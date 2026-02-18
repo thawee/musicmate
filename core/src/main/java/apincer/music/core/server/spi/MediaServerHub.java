@@ -2,7 +2,6 @@ package apincer.music.core.server.spi;
 
 import java.util.List;
 
-import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
@@ -25,7 +24,7 @@ public interface MediaServerHub {
         }
     }
 
-    boolean activatePlayer(String udn, PlaybackCallback callback);
+    void activatePlayer(String udn, PlaybackCallback callback);
 
     void deactivatePlayer(String udn);
 
@@ -40,12 +39,12 @@ public interface MediaServerHub {
     void stopPlaying(String udn);
     void pause(String rendererUdn);
 
-    //void play(String rendererUdn);
+    //void play(String renderer);
 
     void playSong(String rendererUdn, MediaTrack song);
 
 
-   // void fetchPlayerState(String rendererUdn);
+   // void fetchPlayerState(String renderer);
 
     // Add a method for the hosting service to call on destroy
     void onDestroy();

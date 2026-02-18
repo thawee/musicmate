@@ -17,14 +17,17 @@ import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.textview.MaterialTextView;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 
@@ -81,8 +84,8 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     // Helper function to add a step to the signal path
     private void addSignalPathStep(LinearLayout container, String title, String description, boolean hasNext) {
         View stepView = LayoutInflater.from(getContext()).inflate(R.layout.signal_path_step, container, false);
-        TextView titleTextView = stepView.findViewById(R.id.step_title);
-        TextView descriptionTextView = stepView.findViewById(R.id.step_description);
+        MaterialTextView titleTextView = stepView.findViewById(R.id.step_title);
+        MaterialTextView descriptionTextView = stepView.findViewById(R.id.step_description);
         View lineView = stepView.findViewById(R.id.vertical_line);
 
         titleTextView.setText(title);
@@ -105,7 +108,6 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             isPlaybackServiceBound = true;
 
             addSignalPathSteps();
-           // populatePlaybackTargets();
         }
 
         @Override
@@ -126,39 +128,40 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         MediaTrack song = playbackService.getNowPlayingSong();
         if (song != null) {
             // Add the "Lossless" indicator at the very top
-            String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + ", "+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
+           // String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
+            String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()) +" - "+MusicTagUtils.getQualityIndFullString(song);
+           //  String quality = song.getQualityInd()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(quality.trim());
             resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_green_light, getContext().getTheme()));
             resolutionIndicator.setTextSize(14f);
             resolutionIndicator.setPadding(0, 0, 0, 8);
             signalPathContainer.addView(resolutionIndicator);
+            //qualityIndicator.setText(MusicTagUtils.getQualityIndFullString(song)); //song.getQualityInd());
 
-            qualityIndicator.setText(song.getQualityInd());
-
-            addSignalPathStep(signalPathContainer, "Source", song.getSimpleName(), true);
+            addSignalPathStep(signalPathContainer, "Source", StringUtils.truncate(song.getSimpleName(),84, StringUtils.TruncateType.PREFIX), true);
         }
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             String playerDetails = playbackTarget.getDisplayName();
-            String serverDetails = Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
-            if (playbackTarget.isStreaming()) {
-                playerDetails = playerDetails + "\n" + playbackTarget.getDescription();
-                addSignalPathStep(signalPathContainer, "Media Server", serverDetails, true);
-                addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
-            }else if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                playerDetails = playerDetails +"\n"+player.getDescription();
-                addSignalPathStep(signalPathContainer, "Player", playerDetails, true);
-                AudioOutputHelper.getOutputDevice(getContext(), device -> {
-                    String deviceDetails = device.getDescription()
-                            +" ["+device.getName()+"]\n"
-                            +device.getCodec() +", "
-                            +StringUtils.formatAudioSampleRate(device.getSamplingRate(), true) + ", "+ StringUtils.formatAudioBitsDepth(device.getBitPerSampling());
-                    addSignalPathStep(signalPathContainer, "Device", deviceDetails, false);
-                });
+            if (playbackTarget instanceof ExternalAndroidPlayer player) {
+                playerDetails = playerDetails +" ["+player.getDescription()+"]";
+                addSignalPathStep(signalPathContainer, "Music Player", playerDetails, true);
+                AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
+                String deviceDetails = device.getFriendyDescription();
+                addSignalPathStep(signalPathContainer, "Output", deviceDetails, false);
+                if(device.isBitPerfect()) {
+                    qualityIndicator.setText(Constants.TITLE_BIT_PERFECT);
+                }
             }else {
-                addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
+                String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" [" + ApplicationUtils.getVersionNumber(getContext())+"]"; //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
+                playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
+                addSignalPathStep(signalPathContainer, "MusicMate Core", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Network Endpoint", playerDetails, false);
+                if(!MusicTagUtils.isLossy(song)) {
+                    qualityIndicator.setText(Constants.TITLE_BIT_PERFECT_STREAMING);
+                }
             }
         }
     }

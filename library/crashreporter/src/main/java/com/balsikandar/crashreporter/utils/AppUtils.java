@@ -119,7 +119,7 @@ public class AppUtils {
         try {
             PackageInfo packageInfo = context.getPackageManager()
                     .getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionCode;
+            return Math.toIntExact(packageInfo.getLongVersionCode());
         } catch (PackageManager.NameNotFoundException e) {
             throw new RuntimeException("Could not get package name: " + e);
         }

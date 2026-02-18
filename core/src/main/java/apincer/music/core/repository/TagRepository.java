@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import apincer.music.core.Constants;
+import apincer.music.core.Settings;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.MusicFolder;
@@ -348,7 +349,8 @@ public class TagRepository {
                     list = dbHelper.findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                    // list = dbHelper.findDuplicateSong();
-                    list = dbHelper.findSimilarSongs(true);
+                    boolean includeArtist = Settings.isArtistAwareSimilarSongs(context);
+                    list = dbHelper.findSimilarSongs(includeArtist);
                 } else if (Constants.TITLE_NO_COVERART.equals(criteria.getKeyword())) {
                     list = dbHelper.findNoEmbedCoverArtSong();
                 }

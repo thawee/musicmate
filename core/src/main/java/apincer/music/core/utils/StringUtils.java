@@ -156,11 +156,11 @@ public class StringUtils {
             case PREFIX ->
                 // We want "...end"
                 // Get the last (maxLength - 3) characters
-                    ellipsis + input.substring(input.length() - (maxLength - ellipsisLength));
+                    ellipsis + input.substring(input.length() - (maxLength - ellipsisLength)).trim();
             default ->
                 // We want "start..."
                 // Get the first (maxLength - 3) characters
-                    input.substring(0, maxLength - ellipsisLength) + ellipsis;
+                    input.substring(0, maxLength - ellipsisLength).trim() + ellipsis;
         };
     }
 	
@@ -496,11 +496,11 @@ public class StringUtils {
     }
 
     public static String formatAudioSampleRate(long rate,boolean includeUnit) {
-        String unit = " kHz";
+        String unit = "kHz";
         String str;
         double factor = 1000.00;
         if(rate > 1000000) {
-            unit = " MHz";
+            unit = "MHz";
             factor = 1000000.00;
             double s = rate / factor;
             str = String.format(Locale.getDefault(),"%.1f", s);
@@ -541,35 +541,37 @@ public class StringUtils {
     }
 
     public static long toLong(String text) {
-        text = trimToEmpty(text);
-        if(isDigitOrDecimal(text)) {
-            return Long.parseLong(text);
+        try {
+            return Long.parseLong(trimToEmpty(text));
+        } catch (NumberFormatException e) {
+            return 0L;
         }
-        return 0L;
     }
 
     public static double toDouble(String text) {
-        text = trimToEmpty(text);
-        if(isDigitOrDecimal(text)) {
-            return Double.parseDouble(text);
+        try {
+            return Double.parseDouble(trimToEmpty(text));
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
-        return 0L;
     }
 
     public static double gainToDouble(String text) {
+        if (text == null) return 0.0;
         text = text.replace("dB", "");
-        text = trimToEmpty(text);
-        if(isDigitOrDecimal(text)) {
-            return Double.parseDouble(text);
+        try {
+            return Double.parseDouble(trimToEmpty(text));
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
-        return 0L;
     }
 
     public static int toInt(String text) {
-        if(isDigitOnly(text)) {
-            return Integer.parseInt(text);
+        try {
+            return Integer.parseInt(trimToEmpty(text));
+        } catch (NumberFormatException e) {
+            return 0;
         }
-        return 0;
     }
 
     public static double toDurationSeconds(String durationString) {
@@ -591,9 +593,8 @@ public class StringUtils {
     }
 
     public static boolean toBoolean(String text) {
-        if("1".equals(trimToEmpty(text))) {
-            return true;
-        }else return "true".equalsIgnoreCase(trimToEmpty(text));
+        String trimmed = trimToEmpty(text);
+        return "1".equals(trimmed) || "true".equalsIgnoreCase(trimmed);
     }
 
     public static String formatAudioBitRateNoUnit(long audioBitRate) {

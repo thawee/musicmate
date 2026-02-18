@@ -9,8 +9,9 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,7 +96,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             }
 
             // FIX: Decode URI (e.g. "%20" -> " ")
-            String requestUri = URLDecoder.decode(rawUri, StandardCharsets.UTF_8.name());
+            String requestUri = URLDecoder.decode(rawUri, StandardCharsets.UTF_8);
 
             if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
                 File filePath = getAlbumArt(requestUri);
@@ -237,10 +238,8 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     private class WebSocketHandlerImpl extends WebSocketContent implements NioHttpServer.WebSocketHandler {
         private final CopyOnWriteArraySet<NioHttpServer.WebSocketConnection> sessions = new CopyOnWriteArraySet<>();
         private static final int MAX_SESSIONS = 100;
-        private static final Gson GSON = new GsonBuilder()
-                .disableHtmlEscaping()
-                .serializeNulls()
-                .create();
+        private static final ObjectMapper MAPPER = new ObjectMapper()
+                .setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
 
         public WebSocketHandlerImpl() {
             super();
@@ -291,8 +290,12 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
         private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
             if (response != null && !connection.isClosed()) {
-                String jsonResponse = GSON.toJson(response);
-                connection.send(jsonResponse);
+                try {
+                    String jsonResponse = MAPPER.writeValueAsString(response);
+                    connection.send(jsonResponse);
+                } catch (JsonProcessingException e) {
+                    Log.e(TAG, "Error serializing response", e);
+                }
             }
         }
 
@@ -309,7 +312,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
             try {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> messageMap = GSON.fromJson(message, Map.class);
+                Map<String, Object> messageMap = MAPPER.readValue(message, Map.class);
                 if (messageMap == null) return;
 
                 String command = String.valueOf(messageMap.getOrDefault("command", ""));
@@ -319,7 +322,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 Map<String, Object> response = handleCommand(command, messageMap);
                 sendMessage(connection, response);
 
-            } catch (com.google.gson.JsonSyntaxException e) {
+            } catch (IOException e) {
                 Log.e(TAG, TAG + " - Bad JSON: " + message);
             } catch (Exception e) {
                 Log.e(TAG, TAG + " - Error processing WS message", e);

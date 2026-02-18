@@ -82,7 +82,7 @@ import coil3.request.ImageRequest;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
 import dagger.hilt.android.AndroidEntryPoint;
-import sakout.mehdi.StateViews.StateView;
+//import sakout.mehdi.StateViews.StateView;
 
 @AndroidEntryPoint
 public class TagsActivity extends AppCompatActivity {
@@ -221,8 +221,8 @@ public class TagsActivity extends AppCompatActivity {
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
         //toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
-        StateView mStateView = findViewById(R.id.status_page);
-        mStateView.hideStates();
+       // StateView mStateView = findViewById(R.id.status_page);
+       // mStateView.hideStates();
 
         setupTitlePanelViews(); // Method to findViewById all title panel views
         setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.

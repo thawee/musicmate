@@ -29,6 +29,7 @@ import musicmate.jupnp.nio.R;
  */
 public class CollectionsBrowser extends AbstractContentBrowser {
     public static final String DOWNLOADS_SONGS = "** Recently Added";
+    public static final String ALL_SONGS = "All Songs";
     public final List<String> playlists = new ArrayList<>();
     public CollectionsBrowser(Context context, TagRepository tagRepos) {
         super(context, tagRepos);

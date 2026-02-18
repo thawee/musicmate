@@ -19,7 +19,19 @@ public class MusicTag implements MediaTrack {
         return Objects.hash(id);
     }
 
+    /* Internal field, not save to table*/
     private MusicTag originTag;
+    private String notes;
+    private String rating;
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
 
     @DatabaseField(generatedId = true, allowGeneratedIdInsert = true, canBeNull = false)
     protected long id;
@@ -543,4 +555,11 @@ public class MusicTag implements MediaTrack {
         this.dynamicRange = measuredDR;
     }
 
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
 }

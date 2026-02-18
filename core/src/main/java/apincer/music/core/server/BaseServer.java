@@ -17,8 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -344,10 +345,8 @@ public class BaseServer {
         private final LruCache<String, float[]> memoryCache;
         final int cacheSize = 10240; // Approx 10 MB based on average waveform size
 
-        protected static final Gson GSON = new GsonBuilder()
-                .disableHtmlEscaping() // Reduces string processing
-                .serializeNulls() // Optional: skip nulls to reduce JSON size
-                .create();
+        protected static final ObjectMapper MAPPER = new ObjectMapper()
+                .setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
 
         /**
          * Constructs the WebSocket content handler.
@@ -367,8 +366,12 @@ public class BaseServer {
                 public void onMediaTrackChanged(MediaTrack track) {
                     Map<String, Object> response = getNowPlaying(track);
                     if (response != null) {
-                        String jsonResponse = GSON.toJson(response);
-                        broadcastMessage(jsonResponse);
+                        try {
+                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (JsonProcessingException e) {
+                            Log.e(TAG, "Error serializing nowPlaying", e);
+                        }
 
                        // Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
                     }
@@ -378,8 +381,12 @@ public class BaseServer {
                 public void onPlaybackStateChanged(PlaybackState state) {
                     Map<String, Object> response = getPlaybackState(state);
                     if (response != null) {
-                        String jsonResponse = GSON.toJson(response);
-                        broadcastMessage(jsonResponse);
+                        try {
+                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (JsonProcessingException e) {
+                            Log.e(TAG, "Error serializing playbackState", e);
+                        }
                     }
                 }
 
@@ -387,8 +394,12 @@ public class BaseServer {
                 public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
                     Map<String, Object> response = getPlaybackTarget(playbackTarget);
                     if (response != null) {
-                        String jsonResponse = GSON.toJson(response);
-                        broadcastMessage(jsonResponse);
+                        try {
+                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (JsonProcessingException e) {
+                            Log.e(TAG, "Error serializing playbackTarget", e);
+                        }
                         //Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
                     }
                 }

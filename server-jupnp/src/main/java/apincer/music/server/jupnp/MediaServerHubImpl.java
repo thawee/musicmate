@@ -151,31 +151,26 @@ public class MediaServerHubImpl implements MediaServerHub {
      * fetch the currently playing track information. The result of this fetch is
      * delivered via the provided {@link PlaybackCallback}.
      *
-     * @param udn The Unique Device Name (UDN) of the target media renderer. This
-     * identifier is used to look up the device in the UPnP registry.
+     * @param udn      The Unique Device Name (UDN) of the target media renderer. This
+     *                 identifier is used to look up the device in the UPnP registry.
      * @param callback A callback interface to deliver results asynchronously. It will
-     * be invoked with the initial media track information and any
-     * subsequent changes discovered via polling.
-     * @return {@code true} if the activation process was successfully <b>initiated</b>.
-     * This does not guarantee that track information will be received, only
-     * that the request was sent. Returns {@code false} if the player could
-     * not be found, is invalid, the service is not initialized, or the
-     * activation command failed.
+     *                 be invoked with the initial media track information and any
+     *                 subsequent changes discovered via polling.
      */
     @Override
-    public boolean activatePlayer(String udn, PlaybackCallback callback) {
+    public void activatePlayer(String udn, PlaybackCallback callback) {
         this.callback = callback;
         //auto resolve udn if, not found in registry
         PlaybackTarget player = resolveRenderer(udn);
         if(player == null) {
-            return false;
+            return;
         }
         if(player.canReadSate()) {
             Log.d(TAG, "active dlna player: "+ player.getTargetId()+" - "+player.getDisplayName());
             activePlayerTargetId = player.getTargetId();
         }
 
-        if(!initialized) return false;
+        if(!initialized) return;
 
         // polling state from remote device
         stopPolling();
@@ -185,12 +180,12 @@ public class MediaServerHubImpl implements MediaServerHub {
         try {
             Device device = upnpService.getRegistry().getDevice(new UDN(activePlayerTargetId), false);
             if (device == null) {
-                return false;
+                return;
             }
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
             if (avTransportService == null) {
-                return false;
+                return;
             }
             upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
                 @Override
@@ -225,11 +220,9 @@ public class MediaServerHubImpl implements MediaServerHub {
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 }
             });
-            return true;
         } catch (Exception ignore) {
             ignore.printStackTrace();
         }
-        return false;
     }
 
     private PlaybackTarget resolveRenderer(String udn) {

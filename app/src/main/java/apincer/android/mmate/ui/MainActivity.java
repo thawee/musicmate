@@ -85,10 +85,10 @@ import java.util.TimerTask;
 import javax.inject.Inject;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.Settings;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
+import apincer.music.core.Settings;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -110,7 +110,7 @@ import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
 import dagger.hilt.android.AndroidEntryPoint;
 import me.stellarsand.android.fastscroll.FastScrollerBuilder;
-import sakout.mehdi.StateViews.StateView;
+//import sakout.mehdi.StateViews.StateView;
 
 /**
  * Main Activity for MusicMate application
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
     private SearchView headerSearchView;
     private TextView headerStatText;
 
-    private StateView mStateView;
+    //private StateView mStateView;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton fabScrollToTop;
@@ -309,11 +309,6 @@ public class MainActivity extends AppCompatActivity {
                        // refreshLayout.finishRefresh();
                     });
             updateHeaderPanel();
-            if (adapter.getItemCount() == 0) {
-                mStateView.displayState("search");
-            } else {
-                mStateView.hideStates();
-            }
         });
 
         viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
@@ -363,9 +358,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doShowSignalPath() {
+        //TODO: if selected player is local, reset player for song title refresh
+        if(playbackService != null && playbackService.getPlayer() != null) {
+            if(!playbackService.getPlayer().isStreaming()) {
+                playbackService.switchPlayer(playbackService.getPlayer(), true);
+            }
+        }
+
         if(previouslyPlaying != null) {
             SignalPathBottomSheet bottomSheet = new SignalPathBottomSheet(v -> scrollToSong(previouslyPlaying));
             bottomSheet.show(getSupportFragmentManager(), "SignalPathBottomSheet");
+
+            // Use a Handler to dismiss after 12 seconds
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (bottomSheet.isAdded()) { // Safety check to ensure it's still there
+                    bottomSheet.dismiss();
+                }
+            }, 12000); // 12000ms = 12 seconds
         }
     }
 
@@ -381,11 +390,6 @@ public class MainActivity extends AppCompatActivity {
             public void onChanged() {
                 super.onChanged();
                 updateHeaderPanel();
-                if (adapter.getItemCount() == 0) {
-                    mStateView.displayState("search");
-                } else {
-                    mStateView.hideStates();
-                }
             }
         });
 
@@ -569,10 +573,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize action mode callback
         actionModeCallback = new ActionModeCallback();
-
-        // Setup state view
-        mStateView = findViewById(R.id.status_page);
-        mStateView.hideStates();
     }
 
     private void setupResideMenus() {
@@ -822,6 +822,13 @@ public class MainActivity extends AppCompatActivity {
         // bottom sheet to display dlna server status, and buttons to start/stop server
         MediaServerManagementSheet sheet = MediaServerManagementSheet.newInstance(playbackService);
         sheet.show(getSupportFragmentManager(), MediaServerManagementSheet.TAG);
+
+        // Use a Handler to dismiss after 12 seconds
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (sheet.isAdded()) { // Safety check to ensure it's still there
+                sheet.dismiss();
+            }
+        }, 12000); // 12000ms = 12 seconds
     }
 
     private void doShowAboutApp() {

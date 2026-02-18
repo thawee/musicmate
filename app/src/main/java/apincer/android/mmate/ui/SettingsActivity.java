@@ -31,7 +31,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_fragement);
         getSupportActionBar().setTitle(R.string.app_settings);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportFragmentManager()
                 .beginTransaction()

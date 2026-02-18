@@ -12,12 +12,15 @@ import android.graphics.drawable.Drawable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 
+import org.jetbrains.annotations.UnknownNullability;
+
 import java.util.Locale;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.Settings;
 import apincer.music.core.Constants;
+import apincer.music.core.Settings;
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
 
 public class MusicTagUtils {
@@ -223,7 +226,7 @@ public class MusicTagUtils {
         return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
     }
 
-    public static boolean isLossy(MusicTag tag) {
+    public static boolean isLossy(MediaTrack tag) {
         return isMPegFile(tag) || isAACFile(tag);
     }
 
@@ -384,7 +387,7 @@ public class MusicTagUtils {
                 Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    public static boolean isMPegFile(MusicTag tag) {
+    public static boolean isMPegFile(@UnknownNullability MediaTrack tag) {
         // mp3
         return (Constants.MEDIA_ENC_MPEG.equalsIgnoreCase(tag.getAudioEncoding()));
     }
@@ -406,7 +409,7 @@ public class MusicTagUtils {
         return StringUtils.compare(path, tag.getPath());
     } */
 
-    public static boolean isAACFile(MusicTag musicTag) {
+    public static boolean isAACFile(@UnknownNullability MediaTrack musicTag) {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
     }
 
@@ -504,5 +507,22 @@ public class MusicTagUtils {
             return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_dsd);
         }
         return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_lc);
+    }
+
+    public static String getQualityIndFullString(MediaTrack song) {
+        String name = "";
+        String ind = song.getQualityInd();
+        if("DSD".equals(ind)) {
+            name = Constants.TITLE_DSD;
+        }else if (ind.equals("MQA")) {
+            name = Constants.TITLE_MASTER_QUALITY;
+        }else if ("HR".equals(ind)) {
+            name = Constants.TITLE_HIRES;
+        }else if ("LC".equals(ind)) {
+            name = Constants.TITLE_HIGH_QUALITY;
+        }else if ("SQ".equals(ind)) {
+            name = Constants.TITLE_HIFI_LOSSLESS;
+        };
+        return name;
     }
 }

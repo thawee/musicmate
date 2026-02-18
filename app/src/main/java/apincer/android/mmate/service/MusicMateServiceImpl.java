@@ -412,7 +412,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(Constants.getPresentationName())
                 .setContentText("Monitoring media sessions")
-                .setSmallIcon(android.R.drawable.ic_media_play) // TODO: Change to your app's icon
+                .setSmallIcon(apincer.android.mmate.R.drawable.ic_notification_default)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOngoing(true)
                 .build();
@@ -826,11 +826,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
         currentPlayerSubject.subscribe(consumer, onErrorConsumer);
-    }
-
-    @Override
-    public String getServerLocation() {
-        return ""; // Not needed for monitoring/control service
     }
 
     // ==================== Binder ====================

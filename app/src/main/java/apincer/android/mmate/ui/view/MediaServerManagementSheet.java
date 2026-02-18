@@ -128,12 +128,13 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     for (PlaybackTarget player : renderers) {
                         if (Objects.equals(item.getTitle(), player.getDisplayName())) {
                             playbackService.switchPlayer(player, true);
+                            break;
                             // Toast.makeText(getContext(), "Selected: " + player.getDisplayName(), Toast.LENGTH_SHORT).show();
                             // Handle logic to switch renderer here...
                         }
                     }
                 }
-
+                dismiss();
                 return true;
             });
 

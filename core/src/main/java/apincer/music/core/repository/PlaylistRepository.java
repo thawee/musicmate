@@ -7,7 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,13 +38,13 @@ public class PlaylistRepository {
 
     public static void initPlaylist(Context context) {
         if (allPlaylists.isEmpty()) { // Ensure it's loaded only once
-            Gson gson = new Gson();
+            ObjectMapper mapper = new ObjectMapper();
             // Assuming playlists.json is directly under assets
             InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlists.json");
 
             if (in != null) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                    PlaylistCollection collection = gson.fromJson(reader, PlaylistCollection.class);
+                    PlaylistCollection collection = mapper.readValue(reader, PlaylistCollection.class);
                     if (collection != null && collection.getPlaylists() != null) {
                         allPlaylists = collection.getPlaylists();
                         Log.d(TAG, "Loaded " + allPlaylists.size() + " playlist entries from JSON.");
@@ -53,7 +53,7 @@ public class PlaylistRepository {
                         allPlaylists = Collections.emptyList(); // Ensure it's not null
                     }
                     populatePlaylistMap(allPlaylists);
-                } catch (IOException | com.google.gson.JsonSyntaxException e) { // Catch parsing errors too
+                } catch (IOException e) { // Catch parsing errors too
                     Log.e(TAG, "Error reading or parsing playlists.json", e);
                     allPlaylists = Collections.emptyList();
                 }

@@ -39,7 +39,9 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         List<MusicTag> results = new ArrayList<>();
         List<MusicTag> list = tagRepos.getAllMusicsForPlaylist();
         for(MusicTag tag: list) {
-            if (CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid) && TagUtils.isOnDownloadDir(tag)) {
+            if (CollectionsBrowser.ALL_SONGS.equals(uuid)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid) && TagUtils.isOnDownloadDir(tag)) {
                 results.add(tag);
             }else if (PlaylistRepository.isSongInPlaylist(tag, uuid)) {
                 results.add(tag);

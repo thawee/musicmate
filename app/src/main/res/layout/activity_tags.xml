@@ -248,6 +248,7 @@
                 <include layout="@layout/view_tag_layout" />
             </LinearLayout>
 
+            <!--
             <sakout.mehdi.StateViews.StateView
                 android:id="@+id/status_page"
                 android:layout_width="match_parent"
@@ -259,7 +260,7 @@
                     android:layout_gravity="center"
                     android:text="" />
 
-            </sakout.mehdi.StateViews.StateView>
+            </sakout.mehdi.StateViews.StateView> -->
 
             <!--
             <androidx.appcompat.widget.Toolbar

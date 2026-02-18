@@ -50,8 +50,6 @@ public interface PlaybackService {
 
     void switchPlayer(String targetId, boolean controlled);
 
-    String getServerLocation();
-
     List<PlaybackTarget> getAvailablePlaybackTargets();
 
     MediaTrack getNowPlayingSong();

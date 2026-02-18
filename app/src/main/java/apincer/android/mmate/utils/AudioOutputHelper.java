@@ -4,11 +4,6 @@ import static android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothA2dp;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -16,30 +11,29 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioMixerAttributes;
 import android.media.MediaRouter;
+import android.media.AudioProfile;
 import android.os.Build;
 import android.text.TextPaint;
-import android.util.Log;
 
 import androidx.core.content.res.ResourcesCompat;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();
 
     public static class Device {
+        private boolean bitPerfect;
+
         public String getName() {
             return name;
         }
@@ -61,6 +55,27 @@ public class AudioOutputHelper {
         long samplingRate;
         long bitRate;
         String description;
+
+        public String getFriendyDescription() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(getName());
+            if(!StringUtils.isEmpty(getDescription())) {
+                builder.append(" [");
+                builder.append(getDescription());
+                builder.append("]");
+            }
+            builder.append("\n");
+            if(!StringUtils.isEmpty(getCodec())) {
+                builder.append(getCodec());
+                builder.append(", ");
+            }
+            if(getSamplingRate()>0) {
+                builder.append(StringUtils.formatAudioSampleRate(getSamplingRate(), true));
+                builder.append("/");
+                builder.append(StringUtils.formatAudioBitsDepth(getBitPerSampling()));
+            }
+            return builder.toString();
+        }
 
         public int getBitPerSampling() {
             return bitPerSampling;
@@ -98,135 +113,104 @@ public class AudioOutputHelper {
         public String getDescription() {
             return description;
         }
-    }
 
-    public interface Callback {
-        void onReady(Device device);
+        public boolean isBitPerfect() {
+            return  bitPerfect;
+        }
+
+        public void setBitPerfect(boolean bitPerfect) {
+            this.bitPerfect = bitPerfect;
+        }
     }
 
     @SuppressLint("MissingPermission")
-    public static void getOutputDevice(Context context, Callback callback) {
+    public static Device getOutputDevice(Context context, MediaTrack track) {
         Device outputDevice = new Device();
         MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
-        MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
+       // MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-        int routeType = ri.getDeviceType();
-        String routeName = String.valueOf(ri.getName());
-        String desc = ri.getDescription() == null ? routeName : String.valueOf(ri.getDescription());
-        
-        AudioDeviceInfo[] adi = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-        AudioDeviceInfo selectedDevice = null;
+       // int routeType = ri.getDeviceType();
+       // String routeName = String.valueOf(ri.getName());
+       // String routeDesc = ri.getDescription() == null ? routeName : String.valueOf(ri.getDescription());
 
-        // 1. Try to match based on MediaRouter type
-        if (routeType == MediaRouter.RouteInfo.DEVICE_TYPE_BLUETOOTH) {
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO);
-            if (selectedDevice != null) {
-                setupBluetoothDevice(context, outputDevice, selectedDevice, callback, desc);
-                return; // Callback is handled asynchronously
-            }
-        } else if (routeType == MediaRouter.RouteInfo.DEVICE_TYPE_SPEAKER) {
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_BUILTIN_SPEAKER);
-        }
-
-        // 2. If no match yet (or MediaRouter returned Unknown/User/Other), check priority devices in AudioDeviceInfo list
-        if (selectedDevice == null) {
-            // Check for USB/HDMI (High Priority)
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_ACCESSORY, AudioDeviceInfo.TYPE_HDMI, AudioDeviceInfo.TYPE_HDMI_ARC);
-            if (selectedDevice != null) {
-                setupUsbHdmiDevice(context, outputDevice, selectedDevice, desc);
-                callback.onReady(outputDevice);
-                return;
-            }
-            
-            // Check for Wired Headset/Headphones
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET);
-            if (selectedDevice != null) {
-                setupWiredDevice(outputDevice, selectedDevice, desc);
-                callback.onReady(outputDevice);
-                return;
-            }
-
-            // Check for Bluetooth again (fallback)
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO);
-            if (selectedDevice != null) {
-                setupBluetoothDevice(context, outputDevice, selectedDevice, callback, desc);
-                return;
-            }
-        }
-
-        // 3. Fallback to Speaker or whatever we found
-        if (selectedDevice == null) {
-            selectedDevice = findAudioDevice(adi, AudioDeviceInfo.TYPE_BUILTIN_SPEAKER);
-        }
+        AudioDeviceInfo[] outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+        AudioDeviceInfo selectedDevice = getAudioDevice(outputs);
 
         // 4. Default setup if we have a device, or absolute fallback
         if (selectedDevice != null) {
-            setResolutions(outputDevice, selectedDevice, desc);
-            outputDevice.setCodec("SRC"); // System Sample Rate Converter
-            outputDevice.setName(Build.MODEL);
+            readResolutions(outputDevice, selectedDevice);
+            outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, (int) track.getAudioSampleRate()));
+            outputDevice.setDescription(typeToString(selectedDevice.getType()));
+            outputDevice.setName(String.valueOf(selectedDevice.getProductName()));
             outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
         } else {
             outputDevice.setCodec("SRC");
-            outputDevice.setName(Build.MODEL);
+            outputDevice.setName("Phone Speaker");
             outputDevice.setBitPerSampling(16);
             outputDevice.setSamplingRate(48000);
             outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-            outputDevice.setDescription(desc);
+            outputDevice.setDescription(Build.MODEL);
         }
-        
-        callback.onReady(outputDevice);
+
+        return outputDevice;
     }
 
-    private static AudioDeviceInfo findAudioDevice(AudioDeviceInfo[] devices, int... types) {
-        for (AudioDeviceInfo device : devices) {
-            if (device.isSink()) {
-                for (int type : types) {
-                    if (device.getType() == type) {
-                        return device;
-                    }
+    // Check if the current path is truly bit-perfect (Android 14+)
+    public static boolean isBitPerfect(Context context, AudioDeviceInfo device, int trackSampleRate) {
+
+        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        // Get the mixer attributes the system PREFERS for this device
+        List<AudioMixerAttributes> mixerAttrs = am.getSupportedMixerAttributes(device);
+
+        for (AudioMixerAttributes attr : mixerAttrs) {
+            // BIT_PERFECT mode sends audio 1:1 without volume scaling or mixing
+            if (attr.getMixerBehavior() == AudioMixerAttributes.MIXER_BEHAVIOR_BIT_PERFECT) {
+                // Check if the hardware is currently set to your file's sample rate
+                if (attr.getFormat().getSampleRate() == trackSampleRate) {
+                    return true;
                 }
             }
         }
-        return null;
+        return false;
     }
 
-    private static void setupUsbHdmiDevice(Context context, Device outputDevice, AudioDeviceInfo a, String desc) {
-        setResolutions(outputDevice, a, desc);
-        outputDevice.setResId(R.drawable.ic_baseline_usb_24);
-        outputDevice.setAddress(a.getAddress());
-        outputDevice.setCodec("Direct");
-        
-        UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-        HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
-        
-        // Try to find the matching USB device name
-        String productName = null;
-        for (UsbDevice device : deviceList.values()) {
-            // Logic to match specific USB device could be improved here (e.g. by vendor/product ID if available in AudioDeviceInfo address)
-            // Current logic takes the first one found, similar to original code.
-            productName = device.getProductName();
-            break; 
+    private static AudioDeviceInfo getAudioDevice(AudioDeviceInfo[] devices) {
+        AudioDeviceInfo bestDevice = null;
+        int highestPriority = -1;
+
+        for (AudioDeviceInfo device : devices) {
+            // We only care about outputs (Sinks)
+            if (!device.isSink()) continue;
+
+            int type = device.getType();
+            int priority = getDevicePriority(type);
+
+            // Logic: Pick the device with the highest audiophile priority
+            if (priority > highestPriority) {
+                highestPriority = priority;
+                bestDevice = device;
+            }
+
+            // Log details for debugging (helpful for your audiophile troubleshooting)
+           // System.out.println("Checking Device: " + device.getProductName() +
+           //         " | Type: " + type +
+           //         " | Priority: " + priority);
         }
-        if (productName != null) {
-             outputDevice.setName(productName);
-        } else {
-             outputDevice.setName(a.getProductName().toString());
-        }
+        return bestDevice;
     }
 
-    private static void setupWiredDevice(Device outputDevice, AudioDeviceInfo a, String desc) {
-        setResolutions(outputDevice, a, desc);
-        outputDevice.setCodec("SRC");
-        outputDevice.setName(Build.MODEL);
-        outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-    }
-
-    private static void setupBluetoothDevice(Context context, Device outputDevice, AudioDeviceInfo a, Callback callback, String desc) {
-        outputDevice.setAddress(a.getAddress());
-        outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
-        // This will call callback.onReady when done
-        getA2DP(context, outputDevice, callback, desc);
+    private static int getDevicePriority(int type) {
+        return switch (type) {
+            case AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET,
+                 AudioDeviceInfo.TYPE_USB_ACCESSORY -> 4; // Top priority: USB DACs/High-Res Output
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> 3; // Mid priority: Wireless (Convenience)
+            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> 2; // Mid priority: Wireless (Convenience)
+            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET ->
+                    1; // Standard Analog Output
+            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> 0; // Fallback: Internal Speakers
+            default -> -1;
+        };
     }
 
     /**
@@ -275,53 +259,92 @@ public class AudioOutputHelper {
     static String typeToString(int type){
         return switch (type) {
             case AudioDeviceInfo.TYPE_AUX_LINE -> "aux line-level connectors";
-            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth device w/ A2DP profile";
-            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth device w/ telephony";
-            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "built-in earphone speaker";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth audio";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth";
+            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "Built-in earphone";
             case AudioDeviceInfo.TYPE_BUILTIN_MIC -> "built-in microphone";
-            case TYPE_BUILTIN_SPEAKER -> "built-in speaker";
+            case TYPE_BUILTIN_SPEAKER -> "Built-in speaker";
             case AudioDeviceInfo.TYPE_BUS -> "BUS";
             case AudioDeviceInfo.TYPE_DOCK -> "DOCK";
             case AudioDeviceInfo.TYPE_FM -> "FM";
             case AudioDeviceInfo.TYPE_FM_TUNER -> "FM tuner";
             case AudioDeviceInfo.TYPE_HDMI -> "HDMI";
-            case AudioDeviceInfo.TYPE_HDMI_ARC -> "HDMI audio return channel";
+            case AudioDeviceInfo.TYPE_HDMI_ARC -> "HDMI audio";
             case AudioDeviceInfo.TYPE_IP -> "IP";
             case AudioDeviceInfo.TYPE_LINE_DIGITAL -> "line digital";
             case AudioDeviceInfo.TYPE_TELEPHONY -> "telephony";
             case AudioDeviceInfo.TYPE_TV_TUNER -> "TV tuner";
             case AudioDeviceInfo.TYPE_USB_ACCESSORY -> "USB accessory";
             case AudioDeviceInfo.TYPE_USB_DEVICE -> "USB device";
-            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "wired headphones";
-            case AudioDeviceInfo.TYPE_WIRED_HEADSET -> "wired headset";
+            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "Wired headphones";
+            case AudioDeviceInfo.TYPE_WIRED_HEADSET -> "Wired headset";
             default -> "";
         };
     }
 
-    private static void setResolutions(Device outputDevice, AudioDeviceInfo device, String desc) {
-        int encoding = intArrayLastIndex(device.getEncodings());
-        int bps = switch (encoding) {
+    private static void readResolutions(Device outputDevice, AudioDeviceInfo device) {
+        List<AudioProfile> profiles = device.getAudioProfiles();
+
+        // 1. Get Codec / Format (Requires API 31+)
+       /* String codec = "PCM"; // Default for most wired/USB audiophile paths
+
+        if (!profiles.isEmpty()) {
+            int format = profiles.get(0).getFormat();
+            codec = getFormatName(format);
+        }
+        outputDevice.setCodec(codec); */
+
+        // 2. Get Bit Depth (Bit Per Sample)
+        int[] encodings = device.getEncodings();
+        int highestEncoding = getHighestEncoding(encodings);
+        int bps = switch (highestEncoding) {
             case AudioFormat.ENCODING_PCM_8BIT -> 8;
-            case AudioFormat.ENCODING_PCM_FLOAT, AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24;
-            case AudioFormat.ENCODING_PCM_32BIT -> 32;
-            default -> 16;
+            case AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24;
+            case AudioFormat.ENCODING_PCM_32BIT, AudioFormat.ENCODING_PCM_FLOAT -> 32;
+            default -> 16; // Standard CD quality fallback
         };
         outputDevice.setBitPerSampling(bps);
-        // Get the highest supported sample rate
-        int[] sampleRates = device.getSampleRates();
+
+        // 3. Get the Highest Supported Sample Rate
         int rate = 0;
-        for (int sampleRate : sampleRates) {
-            if (sampleRate > rate) {
-                rate = sampleRate;
+        // Check Profiles first for accurate hardware capabilities
+        for (AudioProfile profile : profiles) {
+            for (int sampleRate : profile.getSampleRates()) {
+                if (sampleRate > rate) rate = sampleRate;
             }
         }
 
-        // If no sample rate found, use a default value
+        // Fallback to basic sample rates if profiles are empty
         if (rate == 0) {
-            rate = 48000; // Default to 48kHz
+            for (int sampleRate : device.getSampleRates()) {
+                if (sampleRate > rate) rate = sampleRate;
+            }
         }
+
+        // Final fallback for older devices or internal speakers
+        if (rate == 0) rate = 48000;
+
         outputDevice.setSamplingRate(rate);
-        outputDevice.setDescription(desc);
+    }
+
+    /** Helper to get the most "Audiophile" encoding available **/
+    private static int getHighestEncoding(int[] encodings) {
+        int best = AudioFormat.ENCODING_PCM_16BIT;
+        for (int e : encodings) {
+            if (e == AudioFormat.ENCODING_PCM_FLOAT || e == AudioFormat.ENCODING_PCM_32BIT) return e;
+            if (e == AudioFormat.ENCODING_PCM_24BIT_PACKED) best = e;
+        }
+        return best;
+    }
+
+    /** Helper to convert Format IDs to Readable Names for your UI **/
+    private static String getFormatName(int format) {
+        return switch (format) {
+            case AudioFormat.ENCODING_PCM_FLOAT -> "PCM (Float)";
+            case AudioFormat.ENCODING_DTS, AudioFormat.ENCODING_DTS_HD -> "DTS";
+            case AudioFormat.ENCODING_AC3, AudioFormat.ENCODING_E_AC3 -> "Dolby Digital";
+            default -> "PCM";
+        };
     }
 
     public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
@@ -456,112 +479,4 @@ public class AudioOutputHelper {
         return integerArray[integerArray.length-1];
     }
 
-    public static void getA2DP(Context context, Device device, Callback callback, String desc) {
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
-
-            @SuppressLint("MissingPermission")
-            @Override
-            public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                List<BluetoothDevice> devices = proxy.getConnectedDevices();
-                BluetoothA2dp bA2dp = (BluetoothA2dp) proxy;
-                if (devices != null && !devices.isEmpty()) {
-                     for (BluetoothDevice dev : devices) {
-                         // Match the address if possible, otherwise take the first one
-                         if (device.address == null || device.address.equals(dev.getAddress())) {
-                            device.setName(dev.getName());
-                            getA2DPCodec(bA2dp, dev, device, desc);
-                            callback.onReady(device);
-                            break;
-                         }
-                     }
-                } else {
-                    // No devices connected, or list empty. Fallback.
-                    callback.onReady(device);
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(int profile) {
-
-            }
-        }, BluetoothProfile.A2DP);
-    }
-
-    @SuppressLint("PrivateApi")
-    private static void getA2DPCodec(BluetoothA2dp bA2dp, BluetoothDevice device, Device device1, String desc) {
-        device1.setCodec("");
-        device1.setDescription("N/A");
-        if (bA2dp == null || device == null) return ;
-        try {
-            Class<?> cls = Class.forName("android.bluetooth.BluetoothA2dp");
-            Method getCodecStatusMethod = cls.getMethod("getCodecStatus", BluetoothDevice.class);
-            Object object = getCodecStatusMethod.invoke(bA2dp, device);
-            if (object == null) return ;
-
-            cls = Class.forName("android.bluetooth.BluetoothCodecStatus");
-            Method getCodecConfigMethod = cls.getMethod("getCodecConfig");
-            Object config = getCodecConfigMethod.invoke(object);
-            if (config == null) return ;
-
-            Class<?> configClass = config.getClass();
-
-            // Get Codec Name
-            try {
-                String codecName = (String) configClass.getMethod("getCodecName").invoke(config);
-                device1.setCodec(codecName);
-            } catch (Exception e) {
-                // Fallback or ignore
-            }
-
-            // Get Sample Rate
-            try {
-                int sampleRateConst = (int) configClass.getMethod("getSampleRate").invoke(config);
-                long sampleRate = 0;
-                if ((sampleRateConst & 0x1) != 0) sampleRate = 44100;
-                else if ((sampleRateConst & 0x2) != 0) sampleRate = 48000;
-                else if ((sampleRateConst & 0x4) != 0) sampleRate = 88200;
-                else if ((sampleRateConst & 0x8) != 0) sampleRate = 96000;
-                else if ((sampleRateConst & 0x10) != 0) sampleRate = 176400;
-                else if ((sampleRateConst & 0x20) != 0) sampleRate = 192000;
-                
-                if (sampleRate > 0) {
-                    device1.setSamplingRate(sampleRate);
-                }
-            } catch (Exception e) {
-                 // Fallback or ignore
-            }
-
-            // Get Bits Per Sample
-            try {
-                int bitsPerSampleConst = (int) configClass.getMethod("getBitsPerSample").invoke(config);
-                int bitsPerSample = 16;
-                if ((bitsPerSampleConst & 0x1) != 0) bitsPerSample = 16;
-                else if ((bitsPerSampleConst & 0x2) != 0) bitsPerSample = 24;
-                else if ((bitsPerSampleConst & 0x4) != 0) bitsPerSample = 32;
-
-                 device1.setBitPerSampling(bitsPerSample);
-            } catch (Exception e) {
-                // Fallback or ignore
-            }
-
-            device1.setDescription(desc);
-
-        } catch(InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof SecurityException) {
-                String msg = cause.getMessage();
-                if (msg != null && msg.contains("CDM association")) {
-                     Log.w(TAG, "Bluetooth codec status access restricted: CDM association required.");
-                } else {
-                     Log.w(TAG, "Missing permission for getCodecStatus: " + msg);
-                }
-            } else {
-                Log.w(TAG, "Failed to invoke getCodecStatus: " + cause.getMessage());
-            }
-        } catch(Exception ex) {
-            Log.e(TAG,"getA2DPCodec",ex);
-        }
-    }
 }

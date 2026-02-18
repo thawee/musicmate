@@ -417,12 +417,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // contents of the view with that element
         MusicTag item = localDataSet.get(position);
         holder.id = position;
-        /*int itemViewType = getItemViewType(position);
-        if(itemViewType == 0 || itemViewType == 1) {
-            onBindViewMusicTag(holder, position, item); // Pass item, not position
-        } else {
-            onBindViewMusicFolder(holder, (MusicFolder) item); // Pass item, not position
-        }*/
         if(item instanceof MusicFolder folder) {
             onBindViewMusicFolder(holder, folder); // Pass item, not position
         }else {
@@ -542,17 +536,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }else{
              holder.drDbView.setVisibility(GONE);
         }
-        /*
-        if(TagUtils.isLossy(tag)) {
-          //  holder.qualityIndicatorView.setVisibility(GONE);
-            holder.drDbView.setVisibility(GONE);
-        } else {
-            holder.drDbView.setVisibility(VISIBLE);
-            holder.drDbView.setMusicItem(tag);
-
-          //  holder.qualityIndicatorView.setVisibility(VISIBLE);
-           // holder.qualityIndicatorView.setMusicItem(tag);
-        } */
 
         holder.qualityIndicatorView.setVisibility(VISIBLE);
         holder.qualityIndicatorView.setMusicItem(tag);

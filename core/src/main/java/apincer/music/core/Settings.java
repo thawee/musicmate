@@ -1,4 +1,4 @@
-package apincer.android.mmate;
+package apincer.music.core;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,8 +8,6 @@ import androidx.preference.PreferenceManager;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import apincer.music.core.Constants;
 
 public class Settings {
     private static final String TAG = Settings.class.getSimpleName();
@@ -43,9 +41,9 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER,false);
     }
 
-    public static boolean isExcludeArtistFromSimilarSongs(Context context) {
+    public static boolean isArtistAwareSimilarSongs(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS,false);
+        return prefs.getBoolean(Constants.PREF_ARTIST_AWARE_SIMILAR_SONGS,false);
     }
 
     public static void setDirectories(Context context, List<String> dirs) {

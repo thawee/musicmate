@@ -7,8 +7,9 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -319,7 +320,8 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
     @WebSocket
     public class WebSocketHandler extends WebSocketContent {
         private final CopyOnWriteArraySet<Session> sessions;
-        private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
+        private static final ObjectMapper MAPPER = new ObjectMapper().setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
+               // .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
         public WebSocketHandler(CopyOnWriteArraySet<Session> sessions) {
             this.sessions = sessions;
@@ -339,7 +341,12 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
             // Send welcome messages
             for (Map<String, Object> msg : getWelcomeMessages()) {
-                session.sendText(GSON.toJson(msg), org.eclipse.jetty.websocket.api.Callback.NOOP);
+                try {
+                    String jsonResponse = MAPPER.writeValueAsString(msg);
+                    session.sendText(jsonResponse, org.eclipse.jetty.websocket.api.Callback.NOOP);
+                } catch (JsonProcessingException e) {
+                    Log.e(TAG, "Error serializing welcome message", e);
+                }
             }
         }
 
@@ -349,13 +356,14 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 if (message == null || message.trim().isEmpty()) return;
 
                 @SuppressWarnings("unchecked")
-                Map<String, Object> map = GSON.fromJson(message, Map.class);
+                Map<String, Object> map = MAPPER.readValue(message, Map.class);
                 String command = String.valueOf(map.get("command"));
 
                 if (!StringUtils.isEmpty(command)) {
                     Map<String, Object> response = handleCommand(command, map);
                     if (response != null) {
-                        session.sendText(GSON.toJson(response), org.eclipse.jetty.websocket.api.Callback.NOOP);
+                        String jsonResponse = MAPPER.writeValueAsString(response);
+                        session.sendText(jsonResponse, org.eclipse.jetty.websocket.api.Callback.NOOP);
                     }
                 }
             } catch (Exception e) {

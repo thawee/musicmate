@@ -62,7 +62,8 @@ dependencies {
     implementation libs.commons.io
     implementation libs.commons.match3
     implementation libs.commons.text
-    implementation libs.google.gson
+    implementation libs.jackson.core
+    implementation libs.jackson.databind
     implementation libs.square.okhttp3
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio

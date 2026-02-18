@@ -5,11 +5,9 @@ import static apincer.android.mmate.service.MusicMateServiceImpl.CHANNEL_ID;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.graphics.Color;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.work.WorkManager;
 
 import com.balsikandar.crashreporter.CrashReporter;
@@ -21,6 +19,7 @@ import javax.inject.Inject;
 
 import apincer.android.mmate.service.MediaServerManager;
 import apincer.music.core.Constants;
+import apincer.music.core.Settings;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
@@ -29,7 +28,7 @@ import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.LogHelper;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import dagger.hilt.android.HiltAndroidApp;
-import sakout.mehdi.StateViews.StateViewsBuilder;
+//import sakout.mehdi.StateViews.StateViewsBuilder;
 
 @HiltAndroidApp
 public class MusixMateApp extends Application {
@@ -77,25 +76,6 @@ public class MusixMateApp extends Application {
         serverManager.startServer();
 
         PlaylistRepository.initPlaylist(this);
-
-        StateViewsBuilder
-                .init(this)
-                .setIconColor(Color.parseColor("#D2D5DA"))
-                .addState("error",
-                        "No Connection",
-                        "Error retrieving information from server.",
-                        AppCompatResources.getDrawable(this, sakout.mehdi.StateViews.R.drawable.ic_server_error),
-                        "Retry"
-                )
-
-                .addState("search",
-                        "No Results",
-                        "Could not find any results matching criteria",
-                        AppCompatResources.getDrawable(this, R.drawable.ic_search_black_24dp), null)
-
-                .setButtonBackgroundColor(Color.parseColor("#317DED"))
-                .setButtonTextColor(Color.parseColor("#FFFFFF"))
-                .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
     }
 

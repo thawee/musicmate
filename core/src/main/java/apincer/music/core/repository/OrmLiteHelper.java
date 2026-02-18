@@ -455,12 +455,26 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     }
 
     // In your OrmLiteHelper.java class
-    public List<MusicTag> findSimilarSongs(boolean excludeArtist) {
+    public List<MusicTag> findSimilarSongs(boolean artistAware) {
         try {
             Dao<MusicTag, Long> dao = getMusicTagDao();
 
-            if (excludeArtist) {
-                // --- Case 1: Find songs with the same title, regardless of artist ---
+            if (artistAware) {
+                // --- Case 1: Find songs with the same title AND artist ---
+                // This is more complex and best handled with a single, clear raw query.
+
+                String rawQuery = "SELECT * FROM musictag WHERE (normalizedTitle, normalizedArtist) " +
+                        "IN (SELECT normalizedTitle, normalizedArtist FROM musictag " +
+                        "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) " +
+                        "ORDER BY normalizedTitle, normalizedArtist";
+
+                try (GenericRawResults<MusicTag> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper())) {
+                    // Use getResults() which is the correct method to get the list
+                    return rawResults.getResults();
+                }
+
+            } else {
+                // --- Case 2: Find songs with the same title, regardless of artist ---
 
                 // Build the outer query
                 QueryBuilder<MusicTag, Long> outerQb = dao.queryBuilder();
@@ -476,20 +490,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 outerQb.orderBy("normalizedTitle", true).orderBy("normalizedArtist", true);
 
                 return outerQb.query();
-
-            } else {
-                // --- Case 2: Find songs with the same title AND artist ---
-                // This is more complex and best handled with a single, clear raw query.
-
-                String rawQuery = "SELECT * FROM musictag WHERE (normalizedTitle, normalizedArtist) " +
-                        "IN (SELECT normalizedTitle, normalizedArtist FROM musictag " +
-                        "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) " +
-                        "ORDER BY normalizedTitle, normalizedArtist";
-
-                try (GenericRawResults<MusicTag> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper())) {
-                    // Use getResults() which is the correct method to get the list
-                    return rawResults.getResults();
-                }
             }
 
         } catch (Exception e) {

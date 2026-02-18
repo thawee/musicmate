@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias libs.plugins.android.application
-    alias libs.plugins.kotlin.android
+    //alias libs.plugins.kotlin.android
     alias libs.plugins.devtools.ksp
     alias libs.plugins.dagger.hilt
 }
@@ -33,8 +33,8 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 101
-        versionName  = "3.11.0-"+ getDate()
+        versionCode = 103
+        versionName  = "3.13.0-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
@@ -162,12 +162,12 @@ dependencies {
     implementation libs.androidx.media3.ui
 
     implementation libs.kotlin.stdlib
+    implementation libs.kotlin.stdlib.jdk8
     implementation libs.kotlin.coroutines.core
     implementation libs.kotlinx.serialization.core
 
     // google
     implementation libs.google.material
-    implementation libs.google.gson
     implementation libs.google.guava
 
     // hilt
@@ -183,13 +183,13 @@ dependencies {
     implementation libs.skydoves.elasticviews
     implementation libs.iwgang.simplifyspan
     implementation libs.androidfastscroll.kt
-    implementation libs.medyo.stateviews
     implementation libs.chrisbanes.photoview
     implementation libs.philjay.mpandroidchart
     implementation libs.vanniktech.textbuilder
     implementation libs.sparrow007.carouselrecyclerview // for reflectioncontainer
     implementation libs.tutorialsandroid.filepicker
     implementation libs.zxing.core
+    implementation libs.commonmark
 
     //others
     implementation libs.anggrayudi.storage

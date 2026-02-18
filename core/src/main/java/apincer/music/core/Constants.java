@@ -69,6 +69,7 @@ public final class Constants {
     public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "Lossy Codec"; //""High Quality";
     public static final String TITLE_MASTER_AUDIO = "Master Quality Authenticated"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
    // public static final String TITLE_PCM = "PCM";
@@ -78,8 +79,12 @@ public final class Constants {
     public static final String TITLE_MQA_SHORT = "MQA";
     public static final String TITLE_HIGH_QUALITY_SHORT = "LC"; //Lossy Codec
 
+    public static final String TITLE_BIT_PERFECT = "Bit-Perfect";
+    public static final String TITLE_BIT_PERFECT_STREAMING = "Bit-Perfect";
+
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
+
 
     static {
         //png
@@ -130,8 +135,7 @@ public final class Constants {
     //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
     public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
-    public static final String PREF_NETTY_MEDIA_SERVER = "preference_netty_media_server";
-    public static final String PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS = "preference_exclude_artist_from_similar_songs";
+    public static final String PREF_ARTIST_AWARE_SIMILAR_SONGS = "preference_similar_songs_match_artist";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";

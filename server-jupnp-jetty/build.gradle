@@ -47,7 +47,8 @@ dependencies {
     implementation libs.jetty.websocket.server12
 
     implementation libs.commons.io
-    implementation libs.google.gson
+    implementation libs.jackson.core
+    implementation libs.jackson.databind
     implementation libs.square.okhttp3
     implementation libs.rxandroid
     implementation libs.rxjava

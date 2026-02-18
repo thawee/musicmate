@@ -7,13 +7,16 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
 import apincer.music.core.database.MusicTag;
@@ -375,10 +378,10 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
 
     // Must be Sharable to be reused or used in ChannelGroup correctly
     @ChannelHandler.Sharable
-    private class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
+    private class WebSocketFrameHandler extends WebSocketContent implements ChannelHandler {
         private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        //private final Gson gson = new Gson();
-        // [Your existing WebSocketContent logic]
+        private final ObjectMapper mapper = new ObjectMapper()
+                .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
         @Override
         public void handlerAdded(ChannelHandlerContext ctx) { channels.add(ctx.channel()); }
@@ -387,12 +390,74 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
         public void handlerRemoved(ChannelHandlerContext ctx) { channels.remove(ctx.channel()); }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) {
-            if (frame instanceof TextWebSocketFrame) {
-                // Logic
-                String text = ((TextWebSocketFrame) frame).text();
-                // Process command...
+        protected void broadcastMessage(String jsonResponse) {
+            channels.writeAndFlush(new TextWebSocketFrame(jsonResponse));
+        }
+
+        /*
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            if (msg instanceof WebSocketFrame frame) {
+                if (frame instanceof TextWebSocketFrame textFrame) {
+                    String text = textFrame.text();
+                    try {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> messageMap = mapper.readValue(text, Map.class);
+                        String command = String.valueOf(messageMap.getOrDefault("command", ""));
+                        if (!command.isEmpty()) {
+                            Map<String, Object> response = handleCommand(command, messageMap);
+                            if (response != null) {
+                                String jsonResponse = mapper.writeValueAsString(response);
+                                ctx.channel().writeAndFlush(new TextWebSocketFrame(jsonResponse));
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing WS message", e);
+                    }
+                }
+            } else {
+                ctx.fireChannelRead(msg);
             }
+        }
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            // Send welcome messages
+            for (Map<String, Object> message : getWelcomeMessages()) {
+                try {
+                    String jsonResponse = mapper.writeValueAsString(message);
+                    ctx.channel().writeAndFlush(new TextWebSocketFrame(jsonResponse));
+                } catch (JsonProcessingException e) {
+                    Log.e(TAG, "Error serializing welcome message", e);
+                }
+            }
+            ctx.fireChannelActive();
+        }
+
+        @Override
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            ctx.fireChannelInactive();
+        }
+
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+            ctx.fireUserEventTriggered(evt);
+        }
+
+        @Override
+        public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+            ctx.fireChannelWritabilityChanged(ctx);
+        }
+
+        @Override
+        public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+            ctx.fireChannelReadComplete();
+        } */
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            Log.e(TAG, "WS Error", cause);
+            ctx.close();
         }
     }
 }

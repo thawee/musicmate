@@ -36,7 +36,7 @@
         android:layout_marginStart="16dp"
         android:orientation="vertical">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/step_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
             android:textColor="#E0E0E0"
             android:textSize="14sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/step_description"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

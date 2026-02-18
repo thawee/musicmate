@@ -2,14 +2,11 @@ package apincer.music.core.repository;
 
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException; // Import JsonSyntaxException
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,10 +38,10 @@ public class MusicInfoRepository {
     ));
     // Create a single, shared OkHttpClient instance. Efficient for multiple requests.
     private final OkHttpClient httpClient = new OkHttpClient();
-    private final Gson gson = new Gson();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    // Define the type for Gson parsing of Wikipedia response
-    private static final Type WIKIPEDIA_RESPONSE_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
+    // Define the type for Jackson parsing of Wikipedia response
+    private static final TypeReference<Map<String, Object>> WIKIPEDIA_RESPONSE_TYPE = new TypeReference<Map<String, Object>>() {};
 
 
     /**
@@ -92,9 +89,8 @@ public class MusicInfoRepository {
      * @param album  The album name.
      * @return The plain text extract of the Wikipedia page, or {@code null} if not found or an error occurs.
      * @throws IOException If a network error occurs.
-     * @throws JsonSyntaxException If the JSON response is malformed.
      */
-    private String getWikipediaAlbumInfo(String artist, String album) throws IOException, JsonSyntaxException {
+    private String getWikipediaAlbumInfo(String artist, String album) throws IOException {
         // Attempt to construct a likely Wikipedia page title format.
         // This might need refinement for edge cases (disambiguation, special characters).
         String pageTitle = album + " (" + artist + " album)";
@@ -135,7 +131,7 @@ public class MusicInfoRepository {
             // Log the raw JSON response for debugging
             // Log.v(TAG, "Wikipedia JSON Response: " + jsonString);
 
-            Map<String, Object> responseMap = gson.fromJson(jsonString, WIKIPEDIA_RESPONSE_TYPE);
+            Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
 
             // Navigate the Wikipedia JSON structure
             Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
@@ -174,9 +170,8 @@ public class MusicInfoRepository {
      * @param year   The release year of the album (can be null or empty). Helps disambiguate.
      * @return The plain text extract of the Wikipedia page, or {@code null} if not found or an error occurs.
      * @throws IOException If a network error occurs.
-     * @throws JsonSyntaxException If the JSON response is malformed.
      */
-    private String getWikipediaAlbumInfo(String artist, String album, String year) throws IOException, JsonSyntaxException {
+    private String getWikipediaAlbumInfo(String artist, String album, String year) throws IOException {
         // --- Step 1: Use OpenSearch to find the best page title ---
         String bestPageTitle = findWikipediaPageTitle(artist, album, year);
 
@@ -218,7 +213,7 @@ public class MusicInfoRepository {
             if (body == null) throw new IOException("Wikipedia Extract API returned empty body.");
 
             String jsonString = body.string();
-            Map<String, Object> responseMap = gson.fromJson(jsonString, WIKIPEDIA_RESPONSE_TYPE);
+            Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
 
             Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
             if (query == null) return null;
@@ -251,9 +246,8 @@ public class MusicInfoRepository {
      * @param year Release year (optional).
      * @return The best guess for the page title, or null if none found.
      * @throws IOException Network errors.
-     * @throws JsonSyntaxException Malformed JSON.
      */
-    private String findWikipediaPageTitle(String artist, String album, String year) throws IOException, JsonSyntaxException {
+    private String findWikipediaPageTitle(String artist, String album, String year) throws IOException {
         // Removes parentheses/brackets from the raw album/artist text
         // which *are* known to break the search.
         String cleanAlbum = album.replaceAll("[\\[\\](){}]", "").replaceAll("\\s+", " ").trim();
@@ -302,18 +296,12 @@ public class MusicInfoRepository {
             if (body == null) throw new IOException("Wikipedia OpenSearch API returned empty body.");
 
             String jsonString = body.string();
-            JsonArray jsonArray;
-            try {
-                jsonArray = JsonParser.parseString(jsonString).getAsJsonArray();
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to parse Wikipedia response: " + jsonString, e);
-                throw new JsonSyntaxException("Failed to parse response", e);
-            }
+            JsonNode rootNode = mapper.readTree(jsonString);
 
-            if (jsonArray.size() > 1) {
-                JsonArray titles = jsonArray.get(1).getAsJsonArray();
-                if (titles.size() > 0) {
-                    String title = titles.get(0).getAsString();
+            if (rootNode.isArray() && rootNode.size() > 1) {
+                JsonNode titles = rootNode.get(1);
+                if (titles.isArray() && titles.size() > 0) {
+                    String title = titles.get(0).asText();
                     Log.i(TAG, "OpenSearch SUCCESS for '" + searchQuery + "'. Found: " + title);
                     return title; // Return the first suggested title
                 }

@@ -103,6 +103,7 @@
         app:backgroundTint="@color/black_transparent_80"
         app:tint="?attr/colorPrimary"/>
 
+    <!--
     <sakout.mehdi.StateViews.StateView
         android:id="@+id/status_page"
         android:layout_width="match_parent"
@@ -117,6 +118,7 @@
             android:text="" />
 
     </sakout.mehdi.StateViews.StateView>
+    -->
 
     <!-- 🔹 Bottom App Bar -->
     <com.google.android.material.bottomappbar.BottomAppBar
