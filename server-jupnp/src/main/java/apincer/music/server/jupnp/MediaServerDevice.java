@@ -208,7 +208,7 @@ public class MediaServerDevice extends LocalDevice {
     }
 
     private record MediaDeviceDetailsProvider(Context context) implements DeviceDetailsProvider {
-            private static final String MANUFACTURER_NAME = "Thawee";
+            private static final String MANUFACTURER_NAME = "thawee.p";
             private static final String MANUFACTURER_URL = "https://github.com/thawee/musicmate";
             private static final ManufacturerDetails MANUFACTURER_DETAILS = new ManufacturerDetails(MANUFACTURER_NAME, MANUFACTURER_URL);
             private static final DLNADoc[] DLNA_DOCS = new DLNADoc[]{new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
@@ -224,7 +224,7 @@ public class MediaServerDevice extends LocalDevice {
             public DeviceDetails provide(RemoteClientInfo info) {
                 String modelNumber = ApplicationUtils.getVersionNumber(context);
                // String modelName = "MusicMate Server";
-                String modelDescription = Constants.getPresentationName()+ " | Your Hi-Res Audio Library (DMS, UPnP/AV 1.0)";
+                String modelDescription = Constants.getPresentationName()+ " | Your private Hi-Res music streamer (UPnP/AV 1.0)";
 
                 // Add serialNumber for better device identification
                 String serialNumber = getUuid(context).substring(0, 12).toUpperCase();

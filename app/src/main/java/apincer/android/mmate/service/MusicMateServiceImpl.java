@@ -583,7 +583,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void switchPlayer(PlaybackTarget newTarget, boolean controlled) {
         if (newTarget != null) {
-            Log.d(TAG, "Switched to player: " + newTarget.getTargetId());
+            //Log.d(TAG, "Switched to player: " + newTarget.getTargetId());
 
             // --- TODO IMPLEMENTED ---
             // Get the current (soon-to-be-previous) player and unregister
@@ -599,7 +599,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
             if(newTarget instanceof ExternalAndroidPlayer externalPlayer){
                 // Register callback to the new external player
-                Log.d(TAG, "Registering callback to new ExternalPlayer: " + newTarget.getTargetId());
+               // Log.d(TAG, "Registering callback to new ExternalPlayer: " + newTarget.getTargetId());
                // MediaController mediaController = getMediaController(newTarget.getTargetId());
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
             }else if (newTarget.isStreaming()) {
@@ -766,8 +766,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         return currentTrackSubject.getValue().orElse(null);
     }
 
-    public String getLibraryName() {
-        return mediaServer.getLibraryName();
+    public String getLibraryNames() {
+        return mediaServer.getLibraryNames();
     }
 
     public boolean isRunning() {

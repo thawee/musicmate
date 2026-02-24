@@ -83,6 +83,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
     private final WebSocketFrameHandler wsHandler;
 
     private final ProfileManager profileManager;
+    private final String serverSignature;
 
     public NettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
@@ -90,7 +91,8 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
         this.serverPort = WEB_SERVER_PORT;
         this.repos = tagRepos;
 
-        addLibInfo("Netty", "4.2.8");
+        addLibInfo("Netty", "");
+        serverSignature = getServerSignature();
 
         // Calculate buffer size based on RAM once
         int bufferSize = calculateBufferSize(context);
@@ -134,7 +136,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                 ChannelFuture f = b.bind(bindAddress.getHostAddress(), serverPort).sync();
                 serverChannel = f.channel();
                 isRunning = true;
-                Log.i(TAG, "Netty WebServer started on " + bindAddress.getHostAddress() + ":" + serverPort);
+                Log.i(TAG, "Netty WebServer started on " + bindAddress.getHostAddress() + ":" + serverPort +" successfully.");
 
                 serverChannel.closeFuture().sync();
             } catch (Exception ex) {
@@ -160,9 +162,6 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
             Log.e(TAG, "Error stopping server", e);
         }
     }
-
-    @Override
-    public String getComponentName() { return "WebServer"; }
 
     @Override
     public int getListenPort() { return serverPort; }
@@ -301,7 +300,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
             response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
         }
         private void setDateAndCacheHeaders(HttpResponse response, String fileName) {
-            response.headers().set(HttpHeaderNames.SERVER, getServerSignature(getComponentName()));
+            response.headers().set(HttpHeaderNames.SERVER, serverSignature);
             response.headers().set(HttpHeaderNames.DATE, formatDate(System.currentTimeMillis()));
             response.headers().set(HttpHeaderNames.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"");
             response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=30");

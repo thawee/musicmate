@@ -80,7 +80,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
     public JettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("Jetty", "12.1.5");
+        addLibInfo("Jetty", "");
 
         // Calculate buffer size based on RAM once
         int bufferSize = calculateBufferSize(context);
@@ -213,9 +213,6 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             notificationExecutor.shutdown();
         }
     }
-
-    @Override
-    public String getComponentName() { return "ContentServer"; }
 
     @Override
     public int getListenPort() { return WEB_SERVER_PORT; }

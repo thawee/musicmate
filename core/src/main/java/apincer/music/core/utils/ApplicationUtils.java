@@ -15,6 +15,8 @@ import android.os.Build;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +24,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import apincer.music.core.Constants;
@@ -432,5 +435,32 @@ public class ApplicationUtils {
                 copyDirToAndroidCacheDir(context, newPath);
             }
         }
+    }
+
+    public static void writeToAndroidFilesDir(Context context, String filename, String info) throws IOException {
+        File newFile = new File(context.getCacheDir(), filename);
+        FileUtils.createParentDirs(newFile);
+
+        // Use try-with-resources to automatically close streams
+        try (OutputStream outputStream = new FileOutputStream(newFile, false)) {
+            byte[] buffer = info.getBytes();
+            outputStream.write(buffer, 0, buffer.length);
+        }
+    }
+
+    public static String readFileOnAndroidFilesDir(Context context, String filename) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        File newFile = new File(context.getCacheDir(), filename);
+        // Use try-with-resources to automatically close streams
+        try (InputStream inputStream = new FileInputStream(newFile);) {
+
+            // Manually copy the file stream
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                builder.append(new String(buffer));
+            }
+        }
+        return builder.toString();
     }
 }

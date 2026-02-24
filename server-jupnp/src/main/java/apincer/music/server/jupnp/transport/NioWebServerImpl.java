@@ -55,7 +55,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
     public NioWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("NioWebServer", "2.1");
+        addLibInfo("NIO",  "");
     }
 
     public void initServer(InetAddress bindAddress) {
@@ -223,11 +223,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         serverThread = null;
         server = null;
         wsHandler = null;
-    }
-
-    @Override
-    public String getComponentName() {
-        return "WebServer";
     }
 
     @Override

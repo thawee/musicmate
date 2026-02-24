@@ -75,13 +75,13 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
     private boolean isInitialized = false;
 
     private Router router;
+    private final String serverSignature;
 
     public NettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos)  {
         super(context, fileRepos, tagRepos);
-
-        addLibInfo("Netty", "4.2.8");
+        addLibInfo("Netty", "");
+        serverSignature = getServerSignature();
     }
-
     @Override
     public void initServer(InetAddress bindAddress, Object router) throws InitializationException {
         if (isInitialized) {
@@ -203,11 +203,6 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
         return UPNP_SERVER_PORT;
     }
 
-    @Override
-    public String getComponentName() {
-        return "";
-    }
-
     @Sharable
     private class HttpServerHandler extends ChannelInboundHandlerAdapter {
         final String upnpPath;
@@ -257,7 +252,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
             response.headers().set("TransferMode.DLNA.ORG", "Interactive");
             response.headers().set("Connection-Timeout", "60");
 
-            response.headers().set(HttpHeaderNames.SERVER, getServerSignature(getComponentName()));
+            response.headers().set(HttpHeaderNames.SERVER, serverSignature);
             ChannelFuture flushPromise = ctx.writeAndFlush(response);
 
             if (!keepAlive) {

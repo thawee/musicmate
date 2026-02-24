@@ -160,7 +160,7 @@ public class MediaServerManager {
 
     public String getLibraryName() {
         if (isBound && service != null) {
-            return service.getLibraryName();
+            return service.getLibraryNames();
         }
         return " - "; // Default
     }

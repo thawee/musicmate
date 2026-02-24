@@ -1,6 +1,8 @@
 package apincer.music.server.jupnp;
 
 
+import static apincer.music.core.Constants.LIBRARIES_INFO_FILE;
+
 import android.Manifest;
 import android.content.Context;
 import android.util.Log;
@@ -39,6 +41,7 @@ import org.jupnp.support.model.PositionInfo;
 import org.jupnp.support.model.TransportInfo;
 import org.jupnp.support.model.item.Item;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -49,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
@@ -58,6 +62,7 @@ import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.MediaServerHub;
+import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -74,9 +79,10 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  *  Note:
  *   - netty smooth, cpu < 10%, memory < 256 MB, short peak to 512 MB
  *     have issue jupnp auto stopping/starting on wifi loss
- *   - httpcore smooth, better SQ than netty, cpu <10, memory < 256 mb, peak 380mb
+ *   - httpcore smooth, better SQ than netty, cpu <10, memory < 256-380 Mb
  *     have bug to stop playing on client sometime
  *   - jetty12 is faster than jetty11 12% and work on android 34
+ *   - ** undertow ** - is smooth, support byte range, websocket, use mumory < 256-300 Mb
  *   <p>
  *   Optimized for compatibility with DLNA clients like mConnectHD and RoPieeeXL
  *  </p>
@@ -166,7 +172,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             return;
         }
         if(player.canReadSate()) {
-            Log.d(TAG, "active dlna player: "+ player.getTargetId()+" - "+player.getDisplayName());
+            //Log.d(TAG, "active dlna player: "+ player.getTargetId()+" - "+player.getDisplayName());
             activePlayerTargetId = player.getTargetId();
         }
 
@@ -484,10 +490,15 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     @Override
-    public String getLibraryName() {
-        // NIO, Jetty, Netty
-        // JUPNP
-        return "jUPnP, "+getWebEngineName();
+    public String getLibraryNames() {
+         // TODO: read from libraries.info
+        String info = null;
+        try {
+            info = ApplicationUtils.readFileOnAndroidFilesDir(context, Constants.LIBRARIES_INFO_FILE);
+        } catch (Exception ignored) {
+
+        }
+        return StringUtils.trim(info, " - ");
     }
 
     @Override

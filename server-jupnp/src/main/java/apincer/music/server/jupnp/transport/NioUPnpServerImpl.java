@@ -1,5 +1,6 @@
 package apincer.music.server.jupnp.transport;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import org.jupnp.model.message.*;
@@ -18,14 +19,28 @@ import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.UpnpServer;
 
 public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
+    private String serverSignature;
+
     /**
      * The Handler that bridges our NIO server with the jUPnP protocol stack.
      */
     class UpnpHandler implements NioHttpServer.Handler {
         private final ProtocolFactory protocolFactory;
+        private long lastDateUpdate = 0;
+        private String cachedDateString = "";
 
         public UpnpHandler(ProtocolFactory protocolFactory) {
             this.protocolFactory = protocolFactory;
+        }
+        
+        private String getCachedDate() {
+            long now = System.currentTimeMillis();
+            // Cache the formatted date for 1 second to reduce GC churn
+            if (now - lastDateUpdate > 1000) {
+                cachedDateString = formatDate(now);
+                lastDateUpdate = now;
+            }
+            return cachedDateString;
         }
 
         @Override
@@ -61,8 +76,8 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
             }
 
             //override header
-            response.addHeader("Server", getServerSignature(getComponentName()));
-            response.addHeader("Date", formatDate(System.currentTimeMillis()));
+            response.addHeader("Server", serverSignature);
+            response.addHeader("Date", getCachedDate());
 
             // Body
             if (responseMessage.hasBody()) {
@@ -114,7 +129,8 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
     public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
        // this.configuration = configuration;
-        addLibInfo("java.nio", "");
+        addLibInfo("NIO", "");
+        serverSignature = getServerSignature();
     }
 
     public void initServer(InetAddress bindAddress, Object router) throws Exception {
@@ -125,7 +141,10 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         NioHttpServer.Handler upnpHandler = new UpnpHandler(this.router.getProtocolFactory());
         server.registerFallbackHandler(upnpHandler); // accept any context path
         server.setMaxThread(2);
-       // server.setClientReadBufferSize();
+        
+        // UPnP messages are small SOAP XMLs, we don't need the default 2MB request size
+        server.setMaxRequestSize(64 * 1024); // 64KB is plenty for UPnP control messages
+        server.setClientReadBufferSize(4 * 1024); // 4KB read buffer per connection to save memory
         server.setTcpNoDelay(true);
 
         serverThread = new Thread(server);
@@ -154,8 +173,4 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         return UPNP_SERVER_PORT;
     }
 
-    @Override
-    public String getComponentName() {
-        return "UPnPServer";
-    }
 }

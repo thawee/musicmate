@@ -9,7 +9,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 public interface MediaServerHub {
 
-    String getLibraryName();
+    String getLibraryNames();
 
     List<PlaybackTarget> getAvailablePlaybackTargets();
 

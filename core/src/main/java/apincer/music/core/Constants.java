@@ -151,6 +151,8 @@ public final class Constants {
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART = "no_cover.png";
 
+    public static final String LIBRARIES_INFO_FILE = "libraries.info";
+
     public static String getPresentationName() {
         // Get the clean, friendly device model name
         String deviceModel = ApplicationUtils.getFriendlyDeviceName(); // e.g., "Galaxy S25"

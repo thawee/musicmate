@@ -1,5 +1,7 @@
 package apincer.music.server.jupnp.transport;
 
+import static apincer.music.core.Constants.LIBRARIES_INFO_FILE;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -8,13 +10,18 @@ import org.jupnp.transport.spi.InitializationException;
 import org.jupnp.transport.spi.StreamServer;
 import org.jupnp.transport.spi.StreamServerConfiguration;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.server.spi.UpnpServer;
+import apincer.music.core.utils.ApplicationUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfiguration> {
     private static final String TAG = "StreamServerImpl";
+
     final private StreamServerConfiguration configuration;
 
     // Injected
@@ -55,6 +62,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        writeLibrariesInfo();
     }
 
     synchronized public int getPort() {
@@ -74,5 +83,20 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
     @Override
     public void run() {
 
+    }
+
+    private void writeLibrariesInfo() {
+        try {
+            List<String> libs = new ArrayList<>();
+            libs.add("jUPNP");
+            libs.addAll(upnpServer.getLibInfos());
+            libs.addAll(webServer.getLibInfos());
+            String info = String.join(", ", libs);
+
+            ApplicationUtils.deleteFilesFromAndroidFilesDir(context, LIBRARIES_INFO_FILE);
+            ApplicationUtils.writeToAndroidFilesDir(context, LIBRARIES_INFO_FILE, info);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

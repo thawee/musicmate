@@ -62,18 +62,6 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
                         15,    // Increased from 10 to 15 seconds for connection timeout
                         8      // Increased from 5 to 8 seconds for data timeout
                 ));
-      /*  return new JettyStreamingClientImpl(
-                new StreamClientConfigurationImpl(
-                getSyncProtocolExecutorService(),
-                        15,    // Increased from 10 to 15 seconds for connection timeout
-                        8      // Increased from 5 to 8 seconds for data timeout
-        )); */
-       /* return new NettyStreamingClientImpl(
-                new StreamClientConfigurationImpl(
-                        getSyncProtocolExecutorService(),
-                        15,    // Increased from 10 to 15 seconds for connection timeout
-                        8      // Increased from 5 to 8 seconds for data timeout
-                )); */
     }
 
     @Override

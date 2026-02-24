@@ -50,6 +50,8 @@ import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.MusicInfoRepository;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
+import apincer.music.core.server.spi.UpnpServer;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.service.spi.MusicMateServiceBinder;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MusicMateExecutors;
@@ -160,7 +162,13 @@ public class BaseServer {
         }
     }
 
-    public String getServerSignature(String componentName) {
+    public String getServerSignature() {
+        String componentName = "Server";
+        if(this instanceof UpnpServer) {
+            componentName = "UpnpServer";
+        }else  if(this instanceof WebServer) {
+            componentName = "WebServer";
+        }
         //Server:  WebServer MusicMate/3.11.0-251014 (Android/16; Jetty/12.1.1;)
         String libInfos = String.join("; ", this.libInfos);
 
@@ -292,6 +300,10 @@ public class BaseServer {
         }
 
         return qualityText;
+    }
+
+    public List<String> getLibInfos() {
+        return libInfos;
     }
 
     public static String getMusicUrl(MediaTrack track) {

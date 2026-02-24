@@ -48,10 +48,12 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     private Server server;
     private Router router;
+    private final String serverSignature;
 
     public JettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context,fileRepos, tagRepos);
-        addLibInfo("Jetty", "12.1.5");
+        addLibInfo("Jetty", "");
+        serverSignature = getServerSignature();
     }
 
     @Override
@@ -116,11 +118,6 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
         return UPNP_SERVER_PORT;
     }
 
-    @Override
-    public String getComponentName() {
-        return "UPnP/1.0";
-    }
-
     private class UPnpHandler extends Handler.Abstract {
         private final ProtocolFactory protocolFactory;
 
@@ -161,7 +158,7 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
                     resp.getHeaders().add(entry.getKey(), value);
                 }
             }
-            resp.getHeaders().put(HttpHeader.SERVER, getServerSignature(getComponentName()));
+            resp.getHeaders().put(HttpHeader.SERVER, serverSignature);
 
             resp.getHeaders().put(HttpHeader.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
             resp.getHeaders().put(HttpHeader.PRAGMA, "no-cache");

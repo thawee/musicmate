@@ -39,10 +39,12 @@ public class LogHelper {
 
     public static void setSLF4JOn() {
        // setLog(LOGGER_SLF4J_ANDROID, Level.INFO);
-        setLogLevel("com.j256.ormlite.stmt", Level.INFO);
-        setLogLevel("org.jupnp", Level.INFO);
+        setLogLevel("com.j256.ormlite.stmt", Level.SEVERE);
+        setLogLevel("org.jupnp", Level.SEVERE);
         setLogLevel("org.jupnp.transport.impl.NetworkAddressFactoryImpl", Level.SEVERE);
-        setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.CONFIG);
+       // setLogLevel("org.jupnp.transport.impl.NetworkAddressFactoryImpl", Level.ALL);
+       // setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.CONFIG);
+        setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.SEVERE);
     }
 
     public static void setFFMpegOn() {
