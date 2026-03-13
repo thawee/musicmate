@@ -56,17 +56,23 @@ android {
                 dimension = "server"
                 // Gradle will look for code in `src/jetty/java`
             }
-           // netty {
-           //     dimension = "server"
+            netty {
+                dimension = "server"
                 // Gradle will look for code in `src/netty/java`
-           // }
+            }
             undertow {
                 dimension = "server"
                 // Gradle will look for code in `src/undertow/java`
             }
+        httpcore {
+            dimension = "server"
+            // Gradle will look for code in `src/httpcore/java`
+        }
     }
 
     compileOptions {
+        // Enable support for new Java APIs
+        //coreLibraryDesugaringEnabled true
         // jetty12 required java 17
         sourceCompatibility = JavaLanguageVersion.of(17)
         targetCompatibility = JavaLanguageVersion.of(17)
@@ -121,6 +127,9 @@ android {
 }
 
 dependencies {
+    // This library backports many Java 8+ and 9+ features to Android
+   // coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     // modules
     implementation project(':core')
 
@@ -222,18 +231,19 @@ dependencies {
     jettyImplementation project(':server-jupnp-jetty')
 
     //netty
-   // nettyImplementation libs.jupnp.android
-   // nettyImplementation project(':server-jupnp')
-   // nettyImplementation project(':server-jupnp-netty')
+    nettyImplementation libs.jupnp.android
+    nettyImplementation project(':server-jupnp')
+    nettyImplementation project(':server-jupnp-netty')
 
     //undertow
     undertowImplementation libs.jupnp.android
-    undertowImplementation(libs.io.undertow.core) {
-        exclude group: 'org.jboss.logging', module: 'jboss-logging'
-    }
-    undertowImplementation libs.jboss.logging
-    undertowImplementation project(':core')
     undertowImplementation project(':server-jupnp')
+    undertowImplementation project(':server-jupnp-undertow')
+
+    //httpcore
+    httpcoreImplementation libs.jupnp.android
+    httpcoreImplementation project(':server-jupnp')
+    httpcoreImplementation project(':server-jupnp-httpcore')
 
     // Local Library
     implementation project(':library:library')

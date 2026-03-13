@@ -77,12 +77,15 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  *  - HTTP Streamer - for streaming digital content to client
  *  - UPnp AV Transport Server (Not Supported)
  *  Note:
+ *   - nio http server, smooth, cpu < 10%, memory < 256 MB
  *   - netty smooth, cpu < 10%, memory < 256 MB, short peak to 512 MB
  *     have issue jupnp auto stopping/starting on wifi loss
  *   - httpcore smooth, better SQ than netty, cpu <10, memory < 256-380 Mb
  *     have bug to stop playing on client sometime
+ *     *** newer version not working on android
  *   - jetty12 is faster than jetty11 12% and work on android 34
- *   - ** undertow ** - is smooth, support byte range, websocket, use mumory < 256-300 Mb
+ *   - ** undertow ** - is smooth, support byte range, websocket, use mumory < 256-300 Mb,
+ *     *** newer version not working on android
  *   <p>
  *   Optimized for compatibility with DLNA clients like mConnectHD and RoPieeeXL
  *  </p>
@@ -232,7 +235,10 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private PlaybackTarget resolveRenderer(String udn) {
+        if(udn ==null) return null;
+
         for(PlaybackTarget dev: availableTargets) {
+            if(dev == null) continue;
             if(udn.equals(dev.getTargetId()) || udn.equals(dev.getDescription())) {
                 return dev;
             }

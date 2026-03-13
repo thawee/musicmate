@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -219,6 +220,9 @@ public class FileOperationTask {
                     if (success) {
                         // Write updated tags back to file
                         TagWriter.writeTagToFile(context, tag);
+                        // if
+                        fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
+
                         // Update tag in repository
                         tagRepos.saveTag(tag);
 

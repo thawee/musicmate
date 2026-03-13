@@ -65,8 +65,8 @@ public class MediaNotificationBuilder {
             // Slightly transparent for nice overlay look
             dominantColor = withAlpha(dominantColor, 0.85f);
 
-            String subText = "on " + player.getDisplayName();
-            int onDominantColor = getContrastingTextColor(dominantColor);
+            String subText = "with " + player.getDisplayName();
+            //int onDominantColor = getContrastingTextColor(dominantColor);
 
             Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -111,16 +111,6 @@ public class MediaNotificationBuilder {
         final Bitmap albumArtBitmap = ensureSoftwareBitmap(albumArt);
 
         Palette.from(albumArtBitmap).generate(palette -> {
-           /* int fallbackColor = MaterialColors.getColor(getApplicationContext(), com.google.android.material.R.attr.colorSurface, Color.DKGRAY);
-            int dominantColor = fallbackColor;
-            if (palette != null) {
-                dominantColor = palette.getDominantColor(fallbackColor);
-            }
-            int onDominantColor = getContrastingTextColor(dominantColor);
-
-            // Make it 40% opaque (60% transparent)
-            dominantColor = withAlpha(dominantColor, 0.9f);
-            notifyPlayingSong(player, track, albumArtBitmap, dominantColor, onDominantColor); */
 
             int surface = MaterialColors.getColor(
                     context,
@@ -162,7 +152,7 @@ public class MediaNotificationBuilder {
         collapsed.setTextViewText(R.id.artist_collapsed, track.getArtist());
         collapsed.setImageViewBitmap(R.id.album_art_small, albumArtBitmap);
 
-        String subText = "on " + player.getDisplayName();
+        String subText = "with " + player.getDisplayName();
 
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification_default)
@@ -215,7 +205,7 @@ public class MediaNotificationBuilder {
         }
 
         // --- 2. Create a rich subtext with player name ---
-        subText = "on " + player.getDisplayName();
+        subText = "with " + player.getDisplayName();
 
         // --- 4. Build the notification ---
         Intent notificationIntent = new Intent(context, MainActivity.class);
@@ -231,22 +221,6 @@ public class MediaNotificationBuilder {
                 .setContentIntent(pendingIntent)
                 .setOngoing(true) // Streaming notifications should be sticky
                 .setOnlyAlertOnce(true);
-
-        /*
-        if(isControllable()) {
-            // for controlled from webui
-            // Create media control intents
-            PendingIntent playPauseIntent = createActionIntent(ACTION_PLAY_PAUSE); // Implement these
-            PendingIntent nextIntent = createActionIntent(ACTION_NEXT);
-            PendingIntent prevIntent = createActionIntent(ACTION_PREVIOUS);
-
-            int playPauseIcon = isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play_arrow;
-
-            // Add media control actions
-            builder.addAction(R.drawable.ic_previous, "Previous", prevIntent);
-            builder.addAction(playPauseIcon, "Play/Pause", playPauseIntent);
-            builder.addAction(R.drawable.ic_next, "Next", nextIntent);
-        } */
 
         // Apply the Style
         builder.setStyle(new NotificationCompat.BigPictureStyle()
@@ -299,7 +273,7 @@ public class MediaNotificationBuilder {
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setContentTitle(Constants.getPresentationName())
-                .setContentText("Connected to " + player.getDisplayName())
+                .setContentText("Connected with " + player.getDisplayName())
                 .setSubText(serverInfo)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOnlyAlertOnce(true)

@@ -1,5 +1,6 @@
 package apincer.music.core.utils;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -9,14 +10,21 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
+
+import androidx.annotation.RequiresPermission;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +32,6 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 import apincer.music.core.Constants;
@@ -149,6 +156,22 @@ public class ApplicationUtils {
      */
     public static void copyFileToAndroidFilesDir(Context context, String filename) throws IOException {
         File newFile = new File(context.getFilesDir(), filename);
+
+        // Use try-with-resources to automatically close streams
+        try (InputStream inputStream = context.getAssets().open(filename);
+             OutputStream outputStream = new FileOutputStream(newFile, false)) {
+
+            // Manually copy the file stream
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+        }
+    }
+
+    public static void copyFileToAndroidFilesDir(Context context, String filename, String targetFilename) throws IOException {
+        File newFile = new File(context.getFilesDir(), targetFilename);
 
         // Use try-with-resources to automatically close streams
         try (InputStream inputStream = context.getAssets().open(filename);
@@ -462,5 +485,29 @@ public class ApplicationUtils {
             }
         }
         return builder.toString();
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    public static String getWifiSSID(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+
+        if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+
+            String ssid = wifiInfo.getSSID();
+            String bssid = wifiInfo.getBSSID();
+
+            // SSID often comes wrapped in quotes: "MyNetworkName"
+            if (ssid.startsWith("\"") && ssid.endsWith("\"")) {
+                ssid = ssid.substring(1, ssid.length() - 1);
+            }
+
+           // Log.d("WiFiInfo", "Connected to: " + ssid);
+            return ssid;
+        }
+        return "";
     }
 }

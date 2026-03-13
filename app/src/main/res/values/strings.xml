@@ -244,6 +244,7 @@
     <string name="encoding_mqa_blue_header">MQA Studio (Blue):</string>
     <string name="encoding_mqa_blue_detail">Directly from Mastering Engineers</string>
     <string name="label_audio_quality">Sound Quality</string>
+    <string name="label_file_quality">File Quality</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="save">Save</string>
@@ -265,12 +266,13 @@
     <string name="processing">Processing…</string>
     <string name="web_server_name">MusicMate</string>
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
-    <string name="show_frequency_spectrum">Show Frequency Spectrum</string>
+    <string name="show_frequency_spectrum">Frequency Spectrum</string>
+    <string name="lossless_verifier">View Spectral Health</string>
     <string name="open_containing_folder">Open Containing Folder</string>
     <string name="find_online">Search Info on Google</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
-    <string name="analyze_music">Analyze Music File</string>
+    <string name="analyze_music">Audio Fidelity Analysis</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
@@ -301,5 +303,9 @@
     <string name="settings">Settings</string>
     <string name="powered_by">"Powered by %1$s"</string>
     <string name="audio_path">Audio Output</string>
+    <string name="menu_resolutions">Resolutions</string>
+    <string name="wave_form">Waveform</string>
+    <string name="analysis_failed">Analysis Failed</string>
+    <string name="analyzing">Analyzing...</string>
 
 </resources>

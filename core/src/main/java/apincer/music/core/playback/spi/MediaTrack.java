@@ -1,5 +1,7 @@
 package apincer.music.core.playback.spi;
 
+import apincer.music.core.database.MusicTag;
+
 public interface MediaTrack {
     String getPath();
 
@@ -40,4 +42,14 @@ public interface MediaTrack {
     boolean isMusicManaged();
 
     double getDynamicRangeScore();
+
+    String getUniqueKey();
+
+    void setUniqueKey(String uniqueKey);
+
+    void setQualityInd(String ind);
+
+    long getMqaSampleRate();
+
+    long getFileSize();
 }

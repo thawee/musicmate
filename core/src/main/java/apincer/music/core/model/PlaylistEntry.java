@@ -5,12 +5,16 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.spi.MediaTrack;
 
 public class PlaylistEntry {
     private String name;
     private String uuid; // Added from your JSON sample
-    private String type; // "song" or "album"
+    private String type = "song"; // "song" or "album"
+    private String note;
+    private String version;
+    private String description;
+
+    private String reference_tag;
     private List<MusicTag> songs;   // Used if type is "song"
     private Map<String, MusicTag> mappedSongs = new HashMap<>(); // Used if type is "album"
 
@@ -26,5 +30,29 @@ public class PlaylistEntry {
 
     public Map<String, MusicTag> getMappedSongs() {
         return mappedSongs;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

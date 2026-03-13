@@ -16,6 +16,7 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.server.jupnp.MediaServerConfiguration;
 import apincer.music.server.jupnp.MediaServerHubImpl;
+import apincer.music.server.jupnp.transport.NioUPnpServerImpl;
 import apincer.music.server.jupnp.transport.StreamServerConfigurationImpl;
 import dagger.Module;
 import dagger.Provides;
@@ -45,7 +46,7 @@ public class NettyServerModule {
     @Provides
     @Singleton
     public UpnpServer provideUpnpServer(@ApplicationContext Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        return new NettyUPnpServerImpl(context,fileRepos, tagRepos);
+        return new NioUPnpServerImpl(context,fileRepos, tagRepos);
     }
 
     @Provides

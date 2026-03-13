@@ -661,7 +661,7 @@ public class StringUtils {
         }
         return result.toString().trim(); */
         // 1. Handle null or empty input
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.trim().isEmpty()) {
             return "";
         }
 

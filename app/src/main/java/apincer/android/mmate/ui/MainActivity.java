@@ -85,6 +85,7 @@ import java.util.TimerTask;
 import javax.inject.Inject;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.service.MediaServerManager;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
@@ -227,6 +228,10 @@ public class MainActivity extends AppCompatActivity {
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+
+        // Start the server here, where we are guaranteed to be in the foreground!
+        MediaServerManager manager = new MediaServerManager(this);
+        manager.startServer();
 
         //Enable Dynamic Colors
         DynamicColors.applyToActivitiesIfAvailable(getApplication());
@@ -762,14 +767,14 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_DUPLICATE);
             return true;
-        } else if (item.getItemId() == R.id.menu_codecs) {
+        } else if (item.getItemId() == R.id.menu_resolution) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.CODEC, null);
             //doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
             return true;
         } else if (item.getItemId() == R.id.menu_collection) {
             doHideSearch();
-            PlaylistRepository.initPlaylist(getApplicationContext());
+            PlaylistRepository.loadPlaylists(getApplicationContext());
             doStartRefresh(SearchCriteria.TYPE.PLAYLIST, null);
             return true;
         /*} else if (item.getItemId() == R.id.menu_groupings) {

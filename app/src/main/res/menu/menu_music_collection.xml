@@ -63,15 +63,15 @@
 -->
 
     <item
-        android:icon="@drawable/rounded_for_you_24"
-        android:id="@+id/menu_tag_artist"
-        android:title="@string/artists"
+        android:icon="@drawable/rounded_order_play_24"
+        android:id="@+id/menu_collection"
+        android:title="@string/label_collections"
         app:showAsAction="ifRoom" />
 
     <item
-        android:icon="@drawable/rounded_equalizer_24"
-        android:id="@+id/menu_codecs"
-        android:title="@string/label_codecs"
+        android:icon="@drawable/rounded_for_you_24"
+        android:id="@+id/menu_tag_artist"
+        android:title="@string/artists"
         app:showAsAction="ifRoom" />
 
     <item
@@ -80,12 +80,12 @@
         android:title="@string/label_genres"
         app:showAsAction="ifRoom" />
 
-    <item
-        android:icon="@drawable/rounded_order_play_24"
-        android:id="@+id/menu_collection"
-        android:title="@string/label_collections"
-        app:showAsAction="ifRoom" />
 
+    <item
+        android:icon="@drawable/rounded_equalizer_24"
+        android:id="@+id/menu_resolution"
+        android:title="@string/menu_resolutions"
+        app:showAsAction="ifRoom" />
     <!--
     <item
         android:icon="@drawable/ic_touch_app_white_24dp"

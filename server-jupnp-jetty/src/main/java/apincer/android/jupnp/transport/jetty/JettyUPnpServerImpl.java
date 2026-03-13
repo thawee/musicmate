@@ -46,6 +46,7 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
     private static final int MIN_THREADS = 4;
     private static final int IDLE_TIMEOUT = 30000; // 30 seconds
 
+    private final Object serverLock = new Object();
     private Server server;
     private Router router;
     private final String serverSignature;
@@ -54,6 +55,28 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
         super(context,fileRepos, tagRepos);
         addLibInfo("Jetty", "");
         serverSignature = getServerSignature();
+    }
+
+    @Override
+    public void restartServer(InetAddress bindAddress, Object router) {
+        synchronized (serverLock) {
+            Log.d(TAG, "Restarting Jetty Server...");
+
+            // 1. Full Stop
+            stopServer();
+
+            // 2. Small grace period for OS to release the socket
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignored) {}
+
+            // 3. Start New Instance
+            try {
+                initServer(bindAddress, router);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to restart server: " + e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -103,13 +126,19 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     @Override
     public void stopServer() {
-        Log.i(TAG, "Stopping UPnPServer (Jetty)");
-        try {
-            if (server != null && server.isRunning()) {
-                server.stop();
+        synchronized (serverLock) {
+            if (server != null) {
+                Log.i(TAG, "Stopping UPnPServer (Jetty)");
+                try {
+                    if (server.isRunning()) {
+                        server.stop();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error stopping UPnPServer", e);
+                }finally {
+                    server = null;
+                }
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error stopping UPnPServer", e);
         }
     }
 

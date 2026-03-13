@@ -4,6 +4,7 @@ import static android.view.View.VISIBLE;
 
 import static apincer.android.mmate.service.MusicMateServiceImpl.OFFLINE_STATUS;
 import static apincer.android.mmate.service.MusicMateServiceImpl.ONLINE_STATUS;
+import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -32,6 +33,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.spi.MediaServerHub;
+import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
 
 import androidx.appcompat.widget.PopupMenu;
@@ -166,7 +168,13 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     tvServerAddress.setVisibility(VISIBLE);
                     qrCodeImage.setVisibility(VISIBLE);
 
-                    tvServerStatus.setText(ONLINE_STATUS);
+                    // todo: get connected wifi access point name
+                    String ssid = ApplicationUtils.getWifiSSID(getContext());
+                    if(!isEmpty(ssid)) {
+                        tvServerStatus.setText("Streaming via "+ssid);
+                    }else {
+                        tvServerStatus.setText(ONLINE_STATUS);
+                    }
                     tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_green);
                     String serverLocation = viewModel.getServerLocationUrl();
                     tvServerAddress.setText(serverLocation);

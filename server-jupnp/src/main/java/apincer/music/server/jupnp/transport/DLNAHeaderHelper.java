@@ -58,13 +58,7 @@ public class DLNAHeaderHelper {
         } else if (isDSDFile(tag)) {
             // DSD support for audiophiles
             return "DLNA.ORG_PN=DSD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-        } else if (isPCM(tag)) {
-            if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-                return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isLosslessFormat(tag)) {
+        } else if (isPCM(tag) || isLosslessFormat(tag)) {
             if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
                 return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
             } else {

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="8dp"
+    android:clipToOutline="true"
+    android:outlineProvider="background"
+    android:layout_margin="12dp"
+    tools:ignore="UseCompoundDrawables">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_dialog_header_gradient"
+        android:padding="@dimen/dimen_14_dp">
+
+        <ImageView
+            android:id="@+id/title_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/rounded_transform_24"
+            android:layout_marginEnd="8dp"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/show_frequency_spectrum"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:shadowColor="#88000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4" />
+    </LinearLayout>
+
+    <!-- Content Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/dimen_14_dp">
+
+        <!-- Output Format Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_6_dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/border_back_label">
+
+                <TextView
+                    android:id="@+id/filename"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/conversion_progress"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginBottom="2dp"/>
+
+        </LinearLayout>
+
+            <apincer.android.mmate.ui.view.AspectRatioPhotoView
+                android:id="@+id/spectrum_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="fitCenter"
+                android:src="@drawable/bg"
+                app:heightRatio="1"
+                app:widthRatio="1"/>
+
+        <!-- File List Section -->
+
+        <!--
+            <TextView
+                android:id="@+id/waveform_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wave_form"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+            <ImageView
+                android:id="@+id/waveform_view"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dimen_86_dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/bg"/> -->
+        <TextView
+            android:id="@+id/quality_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_file_quality"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+        <TextView
+            android:id="@+id/quality_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wave_form"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="@dimen/dimen_24_dp">
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="match_parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_ok"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ok"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -180,12 +180,35 @@ import java.util.concurrent.atomic.AtomicInteger;
  * server.setMaxThread(4);
  *
  * // Register HTTP handler
- * server.registerHandler("/api/data", request ->
+ * server.registerHttpHandler(request ->
  *     new NioHttpServer.HttpResponse()
  *         .setStatus(200, "OK")
  *         .addHeader("Content-Type", "application/json")
  *         .setBody("{\"status\":\"success\"}".getBytes())
  * );
+ *
+ * new Thread(server).start();
+ * }</pre>
+ *
+ * <h3>Multi context HTTP Server</h3>
+ * <pre>{@code
+ * NioHttpServer server = new NioHttpServer(8080);
+ * server.setMaxThread(4);
+ *
+ * // Register HTTP handler
+ * // 1. Create your Router (The Traffic Cop)
+ * RouterHandler router = new RouterHandler();
+ *
+ * // 2. Add your application routes to the router
+ * router.get("/music/*", request -> createSongResponse(request));
+ * router.get("/cover/*", request -> createAlbumArtResponse(request));
+ * router.get("/api/status", request -> new NioHttpServer.HttpResponse().setBody("OK".getBytes()));
+ *
+ * // 3. Wrap the router in your security/rate-limiting middleware
+ * NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50, router);
+ *
+ * // 4. Give the final wrapped package to your "Dumb but Fast" Server
+ * server.registerHttpHandler(rateLimiter);
  *
  * new Thread(server).start();
  * }</pre>
@@ -246,7 +269,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <ul>
  *   <li><b>ETag:</b> "hash-size" format for unique file identification</li>
  *   <li><b>Last-Modified:</b> RFC 7231 formatted timestamp</li>
- *   <li><b>Cache-Control:</b> public, max-age=31536000 (1 year)</li>
  *   <li><b>Accept-Ranges:</b> bytes (enables seeking in media players)</li>
  * </ul>
  *
@@ -314,9 +336,8 @@ public class NioHttpServer implements Runnable {
 
     private volatile boolean isRunning = false;
     private final int port;
-    private final Map<String, Handler> routes = new HashMap<>();
-    private final Map<String, WebSocketHandler> webSocketRoutes = new HashMap<>();
-    private Handler fallbackHandler = null;
+    private Handler httpHandler = null;
+    private WebSocketHandler webSocketHandler = null;
     private Selector selector;
     private ExecutorService workerPool;
     private int maxThread = 0;
@@ -356,24 +377,18 @@ public class NioHttpServer implements Runnable {
     public void setMaxConcurrentStreams(int max) { this.maxConcurrentStreams = max;}
 
     /**
-     * Registers an HTTP handler for the given path.
-     * @param path the request path
+     * Registers a main http handler.
      * @param handler the handler instance
      */
-    public void registerHandler(String path, Handler handler) { routes.put(path, handler); }
-
+    public void registerHttpHandler(Handler handler) { this.httpHandler = handler; }
     /**
      * Registers a WebSocket handler for the given path.
-     * @param path the request path
      * @param handler the WebSocket handler instance
      */
-    public void registerWebSocketHandler(String path, WebSocketHandler handler) { webSocketRoutes.put(path, handler); }
+    public void registerWebSocketHandler(WebSocketHandler handler) {
+        this.webSocketHandler = handler;
+    }
 
-    /**
-     * Registers a fallback handler for unmatched paths.
-     * @param handler the handler instance
-     */
-    public void registerFallbackHandler(Handler handler) { this.fallbackHandler = handler; }
     public void setSocketBacklog(int socketBacklog) { this.socketBacklog = socketBacklog; }
     public void setClientReadBufferSize(int clientReadBufferSize) { this.clientReadBufferSize = clientReadBufferSize; }
     public void setTcpNoDelay(boolean tcpNoDelay) { this.tcpNoDelay = tcpNoDelay; }
@@ -432,8 +447,8 @@ public class NioHttpServer implements Runnable {
         isRunning = true;
 
         // --- Initialize the Object Pools ---
-        attachmentPool = new ObjectPool<>(() -> new ConnectionAttachment(clientReadBufferSize));
-        requestPool = new ObjectPool<>(HttpRequest::new);
+        attachmentPool = new ObjectPool<>(() -> new ConnectionAttachment(clientReadBufferSize), 50);
+        requestPool = new ObjectPool<>(HttpRequest::new, 50);
 
         if (maxThread <= 0) {
             maxThread = Runtime.getRuntime().availableProcessors();
@@ -590,9 +605,12 @@ public class NioHttpServer implements Runnable {
 
             // Send 503 Service Unavailable
             ByteBuffer response = ByteBuffer.wrap(
-                    ("HTTP/1.1 503 Service Unavailable\r\n" +
-                            "Connection: close\r\n" +
-                            "Content-Length: 0\r\n\r\n").getBytes()
+                    ("""
+                            HTTP/1.1 503 Service Unavailable\r
+                            Connection: close\r
+                            Content-Length: 0\r
+                            \r
+                            """).getBytes()
             );
             clientChannel.write(response);
             clientChannel.close();
@@ -682,53 +700,40 @@ public class NioHttpServer implements Runnable {
     }
     private void processRequest(SelectionKey key, HttpRequest request) {
         try {
-            // Check for WebSocket upgrade first
-            String upgradeHeader = request.getHeader("upgrade", "");
-            String connectionHeader = request.getHeader("connection", "");
+            String path = request.getPath();
 
-            if ("websocket".equalsIgnoreCase(upgradeHeader) &&
-                    connectionHeader.toLowerCase().contains("upgrade")) {
-
-                WebSocketHandler wsHandler = webSocketRoutes.get(request.getPath());
-                if (wsHandler != null) {
-                    try {
-                        HttpResponse handshakeResponse = WebSocketHandshake.createHandshakeResponse(request);
-                        responseQueue.add(new ResponseTask(key, handshakeResponse, wsHandler));
-                        selector.wakeup();
-                    } catch (NoSuchAlgorithmException e) {
-                        HttpResponse errorResponse = new HttpResponse()
-                                .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
-                                .setBody("WebSocket handshake failed".getBytes());
-                        responseQueue.add(new ResponseTask(key, errorResponse));
-                        selector.wakeup();
-                    }
-                    return; // Early return after WebSocket handling
-                }
+            String normalizedPath = path.contains("?") ? path.substring(0, path.indexOf("?")) : path;
+            if (normalizedPath.endsWith("/") && normalizedPath.length() > 1) {
+                normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
             }
 
-            // Regular HTTP request - find matching handler
-            Handler handler = null;
-            for (Map.Entry<String, Handler> entry : routes.entrySet()) {
-                String route = entry.getKey();
-                if (route.endsWith("/*")) {
-                    String prefix = route.substring(0, route.length() - 2);
-                    if (request.getPath().startsWith(prefix)) {
-                        handler = entry.getValue();
-                        break;
-                    }
-                } else if (route.equals(request.getPath())) {
-                    handler = entry.getValue();
-                    break;
+            if(webSocketHandler != null && webSocketHandler.getNamespace().equals(normalizedPath)) {
+                // Check for WebSocket upgrade first
+                String upgradeHeader = request.getHeader("upgrade", "");
+                String connectionHeader = request.getHeader("connection", "");
+
+                if ("websocket".equalsIgnoreCase(upgradeHeader) &&
+                        connectionHeader.toLowerCase().contains("upgrade")) {
+                        try {
+                            HttpResponse handshakeResponse = WebSocketHandshake.createHandshakeResponse(request);
+                            responseQueue.add(new ResponseTask(key, handshakeResponse, webSocketHandler));
+                            selector.wakeup();
+                        } catch (NoSuchAlgorithmException e) {
+                            HttpResponse errorResponse = new HttpResponse()
+                                    .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
+                                    .setBody("WebSocket handshake failed".getBytes());
+                            responseQueue.add(new ResponseTask(key, errorResponse));
+                            selector.wakeup();
+                        }
+                        return; // Early return after WebSocket handling
                 }
             }
-
-            if (handler == null) handler = fallbackHandler;
 
             HttpResponse response; // Declare response outside the try block
-            if (handler != null) {
+            if (httpHandler != null) {
                 try {
                     // Execute the handler directly on this worker thread
-                    response = handler.handle(request);
+                    response = httpHandler.handle(request);
                 } catch (Exception e) {
                     // Handle exceptions from the handler
                     System.err.println("Handler error: " + e.getMessage());
@@ -916,6 +921,7 @@ public class NioHttpServer implements Runnable {
     public interface Handler { HttpResponse handle(HttpRequest request); }
 
     public interface WebSocketHandler {
+        String getNamespace();
         void onOpen(WebSocketConnection connection);
         void onMessage(WebSocketConnection connection, String message);
         void onMessage(WebSocketConnection connection, byte[] message);
@@ -1166,15 +1172,11 @@ public class NioHttpServer implements Runnable {
         );
     }
 
-    private static class ResponseTask {
-        final SelectionKey key;
-        final HttpResponse response;
-        final WebSocketHandler wsHandler;
-
-        ResponseTask(SelectionKey key, HttpResponse response) { this(key, response, null); }
-        ResponseTask(SelectionKey key, HttpResponse response, WebSocketHandler wsHandler) {
-            this.key = key; this.response = response; this.wsHandler = wsHandler;
-        }
+    private record ResponseTask(SelectionKey key, HttpResponse response,
+                                WebSocketHandler wsHandler) {
+            ResponseTask(SelectionKey key, HttpResponse response) {
+                this(key, response, null);
+            }
     }
 
     public static class HttpResponse {
@@ -1239,7 +1241,7 @@ public class NioHttpServer implements Runnable {
             // Generate ETag based on file path, size and last modified time
             this.addHeader("ETag", etag);
             this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
-            this.addHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
+            //this.addHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
 
             long tempStart = 0;
             long tempEnd = file.length() - 1;
@@ -1591,9 +1593,21 @@ public class NioHttpServer implements Runnable {
         }
 
         private void send(WebSocketFrame frame) {
+            /*
             if (closed) return;
             outgoingQueue.add(frame);
             //key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+            key.selector().wakeup();
+            */
+            if (closed) return;
+            outgoingQueue.add(frame);
+
+            // FIX: Force immediate interest in writing if we are on the same thread
+            // or trigger it more aggressively.
+            int ops = key.interestOps();
+            if ((ops & SelectionKey.OP_WRITE) == 0) {
+                key.interestOps(ops | SelectionKey.OP_WRITE);
+            }
             key.selector().wakeup();
         }
 
@@ -1845,9 +1859,12 @@ public class NioHttpServer implements Runnable {
     private static class ObjectPool<T> {
         private final Queue<T> pool = new ConcurrentLinkedQueue<>();
         private final java.util.function.Supplier<T> factory;
+        private final int maxIdle; // Add a limit
+        private final AtomicInteger currentSize = new AtomicInteger(0);
 
-        ObjectPool(java.util.function.Supplier<T> factory) {
+        ObjectPool(java.util.function.Supplier<T> factory, int maxIdle) {
             this.factory = factory;
+            this.maxIdle = maxIdle;
         }
 
         public T acquire() {
@@ -1855,11 +1872,16 @@ public class NioHttpServer implements Runnable {
             if (obj == null) {
                 return factory.get();
             }
+            currentSize.decrementAndGet();
             return obj;
         }
 
         public void release(T obj) {
-            pool.offer(obj);
+            if (currentSize.get() < maxIdle) {
+                pool.offer(obj);
+                currentSize.incrementAndGet();
+            }
+            // If the pool is full, we simply let the object fall out of scope for GC
         }
     }
 

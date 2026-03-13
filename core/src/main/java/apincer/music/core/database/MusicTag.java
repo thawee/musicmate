@@ -127,6 +127,24 @@ public class MusicTag implements MediaTrack {
    @DatabaseField
    protected double dynamicRange = 0;
 
+   protected String era;
+    protected String tag;
+
+    public String getEra() {
+        return era;
+    }
+
+    public void setEra(String era) {
+        this.era = era;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String reference_tag) {
+        this.tag = reference_tag;
+    }
 
     public String getAlbumArtFilename() {
         return albumArtFilename;

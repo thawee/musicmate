@@ -3,6 +3,7 @@ package apincer.android.mmate.ui;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.getStatusColor;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +18,9 @@ import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,6 +30,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -44,6 +49,7 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.color.DynamicColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -51,6 +57,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -60,7 +67,9 @@ import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.music.core.Constants;
+import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.DynamicRangeView;
@@ -79,6 +88,7 @@ import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.CachePolicy;
 import coil3.request.ImageRequest;
+import coil3.size.Precision;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -221,8 +231,6 @@ public class TagsActivity extends AppCompatActivity {
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
         //toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
-       // StateView mStateView = findViewById(R.id.status_page);
-       // mStateView.hideStates();
 
         setupTitlePanelViews(); // Method to findViewById all title panel views
         setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.
@@ -346,7 +354,8 @@ public class TagsActivity extends AppCompatActivity {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
                 return true;
             } else if (itemId == R.id.action_spectrum) {
-                ApplicationUtils.startAspect(this, viewModel.displayTag.getValue());
+                //ApplicationUtils.startAspect(this, viewModel.displayTag.getValue());
+                doShowSpectrum();
                 return true;
             } else if (itemId == R.id.action_open_folder) {
                 ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
@@ -362,6 +371,112 @@ public class TagsActivity extends AppCompatActivity {
 
         // 4. Show the PopupMenu
         popup.show();
+    }
+
+    private void doShowSpectrum() {
+        if (getEditItems().isEmpty()) return;
+
+        MediaTrack track = getEditItems().get(0);
+        View cview = getLayoutInflater().inflate(R.layout.view_action_spectrum, null);
+
+        TextView filenameText = cview.findViewById(R.id.filename);
+        TextView resolution = cview.findViewById(R.id.resolution);
+        TextView qualityScore = cview.findViewById(R.id.quality_score);
+        ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
+        ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
+
+        filenameText.setText(track.getSimpleName());
+        qualityScore.setText(R.string.analyzing);
+
+        int metaInfoTextSize = 10; //12; //10
+        int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
+        int sepColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_600);
+        SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
+
+        // encoding type
+        spannableEnc.append(new SpecialTextUnit(track.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
+        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
+
+        // bps
+        spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(track.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
+        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
+        spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(track.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
+        if(TagUtils.isMQA(track)) {
+            spannableEnc.append(new SpecialTextUnit(" ("+StringUtils.formatAudioSampleRate(track.getMqaSampleRate(), true)+")", encColor).setTextSize(metaInfoTextSize));
+        }
+        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
+        spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(track.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
+
+        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
+        spannableEnc.append(new SpecialTextUnit(StringUtils.formatStorageSize(track.getFileSize()), encColor).setTextSize(metaInfoTextSize));
+
+        resolution.setText(spannableEnc.build());
+
+        if (spinner != null) spinner.setVisibility(View.VISIBLE);
+
+        // 1. Generate Spectrogram
+        FFMpegHelper.generateSpectrum(getApplicationContext(), track, new FFMpegHelper.GenerateCallback() {
+            @Override
+            public void onGenerated(String path, String qualityStatus, int realBits, double highFreqVolume) {
+                // Coin/Coil/Glide must be called on Main Thread
+                runOnUiThread(() -> {
+                    ImageRequest imageRequest = new ImageRequest.Builder(getApplicationContext())
+                            .data(new File(path))
+                            .size(Size.ORIGINAL)
+                            // Disables the memory cache (prevents showing the previous track's image)
+                            .memoryCachePolicy(CachePolicy.DISABLED)
+                            // Disables the disk cache (forces a fresh read from your FFmpeg output)
+                            .diskCachePolicy(CachePolicy.DISABLED)
+                            // Highly recommended for spectrograms to ensure sharp detail
+                            .precision(Precision.EXACT)
+                            .target(new ImageViewTarget(spectrumView))
+                            .build();
+                    SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
+                    SpannableString spannable = new SpannableString(qualityStatus);
+                    int color = getStatusColor(qualityStatus);
+                    spannable.setSpan(new ForegroundColorSpan(color), 0, qualityStatus.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    qualityScore.setText(spannable);
+
+                   // qualityScore.setText(qualityStatus);
+
+                    if (spinner != null) spinner.setVisibility(View.GONE);
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    qualityScore.setText(R.string.analysis_failed);
+                    if (spinner != null) spinner.setVisibility(View.GONE);
+                });
+            }
+        });
+
+        // Dialog Setup
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+
+        // Use Window flags for a true edge-to-edge transparent blur look
+        if (alert.getWindow() != null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            alert.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        }
+
+        cview.findViewById(R.id.button_ok).setOnClickListener(v -> alert.dismiss());
+        alert.show();
+        // After alert.show(), add these lines:
+        if (alert.getWindow() != null) {
+            // This allows the window to dim the background
+            alert.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
+            // Set how dark the dim should be (0.0 to 1.0)
+            WindowManager.LayoutParams lp = alert.getWindow().getAttributes();
+            lp.dimAmount = 0.75f; // 75% dim for high contrast
+            alert.getWindow().setAttributes(lp);
+        }
     }
 
     @SuppressLint("CheckResult")

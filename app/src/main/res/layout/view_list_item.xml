@@ -164,6 +164,21 @@
 
     <!-- Currently Playing Indicator -->
     <ImageView
+        android:id="@+id/item_playlist"
+        android:layout_width="@dimen/dimen_24_dp"
+        android:layout_height="@dimen/dimen_24_dp"
+        android:layout_marginEnd="@dimen/dimen_64_dp"
+        android:layout_margin="@dimen/dimen_4_dp"
+        android:background="@drawable/bg_transparent"
+        android:padding="@dimen/dimen_6_dp"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/currently_playing"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/round_favorite_border_24"
+        tools:src="@drawable/round_favorite_border_24" />
+
+    <ImageView
         android:id="@+id/item_player"
         android:layout_width="@dimen/dimen_24_dp"
         android:layout_height="@dimen/dimen_24_dp"
@@ -174,7 +189,8 @@
         android:contentDescription="@string/currently_playing"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/ic_equalizer_active"
-        tools:src="@drawable/ic_equalizer_active" />
+        android:src="@drawable/ic_notification_default"
+        tools:src="@drawable/ic_notification_default" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

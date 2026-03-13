@@ -160,7 +160,7 @@ public class ContentDirectory {
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), () -> new ArtistsBrowser(getContext(),tagRepos));
         //directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), () -> new GroupingsBrowser(getContext(),tagRepos));
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), () -> new CollectionsBrowser(getContext(),tagRepos));
-        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), () -> new ResolutionsBrowser(getContext(),tagRepos));
+       // directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), () -> new ResolutionsBrowser(getContext(),tagRepos));
 
         // Prefix matches
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId(), () -> new SourceFolderBrowser(getContext(),tagRepos));
@@ -179,9 +179,9 @@ public class ContentDirectory {
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), () -> new CollectionFolderBrowser(getContext(),tagRepos));
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId(),
                 () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId()));
-        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), () -> new ResolutionFolderBrowser(getContext(),tagRepos));
-        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId(),
-                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId()));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), () -> new ResolutionFolderBrowser(getContext(),tagRepos));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId(),
+        //        () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId()));
     }
 
     public Context getContext() {

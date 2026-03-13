@@ -156,31 +156,18 @@ public class FileSystem {
         }
     }
 
-    public static void copyRelatedDir(File f, File newRelated) {
-        if(newRelated.exists()) {
-            newRelated.mkdirs();
-        }
-        copyRelatedFiles(f, newRelated);
-    }
 
-    public static void copyRelatedFiles(File oldFile, File newFile) {
-        // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
-       // File oldFile = new File(item.getPath());
-        File oldDir = oldFile.getParentFile();
-       // File newFile = new File(newPath);
-        if(newFile.isFile()) {
-            newFile = newFile.getParentFile();
+    public static void copyDir(File sourceDir, File targetDir) {
+        if(!targetDir.exists()) {
+            targetDir.mkdirs();
         }
-       // File newDir = newFile.getParentFile();
-
-        assert oldDir != null;
-        File [] files = oldDir.listFiles(file -> (file.isDirectory() && "cover".equalsIgnoreCase(file.getName()) || Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase())));
+        File [] files = sourceDir.listFiles();
         if(files != null) {
             for (File f : files) {
-                File newRelated = new File(newFile, f.getName());
+                File newRelated = new File(targetDir, f.getName());
                 try {
                     if(f.isDirectory()) {
-                        FileSystem.copyRelatedDir(f, newRelated);
+                        FileSystem.copyDir(f, newRelated);
                     }else {
                         FileSystem.copyFile(f, newRelated);
                     }
@@ -189,6 +176,60 @@ public class FileSystem {
                 }
             }
         }
+    }
+
+    /*
+        copy file is parents of source file to parents of target fie
+     */
+    public static void copyRelatedFiles(File sourceDir, File targetDir) {
+        // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
+        if(sourceDir == null) return;
+
+        if(!sourceDir.isDirectory()) {
+            sourceDir = sourceDir.getParentFile();
+        }
+        if(!targetDir.isDirectory()) {
+            targetDir = targetDir.getParentFile();
+        }
+        if(!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+
+        File [] files = sourceDir.listFiles(file -> (
+                (isRelatedDir(file) || isRelatedFile(file))));
+       // File [] files = sourceDir.listFiles();
+        if(files != null) {
+            for (File f : files) {
+                if(isRelatedDir(f)) {
+                    File newRelated = new File(targetDir, f.getName());
+                    FileSystem.copyDir(f, newRelated);
+                }else if(isRelatedFile(f)) {
+                    File newRelated = new File(targetDir, f.getName());
+                    try {
+                        FileSystem.copyFile(f, newRelated);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isRelatedFile(File file) {
+        if(file.isDirectory()) return false;
+        return Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase());
+    }
+
+    private static boolean isRelatedDir(File file) {
+        if(!file.isDirectory()) return false;
+
+        String name = file.getName();
+        if("cover".equalsIgnoreCase(name)) {
+            return true;
+        }else if("art works".equalsIgnoreCase(name)) {
+            return true;
+        }
+        return false;
     }
 
     // Copy an InputStream to a File.

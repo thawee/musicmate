@@ -1,9 +1,12 @@
 package apincer.android.mmate.service;
 
+import android.app.ForegroundServiceStartNotAllowedException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -146,7 +149,8 @@ public class MediaServerManager {
             serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STOPPED);
             Intent intent = new Intent(context, MusicMateServiceImpl.class);
             intent.setAction(ACTION_STOP_SERVER);
-            context.startService(intent);
+            //Safely stops the service without triggering background start limits
+            context.stopService(intent);
         }
     }
 

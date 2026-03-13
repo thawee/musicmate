@@ -30,11 +30,11 @@ import musicmate.jupnp.nio.R;
 public class CollectionsBrowser extends AbstractContentBrowser {
     public static final String DOWNLOADS_SONGS = "** Recently Added";
     public static final String ALL_SONGS = "All Songs";
-    public final List<String> playlists = new ArrayList<>();
+    public final List<PlaylistEntry> playlists = new ArrayList<>();
     public CollectionsBrowser(Context context, TagRepository tagRepos) {
         super(context, tagRepos);
-        PlaylistRepository.initPlaylist(context);
-        playlists.addAll(PlaylistRepository.getPlaylistNames());
+        PlaylistRepository.loadPlaylists(context);
+        playlists.addAll(PlaylistRepository.getPlaylists());
     }
 
     @Override
@@ -52,20 +52,21 @@ public class CollectionsBrowser extends AbstractContentBrowser {
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
 
-        PlaylistRepository.initPlaylist(getContext());
+        PlaylistRepository.loadPlaylists(getContext());
 
         Map<String, MusicFolder> mapped = new HashMap<>();
-        for(String pls: playlists) {
-            MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.PLAYLIST, pls);
-            PlaylistEntry entry = PlaylistRepository.getPlaylistByName(pls);
+        for(PlaylistEntry pls: playlists) {
+            MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.PLAYLIST, pls.getName());
+            PlaylistEntry entry = PlaylistRepository.getPlaylistByName(pls.getName());
             dir.setUniqueKey(entry.getUuid());
-            mapped.put(pls, dir);
+            mapped.put(pls.getName(), dir);
         }
+
         List<MusicTag> songs = tagRepos.findMySongs();
         for(MusicTag tag: songs) {
-            for (String name : PlaylistRepository.getPlaylistNames()) {
-                if(PlaylistRepository.isSongInPlaylistName(tag, name)) {
-                    Objects.requireNonNull(mapped.get(name)).increaseChildCount();
+            for (PlaylistEntry name : PlaylistRepository.getPlaylists()) {
+                if(PlaylistRepository.isSongInPlaylistName(tag, name.getName())) {
+                    Objects.requireNonNull(mapped.get(name.getName())).increaseChildCount();
                 }
             }
         }

@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import apincer.android.mmate.service.MediaServerManager;
+//import apincer.android.mmate.service.MediaServerManager;
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
 import apincer.music.core.utils.ApplicationUtils;
@@ -28,7 +28,6 @@ import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.LogHelper;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import dagger.hilt.android.HiltAndroidApp;
-//import sakout.mehdi.StateViews.StateViewsBuilder;
 
 @HiltAndroidApp
 public class MusixMateApp extends Application {
@@ -69,13 +68,7 @@ public class MusixMateApp extends Application {
         // start music scan
         startMusicScan();
 
-        startMediaServer();
-
-        // Call the static method to start the service from a valid context
-        MediaServerManager serverManager = new MediaServerManager(this);
-        serverManager.startServer();
-
-        PlaylistRepository.initPlaylist(this);
+        PlaylistRepository.loadPlaylists(this);
 
     }
 
@@ -98,11 +91,6 @@ public class MusixMateApp extends Application {
         } catch (IOException e) {
             Log.e(TAG, "cannot prepare initial assets", e);
         }
-    }
-
-    private void startMediaServer() {
-        MediaServerManager manager = new MediaServerManager(this);
-        manager.startServer();
     }
 
     // Add this to your MusixMateApp class

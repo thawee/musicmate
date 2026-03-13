@@ -6,9 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
 import androidx.work.Data;
-import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
+import androidx.work.OutOfQuotaPolicy;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
@@ -41,7 +39,6 @@ public class ScanAudioFileWorker extends Worker {
     private final int optimalThreadCount;
     private final int optimalBatchSize;
 
-    static final long SCAN_SCHEDULE_TIME = 5;
     protected final FileRepository repos;
     protected final TagRepository tagRepos;
 
@@ -176,7 +173,7 @@ public class ScanAudioFileWorker extends Worker {
             }
 
             if(pathString.toLowerCase().contains("download")) {
-                // always re-scan in-comming songs
+                // always re-scan in-coming songs
                 return true;
             }
 
@@ -196,44 +193,30 @@ public class ScanAudioFileWorker extends Worker {
         return files;
     }
 
-    // One-time scan (can be full)
+    // One-time scan
     public static void startScan(Context context) {
         WorkManager.getInstance(context).cancelAllWorkByTag(WORKER_TAG);
 
         Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
+                //.setRequiresBatteryNotLow(true)
                 .setRequiresStorageNotLow(true)
+                //.setRequiresDeviceIdle(true)
                 .build();
 
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-               // .setInputData(inputData)
-                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
+        OneTimeWorkRequest scanRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
                 .setConstraints(constraints)
+                // This is the magic flag for Android 12+
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                //.setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
                 .addTag(WORKER_TAG)
                 .build();
-        WorkManager.getInstance(context).enqueue(workRequest);
-    }
 
-    // Schedule regular incremental scans
-    public static void scheduleRegularScans(Context context) {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .setRequiresStorageNotLow(true)
-                .setRequiresDeviceIdle(true)  // Only when device is idle
-                .build();
-
-        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(
-                ScanAudioFileWorker.class,
-                24, TimeUnit.HOURS)  // Run once per day
-               // .setInputData(inputData)
-                .setConstraints(constraints)
-                .addTag(WORKER_TAG + "_PERIODIC")
-                .build();
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "PERIODIC_MUSIC_SCAN",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                periodicWorkRequest);
+       // WorkManager.getInstance(context).enqueue(scanRequest);
+        WorkManager.getInstance(context).enqueueUniqueWork(
+                "MusicScanWork",
+                androidx.work.ExistingWorkPolicy.KEEP,
+                scanRequest
+        );
     }
 
     // Dynamically adjust based on device capabilities
@@ -254,14 +237,4 @@ public class ScanAudioFileWorker extends Worker {
         return 15;
     }
 
-    // Determine optimal pause time based on device performance
-    private int getOptimalPauseTime() {
-        Runtime runtime = Runtime.getRuntime();
-        long maxMemory = runtime.maxMemory() / (1024 * 1024); // MB
-
-        // Lower-end devices need more time to recover
-        if (maxMemory < 256) return 200;
-        if (maxMemory < 512) return 150;
-        return 100;
-    }
 }

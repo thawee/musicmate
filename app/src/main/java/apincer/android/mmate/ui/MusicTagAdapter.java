@@ -8,7 +8,6 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,7 +17,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.ItemKeyProvider;
@@ -36,6 +34,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
@@ -156,7 +155,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return keyword;
                 }
             } else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
-                return isEmpty(keyword) ? Constants.TITLE_CODEC : keyword;
+                return isEmpty(keyword) ? Constants.TITLE_RESOLUTION : keyword;
             } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
                 return isEmpty(keyword) ? Constants.TITLE_PLAYLIST : keyword;
             } else {
@@ -266,6 +265,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
+        ImageView mPlaylistView;
         TriangleLabelView mNewLabelView;
        // ResolutionView resolutionView;
         DynamicRangeView drDbView;
@@ -288,6 +288,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mDurationView = view.findViewById(R.id.view_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
+            this.mPlaylistView = view.findViewById(R.id.item_playlist);
 
            // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
@@ -470,26 +471,30 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
         }
         boolean isPlaying = false;
+        holder.mPlayerView.setVisibility(GONE);
         if(playbackService != null) {
             if (tag.equals(playbackService.getNowPlayingSong())) {
                 isPlaying = true;
-                Drawable bg = AppCompatResources.getDrawable(holder.mContext, R.drawable.shape_round_background_playing);
-               // Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_equalizer_active);
-                Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_notification_default);
-                holder.mPlayerView.setImageDrawable(drawable);
-                holder.mPlayerView.setBackground(bg);
+               // Drawable bg = AppCompatResources.getDrawable(holder.mContext, R.drawable.shape_round_background_playing);
+              //  Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_notification_default);
+               // holder.mPlayerView.setImageDrawable(drawable);
+              //  holder.mPlayerView.setBackground(bg);
                 holder.mPlayerView.setVisibility(VISIBLE);
-                /*if (drawable instanceof AnimatedImageDrawable animatedImageDrawable) {
-                    animatedImageDrawable.start();
-                } */
+               // holder.mPlaylistView.setVisibility(GONE);
             }
         }
-        if(!isPlaying && MusicTagUtils.getRating(tag)>= 3) {
-            holder.mPlayerView.setVisibility(VISIBLE);
-            holder.mPlayerView.setImageDrawable(AppCompatResources.getDrawable(holder.mContext, R.drawable.round_favorite_border_24));
-            holder.mPlayerView.setBackground(AppCompatResources.getDrawable(holder.mContext, R.drawable.bg_transparent));
+        //if(!isPlaying) {
+            if(PlaylistRepository.isInPlaylist(tag)) {
+                holder.mPlaylistView.setVisibility(VISIBLE);
+            }else {
+                holder.mPlaylistView.setVisibility(GONE);
+            }
+
+           // holder.mPlaylistView.setImageDrawable(AppCompatResources.getDrawable(holder.mContext, R.drawable.round_favorite_border_24));
+           // holder.mPlaylistView.setBackground(AppCompatResources.getDrawable(holder.mContext, R.drawable.bg_transparent));
+
             //  builder.addText("🤍");
-        }
+       //}
 
         // download label
         if (tag.isMusicManaged()) {

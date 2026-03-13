@@ -201,9 +201,9 @@
         <item>Not Rated</item>
     </string-array>
     <string-array name="output_formats" >
-        <item>Uncompressed PCM, 16/24-bit, .aiff</item>
-        <item>Lossless, Standard Compression, .flac</item>
-        <item>Lossless, Uncompressed, .flac</item>
+        <item>PCM, Uncompressed 16/24-bit, .aiff</item>
+        <item>FLAC, Standard Compression, .flac</item>
+        <item>FLAC, Uncompressed, .flac</item>
         <item>MPEG-1 Layer III, 320kbps, .mp3</item>
     </string-array>
 </resources>

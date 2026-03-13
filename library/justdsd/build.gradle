@@ -28,3 +28,7 @@ android {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+dependencies {
+    // Support libraries
+    implementation libs.jetbrains.annotations
+}

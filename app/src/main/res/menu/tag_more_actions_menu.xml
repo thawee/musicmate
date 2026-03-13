@@ -9,7 +9,7 @@
 
     <item
         android:id="@+id/action_spectrum"
-        android:title="@string/show_frequency_spectrum"
+        android:title="@string/lossless_verifier"
         app:showAsAction="ifRoom"/>
 
     <item

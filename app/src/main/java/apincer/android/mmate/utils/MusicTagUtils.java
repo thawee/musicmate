@@ -22,6 +22,7 @@ import apincer.music.core.Settings;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -510,8 +511,8 @@ public class MusicTagUtils {
     }
 
     public static String getQualityIndFullString(MediaTrack song) {
-        String name = "";
-        String ind = song.getQualityInd();
+        String name = Constants.TITLE_CD_QUALITY;
+       /* String ind = song.getQualityInd();
         if("DSD".equals(ind)) {
             name = Constants.TITLE_DSD;
         }else if (ind.equals("MQA")) {
@@ -522,7 +523,21 @@ public class MusicTagUtils {
             name = Constants.TITLE_HIGH_QUALITY;
         }else if ("SQ".equals(ind)) {
             name = Constants.TITLE_HIFI_LOSSLESS;
-        };
+        }; */
+
+        if(TagUtils.isDSD(song)) {
+            name = Constants.TITLE_DSD;
+        }else if(TagUtils.isMQA(song)) {
+            name = Constants.TITLE_MASTER_AUDIO;
+        }else if(TagUtils.isHiRes48(song)) {
+            name = Constants.TITLE_HIRES_24_48;
+        }else if(TagUtils.isHiRes(song)) {
+            name = Constants.TITLE_HIRES;
+        }else if(TagUtils.isLossy(song)) {
+            name = Constants.TITLE_HIGH_QUALITY;
+        }else if(TagUtils.isHiRes(song)) {
+            name = Constants.TITLE_DSD;
+        }
         return name;
     }
 }

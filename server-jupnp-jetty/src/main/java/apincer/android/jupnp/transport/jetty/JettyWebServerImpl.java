@@ -70,6 +70,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
     private static final int OUTPUT_BUFFER_SIZE = 131_072;
 
     private Thread serverThread;
+    private final Object serverLock = new Object();
     private Server server;
 
     // Manage sessions at the server level to prevent leaks on restart
@@ -88,6 +89,28 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
         // Initialize the shared manager
         this.profileManager = new ProfileManager(bufferSize);
         this.notificationExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    public void restartServer(InetAddress bindAddress) {
+        synchronized (serverLock) {
+            Log.d(TAG, "Restarting Undertow Server...");
+
+            // 1. Full Stop
+            stopServer();
+
+            // 2. Small grace period for OS to release the socket
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignored) {}
+
+            // 3. Start New Instance
+            try {
+                initServer(bindAddress);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to restart server: " + e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -183,34 +206,41 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
     @Override
     public void stopServer() {
-        Log.i(TAG, "Stopping WebServer");
+        synchronized (serverLock) {
+            if (server != null) {
+                Log.i(TAG, "Stopping WebServer");
 
-        // Graceful WebSocket cleanup
-        for (Session session : activeWebsocketSessions) {
-            try {
-                if (session.isOpen()) session.close(1001, "Server stopping", null);
-            } catch (Exception ignored) {}
-        }
-        activeWebsocketSessions.clear();
+                // Graceful WebSocket cleanup
+                for (Session session : activeWebsocketSessions) {
+                    try {
+                        if (session.isOpen()) session.close(1001, "Server stopping", null);
+                    } catch (Exception ignored) {
+                    }
+                }
+                activeWebsocketSessions.clear();
 
-        try {
-            if (server != null && server.isRunning()) {
-                server.stop();
+                try {
+                    if (server.isRunning()) {
+                        server.stop();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error stopping server", e);
+                }finally {
+                    server = null;
+                }
+
+                if (serverThread != null && serverThread.isAlive()) {
+                    try {
+                        serverThread.join(3000); // Wait up to 3 seconds
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+                if (notificationExecutor != null) {
+                    notificationExecutor.shutdown();
+                }
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error stopping server", e);
-        }
-
-        if (serverThread != null && serverThread.isAlive()) {
-            try {
-                serverThread.join(3000); // Wait up to 3 seconds
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        
-        if (notificationExecutor != null) {
-            notificationExecutor.shutdown();
         }
     }
 

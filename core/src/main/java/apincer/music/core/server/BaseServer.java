@@ -62,7 +62,7 @@ import apincer.music.core.utils.TagUtils;
 public class BaseServer {
     private static final String TAG = "BaseServer";
     public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
-    //public static final int CONTENT_SERVER_PORT = 9000; //8089;
+
     public static final int WEB_SERVER_PORT = 9000;
     public static final String CONTEXT_PATH_WEBSOCKET = "/ws";
     protected static final String CONTEXT_PATH_ROOT = "/";
@@ -72,14 +72,10 @@ public class BaseServer {
     protected final Context context;
     private final TagRepository tagRepos;
     private final FileRepository fileRepos;
-    private final File coverartDir;
+    //private final File coverartDir;
     private final String appVersion;
     private final String osVersion;
     private final List<String> libInfos = new ArrayList<>();
-
-    // common cache, used by all services
-    private final LruCache<String, String> memoryCache;
-    final int cacheSize = 10240; // 10 k
 
     private PlaybackCallback playbackCallback;
 
@@ -88,10 +84,10 @@ public class BaseServer {
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
 
-        this.coverartDir =  FileRepository.getCoverartDir(context); //context.getExternalCacheDir();
+        //this.coverartDir =  FileRepository.getCoverartDir(context); //context.getExternalCacheDir();
         this.appVersion = ApplicationUtils.getVersionNumber(context);
         this.osVersion = Build.VERSION.RELEASE;
-        this.memoryCache = new LruCache<>(cacheSize);
+        //this.memoryCache = new LruCache<>(cacheSize);
 
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
@@ -187,10 +183,6 @@ public class BaseServer {
         return context;
     }
 
-    public File getCoverartDir(String coverartName) {
-        return new File(coverartDir, coverartName);
-    }
-
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
@@ -214,13 +206,14 @@ public class BaseServer {
     }
 
     protected File getWebResource(String requestUri) {
-        File webUiDir = new File(getContext().getFilesDir(), "webui");
         if (requestUri.contains("?")) {
             requestUri = requestUri.substring(0, requestUri.indexOf("?"));
         }
         if (requestUri.contains("#")) {
             requestUri = requestUri.substring(0, requestUri.indexOf("#"));
         }
+
+        File webUiDir = new File(getContext().getFilesDir(), "webui");
         return new File(webUiDir, requestUri);
     }
 
@@ -259,47 +252,6 @@ public class BaseServer {
             Log.e(TAG, TAG+" - Failed to parse content ID from URI: " + uri, ex);
         }
         return null;
-    }
-
-    protected String formatAudioQuality(MusicTag tag) {
-        // Pre-calculate capacity to avoid StringBuilder resizing
-        String key = "quality_"+ tag.getId();
-        String qualityText = memoryCache.get(key);
-
-        if(qualityText == null) {
-
-            StringBuilder quality = new StringBuilder(64);
-
-            if (tag.getAudioSampleRate() >= 88200 && tag.getAudioBitsDepth() >= 24) {
-                quality.append("Hi-Res ");
-            } else if (tag.getAudioSampleRate() >= 44100 && tag.getAudioBitsDepth() >= 16) {
-                quality.append("CD-Quality ");
-            }
-
-            quality.append(tag.getFileType());
-
-            if (tag.getAudioSampleRate() > 0) {
-                quality.append(' ').append(tag.getAudioSampleRate() / 1000.0).append("kHz");
-            }
-
-            if (tag.getAudioBitsDepth() > 0) {
-                quality.append('/').append(tag.getAudioBitsDepth()).append("-bit");
-            }
-
-            int channels = TagUtils.getChannels(tag);
-            if (channels == 1) {
-                quality.append(" Mono");
-            } else if (channels == 2) {
-                quality.append(" Stereo");
-            } else if (channels > 2) {
-                quality.append(" Multichannel (").append(channels).append(')');
-            }
-
-            qualityText = quality.toString();
-            memoryCache.put(key, qualityText);
-        }
-
-        return qualityText;
     }
 
     public List<String> getLibInfos() {
@@ -579,124 +531,6 @@ public class BaseServer {
         private boolean getBoolean(Map<String, Object> message, String key) {
             // This is the most robust way to parse a boolean from an Object
             return Boolean.TRUE.equals(message.get(key));
-        }
-
-        /**
-         * The main entry point for processing commands received from the WebSocket client.
-         * Parses the command and delegates to the appropriate handler method.
-         *
-         * @param command The command string (e.g., "browse", "play", "getTrackMetadata").
-         * @param message A Map containing the payload associated with the command (e.g., path, trackId).
-         * @return A Map representing the JSON response to send back to the client,
-         * or {@code null} if the command does not require a direct response (e.g., control commands like 'next').
-         */
-        @Nullable
-        public Map<String, Object> handleCommandOld(String command, Map<String, Object> message) {
-            if (command == null) {
-                Log.w(TAG, "Received websocket null command");
-                return null;
-            }
-            Log.d(TAG, "Received websocket command: "+command);
-            try { // Add try-catch for robustness against parsing errors
-                switch (command) {
-                    case "browse":
-                        String path = String.valueOf(message.getOrDefault("path", "Library"));
-                        return sendBrowseResult(path);
-                    case "getTrackMetadata":
-                        Object idObj = message.get("trackId");
-                        Object artistObj = message.get("artist");
-                        Object albumObj = message.get("album");
-                        if (!(idObj instanceof Number) || artistObj == null || albumObj == null) {
-                            Log.w(TAG, "getTrackMetadata command failed: missing or invalid id, artist, or album.");
-                            return createErrorResponse("Invalid parameters for getTrackMetadata");
-                        }
-                        long trackIdMeta = ((Number) idObj).longValue();
-                        String artist = String.valueOf(artistObj);
-                        String album = String.valueOf(albumObj);
-                        return handleGetTrackMetadata(trackIdMeta);
-                    case "setRenderer":
-                        String udn = String.valueOf(message.get("udn"));
-                        if(isEmpty(udn) || "null".equalsIgnoreCase(udn)) {
-                            Log.w(TAG, "setRenderer command failed: missing or invalid udn.");
-                            return createErrorResponse("Invalid UDN for setRenderer");
-                        }
-                        setRenderer(udn);
-                        break; // No direct response needed, state will be pushed
-                    case "getQueue":
-                        return sendQueueUpdate();
-                    case "addToQueue":
-                        String songIdAdd = String.valueOf(message.get("trackId"));
-                        if(isEmpty(songIdAdd) || "null".equalsIgnoreCase(songIdAdd)) {
-                            Log.w(TAG, "addToQueue command failed: missing or invalid id.");
-                            return createErrorResponse("Invalid ID for addToQueue");
-                        }
-                        handleAddToQueue(songIdAdd);
-                        break; // Queue update will be pushed
-                    case "emptyQueue":
-                        handleEmptyQueue();
-                        break; // Queue update will be pushed
-                    case "play":
-                        String songIdPlay = String.valueOf(message.get("trackId"));
-                        if(isEmpty(songIdPlay) || "null".equalsIgnoreCase(songIdPlay)) {
-                            Log.w(TAG, "play command failed: missing or invalid id.");
-                            return createErrorResponse("Invalid ID for play");
-                        }
-                        handlePlay(songIdPlay);
-                        break; // Playback state updates will be pushed
-                    case "playFromContext":
-                        String songIdContext = String.valueOf(message.get("trackId"));
-                        String pathContext = String.valueOf(message.get("path"));
-                        if(isEmpty(songIdContext) || "null".equalsIgnoreCase(songIdContext) || isEmpty(pathContext)) {
-                            Log.w(TAG, "playFromContext command failed: missing or invalid id or path.");
-                            return createErrorResponse("Invalid ID or Path for playFromContext");
-                        }
-                        handlePlayFormContext(songIdContext, pathContext);
-                        break; // Playback state and queue updates will be pushed
-                    case "next":
-                        handlePlayNext();
-                        break; // Playback state update will be pushed
-                    case "previous":
-                        handlePlayPrevious();
-                        break; // Playback state update will be pushed
-                    case "getTrackDetails":
-                        String trackIdDetails = String.valueOf(message.get("trackId"));
-                        if(isEmpty(trackIdDetails) || "null".equalsIgnoreCase(trackIdDetails)) {
-                            Log.w(TAG, "getTrackDetails command failed: missing or invalid id.");
-                            return createErrorResponse("Invalid ID for getTrackDetails");
-                        }
-                        return handleGetTrackDetails(trackIdDetails);
-                    case "setRepeatMode":
-                        String mode = String.valueOf(message.get("mode"));
-                        if(isEmpty(mode) || (!mode.equals("none") && !mode.equals("all") && !mode.equals("one"))) {
-                            Log.w(TAG, "setRepeatMode command failed: invalid mode.");
-                            return createErrorResponse("Invalid mode for setRepeatMode");
-                        }
-                        handleSetRepeatMode(mode);
-                        break; // Playback state update will be pushed
-                    case "setShuffle":
-                        // Safely handle potential ClassCastException
-                        Object enabledObj = message.get("enabled");
-                        boolean enabled = Boolean.TRUE.equals(enabledObj); // Defaults to false if null or not boolean
-                        handleSetShuffleMode(enabled);
-                        break; // Playback state update will be pushed
-                    // Add case for "getNowPlaying" if needed for desync fix
-                    case "getNowPlaying":
-                        return sendNowPlaying();
-                    default:
-                        Log.w(TAG, "Unknown command received: " + command);
-                        return createErrorResponse("Unknown command: " + command);
-                }
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Error parsing numeric ID for command: " + command, e);
-                return createErrorResponse("Invalid numeric ID format");
-            } catch (ClassCastException e) {
-                Log.e(TAG, "Error casting parameter for command: " + command, e);
-                return createErrorResponse("Invalid parameter type");
-            } catch (Exception e) {
-                Log.e(TAG, "Unexpected error handling command: " + command, e);
-                return createErrorResponse("Internal server error");
-            }
-            return null; // Return null for commands that don't send a direct response
         }
 
         /**
@@ -1049,14 +883,27 @@ public class BaseServer {
                             .sorted(Comparator.comparing(PlaylistEntry::getName))
                             .map(entry -> Map.<String, Object>of("type", "folder", "name", entry.getName(), "path", "Library/Playlists/" + entry.getName()))
                             .collect(Collectors.toList());
+                   // String missingTitle = "the Missing Titles";
+                   // items.add(Map.<String, Object>of("type", "folder", "name", missingTitle, "path", "Library/Playlists/" + missingTitle));
                 } else if (path.startsWith("Library/Playlists/")) {
                     String name = path.substring("Library/Playlists/".length());
-                    // This might be inefficient if getAllMusicsForPlaylist is large
-                    List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
-                    items = songs.stream()
-                            .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
-                            .map(this::getMap)
-                            .collect(Collectors.toList());
+
+                    /*String missingTitle = "the Missing Titles";
+                    if(name.equals(missingTitle)) {
+                        List<PlaylistEntry> entries = PlaylistRepository.getPlaylists();
+
+                        items = songs.stream()
+                                .filter(musicTag -> !PlaylistRepository.isSongInPlaylistName(musicTag, name))
+                                .map(this::getMap)
+                                .collect(Collectors.toList());
+                    }else { */
+                        // This might be inefficient if getAllMusicsForPlaylist is large
+                        List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
+                        items = songs.stream()
+                                .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
+                                .map(this::getMap)
+                                .collect(Collectors.toList());
+                  //  }
                 } else {
                     Log.w(TAG, "sendBrowseResult: Unknown browse path: " + path);
                     // Return empty list for unknown paths
@@ -1197,8 +1044,8 @@ public class BaseServer {
             if (player != null) {
                 return Map.of(
                         "type", "playerStatus",
-                        "targetId", player.getTargetId(),
-                        "name", player.getDisplayName()
+                        "targetId", trimToEmpty(player.getTargetId()),
+                        "name", trimToEmpty(player.getDisplayName())
                         // Add volume, shuffle, repeat mode if available from PlaybackTarget/PlaybackService
                 );
             }

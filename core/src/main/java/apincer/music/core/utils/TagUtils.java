@@ -2,17 +2,21 @@ package apincer.music.core.utils;
 
 import static apincer.music.core.Constants.QUALITY_FAVORITE;
 import static apincer.music.core.Constants.QUALITY_RECOMMENDED;
+import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_44;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 
+import org.jetbrains.annotations.UnknownNullability;
+
 import java.util.Locale;
 
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.repository.PlaylistRepository;
 import musicmate.core.R;
 
 public class TagUtils {
@@ -68,7 +72,7 @@ public class TagUtils {
         return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= 16));
     }
 
-    public static boolean isDSD(MusicTag tag) {
+    public static boolean isDSD(@UnknownNullability MediaTrack tag) {
         return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
@@ -80,11 +84,22 @@ public class TagUtils {
         return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
-    public static boolean isHiRes(MusicTag tag) {
+    public static boolean isHiRes(@UnknownNullability MediaTrack tag) {
         // > 24/96
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
         return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
+    }
+
+    public static boolean isHiRes48(@UnknownNullability MediaTrack tag) {
+        // > 24/96
+        // JAS,  96kHz/24bit format or above
+        //https://www.jas-audio.or.jp/english/hi-res-logo-en
+        return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() < QUALITY_SAMPLING_RATE_96));
+    }
+
+    public static boolean isCDQuality(@UnknownNullability MediaTrack tag) {
+        return (isLossless(tag) && tag.getAudioBitsDepth() == Constants.QUALITY_BIT_CD && tag.getAudioSampleRate() == QUALITY_SAMPLING_RATE_44);
     }
 
     public static String getFormattedSubtitle(MusicTag tag) {
@@ -103,11 +118,11 @@ public class TagUtils {
         return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
     }
 
-    public static boolean isLossless(MusicTag tag) {
+    public static boolean isLossless(@UnknownNullability MediaTrack tag) {
         return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
     }
 
-    public static boolean isLossy(MusicTag tag) {
+    public static boolean isLossy(MediaTrack tag) {
         return isMPegFile(tag) || isAACFile(tag);
     }
 
@@ -147,7 +162,7 @@ public class TagUtils {
 
 
     public static int getRating(MusicTag tag) {
-        String label1 = tag.getQualityRating();
+       /* String label1 = tag.getQualityRating();
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
             return 5;
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
@@ -159,6 +174,12 @@ public class TagUtils {
         }else {
             return 0;
         }
+        */
+        if(PlaylistRepository.isInPlaylist(tag)) {
+            return 5;
+        }
+
+        return 0;
     }
 
     public static boolean isOnDownloadDir(MusicTag tag) {
@@ -190,6 +211,20 @@ public class TagUtils {
         return artist;
     }
 
+    public static int getStatusColor(String status) {
+        if(status.startsWith("High Fidelity:")) return 0xFF2ECC71; // Green
+        //if(status.startsWith("16-bit Hi-Res")) return 0xFF2ECC71; // Green
+        //if(status.startsWith("16-bit Upscaled")) return 0xFFE74C3C; // Red
+        //return 0xFF3498DB; // Blue
+        return 0xFFE74C3C; // Red
+       /* switch (status) {
+            case "24-bit Hi-Res": return 0xFF2ECC71; // Green
+            case "CD Quality":    return 0xFF3498DB; // Blue
+            case "Fake Lossless": return 0xFFE74C3C; // Red
+            default:              return 0xFFF1C40F; // Yellow/Orange
+        } */
+    }
+
     public static String getEncodingTypeShort(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_SHORT;
@@ -204,11 +239,11 @@ public class TagUtils {
         }
     }
 
-    public static boolean isWavFile(MusicTag musicTag) {
+    public static boolean isWavFile(@UnknownNullability MediaTrack musicTag) {
         return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getAudioEncoding()));
     }
 
-    public static boolean isFLACFile(MusicTag musicTag) {
+    public static boolean isFLACFile(@UnknownNullability MediaTrack musicTag) {
         return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getAudioEncoding()));
     }
 
@@ -223,23 +258,23 @@ public class TagUtils {
                 Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    public static boolean isMPegFile(MusicTag tag) {
+    public static boolean isMPegFile(@UnknownNullability MediaTrack tag) {
         // mp3
         return (Constants.MEDIA_ENC_MPEG.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    public static boolean isALACFile(MusicTag tag) {
+    public static boolean isALACFile(@UnknownNullability MediaTrack tag) {
         // m4a, mov, ,p4
         return (Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
 
-    public static boolean isAIFFile(MusicTag tag) {
+    public static boolean isAIFFile(@UnknownNullability MediaTrack tag) {
         // aif, aiff
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()) || Constants.MEDIA_ENC_AIFF_ALT.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    public static boolean isAACFile(MusicTag musicTag) {
+    public static boolean isAACFile(@UnknownNullability MediaTrack musicTag) {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
     }
 

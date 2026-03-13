@@ -341,6 +341,24 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     }
 
+    public List<MusicTag> findHiRes48(long firstResult, long maxResults)   {
+        try {
+            Dao<MusicTag, ?> dao = getMusicTagDao();
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wave', 'wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'");
+            if(firstResult>0) {
+                builder.offset(firstResult);
+            }
+            if(maxResults>0) {
+                builder.limit(maxResults);
+            }
+            return builder.query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
+
+    }
+
     public List<MusicTag> findHighQuality(long firstResult, long maxResults)   {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
@@ -425,11 +443,12 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<MusicTag> findLosslessSong(long firstResult, long maxResults) {
+    public List<MusicTag> findCDQuality(long firstResult, long maxResults) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioSampleRate < 96000 and qualityInd not like 'MQA%' order by title, artist");
+           // builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioSampleRate < 96000 and qualityInd not like 'MQA%' order by title, artist");
+            builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and audioSampleRate = 44100 order by title, artist");
             if(firstResult>0) {
                 builder.offset(firstResult);
             }

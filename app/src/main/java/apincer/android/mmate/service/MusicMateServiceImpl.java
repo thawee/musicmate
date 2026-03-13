@@ -2,27 +2,20 @@ package apincer.android.mmate.service;
 
 import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotification;
 
-import android.annotation.SuppressLint;
+import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.Notification;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiManager;
 import android.os.Binder;
-import android.os.Handler;
+import android.os.Build;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.PowerManager;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.LiveData;
@@ -88,19 +81,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     // -- SERVICE --
     private MediaSessionManager mediaSessionManager;
 
-    private WifiManager wifiManager;
-    private PowerManager powerManager;
-    private ConnectivityManager connectivityManager;
+   // private WifiManager wifiManager;
+   // private PowerManager powerManager;
+   // private ConnectivityManager connectivityManager;
 
-    // Locks to keep the CPU and WiFi active for stable streaming
-    private WifiManager.WifiLock wifiLock;
-    private WifiManager.MulticastLock multicastLock;
-    private PowerManager.WakeLock wakeLock;
+    // Locks to keep the CPU and Wi-Fi active for stable streaming
+   // private WifiManager.WifiLock wifiLock;
+   // private WifiManager.MulticastLock multicastLock;
+   // private PowerManager.WakeLock wakeLock;
 
     // Network monitoring for the 30-minute auto-stop failsafe
-    private final Handler networkHandler = new Handler(Looper.getMainLooper());
-    private Runnable stopServerRunnable;
-    private ConnectivityManager.NetworkCallback networkCallback;
+    //private final Handler networkHandler = new Handler(Looper.getMainLooper());
+   // private Runnable stopServerRunnable;
+   // private ConnectivityManager.NetworkCallback networkCallback;
 
     // -- STATE -->
     private List<MusicTag> playingQueue = new CopyOnWriteArrayList<>();
@@ -199,25 +192,28 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void onCreate() {
         super.onCreate();
-        // must create notification within 5-10 seconds
-        // Create the channel (it's safe to call this every time)
-        //if(!isNotificationActive) {
-         //   createNotificationChannel();
 
-        // Start foreground service immediately with the *initial* notification
-        startForeground(SERVICE_ID, createInitialNotification());
-        //    isNotificationActive = true;
-       // }
-
-        this.wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        this.connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-       // this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        try {
+            // Only call it ONCE based on the Android version
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(SERVICE_ID, createInitialNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+            } else {
+                startForeground(SERVICE_ID, createInitialNotification());
+            }
+        } catch (Exception e) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    e instanceof ForegroundServiceStartNotAllowedException) {
+                Log.w(TAG, "Service bound in background. Cannot elevate to Foreground. Running silently.");
+            } else if (e instanceof SecurityException) {
+                Log.w(TAG, "Lacking permissions for foreground start. Running silently.");
+            } else {
+                Log.e(TAG, "Unexpected error starting foreground service", e);
+            }
+        }
 
         getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs()));
 
-        // initial dmr/local player player
-        //getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
+        // initial dmr/local player
         // Iterate and add using the duplicate-checking method
         List<PlaybackTarget> serverTargets = mediaServer.getAvailablePlaybackTargets();
         for (PlaybackTarget player : serverTargets) {
@@ -286,7 +282,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
             }
         }
-        return START_STICKY;
+        // Change this from START_STICKY to START_NOT_STICKY
+        return START_NOT_STICKY;
     }
 
     private void handlePlayPause() {
@@ -294,14 +291,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     public void startServers() {
         if (mediaServer.isInitialized()) return;
-
-      /*  if(!isNotificationActive) {
-          //  createNotificationChannel();
-
-            // Start foreground service immediately with the *initial* notification
-            startForeground(SERVICE_ID, createInitialNotification());
-            isNotificationActive = true;
-        } */
 
         if (!NetworkUtils.isWifiConnected(this)) {
             statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
@@ -311,24 +300,24 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // --- ACQUIRE RESOURCES ---
         // Wake lock keeps the CPU from sleeping. A timeout is used as a safeguard.
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MusixMate:MediaServerWakeLock");
-        wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);
+       // wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MusixMate:MediaServerWakeLock");
+       // wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);
 
-        // WifiLock keeps the WiFi radio from turning off, crucial for streaming.
-        wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "MusixMate:WifiLock");
-        wifiLock.setReferenceCounted(false);
-        wifiLock.acquire();
+        // WifiLock keeps the Wi-Fi radio from turning off, crucial for streaming.
+       // wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "MusixMate:WifiLock");
+      //  wifiLock.setReferenceCounted(false);
+       // wifiLock.acquire();
 
         // MulticastLock is required for device discovery (DLNA/UPnP).
-        multicastLock = wifiManager.createMulticastLock("MusixMate:MulticastLock");
-        multicastLock.setReferenceCounted(false);
-        multicastLock.acquire();
-        Log.d(TAG, "CPU, Wi-Fi, and Multicast locks acquired.");
+       // multicastLock = wifiManager.createMulticastLock("MusixMate:MulticastLock");
+       // multicastLock.setReferenceCounted(false);
+       // multicastLock.acquire();
+       // Log.d(TAG, "CPU, Wi-Fi, and Multicast locks acquired.");
 
         // --- START SERVICES ---
         //showNotification(null);
         mediaServer.startServers();
-        startNetworkMonitoring();
+        //startNetworkMonitoring();
 
         // Report that the server is now running.
         statusLiveData.postValue(MediaServerHub.ServerStatus.RUNNING);
@@ -339,30 +328,31 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // --- RELEASE RESOURCES ---
         // Always cancel any pending stop command first
-        networkHandler.removeCallbacks(stopServerRunnable);
-        stopNetworkMonitoring();
+       // networkHandler.removeCallbacks(stopServerRunnable);
+        //stopNetworkMonitoring();
         mediaServer.stopServers();
         //  cancelNotification();
 
         // Report that the server has stopped.
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
 
-        if (wakeLock != null && wakeLock.isHeld()) {
-            wakeLock.release();
-        }
-        if (multicastLock != null && multicastLock.isHeld()) {
-            multicastLock.release();
-        }
-        if (wifiLock != null && wifiLock.isHeld()) {
-            wifiLock.release();
-        }
-        Log.d(TAG, "All locks released and server stopped.");
+       // if (wakeLock != null && wakeLock.isHeld()) {
+       //     wakeLock.release();
+       // }
+       // if (multicastLock != null && multicastLock.isHeld()) {
+       //     multicastLock.release();
+        //}
+       // if (wifiLock != null && wifiLock.isHeld()) {
+       //     wifiLock.release();
+       // }
+       // Log.d(TAG, "All locks released and server stopped.");
     }
 
     /**
      * Sets up network monitoring. This will not start the server, but will
-     * stop it after 30 minutes if the WiFi connection is lost.
+     * stop it after 30 minutes if the Wi-Fi connection is lost.
      */
+    /*
     @SuppressLint("MissingPermission")
     private void startNetworkMonitoring() {
         NetworkRequest networkRequest = new NetworkRequest.Builder()
@@ -379,22 +369,23 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                // WiFi is connected. Cancel any pending shutdown command.
+                // Wi-Fi is connected. Cancel any pending shutdown command.
                 Log.d(TAG, "WiFi connection available. Cancelling stop timer.");
                 networkHandler.removeCallbacks(stopServerRunnable);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-                // WiFi is lost. Schedule a shutdown in 30 minutes.
+                // Wi-Fi is lost. Schedule a shutdown in 30 minutes.
                 Log.d(TAG, "WiFi connection lost. Server will stop in 30 minutes.");
                 networkHandler.postDelayed(stopServerRunnable, 1800000L); // 30 minutes
             }
         };
 
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-    }
+    } */
 
+    /*
     private void stopNetworkMonitoring() {
         // Unregister the callback to prevent leaks.
         if (networkCallback != null) {
@@ -405,7 +396,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 Log.w(TAG, "Error unregistering network callback", e);
             }
         }
-    }
+    } */
 
     // It just creates the *first* notification shown before anything is loaded.
     private Notification createInitialNotification() {
@@ -599,8 +590,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
             if(newTarget instanceof ExternalAndroidPlayer externalPlayer){
                 // Register callback to the new external player
-               // Log.d(TAG, "Registering callback to new ExternalPlayer: " + newTarget.getTargetId());
-               // MediaController mediaController = getMediaController(newTarget.getTargetId());
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
             }else if (newTarget.isStreaming()) {
                 // replace http stream with real streaming device
@@ -691,7 +680,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
      * Automatically selects the best available player based on a predefined priority.
      *
      * Priority Order:
-     * 1. DMRPlayer (DLNA/UPnP, target.isStreaming() and target.canReadSate())
+     * 1. DMR Player (DLNA/UPnP, target.isStreaming() and target.canReadSate())
      * 2. WebStreaming Player (target.isStreaming())
      * 3. ExternalPlayer (MediaSession-based)
      *
@@ -710,9 +699,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             if(target == null) continue;
 
             // --- Priority 1: DMCA / DMR Player ---
-            // (Replace 'DMRPlayer' with your actual DLNA/UPnP player class name)
+            // (Replace 'DMR Player' with your actual DLNA/UPnP player class name)
             if (target.isStreaming() && target.canReadSate()) {
-                Log.d(TAG, "Auto-select: Found high-priority DMRPlayer: " + target.getTargetId());
+                Log.d(TAG, "Auto-select: Found high-priority DMR Player: " + target.getTargetId());
                 // This is the highest priority, so we can return immediately
                 return Optional.of(target);
             }
@@ -755,6 +744,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             // Per your code, this will delete and re-copy on every service creation.
             ApplicationUtils.deleteFilesFromAndroidFilesDir(context, assetDir);
             ApplicationUtils.copyDirToAndroidFilesDir(context, assetDir);
+            ApplicationUtils.copyFileToAndroidFilesDir(context, "playlists.json",  assetDir+"/playlists.json");
         } catch (IOException e) {
             Log.e(TAG, "Failed to copy web assets", e);
         }

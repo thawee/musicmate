@@ -69,6 +69,18 @@ public class FileRepository {
                     yield image;
                 }
                 case GENRE, CODEC -> new File(cacheDir, music.getPath());
+                case PLAYLIST -> {
+                    File image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".jpg");
+
+                    if(!image.exists()) {
+                        image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".png");
+                    }
+
+                    if(!image.exists()) {
+                        new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
                 default ->
                     // Fallback, but it's better to throw an error
                      new File(cacheDir, music.getPath());
@@ -98,12 +110,11 @@ public class FileRepository {
            // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", by:  "+coverartName);
             if(isEmpty(coverartName) || DEFAULT_COVERART.equals(coverartName)) {
                 if (isManagedInLibrary(tag)) {
-
                     File pathFile = new File(path);
                     pathFile = pathFile.getParentFile();
                     pathFile = new File(pathFile, "Cover.png");
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
-                    FFMpegHelper.extractCoverArt(path, pathFile);
+                    FFMpegHelper.extractCoverArt(path, pathFile, null);
                     return DigestUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
                 } else {
                     String coverFilename = DigestUtils.md5Hex(path);
@@ -111,7 +122,7 @@ public class FileRepository {
 
                     FileUtils.createParentDirs(pathFile);
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
-                    FFMpegHelper.extractCoverArt(path, pathFile);
+                    FFMpegHelper.extractCoverArt(path, pathFile, null);
                     return pathFile.getName(); // hex for individual file
                 }
             }
@@ -207,6 +218,11 @@ public class FileRepository {
             return null; // Not a valid file
         }
 
+        //if file existed and image file, just return file
+        if(file.exists() && isImageFile(file)) {
+            return file;
+        }
+
         File folder = file.getParentFile();
 
         if(folder == null) return null;
@@ -251,6 +267,11 @@ public class FileRepository {
 
         // 3. If we checked all priorities and found no file
         return null; // Return null, not the original folder
+    }
+
+    private static boolean isImageFile(File file) {
+        String ext = FileUtils.getExtension(file);
+        return "png".equalsIgnoreCase(ext) || "jpg".equalsIgnoreCase(ext);
     }
 
     @Nullable

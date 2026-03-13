@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="8dp"
+    android:layout_margin="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_dialog_header_gradient"
+        android:padding="14dp">
+
+        <ImageView
+            android:id="@+id/title_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_round_audio_file_24"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/lossless_verifier"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/analysis_progress_spinner"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/filename"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:alpha="0.7"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="start"
+            android:layout_marginBottom="8dp"
+            tools:text="14 - ขอบใจที่หาเจอ.flac" />
+
+        <TextView
+            android:id="@+id/resolution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_gravity="center_horizontal"
+            android:alpha="0.7"
+            android:textSize="11sp"
+            android:maxLines="1"
+            android:ellipsize="start"
+            android:layout_marginBottom="8dp"
+            android:padding="@dimen/dimen_4_dp"
+            android:paddingStart="@dimen/dimen_12_dp"
+            android:paddingEnd="@dimen/dimen_12_dp"
+            android:background="@drawable/textview_dent_background"
+            android:elevation="8dp"
+            tools:text="" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="8dp"
+            app:cardBackgroundColor="#1A1A1A"
+            android:layout_marginBottom="16dp">
+
+            <apincer.android.mmate.ui.view.AspectRatioPhotoView
+                android:id="@+id/spectrum_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:scaleType="fitXY" />
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/dimen_4_dp"
+            android:layout_marginBottom="@dimen/dimen_8_dp"
+            android:gravity="center">
+                <TextView
+                    android:id="@+id/quality_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/grey200"
+                    android:textSize="13sp"
+                    android:maxLines="2"
+                    android:textStyle="italic"
+                    tools:text="Verified Lossless" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_ok"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ok"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

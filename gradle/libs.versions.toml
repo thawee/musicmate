@@ -1,6 +1,7 @@
 [versions]
 #minSdkVersion <= targetSdkVersion <= compileSdkVersion
 androidfastscrollKt = "v1.0.8"
+#desugar_jdk_libs = "2.1.5"
 zxing-core = "3.5.4"
 espressoCore = "3.7.0"
 hiltWork = "1.3.0"
@@ -16,10 +17,10 @@ minSdkVersion    = "36" # support running on 31 - 12, 34 - 14, 35 - 15, 36 - 16
 #nanohttpd = "2.3.1"
 targetSdkVersion = "36" # //33, // required 35 - 15
 compileSdkVersion = "36"
-buildTools ="36.1.0" #""35.0.1"
+buildTools = "37.0.0-rc2" #"36.1.0" #""35.0.1"
 #buildTools ="36.0.0"
 #androidGradlePlugin = "8.11.1"
-androidGradlePlugin = "9.0.1"
+androidGradlePlugin = "9.1.0"
 aboutlibraries = "13.2.1"
 kotlin = "2.3.10"
 kotlinxSerializationCore = "1.10.0"
@@ -28,8 +29,10 @@ coroutines = "1.10.2"
 # https://repo.maven.apache.org/maven2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/
 #ksp="2.2.21-2.0.4"
 #ksp= "2.3.2"
-ksp= "2.3.5"
+#ksp= "2.3.5"
+ksp= "2.3.6"
 hilt ="2.59.2"
+#coreKtx = "1.18.0"
 
 [libraries]
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
@@ -42,6 +45,7 @@ androidx-media = { module = "androidx.media:media", version.ref = "media" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Session" }
 androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "media3Session" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Session" }
+#desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 google-material = { module = "com.google.android.material:material", version = "1.13.0" }
@@ -59,13 +63,13 @@ kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 ##httpcomponents-httpmime = {module = "org.apache.httpcomponents:httpmime", version="4.5.14"}
 commons-codec = {module = "commons-codec:commons-codec", version="1.21.0"}
 commons-io = {module = "commons-io:commons-io", version="2.21.0"}
-commons-logging = {module = "commons-logging:commons-logging", version="1.3.5"}
+commons-logging = {module = "commons-logging:commons-logging", version="1.3.6"}
 commons-match3 = {module = "org.apache.commons:commons-math3", version="3.6.1"}
 commons-lang3 = {module = "org.apache.commons:commons-lang3", version="3.20.0"}
 commons-text = {module = "org.apache.commons:commons-text", version="1.15.0"}
 #https://hc.apache.org/news.html
-#apache-httpcore = {module="org.apache.httpcomponents.core5:httpcore5", version="5.2.3"}
-#apache-http2core = {module="org.apache.httpcomponents.core5:httpcore5-h2", version="5.2.3"}
+apache-httpcore = {module="org.apache.httpcomponents.core5:httpcore5", version="5.3.6"}
+apache-http2core = {module="org.apache.httpcomponents.core5:httpcore5-h2", version="5.3.6"}
 #apache-httpcomponents-httpclient5 = {module = "org.apache.httpcomponents.client5:httpclient5", version="5.5.1"}
 
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -96,24 +100,26 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
 #cling-support = {module="org.fourthline.cling:cling-support", version="2.1.2"}
 
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.6"}
-jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.6"}
-jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.6"}
+jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.7"}
+jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.7"}
+jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.7"}
 #// Add this to your dependencies block
 #implementation 'org.eclipse.jetty:jetty-websocket-server:12.0.11' // Use the specific Jetty 12 version you are targeting
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}
 
-#netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.10.Final"}
+netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.10.Final"}
 
 # 2.4.0.Beta1
 # 2.3.18.Final
-io-undertow-core = {module = "io.undertow:undertow-core", version = "2.4.0.Beta1"}
+io-undertow-core = {module = "io.undertow:undertow-core", version = "2.4.0.RC1"}
 # jboss-logging 3.6.x not work on andoid
 jboss-logging = {module = "org.jboss.logging:jboss-logging", version="3.5.3.Final"}
+# jboss-logging 3.6.x not work on andoid
+#jboss-xnio = {module = "org.jboss.xnio:xnio-nio", version="3.8.15.Final"}
 
 tutorialsandroid-filepicker = {module = "io.github.tutorialsandroid:filepicker", version="9.2.5"}
 #icm-jlargearrays =  {module = "pl.edu.icm:JLargeArrays", version="1.6"}
-square-okio = {module = "com.squareup.okio:okio", version = "3.16.4"}
+square-okio = {module = "com.squareup.okio:okio", version = "3.17.0"}
 square-okhttp3 = {module = "com.squareup.okhttp3:okhttp", version= "5.3.2"}
 rxandroid = {module="io.reactivex.rxjava3:rxandroid", version="3.0.2"}
 rxjava = {module="io.reactivex.rxjava3:rxjava", version="3.1.12"}
@@ -140,8 +146,8 @@ commonmark = {module="com.atlassian.commonmark:commonmark", version="0.17.0"}
 #seamless-util = {module="org.seamless:seamless-util", version="1.1.2"}
 #seamless-http = {module="org.seamless:seamless-http", version="1.1.2"}
 
-androidx-core = {module = "androidx.core:core", version="1.17.0"}
-androidx-activity = {module = "androidx.activity:activity", version="1.12.4"}
+androidx-core = {module = "androidx.core:core", version="1.18.0"}
+androidx-activity = {module = "androidx.activity:activity", version="1.13.0"}
 androidx-annotation = {module = "androidx.annotation:annotation", version="1.9.1"}
 androidx-appCompat = {module = "androidx.appcompat:appcompat", version="1.7.1"}
 androidx-fragment = {module = "androidx.fragment:fragment", version="1.8.9"}
@@ -169,7 +175,7 @@ androidx-lifecycle-process = {module = "androidx.lifecycle:lifecycle-process", v
 #androidx-paging-common = {module = "androidx.paging:paging-common", version="3.3.6"}
 #androidx-paging-rxjava2 = {module = "androidx.paging:paging-rxjava2", version="3.3.6"}
 androidx-work = {module = "androidx.work:work-runtime", version="2.11.1"}
-coilkt-coil3 = {module="io.coil-kt.coil3:coil", version="3.3.0"}
+coilkt-coil3 = {module="io.coil-kt.coil3:coil", version="3.4.0"}
 iirj = {module="uk.me.berndporr:iirj", version="1.7"}
 markwon-core = {module="io.noties.markwon:core", version="4.6.2"}
 markwon-html = {module="io.noties.markwon:html", version="4.6.2"}
@@ -181,6 +187,7 @@ markwon-html = {module="io.noties.markwon:html", version="4.6.2"}
 # android auto
 androidx-car-app-projected = {module="androidx.car.app:app-projected", version="1.7.0"}
 androidx-car-app = {module="androidx.car.app:app", version="1.7.0"}
+#androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
@@ -190,4 +197,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 #kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = {id="com.google.dagger.hilt.android", version.ref="hilt"}
-objectbox = { id = "io.objectbox", version = "4.0.3" }
+objectbox = { id = "io.objectbox", version = "5.3.0" }

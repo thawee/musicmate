@@ -31,7 +31,7 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_48 = 48000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
-  //  public static final int QUALITY_BIT_CD = 16;
+    public static final int QUALITY_BIT_CD = 16;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
 
    public static final String UNKNOWN = "Unknown";
@@ -42,17 +42,9 @@ public final class Constants {
     public static final String ARTIST_SEP_ALT = ",";
     public static final String ARTIST_SEP_ALT_SPACE = ", ";
 
-    /*
-    public static final String GROUPING_CLASSICAL = "Classical";
-    public static final String GROUPING_TRADITIONAL = "Traditional";
-    public static final String GROUPING_LOUNGE = "Lounge";
-    public static final String GROUPING_CONTEMPORARY = "Contemporary";
-    public static final String GROUPING_OLDEIS = "Oldies";
-    */
-
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
-    //public static final String TITLE_RESOLUTION = "Resolutions";
+    public static final String TITLE_RESOLUTION = "Resolutions";
     public static final String TITLE_CODEC = "Codecs";
    // public static final String TITLE_GROUPING = "Groupings";
     public static final String TITLE_GENRE = "Genres";
@@ -66,8 +58,11 @@ public final class Constants {
     public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD Audio"; //""Direct Stream Digital";
     public static final String TITLE_HIRES = "High Resolution"; //""Hi-Res Lossless";
+    public static final String TITLE_HIRES_24_48 = "High Resolution (24/48)"; //""Hi-Res Lossless";
+   // public static final String TITLE_HIRES_96_PLUS = "Hi-Res 24/96+"; //""Hi-Res Lossless";
+    public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "Lossy Codec"; //""High Quality";
+    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed"; //"Lossy Codec"; //""High Quality";
     public static final String TITLE_MASTER_AUDIO = "Master Quality Authenticated"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
