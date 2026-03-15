@@ -29,7 +29,6 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,9 +68,10 @@ public class TagsEditorFragment extends Fragment {
     private TextInputEditText txtYear;
     private AutoCompleteTextView txtGenre;
     //private AutoCompleteTextView txtGrouping;
-    private TextInputEditText txtPublisher;
+   // private TextInputEditText txtPublisher;
+    private AutoCompleteTextView txtPublisher;
    // private FloatingActionButton fabSav;
-    private AutoCompleteTextView qualityDropdown;
+   // private AutoCompleteTextView qualityDropdown;
 
     private NestedScrollView scrollView;
     private MaterialButtonToggleGroup toggleGroup;
@@ -104,13 +104,9 @@ public class TagsEditorFragment extends Fragment {
         txtGenre = v.findViewById(R.id.input_genre);
         //txtGrouping = v.findViewById(R.id.input_grouping);
         txtPublisher = v.findViewById(R.id.input_publisher);
-        qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
+        //qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
 
         toggleGroup = v.findViewById(R.id.editor_action_group);
-
-       // MaterialButton buttonReformat = v.findViewById(R.id.action_reformat);
-       // MaterialButton buttonReadTag = v.findViewById(R.id.action_read_tag);
-       // MaterialButton buttonSave = v.findViewById(R.id.action_save);
 
         setupActions();
 
@@ -135,13 +131,13 @@ public class TagsEditorFragment extends Fragment {
         });
 
         // popup list
-        String[] qualityList = getResources().getStringArray(R.array.file_qualities);
-        setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
+       // String[] qualityList = getResources().getStringArray(R.array.file_qualities);
+       // setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
        // setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
         setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
         setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
        // setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
-       // setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),3);
+        setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),1);
 
         return v;
     }
@@ -424,12 +420,12 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setGenre(buildTag(txtGenre, originTag.getGenre()));
         tagUpdate.setPublisher(buildTag(txtPublisher, originTag.getPublisher()));
         tagUpdate.setYear(buildTag(txtYear, originTag.getYear()));
-        tagUpdate.setQualityRating(buildQualityTag());
+       // tagUpdate.setQualityRating(buildQualityTag());
     }
 
-    private String buildQualityTag() {
-        return qualityDropdown.getText().toString();
-    }
+   // private String buildQualityTag() {
+   //     return qualityDropdown.getText().toString();
+   // }
 
     private String buildTag(TextInputEditText txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
@@ -489,12 +485,12 @@ public class TagsEditorFragment extends Fragment {
                 }
         ).thenAccept(
                 unused -> {
-                    tagsActivity.refreshDisplayTag();
+                    tagsActivity.redisplayTag();
                     tagsActivity.stopProgressBar();
                 }
         ).exceptionally(
                 throwable -> {
-                    tagsActivity.refreshDisplayTag();
+                    tagsActivity.redisplayTag();
                     tagsActivity.stopProgressBar();
                     return null;
                 }
@@ -519,7 +515,7 @@ public class TagsEditorFragment extends Fragment {
         txtAlbumArtist.invalidate();
 
         // quality
-        qualityDropdown.setText(tag.getQualityRating());
+        //qualityDropdown.setText(tag.getQualityRating());
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {

@@ -219,7 +219,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                     String title = songItem.getTitle();
                     String artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
                     String album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class).toString();
-                    MusicTag song = tagRepos.findMediaItem(title, artist, album);
+                    MusicTag song = tagRepos.findMusic(title, artist, album);
                     if (callback != null) {
                         callback.onMediaTrackChanged(song);
                     }

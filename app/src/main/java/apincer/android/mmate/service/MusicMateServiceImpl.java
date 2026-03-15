@@ -67,8 +67,10 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public static final String ACTION_PREVIOUS = "apincer.musicmate.ACTION_PREVIOUS";
     public static final String ACTION_STOP = "apincer.musicmate.ACTION_STOP";
 
-    public static final String ONLINE_STATUS = "Online"; // Green circle for Online
-    public static final String OFFLINE_STATUS = "Offline"; // Red circle for Offline
+    public static final String SERVER_STATUS_NO_WIFI = "No Network"; // Red circle for Offline
+    // Used as a prefix for the dynamic SSID
+    public static final String SERVER_STATUS_ONLINE_PREFIX = "Online"; // Green circle for Online
+    public static final String SERVER_STATUS_OFFLINE = "Offline"; // Red circle for Offline
 
     @Inject
     TagRepository tagRepos;
@@ -121,7 +123,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         @Override
         public void onMediaTrackChanged(String title, String artist, String album, long duration) {
-            MediaTrack song = tagRepos.findMediaItem(title, artist, album);
+            MediaTrack song = tagRepos.findMusic(title, artist, album);
             if(song != null) {
                 MusicMateServiceImpl.this.onMediaTrackChanged(song);
             }

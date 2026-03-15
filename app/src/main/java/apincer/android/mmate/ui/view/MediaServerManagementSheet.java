@@ -2,10 +2,12 @@ package apincer.android.mmate.ui.view;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
-import static apincer.android.mmate.service.MusicMateServiceImpl.OFFLINE_STATUS;
-import static apincer.android.mmate.service.MusicMateServiceImpl.ONLINE_STATUS;
+import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_NO_WIFI;
+import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_OFFLINE;
+import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_ONLINE_PREFIX;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -151,6 +153,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private void observeServerStatus() {
         viewModel.getServerStatus().observe(getViewLifecycleOwner(), status -> {
             if (status == null) {
@@ -171,9 +174,9 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     // todo: get connected wifi access point name
                     String ssid = ApplicationUtils.getWifiSSID(getContext());
                     if(!isEmpty(ssid)) {
-                        tvServerStatus.setText("Streaming via "+ssid);
+                        tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX+" ("+ssid+")");
                     }else {
-                        tvServerStatus.setText(ONLINE_STATUS);
+                        tvServerStatus.setText(SERVER_STATUS_NO_WIFI);
                     }
                     tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_green);
                     String serverLocation = viewModel.getServerLocationUrl();
@@ -189,7 +192,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                    // btnStopServer.setEnabled(false);
                     qrCodeImage.setVisibility(GONE);
 
-                    tvServerStatus.setText(OFFLINE_STATUS);
+                    tvServerStatus.setText(SERVER_STATUS_OFFLINE);
                     tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_red);
                     if (!isWifiConnected) {
                         tvServerAddress.setText(R.string.notification_server_not_running);
@@ -204,7 +207,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     tvServerAddress.setVisibility(GONE);
                     btnStartServer.setEnabled(false);
                     btnStopServer.setEnabled(false);
-                    tvServerStatus.setText(OFFLINE_STATUS);
+                    tvServerStatus.setText(SERVER_STATUS_OFFLINE);
                     break;
             }
         });

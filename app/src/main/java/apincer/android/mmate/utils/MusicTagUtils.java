@@ -1,8 +1,14 @@
 package apincer.android.mmate.utils;
 
+import static apincer.music.core.Constants.LEGEND_CD;
+import static apincer.music.core.Constants.LEGEND_DSD;
+import static apincer.music.core.Constants.LEGEND_HIRES;
+import static apincer.music.core.Constants.LEGEND_MQA;
+import static apincer.music.core.Constants.LEGEND_STUDIO;
 import static apincer.music.core.Constants.QUALITY_FAVORITE;
 import static apincer.music.core.Constants.QUALITY_RECOMMENDED;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_96;
+import static apincer.music.core.Constants.TITLE_DSD;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -292,25 +298,26 @@ public class MusicTagUtils {
             return R.drawable.icon_joox;
         } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_QOBUZ)) {
             return R.drawable.icon_qobuz;
-        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
-            return R.drawable.icon_cd;
-        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_SACD)) {
-            return R.drawable.icon_sacd;
-        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_VINYL)) {
-            return R.drawable.icon_vinyl;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
+       //     return R.drawable.icon_cd;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_SACD)) {
+       //     return R.drawable.icon_sacd;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_VINYL)) {
+       //     return R.drawable.icon_vinyl;
         } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_SPOTIFY)) {
             return R.drawable.icon_spotify;
         } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_TIDAL)) {
             return R.drawable.icon_tidal;
         } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_APPLE)) {
             return R.drawable.icon_itune;
-        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_YOUTUBE)) {
-            return R.drawable.icon_youtube;
+       // } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_YOUTUBE)) {
+       //     return R.drawable.icon_youtube;
         }
 
         return -1;
     }
 
+    @Deprecated
     public static int getRating(MusicTag tag) {
         String label1 = tag.getQualityRating();
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
@@ -355,6 +362,7 @@ public class MusicTagUtils {
         return artist;
     }
 
+    /*
     public static String getEncodingTypeShort(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_SHORT;
@@ -367,7 +375,7 @@ public class MusicTagUtils {
         }else {
             return Constants.TITLE_HIGH_QUALITY_SHORT;
         }
-    }
+    } */
 
     public static boolean isWavFile(MusicTag musicTag) {
         return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getAudioEncoding()));
@@ -433,61 +441,20 @@ public class MusicTagUtils {
                 path.endsWith(".dsf");
     }
 
-    /**
-     * Determines and formats the audio quality for a given song.
-     * The logic prioritizes specific, high-fidelity formats over generic ones.
-     *
-     * @param song The MusicTag object representing the song.
-     * @return A descriptive string for the audio quality, suitable for music lovers.
-     */
-    public static String getQualityIndicator(MusicTag song) {
-        // 1. Check for DSD, a single-bit format (highest priority)
-        if (song.getAudioBitsDepth() == 1) {
-            return "DSD";
-        }
-
-        // 2. Check for MQA and include the original sample rate
-        String mqaIndicator = trimToEmpty(song.getQualityInd());
-        if ("MQA".equalsIgnoreCase(mqaIndicator) || "MQA Studio".equalsIgnoreCase(mqaIndicator)) {
-            // We now include the original sample rate for MQA
-            //String mqaSampleRate = StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true);
-            //return String.format("%s (%s)", mqaIndicator, mqaSampleRate);
-            return "MQA"; // mqaIndicator;
-        }
-
-        // 3. Check for Hi-Res Audio (any format with bit depth > 16 or sample rate > 44.1kHz)
-        if (song.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
-            return "HR"; //""Hi-Res";
-        }
-
-        // 4. Check for Lossy formats (this should be the final check)
-        if (isLossy(song)) {
-            // Explicitly label the audio as "Lossy" instead of an empty string,
-            // which provides more valuable information to the user.
-            return "LC"; // lossy compress codec
-        }
-
-        // 5. Check for CD Quality (16-bit / 44.1 kHz)
-        //if (song.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48) {
-            return "SQ"; //""CD";
-       // }
-
-        // 6. Fallback for any unknown format
-      //  return "NA";
-    }
-
     public static int getQualityTextColor(Context context, String qualityInd) {
         if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_unknown);
 
         if(qualityInd.equals("MQA Studio")) {
             return context.getColor(R.color.quality_mqa_studio_text);
-        } else if(qualityInd.startsWith("MQA")) {
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
             return context.getColor(R.color.quality_mqa_text);
-        }else if(qualityInd.equals("SQ")) {
-            return context.getColor(R.color.quality_sq_text);
-        }else if(qualityInd.equals("HR")) {
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return context.getColor(R.color.quality_cd_text);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return context.getColor(R.color.quality_cd_text);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
             return context.getColor(R.color.quality_hr_text);
-        }else if(qualityInd.equals("DSD")) {
+        }else if(qualityInd.equals(LEGEND_DSD)) {
             return context.getColor(R.color.quality_dsd_text);
         }
 
@@ -498,13 +465,15 @@ public class MusicTagUtils {
         if(qualityInd ==null || isEmpty(qualityInd)) return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_unkwon);
         if(qualityInd.equals("MQA Studio")) {
             return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa_studio);
-        } else if(qualityInd.startsWith("MQA")) {
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
             return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa);
-        }else if(qualityInd.equals("SQ")) {
-            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_sq);
-        }else if(qualityInd.equals("HR")) {
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_cd);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_cd_ext);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
             return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_hr);
-        }else if(qualityInd.equals("DSD")) {
+        }else if(qualityInd.equals(LEGEND_DSD)) {
             return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_dsd);
         }
         return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_lc);
@@ -512,31 +481,16 @@ public class MusicTagUtils {
 
     public static String getQualityIndFullString(MediaTrack song) {
         String name = Constants.TITLE_CD_QUALITY;
-       /* String ind = song.getQualityInd();
-        if("DSD".equals(ind)) {
-            name = Constants.TITLE_DSD;
-        }else if (ind.equals("MQA")) {
-            name = Constants.TITLE_MASTER_QUALITY;
-        }else if ("HR".equals(ind)) {
-            name = Constants.TITLE_HIRES;
-        }else if ("LC".equals(ind)) {
-            name = Constants.TITLE_HIGH_QUALITY;
-        }else if ("SQ".equals(ind)) {
-            name = Constants.TITLE_HIFI_LOSSLESS;
-        }; */
-
         if(TagUtils.isDSD(song)) {
-            name = Constants.TITLE_DSD;
+            name = TITLE_DSD;
         }else if(TagUtils.isMQA(song)) {
             name = Constants.TITLE_MASTER_AUDIO;
         }else if(TagUtils.isHiRes48(song)) {
-            name = Constants.TITLE_HIRES_24_48;
+            name = Constants.TITLE_CD_EXT_QUALITY;
         }else if(TagUtils.isHiRes(song)) {
             name = Constants.TITLE_HIRES;
         }else if(TagUtils.isLossy(song)) {
             name = Constants.TITLE_HIGH_QUALITY;
-        }else if(TagUtils.isHiRes(song)) {
-            name = Constants.TITLE_DSD;
         }
         return name;
     }

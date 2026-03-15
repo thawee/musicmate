@@ -24,6 +24,7 @@ import apincer.music.core.repository.FileRepository;
 import apincer.music.core.codec.MusicAnalyser;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.utils.FileUtils;
+import apincer.music.core.utils.TagUtils;
 
 /**
  * Utility class to handle file operations in background threads
@@ -222,7 +223,8 @@ public class FileOperationTask {
                         TagWriter.writeTagToFile(context, tag);
                         // if
                         fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
-
+                        tag.setQualityInd(TagUtils.getQualityIndicator(tag));
+                        tag.setMusicManaged(fileRepos.isManagedInLibrary(tag));
                         // Update tag in repository
                         tagRepos.saveTag(tag);
 

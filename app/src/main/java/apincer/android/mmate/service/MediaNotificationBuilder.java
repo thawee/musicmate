@@ -1,7 +1,7 @@
 package apincer.android.mmate.service;
 import static apincer.android.mmate.service.MusicMateServiceImpl.CHANNEL_ID;
-import static apincer.android.mmate.service.MusicMateServiceImpl.OFFLINE_STATUS;
-import static apincer.android.mmate.service.MusicMateServiceImpl.ONLINE_STATUS;
+import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_OFFLINE;
+import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_ONLINE_PREFIX;
 import static apincer.android.mmate.service.MusicMateServiceImpl.SERVICE_ID;
 
 import android.app.Notification;
@@ -267,8 +267,8 @@ public class MediaNotificationBuilder {
             @Nullable MediaServerHub.ServerStatus status) {
 
         String serverInfo = (status != null && status.isOnline())
-                ? ONLINE_STATUS
-                : OFFLINE_STATUS;
+                ? SERVER_STATUS_ONLINE_PREFIX
+                : SERVER_STATUS_OFFLINE;
 
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification_default)
@@ -512,28 +512,28 @@ public class MediaNotificationBuilder {
             Context context,
             @Nullable MediaServerHub.ServerStatus status,
             long tracks) {
-        String contentText = "Tap to start the server";
-        String statusText = OFFLINE_STATUS;
+      //  String contentText = "Tap to start the server";
+        String statusText = SERVER_STATUS_OFFLINE;
        // int tracks = (status != null) ? (int) tagRepos.getTotalSongs() : 0;
         PendingIntent toggleIntent = createServerToggleIntent(context, status); // Needs to be implemented
         int toggleIcon = R.drawable.ic_play_arrow;
-        String toggleTitle = "Start Server";
+       // String toggleTitle = "Start Server";
 
         if (status != null && status.isOnline()) {
-            statusText = ONLINE_STATUS;
-            contentText = tracks + " tracks available";
+            statusText = SERVER_STATUS_ONLINE_PREFIX;
+          //  contentText = tracks + " tracks available";
             toggleIcon = R.drawable.ic_stop;
-            toggleTitle = "Stop Server";
+       //     toggleTitle = "Stop Server";
         }
 
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setContentTitle(Constants.getPresentationName())
-                .setContentText(contentText)
+               // .setContentText(contentText)
                 .setSubText(statusText)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOnlyAlertOnce(true)
-                .addAction(toggleIcon, toggleTitle, toggleIntent)
+               // .addAction(toggleIcon, toggleTitle, toggleIntent)
                 .build();
 
         MediaNotificationBuilder.notify(context, notification);

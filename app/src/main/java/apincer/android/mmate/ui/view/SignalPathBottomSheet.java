@@ -30,6 +30,8 @@ import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.music.core.utils.TagUtils;
+import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 
 public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private final View.OnClickListener onClickListener;
@@ -129,7 +131,18 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         if (song != null) {
             // Add the "Lossless" indicator at the very top
            // String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
-            String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()) +" - "+MusicTagUtils.getQualityIndFullString(song);
+            String bps = StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true);
+            if(TagUtils.isMQA(song)) {
+                bps = bps + " ("+StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true)+")";
+            }
+            String quality = MusicTagUtils.getQualityIndFullString(song)
+                    + "  [ "
+                    + StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth())
+                    + " • "
+                    //+ song.getAudioEncoding().toUpperCase()
+                    //+" | "
+                    + bps
+                    + " ]";
            //  String quality = song.getQualityInd()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(quality.trim());
@@ -151,16 +164,16 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
                 addSignalPathStep(signalPathContainer, "Output", deviceDetails, false);
-                if(device.isBitPerfect()) {
-                    qualityIndicator.setText(Constants.TITLE_BIT_PERFECT);
-                }
+                //if(device.isBitPerfect()) {
+                //    qualityIndicator.setText(Constants.TITLE_STREAMING);
+                //}
             }else {
                 String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" [" + ApplicationUtils.getVersionNumber(getContext())+"]"; //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
                 playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
                 addSignalPathStep(signalPathContainer, "MusicMate Core", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Network Endpoint", playerDetails, false);
                 if(!MusicTagUtils.isLossy(song)) {
-                    qualityIndicator.setText(Constants.TITLE_BIT_PERFECT_STREAMING);
+                    qualityIndicator.setText(Constants.TITLE_STREAMING);
                 }
             }
         }

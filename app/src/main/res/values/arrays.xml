@@ -69,38 +69,20 @@
         <!-- audio recording company -->
         <item>Joox</item>
         <item>Qobuz</item>
-        <item>Apple</item>
+        <item>Apple Music</item>
         <item>Spotify</item>
         <item>Tidal</item>
-        <item>Youtube</item>
         <item>2L</item>
         <item>HD Tracks</item>
         <item>NativeDSD</item>
         <item>Onkyo</item>
         <item>GMM Grammy</item>
-        <item>Audioquest</item>
-        <item>Reference Recordings</item>
         <item>Chesky Records</item>
-        <item>Linn Records</item>
         <item>Sheffield Lab</item>
-        <item>Clearaudio</item>
         <item>Stockfisch</item>
         <item>Telarc Records</item>
         <item>Opus3</item>
-        <item>JVC</item>
-        <item>Lasting Impression Music</item>
-        <item>First Impression Music</item>
-        <item>Three Blind Mice</item>
-        <item>Classic Records</item>
-        <item>Proprius Records</item>
-        <item>Impex Records</item>
-        <item>Groove Note</item>
-        <item>Pope Music</item>
-        <item>Analogue Productions</item>
-        <item>Mobile Fidelity Sound Lab</item>
-        <item>TopMusic</item>
-        <item>Premonition Records</item>
-        <item>The Absolute Sound</item>
+        <item>MFSL</item>
     </string-array>
 
     <array name="auto_size_text_sizes">

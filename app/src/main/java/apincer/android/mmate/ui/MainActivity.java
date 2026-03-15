@@ -853,6 +853,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
         View btnOK = cview.findViewById(R.id.button_ok);
+        View btnOKFull = cview.findViewById(R.id.button_ok_full);
         View btnCancel = cview.findViewById(R.id.button_cancel);
 
         List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
@@ -949,9 +950,16 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
-           // Settings.setLastScanTime(getApplicationContext(), 0);
-            // start scan after setting dirs
-            Log.i(TAG, "Starting scan music file for first time.");
+            Log.i(TAG, "Starting scan music file.");
+            ScanAudioFileWorker.startScan(getApplicationContext());
+            alert.dismiss();
+        });
+
+        btnOKFull.setOnClickListener(v -> {
+            Settings.setDirectories(getApplicationContext(), dirs);
+            Log.i(TAG, "Starting full scan music file.");
+            TagRepository repository = new TagRepository(getApplicationContext());
+            repository.purgeDatabase();
             ScanAudioFileWorker.startScan(getApplicationContext());
             alert.dismiss();
         });

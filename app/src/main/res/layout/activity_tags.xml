@@ -217,7 +217,8 @@
                             android:id="@+id/rating_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/dimen_6_dp"/>
+                            android:layout_marginStart="@dimen/dimen_6_dp"
+                            app:mode="mini"/>
 
                         <apincer.android.mmate.ui.view.NewIndicatorView
                             android:id="@+id/new_view"

@@ -1,11 +1,11 @@
 {
   "playlists": [
     {
-      "name": "Golden Ear: The Audiophile Archive",
+      "name": "The Audiophile Archive",
       "uuid": "HighFidelityArchive",
       "type": "song",
       "version": "1.3",
-      "description": "Curated for the 'Velvet' signature of the iFi ZEN DAC V2 via Ropieee/DLNA. This archive serves as a critical benchmark for holographic vocal imaging, complex Big Band transients, and high-resolution orchestral decay. Each track is selected to evaluate bit-perfect transparency from source to transducer.",
+      "description": "Reference tracks for testing imaging and dynamics.",
       "songs": [
         {
           "title": "500 Miles",
@@ -124,13 +124,31 @@
         {
           "title": "25 Minutes",
           "artist": "Michael Learns to Rock",
-          "album": "Colours (Original 1993 Master)",
-          "notes": "The benchmark for 'Center-Stage Vocal Focus'. Features a dry, uncompressed vocal production. The snare drum has a specific 'wooden' snap that tests for mid-bass timing. Avoid modern loud remasters; the 1993 original has a superior DR12+ rating."
+          "album": "Colours (1993)",
+          "notes": "The 'Vocal Clarity' test. Jascha Richter’s voice is mixed very 'forward.' On your iFi setup, his voice should sound intimate and dry, with no digital 'grain.' Perfect for testing if your Isuzu MU-X's center image is stable."
+        },
+        {
+          "title": "25 Minutes",
+          "artist": "Michael Learns to Rock",
+          "album": "Colours (2014 Remaster)",
+          "notes": "The 'Vocal Clarity' test. Jascha Richter’s voice is mixed very 'forward.' On your iFi setup, his voice should sound intimate and dry, with no digital 'grain.' Perfect for testing if your Isuzu MU-X's center image is stable."
+        },
+        {
+          "title": "Sleeping Child",
+          "artist": "Michael Learns to Rock",
+          "album": "Colours (2014 Remaster)",
+          "notes": "The 'Mid-Bass Punch' benchmark. Features a very iconic, tight 90s snare and kick. In your Honda Accord, this should sound 'snappy'—if it sounds 'boomy,' your 80Hz-125Hz EQ bands are too high."
+        },
+        {
+          "title": "Out of the Blue",
+          "artist": "Michael Learns to Rock",
+          "album": "Colours (2014 Remaster)",
+          "notes": "The 'Soundstage' test. Features layered synthesizers and acoustic guitars. Your Java code will detect a lot of 'Air' here. On your DAC, you should be able to separate the piano from the synth pads easily."
         },
         {
           "title": "That's Why (You Go Away)",
           "artist": "Michael Learns to Rock",
-          "album": "Played on Pepper (1995 Original)",
+          "album": "Played on Pepper",
           "notes": "Reference for 'Piano Resonance' and vocal layering. The acoustic guitar in the intro should sound metallic and physical. The iFi Velvet signature prevents the high-tenor harmonies from sounding 'thin' or 'digital'."
         },
         {
@@ -140,9 +158,21 @@
           "notes": "The ultimate 'String Lushness' test. Features a wide orchestral backing. Perfect for evaluating 'Soundstage Width' in your Isuzu MU-X—the strings should bloom from the A-pillars, wrapping around the cabin while the piano stays dead-center."
         },
         {
+          "title": "That's Why (You Go Away)",
+          "artist": "Michael Learns to Rock",
+          "album": "Paint My Love - Greatest Hits",
+          "notes": "The 'Piano & Timbre' test. The opening piano notes are legendary. Your Java code will see a very healthy dynamic range here. On your system, the piano should have a natural 'weight' and decay. Perfect for checking for digital 'jitter'."
+        },
+        {
+          "title": "The Actor",
+          "artist": "Michael Learns to Rock",
+          "album": "Paint My Love - Greatest Hits",
+          "notes": "The 'Early 90s' benchmark. Since this is from their 1991 debut, it has a slightly 'thinner' and more 'digital' sound than their later hits. A great track to see if your iFi DAC's 'Velvet' sound can add some needed warmth."
+        },
+        {
           "title": "Take Me To Your Heart",
           "artist": "Michael Learns to Rock",
-          "album": "Take Me to Your Heart (2004)",
+          "album": "Take Me to Your Heart",
           "notes": "Modern Pop-Rock reference. A cover of Jacky Cheung's 'Goodbye Kiss'. Features cleaner, more digital production. Use this to test for 'Sibilance' control—if the 'S' sounds are sharp, your tweeter phase might be out by 180 degrees."
         },
         {
@@ -3254,11 +3284,11 @@
       ]
     },
     {
-      "name": "Golden Ear: Orchestral Resonance",
+      "name": "The Orchestral Resonance",
       "uuid": "OrchestralResonance",
       "type": "song",
       "version": "2026.03.04",
-      "description": "The definitive reference. Artist Format: Composer / Performer, Ensemble.",
+      "description": "Reference recordings for Composer, Performer & Ensemble",
       "songs": [
         {
           "title": "Symphony No. 5 in C Minor, Op. 67: I. Allegro con brio",
@@ -3763,10 +3793,10 @@
       ]
     },
     {
-      "name": "Golden Ear: Masterwork Albums",
+      "name": "The Masterwork Albums",
       "uuid": "MasterworkAlbums",
       "type": "album",
-      "description": "The definitive 40-album reference library for high-fidelity evaluation and musical appreciation.",
+      "description": "High-fidelity reference collection for listening",
       "songs": [
         {
           "album": "The Nightfly",
@@ -4015,6 +4045,7 @@
       "uuid": "RegionalEchoes",
       "type": "genre",
       "note": "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ",
+      "description": "Regional folk and local legends for relaxed, nostalgic listening",
       "songs": [
         {
           "genre": "Luk Thung"
@@ -4053,6 +4084,7 @@
       "uuid": "MidnightMoods",
       "type": "genre",
       "note": "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์",
+      "description": "Smooth relaxing music for calm nights and easy listening",
       "songs": [
         {
           "genre": "Jazz"
@@ -4127,6 +4159,7 @@
       "uuid": "EssentialSelects",
       "type": "genre",
       "note": "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป",
+      "description": "Timeless hits and crowd favorites with great sound",
       "songs": [
         {
           "genre": "Alternative"
@@ -4155,6 +4188,7 @@
       "name": "Timeless: Motion & Melody",
       "uuid": "MotionMelody",
       "type": "song",
+      "description": "Rhythmic energy and memorable melodies in a timeless journey",
       "songs": [
         {
           "title": "When You Say Nothing At All",

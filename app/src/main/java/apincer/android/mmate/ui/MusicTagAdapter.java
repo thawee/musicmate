@@ -30,6 +30,7 @@ import java.util.List;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.ui.view.BadgeView;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
@@ -155,7 +156,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return keyword;
                 }
             } else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
-                return isEmpty(keyword) ? Constants.TITLE_RESOLUTION : keyword;
+                return isEmpty(keyword) ? Constants.TITLE_QUALITY : keyword;
             } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
                 return isEmpty(keyword) ? Constants.TITLE_PLAYLIST : keyword;
             } else {
@@ -257,17 +258,20 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         View mTitleLayout;
         TextView mTitle;
         TextView mSubtitle;
-        TextView mAlbum;
+        TextView mStatistic;
+       // TextView mAlbum;
 
-        TextView mFileType;
+        //TextView mFileType;
 
-        TextView mSampleRate;
+        //TextView mSampleRate;
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
         ImageView mPlaylistView;
         TriangleLabelView mNewLabelView;
        // ResolutionView resolutionView;
+       BadgeView codec;
+        BadgeView resolution;
         DynamicRangeView drDbView;
         QualityIndicatorView qualityIndicatorView;
        // RatingIndicatorView ratingIndicatorView;
@@ -284,7 +288,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitleLayout = view.findViewById(R.id.item_title_layout);
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
-            this.mAlbum = view.findViewById(R.id.item_album);
+            this.mStatistic = view.findViewById(R.id.item_statistic);
+           // this.mAlbum = view.findViewById(R.id.item_album);
             this.mDurationView = view.findViewById(R.id.view_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
@@ -293,13 +298,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
 
+            this.codec = view.findViewById(R.id.icon_codec);
+            this.resolution = view.findViewById(R.id.icon_resolution);
+           // this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
             this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
             this.qualityIndicatorView = view.findViewById(R.id.icon_quality_indicator);
            // this.ratingIndicatorView = view.findViewById(R.id.rating_view);
 
            // this.moreActions = view.findViewById(R.id.item_more_actions);
-            this.mFileType = view.findViewById(R.id.item_filetype);
-            this.mSampleRate = view.findViewById(R.id.item_sample_rate);
+          //  this.mFileType = view.findViewById(R.id.item_filetype);
+          //  this.mSampleRate = view.findViewById(R.id.item_sample_rate);
         }
 
         public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
@@ -393,13 +401,15 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(viewType == 0) {
             // Create a new view, which defines the UI of the list item
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.view_list_item, parent, false);
+                   // .inflate(R.layout.view_list_item, parent, false);
+                    .inflate(R.layout.view_list_music_tag, parent, false);
 
             return new ViewHolder(view);
         }else if(viewType == 1) {
             // Create a new view, which defines the UI of the list item
             View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.view_list_item_compared, parent, false);
+                   // .inflate(R.layout.view_list_item_compared, parent, false);
+                    .inflate(R.layout.view_list_music_tag, parent, false);
 
             return new ViewHolder(view);
         }else {
@@ -441,13 +451,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         imageLoader.enqueue(request);
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, item));
-       // String subTitle = "🎵 "+formatSongSize(item.getChildCount());
-        String subTitle = formatSongSize(item.getChildCount());
-        subTitle = subTitle+" Songs | " + StringUtils.formatDuration(item.getAudioDuration(), true);
 
-        //if(SearchCriteria.TYPE.ARTIST.name().equals(item.getFileType())) {
-            holder.mSubtitle.setText(subTitle);
-       // }
+        holder.mSubtitle.setText(item.getNotes());
+
+        // String subTitle = "🎵 "+formatSongSize(item.getChildCount());
+        String subTitle = formatSongSize(item.getChildCount());
+        subTitle = subTitle+" tracks • " + StringUtils.formatDuration(item.getAudioDuration(), true);
+        holder.mStatistic.setText(subTitle);
+
     }
 
     public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, @NotNull MusicTag tag) {
@@ -520,27 +531,31 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         imageLoader.enqueue(request);
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
-        //holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
-        holder.mSubtitle.setText(tag.getArtist());
-        holder.mAlbum.setText(StringUtils.getSimplifiedAlbum(tag));
+        holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
+       // holder.mSubtitle.setText(tag.getArtist());
+      //  holder.mAlbum.setText(StringUtils.getSimplifiedAlbum(tag));
 
       //  holder.resolutionView.setMusicItem(tag);
 
-        if(isComparing(tag)) {
+       // if(isComparing(tag)) {
             holder.drDbView.setVisibility(VISIBLE);
             holder.drDbView.setMusicItem(tag);
-            if(holder.mFileType != null) {
+            holder.codec.setBadge(tag.getAudioEncoding().toUpperCase());
+            //String res = tag.getAudioBitsDepth() + "-bit • " + TagUtils.getSampleRate(tag);
+       // String res = tag.getAudioBitsDepth() + " / " + StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
+            holder.resolution.setBadge(TagUtils.getSampleRate(tag));
+          /*  if(holder.mFileType != null) {
                 holder.mFileType.setText(tag.getFileType());
             }
             if(holder.mSampleRate != null) {
                 holder.mSampleRate.setText(TagUtils.getSampleRate(tag));
-            }
-        }else if(tag.getDynamicRangeScore()>0){
-            holder.drDbView.setVisibility(VISIBLE);
-            holder.drDbView.setMusicItem(tag);
-        }else{
-             holder.drDbView.setVisibility(GONE);
-        }
+            } */
+       // }else if(tag.getDynamicRangeScore()>0){
+       //     holder.drDbView.setVisibility(VISIBLE);
+       //     holder.drDbView.setMusicItem(tag);
+      //  }else{
+      //       holder.drDbView.setVisibility(GONE);
+       // }
 
         holder.qualityIndicatorView.setVisibility(VISIBLE);
         holder.qualityIndicatorView.setMusicItem(tag);

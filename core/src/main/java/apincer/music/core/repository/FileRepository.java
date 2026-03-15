@@ -4,7 +4,8 @@ import static com.anggrayudi.storage.file.StorageId.PRIMARY;
 import static apincer.music.core.Constants.COVER_ARTS;
 import static apincer.music.core.Constants.DEFAULT_COVERART;
 import static apincer.music.core.Constants.IMAGE_COVERS;
-import static apincer.music.core.Constants.TITLE_MQA_SHORT;
+import static apincer.music.core.Constants.LEGEND_CD;
+import static apincer.music.core.Constants.LEGEND_MQA;
 import static apincer.music.core.provider.FileSystem.copyRelatedFiles;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
@@ -420,12 +421,12 @@ public class FileRepository {
                 album = Constants.UNKNOWN;
             }
             if(!StringUtils.isEmpty(sqInd)) {
-                if (sqInd.contains(TITLE_MQA_SHORT)) {
+                if (sqInd.contains(LEGEND_MQA)) {
                     // use MQA for MQA and MQA Studio
-                    sqInd = TITLE_MQA_SHORT;
+                    sqInd = LEGEND_MQA;
                 }
 
-                if (!Constants.TITLE_HIFI_LOSSLESS_SHORT.equals(sqInd)) {
+                if (!sqInd.equals(LEGEND_CD)) {
                     album = album + " (" + sqInd + ")";
                 }
             }

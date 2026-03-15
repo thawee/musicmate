@@ -84,7 +84,7 @@
     <item
         android:icon="@drawable/rounded_equalizer_24"
         android:id="@+id/menu_resolution"
-        android:title="@string/menu_resolutions"
+        android:title="@string/menu_quality"
         app:showAsAction="ifRoom" />
     <!--
     <item

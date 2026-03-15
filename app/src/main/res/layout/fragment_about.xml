@@ -149,12 +149,19 @@
                 app:label="@string/label_lossy"
                 />
             <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/encoding_btn_sq"
+                android:id="@+id/encoding_btn_cd"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/dimen_8_dp"
-                app:label="@string/label_Lossless"
+                app:label="@string/label_cd"
                 />
+
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_cd_ext"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                app:label="@string/label_cd_ext" />
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/encoding_btn_hr"
                 android:layout_width="wrap_content"

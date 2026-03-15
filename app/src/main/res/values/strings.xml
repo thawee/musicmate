@@ -200,29 +200,40 @@
     <string name="about_encoding_file">Convert Files</string>
     <string name="label_resolutions">Resolutions</string>
     <string name="label_codecs">Codecs</string>
-    <string name="label_lossy">LC</string>
+
+    <string name="label_lossy">LOSSY</string>
     <string name="label_Lossless">SQ</string>
-    <string name="label_hi_res">HR</string>
+    <string name="label_hi_res">HI-RES</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
-    <string name="label_audio_encoding_format">Resolutions</string>
-    <string name="label_file_format">File Format:</string>
-    <string name="label_file_resolution">Resolution:</string>
-    <string name="label_file_recommended">Recommended Genre:</string>
+    <string name="label_cd">CD</string>
+    <string name="label_cd_ext">24-BIT</string>
 
-    <string name="encoding_hq_header">Lossy Codecs</string>
+    <string name="label_audio_encoding_format">Resolutions</string>
+    <string name="label_file_format">Format:</string>
+    <string name="label_file_resolution">Resolution:</string>
+    <string name="label_file_recommended">Best for:</string>
+
+    <!--
+    <string name="encoding_hq_header">Lossy Quality</string>
     <string name="encoding_hq_desc">Optimal Balance of Data Usage and Sound Fidelity.</string>
     <string name="encoding_hq_format">MP3, AAC(M4A)</string>
     <string name="encoding_hq_resolution">16bit/44.1kHz, bitrate 256kbps or higher</string>
     <string name="encoding_hq_recommended">-</string>
 
-    <string name="encoding_lossless_header">Standard Quality</string>
-    <string name="encoding_lossless_desc">Reproduce Music with Smooth CD Quality.</string>
-    <string name="encoding_lossless_format">FLAC, ALAC, WAVE, AIFF</string>
-    <string name="encoding_lossless_resolution">16bit/44.1kHz, 24bit/48kHz</string>
-    <string name="encoding_lossless_recommended">Pop, Rock</string>
+    <string name="encoding_cd_header">CD Quality</string>
+    <string name="encoding_cd_desc">Reproduce Music with Smooth CD Quality.</string>
+    <string name="encoding_cd_format">FLAC, ALAC, WAVE, AIFF</string>
+    <string name="encoding_cd_resolution">16bit/44.1kHz</string>
+    <string name="encoding_cd_recommended">Pop, Rock</string>
 
-    <string name="encoding_hires_header">High Resolution Lossless</string>
+    <string name="encoding_cd_ext_header">CD-Extended Quality</string>
+    <string name="encoding_cd_ext_desc">Reproduce Music with Smooth CD Quality.</string>
+    <string name="encoding_cd_ext_format">FLAC, ALAC, WAVE, AIFF</string>
+    <string name="encoding_cd_ext_resolution">24bit/48kHz</string>
+    <string name="encoding_cd_ext_recommended">Pop, Rock</string>
+
+    <string name="encoding_hires_header">High Resolution</string>
     <string name="encoding_hires_desc">Enjoy Rich Music with Fine Instrument Details.</string>
     <string name="encoding_hires_format">FLAC, ALAC, WAVE, AIFF</string>
     <string name="encoding_hires_resolution">24bit/96kHz or Higher</string>
@@ -234,7 +245,7 @@
     <string name="encoding_dsd_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
     <string name="encoding_dsd_recommended">Classic, Jazz, Vocal</string>
 
-    <string name="encoding_mqa_header">MQA Studio Masters</string>
+    <string name="encoding_mqa_header">MQA Master Studio</string>
     <string name="encoding_mqa_desc">High-Quality Recordings with Studio Sound and Archival Classics.</string>
     <string name="encoding_mqa_format">FLAC</string>
     <string name="encoding_mqa_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
@@ -243,6 +254,50 @@
     <string name="encoding_mqa_green_detail">Genuine, but Not the Final Release</string>
     <string name="encoding_mqa_blue_header">MQA Studio (Blue):</string>
     <string name="encoding_mqa_blue_detail">Directly from Mastering Engineers</string>
+    -->
+
+    <string name="encoding_hq_header">Lossy Compressed Audio</string>
+    <string name="encoding_hq_desc">Efficient compressed audio that saves space while maintaining good sound quality.</string>
+    <string name="encoding_hq_format">MP3, AAC (M4A), OGG</string>
+    <string name="encoding_hq_resolution">16-bit • 44.1 kHz (up to 320kbps)</string>
+    <string name="encoding_hq_recommended">Casual Listening, Podcasts, Radio</string>
+
+    <string name="encoding_cd_header">CD Quality</string>
+    <string name="encoding_cd_desc">Lossless audio identical to the original compact disc.</string>
+    <string name="encoding_cd_format">FLAC, ALAC, WAV, AIFF</string>
+    <string name="encoding_cd_resolution">16–bit • 44.1–48 kHz</string>
+    <string name="encoding_cd_recommended">Pop, Rock, Country, Traditional</string>
+
+    <string name="encoding_cd_ext_header">Studio Quality (24-bit)</string>
+    <string name="encoding_cd_ext_desc">A step above standard CD, offering greater dynamic headroom.</string>
+    <string name="encoding_cd_ext_format">FLAC, ALAC, WAV, AIFF</string>
+    <string name="encoding_cd_ext_resolution">24-bit • 44.1–88.2 kHz</string>
+    <string name="encoding_cd_ext_recommended">Modern Pop, Electronic, R&amp;B</string>
+
+    <string name="encoding_hires_header">Hi-Res Audio</string>
+    <string name="encoding_hires_desc">High-resolution studio master audio with greater detail and dynamic range.</string>
+    <string name="encoding_hires_format">FLAC, ALAC, WAV, AIFF</string>
+    <string name="encoding_hires_resolution">24-bit • 96–384 kHz</string>
+    <string name="encoding_hires_recommended">Classical, Jazz, Acoustic</string>
+
+    <string name="encoding_dsd_header">DSD Audio</string>
+    <string name="encoding_dsd_desc">Ultra-high fidelity format known for smooth, analog-like sound reproduction.</string>
+    <string name="encoding_dsd_format">DSF, DFF</string>
+    <string name="encoding_dsd_resolution">DSD64 (2.8MHz) to DSD512 (22.5MHz)</string>
+    <string name="encoding_dsd_recommended">Audiophile Recordings, Classical, Jazz</string>
+
+    <string name="encoding_mqa_header">MQA (Master Quality Authenticated)</string>
+    <string name="encoding_mqa_desc">Master quality audio optimized for efficient streaming and playback.</string>
+    <string name="encoding_mqa_format">MQA Encoded</string>
+    <string name="encoding_mqa_resolution">Unfolds to 24-bit / 352.8 kHz</string>
+    <string name="encoding_mqa_recommended">Tidal Streams, Studio Masters</string>
+
+    <string name="encoding_mqa_green_header">MQA Verified</string>
+    <string name="encoding_mqa_green_detail">The file is authenticated and matches the original master.</string>
+
+    <string name="encoding_mqa_blue_header">MQA Studio</string>
+    <string name="encoding_mqa_blue_detail">Approved by the artist or studio as the definitive master.</string>
+
     <string name="label_audio_quality">Sound Quality</string>
     <string name="label_file_quality">File Quality</string>
     <string name="cancel">Cancel</string>
@@ -272,12 +327,12 @@
     <string name="find_online">Search Info on Google</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
-    <string name="analyze_music">Audio Fidelity Analysis</string>
+    <string name="analyze_music">Deep Analysis</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
     <string name="notification_server_not_running">Required WiFi network</string>
-    <string name="update_library">Update Library</string>
+    <string name="update_library">Music Library</string>
     <string name="label_library_all_songs">All Songs</string>
     <string name="label_library_recently_added">Recently Added</string>
     <string name="label_library_similar_songs">Similar Songs</string>
@@ -302,10 +357,12 @@
     <string name="media_server">Media Server</string>
     <string name="settings">Settings</string>
     <string name="powered_by">"Powered by %1$s"</string>
-    <string name="audio_path">Audio Output</string>
+    <string name="audio_path">Signal Path</string>
     <string name="menu_resolutions">Resolutions</string>
     <string name="wave_form">Waveform</string>
     <string name="analysis_failed">Analysis Failed</string>
-    <string name="analyzing">Analyzing...</string>
+    <string name="analyzing">Analyzing…</string>
+    <string name="scan_full">Full Scan</string>
+    <string name="menu_quality">Quality</string>
 
 </resources>

@@ -24,7 +24,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/rounded_directory_sync_24"
+            android:src="@drawable/rounded_label_24"
             android:layout_marginEnd="8dp"
             app:tint="@color/white" />
 
@@ -100,7 +100,21 @@
             android:layout_height="wrap_content"
             android:text="@string/fetch_songs_info"/>
         -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/colorOutline" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_ok_full"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/scan_full"/>
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"

@@ -1,5 +1,11 @@
 package apincer.music.core.utils;
 
+import static apincer.music.core.Constants.LEGEND_CD;
+import static apincer.music.core.Constants.LEGEND_DSD;
+import static apincer.music.core.Constants.LEGEND_HIRES;
+import static apincer.music.core.Constants.LEGEND_LOSSY;
+import static apincer.music.core.Constants.LEGEND_MQA;
+import static apincer.music.core.Constants.LEGEND_STUDIO;
 import static apincer.music.core.Constants.QUALITY_FAVORITE;
 import static apincer.music.core.Constants.QUALITY_RECOMMENDED;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_44;
@@ -227,15 +233,17 @@ public class TagUtils {
 
     public static String getEncodingTypeShort(MusicTag tag) {
         if(tag.isDSD()) {
-            return Constants.TITLE_DSD_SHORT;
+            return Constants.LEGEND_DSD;
         }else if(isMQA(tag)) {
-            return Constants.TITLE_MQA_SHORT;
+            return Constants.LEGEND_MQA;
         }else if(isHiRes(tag)) {
-            return Constants.TITLE_HIRES_SHORT;
+            return Constants.LEGEND_HIRES;
+        }else if(isPCM24Bits(tag)) {
+            return Constants.LEGEND_STUDIO;
         }else if(isLossless(tag)) {
-            return Constants.TITLE_HIFI_LOSSLESS_SHORT;
+            return Constants.LEGEND_CD;
         }else {
-            return Constants.TITLE_HIGH_QUALITY_SHORT;
+            return LEGEND_LOSSY;
         }
     }
 
@@ -307,35 +315,52 @@ public class TagUtils {
     public static String getQualityIndicator(MusicTag song) {
         // 1. Check for DSD, a single-bit format (highest priority)
         if (song.getAudioBitsDepth() == 1) {
-            return "DSD";
+            return LEGEND_DSD; //"DSD";
         }
 
         // 2. Check for MQA and include the original sample rate
         String mqaIndicator = trimToEmpty(song.getQualityInd());
         if ("MQA".equalsIgnoreCase(mqaIndicator) || "MQA Studio".equalsIgnoreCase(mqaIndicator)) {
             // We now include the original sample rate for MQA
-            return "MQA"; // mqaIndicator;
+            return LEGEND_MQA; //"MQA"; // mqaIndicator;
         }
 
         // 3. Check for Hi-Res Audio (any format with bit depth > 16 or sample rate > 44.1kHz)
-        if (song.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
-            return "HR"; //""Hi-Res";
+        if (song.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96) {
+            return LEGEND_HIRES; //"HR"; //""Hi-Res";
         }
 
         // 4. Check for Lossy formats (this should be the final check)
         if (isLossy(song)) {
             // Explicitly label the audio as "Lossy" instead of an empty string,
             // which provides more valuable information to the user.
-            return "LC"; // lossy compress codecs
+            return LEGEND_LOSSY; //"LC"; // lossy compress codecs
         }
 
-        // 5. Check for CD Quality (16-bit / 44.1 kHz)
-        //if (song.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48) {
-            return "SQ"; //""CD";
-       // }
+        // 5. Check for CD-Extended Quality (24-bit / 44.1 kHz)
+        if(isPCM24Bits(song)) {
+            return LEGEND_STUDIO;
+        }
 
-        // 6. Fallback for any unknown format
-      //  return "NA";
+        //6. else all 16 bit is CD quality
+        return  LEGEND_CD; // "SQ"; //""CD";
     }
 
+    public static String getQualityNote(String codec) {
+        if(codec.equals(Constants.TITLE_CD_QUALITY)) {
+            return "16–bit • 44.1–48 kHz";
+        }else  if(codec.equals(Constants.TITLE_DSD)) {
+            return "DSD64 (2.8MHz) to DSD512 (22.5MHz)";
+        }else  if(codec.equals(Constants.TITLE_MASTER_AUDIO)) {
+            return "Unfolds to 24-bit / 352.8 kHz";
+        }else  if(codec.equals(Constants.TITLE_CD_EXT_QUALITY)) {
+            return "24-bit • 44.1–88.2 kHz";
+        }else  if(codec.equals(Constants.TITLE_HIRES)) {
+            return "24-bit • 96–384 kHz";
+        }else  if(codec.equals(Constants.TITLE_HIGH_QUALITY)) {
+            return "MP3 • AAC • OGG";
+        }
+
+        return "";
+    }
 }

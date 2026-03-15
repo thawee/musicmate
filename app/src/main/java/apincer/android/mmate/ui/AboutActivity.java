@@ -1,11 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.music.core.Constants.TITLE_DSD_SHORT;
-import static apincer.music.core.Constants.TITLE_HIFI_LOSSLESS_SHORT;
-import static apincer.music.core.Constants.TITLE_HIGH_QUALITY_SHORT;
-import static apincer.music.core.Constants.TITLE_HIRES_SHORT;
-import static apincer.music.core.Constants.TITLE_MQA_SHORT;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -45,6 +39,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.android.mmate.R;
@@ -124,12 +119,13 @@ public class AboutActivity extends AppCompatActivity {
             TextView encodingHeader = v.findViewById(R.id.encoding_header);
             TextView encodingDetail = v.findViewById(R.id.encoding_details);
 
-            v.findViewById(R.id.encoding_btn_lc).setOnClickListener(view -> updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_sq).setOnClickListener(view -> updateEncodings(TITLE_HIFI_LOSSLESS_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_hr).setOnClickListener(view -> updateEncodings(TITLE_HIRES_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA_SHORT, encodingHeader, encodingDetail));
-            updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail);
+            v.findViewById(R.id.encoding_btn_lc).setOnClickListener(view -> updateEncodings(Constants.LEGEND_LOSSY, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_cd).setOnClickListener(view -> updateEncodings(Constants.LEGEND_CD, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_cd_ext).setOnClickListener(view -> updateEncodings(Constants.LEGEND_STUDIO, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_hr).setOnClickListener(view -> updateEncodings(Constants.LEGEND_HIRES, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(Constants.LEGEND_DSD, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(Constants.LEGEND_MQA, encodingHeader, encodingDetail));
+            updateEncodings(Constants.LEGEND_LOSSY, encodingHeader, encodingDetail);
 
             TextView qualityDetail = v.findViewById(R.id.quality_details);
             String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.md");
@@ -148,7 +144,6 @@ public class AboutActivity extends AppCompatActivity {
                     }else {
                         encList.put(enc, 1);
                     }
-
                 }
                 getActivity().runOnUiThread(() -> {
                     // storage
@@ -184,16 +179,17 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         private String getEncodingHeader(String btn) {
-            if(TITLE_HIGH_QUALITY_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
-            if(TITLE_HIFI_LOSSLESS_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
-            if(TITLE_HIRES_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
-            if(TITLE_DSD_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
-            if(TITLE_MQA_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
+            if(Constants.LEGEND_LOSSY.equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
+            if(Constants.LEGEND_CD.equalsIgnoreCase(btn)) return getString(R.string.encoding_cd_header);
+            if(Constants.LEGEND_STUDIO.equalsIgnoreCase(btn)) return getString(R.string.encoding_cd_ext_header);
+            if(Constants.LEGEND_HIRES.equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
+            if(Constants.LEGEND_DSD.equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
+            if(Constants.LEGEND_MQA.equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
             return btn;
         }
 
         private TextBuilder getEncodingDetailBuilder(String btn) {
-            if(TITLE_HIGH_QUALITY_SHORT.equalsIgnoreCase(btn)) {
+            if(Constants.LEGEND_LOSSY.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_hq_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -210,24 +206,41 @@ public class AboutActivity extends AppCompatActivity {
                        // .addWhiteSpace()
                       //  .addColoredTextRes(R.string.encoding_hq_recommended, R.color.encoding_desc);
             }
-            if(TITLE_HIFI_LOSSLESS_SHORT.equalsIgnoreCase(btn)) {
+            if(Constants.LEGEND_CD.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
-                        .addColoredTextRes(R.string.encoding_lossless_desc, R.color.encoding_desc)
+                        .addColoredTextRes(R.string.encoding_cd_desc, R.color.encoding_desc)
                         .addNewLine()
                         .addNewLine()
                         .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
                         .addWhiteSpace()
-                        .addColoredTextRes(R.string.encoding_lossless_format, R.color.encoding_detail)
+                        .addColoredTextRes(R.string.encoding_cd_format, R.color.encoding_detail)
                         .addNewLine()
                         .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
                         .addWhiteSpace()
-                        .addColoredTextRes(R.string.encoding_lossless_resolution, R.color.encoding_detail)
+                        .addColoredTextRes(R.string.encoding_cd_resolution, R.color.encoding_detail)
                         .addNewLine()
                         .addColoredTextRes(R.string.label_file_recommended, R.color.encoding_label)
                         .addWhiteSpace()
-                        .addColoredTextRes(R.string.encoding_lossless_recommended, R.color.encoding_detail);
+                        .addColoredTextRes(R.string.encoding_cd_recommended, R.color.encoding_detail);
             }
-            if(TITLE_HIRES_SHORT.equalsIgnoreCase(btn)) {
+            if(Constants.LEGEND_STUDIO.equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_cd_ext_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_cd_ext_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_cd_ext_resolution, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_recommended, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_cd_ext_recommended, R.color.encoding_detail);
+            }
+            if(Constants.LEGEND_HIRES.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_hires_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -244,7 +257,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_hires_recommended, R.color.encoding_detail);
             }
-            if(TITLE_DSD_SHORT.equalsIgnoreCase(btn)) {
+            if(Constants.LEGEND_DSD.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_dsd_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -261,7 +274,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_dsd_recommended, R.color.encoding_detail);
             }
-            if(TITLE_MQA_SHORT.equalsIgnoreCase(btn)) {
+            if(Constants.LEGEND_MQA.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_mqa_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -335,11 +348,12 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
-            mappedColors.put(TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
-            mappedColors.put(TITLE_DSD_SHORT, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
-            mappedColors.put(TITLE_HIRES_SHORT, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
-            mappedColors.put(TITLE_HIFI_LOSSLESS_SHORT, ContextCompat.getColor(getContext(), R.color.quality_sq_background));
-            mappedColors.put(TITLE_HIGH_QUALITY_SHORT, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
+            mappedColors.put(Constants.LEGEND_MQA, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
+            mappedColors.put(Constants.LEGEND_DSD, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
+            mappedColors.put(Constants.LEGEND_HIRES, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
+            mappedColors.put(Constants.LEGEND_CD, ContextCompat.getColor(getContext(), R.color.quality_cd_background));
+            mappedColors.put(Constants.LEGEND_STUDIO, ContextCompat.getColor(getContext(), R.color.quality_cd_ext_background));
+            mappedColors.put(Constants.LEGEND_LOSSY, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
 
             for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
@@ -388,5 +402,70 @@ public class AboutActivity extends AppCompatActivity {
 
             chart.invalidate();
         }
+
+        private void setDataForQuality(PieChart chart, Map<String, Integer> encList, String title) {
+            ArrayList<PieEntry> entries = new ArrayList<>();
+
+            // NOTE: The order of the entries when being added to the entries array determines their position around the center of
+            // the chart.
+            // add a lot of colors
+            ArrayList<Integer> colors = new ArrayList<>();
+            Map<String, Integer> mappedColors = new HashMap<>();
+
+            mappedColors.put(Constants.LEGEND_MQA, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
+            mappedColors.put(Constants.LEGEND_DSD, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
+            mappedColors.put(Constants.LEGEND_HIRES, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
+            mappedColors.put(Constants.LEGEND_CD, ContextCompat.getColor(getContext(), R.color.quality_cd_background));
+            mappedColors.put(Constants.LEGEND_STUDIO, ContextCompat.getColor(getContext(), R.color.quality_cd_ext_background));
+            mappedColors.put(Constants.LEGEND_LOSSY, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
+
+            for(String enc: encList.keySet()) {
+                entries.add(new PieEntry(encList.get(enc), enc));
+                if(mappedColors.containsKey(enc)) {
+                    colors.add(mappedColors.get(enc));
+                }else {
+                    colors.add(ColorTemplate.COLORFUL_COLORS[0]);
+                }
+            }
+
+            PieDataSet dataSet = new PieDataSet(entries, title);
+            //setting size of the value
+            dataSet.setValueLinePart1OffsetPercentage(0.0f);
+            dataSet.setValueLinePart1Length(1f);
+            dataSet.setValueLinePart2Length(0.4f);
+
+            dataSet.setValueFormatter(new ValueFormatter() {
+                private final DecimalFormat mFormat = new DecimalFormat("#,###");
+                @SuppressLint("DefaultLocale")
+                @Override
+                public String getFormattedValue(float value) {
+                    // return String.format("%.1f", value); // Format to one decimal place
+                    return mFormat.format(value);
+                }
+            });
+
+            dataSet.setDrawIcons(false);
+            dataSet.setSliceSpace(2f); //space between each slice
+            dataSet.setValueLineColor(Color.WHITE);
+            dataSet.setSelectionShift(2f);
+            //setting position of the value
+            dataSet.setYValuePosition(PieDataSet.ValuePosition.INSIDE_SLICE); // display value outside with pointing line
+            dataSet.setUsingSliceColorAsValueLineColor(true);
+            dataSet.setAutomaticallyDisableSliceSpacing(true);
+
+            dataSet.setColors(colors);
+
+            PieData data = new PieData(dataSet);
+            //   data.setValueFormatter(new PercentFormatter());
+            data.setValueTextSize(10f);
+            data.setValueTextColor(Color.BLACK);
+            chart.setData(data);
+
+            // undo all highlights
+            chart.highlightValues(null);
+
+            chart.invalidate();
+        }
+
     }
 }

@@ -39,11 +39,19 @@ dependencies {
     implementation libs.androidx.annotation
     implementation libs.androidx.core
     implementation(libs.io.undertow.core)
+
+    /*
     implementation("org.jboss.logging:jboss-logging") {
         version {
             strictly("3.5.3.Final")
         }
-    }
+    } */
+
+     /*
+     die in jboss tread 3.9.2
+at org.jboss.threads.EnhancedQueueExecutor.<clinit>(EnhancedQueueExecutor.java:81)
+*/
+    /*
     implementation("org.jboss.xnio:xnio-api") {
         version {
             strictly("3.5.11.Final")
@@ -53,7 +61,7 @@ dependencies {
         version {
             strictly("3.5.11.Final")
         }
-    }
+    } */
 
     implementation libs.jupnp.android
     implementation libs.jupnp.support

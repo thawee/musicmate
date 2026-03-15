@@ -208,7 +208,9 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
     private void addMusicStreamingHeaders(NioHttpServer.HttpResponse response, MusicTag song) {
         // MUSIC: Force volatile streaming, protect player memory
-        response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        //response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        // Focus on "Direct Streaming" and "No Bit-Tampering"
+        response.addHeader("Cache-Control", "no-store, no-transform, max-age=0");
         response.addHeader("Pragma", "no-cache"); // Legacy support for older DLNA gear
         response.addHeader("transferMode.dlna.org", "Streaming");
         response.addHeader("contentFeatures.dlna.org", getDLNAContentFeatures(song));

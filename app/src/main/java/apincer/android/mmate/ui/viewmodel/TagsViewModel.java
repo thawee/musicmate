@@ -40,7 +40,7 @@ public class TagsViewModel extends ViewModel {
     public void processAudioTagEditEvent(List<MusicTag> items) {
         //_searchCriteria.postValue(criteria);
         _editItems.postValue(items); // Post a copy
-        rebuildDisplayTag(items);
+        redisplayTag(items);
     }
 
     public void updateWithPlayingSong(MusicTag playingSong) {
@@ -52,10 +52,10 @@ public class TagsViewModel extends ViewModel {
         List<MusicTag> singleItemList = new ArrayList<>();
         singleItemList.add(playingSong.copy()); // Work with a copy
         _editItems.postValue(singleItemList);
-        rebuildDisplayTag(singleItemList);
+        redisplayTag(singleItemList);
     }
 
-    public void rebuildDisplayTag(List<MusicTag> currentItems) {
+    public void redisplayTag(List<MusicTag> currentItems) {
         if (currentItems == null || currentItems.isEmpty()) {
             _displayTag.postValue(null);
             return;
@@ -128,6 +128,6 @@ public class TagsViewModel extends ViewModel {
             updatedItems.add(musicTag);
         });
         _editItems.postValue(updatedItems); // This will trigger observers
-        rebuildDisplayTag(updatedItems);     // This will also trigger observers
+        redisplayTag(updatedItems);     // This will also trigger observers
     }
 }

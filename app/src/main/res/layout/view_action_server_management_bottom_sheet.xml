@@ -208,4 +208,12 @@
         </LinearLayout>
 
     </LinearLayout>
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dimen_2_dp"
+        android:background="@color/grays_charcoal"
+        android:layout_marginStart="@dimen/dimen_24_dp"
+        android:layout_marginEnd="@dimen/dimen_24_dp"
+        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginBottom="@dimen/dimen_8_dp"/>
 </LinearLayout>

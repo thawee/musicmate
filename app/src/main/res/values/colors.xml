@@ -312,6 +312,8 @@
     <color name="file_format_lossless">#ffecb3</color>
     <color name="file_format_lossy">@color/grey400</color>
 
+    <color name="text_badge">#ffe0e0e0</color>     <!-- Neutral grey -->
+
     <!--
     <color name="quality_bad">#EF2350</color>
     <color name="quality_good">#ef7350</color>
@@ -564,10 +566,13 @@
 
     <color name="drdb_background">#36454F</color>
 
+    <!--
     <color name="quality_dsd_text">#d8b4fe</color>
     <color name="quality_dsd_background">#6b21a8</color>
-    <color name="quality_sq_text">#93c5fd</color>
-    <color name="quality_sq_background">#1d4ed8</color>
+    <color name="quality_cd_text">#93c5fd</color>
+    <color name="quality_cd_background">#1d4ed8</color>
+    <color name="quality_cd_ext_text">#93c5fd</color>
+    <color name="quality_cd_ext_background">#1d4ed8</color>
     <color name="quality_hr_text">#fde68a</color>
     <color name="quality_hr_background">#d97706</color>
     <color name="quality_mqa_text">#86efac</color>
@@ -575,6 +580,27 @@
     <color name="quality_mqa_studio_text">#dcfce7</color>
     <color name="quality_mqa_studio_background">#2196F3</color>
     <color name="quality_lc_text">#d1d5db</color>
+    <color name="quality_lc_background">#374151</color>
+    -->
+    <color name="quality_dsd_text">#E9D5FF</color>
+    <color name="quality_dsd_background">#6B21A8</color>
+
+    <color name="quality_cd_text">#BFDBFE</color>
+    <color name="quality_cd_background">#1E3A8A</color>
+
+    <color name="quality_cd_ext_text">#99F6E4</color>
+    <color name="quality_cd_ext_background">#0F766E</color>
+
+    <color name="quality_hr_text">#FEF08A</color>
+    <color name="quality_hr_background">#B45309</color>
+
+    <color name="quality_mqa_text">#BBF7D0</color>
+    <color name="quality_mqa_background">#166534</color>
+
+    <color name="quality_mqa_studio_text">#BAE6FD</color>
+    <color name="quality_mqa_studio_background">#0369A1</color>
+
+    <color name="quality_lc_text">#E5E7EB</color>
     <color name="quality_lc_background">#374151</color>
 
     <color name="rating_text">#ffb300</color>

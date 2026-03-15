@@ -1,4 +1,4 @@
-package apincer.android.jupnp.transport.undertow;
+package apincer.android.jupnp.server.undertow;
 
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
@@ -67,22 +67,11 @@ public class WebServerImpl extends BaseServer implements WebServer {
         // need to  set followLinks on resourceManager
         String[] safePaths = new String[]{"/storage","/data"};
         // Define the specific entry points for your music
-        /*String[] safePaths = new String[]{
-                "/storage/",
-                context.getExternalCacheDir().getPath(), // App-specific external files
-                context.getExternalFilesDir(null).getPath(), // App-specific external files
-                context.getCacheDir().getPath(),             // App cache
-                context.getFilesDir().getPath(), // App Files
-                context.getDataDir().getPath(),  // App Dir
-                new File(getContext().getFilesDir(), "webui").getAbsolutePath()
-        }; */
         // Use a larger attribute cache for these paths to avoid repeated disk I/O
         // This prevents the CPU from waking up just to check "lastModified" on every chunk request.
         int transferMinSize = 1024 * 100; // 100kB is plenty for file metadata
         resourceHandler = new ResourceHandler(new PathResourceManager(Paths.get("/"), transferMinSize, true, true, safePaths))
                 .setDirectoryListingEnabled(false);
-        //resourceHandler = new ResourceHandler(new PathResourceManager(Paths.get("/"), 10485760, true, true, safePaths))
-        //        .setDirectoryListingEnabled(false);
     }
 
     @Override
@@ -186,8 +175,8 @@ public class WebServerImpl extends BaseServer implements WebServer {
                                 }
                             }));
 
-                    // Optimized for Hi-Res Streaming on Android
-                    int bufferSize = 1024 * 64; // 64KB buffers for Hi-Res efficiency
+                    // 128KB or 256KB is the "sweet spot" for DSD and 192kHz PCM
+                    int bufferSize = 1024 * 256;
 
                     server = Undertow.builder()
                             .addHttpListener(WEB_SERVER_PORT, bindAddress.getHostAddress())
@@ -204,7 +193,13 @@ public class WebServerImpl extends BaseServer implements WebServer {
                             // Correct way to set TCP_NODELAY in Undertow
                             .setSocketOption(Options.TCP_NODELAY, true)
                             // Hints to the Android Linux kernel to prioritize these packets for Low Delay
-                            .setSocketOption(Options.IP_TRAFFIC_CLASS, 0x10)
+                            // 0x10 is Low Delay (Good for control)
+                            // 0x08 is High Throughput (Better for massive Hi-Res/DSD streams)
+                            // Use 0x10|0x08 for a balance (0x18)
+                            //.setSocketOption(Options.IP_TRAFFIC_CLASS, 0x10)
+                            .setSocketOption(Options.IP_TRAFFIC_CLASS, 0x18)
+                            // Increase the system-level send buffer to handle bursts
+                            .setSocketOption(Options.SEND_BUFFER, 1024 * 1024)
                             .setHandler(pathHandler)
                             .build();
 
@@ -221,16 +216,37 @@ public class WebServerImpl extends BaseServer implements WebServer {
     private void serveContent(HttpServerExchange exchange, ContentHolder contentHolder) throws Exception {
         File file = new File(contentHolder.getFilePath());
         if (file.exists()) {
+            if(contentHolder.isMedia()) {
+                // 1. Bit-Perfect & Live Streaming Headers
+                // 'no-transform' is the most critical for audiophiles: it forbids network compression.
+                exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "no-store, no-transform, max-age=0");
+                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, contentHolder.getContentType());
+                exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, file.length());
+                exchange.getResponseHeaders().put(Headers.ACCEPT_RANGES, "bytes");
 
-            // Help the browser/player with cache headers so it doesn't re-request metadata
-            exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "public, max-age=3600");
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, contentHolder.getContentType());
-            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, file.length());
-            exchange.getResponseHeaders().put(Headers.ACCEPT_RANGES, "bytes");
+                // 2. High-End Renderer Hints
+                exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Bit-Perfect"), "true");
 
-            if (contentHolder.getDlnaContentFeatures() != null) {
-                exchange.getResponseHeaders().put(new HttpString("transferMode.dlna.org"), "Streaming");
-                exchange.getResponseHeaders().put(new HttpString("contentFeatures.dlna.org"), contentHolder.getDlnaContentFeatures());
+                // Fix: Use the file extension or type from your MusicTag if available
+                String codec = contentHolder.getContentType().replace("audio/", "").toUpperCase();
+                exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Codec"), codec);
+
+                // 3. DLNA Specifics
+                if (contentHolder.getDlnaContentFeatures() != null) {
+                    exchange.getResponseHeaders().put(new HttpString("transferMode.dlna.org"), "Streaming");
+                    exchange.getResponseHeaders().put(new HttpString("contentFeatures.dlna.org"), contentHolder.getDlnaContentFeatures());
+                }
+            }else if (contentHolder.isImage()) {
+                // Optimize for Library Scrolling: 1 hour cache is good,
+                // but for a camper setup with slow Wi-Fi, 24h (86400) is even better.
+                exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "public, max-age=86400, must-revalidate");
+                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, contentHolder.getContentType());
+                exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, file.length());
+            }else {
+                // 4. Snappy Web UI: 7-day cache for CSS/JS/Icons
+                exchange.getResponseHeaders().put(Headers.CACHE_CONTROL, "public, max-age=604800");
+                exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, contentHolder.getContentType());
+                exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, file.length());
             }
 
             // Because ResourceManager base is "/"
@@ -241,7 +257,7 @@ public class WebServerImpl extends BaseServer implements WebServer {
             resourceHandler.handleRequest(exchange);
         } else {
             exchange.setStatusCode(404);
-            exchange.getResponseSender().send("<html><body><h1>File not found</h1></body></html>");
+            exchange.getResponseSender().send("File not found");
         }
     }
 
@@ -331,6 +347,16 @@ public class WebServerImpl extends BaseServer implements WebServer {
 
         public String getDlnaContentFeatures() {
             return dlnaContentFeatures;
+        }
+
+        public boolean isMedia() {
+            if(isEmpty(contentType)) return false;
+            return contentType.startsWith("audio/") || contentType.startsWith("video/");
+        }
+
+        public boolean isImage() {
+            if(isEmpty(contentType)) return false;
+            return contentType.startsWith("image/");
         }
     }
 

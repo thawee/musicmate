@@ -4,7 +4,7 @@
 
     <!-- View background color -->
     <solid
-        android:color="@color/quality_sq_background" >
+        android:color="@color/quality_lc_background" >
     </solid>
 
     <!-- View border color and width -->

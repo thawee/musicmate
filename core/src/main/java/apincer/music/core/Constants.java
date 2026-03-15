@@ -39,43 +39,46 @@ public final class Constants {
     public static final String EMPTY = "";
     public static final String ARTIST_SEP = ",";
     public static final String ARTIST_SEP_SPACE = ", ";
-    public static final String ARTIST_SEP_ALT = ",";
-    public static final String ARTIST_SEP_ALT_SPACE = ", ";
+    //public static final String ARTIST_SEP_ALT = ",";
+    //public static final String ARTIST_SEP_ALT_SPACE = ", ";
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
-    public static final String TITLE_RESOLUTION = "Resolutions";
+    public static final String TITLE_QUALITY = "Quality";
     public static final String TITLE_CODEC = "Codecs";
-   // public static final String TITLE_GROUPING = "Groupings";
     public static final String TITLE_GENRE = "Genres";
     public static final String TITLE_ARTIST = "Artists";
     public static final String TITLE_NO_COVERART = "No Embed Coverart";
 
     public static final String TITLE_DUPLICATE = "Similar Songs";
-    //public static final String TITLE_BROKEN = "Quality Issues"; //	"Unsatisfactory"	"Needs Attention" or "Quality Issues"
     public static final String TITLE_TO_ANALYST_DR = "Pending Analysis";
     public static final String TITLE_INCOMING_SONGS = "Recently Added";
     public static final String TITLE_ALL_SONGS = "All Songs";
-    public static final String TITLE_DSD = "DSD Audio"; //""Direct Stream Digital";
-    public static final String TITLE_HIRES = "High Resolution"; //""Hi-Res Lossless";
-    public static final String TITLE_HIRES_24_48 = "High Resolution (24/48)"; //""Hi-Res Lossless";
-   // public static final String TITLE_HIRES_96_PLUS = "Hi-Res 24/96+"; //""Hi-Res Lossless";
+    public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
+    public static final String TITLE_HIRES = "Hi-Res Audio"; //""Hi-Res Lossless";
+    //public static final String TITLE_HIRES_24_48 = "Hi-Res (24/48 kHz)"; //""Hi-Res Lossless";
+   // public static final String SHORT_TITLE_HIRES = "Hi-Res"; //""Hi-Res Lossless";
+   // public static final String SHORT_TITLE_MQA = "MQA";
+
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed"; //"Lossy Codec"; //""High Quality";
-    public static final String TITLE_MASTER_AUDIO = "Master Quality Authenticated"; //""Studio Masters";  // Industry standard term //"Master Recordings";
-    public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality (24-bit)";
+   // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
+    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Audio"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
+    public static final String TITLE_MASTER_AUDIO = "MQA Master"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    //public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
    // public static final String TITLE_PCM = "PCM";
-   public static final String TITLE_HIRES_SHORT = "HR";
-    public static final String TITLE_HIFI_LOSSLESS_SHORT = "SQ";
-    public static final String TITLE_DSD_SHORT = "DSD";
-    public static final String TITLE_MQA_SHORT = "MQA";
-    public static final String TITLE_HIGH_QUALITY_SHORT = "LC"; //Lossy Codec
+   public static final String LEGEND_HIRES = "HI-RES";
+    public static final String LEGEND_CD = "CD";
+    public static final String LEGEND_STUDIO = "24-BIT"; // CD-Extended
+    public static final String LEGEND_DSD = "DSD";
+    public static final String LEGEND_MQA = "MQA";
+    public static final String LEGEND_LOSSY = "LOSSY"; //""LC"; //Lossy Codec
 
-    public static final String TITLE_BIT_PERFECT = "Bit-Perfect";
-    public static final String TITLE_BIT_PERFECT_STREAMING = "Bit-Perfect";
+    //public static final String TITLE_BIT_PERFECT = "Bit-Perfect";
+    //public static final String TITLE_BIT_PERFECT_STREAMING = "Bit-Perfect";
+    public static final String TITLE_STREAMING = "Steaming";
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
@@ -135,13 +138,13 @@ public final class Constants {
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
     public static final String PUBLISHER_QOBUZ = "Qobuz";
-    public static final String MEDIA_TYPE_CD = "CD";
-    public static final String MEDIA_TYPE_SACD = "SACD";
-    public static final String MEDIA_TYPE_VINYL = "VINYL";
-    public static final String PUBLISHER_APPLE = "Apple";
+   // public static final String MEDIA_TYPE_CD = "CD";
+   // public static final String MEDIA_TYPE_SACD = "SACD";
+   // public static final String MEDIA_TYPE_VINYL = "VINYL";
+    public static final String PUBLISHER_APPLE = "Apple Music";
     public static final String PUBLISHER_SPOTIFY = "Spotify";
     public static final String PUBLISHER_TIDAL = "Tidal";
-    public static final String PUBLISHER_YOUTUBE = "Youtube";
+   // public static final String PUBLISHER_YOUTUBE = "Youtube";
 
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART = "no_cover.png";

@@ -51,7 +51,7 @@ public class MainViewModel extends ViewModel {
 
         backgroundExecutor.execute(() -> {
             try {
-                List<MusicTag> items = repos.findMediaTag(criteria);
+                List<MusicTag> items = repos.findMusic(criteria);
                 _musicItems.postValue(items);
                 _musicItemsLoading.postValue(false);
             } catch (Exception e) {

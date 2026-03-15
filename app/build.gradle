@@ -214,9 +214,8 @@ dependencies {
     implementation libs.iirj
     implementation libs.markwon.core
     implementation libs.markwon.html
-    implementation libs.jboss.logging
 
-    // Flavor-specific dependencies
+    // ========= Flavor-specific dependencies ==============
 
     // OrmLite
     ormliteImplementation libs.ormlite.android

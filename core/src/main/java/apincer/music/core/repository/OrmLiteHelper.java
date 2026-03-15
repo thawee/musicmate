@@ -65,6 +65,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return list;
     }
 
+    public void purgeDatabase() throws SQLException {
+        // delete all music tag table
+        TableUtils.clearTable(getConnectionSource(), MusicTag.class);
+
+        // Reset the auto-increment counter in SQLite's internal sequence table
+        getMusicTagDao().executeRaw("DELETE FROM sqlite_sequence WHERE name='musictag'");
+    }
+
     public enum ORDERED_BY {ALBUM, ARTIST,TITLE}
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
@@ -411,6 +419,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    @Deprecated
     public List<MusicTag> findByMediaQuality(String keyword) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
@@ -515,44 +524,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Log.e(TAG, "findSimilarSongs Error: " + e.getMessage(), e);
             // Return an empty list instead of null to prevent NullPointerExceptions
             return new ArrayList<>();
-        }
-    }
-
-    @Deprecated
-    public List<MusicTag> findSimilarSongsOld(boolean excludeArtist) {
-        try {
-            List<MusicTag> list =  getMusicTagDao().queryForAll();
-
-            Map<String, List<MusicTag>> consolidatedMap = new HashMap<>();
-            for (MusicTag song : list) {
-                String key = song.getNormalizedTitle();// + "||" + song.getNormalizedTitle();
-                if(!excludeArtist) {
-                    key = key  + "||" + song.getNormalizedArtist();
-                }
-
-                // This is a shorter way to get the list for a key or create a new one
-                List<MusicTag> group = consolidatedMap.computeIfAbsent(key, k -> new ArrayList<>());
-                group.add(song);
-            }
-
-            List<MusicTag> masterList = new ArrayList<>();
-            for (List<MusicTag> duplicateGroup : consolidatedMap.values()) {
-                if(duplicateGroup.size()>1) {
-                    masterList.addAll(duplicateGroup);
-                }
-            }
-
-            // --- 2. Sort the final list of master records ---
-            // This sorts first by artist (A-Z), and then by title (A-Z) for artists with the same name.
-            masterList.sort(Comparator
-                    .comparing(MusicTag::getNormalizedTitle)
-                    .thenComparing(MusicTag::getNormalizedArtist)
-            );
-
-            return masterList;
-        } catch (Exception e) {
-            Log.e(TAG, "findSimilarSongs: " + e.getMessage());
-            return EMPTY_LIST;
         }
     }
 
@@ -871,22 +842,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             musicTagDao = getDao(MusicTag.class);
         }
         return musicTagDao;
-    }
-
-    @Deprecated
-    public Dao<Playlist, Long> getPlaylistDao() throws SQLException {
-        if (playlistDao == null) {
-            playlistDao = getDao(Playlist.class);
-        }
-        return playlistDao;
-    }
-
-    @Deprecated
-    public Dao<PlaylistItem, Long> getPlaylistItemDao() throws SQLException {
-        if (playlistItemDao == null) {
-            playlistItemDao = getDao(PlaylistItem.class);
-        }
-        return playlistItemDao;
     }
 
     public Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
