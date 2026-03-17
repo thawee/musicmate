@@ -205,16 +205,52 @@ public class BaseServer {
         );
     }
 
-    protected File getWebResource(String requestUri) {
-        if (requestUri.contains("?")) {
-            requestUri = requestUri.substring(0, requestUri.indexOf("?"));
-        }
-        if (requestUri.contains("#")) {
-            requestUri = requestUri.substring(0, requestUri.indexOf("#"));
+    /**
+     * Normalizes a request path to prevent path traversal attacks (e.g., ../../etc/passwd).
+     * Returns a safe relative path or null if traversal is detected.
+     */
+    protected String normalizePath(String path) {
+        if (path == null) return null;
+        
+        // 1. Remove query and fragment
+        if (path.contains("?")) path = path.substring(0, path.indexOf("?"));
+        if (path.contains("#")) path = path.substring(0, path.indexOf("#"));
+
+        // 2. Decode URL-encoded characters (like %2e%2e for ..)
+        try {
+            path = java.net.URLDecoder.decode(path, "UTF-8");
+        } catch (Exception ignored) {}
+
+        // 3. Check for obvious traversal attempts
+        if (path.contains("..") || path.contains("./") || path.contains("//")) {
+            return null;
         }
 
+        // 4. Ensure it's treated as a relative path from the context root
+        while (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return path.isEmpty() ? null : path;
+    }
+
+    protected File getWebResource(String requestUri) {
+        String safePath = normalizePath(requestUri);
+        if (safePath == null) return null;
+
         File webUiDir = new File(getContext().getFilesDir(), "webui");
-        return new File(webUiDir, requestUri);
+        File resource = new File(webUiDir, safePath);
+        
+        // Final sanity check: Does the resolved file still live inside webUiDir?
+        try {
+            if (!resource.getCanonicalPath().startsWith(webUiDir.getCanonicalPath())) {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        
+        return resource;
     }
 
     protected File getDefaultAlbumArt() {
@@ -223,8 +259,17 @@ public class BaseServer {
     }
 
     protected File getAlbumArt(String requestUri) {
-        //String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf("."));
+        if (requestUri == null || !requestUri.startsWith(CONTEXT_PATH_COVERART)) {
+            return getDefaultAlbumArt();
+        }
+
         String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length());
+        
+        // Basic sanitization for the filename key
+        if (albumUniqueKey.contains("/") || albumUniqueKey.contains("\\") || albumUniqueKey.contains("..")) {
+            return getDefaultAlbumArt();
+        }
+
         File albumArt = getFileRepos().getCoverArtByAlbumartFilename(albumUniqueKey);
         if(albumArt == null || albumArt.length() == 0) {
             albumArt = getDefaultAlbumArt();

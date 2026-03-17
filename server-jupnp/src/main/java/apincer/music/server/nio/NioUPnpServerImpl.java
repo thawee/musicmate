@@ -44,23 +44,27 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
 
         @Override
         public NioHttpServer.HttpResponse handle(NioHttpServer.HttpRequest request) {
+            String rawUri = request.getPath();
             try {
-                StreamRequestMessage requestMessage = readRequestMessage(request);
-                // System.out.println("Processing new request message: " + requestMessage);
+                // Basic Path Validation for UPnP
+                String normalizedPath = normalizePath(rawUri);
+                if (normalizedPath == null) {
+                    Log.w(TAG, "Security alert: Blocked suspicious UPnP path: " + rawUri);
+                    return new NioHttpServer.HttpResponse().setStatus(400, "Bad Request");
+                }
 
+                StreamRequestMessage requestMessage = readRequestMessage(request);
                 ReceivingSync protocol = protocolFactory.createReceivingSync(requestMessage);
                 protocol.run();
                 StreamResponseMessage responseMessage = protocol.getOutputMessage();
 
                 if (responseMessage != null) {
-                    // System.out.println("Preparing HTTP response message: " + responseMessage);
                     return writeResponseMessage(responseMessage);
                 } else {
-                   // System.out.println("Sending HTTP response status: 404 - No response from protocol stack");
                     return new NioHttpServer.HttpResponse().setStatus(404, "Not Found");
                 }
             } catch (Exception t) {
-                Log.i(TAG, TAG+" - Exception occurred during UPnP stream processing: " + t.getMessage());
+                Log.e(TAG, TAG+" - Exception occurred during UPnP stream processing: " + t.getMessage());
                 return new NioHttpServer.HttpResponse().setStatus(500, "Internal Server Error").setBody(t.getMessage().getBytes());
             }
         }
@@ -74,7 +78,7 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                 response.addHeader(entry.getKey(), entry.getValue().get(entry.getValue().size() - 1));
             }
 
-            //override header
+            // override header
             response.addHeader("Server", serverSignature);
             response.addHeader("Date", getCachedDate());
 
@@ -124,18 +128,16 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
 
     private Thread serverThread;
 
-    // Simplified constructor for pure Java environment
     public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-       // this.configuration = configuration;
-        addLibInfo("NioHttpServer", "");
+        addLibInfo("SonicNIO",  "2.2");
         serverSignature = getServerSignature();
     }
 
     @Override
     public void restartServer(InetAddress bindAddress, Object router) {
         synchronized (serverLock) {
-            Log.d(TAG, "Restarting NioUPnp Server...");
+            Log.d(TAG, "Restarting SonicNIO UPnP Server...");
 
             // 1. Full Stop
             stopServer();
@@ -171,16 +173,15 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         serverThread = new Thread(server);
         serverThread.setName("nio-upnp-runner");
         serverThread.start();
-        Log.i(TAG, TAG+" - NioUPnp Server running on " + bindAddress.getHostAddress() + ":" + getListenPort());
+        Log.i(TAG, TAG+" - SonicNIO UPnP Server running on " + bindAddress.getHostAddress() + ":" + getListenPort());
     }
 
     public void stopServer() {
-        //System.out.println(TAG + ": Stopping UPnPServer");
         synchronized (serverLock) {
             if (server != null) {
                 try {
                     server.stop();
-                    Log.i(TAG, "NioUPnp Server stopped successfully.");
+                    Log.i(TAG, "SonicNIO UPnP Server stopped successfully.");
                 } catch (Exception e) {
                     Log.e(TAG, "Error during server shutdown", e);
                 } finally {
@@ -193,6 +194,8 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         Log.i(TAG, TAG + " - Interrupted while waiting for server thread to stop.");
+                    }finally {
+                        serverThread = null;
                     }
                 }
             }

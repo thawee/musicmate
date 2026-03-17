@@ -31,6 +31,7 @@ import java.util.List;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.ui.view.BadgeView;
+import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
@@ -267,15 +268,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
-        ImageView mPlaylistView;
+       // ImageView mPlaylistView;
         TriangleLabelView mNewLabelView;
        // ResolutionView resolutionView;
        BadgeView codec;
         BadgeView resolution;
         DynamicRangeView drDbView;
         QualityIndicatorView qualityIndicatorView;
-       // RatingIndicatorView ratingIndicatorView;
-        DurationView mDurationView;
+        RatingIndicatorView ratingIndicatorView;
+       // DurationView mDurationView;
+       BadgeView mDurationView;
        // View moreActions;
 
         public ViewHolder(View view) {
@@ -293,7 +295,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mDurationView = view.findViewById(R.id.view_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
-            this.mPlaylistView = view.findViewById(R.id.item_playlist);
+            //this.mPlaylistView = view.findViewById(R.id.item_playlist);
 
            // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
@@ -303,7 +305,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            // this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
             this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
             this.qualityIndicatorView = view.findViewById(R.id.icon_quality_indicator);
-           // this.ratingIndicatorView = view.findViewById(R.id.rating_view);
+           this.ratingIndicatorView = view.findViewById(R.id.rating_view);
 
            // this.moreActions = view.findViewById(R.id.item_more_actions);
           //  this.mFileType = view.findViewById(R.id.item_filetype);
@@ -481,11 +483,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if (holder.mTitleLayout != null) {
             holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
         }
-        boolean isPlaying = false;
+       // boolean isPlaying = false;
         holder.mPlayerView.setVisibility(GONE);
         if(playbackService != null) {
             if (tag.equals(playbackService.getNowPlayingSong())) {
-                isPlaying = true;
+             //   isPlaying = true;
                // Drawable bg = AppCompatResources.getDrawable(holder.mContext, R.drawable.shape_round_background_playing);
               //  Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_notification_default);
                // holder.mPlayerView.setImageDrawable(drawable);
@@ -496,9 +498,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
         //if(!isPlaying) {
             if(PlaylistRepository.isInPlaylist(tag)) {
-                holder.mPlaylistView.setVisibility(VISIBLE);
+                holder.ratingIndicatorView.setMusicItem(tag);
+                holder.ratingIndicatorView.setVisibility(VISIBLE);
+               // holder.mPlaylistView.setVisibility(VISIBLE);
             }else {
-                holder.mPlaylistView.setVisibility(GONE);
+               // holder.mPlaylistView.setVisibility(GONE);
+                holder.ratingIndicatorView.setVisibility(GONE);
             }
 
            // holder.mPlaylistView.setImageDrawable(AppCompatResources.getDrawable(holder.mContext, R.drawable.round_favorite_border_24));
@@ -540,8 +545,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        // if(isComparing(tag)) {
             holder.drDbView.setVisibility(VISIBLE);
             holder.drDbView.setMusicItem(tag);
-            holder.codec.setBadge(tag.getAudioEncoding().toUpperCase());
-            //String res = tag.getAudioBitsDepth() + "-bit • " + TagUtils.getSampleRate(tag);
+          //  holder.codec.setBadge(tag.getAudioEncoding().toUpperCase());
+        holder.codec.setBadge(tag.getAudioEncoding().toUpperCase(), TagUtils.getCodecColor(holder.mContext, tag), null);
+
+        //String res = tag.getAudioBitsDepth() + "-bit • " + TagUtils.getSampleRate(tag);
        // String res = tag.getAudioBitsDepth() + " / " + StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
             holder.resolution.setBadge(TagUtils.getSampleRate(tag));
           /*  if(holder.mFileType != null) {
@@ -561,7 +568,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.qualityIndicatorView.setMusicItem(tag);
 
        // holder.ratingIndicatorView.setMusicItem(tag);
-        holder.mDurationView.setMusicItem(tag);
+       // holder.mDurationView.setMusicItem(tag);
+        holder.mDurationView.setBadge(StringUtils.formatDuration(tag.getAudioDuration(), false));
     }
 
     private boolean isComparing(MusicTag tag) {

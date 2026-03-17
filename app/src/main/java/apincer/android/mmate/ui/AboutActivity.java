@@ -403,6 +403,7 @@ public class AboutActivity extends AppCompatActivity {
             chart.invalidate();
         }
 
+        /*
         private void setDataForQuality(PieChart chart, Map<String, Integer> encList, String title) {
             ArrayList<PieEntry> entries = new ArrayList<>();
 
@@ -465,7 +466,7 @@ public class AboutActivity extends AppCompatActivity {
             chart.highlightValues(null);
 
             chart.invalidate();
-        }
+        } */
 
     }
 }

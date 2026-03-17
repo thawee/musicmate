@@ -1,9 +1,9 @@
 package apincer.android.mmate.ui;
 
+import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
-import static apincer.music.core.utils.TagUtils.getStatusColor;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -18,9 +18,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -57,7 +54,6 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -65,9 +61,13 @@ import javax.inject.Inject;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.android.mmate.ui.view.BadgeView;
+import apincer.android.mmate.ui.view.VerdictFormatter;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.music.core.Constants;
-import apincer.music.core.codec.FFMpegHelper;
+import apincer.music.core.authenticity.AudioAnalysisResult;
+import apincer.music.core.authenticity.AudioAuthenticityAnalyzer;
+import apincer.music.core.authenticity.SpectrogramGenerator;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -92,7 +92,6 @@ import coil3.size.Precision;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
 import dagger.hilt.android.AndroidEntryPoint;
-//import sakout.mehdi.StateViews.StateView;
 
 @AndroidEntryPoint
 public class TagsActivity extends AppCompatActivity {
@@ -113,6 +112,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView genreView;
     private TextView encInfo;
     private TextView pathInfo;
+    private BadgeView codecView;
     private DynamicRangeView dynamicRangeView;
     private QualityIndicatorView qualityIndicatorView;
     private RatingIndicatorView ratingIndicatorView;
@@ -317,6 +317,7 @@ public class TagsActivity extends AppCompatActivity {
         pathInfo = findViewById(R.id.panel_path);
         //pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
+        codecView = findViewById(R.id.icon_codec);
         dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
         //ratingView = findViewById(R.id.rating);
         qualityIndicatorView = findViewById(R.id.icon_quality_indicator);
@@ -380,7 +381,7 @@ public class TagsActivity extends AppCompatActivity {
         View cview = getLayoutInflater().inflate(R.layout.view_action_spectrum, null);
 
         TextView filenameText = cview.findViewById(R.id.filename);
-        TextView resolution = cview.findViewById(R.id.resolution);
+        //TextView resolution = cview.findViewById(R.id.resolution);
         TextView qualityScore = cview.findViewById(R.id.quality_score);
         ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
         ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
@@ -388,70 +389,84 @@ public class TagsActivity extends AppCompatActivity {
         filenameText.setText(track.getSimpleName());
         qualityScore.setText(R.string.analyzing);
 
-        int metaInfoTextSize = 10; //12; //10
-        int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
-        int sepColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_600);
-        SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-
-        // encoding type
-        spannableEnc.append(new SpecialTextUnit(track.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
-        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
-
-        // bps
-        spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(track.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
-        spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(track.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
-        if(TagUtils.isMQA(track)) {
-            spannableEnc.append(new SpecialTextUnit(" ("+StringUtils.formatAudioSampleRate(track.getMqaSampleRate(), true)+")", encColor).setTextSize(metaInfoTextSize));
-        }
-        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
-        spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(track.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
-
-        spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
-        spannableEnc.append(new SpecialTextUnit(StringUtils.formatStorageSize(track.getFileSize()), encColor).setTextSize(metaInfoTextSize));
-
-        resolution.setText(spannableEnc.build());
-
         if (spinner != null) spinner.setVisibility(View.VISIBLE);
 
-        // 1. Generate Spectrogram
-        FFMpegHelper.generateSpectrum(getApplicationContext(), track, new FFMpegHelper.GenerateCallback() {
-            @Override
-            public void onGenerated(String path, String qualityStatus, int realBits, double highFreqVolume) {
-                // Coin/Coil/Glide must be called on Main Thread
-                runOnUiThread(() -> {
-                    ImageRequest imageRequest = new ImageRequest.Builder(getApplicationContext())
-                            .data(new File(path))
-                            .size(Size.ORIGINAL)
-                            // Disables the memory cache (prevents showing the previous track's image)
-                            .memoryCachePolicy(CachePolicy.DISABLED)
-                            // Disables the disk cache (forces a fresh read from your FFmpeg output)
-                            .diskCachePolicy(CachePolicy.DISABLED)
-                            // Highly recommended for spectrograms to ensure sharp detail
-                            .precision(Precision.EXACT)
-                            .target(new ImageViewTarget(spectrumView))
-                            .build();
-                    SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
-                    SpannableString spannable = new SpannableString(qualityStatus);
-                    int color = getStatusColor(qualityStatus);
-                    spannable.setSpan(new ForegroundColorSpan(color), 0, qualityStatus.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        AudioAuthenticityAnalyzer.analyze(
+                track.getPath(),
+                (int) track.getAudioSampleRate(),
+                track.getAudioBitsDepth(),
+                new AudioAuthenticityAnalyzer.Callback() {
 
-                    qualityScore.setText(spannable);
+                    @Override
+                    public void onResult(AudioAnalysisResult r) {
+/*
+                        Log.d("AudioAnalysis", "Verdict: " + r.verdict);
+                        Log.d("AudioAnalysis", "DR: " + r.dynamicRange);
+                        Log.d("AudioAnalysis", "Noise floor: " + r.noiseFloor);
+                        Log.d("AudioAnalysis", "Peak: " + r.peak);
+                        Log.d("AudioAnalysis", "bitDepth: " + r.bitDepth);
+                        Log.d("AudioAnalysis", "sampleRate: " + r.sampleRate);
+                        Log.d("AudioAnalysis", "highBandRms: " + r.highBandRms);
+                        Log.d("AudioAnalysis", "lowBandRms: " + r.lowBandRms);
+                        Log.d("AudioAnalysis", "Flatness: " + r.spectralFlatness); */
 
-                   // qualityScore.setText(qualityStatus);
+                        runOnUiThread(() -> {
+                            String result = r.verdict
+                                    + " ["
+                                    + StringUtils.formatAudioBitsDepth(r.bitDepth)
+                                    + SYMBOL_ENC_SEP
+                                    + StringUtils.formatAudioSampleRate(r.sampleRate, true)
+                                    +  "]";
 
-                    if (spinner != null) spinner.setVisibility(View.GONE);
+                           // SpannableString spannable = new SpannableString(result);
+                           // int color = getStatusColor(r.verdict);
+                           // spannable.setSpan(new ForegroundColorSpan(color), 0, result.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                          //  qualityScore.setText(spannable);
+
+                            // Apply the formatted spannable text
+                            qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
+
+                            if (spinner != null) spinner.setVisibility(View.GONE);
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                        Log.e("AudioAnalysis", error);
+
+                    }
                 });
-            }
 
-            @Override
-            public void onError(String message) {
-                runOnUiThread(() -> {
-                    qualityScore.setText(R.string.analysis_failed);
-                    if (spinner != null) spinner.setVisibility(View.GONE);
+        SpectrogramGenerator.generate(getApplicationContext(), track.getPath(), (int) track.getAudioSampleRate(),
+                new SpectrogramGenerator.Callback() {
+
+                    @Override
+                    public void onSuccess(String outputPath) {
+
+                        Log.d("AudioAnalysis", "Spectrogram saved: " + outputPath);
+
+                        ImageRequest imageRequest = new ImageRequest.Builder(getApplicationContext())
+                                .data(new File(outputPath))
+                                .size(Size.ORIGINAL)
+                                // Disables the memory cache (prevents showing the previous track's image)
+                                .memoryCachePolicy(CachePolicy.DISABLED)
+                                // Disables the disk cache (forces a fresh read from your FFmpeg output)
+                                .diskCachePolicy(CachePolicy.DISABLED)
+                                // Highly recommended for spectrograms to ensure sharp detail
+                                .precision(Precision.EXACT)
+                                .target(new ImageViewTarget(spectrumView))
+                                .build();
+                        SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                        Log.e("AudioAnalysis", error);
+
+                    }
                 });
-            }
-        });
 
         // Dialog Setup
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
@@ -517,6 +532,7 @@ public class TagsActivity extends AppCompatActivity {
         // load resolution, quality, coverArt
         loadImages(currentDisplayTag);
         //resolutionView.setMusicItem(currentDisplayTag);
+        codecView.setBadge(currentDisplayTag.getAudioEncoding().toUpperCase(), TagUtils.getCodecColor(getApplicationContext(), currentDisplayTag), null);
         dynamicRangeView.setMusicItem(currentDisplayTag);
         qualityIndicatorView.setMusicItem(currentDisplayTag);
         ratingIndicatorView.setMusicItem(currentDisplayTag);
@@ -583,8 +599,8 @@ public class TagsActivity extends AppCompatActivity {
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
 
             // encoding type
-            spannableEnc.append(new SpecialTextUnit(currentDisplayTag.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
+            //spannableEnc.append(new SpecialTextUnit(currentDisplayTag.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
+            //spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
 
             // bps
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));

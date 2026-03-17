@@ -1,5 +1,6 @@
 package apincer.music.server.nio;
 
+import static apincer.music.core.http.NioHttpServer.HTTP_BAD_REQUEST;
 import static apincer.music.core.http.NioHttpServer.HTTP_INTERNAL_ERROR;
 import static apincer.music.core.http.NioHttpServer.HTTP_NOT_FOUND;
 import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_SERVER_FULL;
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -56,13 +56,13 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
     public NioWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("NioHttpServer",  "");
+        addLibInfo("SonicNIO",  "2.2");
     }
 
     @Override
     public void restartServer(InetAddress bindAddress) {
         synchronized (serverLock) {
-            Log.d(TAG, "Restarting Nio Server...");
+            Log.d(TAG, "Restarting SonicNIO Server...");
 
             // 1. Full Stop
             stopServer();
@@ -95,10 +95,8 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 server.setKeepAliveTimeout(IDLE_TIMEOUT);
 
                 wsHandler = new WebSocketHandlerImpl();
-                //server.registerWebSocketHandler(CONTEXT_PATH_WEBSOCKET, wsHandler);
                 server.registerWebSocketHandler(wsHandler);
 
-                //server.registerFallbackHandler(this::handleHttpRequest);
                 // 1. Your existing core router (the bottom of the chain)
                 NioHttpServer.Handler baseRouter = this::handleRequest;
 
@@ -108,7 +106,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 // 3. Register the outermost layer as the fallback handler
                 server.registerHttpHandler(rateLimiter);
 
-                Log.i(TAG, TAG + " - Nio WebServer running on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
+                Log.i(TAG, TAG + " - SonicNIO WebServer running on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
                 server.run();
 
             } catch (Exception e) {
@@ -121,14 +119,21 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     }
 
     private NioHttpServer.HttpResponse handleRequest(NioHttpServer.HttpRequest request) {
+        String rawUri = request.getPath();
         try {
-            String rawUri = request.getPath();
-            if (isEmpty(rawUri) || rawUri.equals("/")) {
-                rawUri = DEFAULT_PATH;
+            // Path Traversal Protection & Normalization
+            String requestUri = normalizePath(rawUri);
+            if (requestUri == null) {
+                Log.w(TAG, "Security alert: Blocked path traversal attempt: " + rawUri);
+                return createErrorResponse(HTTP_BAD_REQUEST, "Invalid path requested");
             }
 
-            // FIX: Decode URI (e.g. "%20" -> " ")
-            String requestUri = URLDecoder.decode(rawUri, StandardCharsets.UTF_8);
+            // Restore leading slash for internal routing logic
+            requestUri = "/" + requestUri;
+
+            if (requestUri.equals("/")) {
+                requestUri = DEFAULT_PATH;
+            }
 
             if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
                 File filePath = getAlbumArt(requestUri);
@@ -144,8 +149,8 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 return createResourceResponse(filePath, request);
             }
         } catch (Exception e) {
-            Log.e(TAG, TAG + " - Error handling HTTP request: " + request.getPath(), e);
-            return new NioHttpServer.HttpResponse().setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
+            Log.e(TAG, "Error handling HTTP request: " + rawUri, e);
+            return createErrorResponse(HTTP_INTERNAL_ERROR, "Internal Server Error");
         }
     }
 
@@ -157,14 +162,18 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
         // Final check on default art
         if (filePath == null || !filePath.exists()) {
-            return new NioHttpServer.HttpResponse().setStatus(HTTP_NOT_FOUND, "Not Found").setBody("Art not found".getBytes());
+            return createErrorResponse(HTTP_NOT_FOUND, "Art not found");
         }
 
-        //return server.createFileResponse(filePath, request);
-        NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
-        // ARTWORK & WEB UI: Cache aggressively for 7 days
-        response.addHeader("Cache-Control", "public, max-age=604800");
-        return response;
+        try {
+            NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
+            // ARTWORK & WEB UI: Cache aggressively for 7 days
+            response.addHeader("Cache-Control", "public, max-age=604800");
+            return response;
+        } catch (IOException e) {
+            Log.e(TAG, "IO error streaming album art", e);
+            return createErrorResponse(HTTP_INTERNAL_ERROR, "Streaming error");
+        }
     }
 
     private NioHttpServer.HttpResponse createSongResponse(MusicTag song, NioHttpServer.HttpRequest request) {
@@ -183,33 +192,37 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             addMusicStreamingHeaders(response, song);
             return response;
         } catch (IOException e) {
-            Log.e(TAG, TAG + " - Error creating file response", e);
-            return createErrorResponse(HTTP_INTERNAL_ERROR, "Error streaming file");
+            Log.e(TAG, "Error creating song file response", e);
+            return createErrorResponse(HTTP_INTERNAL_ERROR, "Error streaming audio file");
         }
     }
 
     private NioHttpServer.HttpResponse createResourceResponse(File filePath, NioHttpServer.HttpRequest request) throws IOException {
         if (filePath == null || !filePath.exists() || !filePath.canRead()) {
-            return new NioHttpServer.HttpResponse().setStatus(HTTP_NOT_FOUND, "Not Found").setBody("Resource not found".getBytes());
+            return createErrorResponse(HTTP_NOT_FOUND, "Resource not found");
         }
-       // return server.createFileResponse(filePath, request);
-        NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
-        // ARTWORK & WEB UI: Cache aggressively for 7 days
-        response.addHeader("Cache-Control", "public, max-age=604800");
-        return response;
+        
+        try {
+            NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
+            // ARTWORK & WEB UI: Cache aggressively for 7 days
+            response.addHeader("Cache-Control", "public, max-age=604800");
+            return response;
+        } catch (IOException e) {
+            Log.e(TAG, "IO error streaming web resource", e);
+            return createErrorResponse(HTTP_INTERNAL_ERROR, "Streaming error");
+        }
     }
 
     private NioHttpServer.HttpResponse createErrorResponse(int code, String message) {
         return new NioHttpServer.HttpResponse()
                 .setStatus(code, message)
                 .setBody(message.getBytes())
-                .addHeader("Content-Type", "text/plain; charset=utf-8");
+                .addHeader("Content-Type", "text/plain; charset=utf-8")
+                .addHeader("Connection", "close"); // Close connection on errors for safety
     }
 
     private void addMusicStreamingHeaders(NioHttpServer.HttpResponse response, MusicTag song) {
         // MUSIC: Force volatile streaming, protect player memory
-        //response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-        // Focus on "Direct Streaming" and "No Bit-Tampering"
         response.addHeader("Cache-Control", "no-store, no-transform, max-age=0");
         response.addHeader("Pragma", "no-cache"); // Legacy support for older DLNA gear
         response.addHeader("transferMode.dlna.org", "Streaming");
@@ -226,7 +239,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     }
 
     public void stopServer() {
-        Log.i(TAG, TAG + " - Stopping Nio WebServer");
+        Log.i(TAG, TAG + " - Stopping SonicNIO WebServer");
         synchronized (serverLock) {
             if (server != null) {
                 // 1. Close WebSockets
@@ -238,7 +251,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 // 2. Stop Server
                 try {
                     server.stop();
-                    Log.i(TAG, "Nio WebServer stopped successfully.");
+                    Log.i(TAG, "SonicNIO WebServer stopped successfully.");
                 } catch (Exception e) {
                     Log.e(TAG, "Error during server shutdown", e);
                 } finally {
@@ -284,7 +297,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         protected void broadcastMessage(String jsonResponse) {
             if (sessions == null || sessions.isEmpty()) return;
 
-            // Simple iteration is cleaner and often faster for small sets (<100) than parallelStream
             for (NioHttpServer.WebSocketConnection session : sessions) {
                 if (session.isClosed()) {
                     sessions.remove(session);
@@ -315,21 +327,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             }
             sessions.add(connection);
 
-            // Send welcome messages in background to avoid blocking acceptance
-            /*
-            backgroundExecutor.submit(() -> {
-                try {
-                    List<Map<String, Object>> messages = getWelcomeMessages();
-                    for (Map<String, Object> message : messages) {
-                        sendMessage(connection, message);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error sending welcome messages", e);
-                }
-            }); */
-
-            // Use the existing workerPool from the server instead of a separate executor
-            // This ensures better resource sharing with the rest of the NIO engine.
             List<Map<String, Object>> messages = getWelcomeMessages();
             for (Map<String, Object> message : messages) {
                 sendMessage(connection, message);
@@ -339,9 +336,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
             if (response != null && !connection.isClosed()) {
                 try {
-                    //String jsonResponse = MAPPER.writeValueAsString(response);
-                    //connection.send(jsonResponse);
-                    // Direct byte conversion is faster for NIO ByteBuffers
                     byte[] rawJson = MAPPER.writeValueAsBytes(response);
                     connection.send(new String(rawJson, StandardCharsets.UTF_8));
                 } catch (JsonProcessingException e) {
@@ -369,7 +363,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 String command = String.valueOf(messageMap.getOrDefault("command", ""));
                 if (command.isEmpty()) return;
 
-                // Handle command logic
                 Map<String, Object> response = handleCommand(command, messageMap);
                 sendMessage(connection, response);
 

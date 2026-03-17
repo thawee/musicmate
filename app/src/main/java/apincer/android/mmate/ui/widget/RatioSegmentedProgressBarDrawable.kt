@@ -5,8 +5,8 @@ import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 
 class RatioSegmentedProgressBarDrawable(
-    @ColorInt private val foregroundColor: Int,
-    @ColorInt private val backgroundColor: Int,
+    @param:ColorInt private val foregroundColor: Int,
+    @param:ColorInt private val backgroundColor: Int,
     segmentValueList: List<Long>,
     private val gapWidth: Float
 ) : Drawable() {

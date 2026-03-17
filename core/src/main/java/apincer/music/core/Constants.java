@@ -16,7 +16,6 @@ public final class Constants {
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
-    //public static final String FILTER_TYPE_GROUPING = "Grouping";
     public static final String FILTER_TYPE_PUBLISHER = "Publisher";
     public static final String FILTER_TYPE_PATH = "Folder";
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
@@ -24,11 +23,7 @@ public final class Constants {
 
     public static final int FLAC_STANDARD_COMPRESS_LEVEL = 4;
     public static final int FLAC_UNCOMPRESS_LEVEL = 0;
-
-    // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
-   // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
-    public static final int QUALITY_SAMPLING_RATE_48 = 48000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_CD = 16;
@@ -44,7 +39,7 @@ public final class Constants {
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
-    public static final String TITLE_QUALITY = "Quality";
+    public static final String TITLE_QUALITY = "Audio Quality";
     public static final String TITLE_CODEC = "Codecs";
     public static final String TITLE_GENRE = "Genres";
     public static final String TITLE_ARTIST = "Artists";
@@ -56,15 +51,12 @@ public final class Constants {
     public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
     public static final String TITLE_HIRES = "Hi-Res Audio"; //""Hi-Res Lossless";
-    //public static final String TITLE_HIRES_24_48 = "Hi-Res (24/48 kHz)"; //""Hi-Res Lossless";
-   // public static final String SHORT_TITLE_HIRES = "Hi-Res"; //""Hi-Res Lossless";
-   // public static final String SHORT_TITLE_MQA = "MQA";
 
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality (24-bit)";
+    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality";
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Audio"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
-    public static final String TITLE_MASTER_AUDIO = "MQA Master"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_MQA_MASTER_AUDIO = "MQA Master"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
@@ -138,13 +130,9 @@ public final class Constants {
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
     public static final String PUBLISHER_QOBUZ = "Qobuz";
-   // public static final String MEDIA_TYPE_CD = "CD";
-   // public static final String MEDIA_TYPE_SACD = "SACD";
-   // public static final String MEDIA_TYPE_VINYL = "VINYL";
     public static final String PUBLISHER_APPLE = "Apple Music";
     public static final String PUBLISHER_SPOTIFY = "Spotify";
     public static final String PUBLISHER_TIDAL = "Tidal";
-   // public static final String PUBLISHER_YOUTUBE = "Youtube";
 
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART = "no_cover.png";

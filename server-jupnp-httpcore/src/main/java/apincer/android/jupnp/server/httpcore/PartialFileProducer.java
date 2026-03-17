@@ -71,7 +71,7 @@ public class PartialFileProducer implements AsyncEntityProducer {
         }
 
         // Use 128KB buffer to match your SndBufSize for consistent high-res streaming
-        int bufferSize = (int) Math.min(131072, remaining);
+        int bufferSize = (int) Math.min(1024 * 1024, remaining);
         ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
 
         int read = fileChannel.read(buffer);

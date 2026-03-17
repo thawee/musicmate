@@ -101,7 +101,8 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                             .setSoKeepAlive(true)
                             //.setSelectInterval(TimeValue.ofSeconds(1))
                             .setSelectInterval(TimeValue.ofMicroseconds(50)) //1s is too slow; it can cause the "client stop" bug during handshakes.
-                            .setSndBufSize(65536*2) //Smoother delivery of Hi-Res FLAC/DSD peaks.
+                            //.setSndBufSize(65536*2) //Smoother delivery of Hi-Res FLAC/DSD peaks.
+                            .setSndBufSize(1024 * 1024)
                             .setRcvBufSize(65536)
                             .setSoReuseAddress(true)
                             .build();
@@ -230,12 +231,16 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                     String acceptKey = generateWebSocketAccept(keyHeader.getValue());
 
                     final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(HttpStatus.SC_SWITCHING_PROTOCOLS);
-                    responseBuilder.addHeader("Upgrade", "websocket");
-                    responseBuilder.addHeader("Connection", "Upgrade");
+                    responseBuilder.addHeader(HttpHeaders.UPGRADE, "websocket");
+                    responseBuilder.addHeader(HttpHeaders.CONNECTION, "Upgrade");
                     responseBuilder.addHeader("Sec-WebSocket-Accept", acceptKey);
 
-                    // Submit handshake response
-                   // responseTrigger.submitResponse(responseBuilder.build(), context);
+                    try {
+                        // Submit handshake response
+                        responseTrigger.submitResponse(responseBuilder.build(), context);
+                    }catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     // Hijack the session for the WebSocketHandler
                     HttpCoreContext coreContext = HttpCoreContext.cast(context);

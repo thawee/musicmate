@@ -31,7 +31,6 @@ import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.music.core.utils.TagUtils;
-import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 
 public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private final View.OnClickListener onClickListener;
@@ -136,16 +135,17 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 bps = bps + " ("+StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true)+")";
             }
             String quality = MusicTagUtils.getQualityIndFullString(song)
-                    + "  [ "
+                    + "  ["
                     + StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth())
                     + " • "
                     //+ song.getAudioEncoding().toUpperCase()
                     //+" | "
                     + bps
-                    + " ]";
-           //  String quality = song.getQualityInd()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
+                    + "]";
+
             TextView resolutionIndicator = new TextView(getContext());
-            resolutionIndicator.setText(quality.trim());
+            //resolutionIndicator.setText(quality.trim());
+            resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
             resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_green_light, getContext().getTheme()));
             resolutionIndicator.setTextSize(14f);
             resolutionIndicator.setPadding(0, 0, 0, 8);

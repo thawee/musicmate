@@ -268,7 +268,7 @@
     <string name="encoding_cd_resolution">16–bit • 44.1–48 kHz</string>
     <string name="encoding_cd_recommended">Pop, Rock, Country, Traditional</string>
 
-    <string name="encoding_cd_ext_header">Studio Quality (24-bit)</string>
+    <string name="encoding_cd_ext_header">Studio Quality</string>
     <string name="encoding_cd_ext_desc">A step above standard CD, offering greater dynamic headroom.</string>
     <string name="encoding_cd_ext_format">FLAC, ALAC, WAV, AIFF</string>
     <string name="encoding_cd_ext_resolution">24-bit • 44.1–88.2 kHz</string>
@@ -322,7 +322,7 @@
     <string name="web_server_name">MusicMate</string>
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
     <string name="show_frequency_spectrum">Frequency Spectrum</string>
-    <string name="lossless_verifier">View Spectral Health</string>
+    <string name="lossless_verifier">Technical Spectral Analysis</string>
     <string name="open_containing_folder">Open Containing Folder</string>
     <string name="find_online">Search Info on Google</string>
     <string name="label_rating_indicator">Rating</string>
@@ -363,6 +363,6 @@
     <string name="analysis_failed">Analysis Failed</string>
     <string name="analyzing">Analyzing…</string>
     <string name="scan_full">Full Scan</string>
-    <string name="menu_quality">Quality</string>
+    <string name="menu_quality">Audio Quality</string>
 
 </resources>

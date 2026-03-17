@@ -29,6 +29,7 @@ import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
+import dalvik.annotation.optimization.FastNative;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -362,21 +363,6 @@ public class MusicTagUtils {
         return artist;
     }
 
-    /*
-    public static String getEncodingTypeShort(MusicTag tag) {
-        if(tag.isDSD()) {
-            return Constants.TITLE_DSD_SHORT;
-        }else if(isMQA(tag)) {
-            return Constants.TITLE_MQA_SHORT;
-        }else if(isHiRes(tag)) {
-            return Constants.TITLE_HIRES_SHORT;
-        }else if(isLossless(tag)) {
-            return Constants.TITLE_HIFI_LOSSLESS_SHORT;
-        }else {
-            return Constants.TITLE_HIGH_QUALITY_SHORT;
-        }
-    } */
-
     public static boolean isWavFile(MusicTag musicTag) {
         return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getAudioEncoding()));
     }
@@ -412,22 +398,17 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()) || Constants.MEDIA_ENC_AIFF_ALT.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    /*
-    public static boolean isManagedInLibrary(Context context, MusicTag tag) {
-        String path = FileRepository.newInstance(context).buildCollectionPath(tag, true);
-        return StringUtils.compare(path, tag.getPath());
-    } */
-
     public static boolean isAACFile(@UnknownNullability MediaTrack musicTag) {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
     }
 
     public static int getChannels(MusicTag tag) {
-        String chStr = tag.getAudioChannels();
+       // String chStr = tag.getAudioChannels();
         return 2;
     }
 
     // Helper to determine if a format is lossless (for audiophile renderers)
+    @Deprecated
     public static boolean isLosslessFormat(MusicTag tag) {
         String format = tag.getFileType() != null ? tag.getFileType().toLowerCase() : "";
         String codec = tag.getAudioEncoding() != null ? tag.getAudioEncoding().toLowerCase() : "";
@@ -484,7 +465,7 @@ public class MusicTagUtils {
         if(TagUtils.isDSD(song)) {
             name = TITLE_DSD;
         }else if(TagUtils.isMQA(song)) {
-            name = Constants.TITLE_MASTER_AUDIO;
+            name = Constants.TITLE_MQA_MASTER_AUDIO;
         }else if(TagUtils.isHiRes48(song)) {
             name = Constants.TITLE_CD_EXT_QUALITY;
         }else if(TagUtils.isHiRes(song)) {

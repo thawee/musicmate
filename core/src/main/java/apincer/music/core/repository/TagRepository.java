@@ -377,7 +377,7 @@ public class TagRepository {
                 list = findQualityItems();
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
                 list = dbHelper.findDSDSongs(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_MASTER_AUDIO.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_MQA_MASTER_AUDIO.equals(criteria.getKeyword())) {
                 list = dbHelper.findMQASongs(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findHighQuality(0, 0);
@@ -426,7 +426,7 @@ public class TagRepository {
             if(TagUtils.isDSD(song)) {
                 codec = Constants.TITLE_DSD;
             }else if(TagUtils.isMQA(song)) {
-                codec = Constants.TITLE_MASTER_AUDIO;
+                codec = Constants.TITLE_MQA_MASTER_AUDIO;
             }else if(TagUtils.isHiRes48(song)) {
                 codec = Constants.TITLE_CD_EXT_QUALITY;
             }else if(TagUtils.isHiRes(song)) {
@@ -444,7 +444,7 @@ public class TagRepository {
             folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
             mapped.put(codec, folder);
 
-            if(codec.equalsIgnoreCase(Constants.TITLE_MASTER_AUDIO)) {
+            if(codec.equalsIgnoreCase(Constants.TITLE_MQA_MASTER_AUDIO)) {
                 if (TagUtils.isHiRes48(song)) {
                     codecAlt = Constants.TITLE_CD_EXT_QUALITY;
                 } else if (TagUtils.isCDQuality(song)) {
@@ -469,9 +469,9 @@ public class TagRepository {
         final Map<String, Integer> customOrder = Map.of(
                 Constants.TITLE_HIGH_QUALITY, 5,
                 Constants.TITLE_CD_QUALITY, 4,
-                Constants.TITLE_CD_EXT_QUALITY, 2,
-                Constants.TITLE_HIRES, 1,
-                Constants.TITLE_MASTER_AUDIO, 3,
+                Constants.TITLE_CD_EXT_QUALITY, 3,
+                Constants.TITLE_HIRES, 2,
+                Constants.TITLE_MQA_MASTER_AUDIO, 1,
                 Constants.TITLE_DSD, 0
         );
         // This new line sorts the list in-place alphabetically by title

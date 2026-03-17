@@ -22,4 +22,9 @@
     <color name="quality_unknown">@color/grey600</color>
     <color name="quality_unknown_black">#000000</color>
 
+    <color name="mm_label_lossless">#009688</color>
+    <color name="mm_label_lossy">#607D8B</color>
+    <color name="mm_label_lossless_bg">#1A009688</color>
+    <color name="mm_label_lossy_bg">#1A607D8B</color>
+
 </resources>

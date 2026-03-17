@@ -68,8 +68,8 @@ commons-match3 = {module = "org.apache.commons:commons-math3", version="3.6.1"}
 commons-lang3 = {module = "org.apache.commons:commons-lang3", version="3.20.0"}
 commons-text = {module = "org.apache.commons:commons-text", version="1.15.0"}
 #https://hc.apache.org/news.html
-apache-httpcore = {module="org.apache.httpcomponents.core5:httpcore5", version="5.3.6"}
-apache-http2core = {module="org.apache.httpcomponents.core5:httpcore5-h2", version="5.3.6"}
+apache-httpcore = {module="org.apache.httpcomponents.core5:httpcore5", version="5.4.2"}
+apache-http2core = {module="org.apache.httpcomponents.core5:httpcore5-h2", version="5.4.2"}
 #apache-httpcomponents-httpclient5 = {module = "org.apache.httpcomponents.client5:httpclient5", version="5.5.1"}
 
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -113,7 +113,7 @@ netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.10.Fina
 # 2.3.18.Final
 io-undertow-core = {module = "io.undertow:undertow-core", version = "2.4.0.RC1"}
 # jboss-logging 3.6.x not work on andoid
-jboss-logging = {module = "org.jboss.logging:jboss-logging", version="3.5.3.Final"}
+#jboss-logging = {module = "org.jboss.logging:jboss-logging", version="3.5.3.Final"}
 # jboss-logging 3.6.x not work on andoid
 #jboss-xnio = {module = "org.jboss.xnio:xnio-nio", version="3.8.15.Final"}
 

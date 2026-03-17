@@ -128,8 +128,14 @@
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
-
+<!--
             <apincer.android.mmate.ui.view.DurationView
+                android:id="@+id/view_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dimen_2_dp" />
+                -->
+            <apincer.android.mmate.ui.view.BadgeView
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -165,6 +171,14 @@
     </LinearLayout>
 
     <!-- Currently Playing Indicator -->
+    <apincer.android.mmate.ui.view.RatingIndicatorView
+        android:id="@+id/rating_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dimen_6_dp"
+        app:mode="mini"
+        tools:ignore="MissingConstraints" />
+    <!--
     <ImageView
         android:id="@+id/item_playlist"
         android:layout_width="@dimen/dimen_24_dp"
@@ -179,6 +193,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:src="@drawable/round_favorite_border_24"
         tools:src="@drawable/round_favorite_border_24" />
+        -->
 
     <ImageView
         android:id="@+id/item_player"

@@ -40,8 +40,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A robust, memory-efficient, multi-threaded NIO HTTP Server optimized for hi-res audio streaming.
- * Uses a single I/O thread (the "Reactor") and a pool of worker threads.
+ * <h1>SonicNIO</h1>
+ * <b>The Audiophile HTTP Reactor Engine for Android.</b>
+ *
+ * <p>SonicNIO (implemented as {@code NioHttpServer}) is a custom-built, zero-dependency
+ * network transport specifically engineered for high-fidelity audio streaming.
+ * Unlike generic servers, SonicNIO prioritizes deterministic throughput and
+ * minimal CPU wake-ups to ensure bit-perfect delivery to high-end DACs.</p>
+ *
+ * <h2>THE "SECRET SAUCE" ARCHITECTURE</h2>
+ * <ul>
+ *   <li><b>Reactor Pattern:</b> A single dedicated I/O thread (the Reactor) handles all
+ *       multiplexing, while a core-aligned worker pool processes business logic.</li>
+ *   <li><b>Zero-Copy Direct I/O:</b> Uses {@link java.nio.channels.FileChannel#transferTo}
+ *       to move bits directly from storage to the network card, bypassing the JVM heap.</li>
+ *   <li><b>Jitter-Free Streaming:</b> Employs fixed 64KB chunking and a global
+ *       Direct ByteBuffer Pool to ensure a steady, predictable stream of data.</li>
+ *   <li><b>Android-First:</b> Optimized for the Dalvik/ART garbage collector to keep
+ *       GC pauses under 20ms, preventing audio dropouts.</li>
+ * </ul>
  *
  * <h2>FEATURES</h2>
  * <ul>
@@ -55,7 +72,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li><b>Zero-Copy Streaming</b> - FileChannel direct transfers for maximum throughput</li>
  *   <li><b>Buffer Pooling</b> - Reusable direct ByteBuffers prevent allocation storms</li>
  *   <li><b>Chunked Streaming</b> - Configurable chunk size (64KB default) for smooth delivery</li>
- *   <li><b>Hi-Res Audio MIME Types</b> - FLAC, DSD (DFF/DSF), ALAC, APE, WavPack, and more</li>
+ *   <li><b>Hi-Res Audio MIME Types</b> - FLAC, DSD (DFF/DSF), ALAC, AAC, MP3, and more</li>
  *   <li><b>Memory Protection</b> - Request size limits and bounded buffers prevent exhaustion</li>
  *   <li><b>Connection Rate Limiting</b> - Prevent simultaneous connection floods</li>
  *   <li><b>Graceful Shutdown</b> - Proper resource cleanup and connection draining</li>
@@ -293,7 +310,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </table>
  *
  * @author Thawee Prakaipetch
- * @version 2.2
+ * @version 2.2 (SonicNIO)
  * @since 1.0
  * @see FileChannel#transferTo(long, long, WritableByteChannel)
  * @see <a href="https://tools.ietf.org/html/rfc7233">RFC 7233 - HTTP Range Requests</a>

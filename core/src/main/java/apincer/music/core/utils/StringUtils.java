@@ -46,7 +46,7 @@ public class StringUtils {
    // public static final String SYMBOL_ATTENTION = " \u2249"; //"" \u266F\u266F"; // path diff
     //public static final String SYMBOL_ENC_SEP = " \u25C8 ";
     //public static final String SYMBOL_ENC_SEP = " | ";
-    public static final String SYMBOL_ENC_SEP = " | "; //"" \u25C8 ";
+    public static final String SYMBOL_ENC_SEP = " • "; //"" | "; //"" \u25C8 ";
     public static final String SYMBOL_SEP = " \u25C8 "; //"" \u2051 "; //"" \u17C7 ";
   //  public static final String SYMBOL_HEADER_SEP = " \u25C8 ";
   //  public static final String SYMBOL_GENRE = " \u24BC ";

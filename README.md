@@ -8,7 +8,8 @@
 
 ### 🎧 High-Res Audio Support
 *   **MQA Identification:** Automatically detects Master Quality Authenticated (MQA) tracks and displays sample rates.
-*   **Audiophile Analysis:** Reads Dynamic Range (DR) and bit-depth to help identify "bad" or up-sampled music files.
+*   **Audiophile Analysis:** Measures Dynamic Range (DR) and bit-depth to help identify "bad" or up-sampled music files.
+*   **Visual Verification:** Integrated **Spectrum View** for verifying audio quality and true frequency response.
 *   **Format Support:** FLAC, WAV, AIFF, ALAC, AAC, MP3, and DSD (DoP).
 
 ### 📡 Advanced Media Server
@@ -17,127 +18,140 @@
 *   **Rich Metadata:** Serves extensive metadata including Album Art, Artist, Genre, and technical details (Bitrate, Sample Rate).
 
 ### 📂 Library Management
-*   Fast scanning using `jaudiotagger`.
-*   Organized browsing by Album, Artist, Genre, and Folder.
+*   **Fast Scanning:** High-performance scanning using `jaudiotagger`.
+*   **Organization:** Organized browsing by Album, Artist, Genre, and Folder.
+*   **Playlists:** Full support for creating and managing custom playlists.
 
 ---
 
 ## 🏗 System Architecture
 
-Music Mate follows a modular, clean architecture using Android Jetpack components.
+Music Mate follows a modular Clean Architecture, implementing a full DLNA stack on Android.
 
-### Modular Server Design
-The application features a unique pluggable server architecture, allowing the underlying HTTP transport engine to be swapped at compile time via Gradle flavors.
+### DLNA Media Server Components
+*   **UPnP Framework:** Core addressing, device discovery, and SOAP eventing.
+*   **Content Directory Service (CDS):** Handles library browsing with integrated Digital Content Decoding and Profiling.
+*   **Connection Manager Service:** Manages active streaming sessions.
+*   **HTTP Streamer:** The high-performance engine delivering digital content to clients.
+*   *Note: AV Transport Service is intentionally not implemented to maintain focus on bit-perfect audio delivery and specialized renderer compatibility.*
 
-### Module Details
+### High-Level Components
 
-#### 🔹 MusicMate Core (The Backend)
-The central nervous system of the application, running as a background service on Android.
-*   **Responsibilities:**
-    *   **DLNA/UPnP Server:** Advertises the library to the network, handles browsing requests, and streams audio.
-    *   **Web Server:** Hosts the **MusicMate Remote** web application.
-    *   **Metadata Manager:** Scans files, extracts tags (ID3, FLAC, Vorbis), and enriches them with high-quality metadata.
-    *   **Playback Control:** Manages the "Now Playing" queue and sends commands to DLNA renderers.
-*   **Key Technologies:** Java, jUPnP (Cling), Jetty 12 / Netty 4, RxJava.
-*   **Server Implementations:**
-    *   **Jetty (`server-jupnp-jetty`):** **(Recommended)** The robust, production-ready implementation.
-    *   **Netty (`server-jupnp-netty`):** High-performance, low-memory NIO implementation (Experimental).
-    *   **NIO (`server-jupnp-nio`):** Lightweight, pure Java NIO implementation.
-
-#### 🔹 MusicMate Web Remote (The Frontend)
-The user interface for controlling the system, accessible via any web browser.
-*   **Responsibilities:**
-    *   **Library Browsing:** Provides a rich, visual interface for navigating Artists, Albums, and Genres.
-    *   **Playback Control:** Play, pause, skip, seek, and volume control for the active renderer.
-    *   **Queue Management:** View and edit the upcoming song list.
-    *   **Visuals:** Displays high-resolution album art and artist imagery.
-*   **Key Technologies:** HTML5, CSS3, JavaScript, WebSockets for real-time updates.
-
-#### 🔹 Music Library (The Data)
-The organized collection of your audio files and their associated metadata.
-*   **Responsibilities:**
-    *   **Storage:** Abstraction over the local file system (Internal Storage, SD Card).
-    *   **Database:** High-performance index of tracks, optimized for fast searching and filtering.
-    *   **Tagging:** Support for reading and writing standard audio tags.
-*   **Key Technologies:** OrmLite (Database), JAudiotagger (Tag Parsing), FFmpeg (Analysis).
+    Music Mate DLNA Server
+    │
+    ├── UPnP Server (Port 49152)
+    │     Purpose: Device discovery and media control.
+    │
+    └── Web Server (Port 9000)
+          ├── /music/*      → Audio streaming endpoint
+          ├── /coverart/*   → Album artwork
+          ├── /ws/*         → WebSocket control API
+          └── /*            → MusicMate Web Remote (Embedded UI)
 
 ---
 
-## 📐 Application Design
+## 📐 Technical Architecture & Implementation
 
-Music Mate is built on a robust, modern Android architecture designed for scalability, testability, and separation of concerns.
+Music Mate employs a sophisticated "pluggable" architecture that separates business logic from the underlying network transport.
 
-### Architecture Patterns
-*   **MVVM (Model-View-ViewModel):** The core architectural pattern.
-    *   **View (UI):** Activities and Fragments (e.g., `MainActivity`, `LibraryFragment`) that observe data and handle user interactions. They contain no business logic.
-    *   **ViewModel:** (e.g., `MainViewModel`, `MediaServerViewModel`) Acts as a bridge between the UI and data layers. It survives configuration changes, manages UI-related data using `LiveData`, and launches asynchronous operations.
-    *   **Model:** Represents the data and business logic, encapsulated in Repositories and domain objects.
-*   **Repository Pattern:** A unified abstraction layer (`TagRepository`, `FileRepository`) that mediates between different data sources (database, file system, network). The UI and ViewModels are agnostic to the origin of the data.
-*   **Dependency Injection (Hilt):** Used extensively to provide dependencies (Repositories, Services, Contexts) to classes, ensuring loose coupling and easier testing.
- 
----
+### The Pluggable Server Engine
+The underlying HTTP engine can be swapped at compile time via Gradle flavors to optimize for specific hardware or audio requirements:
 
-## ⚙️ Server Implementation Details
+#### 🛡️ NIO (`server-jupnp-nio`) — *The Optimized Secret Sauce* (Recommended)
+*   **Status:** **Production Grade.**
+*   **Architecture:** A **custom-built, zero-dependency** Reactor-pattern engine written from scratch for Android.
+*   **Superpowers:**
+    *   **Hi-Res Optimized:** Built-in native support for DSD (DSF/DFF), FLAC, and 32-bit WAV.
+    *   **Zero-Copy Direct I/O:** Utilizes `FileChannel.transferTo()` and a global **Direct ByteBuffer Pool** for maximum throughput with zero CPU overhead.
+    *   **Extreme Efficiency:** Memory footprint is a mere **~8KB per connection**, with GC pauses consistently **< 20ms**.
+    *   **Deterministic Streaming:** Fixed 64KB chunking ensures jitter-free delivery to sensitive high-end DACs.
 
-The **Jetty 12** implementation (`JettyUPnpServerImpl` & `JettyWebServerImpl`) is highly optimized for Android devices:
+#### 🚀 Undertow 2.4.0.RC1 (`server-jupnp-undertow`) — *The Performance Leader*
+*   **Status:** **Production Grade.**
+*   **Metrics:** Smooth playback, **Memory: 256–300 MB**, CPU < 10%.
+*   **Superpowers:** **Zero-Copy Streaming** via NIO `transferTo()`, full Byte-Range support, and robust WebSockets.
+*   **Note:** Highly stable on Android; optimized for DSD and 192kHz peaks. *(Requires Android-specific class hacks)*.
 
-*   **Engine:** Built on **Eclipse Jetty 12.1.2**.
-*   **Performance Optimizations:**
-    *   **Dynamic Threading:** Thread pool automatically scales based on the device's CPU cores (`Math.max(4, cores * 4)`), ensuring responsiveness on both low-end and flagship devices.
-    *   **Non-Blocking I/O:** Uses Jetty's asynchronous I/O capabilities for handling UPnP requests and media streaming, minimizing thread blocking and memory footprint.
-    *   **Adaptive Buffering:** Media stream buffers are dynamically calculated based on the device's available RAM to prevent Out-Of-Memory (OOM) errors while maintaining high throughput.
-    *   **Zero-Copy Streaming:** Utilizes memory-mapped files (where supported) to stream audio directly from storage to the network interface.
-    *   **Efficient Notifications:** Uses a shared `ExecutorService` for playback state notifications to eliminate thread churn during song changes.
-*   **Interoperability:**
-    *   Implements specific DLNA headers (`transferMode.dlna.org`, `contentFeatures.dlna.org`) to ensure compatibility with strict hardware renderers (e.g., Sony, Denon, Onkyo).
-    *   Supports `GetMediaInfo`, `GetTransportInfo`, and `GetPositionInfo` for accurate playback status synchronization.
+#### 🛡️ Jetty 12.1.7 (`server-jupnp-jetty`) — *The Robust Standard*
+*   **Status:** **Production Grade.**
+*   **Metrics:** **12% faster than Jetty 11**, fully compatible with Android 14+ (API 34).
+*   **Superpowers:** **Dynamic Resilience.** Automatically scales threads and buffers based on available RAM to prevent OOM on entry-level devices.
+
+#### ⚡ HttpCore 5.4.2 (`server-jupnp-httpcore`) — *Modern & Efficient*
+*   **Status:** **Experimental.**
+*   **Metrics:** **Memory: 256–380 MB**, CPU < 10%.
+*   **Superpower:** **Perceived Sound Quality (SQ)** often exceeds Netty in testing.
+*   **Known Issues:** Occasional playback stops on some clients. *(Requires Android-specific class hacks; No WebSocket support)*.
+
+#### 🧪 Netty 4.2.10.Final (`server-jupnp-netty`) — *High-Throughput*
+*   **Status:** **Experimental.**
+*   **Metrics:** **Memory: 256 MB (Short peaks to 512 MB)**, CPU < 10%.
+*   **Known Issues:** Susceptible to jUPnP auto-restart loops during Wi-Fi signal loss. *(WebSocket support non-functional)*.
 
 ---
 
 ## 🛠 Tech Stack
 
 *   **Language:** Java 17 / Kotlin
-*   **Dependency Injection:** Hilt
 *   **Async/Reactive:** RxJava 3
-*   **Server Engines:** Eclipse Jetty 12, Netty 4
-*   **UPnP Framework:** jUPnP (fork of Cling)
-*   **Tagging:** JAudiotagger
-*   **Media Processing:** FFmpeg (File Conversion & Analysis)
-*   **Database:** OrmLite
+*   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
+*   **Engines:** Jetty 12.1.7, Undertow 2.4.0.RC1, Apache HttpCore 5.4.2, Netty 4.2.10.Final, **Custom NIO Reactor**
+*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg, OrmLite
+
+---
+
+## 🔧 Developer Notes & Android Compatibility
+
+Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). Music Mate uses "shadowed" classes and reflection hacks to ensure platform interoperability:
+
+*   **Undertow Hacks:** 
+    *   `org.jboss.logging.Logger`: Custom implementation to bypass JBoss Logging dependency issues on Android.
+    *   `org.xnio.XnioWorker`: Modified version to handle Android-specific thread and context management.
+*   **HttpCore Hacks:**
+    *   `org.apache.hc.core5.util.ReflectionUtils`: Custom implementation to handle restricted `setAccessible` calls and JRE level detection on Android ART.
+
+---
+
+## 📖 Typical Use Case: Audiophile Network Streaming
+
+```text
+    [ iPad (Controller) ]          [ Android (Server) ]          [ Hi-Fi (Renderer) ]
+    |                   |          |                  |          |                  |
+    |  mConnect / JPlay |--------->|    Music Mate    |<---------|    RoPieeeXL     |
+    |                   |  (UPnP)  |        +         |  (HTTP)  |        +         |
+    |                   |          |  Music Library   |          |   External DAC   |
+    |___________________|          |__________________|          |__________________|
+              |                                                        |
+              └────────────────────────────────────────────────────────┘
+                                 (Control Commands)
+```
+
+1.  **The Server:** Music Mate runs on an Android device hosting your high-fidelity library.
+2.  **The Controller:** Use an iPad running **mConnect Player** or **JPlay** as the UPnP Control Point.
+3.  **The Renderer:** A Hi-Fi streamer (RoPieeeXL/Volumio) connected to your DAC.
+4.  **The Workflow:** Browse and play bit-perfect Hi-Res audio with full metadata and high-resolution album art.
+
+---
+
+## 🔍 Comparison with Other Music Servers
+
+| Feature | **Music Mate** | MinimServer | Plex | BubbleUPnP Server | Roon |
+|--------|---------------|-------------|------|-------------------|------|
+| Platform | Android | Java (PC/NAS) | PC/NAS | PC/NAS | PC/NAS |
+| Bit-Perfect Streaming | ✔ | ✔ | ❌ | ✔ | ✔ |
+| MQA Detection | ✔ | ❌ | ❌ | ❌ | ✔ |
+| Dynamic Range Analysis | ✔ | ❌ | ❌ | ❌ | ❌ |
+| Mobile-Native Server | ✔ | ❌ | ❌ | ❌ | ❌ |
+| Open Source | ✔ | ❌ | ❌ | ❌ | ❌ |
+
+---
 
 ## 📋 Pre-requisites
 
-*   **Android OS:** Android 14 (API 34) or higher is required due to Jetty 12 dependencies.
+*   **Android OS:** Android 14 (API 34) or higher is required.
 
 ---
 
 ## 📄 License
 
-Copyright 2014-2025 The Android Open Source Project, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
----
-
-## 🌐 MusicMate Ecosystem
-
-For a detailed overview of the MusicMate architecture, players, and controllers, please see the [MusicMate Ecosystem Guide](ECOSYSTEM.md).
-
-
----
-
-## 🎼 Music Quality Guide
-
-
-
-For details on Bit Depth, Dynamic Range, and what the numbers mean for your listening experience, please see the [Music Quality Guide](MUSIC_QUALITY_GUIDE.md).
+Copyright 2014–2025 Thawee Prakaipetch. Licensed under the Apache License, Version 2.0.

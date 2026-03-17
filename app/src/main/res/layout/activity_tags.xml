@@ -198,6 +198,13 @@
                             app:encodingText="FLAC"
                             app:resolutionText="16/48" />
                         -->
+                        <apincer.android.mmate.ui.view.BadgeView
+                            android:id="@+id/icon_codec"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/dimen_6_dp"
+                            android:gravity="center_vertical"/>
+
                         <apincer.android.mmate.ui.view.QualityIndicatorView
                             android:id="@+id/icon_quality_indicator"
                             android:layout_width="wrap_content"

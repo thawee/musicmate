@@ -6,8 +6,6 @@ import static apincer.music.core.Constants.LEGEND_HIRES;
 import static apincer.music.core.Constants.LEGEND_LOSSY;
 import static apincer.music.core.Constants.LEGEND_MQA;
 import static apincer.music.core.Constants.LEGEND_STUDIO;
-import static apincer.music.core.Constants.QUALITY_FAVORITE;
-import static apincer.music.core.Constants.QUALITY_RECOMMENDED;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_44;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -52,6 +50,7 @@ public class TagUtils {
         return trimToEmpty(tag.getQualityInd()).contains("MQA");
     }
 
+    @Deprecated
     public static int getResolutionColor(Context context, MusicTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
@@ -217,18 +216,26 @@ public class TagUtils {
         return artist;
     }
 
+    @Deprecated
     public static int getStatusColor(String status) {
-        if(status.startsWith("High Fidelity:")) return 0xFF2ECC71; // Green
-        //if(status.startsWith("16-bit Hi-Res")) return 0xFF2ECC71; // Green
-        //if(status.startsWith("16-bit Upscaled")) return 0xFFE74C3C; // Red
-        //return 0xFF3498DB; // Blue
-        return 0xFFE74C3C; // Red
+        if(status.toLowerCase().contains("upsampled")) return 0xFFF1C40F; // Yellow/Orange
+        if(status.contains("Hi-Res")) return 0xFF2ECC71; // Green
+        if(status.toLowerCase().contains("lossy transcode")) return 0xFFE74C3C; // Red
+        return 0xFF3498DB; // Blue
+        //return 0xFFE74C3C; // Red
        /* switch (status) {
             case "24-bit Hi-Res": return 0xFF2ECC71; // Green
             case "CD Quality":    return 0xFF3498DB; // Blue
             case "Fake Lossless": return 0xFFE74C3C; // Red
             default:              return 0xFFF1C40F; // Yellow/Orange
         } */
+    }
+
+    public static int getCodecColor(Context context, MusicTag tag) {
+        if(isLossless(tag)) {
+            return context.getColor(R.color.mm_label_lossless);
+        }
+        return context.getColor(R.color.mm_label_lossy);
     }
 
     public static String getEncodingTypeShort(MusicTag tag) {
@@ -351,7 +358,7 @@ public class TagUtils {
             return "16–bit • 44.1–48 kHz";
         }else  if(codec.equals(Constants.TITLE_DSD)) {
             return "DSD64 (2.8MHz) to DSD512 (22.5MHz)";
-        }else  if(codec.equals(Constants.TITLE_MASTER_AUDIO)) {
+        }else  if(codec.equals(Constants.TITLE_MQA_MASTER_AUDIO)) {
             return "Unfolds to 24-bit / 352.8 kHz";
         }else  if(codec.equals(Constants.TITLE_CD_EXT_QUALITY)) {
             return "24-bit • 44.1–88.2 kHz";

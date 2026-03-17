@@ -79,8 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.inject.Inject;
 
@@ -111,7 +109,6 @@ import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
 import dagger.hilt.android.AndroidEntryPoint;
 import me.stellarsand.android.fastscroll.FastScrollerBuilder;
-//import sakout.mehdi.StateViews.StateView;
 
 /**
  * Main Activity for MusicMate application
@@ -161,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
     // State variables
     private long lastScrollEventTime = 0;
-    private Timer timer;
     private volatile boolean busy;
     private MediaTrack previouslyPlaying;
 
@@ -170,6 +166,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Inject
     FileOperationTask operationTask;
+
+    @Inject
+    MediaServerManager mediaServerManager;
+
+    private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable scrollRunnable;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
@@ -182,14 +184,13 @@ public class MainActivity extends AppCompatActivity {
             adapter.setPlaybackService(playbackService);
             playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong()),
-                    throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable));
+                    throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             isPlaybackServiceBound = false;
             playbackService = null;
-          //  Log.w(TAG, "PlaybackService disconnected unexpectedly.");
         }
     };
 
@@ -199,18 +200,15 @@ public class MainActivity extends AppCompatActivity {
                 if(!song.equals(previouslyPlaying)) {
                     if (Settings.isListFollowNowPlaying(getBaseContext())) {
                         // only scrolled on first event for each song
-                        if (timer != null) {
-                            timer.cancel();
+                        if (scrollRunnable != null) {
+                            scrollHandler.removeCallbacks(scrollRunnable);
                         }
-                        timer = new Timer();
-                        timer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                if (!busy) {
-                                    runOnUiThread(() -> scrollToSong(song));
-                                }
+                        scrollRunnable = () -> {
+                            if (!busy) {
+                                scrollToSong(song);
                             }
-                        }, 500); // 0.5 seconds
+                        };
+                        scrollHandler.postDelayed(scrollRunnable, 500); // 0.5 seconds
                     }
 
                     // refresh music list
@@ -230,8 +228,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Start the server here, where we are guaranteed to be in the foreground!
-        MediaServerManager manager = new MediaServerManager(this);
-        manager.startServer();
+        mediaServerManager.startServer();
 
         //Enable Dynamic Colors
         DynamicColors.applyToActivitiesIfAvailable(getApplication());
@@ -255,8 +252,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup status bar
         Window window = getWindow();
-        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-       // window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
         WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
         // If the background is dark, use light icons
         insetsController.setAppearanceLightStatusBars(false);
@@ -268,25 +263,16 @@ public class MainActivity extends AppCompatActivity {
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
-        // Initialize repository
-        //repos = FileRepository.newInstance(getApplicationContext());
-
         // Set content view
         setContentView(R.layout.activity_main);
 
-        // Initialize ViewModel
-       // viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-       // MainViewModel.MusicViewModelFactory factory = new MainViewModel.MusicViewModelFactory(getApplication());
-        //viewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
         // Get the ViewModel. Hilt handles all the factory creation for you.
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        //operationTask = new FileOperationTask(viewModel.getFileRepository(), viewModel.getTagRepository());
+
         // Setup UI components
         setupHeaderPanel();
-        //setupNowPlayingView();
         setupBottomAppBar();
         setupRecycleView(searchCriteria);
-        //setupSwipeToRefresh();
         setupResideMenus();
 
         // Observe ViewModel LiveData
@@ -294,11 +280,6 @@ public class MainActivity extends AppCompatActivity {
 
         // load music items
         viewModel.loadMusicItems(adapter.getCriteria());
-
-        // Setup exit snackbar
-        //mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
-        //View snackBarView = mExitSnackbar.getView();
-        //snackBarView.setBackgroundColor(getColor(R.color.warningColor));
 
         // Bind to the MediaServerService as soon as this service is created
         Intent intent = new Intent(this, MusicMateServiceImpl.class);
@@ -673,7 +654,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        headerSearchView.setQueryHint("Search "+StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
+       // headerSearchView.setQueryHint("Search "+StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
+        headerSearchView.setQueryHint(StringUtils.truncate(adapter.getHeaderTitle(), 32, StringUtils.TruncateType.SUFFIX));
         headerStatText.setText(statText);
     }
 
@@ -700,10 +682,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
         if(isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -1012,10 +990,6 @@ public class MainActivity extends AppCompatActivity {
 
        // mBackButton.setImageDrawable(getDrawable(R.drawable.round_close_24));
        // mBackButton.setOnClickListener(view -> closeSearch());
-
-        // Show keyboard
-       // InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-       // imm.showSoftInput(headerSearchView.findViewById(androidx.appcompat.R.id.search_src_text), InputMethodManager.SHOW_IMPLICIT);
     }
 
     private void setupSearchView() {

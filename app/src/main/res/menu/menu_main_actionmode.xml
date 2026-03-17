@@ -2,6 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
+	<group android:id="@+id/main_items">
 	<item
 		android:icon="@drawable/rounded_tv_24"
 		android:id="@+id/action_edit_metadata"
@@ -13,23 +14,27 @@
 		android:id="@+id/action_encoding_file"
 		android:title="Convert Files"
 		app:showAsAction="always"/>
+	</group>
 
+	<!--
 	<item
 		android:icon="@drawable/rounded_query_stats_24"
 		android:id="@+id/action_measure_dr"
 		android:title="Analyze Dynamic Range"
 		app:showAsAction="always"/>
+	-->
+	<group android:id="@+id/main_files">
+		<item
+			android:icon="@drawable/rounded_deployed_code_update_24"
+			android:id="@+id/action_transfer_file"
+			android:title="Move Songs"
+			app:showAsAction="always"/>
 
-	<item
-		android:icon="@drawable/rounded_deployed_code_update_24"
-		android:id="@+id/action_transfer_file"
-		android:title="Move Songs"
-		app:showAsAction="always"/>
-
-	<item android:id="@+id/action_delete"
+		<item android:id="@+id/action_delete"
 		android:title="@string/action_delete"
 		android:icon="@drawable/rounded_delete_24"
 		app:showAsAction="always"/>
+	</group>
 
 	<item android:id="@+id/action_select_all"
 		android:title="@string/action_select_all"
