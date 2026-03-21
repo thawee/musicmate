@@ -41,6 +41,7 @@ import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.QueueManager;
 import apincer.music.core.playback.WebStreamingPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackCallback;
@@ -58,6 +59,7 @@ import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public class BaseServer {
     private static final String TAG = "BaseServer";
@@ -72,22 +74,25 @@ public class BaseServer {
     protected final Context context;
     private final TagRepository tagRepos;
     private final FileRepository fileRepos;
-    //private final File coverartDir;
     private final String appVersion;
     private final String osVersion;
     private final List<String> libInfos = new ArrayList<>();
 
     private PlaybackCallback playbackCallback;
+    private final QueueManager queueManager;
+
+    Disposable nowPlayingDisposable;
+    Disposable playbackDisposable;
+    Disposable playbackStateDisposable;
 
     public BaseServer(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
+        this.queueManager = new QueueManager(tagRepos);
 
-        //this.coverartDir =  FileRepository.getCoverartDir(context); //context.getExternalCacheDir();
         this.appVersion = ApplicationUtils.getVersionNumber(context);
         this.osVersion = Build.VERSION.RELEASE;
-        //this.memoryCache = new LruCache<>(cacheSize);
 
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
@@ -101,6 +106,10 @@ public class BaseServer {
     private PlaybackService playbackService;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
+        Disposable nowPlayingDisposable;
+        Disposable playbackDisposable;
+        Disposable playbackState;
+
         @SuppressLint("CheckResult")
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -109,7 +118,7 @@ public class BaseServer {
             playbackService = binder.getPlaybackService();
             if(playbackCallback != null) {
                 //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-                playbackService.subscribeNowPlayingSong(
+                nowPlayingDisposable = playbackService.subscribeNowPlayingSong(
                         // onNext
                         mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
 
@@ -120,7 +129,7 @@ public class BaseServer {
                         }
                 );
                // playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
-                playbackService.subscribePlaybackTarget(
+                playbackDisposable = playbackService.subscribePlaybackTarget(
                         // onNext
                         playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
 
@@ -131,7 +140,7 @@ public class BaseServer {
                         }
                 );
                 //playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
-                playbackService.subscribePlaybackState(
+                playbackState =playbackService.subscribePlaybackState(
                         // onNext
                         playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
 
@@ -147,7 +156,9 @@ public class BaseServer {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             playbackService = null;
-            //  Log.w(TAG, "PlaybackService disconnected unexpectedly.");
+            playbackState.dispose();
+            playbackDisposable.dispose();
+            nowPlayingDisposable.dispose();
         }
     };
 
@@ -184,11 +195,12 @@ public class BaseServer {
     }
 
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
+        // FIXME remove or not
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
                 PlaybackTarget player = WebStreamingPlayer.Factory.create(clientIp, userAgent, clientIp);
                 playbackService.switchPlayer(player, false);
-                playbackService.onMediaTrackChanged(tag);
+                playbackService.onAccessMediaTrack(tag);
             }
         });
     }
@@ -319,7 +331,7 @@ public class BaseServer {
         this.playbackCallback = callback;
         if(playbackService != null) {
             //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-            playbackService.subscribeNowPlayingSong(
+            nowPlayingDisposable = playbackService.subscribeNowPlayingSong(
                     // onNext
                     mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
 
@@ -328,7 +340,7 @@ public class BaseServer {
                         // Now you log the error instead of crashing!
                         Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
                     });
-            playbackService.subscribePlaybackTarget(
+            playbackDisposable = playbackService.subscribePlaybackTarget(
                     playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
 
                     // onError
@@ -336,7 +348,7 @@ public class BaseServer {
                         // Now you log the error instead of crashing!
                         Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
                     });
-            playbackService.subscribePlaybackState(
+            playbackStateDisposable =  playbackService.subscribePlaybackState(
                     playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
 
                     // onError
@@ -495,6 +507,9 @@ public class BaseServer {
                     case "getNowPlaying":
                         return sendNowPlaying();
 
+                    case "togglePlayPause":
+                        handlePlayPause();
+                        break; // Playback state update will be pushed
                     default:
                         Log.w(TAG, "Unknown command received: " + command);
                         return createErrorResponse("Unknown command: " + command);
@@ -666,7 +681,7 @@ public class BaseServer {
                     long trackId = Long.parseLong(id);
                     MusicTag tag = tagRepos.findById(trackId);
                     if (tag != null) {
-                        playbackService.play(tag);
+                        playbackService.playSong(tag);
                     } else {
                         Log.w(TAG, "handlePlay: Track not found for ID " + id);
                     }
@@ -684,6 +699,12 @@ public class BaseServer {
         private void handleSetShuffleMode(boolean enabled) {
             if (playbackService != null) {
                 playbackService.setShuffleMode(enabled);
+            }
+        }
+
+        private void handlePlayPause() {
+            if (playbackService != null) {
+                playbackService.pausePlayer();
             }
         }
 
@@ -761,9 +782,6 @@ public class BaseServer {
                 } else if (path.startsWith("Library/Artists/")) {
                     String name = path.substring("Library/Artists/".length());
                     songsInContext = tagRepos.findByArtist(name, 0, 0);
-                } else if (path.startsWith("Library/Groupings/")) {
-                    String name = path.substring("Library/Groupings/".length());
-                    songsInContext = tagRepos.findByGrouping(name, 0, 0);
                 } else if (path.startsWith("Library/Playlists/")) {
                     String name = path.substring("Library/Playlists/".length());
                     // Assuming isSongInPlaylistName works correctly
@@ -777,11 +795,9 @@ public class BaseServer {
                 }
 
                 // Set the queue in the repository and load it into the playback service
-                tagRepos.setPlayingQueue(songsInContext);
-                playbackService.loadPlayingQueue(songToPlay); // Load queue and start playing 'songToPlay'
-
-                // Explicitly start playback (handlePlay might not be needed if loadPlayingQueue starts it)
-                // handlePlay(id); // Re-evaluate if this is necessary
+                //tagRepos.savePlayingQueue(songsInContext);
+                queueManager.savePlayingQueue(songsInContext);
+                playbackService.playSong(songToPlay);
 
             } catch (NumberFormatException e) {
                 Log.e(TAG, "handlePlayFormContext: Invalid ID format " + id, e);
@@ -804,7 +820,7 @@ public class BaseServer {
          */
         private void handlePlayNext() {
             if (playbackService != null) {
-                playbackService.skipToNext();
+                playbackService.skipToNextInQueue();
             }
         }
 
@@ -828,12 +844,7 @@ public class BaseServer {
             if (songId == null || songId.isBlank()) return;
             try {
                 long trackId = Long.parseLong(songId);
-                MusicTag song = tagRepos.findById(trackId);
-                if (song != null) {
-                    tagRepos.addToPlayingQueue(song);
-                } else {
-                    Log.w(TAG, "handleAddToQueue: Track not found for ID " + songId);
-                }
+                queueManager.addPlayingQueue(trackId);
             } catch (NumberFormatException e) {
                 Log.e(TAG, "handleAddToQueue: Invalid ID format " + songId, e);
             }
@@ -849,6 +860,7 @@ public class BaseServer {
         public Map<String, Object> sendQueueUpdate() {
             try {
                 // Fetching QueueItems which contain the order and the MusicTag
+                // FIXME call queueManager.getSongs()
                 List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
                 List<Map<String, ?>> queueAsMaps = playingQueue.stream()
                         .map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
@@ -943,6 +955,7 @@ public class BaseServer {
                                 .collect(Collectors.toList());
                     }else { */
                         // This might be inefficient if getAllMusicsForPlaylist is large
+
                         List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
                         items = songs.stream()
                                 .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
@@ -1106,7 +1119,7 @@ public class BaseServer {
             if (playbackService == null) return Map.of("type", "availableRenderers", "renderers", Collections.emptyList());
 
             List<Map<String, ?>> renderers = Collections.emptyList(); // Default to empty list
-            List<PlaybackTarget> rendererList = playbackService.getAvailablePlaybackTargets();
+            List<PlaybackTarget> rendererList = playbackService.getPlaybackTargets();
 
             if (rendererList != null && !rendererList.isEmpty()) {
                 renderers = rendererList.stream()

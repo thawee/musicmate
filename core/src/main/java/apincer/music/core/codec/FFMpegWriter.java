@@ -181,7 +181,7 @@ public class FFMpegWriter extends TagWriter {
                     return false;
                 }
           /*  }else {
-                // FIXME : for test
+                // NOTE: for test
                 FileSystem.move(context, targetPath, srcPath + "_TAGS." + tag.getFileFormat());
                 FileRepository.newInstance(context).scanMusicFile(new File(srcPath + "_TAGS." + tag.getFileFormat()),false);
                 return true;

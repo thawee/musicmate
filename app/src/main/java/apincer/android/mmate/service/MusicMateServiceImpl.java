@@ -25,15 +25,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.QueueManager;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -44,21 +47,25 @@ import apincer.music.core.service.spi.MusicMateServiceBinder;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
 import dagger.hilt.android.AndroidEntryPoint;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 /**
  * Media session monitoring service that:
- * 1. Discovers all active media sessions (external apps + streaming players)
- * 2. Controls external players (Spotify, YouTube Music, etc.) and streaming players (DmcPlayer)
+ * 1. Discovers all active media sessions (external music player + streaming renderers)
+ * 2. Controls external players (UAPP, Neutron Music, Hiby Music, etc.) and streaming players (RopieeeXL, WiiM)
  * 3. Bridges external playback state to streaming player targets
- * 4. Manages queue for streaming player playback
+ * 4. Manages playing queue for streaming player playback
  *
  * NO internal ExoPlayer - only monitors and controls external apps and streaming targets.
  */
 @AndroidEntryPoint
 public class MusicMateServiceImpl extends Service implements PlaybackService {
     private static final String TAG = "MusicMateServiceImpl";
+
+    enum RUNNING_MODE {MONITOR, CONTROL}
     public static final String CHANNEL_ID = "musicmate_service_channel";
     public static final int SERVICE_ID = 1;
 
@@ -72,33 +79,20 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public static final String SERVER_STATUS_ONLINE_PREFIX = "Online"; // Green circle for Online
     public static final String SERVER_STATUS_OFFLINE = "Offline"; // Red circle for Offline
 
+    public static final String SERVER_STATUS_CAST_PREFIX = "Cast"; // Green circle for Online
+
     @Inject
     TagRepository tagRepos;
 
     @Inject
-    MediaServerHub mediaServer;
+    MediaServerHub mediaHub;
+
+    @Inject
+    QueueManager queueManager;
 
     private AndroidPlayerController androidPlayer;
 
-    // -- SERVICE --
     private MediaSessionManager mediaSessionManager;
-
-   // private WifiManager wifiManager;
-   // private PowerManager powerManager;
-   // private ConnectivityManager connectivityManager;
-
-    // Locks to keep the CPU and Wi-Fi active for stable streaming
-   // private WifiManager.WifiLock wifiLock;
-   // private WifiManager.MulticastLock multicastLock;
-   // private PowerManager.WakeLock wakeLock;
-
-    // Network monitoring for the 30-minute auto-stop failsafe
-    //private final Handler networkHandler = new Handler(Looper.getMainLooper());
-   // private Runnable stopServerRunnable;
-   // private ConnectivityManager.NetworkCallback networkCallback;
-
-    // -- STATE -->
-    private List<MusicTag> playingQueue = new CopyOnWriteArrayList<>();
 
     private final BehaviorSubject<apincer.music.core.playback.PlaybackState> playbackStateSubject =
             BehaviorSubject.createDefault(new apincer.music.core.playback.PlaybackState());
@@ -106,10 +100,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             BehaviorSubject.createDefault(Optional.empty());
     private final BehaviorSubject<Optional<PlaybackTarget>> currentPlayerSubject =
             BehaviorSubject.createDefault(Optional.empty());
-    private final BehaviorSubject<List<MusicTag>> playingQueueSubject =
+    private final BehaviorSubject<List<MediaTrack>> playingQueueSubject =
             BehaviorSubject.createDefault(new ArrayList<>());
 
+   //TODO: change to playing/monitor mode
+    private RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
     private String controlledPlayerTargetId;
+    private final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
+    private ScheduledFuture<?> nextTrackTask;
+
+    private volatile long lastPreloadedTrackId = -1;
+    private volatile long lastPlaybackTrackId = -1;
 
     // The Service is now the single source of truth for its status.
     private final MutableLiveData<MediaServerHub.ServerStatus> statusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
@@ -125,7 +127,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         public void onMediaTrackChanged(String title, String artist, String album, long duration) {
             MediaTrack song = tagRepos.findMusic(title, artist, album);
             if(song != null) {
-                MusicMateServiceImpl.this.onMediaTrackChanged(song);
+                onMediaTrackChanged(song);
             }
         }
 
@@ -142,9 +144,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
             controllers -> {
-                Log.d(TAG, "Active sessions changed: " + controllers.size());
+               // Log.d(TAG, "Active sessions changed: " + controllers.size());
                 updateAvailableExternalPlayers(controllers);
             };
+
+    public MusicMateServiceImpl( ) {
+    }
 
     private PlaybackTarget getActivePlayer() {
         return currentPlayerSubject.getValue().orElse(null);
@@ -152,41 +157,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private void updateAvailableExternalPlayers(List<MediaController> controllers) {
         // Remove all existing external Players
-        if (getAvailablePlaybackTargets() != null && !getAvailablePlaybackTargets().isEmpty()) {
-            getAvailablePlaybackTargets().removeIf(target -> target instanceof ExternalAndroidPlayer);
-        }
+        addLocalPlaybackTarget(null, true);
 
         // Add external media session targets
         for (MediaController controller : controllers) {
             String packageName = controller.getPackageName();
            // String sessionTag = controller.getTag();
             PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
-            addPlaybackTarget(player);
+            addLocalPlaybackTarget(player, false);
         }
 
         // Streaming players will be added via registerStreamingPlayer()
-        Log.d(TAG, "Updated available targets: " + getAvailablePlaybackTargets().size());
-    }
-
-    private void addPlaybackTarget(PlaybackTarget player) {
-        // 1. Safety check for the new player and its ID
-        if (player == null || player.getTargetId() == null) {
-            return;
-        }
-
-        String newTargetId = player.getTargetId();
-        List<PlaybackTarget> targets = getAvailablePlaybackTargets();
-
-        // 2. Check for an existing player with the same ID
-        for (PlaybackTarget existingPlayer : targets) {
-            if (existingPlayer != null && newTargetId.equals(existingPlayer.getTargetId())) {
-                // A player with this ID already exists, so don't add.
-                return;
-            }
-        }
-
-        // 3. If the loop completes, no match was found. Add the new player.
-        targets.add(player);
+        Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());
     }
 
     // ==================== Service Lifecycle ====================
@@ -213,14 +195,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             }
         }
 
-        getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs()));
-
-        // initial dmr/local player
-        // Iterate and add using the duplicate-checking method
-        List<PlaybackTarget> serverTargets = mediaServer.getAvailablePlaybackTargets();
-        for (PlaybackTarget player : serverTargets) {
-            addPlaybackTarget(player);
-        }
+        getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs()));
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
@@ -233,7 +208,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
 
             // Load queue from database
-            loadPlayingQueue();
+            if(queueManager != null) {
+                playingQueueSubject.onNext(queueManager.getSongs());
+            }
         } catch (SecurityException e) {
             Log.e(TAG, "Missing notification listener permission", e);
         }
@@ -270,7 +247,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                     break;
                 case ACTION_NEXT:
                     // Add your logic to skip to the next track
-                    skipToNext();
+                    skipToNextInQueue();
                     break;
                 case ACTION_PREVIOUS:
                     // Add your logic to go to the previous track
@@ -289,10 +266,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void handlePlayPause() {
+        if (isPlaying()) {
+            pausePlayer();
+        } else {
+            // Find current track and resume
+            currentPlayerSubject.getValue().ifPresent(target -> playSong(getNowPlayingSong()));
+        }
     }
 
     public void startServers() {
-        if (mediaServer.isInitialized()) return;
+      //  if (mediaServer.isInitialized()) return;
 
         if (!NetworkUtils.isWifiConnected(this)) {
             statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
@@ -318,7 +301,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // --- START SERVICES ---
         //showNotification(null);
-        mediaServer.startServers();
+        mediaHub.start();
         //startNetworkMonitoring();
 
         // Report that the server is now running.
@@ -326,79 +309,14 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     public void stopServers() {
-        if (!mediaServer.isInitialized()) return;
+       // if (!mediaServer.isInitialized()) return;
 
         // --- RELEASE RESOURCES ---
-        // Always cancel any pending stop command first
-       // networkHandler.removeCallbacks(stopServerRunnable);
-        //stopNetworkMonitoring();
-        mediaServer.stopServers();
-        //  cancelNotification();
+        mediaHub.stop();
 
         // Report that the server has stopped.
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
-
-       // if (wakeLock != null && wakeLock.isHeld()) {
-       //     wakeLock.release();
-       // }
-       // if (multicastLock != null && multicastLock.isHeld()) {
-       //     multicastLock.release();
-        //}
-       // if (wifiLock != null && wifiLock.isHeld()) {
-       //     wifiLock.release();
-       // }
-       // Log.d(TAG, "All locks released and server stopped.");
     }
-
-    /**
-     * Sets up network monitoring. This will not start the server, but will
-     * stop it after 30 minutes if the Wi-Fi connection is lost.
-     */
-    /*
-    @SuppressLint("MissingPermission")
-    private void startNetworkMonitoring() {
-        NetworkRequest networkRequest = new NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .build();
-
-        stopServerRunnable = () -> {
-            Log.w(TAG, "WiFi has been disconnected for 30 minutes. Stopping server to save battery.");
-            if (mediaServer.isInitialized()) {
-                stopServers();
-            }
-        };
-
-        networkCallback = new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(@NonNull Network network) {
-                // Wi-Fi is connected. Cancel any pending shutdown command.
-                Log.d(TAG, "WiFi connection available. Cancelling stop timer.");
-                networkHandler.removeCallbacks(stopServerRunnable);
-            }
-
-            @Override
-            public void onLost(@NonNull Network network) {
-                // Wi-Fi is lost. Schedule a shutdown in 30 minutes.
-                Log.d(TAG, "WiFi connection lost. Server will stop in 30 minutes.");
-                networkHandler.postDelayed(stopServerRunnable, 1800000L); // 30 minutes
-            }
-        };
-
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-    } */
-
-    /*
-    private void stopNetworkMonitoring() {
-        // Unregister the callback to prevent leaks.
-        if (networkCallback != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(networkCallback);
-                networkCallback = null; // Clear the reference
-            } catch (Exception e) {
-                Log.w(TAG, "Error unregistering network callback", e);
-            }
-        }
-    } */
 
     // It just creates the *first* notification shown before anything is loaded.
     private Notification createInitialNotification() {
@@ -418,9 +336,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void onDestroy() {
+        // 1. Cancel the pending "Next Track" timer
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+        }
+
+        // 2. Shut down the scheduler
+        scheduler.shutdownNow();
+
         // Ensure everything is cleaned up if the service is destroyed.
         stopServers();
-        mediaServer.onDestroy();
 
         if (mediaSessionManager != null) {
             mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
@@ -432,7 +357,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private void deactivatePlayer(PlaybackTarget player) {
         if(player != null) {
             if (player.isStreaming()){
-                mediaServer.deactivatePlayer(player.getTargetId());
+                mediaHub.playerDeactivate(player.getTargetId());
             }else {
                 androidPlayer.unregisterCallback();
             }
@@ -442,40 +367,45 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     // ==================== Playback Control (Unified) ====================
 
     @Override
-    public void play(MediaTrack song) {
+    public void playSong(MediaTrack song) {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable()) {
-                playOnStreamingPlayer(playbackTarget, song);
+            runningMode = RUNNING_MODE.CONTROL;
+            if (isControllable(playbackTarget)) {
+                internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
                 androidPlayer.play(song);
             }
         });
     }
 
-
     @Override
-    public void skipToNext() {
+    public void skipToNextInQueue() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable()) {
-                androidPlayer.skipToNext();
+            if (isControllable(playbackTarget)) {
+                internalSkipToNextOnDMRPlayer();
             } else {
                 // external player
-                playNextOnExternalPlayer(playbackTarget);
+                androidPlayer.skipToNext();
             }
         });
     }
 
-    private void playNextOnExternalPlayer(PlaybackTarget playbackTarget) {
-        if(playbackTarget instanceof ExternalAndroidPlayer player) {
-            androidPlayer.skipToNext();
+    private void internalSkipToNextOnDMRPlayer() {
+        resetGaplessState();
+
+        // get next song from queuemanager
+        queueManager.setCurrentTrack(getNowPlayingSong());
+        MediaTrack song = queueManager.getNextTrack();
+        if(song != null) {
+            mediaHub.playerPlaySong(song);
         }
     }
 
     @Override
     public void skipToPrevious() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable()) {
-                playPreviousOnStreamingPlayer(playbackTarget);
+            if (isControllable(playbackTarget)) {
+                internalPreviousOnDMRPlayer(playbackTarget);
             } else {
                 // external player
                 androidPlayer.skipToPrevious();
@@ -483,13 +413,14 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         });
     }
 
-    private void playPreviousOnStreamingPlayer(PlaybackTarget playbackTarget) {
+    private void internalPreviousOnDMRPlayer(PlaybackTarget playbackTarget) {
     }
 
-    public void pause() {
+    @Override
+    public void pausePlayer() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable()) {
-                pauseOnStreamingPlayer(playbackTarget);
+            if (isControllable(playbackTarget)) {
+                InternalPauseDMRPlayer(playbackTarget);
             } else {
                 // external player
                 androidPlayer.pause();
@@ -497,14 +428,15 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         });
     }
 
-    private void pauseOnStreamingPlayer(PlaybackTarget playbackTarget) {
+    private void InternalPauseDMRPlayer(PlaybackTarget playbackTarget) {
+        mediaHub.playerStop(playbackTarget.getTargetId());
     }
 
     @Override
     public void stopPlaying() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable()) {
-                stopOnStreamingPlayer(playbackTarget);
+            if (isControllable(playbackTarget)) {
+                internalStopOnDMRPlayer(playbackTarget);
             } else {
                 // external player
                 androidPlayer.stopPlaying();
@@ -512,7 +444,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         });
     }
 
-    private void stopOnStreamingPlayer(PlaybackTarget playbackTarget) {
+    private void internalStopOnDMRPlayer(PlaybackTarget playbackTarget) {
+        resetGaplessState();
     }
 
     @Override
@@ -542,18 +475,98 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     // ==================== Streaming Player Management ====================
 
-    private void playOnStreamingPlayer(PlaybackTarget player, MediaTrack song) {
-        if (song != null) {
-            mediaServer.playSong(player.getTargetId(), song);
-            onMediaTrackChanged(song);
+    private void internalPlayOnDMRPlayer(PlaybackTarget player, MediaTrack song) {
+        if (song == null) return;
+
+        // 1. Start playback
+        mediaHub.playerPlaySong(player.getTargetId(), song);
+        currentTrackSubject.onNext(Optional.of(song));
+
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionSecond = 0;
+
+        onPlaybackStateChanged(state);
+
+        handleTrackStartEvent(song);
+
+        // 3. Cancel any existing task
+        if (nextTrackTask != null && !nextTrackTask.isDone()) {
+            nextTrackTask.cancel(false);
+        }
+
+        // Let EVENT drive everything, Wait for real UPnP event
+
+        /*
+        // =========================
+        // ✅ GAPLESS: PRELOAD EARLY
+        // =========================
+        preloadNextTrack();
+
+        // =========================
+        // ⚠️ FALLBACK TIMER
+        // =========================
+        long durationMs = (long) song.getAudioDuration();
+
+        // fallback trigger ~95% (safe)
+        long fallbackDelay = (long) (durationMs * 0.95);
+
+        // short track protection
+        fallbackDelay = Math.max(3000, fallbackDelay);
+
+        Log.d(TAG, "Gapless: Fallback timer in " + (fallbackDelay / 1000) + " sec");
+
+        nextTrackTask = scheduler.schedule(() -> {
+            Log.w(TAG, "Gapless fallback triggered → forcing next track");
+            fallbackToNextTrack(player);
+        }, fallbackDelay, TimeUnit.MILLISECONDS);
+
+         */
+    }
+
+    private void preloadNextTrack() {
+        MediaTrack next = queueManager.getNextTrack();
+
+        if (next != null) {
+            Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
+            mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
+        } else {
+            Log.d(TAG, "Gapless: No next track to preload");
         }
     }
 
-    // ==================== Player Switching ====================
+    private void fallbackToNextTrack(PlaybackTarget player) {
+        MediaTrack current = getNowPlayingSong();
+        MediaTrack expectedNext = queueManager.getNextTrack();
+
+        if (expectedNext == null) {
+            Log.w(TAG, "Fallback: No next track");
+            return;
+        }
+
+        // Check if renderer already moved
+        if (current != null && current.getId() == expectedNext.getId()) {
+            Log.d(TAG, "Fallback skipped: renderer already advanced");
+            return;
+        }
+
+        Log.w(TAG, "Fallback: Forcing next → " + expectedNext.getTitle());
+
+        mediaHub.playerPlaySong(player.getTargetId(), expectedNext);
+        queueManager.setPlaybackTrack(expectedNext);
+
+        lastPreloadedTrackId = -1;
+    }
 
     @Override
-    public List<PlaybackTarget> getAvailablePlaybackTargets() {
-        return mediaServer.getAvailablePlaybackTargets();
+    public List<PlaybackTarget> getPlaybackTargets() {
+        return mediaHub.getPlaybackTargets();
+    }
+
+    @Override
+    public void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting) {
+        mediaHub.addLocalPlaybackTarget(playbackTarget, purgeExisting);
     }
 
     @Override
@@ -565,7 +578,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void switchPlayer(String targetId, boolean controlled) {
         //if (targetId.startsWith(STREAMING_PLAYER_PREFIX)) {
         // Find and activate streaming player
-        PlaybackTarget newTarget = getAvailablePlaybackTargets().stream()
+        PlaybackTarget newTarget = getPlaybackTargets().stream()
                 .filter(target -> target.getTargetId().equals(targetId))
                 .findFirst()
                 .orElse(null);
@@ -576,38 +589,40 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void switchPlayer(PlaybackTarget newTarget, boolean controlled) {
         if (newTarget != null) {
-            //Log.d(TAG, "Switched to player: " + newTarget.getTargetId());
+            // 1. Resolve the real target (e.g. proxy to actual DMR)
+            final PlaybackTarget resolvedTarget = (newTarget.isStreaming()) ? resolveStreamingPlayerTarget(newTarget) : newTarget;
 
-            // --- TODO IMPLEMENTED ---
-            // Get the current (soon-to-be-previous) player and unregister
-            // the callback if it's an external one.
-            //Optional<PlaybackTarget> oldTargetOpt = currentPlayerSubject.getValue();
-           // oldTargetOpt.ifPresent(oldTarget -> {
-            //    if (oldTarget instanceof ExternalPlayer oldExternalPlayer) {
-            //        Log.d(TAG, "Unregistering callback from previous player: " + oldTarget.getTargetId());
-                    androidPlayer.unregisterCallback();
-            //    }
-           // });
-            // --- END ---
+            // 2. Deactivate current player IF DIFFERENT
+            currentPlayerSubject.getValue().ifPresent(oldTarget -> {
+                if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
+                    deactivatePlayer(oldTarget);
+                }
+            });
 
-            if(newTarget instanceof ExternalAndroidPlayer externalPlayer){
-                // Register callback to the new external player
+            // 3. Activate the new player
+            if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
+                // Register callback to ensure we are listening to this session
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
-            }else if (newTarget.isStreaming()) {
-                // replace http stream with real streaming device
-                newTarget = resolveStreamingPlayerTarget(newTarget);
-                mediaServer.activatePlayer(newTarget.getTargetId(), playbackCallback);
+            } else if (resolvedTarget.isStreaming()) {
+                mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
             }
 
-            if(controlled) {
-                this.controlledPlayerTargetId = newTarget.getTargetId();
+            if (controlled) {
+                this.controlledPlayerTargetId = resolvedTarget.getTargetId();
             }
 
-            // This existing call will handle other deactivation logic (like for streaming)
-            currentPlayerSubject.getValue().ifPresent(this::deactivatePlayer);
+            currentPlayerSubject.onNext(Optional.of(resolvedTarget));
+            updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        }
+    }
 
-            currentPlayerSubject.onNext(Optional.of(newTarget));
-            updateNotification(getApplicationContext(), null, newTarget, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs());
+    @Override
+    public void setNextSongInQueue() {
+        // get next track from que manager
+        queueManager.setPlaybackTrack(getNowPlayingSong());
+        MediaTrack track = queueManager.getNextTrack();
+        if(track != null) {
+            mediaHub.setNextTrack(track);
         }
     }
 
@@ -616,7 +631,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if(player.getDescription() == null) return player;
 
         //Log.d(TAG, "resolve streaming player: " + player.getTargetId() +" :: "+getAvailablePlaybackTargets().size());
-        for(PlaybackTarget dev: getAvailablePlaybackTargets()) {
+        for(PlaybackTarget dev: getPlaybackTargets()) {
             if(dev!=null && dev.isStreaming()
                     && player.getDescription().equals(dev.getDescription())) {
                // Log.d(TAG, "resolve player:"+ dev.getTargetId()+" - "+dev.getDisplayName());
@@ -626,7 +641,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         return player;
     }
 
-    public boolean isControllable() {
+    public boolean isControllable(PlaybackTarget player) {
         final boolean[] controlled = {false};
         if(controlledPlayerTargetId != null) {
             currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
@@ -636,46 +651,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             });
         }
         return controlled[0];
-    }
-
-    // ==================== Queue Management ====================
-
-    private void loadPlayingQueue() {
-        try {
-            List<MusicTag> queueList = new CopyOnWriteArrayList<>();
-            List<PlayingQueue> queues = tagRepos.getQueueItems();
-            for (PlayingQueue queueItem : queues) {
-                queueList.add(queueItem.getTrack());
-            }
-
-            playingQueue = queueList;
-            playingQueueSubject.onNext(playingQueue);
-            Log.d(TAG, "Loaded queue from DB with size: " + playingQueue.size());
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading playing queue", e);
-        }
-    }
-
-    @Override
-    public void loadPlayingQueue(MediaTrack song) {
-        loadPlayingQueue();
-
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-            if (isControllable() && song != null) {
-                // Find song in queue and play
-                int startIndex = 0;
-                for (int i = 0; i < playingQueue.size(); i++) {
-                    if (playingQueue.get(i).getId() == song.getId()) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-
-                if (startIndex < playingQueue.size()) {
-                    playOnStreamingPlayer(playbackTarget, playingQueue.get(startIndex));
-                }
-            }
-        });
     }
 
     /**
@@ -689,7 +664,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
      * @return An Optional containing the highest-priority player found, or Optional.empty() if no suitable player is available.
      */
     public Optional<PlaybackTarget> autoSelectBestPlayer() {
-        if (getAvailablePlaybackTargets() == null || getAvailablePlaybackTargets().isEmpty()) {
+        if (getPlaybackTargets() == null || getPlaybackTargets().isEmpty()) {
             return Optional.empty();
         }
 
@@ -697,7 +672,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         PlaybackTarget externalPlayerFallback = null;
 
         // We iterate once to find the best match
-        for (PlaybackTarget target : getAvailablePlaybackTargets()) {
+        for (PlaybackTarget target : getPlaybackTargets()) {
             if(target == null) continue;
 
             // --- Priority 1: DMCA / DMR Player ---
@@ -747,6 +722,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             ApplicationUtils.deleteFilesFromAndroidFilesDir(context, assetDir);
             ApplicationUtils.copyDirToAndroidFilesDir(context, assetDir);
             ApplicationUtils.copyFileToAndroidFilesDir(context, "playlists.json",  assetDir+"/playlists.json");
+            ApplicationUtils.copyFileToAndroidFilesDir(context, "noto_sans_thai_semi_bold.ttf",  assetDir+"/noto_sans_thai.ttf");
         } catch (IOException e) {
             Log.e(TAG, "Failed to copy web assets", e);
         }
@@ -759,11 +735,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     public String getLibraryNames() {
-        return mediaServer.getLibraryNames();
-    }
-
-    public boolean isRunning() {
-        return mediaServer.isInitialized();
+        return mediaHub.getLibraryNames();
     }
 
     /**
@@ -775,10 +747,100 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     // ==================== State Notifications ====================
 
+    private synchronized void handleTrackStartEvent(MediaTrack track) {
+        if (track == null) return;
+
+        long trackId = track.getId();
+
+        // جلوگیری event ซ้ำ / duplicate events
+        if (trackId == lastPlaybackTrackId) {
+            Log.d(TAG, "Event ignored (duplicate): " + track.getTitle());
+            return;
+        }
+
+        lastPlaybackTrackId = trackId;
+
+        Log.d(TAG, "Event-driven: Track started → " + track.getTitle());
+
+        // 1. Sync queue with actual renderer state
+        queueManager.setPlaybackTrack(track);
+
+        // 2. Preload next track (PRIMARY)
+        preloadNextTrackSafe();
+
+        // 3. Setup fallback timer
+        scheduleFallback(track);
+    }
+
+    private void preloadNextTrackSafe() {
+        MediaTrack next = queueManager.getNextTrack();
+
+        if (next == null) {
+            Log.d(TAG, "Gapless: No next track");
+            return;
+        }
+
+        if (next.getId() == lastPreloadedTrackId) {
+            Log.d(TAG, "Gapless: Already preloaded → " + next.getTitle());
+            return;
+        }
+
+        lastPreloadedTrackId = next.getId();
+
+        Log.d(TAG, "Gapless: Preloading → " + next.getTitle());
+
+        mediaHub.setNextTrack(next); // SetNextAVTransportURI
+    }
+
+    private void scheduleFallback(MediaTrack song) {
+        if (nextTrackTask != null && !nextTrackTask.isDone()) {
+            nextTrackTask.cancel(false);
+        }
+
+        long durationMs = (long) (song.getAudioDuration() * 1000);
+
+        // trigger at ~97% (very late fallback)
+        long delay = (long) (durationMs * 0.97);
+
+        delay = Math.max(3000, delay);
+
+        Log.d(TAG, "Fallback Preloading scheduled in " + (delay / 1000) + " sec");
+
+        nextTrackTask = scheduler.schedule(() -> {
+            Log.w(TAG, "Fallback triggered!");
+
+            currentPlayerSubject.getValue().ifPresent(this::fallbackToNextTrack);
+
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void resetGaplessState() {
+        lastPreloadedTrackId = -1;
+        lastPlaybackTrackId = -1;
+
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+        }
+    }
+
     @Override
     public void onMediaTrackChanged(MediaTrack song) {
         currentTrackSubject.onNext(Optional.ofNullable(song));
+        runningMode = RUNNING_MODE.CONTROL;
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionSecond = 0;
+        onPlaybackStateChanged(state);
 
+        // EVENT-DRIVEN PIPELINE ENTRY
+        handleTrackStartEvent(song);
+    }
+
+    @Override
+    public void onAccessMediaTrack(MusicTag song) {
+        currentTrackSubject.onNext(Optional.ofNullable(song));
+        runningMode = RUNNING_MODE.MONITOR;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
         state.currentTrack = song;
@@ -789,7 +851,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
         playbackStateSubject.onNext(state);
-        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerSubject.getValue().orElse(null), mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs());
+        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerSubject.getValue().orElse(null), mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
     }
 
     @Override
@@ -802,22 +864,22 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     @Override
-    public void subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
-        playbackStateSubject.subscribe(consumer, onErrorConsumer);
+    public @NonNull Disposable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
+        return playbackStateSubject.subscribe(consumer, onErrorConsumer);
     }
 
     @Override
-    public void subscribeNowPlayingSong(
+    public @NonNull Disposable subscribeNowPlayingSong(
             Consumer<Optional<MediaTrack>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     ) {
         // Use the subscribe overload that takes both
-        currentTrackSubject.subscribe(onNextConsumer, onErrorConsumer);
+        return currentTrackSubject.subscribe(onNextConsumer, onErrorConsumer);
     }
 
     @Override
-    public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
-        currentPlayerSubject.subscribe(consumer, onErrorConsumer);
+    public @NonNull Disposable subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
+        return currentPlayerSubject.subscribe(consumer, onErrorConsumer);
     }
 
     // ==================== Binder ====================
@@ -829,7 +891,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
         @Override
         public MediaServerHub getMediaServerHub() {
-            return mediaServer;
+            return mediaHub;
         }
 
         public MusicMateServiceImpl getService() {

@@ -268,7 +268,7 @@
     <string name="encoding_cd_resolution">16–bit • 44.1–48 kHz</string>
     <string name="encoding_cd_recommended">Pop, Rock, Country, Traditional</string>
 
-    <string name="encoding_cd_ext_header">Studio Quality</string>
+    <string name="encoding_cd_ext_header">Studio 24-bit Quality</string>
     <string name="encoding_cd_ext_desc">A step above standard CD, offering greater dynamic headroom.</string>
     <string name="encoding_cd_ext_format">FLAC, ALAC, WAV, AIFF</string>
     <string name="encoding_cd_ext_resolution">24-bit • 44.1–88.2 kHz</string>
@@ -327,7 +327,7 @@
     <string name="find_online">Search Info on Google</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
-    <string name="analyze_music">Deep Analysis</string>
+    <string name="analyze_music">Deep Scan</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>

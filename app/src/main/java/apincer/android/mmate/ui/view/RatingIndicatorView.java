@@ -69,6 +69,22 @@ public class RatingIndicatorView extends LinearLayout {
 
     @SuppressLint("CheckResult")
     public void setMusicItem(MusicTag tag) {
+        if("icon".equals(mode)) {
+            textView.setBackground(getContext().getDrawable(R.drawable.bg_transparent));
+            TextBuilder builder = new TextBuilder(getContext());
+            int rating = getRating(tag);
+            if(rating >= 3) {
+                setVisibility(VISIBLE);
+                // builder.addText("\u2764");
+                // builder.addText("\u2661");
+                // builder.addText("\u1f90d");
+                // Just copy and paste the emoji
+                builder.addText("🤍");
+                builder.into(textView);
+            }else {
+                setVisibility(GONE);
+            }
+        }else
         if("mini".equals(mode)) {
             TextBuilder builder = new TextBuilder(getContext());
             int rating = getRating(tag);

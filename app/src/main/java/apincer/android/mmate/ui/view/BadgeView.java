@@ -2,6 +2,7 @@ package apincer.android.mmate.ui.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -65,6 +66,7 @@ public class BadgeView extends LinearLayout {
         }
     }
 
+    /*
     public void setBadge(String label, int textColor, Drawable background) {
         if(label != null) {
             TextBuilder builder = new TextBuilder(getContext());
@@ -72,6 +74,19 @@ public class BadgeView extends LinearLayout {
             builder.into(textView);
             if(background != null) {
                 textView.setBackground(background);
+            }
+        }
+    } */
+
+    public void setBadge(String label, int textColor, int bgColor) {
+        if(label != null) {
+            TextBuilder builder = new TextBuilder(getContext());
+            builder.addColoredText(label, textColor);
+            builder.into(textView);
+            if(bgColor > -1) {
+                textView.getBackground().setTint(bgColor);
+                textView.getBackground().setTintMode(PorterDuff.Mode.ADD);
+                //textView.setBackground(background);
             }
         }
     }

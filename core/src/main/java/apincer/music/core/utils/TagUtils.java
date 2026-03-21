@@ -13,6 +13,7 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.Locale;
@@ -167,19 +168,6 @@ public class TagUtils {
 
 
     public static int getRating(MusicTag tag) {
-       /* String label1 = tag.getQualityRating();
-        if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
-            return 5;
-        }else if(QUALITY_RECOMMENDED.equals(label1)) {
-            return 4;
-        }else if (QUALITY_FAVORITE.equals(label1)) {
-            return 3;
-        }else if(Constants.QUALITY_BAD.equals(label1)) {
-            return 1;
-        }else {
-            return 0;
-        }
-        */
         if(PlaylistRepository.isInPlaylist(tag)) {
             return 5;
         }
@@ -232,10 +220,11 @@ public class TagUtils {
     }
 
     public static int getCodecColor(Context context, MusicTag tag) {
-        if(isLossless(tag)) {
-            return context.getColor(R.color.mm_label_lossless);
+        if(isLossy(tag)) {
+            return context.getColor(R.color.mm_label_lossy);
         }
-        return context.getColor(R.color.mm_label_lossy);
+
+        return context.getColor(R.color.mm_label_lossless);
     }
 
     public static String getEncodingTypeShort(MusicTag tag) {
@@ -369,5 +358,13 @@ public class TagUtils {
         }
 
         return "";
+    }
+
+    public static int getCodecBgColor(Context mContext, @NotNull MusicTag tag) {
+            if(isLossy(tag)) {
+                return mContext.getColor(R.color.mm_label_lossy_bg);
+            }
+
+            return mContext.getColor(R.color.mm_label_lossless_bg);
     }
 }

@@ -257,7 +257,7 @@ public class TagsTechnicalFragment extends Fragment {
                         String path = tag.getPath();
                         File pathFile = new File(path);
                         pathFile = pathFile.getParentFile();
-                        String coverArtPath = pathFile.getAbsolutePath()+"/Cover.png";
+                        String coverArtPath = pathFile.getAbsolutePath()+"/Cover.jpg";
                         FFMpegHelper.extractCoverArt(path, new File(coverArtPath), null);
                     }
                 }

@@ -39,8 +39,8 @@ import apincer.music.core.utils.StringUtils;
 public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     // DAO objects
     private Dao<MusicTag, Long> musicTagDao = null;
-    private Dao<Playlist, Long> playlistDao = null;
-    private Dao<PlaylistItem, Long> playlistItemDao = null;
+   // private Dao<Playlist, Long> playlistDao = null;
+   // private Dao<PlaylistItem, Long> playlistItemDao = null;
     private Dao<PlayingQueue, Long> queueItemDao = null;
 
     public MusicTag findByUniqueKey(String uniqueKey) {
@@ -77,7 +77,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 13;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -192,9 +192,53 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public void save(MusicTag tag)   {
+    public void saveNew(MusicTag tag) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
+            try {
+                tag.setId(0);
+                dao.create(tag);
+                return;
+            } catch (SQLException e) {
+               // if (!isUniqueConstraint(e)) throw e;
+            }
+
+            // conflict fallback
+            MusicTag existing = dao.queryBuilder()
+                    .where()
+                    .eq("uniqueKey", tag.getUniqueKey())
+                    .queryForFirst();
+
+            if (existing != null) {
+                tag.setId(existing.getId());
+                dao.update(tag);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "save", e);
+        }
+    }
+
+    public void save(MusicTag tag) {
+        try {
+            Dao<MusicTag, Long> dao = getMusicTagDao();
+            dao.createOrUpdate(tag);
+        } catch (SQLException e) {
+            Log.e(TAG, "save", e);
+        }
+    }
+
+    public void saveNew3(MusicTag tag)   {
+        try {
+            Dao<MusicTag, ?> dao = getMusicTagDao();
+            MusicTag existing = dao.queryBuilder()
+                    .where()
+                    .eq("uniqueKey", tag.getUniqueKey())
+                    .queryForFirst();
+
+            if (existing != null) {
+                // merge or reuse existing ID
+                tag.setId(existing.getId());
+            }
             dao.createOrUpdate(tag);
         } catch (SQLException e) {
             Log.e(TAG,"save", e);
@@ -301,7 +345,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             if(StringUtils.isEmpty(genre)) {
                 builder.where().isNull("genre").or().eq("genre", "");
             }else {
-                builder.where().eq("genre", genre.replace("'", "''"));
+                //builder.where().eq("genre", genre.replace("'", "''"));
+                builder.where().eq("genre", new SelectArg(genre));
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
@@ -316,7 +361,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             if(StringUtils.isEmpty(grouping)) {
                 builder.where().isNull("grouping").or().eq("grouping", "");
             }else {
-                builder.where().eq("grouping", grouping.replace("'", "''"));
+                //builder.where().eq("grouping", grouping.replace("'", "''"));
+                builder.where().eq("grouping", new SelectArg(grouping));
             }
             if(firstResult>0) {
                 builder.offset(firstResult);
@@ -761,7 +807,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             if(StringUtils.isEmpty(name)) {
                 builder.where().isNull("artist").or().eq("artist", "");
             }else {
-                name = name.replace("'", "''");
+               // name = name.replace("'", "''");
                 // Note: Use SelectArg for security instead of name.replace("'", "''")
                 builder.where().like("artist", new SelectArg("%" + name + "%"));
             }
@@ -855,8 +901,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public void close() {
         super.close();
         musicTagDao = null;
-        playlistDao = null;
-        playlistItemDao = null;
+       // playlistDao = null;
+       // playlistItemDao = null;
         queueItemDao = null;
     }
 }

@@ -3,8 +3,9 @@ package apincer.android.mmate.ui;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static apincer.android.mmate.utils.UIUtils.dpToPx;
-import static apincer.music.core.Constants.FLAC_STANDARD_COMPRESS_LEVEL;
-import static apincer.music.core.Constants.FLAC_UNCOMPRESS_LEVEL;
+import static apincer.music.core.Constants.FLAC_BALANCE_COMPRESS_LEVEL;
+import static apincer.music.core.Constants.FLAC_FAST_COMPRESS_LEVEL;
+import static apincer.music.core.Constants.FLAC_MAXIMUM_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.KEY_FILTER_KEYWORD;
 import static apincer.music.core.Constants.KEY_FILTER_TYPE;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -127,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String FILE_FLAC = "FLAC";
     public static final String FILE_AIFF = "AIFF";
     public static final String FILE_MP3 = "MP3";
+    private static final String FILE_ALAC = "M4A";
 
     // Activity result launcher
     ActivityResultLauncher<Intent> tagViewResultLauncher;
@@ -331,9 +333,7 @@ public class MainActivity extends AppCompatActivity {
         nowPlayingLabel = bottomAppBar.findViewById(R.id.navigation_now_playing);
 
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
-       // UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-      //  View signalPath = bottomAppBar.findViewById(R.id.navigation_signal_path);
         View mediaServer = bottomAppBar.findViewById(R.id.navigation_media_server);
 
         // Setup menu click listeners
@@ -688,12 +688,11 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private boolean scrollToSong(MediaTrack currentlyPlaying) {
-        if (currentlyPlaying == null) return false;
+    private void scrollToSong(MediaTrack currentlyPlaying) {
+        if (currentlyPlaying == null) return;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
         scrollToPosition(positionToScroll);
-        return true;
     }
 
     private void scrollToPosition(int position) {
@@ -790,9 +789,6 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.menu_directories) {
             doScanDirectories();
             return true;
-      //  } else if (item.getItemId() == R.id.menu_media_server) {
-      //      doManageMediaServer();
-      //      return true;
         } else if (item.getItemId() == R.id.menu_about_crash) {
             Intent intent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(intent);
@@ -958,7 +954,7 @@ public class MainActivity extends AppCompatActivity {
                         .setMessage(getString(R.string.alert_invalid_media_file, tag==null?" - ":tag.getPath()))
                         .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                             if(isPlaybackServiceBound) {
-                                playbackService.play(tag);
+                                playbackService.playSong(tag);
                             }
                             viewModel.getTagRepository().deleteMediaTag(tag);
                            // repos.deleteMediaItem(tag);
@@ -986,10 +982,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Show the SearchView
         headerSearchView.setVisibility(View.VISIBLE);
-       // headerSearchView.requestFocus();
 
-       // mBackButton.setImageDrawable(getDrawable(R.drawable.round_close_24));
-       // mBackButton.setOnClickListener(view -> closeSearch());
     }
 
     private void setupSearchView() {
@@ -1019,7 +1012,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Manually handle the "X" button click
-        ImageView closeButton = headerSearchView.findViewById(androidx.appcompat.R.id.search_close_btn);
+        ImageView closeButton = headerSearchView.findViewById(R.id.search_close_btn);
         closeButton.setOnClickListener(v -> {
             headerSearchView.setQuery("", false); // Clear the text
             // You might also want to close the whole search bar here:
@@ -1266,7 +1259,7 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private void doMeasureDR(List<MusicTag> selections) {
+    private void doDeepAnalysis(List<MusicTag> selections) {
         if (selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
@@ -1401,7 +1394,7 @@ public class MainActivity extends AppCompatActivity {
 
         String[] outputFormatList = getResources().getStringArray(R.array.output_formats);
         setupListValuePopupFullList(outputFormat, Arrays.asList(outputFormatList));
-        outputFormat.setText(outputFormatList[1]); // set default, flac standard compress
+        outputFormat.setText(outputFormatList[2]); // set default, flac standard compress
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1465,30 +1458,29 @@ public class MainActivity extends AppCompatActivity {
             alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
-
-        int compressionLevel = FLAC_STANDARD_COMPRESS_LEVEL;
-        String targetExt;
-        String selectedFormat = outputFormat.getText().toString();
-        if(selectedFormat.contains(".aiff")) {
-            targetExt = FILE_AIFF;
-        }else if(selectedFormat.contains(".mp3")) {
-            targetExt = FILE_MP3;
-        }else {
-            compressionLevel = selectedFormat.contains("Uncompressed")?FLAC_UNCOMPRESS_LEVEL:FLAC_STANDARD_COMPRESS_LEVEL;
-            targetExt = FILE_FLAC;
-        }
-
-        final String finalTargetExt = targetExt.toLowerCase();
-        final int finalCompressionLevel = compressionLevel;
-
         btnOK.setOnClickListener(v -> {
             busy = true;
             btnOK.setEnabled(false);
            // btnOK.setVisibility(GONE);
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
+            int compressionLevel = FLAC_BALANCE_COMPRESS_LEVEL;
+            String targetExt;
+            String selectedFormat = outputFormat.getText().toString();
+            if(selectedFormat.contains(".aiff")) {
+                targetExt = FILE_AIFF;
+            }else if(selectedFormat.contains(".mp3")) {
+                targetExt = FILE_MP3;
+            }else if(selectedFormat.contains(".m4a")) {
+                targetExt = FILE_ALAC;
+            }else {
+                if(selectedFormat.contains("fast")) compressionLevel = FLAC_FAST_COMPRESS_LEVEL;
+                else if(selectedFormat.contains("maximum")) compressionLevel = FLAC_MAXIMUM_COMPRESS_LEVEL;
+                else compressionLevel = FLAC_BALANCE_COMPRESS_LEVEL;
+                targetExt = FILE_FLAC;
+            }
 
-            operationTask.encodeFiles(getApplicationContext(), selections, finalTargetExt, finalCompressionLevel,
+            operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(MusicTag tag, int progress, String status) {
@@ -1648,10 +1640,10 @@ public class MainActivity extends AppCompatActivity {
                 doEncodeAudioFiles(getSelections());
                 mode.finish();
                 return true;
-            } else if (id == R.id.action_measure_dr) {
+            /*} else if (id == R.id.action_measure_dr) {
                 doMeasureDR(getSelections());
                 mode.finish();
-                return true;
+                return true; */
             } else if (id == R.id.action_select_all) {
                 if (mTracker.getSelection().size() == adapter.getItemCount()) {
                     // Selected all, reset selection

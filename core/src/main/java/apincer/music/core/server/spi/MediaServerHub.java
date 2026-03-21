@@ -11,42 +11,41 @@ public interface MediaServerHub {
 
     String getLibraryNames();
 
-    List<PlaybackTarget> getAvailablePlaybackTargets();
+    List<PlaybackTarget> getPlaybackTargets();
+
+    void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting);
+
+    void setNextTrack(MediaTrack nextSong);
 
     enum ServerStatus {
         RUNNING,
         STOPPED,
         STARTING,
-        ERROR;
+        ERROR, CAST;
 
         public boolean isOnline() {
             return this == RUNNING;
         }
     }
 
-    void activatePlayer(String udn, PlaybackCallback callback);
+    void playerActivate(String udn, PlaybackCallback callback);
 
-    void deactivatePlayer(String udn);
+    void playerDeactivate(String udn);
 
-    void startServers();
+    void start();
 
-    void stopServers();
+    void stop();
 
-    boolean isInitialized();
+   // boolean isInitialized();
 
-    BehaviorSubject<ServerStatus> getServerStatus();
+    BehaviorSubject<ServerStatus> getStatus();
 
-    void stopPlaying(String udn);
-    void pause(String rendererUdn);
+    void playerStop(String udn);
+    //void pause(String rendererUdn);
 
     //void play(String renderer);
 
-    void playSong(String rendererUdn, MediaTrack song);
-
-
-   // void fetchPlayerState(String renderer);
-
-    // Add a method for the hosting service to call on destroy
-    void onDestroy();
+    void playerPlaySong(String rendererUdn, MediaTrack song);
+    void playerPlaySong(MediaTrack song);
 
 }

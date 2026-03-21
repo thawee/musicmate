@@ -21,8 +21,9 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-    public static final int FLAC_STANDARD_COMPRESS_LEVEL = 4;
-    public static final int FLAC_UNCOMPRESS_LEVEL = 0;
+    public static final int FLAC_BALANCE_COMPRESS_LEVEL = 4;
+    public static final int FLAC_FAST_COMPRESS_LEVEL = 0;
+    public static final int FLAC_MAXIMUM_COMPRESS_LEVEL = 8;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
@@ -53,7 +54,7 @@ public final class Constants {
     public static final String TITLE_HIRES = "Hi-Res Audio"; //""Hi-Res Lossless";
 
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality";
+    public static final String TITLE_CD_EXT_QUALITY = "Studio 24-bit Quality";
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Audio"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
     public static final String TITLE_MQA_MASTER_AUDIO = "MQA Master"; //""Studio Masters";  // Industry standard term //"Master Recordings";
@@ -68,9 +69,8 @@ public final class Constants {
     public static final String LEGEND_MQA = "MQA";
     public static final String LEGEND_LOSSY = "LOSSY"; //""LC"; //Lossy Codec
 
-    //public static final String TITLE_BIT_PERFECT = "Bit-Perfect";
-    //public static final String TITLE_BIT_PERFECT_STREAMING = "Bit-Perfect";
-    public static final String TITLE_STREAMING = "Steaming";
+    public static final String TITLE_PLAYER_LOCAL = "This Device";
+    public static final String TITLE_PLAYER_CAST = "Cast";
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();

@@ -170,14 +170,6 @@ public class MediaServerDevice extends LocalDevice {
         return contentDirectoryService;
     }
 
-    public static MediaServerDevice createMediaServerDevice(Context context, TagRepository tagRepos) {
-        try {
-            return new MediaServerDevice(context, tagRepos);
-        } catch (ValidationException e) {
-            return null;
-        }
-    }
-
     private static String getUuid(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String mediaServerUuid = preferences.getString(Constants.PREF_MEDIA_SERVER_UUID_KEY, null);

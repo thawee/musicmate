@@ -29,7 +29,6 @@ import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
-import dalvik.annotation.optimization.FastNative;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -238,6 +237,7 @@ public class MusicTagUtils {
         return isMPegFile(tag) || isAACFile(tag);
     }
 
+    @Deprecated
     public static String getDynamicRangeScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {

@@ -16,7 +16,7 @@ import apincer.music.core.utils.StringUtils;
 public class MusicTag implements MediaTrack {
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(uniqueKey);
     }
 
     /* Internal field, not save to table*/
@@ -33,10 +33,11 @@ public class MusicTag implements MediaTrack {
     }
 
 
-    @DatabaseField(generatedId = true, allowGeneratedIdInsert = true, canBeNull = false)
+    //@DatabaseField(generatedId = true, allowGeneratedIdInsert = true, canBeNull = false)
+    @DatabaseField(generatedId = true, canBeNull = false)
     protected long id;
 
-    @DatabaseField(uniqueIndex = true)
+    @DatabaseField(uniqueIndex = true, canBeNull = false)
     protected String uniqueKey;
 
     @DatabaseField

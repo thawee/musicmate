@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_measure_dr"
+        android:id="@+id/action_deep_analysis"
         android:title="@string/analyze_music"
         app:showAsAction="ifRoom"/>
 

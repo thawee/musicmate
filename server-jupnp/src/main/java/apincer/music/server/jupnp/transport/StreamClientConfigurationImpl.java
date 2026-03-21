@@ -16,7 +16,7 @@ public class StreamClientConfigurationImpl extends AbstractStreamClientConfigura
 
     @Override
     public String getUserAgentValue(int majorVersion, int minorVersion) {
-        // TODO: UPNP VIOLATION: Synology NAS requires User-Agent to contain
+        // UPNP VIOLATION: Synology NAS requires User-Agent to contain
         // "Android" to return DLNA protocolInfo required to stream to Samsung TV
         // see: http://two-play.com/forums/viewtopic.php?f=6&t=81
         ServerClientTokens tokens = new ServerClientTokens(majorVersion, minorVersion);

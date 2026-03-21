@@ -113,13 +113,13 @@ public class FileRepository {
                 if (isManagedInLibrary(tag)) {
                     File pathFile = new File(path);
                     pathFile = pathFile.getParentFile();
-                    pathFile = new File(pathFile, "Cover.png");
+                    pathFile = new File(pathFile, "Cover.jpg");
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
                     FFMpegHelper.extractCoverArt(path, pathFile, null);
                     return DigestUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
                 } else {
                     String coverFilename = DigestUtils.md5Hex(path);
-                    File pathFile = new File(dir, coverFilename + ".png");
+                    File pathFile = new File(dir, coverFilename + ".jpg");
 
                     FileUtils.createParentDirs(pathFile);
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
@@ -154,7 +154,7 @@ public class FileRepository {
             File dir = getCoverartDir(context);
             File cover = new File(dir, albumArtFilename);
             if(!cover.exists()) {
-                // try to to get folder cover art
+                // try to get folder cover art
                 MusicTag song = tagRepos.getByAlbumArtFilename(albumArtFilename);
                 if(song != null) {
                     return getFolderCoverArt(song.getPath());
@@ -387,8 +387,8 @@ public class FileRepository {
 
     public String buildCollectionPath(@NotNull MusicTag metadata, boolean includeStorageDir) {
         // hierarchy directory
-        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc)
-        // 2. hires, lossless, mqa, etc
+        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc.)
+        // 2. hires, lossless, mqa, etc.
         // 3. artist|albumArtist
         // 4. album
         // 5. file name <track no>-<artist>-<title>
@@ -465,35 +465,6 @@ public class FileRepository {
         }
         return metadata.getPath();
     }
-
-    /*
-    public String getStorageIdFor(MusicTag metadata) {
-        String STORAGE_PRIMARY = PRIMARY;
-       // if(metadata.isDSD() || metadata.isSACDISO()) {
-            // DSD and ISO SACD
-       //     return STORAGE_PRIMARY;
-       // }else if (MusicTagUtils.isHiRes(metadata)) {
-       //     return STORAGE_PRIMARY;
-       // }else
-       // if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) { // ||
-            //    Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {// ||
-             //   Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY; */
-
-      /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
-                 Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping()) ||
-                Constants.GROUPING_THAI_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
-                return STORAGE_PRIMARY; */
-       // }
-    /*
-        return STORAGE_SECONDARY;
-    } */
 
     public static boolean isMediaFileExist(MusicTag item) {
         if(item == null || item.getPath()==null) {

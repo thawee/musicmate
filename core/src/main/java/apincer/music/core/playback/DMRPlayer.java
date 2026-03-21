@@ -7,6 +7,11 @@ public class DMRPlayer implements PlaybackTarget {
     private final String displayName;
     private final String location;
 
+    // Capability Flags
+    private boolean supportsFlac = false;
+    private boolean supportsSeek = true; // Most support it, but we'll verify
+    private boolean supports24Bit = false;
+
     //DLNA/UPnP
     private DMRPlayer(String urn, String friendlyName, String host) {
         this.udn = urn;
@@ -31,12 +36,40 @@ public class DMRPlayer implements PlaybackTarget {
 
     @Override
     public String getDescription() {
+        // You can now return a more detailed description based on capabilities
+        if (supports24Bit) return location + " (Hi-Res Lossless)";
         return location;
     }
 
     @Override
     public boolean canReadSate() {
         return true;
+    }
+
+    // --- Capability Getters & Setters ---
+
+    public boolean isSupportsFlac() {
+        return supportsFlac;
+    }
+
+    public void setSupportsFlac(boolean supportsFlac) {
+        this.supportsFlac = supportsFlac;
+    }
+
+    public boolean isSupportsSeek() {
+        return supportsSeek;
+    }
+
+    public void setSupportsSeek(boolean supportsSeek) {
+        this.supportsSeek = supportsSeek;
+    }
+
+    public boolean isSupports24Bit() {
+        return supports24Bit;
+    }
+
+    public void setSupports24Bit(boolean supports24Bit) {
+        this.supports24Bit = supports24Bit;
     }
 
     public static class Factory {

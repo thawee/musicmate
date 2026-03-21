@@ -152,7 +152,7 @@ public class AboutActivity extends AppCompatActivity {
                    // UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
                     // file type piechart
-                    setupResolutionChart(v, encList, "");
+                    setupQualityChart(v, encList, "");
                     //setupGroupingChart(v, grpList, "");
 
                     // setup digital music details
@@ -301,7 +301,7 @@ public class AboutActivity extends AppCompatActivity {
             return null;
         }
 
-        private void setupResolutionChart(View v, Map<String, Integer> encList, String title) {
+        private void setupQualityChart(View v, Map<String, Integer> encList, String title) {
             PieChart chart = v.findViewById(R.id.chartResolutions);
             chart.setUsePercentValues(false);
             //chart.setUsePercentValues(true);
@@ -402,71 +402,6 @@ public class AboutActivity extends AppCompatActivity {
 
             chart.invalidate();
         }
-
-        /*
-        private void setDataForQuality(PieChart chart, Map<String, Integer> encList, String title) {
-            ArrayList<PieEntry> entries = new ArrayList<>();
-
-            // NOTE: The order of the entries when being added to the entries array determines their position around the center of
-            // the chart.
-            // add a lot of colors
-            ArrayList<Integer> colors = new ArrayList<>();
-            Map<String, Integer> mappedColors = new HashMap<>();
-
-            mappedColors.put(Constants.LEGEND_MQA, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
-            mappedColors.put(Constants.LEGEND_DSD, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
-            mappedColors.put(Constants.LEGEND_HIRES, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
-            mappedColors.put(Constants.LEGEND_CD, ContextCompat.getColor(getContext(), R.color.quality_cd_background));
-            mappedColors.put(Constants.LEGEND_STUDIO, ContextCompat.getColor(getContext(), R.color.quality_cd_ext_background));
-            mappedColors.put(Constants.LEGEND_LOSSY, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
-
-            for(String enc: encList.keySet()) {
-                entries.add(new PieEntry(encList.get(enc), enc));
-                if(mappedColors.containsKey(enc)) {
-                    colors.add(mappedColors.get(enc));
-                }else {
-                    colors.add(ColorTemplate.COLORFUL_COLORS[0]);
-                }
-            }
-
-            PieDataSet dataSet = new PieDataSet(entries, title);
-            //setting size of the value
-            dataSet.setValueLinePart1OffsetPercentage(0.0f);
-            dataSet.setValueLinePart1Length(1f);
-            dataSet.setValueLinePart2Length(0.4f);
-
-            dataSet.setValueFormatter(new ValueFormatter() {
-                private final DecimalFormat mFormat = new DecimalFormat("#,###");
-                @SuppressLint("DefaultLocale")
-                @Override
-                public String getFormattedValue(float value) {
-                    // return String.format("%.1f", value); // Format to one decimal place
-                    return mFormat.format(value);
-                }
-            });
-
-            dataSet.setDrawIcons(false);
-            dataSet.setSliceSpace(2f); //space between each slice
-            dataSet.setValueLineColor(Color.WHITE);
-            dataSet.setSelectionShift(2f);
-            //setting position of the value
-            dataSet.setYValuePosition(PieDataSet.ValuePosition.INSIDE_SLICE); // display value outside with pointing line
-            dataSet.setUsingSliceColorAsValueLineColor(true);
-            dataSet.setAutomaticallyDisableSliceSpacing(true);
-
-            dataSet.setColors(colors);
-
-            PieData data = new PieData(dataSet);
-            //   data.setValueFormatter(new PercentFormatter());
-            data.setValueTextSize(10f);
-            data.setValueTextColor(Color.BLACK);
-            chart.setData(data);
-
-            // undo all highlights
-            chart.highlightValues(null);
-
-            chart.invalidate();
-        } */
 
     }
 }

@@ -22,11 +22,13 @@ import com.google.android.material.textview.MaterialTextView;
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.provider.FileSystem;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
@@ -128,8 +130,6 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         // Step 1: Song
         MediaTrack song = playbackService.getNowPlayingSong();
         if (song != null) {
-            // Add the "Lossless" indicator at the very top
-           // String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + "/"+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
             String bps = StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true);
             if(TagUtils.isMQA(song)) {
                 bps = bps + " ("+StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true)+")";
@@ -138,13 +138,10 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                     + "  ["
                     + StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth())
                     + " • "
-                    //+ song.getAudioEncoding().toUpperCase()
-                    //+" | "
                     + bps
                     + "]";
 
             TextView resolutionIndicator = new TextView(getContext());
-            //resolutionIndicator.setText(quality.trim());
             resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
             resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_green_light, getContext().getTheme()));
             resolutionIndicator.setTextSize(14f);
@@ -152,7 +149,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             signalPathContainer.addView(resolutionIndicator);
             //qualityIndicator.setText(MusicTagUtils.getQualityIndFullString(song)); //song.getQualityInd());
 
-            addSignalPathStep(signalPathContainer, "Source", StringUtils.truncate(song.getSimpleName(),84, StringUtils.TruncateType.PREFIX), true);
+            addSignalPathStep(signalPathContainer, "Source", FileUtils.getFileName(song.getPath()), true);
         }
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
@@ -164,16 +161,14 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
                 addSignalPathStep(signalPathContainer, "Output", deviceDetails, false);
-                //if(device.isBitPerfect()) {
-                //    qualityIndicator.setText(Constants.TITLE_STREAMING);
-                //}
+                qualityIndicator.setText(Constants.TITLE_PLAYER_LOCAL);
             }else {
-                String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" [" + ApplicationUtils.getVersionNumber(getContext())+"]"; //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
+                String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" " + ApplicationUtils.getVersionNumber(getContext()); //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
                 playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
                 addSignalPathStep(signalPathContainer, "MusicMate Core", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Network Endpoint", playerDetails, false);
                 if(!MusicTagUtils.isLossy(song)) {
-                    qualityIndicator.setText(Constants.TITLE_STREAMING);
+                    qualityIndicator.setText(Constants.TITLE_PLAYER_CAST);
                 }
             }
         }

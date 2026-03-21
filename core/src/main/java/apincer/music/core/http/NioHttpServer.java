@@ -527,12 +527,12 @@ public class NioHttpServer implements Runnable {
                                 handleWrite(key);
                             }
                         } catch (IOException e) {
-                            String msg = e.getMessage();
-                            if (msg != null && (msg.contains("Connection reset by peer") || msg.contains("Broken pipe"))) {
+                           // String msg = e.getMessage();
+                            //if (msg != null && (msg.contains("Connection reset by peer") || msg.contains("Broken pipe"))) {
                                 // Quietly log common client disconnects
-                            } else {
-                                System.err.println("I/O error handling key: " + e.getMessage());
-                            }
+                            //} else {
+                            //    System.err.println("I/O error handling key: " + e.getMessage());
+                           // }
                             closeConnection(key);
                         } catch (Exception e) {
                             System.err.println("Error handling key: " + e.getClass().getSimpleName() + " - " + e.getMessage());
@@ -1239,10 +1239,233 @@ public class NioHttpServer implements Runnable {
         private final long rangeStart;
         private final long rangeEnd;
         private final long rangeLength;
+        private final AtomicBoolean hasClosed = new AtomicBoolean(false);
+
+        private static final long CHUNK_SIZE = 256 * 1024; // 256KB (DLNA-friendly)
+
+        private FileResponse(File file, HttpRequest request) throws IOException {
+            super();
+
+            long fileLen = file.length();
+
+            // HEAD request → no streaming, no stream count
+            if ("HEAD".equalsIgnoreCase(request.getMethod())) {
+                this.fileChannel = null;
+                this.fileSize = fileLen;
+                this.rangeStart = 0;
+                this.rangeEnd = 0;
+                this.rangeLength = 0;
+
+                setStatus(HTTP_OK, "OK");
+                addHeader("Content-Length", String.valueOf(fileLen));
+                addHeader("Accept-Ranges", "bytes");
+                return;
+            }
+
+            // 1. Stream limit check
+            int currentCount = activeStreams.get();
+            if (currentCount >= maxConcurrentStreams) {
+                throw new IOException("Service Unavailable - max concurrent streams reached (" +
+                        currentCount + "/" + maxConcurrentStreams + ")");
+            }
+
+            this.addHeader("Content-Type", MimeTypeUtil.readContentForMime(file.getName()));
+
+            String etag = generateETag(file);
+            this.addHeader("ETag", etag);
+            this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
+
+            long tempStart = 0;
+            long tempEnd = fileLen - 1;
+
+            String ifNoneMatch = request.getHeader("if-none-match", null);
+            if (ifNoneMatch != null && ifNoneMatch.equals(etag)) {
+                setStatus(HTTP_NOT_MODIFIED, "Not Modified");
+                this.fileChannel = null;
+                this.fileSize = 0;
+                this.rangeStart = 0;
+                this.rangeEnd = 0;
+                this.rangeLength = 0;
+                return;
+            }
+
+            // 2. Increment stream count
+            activeStreams.incrementAndGet();
+
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            this.fileChannel = raf.getChannel();
+            this.fileSize = fileChannel.size();
+
+            String rangeHeader = request.getHeader("range", "");
+            boolean rangeValid = true;
+
+            if (rangeHeader.startsWith("bytes=")) {
+                String ifRange = request.getHeader("if-range", null);
+                if (ifRange != null) {
+                    rangeValid = ifRange.equals(etag);
+                }
+
+                if (rangeValid && parseRangeHeader(rangeHeader)) {
+
+                    if (parsedStart >= fileSize) {
+                        setStatus(HTTP_RANGE_NOT_SATISFIABLE, "Range Not Satisfiable");
+                        addHeader("Content-Range", "bytes */" + fileSize);
+
+                        rangeStart = 0;
+                        rangeEnd = 0;
+                        rangeLength = 0;
+
+                        close();
+                        return;
+                    }
+
+                    tempStart = parsedStart;
+                    tempEnd = Math.min(parsedEnd, fileSize - 1);
+                }
+            }
+
+            this.rangeStart = tempStart;
+            this.rangeEnd = tempEnd;
+            this.rangeLength = this.rangeEnd - this.rangeStart + 1;
+
+            if (rangeHeader.isEmpty() || !rangeValid) {
+                setStatus(HTTP_OK, "OK");
+            } else {
+                setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
+                addHeader("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize);
+            }
+
+            addHeader("Content-Length", String.valueOf(rangeLength));
+            addHeader("Accept-Ranges", "bytes");
+            addHeader("Connection", "keep-alive"); // DLNA stability
+        }
+
+        private long parsedStart, parsedEnd;
+
+        private boolean parseRangeHeader(String rangeHeader) {
+            try {
+                String rangeValue = rangeHeader.substring(6);
+                parsedStart = -1;
+                parsedEnd = -1;
+
+                if (rangeValue.startsWith("-")) {
+                    long lastBytes = Long.parseLong(rangeValue.substring(1));
+                    parsedStart = Math.max(0, this.fileSize - lastBytes);
+                    parsedEnd = this.fileSize - 1;
+                } else {
+                    String[] ranges = rangeValue.split("-");
+                    parsedStart = Long.parseLong(ranges[0]);
+                    parsedEnd = (ranges.length > 1 && !ranges[1].isEmpty())
+                            ? Long.parseLong(ranges[1])
+                            : this.fileSize - 1;
+                }
+
+                return parsedStart >= 0 &&
+                        parsedStart <= parsedEnd &&
+                        parsedStart < fileSize;
+
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        private String generateETag(File file) {
+            String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
+
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
+                return "\"" + bytesToHex(hash).substring(0, 16) + "-" +
+                        Long.toHexString(file.length()) + "\"";
+            } catch (NoSuchAlgorithmException e) {
+                int hash = value.hashCode();
+                return "\"" + Integer.toHexString(hash) + "-" +
+                        Long.toHexString(file.length()) + "\"";
+            }
+        }
+
+        private static String bytesToHex(byte[] bytes) {
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        }
+
+        private String formatHttpDate(long timestamp) {
+            SimpleDateFormat df = new SimpleDateFormat(
+                    "EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+            df.setTimeZone(TimeZone.getTimeZone("GMT"));
+            return df.format(new Date(timestamp));
+        }
+
+        @Override
+        public void write(SocketChannel channel) throws IOException {
+            if (headerBuffer == null) buildHeaders();
+
+            if (!headersSent) {
+                channel.write(headerBuffer);
+                if (headerBuffer.hasRemaining()) return;
+                headersSent = true;
+            }
+
+            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) return;
+
+            if (fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
+                long position = rangeStart + bytesSent;
+                long remaining = rangeLength - bytesSent;
+
+                int maxTries = 3;
+
+                while (remaining > 0 && maxTries-- > 0) {
+                    long chunk = Math.min(remaining, CHUNK_SIZE);
+
+                    long written = fileChannel.transferTo(position, chunk, channel);
+
+                    if (written <= 0) {
+                        // IMPORTANT: socket not ready → wait for next OP_WRITE
+                        break;
+                    }
+
+                    position += written;
+                    remaining -= written;
+                    bytesSent += written;
+                }
+            }
+        }
+
+        @Override
+        public boolean isFullySent() {
+            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) {
+                return headersSent;
+            }
+            return headersSent && (fileChannel == null || bytesSent >= rangeLength);
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (!hasClosed.compareAndSet(false, true)) return;
+
+            if (fileChannel != null) {
+                if (fileChannel.isOpen()) {
+                    fileChannel.close();
+                }
+                activeStreams.decrementAndGet();
+            }
+        }
+    }
+
+    private class FileResponseOld extends HttpResponse {
+        private final FileChannel fileChannel;
+        private final long fileSize;
+        private long bytesSent = 0;
+        private final long rangeStart;
+        private final long rangeEnd;
+        private final long rangeLength;
         private final String etag;
         private final AtomicBoolean hasClosed = new AtomicBoolean(false);
 
-        private FileResponse(File file, HttpRequest request) throws IOException {
+        private FileResponseOld(File file, HttpRequest request) throws IOException {
             super();
 
             // **1. CHECK LIMIT FIRST - reject before doing anything**
@@ -1411,11 +1634,20 @@ public class NioHttpServer implements Runnable {
                 long position = rangeStart + bytesSent;
                 long remaining = rangeLength - bytesSent;
 
-                long written = fileChannel.transferTo(position, remaining, channel);
+               // long written = fileChannel.transferTo(position, remaining, channel);
+                int maxTries = 3;
+                while (remaining > 0 && maxTries-- > 0) {
+                    long written = fileChannel.transferTo(position, remaining, channel);
+                    if (written <= 0) break;
 
-                if (written > 0) {
+                    position += written;
+                    remaining -= written;
                     bytesSent += written;
                 }
+
+               /* if (written > 0) {
+                    bytesSent += written;
+                }*/
             }
         }
 

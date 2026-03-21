@@ -183,9 +183,17 @@
         <item>Not Rated</item>
     </string-array>
     <string-array name="output_formats" >
-        <item>PCM, Uncompressed 16/24-bit, .aiff</item>
-        <item>FLAC, Standard Compression, .flac</item>
+        <!--
+        <item>PCM, Uncompressed, .aiff</item>
         <item>FLAC, Uncompressed, .flac</item>
+        <item>FLAC, Standard Compressed, .flac</item>
+        <item>ALAC, Apple Lossless, .m4a</item>
         <item>MPEG-1 Layer III, 320kbps, .mp3</item>
+         <item>MP3 (320 kbps), .mp3</item>
+        -->
+        <item>PCM (Uncompressed), .aiff</item>
+        <item>FLAC (Fast – Larger Size), .flac</item>
+        <item>FLAC (Balanced – Recommended), .flac</item>
+        <item>ALAC (Apple Lossless), .m4a</item>
     </string-array>
 </resources>

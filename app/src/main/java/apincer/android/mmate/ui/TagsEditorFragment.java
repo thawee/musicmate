@@ -423,10 +423,6 @@ public class TagsEditorFragment extends Fragment {
        // tagUpdate.setQualityRating(buildQualityTag());
     }
 
-   // private String buildQualityTag() {
-   //     return qualityDropdown.getText().toString();
-   // }
-
     private String buildTag(TextInputEditText txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
         if(isEmpty(text) || isMultiValuesMarker(text)) {
@@ -531,34 +527,4 @@ public class TagsEditorFragment extends Fragment {
         previewPath.setText(tag.getSimpleName());
     }
 
-    /*
-    static class NoFilterArrayAdapter<T> extends ArrayAdapter<T> {
-        private final List<T> items;
-        private final Filter disabledFilter;
-
-        public NoFilterArrayAdapter(@NonNull Context context, int resource, @NonNull List<T> items) {
-            super(context, resource, items);
-            this.items = items;
-            this.disabledFilter = new Filter() {
-                @Override
-                protected FilterResults performFiltering(CharSequence constraint) {
-                    FilterResults results = new FilterResults();
-                    results.values = NoFilterArrayAdapter.this.items; // Always return the full list
-                    results.count = NoFilterArrayAdapter.this.items.size();
-                    return results;
-                }
-
-                @Override
-                protected void publishResults(CharSequence constraint, FilterResults results) {
-                    notifyDataSetChanged();
-                }
-            };
-        }
-
-        @NonNull
-        @Override
-        public Filter getFilter() {
-            return disabledFilter;
-        }
-    } */
 }

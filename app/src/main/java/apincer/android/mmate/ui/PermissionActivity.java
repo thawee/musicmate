@@ -79,7 +79,7 @@ public class PermissionActivity extends AppCompatActivity {
 
         txtTitle.setText("Permissions for Music Mate");
         txtConfirm.setText("OK");
-        //todo when permission is granted
+        //on permission is granted
         txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
                 PermissionUtils.PERMISSIONS_ALL,
                 REQUEST_CODE_STORAGE_PERMISSION));

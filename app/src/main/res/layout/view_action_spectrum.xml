@@ -48,15 +48,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingTop="@dimen/dimen_2_dp"
+        android:paddingLeft="@dimen/dimen_8_dp"
+        android:paddingRight="@dimen/dimen_8_dp"
+        android:paddingBottom="@dimen/dimen_8_dp">
 
         <TextView
             android:id="@+id/filename"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:textColor="@color/white"
             android:alpha="0.7"
             android:textSize="12sp"
+            android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="start"
             android:layout_marginBottom="8dp"
@@ -130,4 +136,12 @@
                 android:textColor="@color/black" />
         </LinearLayout>
     </LinearLayout>
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dimen_2_dp"
+        android:background="@color/grays_charcoal"
+        android:layout_marginStart="@dimen/dimen_24_dp"
+        android:layout_marginEnd="@dimen/dimen_24_dp"
+        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginBottom="@dimen/dimen_8_dp"/>
 </LinearLayout>

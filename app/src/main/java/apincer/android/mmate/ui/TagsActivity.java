@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
@@ -64,6 +63,7 @@ import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.view.BadgeView;
 import apincer.android.mmate.ui.view.VerdictFormatter;
 import apincer.android.mmate.utils.UIUtils;
+import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.authenticity.AudioAnalysisResult;
 import apincer.music.core.authenticity.AudioAuthenticityAnalyzer;
@@ -164,7 +164,7 @@ public class TagsActivity extends AppCompatActivity {
         dismissProgressDialog(); // Ensure progress dialog is dismissed
     }
 
-    private void doMeasureDR() {
+    private void doDeepScan() {
         startProgressBar();
         operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             @Override
@@ -348,8 +348,8 @@ public class TagsActivity extends AppCompatActivity {
         // 3. Set an OnMenuItemClickListener to handle menu item clicks
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_measure_dr) {
-                doMeasureDR();
+            if (itemId == R.id.action_deep_analysis) {
+                doDeepScan();
                 return true;
             } else if (itemId == R.id.action_web_search) {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
@@ -386,7 +386,7 @@ public class TagsActivity extends AppCompatActivity {
         ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
         ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
 
-        filenameText.setText(track.getSimpleName());
+        filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
         qualityScore.setText(R.string.analyzing);
 
         if (spinner != null) spinner.setVisibility(View.VISIBLE);
@@ -411,17 +411,7 @@ public class TagsActivity extends AppCompatActivity {
                         Log.d("AudioAnalysis", "Flatness: " + r.spectralFlatness); */
 
                         runOnUiThread(() -> {
-                            String result = r.verdict
-                                    + " ["
-                                    + StringUtils.formatAudioBitsDepth(r.bitDepth)
-                                    + SYMBOL_ENC_SEP
-                                    + StringUtils.formatAudioSampleRate(r.sampleRate, true)
-                                    +  "]";
-
-                           // SpannableString spannable = new SpannableString(result);
-                           // int color = getStatusColor(r.verdict);
-                           // spannable.setSpan(new ForegroundColorSpan(color), 0, result.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                          //  qualityScore.setText(spannable);
+                            String result = r.verdict;
 
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
@@ -438,7 +428,7 @@ public class TagsActivity extends AppCompatActivity {
                     }
                 });
 
-        SpectrogramGenerator.generate(getApplicationContext(), track.getPath(), (int) track.getAudioSampleRate(),
+        SpectrogramGenerator.generate(getApplicationContext(), track.getPath(), track.getAudioEncoding (), track.getAudioBitsDepth(), (int) track.getAudioSampleRate(),
                 new SpectrogramGenerator.Callback() {
 
                     @Override
@@ -532,7 +522,9 @@ public class TagsActivity extends AppCompatActivity {
         // load resolution, quality, coverArt
         loadImages(currentDisplayTag);
         //resolutionView.setMusicItem(currentDisplayTag);
-        codecView.setBadge(currentDisplayTag.getAudioEncoding().toUpperCase(), TagUtils.getCodecColor(getApplicationContext(), currentDisplayTag), null);
+        int txtColor = TagUtils.getCodecColor(getApplicationContext(), currentDisplayTag);
+        int bgColor = TagUtils.getCodecBgColor(getApplicationContext(), currentDisplayTag);
+        codecView.setBadge(currentDisplayTag.getAudioEncoding().toUpperCase(), txtColor, bgColor);
         dynamicRangeView.setMusicItem(currentDisplayTag);
         qualityIndicatorView.setMusicItem(currentDisplayTag);
         ratingIndicatorView.setMusicItem(currentDisplayTag);

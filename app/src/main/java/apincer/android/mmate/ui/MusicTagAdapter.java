@@ -545,8 +545,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        // if(isComparing(tag)) {
             holder.drDbView.setVisibility(VISIBLE);
             holder.drDbView.setMusicItem(tag);
+            int txtColor = TagUtils.getCodecColor(holder.mContext, tag);
+            int bgColor = TagUtils.getCodecBgColor(holder.mContext, tag);
           //  holder.codec.setBadge(tag.getAudioEncoding().toUpperCase());
-        holder.codec.setBadge(tag.getAudioEncoding().toUpperCase(), TagUtils.getCodecColor(holder.mContext, tag), null);
+        holder.codec.setBadge(tag.getAudioEncoding().toUpperCase(), txtColor, bgColor);
 
         //String res = tag.getAudioBitsDepth() + "-bit • " + TagUtils.getSampleRate(tag);
        // String res = tag.getAudioBitsDepth() + " / " + StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
@@ -596,7 +598,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             int itemId = item.getItemId();
             if (itemId == R.id.play_button) {
                 if(song != null && playbackService != null) {
-                    playbackService.play(song);
+                    playbackService.playSong(song);
                 }
                 return true;
             } else if (itemId == R.id.add_to_queue_button) {

@@ -26,7 +26,7 @@
             android:id="@+id/title_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/rounded_speaker_24"
+            android:src="@drawable/ic_notification_default"
             android:layout_marginEnd="8dp"
             app:tint="@color/white" />
 

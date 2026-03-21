@@ -119,7 +119,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
 
             // 1. Add Local Player
             //popup.getMenu().add(0, 0, 0, "Galaxy S25 (This Device)");
-            List<PlaybackTarget> renderers = playbackService.getAvailablePlaybackTargets();
+            List<PlaybackTarget> renderers = playbackService.getPlaybackTargets();
             if (renderers != null && !renderers.isEmpty()) {
                 for (PlaybackTarget player : renderers) {
                     popup.getMenu().add(0, 0, 0, player.getDisplayName());
@@ -171,7 +171,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     tvServerAddress.setVisibility(VISIBLE);
                     qrCodeImage.setVisibility(VISIBLE);
 
-                    // todo: get connected wifi access point name
+                    // get connected wifi access point name
                     String ssid = ApplicationUtils.getWifiSSID(getContext());
                     if(!isEmpty(ssid)) {
                         tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX+" ("+ssid+")");
@@ -188,7 +188,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                 case ERROR:
                     btnStartServer.setVisibility(VISIBLE);
                     btnStopServer.setVisibility(GONE);
-                    btnStartServer.setEnabled(isWifiConnected); // Only enable start if WiFi is on
+                    btnStartServer.setEnabled(isWifiConnected); // Only enable start if Wi-Fi is on
                    // btnStopServer.setEnabled(false);
                     qrCodeImage.setVisibility(GONE);
 

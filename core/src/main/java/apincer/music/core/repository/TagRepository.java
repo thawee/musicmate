@@ -806,7 +806,7 @@ public class TagRepository {
         return dbHelper.getArtistWithChildrenCount();
     }
 
-    public void setPlayingQueue(List<MusicTag> songsInContext) {
+    public void savePlayingQueue(List<MusicTag> songsInContext) {
         try {
             // --- Get references to our Data Access Objects (DAOs) ---
             Dao<PlayingQueue, Long> queueDao = dbHelper.getQueueItemDao();

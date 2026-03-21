@@ -3,7 +3,10 @@ package apincer.music.core.playback.spi;
 import java.util.List;
 import java.util.Optional;
 
+import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.PlaybackState;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 
 public interface PlaybackService {
@@ -25,38 +28,39 @@ public interface PlaybackService {
 
     void switchPlayer(PlaybackTarget newTarget, boolean controlled);
 
-    void loadPlayingQueue(MediaTrack song);
+    void switchPlayer(String targetId, boolean controlled);
+
+    void playSong(MediaTrack song);
+    void pausePlayer();
+
+   void skipToNextInQueue();
+
+   void setNextSongInQueue();
 
     void onPlaybackStateChanged(PlaybackState state);
 
     void onPlaybackStateElapsedTime(long elapsedTimeMS);
 
-    void subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
+    @NonNull Disposable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
 
-   // void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer);
-
-    void subscribeNowPlayingSong(
+    @NonNull Disposable subscribeNowPlayingSong(
             Consumer<Optional<MediaTrack>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     );
 
-    void subscribePlaybackTarget(
+    @NonNull Disposable subscribePlaybackTarget(
             Consumer<Optional<PlaybackTarget>> consumer,
             Consumer<Throwable> onErrorConsumer);
 
-    void play(MediaTrack song);
+    List<PlaybackTarget> getPlaybackTargets();
 
-    void skipToNext();
-
-    void switchPlayer(String targetId, boolean controlled);
-
-    List<PlaybackTarget> getAvailablePlaybackTargets();
+    void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting);
 
     MediaTrack getNowPlayingSong();
 
     PlaybackTarget getPlayer();
 
-
     void onMediaTrackChanged(MediaTrack tag);
 
+    void onAccessMediaTrack(MusicTag tag);
 }

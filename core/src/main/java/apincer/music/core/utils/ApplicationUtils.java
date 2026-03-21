@@ -18,7 +18,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.RequiresPermission;
@@ -509,5 +508,10 @@ public class ApplicationUtils {
             return ssid;
         }
         return "";
+    }
+
+    public static String getPathOnAndroidFiles(Context context, String path) {
+      File file =new File(context.getFilesDir(), path);
+        return file.getAbsolutePath();
     }
 }
