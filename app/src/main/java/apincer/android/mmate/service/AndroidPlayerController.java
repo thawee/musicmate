@@ -1,7 +1,10 @@
 package apincer.android.mmate.service;
 
+import static apincer.music.core.playback.ExternalAndroidPlayer.NEUTRON_MUSIC_PACK_NAME;
+
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -18,6 +21,7 @@ import java.util.List;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackCallback;
+import apincer.music.core.provider.MusicFileProvider;
 
 public class AndroidPlayerController {
     private static final String TAG = "AndroidPlayerController";
@@ -25,6 +29,7 @@ public class AndroidPlayerController {
     private final Context context;
     private final MediaSessionManager mediaSessionManager;
 
+    private String playbackTargetId;
     private MediaController mediaController;
     private PlaybackCallback playbackCallback;
 
@@ -72,6 +77,7 @@ public class AndroidPlayerController {
     public void registerCallback(ExternalAndroidPlayer player, PlaybackCallback playbackCallback) {
         this.mediaController = getMediaController(player.getTargetId());
         this.playbackCallback = playbackCallback;
+        this.playbackTargetId = player.getTargetId();
 
         if(this.mediaController != null) {
             Log.d("ExternalPlayer", "registerCallback");
@@ -187,14 +193,52 @@ public class AndroidPlayerController {
     }
 
     public void play(MediaTrack song) {
-        if(mediaController != null && song != null) {
-            File songFile = new File(song.getPath());
+        if(NEUTRON_MUSIC_PACK_NAME.equals(playbackTargetId)) {
+            playInNeutron(context, song);
+        }else {
+            if (mediaController != null && song != null) {
+                File songFile = new File(song.getPath());
 
-            // Convert the File object to a Uri
-            Uri songUri = Uri.fromFile(songFile);
-            // Pass the Uri to playFromUri. The second parameter (extras) can be null.
-            mediaController.getTransportControls().playFromUri(songUri, null);
+                // Convert the File object to a Uri
+                Uri songUri = Uri.fromFile(songFile);
+                // Pass the Uri to playFromUri. The second parameter (extras) can be null.
+                mediaController.getTransportControls().playFromUri(songUri, null);
+            }
         }
+    }
+
+
+
+    public void playInNeutron(Context context, MediaTrack song) {
+        if (song == null || song.getPath() == null) return;
+
+        /*
+        // Use Neutron's specific broadcast action
+        Intent intent = new Intent("com.neutroncode.mp.PLAY");
+
+        // Target both the paid and evaluation versions
+        intent.setPackage("com.neutroncode.mp");
+
+        Uri uri = MusicFileProvider.getUriForFile(song.getPath());
+       // File file = new File(song.getPath());
+       // Uri uri = Uri.fromFile(file);
+
+        // Set the data and the type
+        intent.setDataAndType(uri, "audio/*");
+
+        // Essential flags for Android 7+ and background execution
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+        context.sendBroadcast(intent); */
+
+        Uri uri = MusicFileProvider.getUriForFile(song.getPath());
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "audio/*");
+        intent.setPackage("com.neutroncode.mp");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        context.startActivity(intent);
     }
 
     public void pause() {

@@ -13,7 +13,7 @@ public class VerdictFormatter {
         if (verdict == null) return "No Analysis Data";
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
-       // builder.append("Verdict: ");
+        builder.append("Verdict: ");
         int start = builder.length();
         builder.append(verdict);
         int end = builder.length();
@@ -29,21 +29,37 @@ public class VerdictFormatter {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        // Optional: Apply a different style for technical warnings in parentheses
-        //applyNotesStyles(context, builder, verdict, start);
-        applyResolutionStyles(context, builder, verdict, start);
+       // applyResolutionStyles(context, builder, verdict, start);
+       // applyNotesStyles(context, builder, verdict, start);
 
         return builder;
     }
 
     private static @StyleRes int getStyleForVerdict(String verdict) {
-        if (verdict.contains("Upsampled")) return R.style.Text_MM_Verdict_Warning;
-        if (verdict.contains("Genuine")) return R.style.Text_MM_Verdict_Genuine;
-        if (verdict.contains("Hi-Res")) return R.style.Text_MM_Verdict_Genuine;
-        if (verdict.contains("Lossy")) return R.style.Text_MM_Verdict_Lossy;
+        if (verdict == null) return R.style.Text_MM_Verdict_CD;
 
-        //if (verdict.contains("CD Quality")) return R.style.Text_MM_Verdict_Standard;
-        return R.style.Text_MM_Verdict_HighFidelity;
+        // 1. Gold / Amber -> Studio Master
+        if (verdict.contains("Studio") || verdict.contains("Hi-Res")) {
+            return R.style.Text_MM_Verdict_Studio;
+        }
+
+        // 2. Green / Vintage -> Analog Master
+        if (verdict.contains("Analog")) {
+            return R.style.Text_MM_Verdict_Vintage;
+        }
+
+        // 3. Orange / Warning -> Upscaled Content
+        if (verdict.contains("Upscaled") || verdict.contains("Upsampled")) {
+            return R.style.Text_MM_Verdict_Warning;
+        }
+
+        // 4. Red -> MPEG/Lossy Source
+        if (verdict.contains("Lossy")) {
+            return R.style.Text_MM_Verdict_Lossy;
+        }
+
+        // 5. Cyan / Blue -> Perfect CD Quality (Default)
+        return R.style.Text_MM_Verdict_CD;
     }
 
     private static void applyNotesStyles(Context context, SpannableStringBuilder builder, String verdict, int offset) {

@@ -322,12 +322,12 @@
     <string name="web_server_name">MusicMate</string>
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
     <string name="show_frequency_spectrum">Frequency Spectrum</string>
-    <string name="lossless_verifier">Technical Spectral Analysis</string>
-    <string name="open_containing_folder">Open Containing Folder</string>
-    <string name="find_online">Search Info on Google</string>
+    <string name="lossless_verifier">MusicMate Spectra</string>
+    <string name="open_containing_folder">Show in folder</string>
+    <string name="find_online">Lookup on Google</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
-    <string name="analyze_music">Deep Scan</string>
+    <string name="analyze_music">Mastering Analysis</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>

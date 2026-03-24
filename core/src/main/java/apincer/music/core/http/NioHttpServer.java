@@ -35,9 +35,12 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * <h1>SonicNIO</h1>
@@ -52,7 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <ul>
  *   <li><b>Reactor Pattern:</b> A single dedicated I/O thread (the Reactor) handles all
  *       multiplexing, while a core-aligned worker pool processes business logic.</li>
- *   <li><b>Zero-Copy Direct I/O:</b> Uses {@link java.nio.channels.FileChannel#transferTo}
+ *   <li><b>Zero-Copy Direct I/O:</b> Uses {@link FileChannel#transferTo}
  *       to move bits directly from storage to the network card, bypassing the JVM heap.</li>
  *   <li><b>Jitter-Free Streaming:</b> Employs fixed 64KB chunking and a global
  *       Direct ByteBuffer Pool to ensure a steady, predictable stream of data.</li>
@@ -471,12 +474,12 @@ public class NioHttpServer implements Runnable {
             maxThread = Runtime.getRuntime().availableProcessors();
         }
         int coreCount = Math.max(2, maxThread);
-        workerPool = new java.util.concurrent.ThreadPoolExecutor(
+        workerPool = new ThreadPoolExecutor(
                 coreCount, // corePoolSize: Threads to keep alive
                 coreCount * 2, // maximumPoolSize: Max threads to create for bursts
                 60L, // keepAliveTime: Time for idle threads to live
                 TimeUnit.SECONDS,
-                new java.util.concurrent.LinkedBlockingQueue<>(), // The queue for waiting tasks
+                new LinkedBlockingQueue<>(), // The queue for waiting tasks
                 r -> {
                     Thread t = new Thread(r, "NIO-Worker");
                     t.setDaemon(true);
@@ -755,8 +758,10 @@ public class NioHttpServer implements Runnable {
                     // Handle exceptions from the handler
                     System.err.println("Handler error: " + e.getMessage());
                     response = new HttpResponse()
-                            .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
-                            .setBody(e.getMessage().getBytes());
+                            .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
+                    if(e.getMessage() != null) {
+                        response.setBody(e.getMessage().getBytes());
+                    }
                 }
             } else {
                 // No handler found - return 404
@@ -772,8 +777,10 @@ public class NioHttpServer implements Runnable {
         } catch (Exception e) {
             System.err.println("Error processing request: " + e.getMessage());
             HttpResponse errorResponse = new HttpResponse()
-                    .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
-                    .setBody(e.getMessage().getBytes());
+                    .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
+            if(e.getMessage() != null) {
+                errorResponse.setBody(e.getMessage().getBytes());
+            }
             responseQueue.add(new ResponseTask(key, errorResponse));
             selector.wakeup();
         } finally {
@@ -839,7 +846,7 @@ public class NioHttpServer implements Runnable {
                 if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
                     workerPool.submit(() -> {
                         try {
-                            attachment.wsHandler.onClose(attachment.wsConnection, 1006, "Connection closed abnormally");
+                            attachment.wsHandler.onClose(attachment.wsConnection, WEBSOCKET_CLOSE_ABNORMAL, "Connection closed abnormally");
                         } catch (Exception e) {
                             // Log error during close if necessary
                         }
@@ -898,22 +905,32 @@ public class NioHttpServer implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         Queue<WebSocketFrame> queue = attachment.wsConnection.getOutgoingQueue();
 
-        WebSocketFrame frame;
-        while ((frame = queue.peek()) != null) {
-            ByteBuffer buffer = frame.toByteBuffer();
-            channel.write(buffer);
-            if (buffer.hasRemaining()) {
-                // Didn't write the whole frame, come back later.
+        while (true) {
+            // 1. Get a buffer to write.
+            // If we have a partially written one, use it. Otherwise, poll the queue.
+            if (attachment.pendingWriteBuffer == null) {
+                WebSocketFrame frame = queue.poll();
+                if (frame == null) {
+                    // Queue is empty. Remove OP_WRITE and stop.
+                    key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+                    return;
+                }
+                // Generate the buffer ONCE per frame.
+                attachment.pendingWriteBuffer = frame.toByteBuffer();
+            }
+
+            // 2. Continuous write attempt
+            channel.write(attachment.pendingWriteBuffer);
+
+            // 3. If the buffer still has data, the TCP window is full.
+            // Exit and wait for the next OP_WRITE signal.
+            if (attachment.pendingWriteBuffer.hasRemaining()) {
                 return;
             }
-            queue.poll(); // Wrote the whole frame, remove it.
-        }
 
-        // We wrote everything, stop listening for write events.
-        if (queue.isEmpty()) {
-            //key.interestOps(SelectionKey.OP_READ);
-            // Unconditionally remove OP_WRITE from the I/O thread
-            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+            // 4. Frame finished. Clear the pending buffer to allow the next loop
+            // to poll the next frame from the queue.
+            attachment.pendingWriteBuffer = null;
         }
     }
 
@@ -921,7 +938,7 @@ public class NioHttpServer implements Runnable {
         try {
             return new FileResponse(file, request);
         } catch (IOException e) {
-            if (e.getMessage().startsWith("Service Unavailable")) {
+            if (e.getMessage()!= null && e.getMessage().startsWith("Service Unavailable")) {
                 return new HttpResponse()
                         .setStatus(503, "Service Unavailable")
                         .addHeader("Retry-After", "5")
@@ -949,7 +966,7 @@ public class NioHttpServer implements Runnable {
     private class ConnectionAttachment implements WebSocketFrameParser.FrameDataHandler { // MODIFIED: implements handler
         enum ParseState { READING_HEADERS, READING_BODY, WEBSOCKET_FRAME }
         final ByteBuffer readBuffer;
-        ByteArrayOutputStream requestData;// = new ByteArrayOutputStream();
+        ByteArrayOutputStream requestData;
         ParseState state = ParseState.READING_HEADERS;
         HttpRequest request;
         HttpResponse response;
@@ -960,7 +977,6 @@ public class NioHttpServer implements Runnable {
         WebSocketConnection wsConnection;
         WebSocketFrameParser wsFrameParser;
 
-        // NEW: Fields for message reassembly
         private ByteArrayOutputStream reassemblyBuffer;
         private int fragmentedOpcode = 0;
         private boolean currentFrameIsFin;
@@ -968,6 +984,8 @@ public class NioHttpServer implements Runnable {
 
         // Control frame buffer for immediate handling
         private ByteArrayOutputStream controlFrameBuffer;
+
+        ByteBuffer pendingWriteBuffer = null;
 
         public ConnectionAttachment(int readBufferSize) {
             this.readBuffer = ByteBuffer.allocate(readBufferSize);
@@ -995,6 +1013,7 @@ public class NioHttpServer implements Runnable {
                 } catch (IOException ignore) { }
                 response = null;
             }
+            pendingWriteBuffer = null;
         }
 
         public void upgradeToWebSocket(SelectionKey key) {
@@ -1066,7 +1085,7 @@ public class NioHttpServer implements Runnable {
 
                 // Check total message size
                 if (reassemblyBuffer.size() + payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                    wsConnection.close(1009, "Message too large");
+                    wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
                     throw new RuntimeException("WebSocket message exceeds size limit");
                 }
             } else {
@@ -1078,7 +1097,7 @@ public class NioHttpServer implements Runnable {
 
                 // Validate initial frame size
                 if (payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                    wsConnection.close(1009, "Message too large");
+                    wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
                     throw new RuntimeException("WebSocket message exceeds size limit");
                 }
             }
@@ -1455,226 +1474,6 @@ public class NioHttpServer implements Runnable {
         }
     }
 
-    private class FileResponseOld extends HttpResponse {
-        private final FileChannel fileChannel;
-        private final long fileSize;
-        private long bytesSent = 0;
-        private final long rangeStart;
-        private final long rangeEnd;
-        private final long rangeLength;
-        private final String etag;
-        private final AtomicBoolean hasClosed = new AtomicBoolean(false);
-
-        private FileResponseOld(File file, HttpRequest request) throws IOException {
-            super();
-
-            // **1. CHECK LIMIT FIRST - reject before doing anything**
-            int currentCount = activeStreams.get();
-            if (currentCount >= maxConcurrentStreams) {
-                throw new IOException("Service Unavailable - max concurrent streams reached (" +
-                        currentCount + "/" + maxConcurrentStreams + ")");
-            }
-
-            //this.addHeader("Content-Type", MimeTypeUtil.getMimeType(file.getName()));
-            this.addHeader("Content-Type", MimeTypeUtil.readContentForMime(file.getName()));
-            this.etag = generateETag(file);
-            // Generate ETag based on file path, size and last modified time
-            this.addHeader("ETag", etag);
-            this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
-            //this.addHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
-
-            long tempStart = 0;
-            long tempEnd = file.length() - 1;
-
-            String ifNoneMatch = request.getHeader("if-none-match", null);
-            if (ifNoneMatch != null && ifNoneMatch.equals(etag)) {
-                setStatus(HTTP_NOT_MODIFIED, "Not Modified");
-                this.fileChannel = null; this.fileSize = 0; this.rangeStart = 0;
-                this.rangeEnd = 0; this.rangeLength = 0;
-                return; // NOTE: No stream is acquired, so no need to increment/decrement
-            }
-
-            // **2. INCREMENT HERE - only for actual file streams**
-            activeStreams.incrementAndGet();
-
-            // Only open file if we'll actually stream it
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            this.fileChannel = raf.getChannel();
-            this.fileSize = fileChannel.size();
-
-            // Parse Range header if present
-            String rangeHeader = request.getHeader("range", "");
-            boolean rangeValid = true;
-            if (rangeHeader.startsWith("bytes=")) {
-                // Check If-Range first
-                String ifRange = request.getHeader("if-range", null);
-                if (ifRange != null) {
-                    rangeValid = ifRange.equals(etag);
-                }
-
-                if (rangeValid && parseRangeHeader(rangeHeader)) {
-                    // First, validate the START of the range.
-                    // If the client asks for a start point beyond the file, it's an error.
-                    if (parsedStart >= fileSize) {
-                        // Invalid range start, this is a 416 error.
-
-                        setStatus(HTTP_RANGE_NOT_SATISFIABLE, "Range Not Satisfiable");
-                        addHeader("Content-Range", "bytes */" + fileSize);
-
-                        // Set final fields to known state before returning
-                        rangeStart =0;
-                        rangeEnd = 0;
-                        rangeLength = 0;
-
-                        close(); // Clean up resources
-                        return;
-                    }
-
-                    // The start is valid. Now, assign tempStart and CLAMP tempEnd to the file size.
-                    tempStart = parsedStart;
-                    tempEnd = Math.min(parsedEnd, fileSize - 1); // Clamp the end to the last valid byte.
-                }
-            }
-
-            // **4. ASSIGN FINAL FIELDS (only once, after all logic)**
-            this.rangeStart = tempStart;
-            this.rangeEnd = tempEnd;
-            this.rangeLength = this.rangeEnd - this.rangeStart + 1;
-
-            if (rangeHeader.isEmpty() || !rangeValid) {
-                setStatus(HTTP_OK, "OK");
-                addHeader("Content-Length", String.valueOf(this.rangeLength));
-            } else {
-                setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
-                addHeader("Content-Range", "bytes " + this.rangeStart + "-" + this.rangeEnd + "/" + this.fileSize);
-                addHeader("Content-Length", String.valueOf(this.rangeLength));
-            }
-            addHeader("Accept-Ranges", "bytes");
-        }
-
-        private long parsedStart, parsedEnd;
-
-        private boolean parseRangeHeader(String rangeHeader) {
-            try {
-                String rangeValue = rangeHeader.substring(6);
-                parsedStart = -1; parsedEnd = -1;
-
-                if (rangeValue.startsWith("-")) {
-                    long lastBytes = Long.parseLong(rangeValue.substring(1));
-                    parsedStart = Math.max(0, this.fileSize - lastBytes);
-                    parsedEnd = this.fileSize - 1;
-                } else {
-                    String[] ranges = rangeValue.split("-");
-                    parsedStart = Long.parseLong(ranges[0]);
-                    parsedEnd = (ranges.length > 1 && !ranges[1].isEmpty()) ? Long.parseLong(ranges[1]) : this.fileSize - 1;
-                }
-                return parsedStart >= 0 && parsedStart <= parsedEnd;
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                return false;
-            }
-        }
-
-        /**
-         * Generate ETag based on file path, size and last modified time.
-         * Format: "hash-size-mtime"
-         */
-        private String generateETag(File file) {
-            String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
-
-            try {
-                MessageDigest md = MessageDigest.getInstance("SHA-256");
-                byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
-                return "\"" + bytesToHex(hash).substring(0, 16) + "-" +
-                        Long.toHexString(file.length()) + "\"";
-            } catch (NoSuchAlgorithmException e) {
-                // Fallback to hashCode (current implementation)
-                int hash = value.hashCode();
-                return "\"" + Integer.toHexString(hash) + "-" +
-                        Long.toHexString(file.length()) + "\"";
-            }
-        }
-
-        private static String bytesToHex(byte[] bytes) {
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        }
-
-        /**
-         * Format timestamp as HTTP date (RFC 7231)
-         */
-        private String formatHttpDate(long timestamp) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(
-                    "EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-            return dateFormat.format(new Date(timestamp));
-        }
-
-        @Override
-        public void write(SocketChannel channel) throws IOException {
-            if (headerBuffer == null) buildHeaders();
-
-            if (!headersSent) {
-                channel.write(headerBuffer);
-                if (headerBuffer.hasRemaining()) {
-                    return; // Headers not fully sent
-                }
-                headersSent = true;
-            }
-
-            // Skip body for responses that don't have one
-            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) {
-                return;
-            }
-
-            // Stream file data using efficient zero-copy transfer
-            if (fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
-                long position = rangeStart + bytesSent;
-                long remaining = rangeLength - bytesSent;
-
-               // long written = fileChannel.transferTo(position, remaining, channel);
-                int maxTries = 3;
-                while (remaining > 0 && maxTries-- > 0) {
-                    long written = fileChannel.transferTo(position, remaining, channel);
-                    if (written <= 0) break;
-
-                    position += written;
-                    remaining -= written;
-                    bytesSent += written;
-                }
-
-               /* if (written > 0) {
-                    bytesSent += written;
-                }*/
-            }
-        }
-
-        @Override
-        public boolean isFullySent() {
-            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) {
-                return headersSent;
-            }
-            return headersSent && (fileChannel == null || bytesSent >= rangeLength);
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (!hasClosed.compareAndSet(false, true)) {
-                return;
-            }
-
-            if (fileChannel != null) {
-                if (fileChannel.isOpen()) {
-                    fileChannel.close();
-                }
-                // Decrement active stream count ONLY if a file channel was used
-                activeStreams.decrementAndGet();
-            }
-        }
-    }
-
     public static class MimeTypeUtil {
         private static final Map<String, String> MIME_MAP = new HashMap<>();
         static {
@@ -1841,23 +1640,15 @@ public class NioHttpServer implements Runnable {
             send(new WebSocketFrame(true, WEBSOCKET_OPCODE_BINARY, message));
         }
 
-        private void send(WebSocketFrame frame) {
-            /*
-            if (closed) return;
-            outgoingQueue.add(frame);
-            //key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-            key.selector().wakeup();
-            */
+        public void send(WebSocketFrame frame) {
             if (closed) return;
             outgoingQueue.add(frame);
 
-            // FIX: Force immediate interest in writing if we are on the same thread
-            // or trigger it more aggressively.
-            int ops = key.interestOps();
-            if ((ops & SelectionKey.OP_WRITE) == 0) {
-                key.interestOps(ops | SelectionKey.OP_WRITE);
+            // CRITICAL: Only wake up the selector.
+            // Do NOT call key.interestOps() here as it is not thread-safe.
+            if (key.selector() != null) {
+                key.selector().wakeup();
             }
-            key.selector().wakeup();
         }
 
         /**
@@ -2107,11 +1898,11 @@ public class NioHttpServer implements Runnable {
 
     private static class ObjectPool<T> {
         private final Queue<T> pool = new ConcurrentLinkedQueue<>();
-        private final java.util.function.Supplier<T> factory;
+        private final Supplier<T> factory;
         private final int maxIdle; // Add a limit
         private final AtomicInteger currentSize = new AtomicInteger(0);
 
-        ObjectPool(java.util.function.Supplier<T> factory, int maxIdle) {
+        ObjectPool(Supplier<T> factory, int maxIdle) {
             this.factory = factory;
             this.maxIdle = maxIdle;
         }

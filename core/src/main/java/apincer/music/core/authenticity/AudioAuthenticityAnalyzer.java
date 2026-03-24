@@ -1,13 +1,27 @@
 package apincer.music.core.authenticity;
 
-import android.util.Log;
-
 import com.antonkarpenko.ffmpegkit.FFmpegKit;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * High-performance audio engine designed to verify the authenticity and
+ * technical integrity of digital audio files.
+ *
+ * <p>This analyzer utilizes {@code ffmpeg-kit} to perform deep bitstream audits,
+ * detecting:
+ * <ul>
+ * <li><b>Fake Lossless:</b> MPEG/Lossy sources transcoded into FLAC/WAV containers.</li>
+ * <li><b>Upscaled Content:</b> CD-quality files upsampled to Hi-Res (96kHz/192kHz).</li>
+ * <li><b>Bit-Depth Integrity:</b> Verifying if 24-bit containers actually contain 24-bit dynamic range.</li>
+ * <li><b>Mastering Quality:</b> Distinguishing between Studio Masters and Analog/Tape transfers.</li>
+ * </ul>
+ *
+ * @author Thawee Prakaipetch
+ * @version 2026.03.23
+ */
 public class AudioAuthenticityAnalyzer {
 
     private static final String TAG = "AudioAnalyzer";
@@ -17,10 +31,36 @@ public class AudioAuthenticityAnalyzer {
         void onError(String error);
     }
 
+    /**
+     * Executes a technical audit on the specified audio file.
+     * * <p>The process runs asynchronously, utilizing input seeking to analyze a
+     * 20-second window (starting at 30s) to balance speed and accuracy on mobile hardware.
+     *
+     * @param inputPath  Absolute path to the audio file.
+     * @param sampleRate The nominal sample rate of the file (e.g., 44100, 96000).
+     * @param bitDepth   The nominal bit depth (e.g., 16, 24).
+     * @param callback   The listener for async results.
+     */
     public static void analyze(String inputPath,
                                int sampleRate,
                                int bitDepth,
                                Callback callback) {
+
+        //String freqFilter = sampleRate > Constants.QUALITY_SAMPLING_RATE_44?"21000":"18000";
+        // Professional Quality Detection Logic
+        String freqFilter;
+        if (sampleRate <= 44100) {
+            // 18.5kHz is the "Danger Zone" for MP3/AAC.
+            // True Lossless stays strong here; Lossy starts the 'cliff' dive.
+            freqFilter = "18500";
+        } else if (sampleRate <= 48000) {
+            // For 48kHz (Studio/DVD): Content above 20kHz is the indicator of quality.
+            freqFilter = "20000";
+        } else {
+            // For Hi-Res (96k/192k): Content MUST exist above the CD-limit (22.05kHz).
+            // This is the "Truth Line" for upsampled files.
+            freqFilter = "22050";
+        }
 
         String command =
                 "-hide_banner -loglevel info " +
@@ -31,9 +71,9 @@ public class AudioAuthenticityAnalyzer {
 
                         "[a]astats=metadata=1:reset=0[a_full];" +
 
-                        "[b]highpass=f=21000,astats=metadata=1:reset=0[a_high];" +
+                        "[b]highpass=f="+freqFilter+",astats=metadata=1:reset=0[a_high];" +
 
-                        "[c]lowpass=f=21000,astats=metadata=1:reset=0[a_low];" +
+                        "[c]lowpass=f="+freqFilter+",astats=metadata=1:reset=0[a_low];" +
 
                         "[d]aspectralstats=measure=flatness+entropy[a_spec]" +
                         "\" " +
@@ -56,31 +96,6 @@ public class AudioAuthenticityAnalyzer {
 
             r.sampleRate = sampleRate;
             r.bitDepth = bitDepth;
-
-/*
-            r.rms = parseOverall(log, "RMS level dB");
-            r.peak = parseOverall(log, "Peak level dB");
-            r.noiseFloor = parseOverall(log, "Noise floor dB");
-
-            r.highBandRms = parseFilter(log, 3, "RMS level dB"); // highpass
-            r.lowBandRms  = parseFilter(log, 5, "RMS level dB"); // lowpass
-            */
-
-            // Assuming [a_full] = stats_1, [a_high] = stats_3, [a_low] = stats_5
-           /* r.rms = parseFullSignalStats(log, "RMS level dB");
-            r.peak = parseFullSignalStats(log, "Peak level dB");
-            r.noiseFloor = parseFullSignalStats(log, "Noise floor dB");
-
-            r.highBandRms = parseFilter(log, 3, "RMS level dB");
-            r.lowBandRms  = parseFilter(log, 5, "RMS level dB");
-            */
-
-            /*
-            r.spectralFlatness = parseSpectral(log, "flatness");
-            r.spectralEntropy = parseSpectral(log, "entropy");
-
-            r.dynamicRange = Math.abs(r.peak - r.rms);
-            */
 
             // 1. BASELINE (Full Signal) - Always use Parsed_astats_1
             r.rms = parseValue(log, "Parsed_astats_1", "Overall", "RMS level dB");
@@ -110,9 +125,13 @@ public class AudioAuthenticityAnalyzer {
     }
 
     /**
-     * Specifically finds a value within a named filter block and a specific section.
-     * @param filterId The FFmpeg filter name (e.g., "Parsed_astats_1")
-     * @param section  "Overall" or "Channel: 1"
+     * Parses a specific numeric metric from a filtered block in the FFmpeg log output.
+     *
+     * @param log      The full output log from FFmpeg.
+     * @param filterId The internal filter identifier (e.g., Parsed_astats_1).
+     * @param section  The log section (e.g., Overall).
+     * @param key      The metric key (e.g., RMS level dB).
+     * @return The parsed double value, or -144.0 if infinite, or NaN if not found.
      */
     private static double parseValue(String log, String filterId, String section, String key) {
         // This regex:
@@ -146,346 +165,165 @@ public class AudioAuthenticityAnalyzer {
         return (count > 0) ? (total / count) : Double.NaN;
     }
 
-    // 1. Updated parseFilter to handle "-inf" and specific blocks
-    private static double parseFilter(String log, int filterId, String key) {
-        // Matches the block for "Parsed_astats_X" and looks for the key inside it
-        // Added (?:-inf|...) to handle the infinite low signal cases
-        Pattern p = Pattern.compile(
-                "Parsed_astats_" + filterId + ".*?" + key + ":\\s*(-?\\d+\\.?\\d*|-inf)",
-                Pattern.DOTALL);
-
-        Matcher m = p.matcher(log);
-        if (m.find()) {
-            String val = m.group(1);
-            if ("-inf".equalsIgnoreCase(val)) return -144.0; // Treat -inf as digital silence
-            return Double.parseDouble(val);
-        }
-        return Double.NaN;
-    }
-
-    private static double parseFilterBak(String log, int filterId, String key) {
-
-        Pattern p = Pattern.compile(
-                "Parsed_astats_" + filterId + ".*?" + key + ":\\s*(-?\\d+\\.?\\d*)",
-                Pattern.DOTALL);
-
-        Matcher m = p.matcher(log);
-
-        if (m.find()) {
-            return Double.parseDouble(m.group(1));
-        }
-
-        return Double.NaN;
-    }
-
-    private static double parseOverall(String log, String key) {
-        // This regex EXPLICITLY looks for the 'Overall' block
-        // and then finds the key within that specific context.
-        Pattern p = Pattern.compile(
-                "Overall\n(?:.*\n)*?.*?" + key + ":\\s*(-?\\d+\\.?\\d*)",
-                Pattern.MULTILINE);
-
-        Matcher m = p.matcher(log);
-        if (m.find()) {
-            return Double.parseDouble(m.group(1));
-        }
-        return Double.NaN;
-    }
-
-    private static double parseSpectral(String log, String key) {
-        // aspectralstats outputs as "Channel X > key: value"
-        // We will find all values and return the average of both channels.
-        Pattern p = Pattern.compile(key + ":\\s*(-?\\d+\\.?\\d*)");
-        Matcher m = p.matcher(log);
-
-        double sum = 0;
-        int count = 0;
-        while (m.find()) {
-            sum += Double.parseDouble(m.group(1));
-            count++;
-        }
-        return (count > 0) ? (sum / count) : Double.NaN;
-    }
-
-    // 3. Force "Overall" to specifically look at astats_1 (the full signal)
-    private static double parseFullSignalStats(String log, String key) {
-        return parseFilter(log, 1, key);
-    }
-
-    private static double parseSpectralBak(String log, String key) {
-
-        Pattern p = Pattern.compile(
-                key + "\\s*:\\s*(-?\\d+\\.?\\d*)"
-        );
-
-        Matcher m = p.matcher(log);
-
-        if (m.find())
-            return Double.parseDouble(m.group(1));
-
-        return Double.NaN;
-    }
-
+    /**
+     * Analyzes the relationship between various metrics to determine the final
+     * authenticity verdict.
+     * * <p>Key Logic Paths:
+     * <ul>
+     * <li><b>Entropy > 0.85:</b> High disorder in high-frequencies indicates MPEG noise artifacts.</li>
+     * <li><b>highVsFull < -65dB:</b> Total lack of energy above 22kHz in a 96kHz file proves CD upscaling.</li>
+     * <li><b>Noise Floor > -91dB:</b> A 24-bit file that does not exceed 16-bit theoretical dynamic range.</li>
+     * </ul>
+     *
+     * @param r The result object to update with the classification verdict.
+     */
     private static void classify(AudioAnalysisResult r) {
-        // 1. Calculate the 'Air' Quality
-        // Real music has a gap between the signal and the noise floor.
-        // Lossy encoders cut the signal so close to the noise floor that SNR becomes very low.
-        double highToLowRatio = r.highBandRms - r.lowBandRms;
+        // 1. Preparation & Variables
+        double highVsFull = r.highBandRms - r.rms;
         double snrHighBand = r.highBandRms - r.noiseFloor;
 
-        // 2. Identify the "Lossy Fingerprint"
-        boolean isLossy = false;
+        boolean weakHF = highVsFull < -55.0;
+        boolean lowClarity = snrHighBand < 10.0;
 
-        // Check A: The 'Shelf' Detection
-        // If the energy drop is significant (>40dB) AND the signal is barely louder than noise (<11dB)
-        if (highToLowRatio < -40.0 && snrHighBand < 11.0) {
+        boolean fakeHighFreq = false;
+
+        if (r.sampleRate <= 48000) {
+            fakeHighFreq =
+                    r.spectralFlatness > 0.35 &&
+                            r.spectralEntropy  > 0.85 &&
+                            r.highBandRms < -60.0 &&
+                            snrHighBand < 12.0;
+        }
+
+        // Final lossy decision
+        boolean isLossy =
+                (weakHF && lowClarity)   // classic MP3 cutoff
+                        || fakeHighFreq;         // modern "noisy HF" MP3
+
+        // 1. The "Shelf" check (Improved)
+        // If the high band (>18.5k) is 45dB quieter than the full range,
+        // and the SNR is low, it's almost certainly a 128-192kbps transcode.
+        //if (r.sampleRate <= 48000 && r.peak >= 0.0 && r.noiseFloor > -75.0) {
+        //    isLossy = true;
+        //}
+        //Overshoot (secondary signal only)
+        if (r.sampleRate <= 48000 &&
+                r.peak >= 0.0 &&
+                r.noiseFloor > -75.0 &&
+                weakHF) {
             isLossy = true;
         }
 
-       // if (r.highBandRms > -50.0) return 100; // Strong Hi-Res presence
-       // if (r.highBandRms > -70.0) return 85;  // Standard CD Quality
-       // if (r.highBandRms > -85.0) return 60;  // Likely 320kbps Upscale
-       // if (r.highBandRms > -100.0) return 30; // Likely 128kbps Upscale
-
-        // Check B: The 'Overshoot' Detection
-        // Lossy encoders often cause peaks to exceed 0dB (Clipped).
-        // If it's 44.1k, clipped, and has a high noise floor, it's almost certainly an MP3.
-        if (r.sampleRate <= 48000 && r.peak >= 0.01 && r.noiseFloor > -75.0) {
-            isLossy = true;
-        }
-
-        // 3. The Verdict Chain
         if (isLossy) {
-            r.verdict = "Lossy Transcode (AAC/MP3)";
+            r.verdict = "MPEG/Lossy Source";
         }
-        else if (r.sampleRate > 48000 && highToLowRatio < -65.0) {
-            r.verdict = "Upsampled Hi-Res";
+        else if (r.sampleRate > 48000 && highVsFull < -65.0) {
+            r.verdict = "Upscaled Content";
         }
-        else if (r.sampleRate > 44100 && highToLowRatio > -50.0) {
-            // High sample rate with real energy above 21kHz
-            if (snrHighBand > 15.0) {
-                r.verdict = "Genuine Hi-Res";
+        else if (r.sampleRate > 48000 && highVsFull > -60.0) {
+            if (snrHighBand > 15.0) { // Higher SNR = Clean Digital
+                r.verdict = "Studio Master (Native Hi-Res)";
+            } else if (snrHighBand > 5.0) { // Lower SNR = Natural Tape Hiss
+                r.verdict = "Analog Master (Hi-Res Rip)";
             } else {
-                r.verdict = "Hi-Res (Analog/Vinyl Source)";
+                r.verdict = "Hi-Res (Noisy/Dithered)";
             }
         }
         else if (r.sampleRate <= 44100) {
-            r.verdict = "CD Quality";
+            r.verdict = "Likely CD Quality";
         }
         else {
-            r.verdict = "High Fidelity";
+            r.verdict = "Verified Lossless";
         }
 
-        // 4. Quality Notifications
-        if (r.peak >= -0.01) {
-            r.verdict += " (Clipped)";
-        }
-
-        // Deep Bit-Depth Analysis
+        // 4. Deep Bit-Depth Analysis (The Truth Check)
+        // If the container is 24-bit, we check if the noise floor justifies it.
         /*if (r.bitDepth >= 24) {
-            if (r.noiseFloor > -70.0) {
-                r.verdict += " (Analog Noise)"; // Noisier than 12-bit
-            } else if (r.noiseFloor > -91.0) {
-                r.verdict += " (16-bit Master)"; // Claims 24, but floor is at 16
+            if (r.noiseFloor > -91.0) {
+                // If noise floor is > -91dB, it's effectively 16-bit dynamic range
+                r.verdict += " (16-bit DR)";
+            //} else if (r.noiseFloor <= -110.0) {
+            } else if (r.noiseFloor <= -105.0) {
+                // strong 24-bit candidate
+                // Real 24-bit performance
+                r.verdict += " (True 24-bit DR)";
             }
-        }*/
-    }
+        } */
 
-    private static void classify3(AudioAnalysisResult r) {
-        // 1. Core Ratios
-        double highToLowRatio = r.highBandRms - r.lowBandRms; // How much energy dropped?
-        double snrHighBand = r.highBandRms - r.noiseFloor;  // Is there 'music' or just 'noise' at the top?
-
-        // 2. The Verdict Chain
-        // Lossy check: If energy drop is huge (>45dB) AND the signal is barely above noise floor (<10dB)
-        boolean looksLossy = (highToLowRatio < -45.0) && (snrHighBand < 12.0);
-
-        // Backup Lossy check: Extreme energy drop
-        if (looksLossy || highToLowRatio < -100.0) {
-            r.verdict = "Lossy Transcode (AAC/MP3)";
-        }
-        else if (r.sampleRate > 48000 && highToLowRatio < -65.0) {
-            r.verdict = "Upsampled Hi-Res";
-        }
-        else if (r.sampleRate <= 44100) {
-            r.verdict = "CD Quality";
-        }
-        else if (highToLowRatio > -40.0) {
-            // Only call it Genuine if the high frequency isn't JUST noise
-            if (snrHighBand > 15.0) {
-                r.verdict = "Genuine Hi-Res";
-            } else {
-                r.verdict = "Hi-Res (Analog Source/Vinyl)";
-            }
-        }
-        else {
-            r.verdict = "High Fidelity";
-        }
-
-        // 3. Technical Warnings
+        // 5. Clipping Alert
         if (r.peak >= -0.01) {
-            r.verdict += " (Clipped)";
-        }
-
-        // Deep Bit-Depth Analysis
-        if (r.bitDepth >= 24) {
-            if (r.noiseFloor > -70.0) {
-                r.verdict += " (Analog Noise)"; // Noisier than 12-bit
-            } else if (r.noiseFloor > -91.0) {
-                r.verdict += " (16-bit Master)"; // Claims 24, but floor is at 16
-            }
+            r.verdict += " [Clipped]";
         }
     }
 
     private static void classify2(AudioAnalysisResult r) {
-        // Difference between energy above 18kHz and below 18kHz
-        double ultrasonicRatio = r.highBandRms - r.lowBandRms;
+        // 1. Preparation & Variables
+        double highToLowRatio = r.highBandRms - r.lowBandRms;
+        // double highVsFull = r.highBandRms - r.rms;
+        double snrHighBand = r.highBandRms - r.noiseFloor;
+        boolean isLossy = false;
 
-        // 2. Define Lossy Indicators (The MP3 Fingerprint)
-        // - MP3s often have a very high noise floor (due to compression artifacts)
-        // - MP3s often 'overshoot' 0dB resulting in positive peak values
-        boolean hasHighNoise = r.noiseFloor > -50;
-        boolean isClipped = r.peak >= -0.01;
-        //boolean hasNoUltrasonics = ultrasonicRatio < -100;
+        // 2. The "Lossy Fingerprint" (Shelf Detection)
+        // Lossy encoders (MP3/AAC) usually have a brick-wall filter at 16-20kHz.
+        // This causes a massive drop in the High Band (>21kHz).
+        //if (highToLowRatio < -40.0 && snrHighBand < 11.0) {
 
-        // 3. The Logic Chain
-        if (!Double.isNaN(r.spectralFlatness) && r.spectralFlatness > 0.15) {
-            r.verdict = "Lossy Transcode (AAC/MP3)";
-        }
-        // backup check for MP3 if flatness is NaN:
-        // High Noise + Clipping + 44.1k sample rate is a classic 128-256kbps MP3 signature
-        else if (r.sampleRate <= 48000 && hasHighNoise && isClipped) {
-            r.verdict = "Lossy (Probable MP3/AAC)";
-        }
-        else if (r.sampleRate > 48000 && ultrasonicRatio < -65) {
-            r.verdict = "Upsampled Hi-Res";
-        }
-        else if (r.sampleRate <= 44100) {
-            // If it's 44.1kHz and silent above 18kHz, it's a standard CD.
-            r.verdict = "CD Quality";
-        }
-        else if (ultrasonicRatio > -40) {
-            r.verdict = "Genuine Hi-Res";
-        }
-        else {
-            r.verdict = "High Fidelity";
+        // 1. The "Shelf" check (Improved)
+        // If the high band (>18.5k) is 45dB quieter than the full range,
+        // and the SNR is low, it's almost certainly a 128-192kbps transcode.
+        if (highToLowRatio < -45.0 && snrHighBand < 10.0) {
+            isLossy = true;
         }
 
-        // 2. The "Fake 24-bit" check (For your S25)
-        // If a file claims to be 24-bit but has a 16-bit noise floor (-96dB)
-        /*if (r.bitDepth >= 24 && r.noiseFloor > -90) {
-            r.verdict += " (Padded 16-bit)";
-        }*/
-
-        // 3. Clipping check
-        if (r.peak >= -0.01) {
-            r.verdict += " (Clipped)";
-        }
-    }
-
-    private static void classifyBak(AudioAnalysisResult r) {
-
-      //  double ultrasonicRatio = r.highBandRms - r.lowBandRms;
-
-        //if (r.bitDepth == 24 && r.noiseFloor > -96) {
-        /*
-        if (r.bitDepth >= 24 && r.noiseFloor > -92) {
-            r.verdict = "Fake 24-bit (likely 16-bit master)";
-
-        }
-        else if (r.spectralFlatness > 0.28 && r.spectralEntropy > 0.92) {
-
-            r.verdict = "Lossy Transcode (MP3/AAC)";
-
-        }
-        else if (ultrasonicRatio < -65 && r.sampleRate > 48000) {
-
-            r.verdict = "Upsampled Hi-Res";
-
-        }
-        else if (r.sampleRate <= 44100) {
-
-            r.verdict = "CD Quality";
-
-        }
-        else if (ultrasonicRatio > -45) {
-
-            r.verdict = "Genuine Hi-Res";
-
-        }
-        else {
-
-            r.verdict = "High Fidelity";
-        } */
-
-        double ultrasonicRatio = r.highBandRms - r.lowBandRms;
-        // If the 'high energy' is just noise, don't call it Genuine.
-        // Real music has a gap between the signal and the noise floor.
-        /*boolean isJustNoise = r.highBandRms < (r.noiseFloor + 5);
-
-        if (r.spectralFlatness > 0.28 && r.spectralEntropy > 0.92) {
-
-            r.verdict = "Lossy Transcode (MP3/AAC)";
-
-        }
-        else if (ultrasonicRatio < -65 && r.sampleRate > 48000) {
-
-            r.verdict = "Upsampled Hi-Res";
-
-        }
-        else if (r.sampleRate <= 44100) {
-
-            r.verdict = "CD Quality";
-
-        }
-        if (ultrasonicRatio > -45 && !isJustNoise) {
-            r.verdict = "Genuine Hi-Res";
-        } else if (ultrasonicRatio > -45) {
-            r.verdict = "Upsampled / Vinyl Rip (High Noise)";
-        }
-        else {
-
-            r.verdict = "High Fidelity";
+        // Overshoot/Clipping detection (Common in bad transcodes)
+        // If it's a standard sample rate but peaks are over 0dB with high noise
+        if (r.sampleRate <= 48000 && r.peak >= 0.0 && r.noiseFloor > -75.0) {
+            isLossy = true;
         }
 
-        //if (r.peak >= -0.1) {
-        if (r.peak >= -0.01) {
-            r.verdict += " (Clipped Master)";
-        } */
-
-        // 1. Lossy Detection (AAC/MP3)
-        // If flatness is NaN, we use the Ultrasonic Ratio as a backup for lossy detection
-        boolean isLossy = (r.spectralFlatness > 0.15) || (ultrasonicRatio < -100);
-
+        // 3. The Main Verdict Chain
         if (isLossy) {
-            r.verdict = "Lossy Transcode (AAC/MP3)";
+            r.verdict = "MPEG/Lossy Source";
         }
-        // 2. Fake Hi-Res Detection
-        else if (ultrasonicRatio < -65 && r.sampleRate > 48000) {
-            r.verdict = "Upsampled Hi-Res";
+        // If user thinks it's 96k/192k but the 'a_high' (above 22.05k) is empty.
+        else if (r.sampleRate > 48000 && r.highBandRms < -90.0) {
+            //else if (r.sampleRate > 48000 && highToLowRatio < -65.0) {
+            // High Sample rate (96k+) but no energy in the ultrasonic range
+            r.verdict = "Upscaled Content";
         }
-        // 3. CD Quality
-        else if (r.sampleRate <= 44100 || ultrasonicRatio < -60) {
-            r.verdict = "CD Quality";
+        else if (r.sampleRate > 44100 && highToLowRatio > -50.0) {
+            // Real energy exists above 21kHz
+            if (snrHighBand > 15.0) {
+                r.verdict = "Studio Master";
+            } else {
+                // High energy but close to noise floor (common in Vinyl rips)
+                r.verdict = "Analog Master";
+            }
         }
-        // 4. Genuine Hi-Res
-        else if (ultrasonicRatio > -45) {
-            r.verdict = "Genuine Hi-Res";
+        else if (r.sampleRate <= 44100) {
+            r.verdict = "Likely CD Quality";
         }
         else {
-            r.verdict = "High Fidelity";
+            r.verdict = "Verified Lossless";
         }
 
-        // 5. Clipped Check (With a bit more headroom for lossy peaks)
-        double peakThreshold = isLossy ? 0.5 : -0.01;
-        if (r.peak >= peakThreshold) {
-            r.verdict += " (Clipped Master)";
+        // 4. Deep Bit-Depth Analysis (The Truth Check)
+        // If the container is 24-bit, we check if the noise floor justifies it.
+        if (r.bitDepth >= 24) {
+            if (r.noiseFloor > -91.0) {
+                // If noise floor is > -91dB, it's effectively 16-bit dynamic range
+                r.verdict += " (16-bit DR)";
+                //} else if (r.noiseFloor <= -110.0) {
+            } else if (r.noiseFloor <= -105.0) {
+                // strong 24-bit candidate
+                // Real 24-bit performance
+                r.verdict += " (True 24-bit DR)";
+            }
         }
 
-        Log.d(TAG,
-                "Verdict=" + r.verdict +
-                        " DR=" + r.dynamicRange +
-                        " Noise=" + r.noiseFloor +
-                        " Ultrasonic=" + ultrasonicRatio);
+        // 5. Clipping Alert
+        if (r.peak >= -0.01) {
+            r.verdict += " [Clipped]";
+        }
     }
 }

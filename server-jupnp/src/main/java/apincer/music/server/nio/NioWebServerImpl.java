@@ -3,6 +3,7 @@ package apincer.music.server.nio;
 import static apincer.music.core.http.NioHttpServer.HTTP_BAD_REQUEST;
 import static apincer.music.core.http.NioHttpServer.HTTP_INTERNAL_ERROR;
 import static apincer.music.core.http.NioHttpServer.HTTP_NOT_FOUND;
+import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_GOING_AWAY;
 import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_SERVER_FULL;
 import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -336,8 +337,10 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
             if (response != null && !connection.isClosed()) {
                 try {
-                    byte[] rawJson = MAPPER.writeValueAsBytes(response);
-                    connection.send(new String(rawJson, StandardCharsets.UTF_8));
+                   // byte[] rawJson = MAPPER.writeValueAsBytes(response);
+                   //connection.send(new String(rawJson, StandardCharsets.UTF_8));
+                    String rawJson = MAPPER.writeValueAsString(response);
+                    connection.send(rawJson);
                 } catch (JsonProcessingException e) {
                     Log.e(TAG, "Error serializing response", e);
                 }
@@ -392,7 +395,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         public void shutdown() {
             try {
                 for (NioHttpServer.WebSocketConnection session : sessions) {
-                    session.close(1001, "Server shutting down");
+                    session.close(WEBSOCKET_CLOSE_GOING_AWAY, "Server shutting down");
                 }
                 sessions.clear();
             } catch (Exception exception) {

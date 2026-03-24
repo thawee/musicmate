@@ -8,10 +8,12 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class BottomOffsetDecoration extends RecyclerView.ItemDecoration {
-    private int mBottomOffset;
+    private final int mBottomOffset;
+    private final int mItemOffset;
 
-    public BottomOffsetDecoration(int bottomOffset) {
+    public BottomOffsetDecoration(int bottomOffset, int itemOffset) {
         mBottomOffset = bottomOffset;
+        mItemOffset = itemOffset;
     }
 
     @Override
@@ -28,23 +30,15 @@ public class BottomOffsetDecoration extends RecyclerView.ItemDecoration {
         if (parent.getLayoutManager() instanceof GridLayoutManager) {
             if (isOnLastRow(view, parent)) {
                 outRect.bottom = mBottomOffset;
+            }else {
+                outRect.bottom = mItemOffset;
             }
         } else if (parent.getChildAdapterPosition(view) == adapter.getItemCount() - 1) {
             // Only set the offset for the last item.
             outRect.bottom = mBottomOffset;
         } else {
-            outRect.bottom = 0;
+            outRect.bottom = mItemOffset;
         }
-    }
-
-    /** Sets the value to use for the bottom offset. */
-    public void setBottomOffset(int bottomOffset) {
-        mBottomOffset = bottomOffset;
-    }
-
-    /** Returns the set bottom offset. If none has been set, then 0 will be returned. */
-    public int getBottomOffset() {
-        return mBottomOffset;
     }
 
     /**

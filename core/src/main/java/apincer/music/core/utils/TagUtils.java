@@ -8,6 +8,7 @@ import static apincer.music.core.Constants.LEGEND_MQA;
 import static apincer.music.core.Constants.LEGEND_STUDIO;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_44;
 import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_96;
+import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -366,5 +367,16 @@ public class TagUtils {
             }
 
             return mContext.getColor(R.color.mm_label_lossless_bg);
+    }
+
+    public static String formatResolution(int bitPerSampling, long samplingRate, long altSamplingRate) {
+        String bps = StringUtils.formatAudioSampleRate(samplingRate, true);
+        if(altSamplingRate >0 && samplingRate != altSamplingRate) {
+            bps = bps + " ("+StringUtils.formatAudioSampleRate(altSamplingRate, true)+")";
+        }
+
+        return StringUtils.formatAudioBitsDepth(bitPerSampling)
+                + SYMBOL_ENC_SEP
+                + bps;
     }
 }

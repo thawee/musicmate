@@ -5,6 +5,7 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -91,6 +92,7 @@ public class QualityIndicatorView extends LinearLayout {
             textView.setText("-");
         }else {
             int textColor = MusicTagUtils.getQualityTextColor(getContext(), tag.getQualityInd());
+            int bgColor = MusicTagUtils.getQualityBgColor(getContext(), tag.getQualityInd());
             String label = tag.getQualityInd();
             if(isEmpty(label)) {
                 label = "-";
@@ -100,8 +102,10 @@ public class QualityIndicatorView extends LinearLayout {
             TextBuilder builder = new TextBuilder(getContext());
             builder.addColoredText(label, textColor);
             builder.into(textView);
-            Drawable background = MusicTagUtils.getQualityBackground(getContext(), tag.getQualityInd());
-            textView.setBackground(background);
+            textView.getBackground().setTint(bgColor);
+            textView.getBackground().setTintMode(PorterDuff.Mode.SCREEN);
+           // Drawable background = MusicTagUtils.getQualityBackground(getContext(), tag.getQualityInd());
+           // textView.setBackground(background);
         }
     }
 }

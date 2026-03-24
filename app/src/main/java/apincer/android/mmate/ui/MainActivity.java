@@ -8,6 +8,7 @@ import static apincer.music.core.Constants.FLAC_FAST_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.FLAC_MAXIMUM_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.KEY_FILTER_KEYWORD;
 import static apincer.music.core.Constants.KEY_FILTER_TYPE;
+import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
@@ -434,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setItemAnimator(null);
 
         // Add bottom padding
-        RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
+        RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(62, 12);
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
@@ -623,7 +624,7 @@ public class MainActivity extends AppCompatActivity {
 
             // filter details or duration
             if(isEmpty(adapter.getCriteria().getFilterType()) && count > 0) {
-                statText = statText+ " · "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
+                statText = statText+ SYMBOL_ENC_SEP +StringUtils.formatStorageSize(adapter.getTotalSize())+SYMBOL_ENC_SEP+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
             }else {
                 String filterText = adapter.getCriteria().getFilterText();
                 if ("Folder".equals(adapter.getCriteria().getFilterType())) {

@@ -70,7 +70,7 @@ public final class Constants {
     public static final String LEGEND_LOSSY = "LOSSY"; //""LC"; //Lossy Codec
 
     public static final String TITLE_PLAYER_LOCAL = "This Device";
-    public static final String TITLE_PLAYER_CAST = "Cast";
+    public static final String TITLE_PLAYER_CAST = "Casting";
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();

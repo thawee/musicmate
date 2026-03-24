@@ -146,13 +146,6 @@ public class QueueManager {
      * @param track The track to set as the current focal point.
      */
     public void setCurrentTrack(MediaTrack track) {
-        /*if (track == null) return;
-        for (int i = 0; i < queueList.size(); i++) {
-            if (queueList.get(i).equals(track)) {
-                currentIndex = i;
-                return;
-            }
-        } */
         if (track == null) return;
 
 

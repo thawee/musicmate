@@ -27,6 +27,7 @@ import java.util.List;
 import apincer.android.mmate.R;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();
@@ -70,9 +71,11 @@ public class AudioOutputHelper {
                 builder.append(", ");
             }
             if(getSamplingRate()>0) {
-                builder.append(StringUtils.formatAudioSampleRate(getSamplingRate(), true));
-                builder.append("/");
-                builder.append(StringUtils.formatAudioBitsDepth(getBitPerSampling()));
+                String res = TagUtils.formatResolution(getBitPerSampling(), getSamplingRate(), -1);
+                builder.append(res);
+                //builder.append(StringUtils.formatAudioSampleRate(getSamplingRate(), true));
+                //builder.append("/");
+                //builder.append(StringUtils.formatAudioBitsDepth(getBitPerSampling()));
             }
             return builder.toString();
         }

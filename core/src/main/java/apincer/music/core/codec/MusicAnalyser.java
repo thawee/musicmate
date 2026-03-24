@@ -1019,10 +1019,6 @@ public class MusicAnalyser {
         return padded;
     }
 
-    /**
-     * Processes a single block of PCM data to calculate RMS, min, and max values.
-     * This is an adapted version of your original method to work with a byte buffer.
-     */
     private static void processBlock(byte[] blockBuffer, int bytesRead, float[] waveform, int pointIndex, int absoluteMax, double logPower) {
         long rmsSum = 0;
         short min = Short.MAX_VALUE;
@@ -1071,7 +1067,8 @@ public class MusicAnalyser {
         String outputPath = outputFile.getAbsolutePath();
 
         String command = String.format(
-                "-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                //"-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                "-i \"%s\" -ac 1 -ar 44100 -f s16le \"%s\" -y",
                 inputPath,
                 outputPath
         );
@@ -1123,6 +1120,7 @@ public class MusicAnalyser {
             return waveform;
         }
 
+        /*
         try (InputStream is = new FileInputStream(pcmFile)) {
             byte[] blockBuffer = new byte[samplesPerPoint * 2];
             for (int i = 0; i < points; i++) {
@@ -1135,6 +1133,29 @@ public class MusicAnalyser {
                 if (totalBytesRead <= 0) {
                     break;
                 }
+                processBlock(blockBuffer, totalBytesRead, waveform, i, absoluteMax, logPower);
+            }
+        } */
+
+        try (InputStream is = new FileInputStream(pcmFile)) {
+            byte[] blockBuffer = new byte[samplesPerPoint * 2];
+            for (int i = 0; i < points; i++) {
+                int totalBytesRead = 0;
+
+                while (totalBytesRead < blockBuffer.length) {
+                    int read = is.read(blockBuffer, totalBytesRead, blockBuffer.length - totalBytesRead);
+                    if (read == -1) break;
+                    totalBytesRead += read;
+                }
+
+                if (totalBytesRead <= 0) {
+                    // 🔥 FILL remaining with last value (not zero!)
+                    if (i > 0) {
+                        waveform[i] = waveform[i - 1];
+                    }
+                    continue;
+                }
+
                 processBlock(blockBuffer, totalBytesRead, waveform, i, absoluteMax, logPower);
             }
         }

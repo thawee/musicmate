@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.view;
 
+import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,15 +24,12 @@ import com.google.android.material.textview.MaterialTextView;
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
-import apincer.music.core.provider.FileSystem;
 import apincer.music.core.utils.ApplicationUtils;
-import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.music.core.utils.TagUtils;
 
@@ -130,16 +129,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         // Step 1: Song
         MediaTrack song = playbackService.getNowPlayingSong();
         if (song != null) {
-            String bps = StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true);
-            if(TagUtils.isMQA(song)) {
-                bps = bps + " ("+StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true)+")";
-            }
-            String quality = MusicTagUtils.getQualityIndFullString(song)
-                    + "  ["
-                    + StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth())
-                    + " • "
-                    + bps
-                    + "]";
+            String quality = MusicTagUtils.getQualityIndFullString(song);
 
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
@@ -149,14 +139,20 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             signalPathContainer.addView(resolutionIndicator);
             //qualityIndicator.setText(MusicTagUtils.getQualityIndFullString(song)); //song.getQualityInd());
 
-            addSignalPathStep(signalPathContainer, "Source", FileUtils.getFileName(song.getPath()), true);
+            String sourceText = song.getTitle() + // FileUtils.getFileName(song.getPath())+"."+FileUtils.getExtension(song.getPath())+
+                    "\n"+
+                    song.getAudioEncoding().toUpperCase()+
+                    SYMBOL_ENC_SEP+
+                    TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());
+
+            addSignalPathStep(signalPathContainer, "Source", sourceText, true);
         }
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             String playerDetails = playbackTarget.getDisplayName();
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                playerDetails = playerDetails +" ["+player.getDescription()+"]";
+                //playerDetails = playerDetails +" ["+ formatPlayerDetail(player.getDescription())+"]";
                 addSignalPathStep(signalPathContainer, "Music Player", playerDetails, true);
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
@@ -173,4 +169,5 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             }
         }
     }
+
 }

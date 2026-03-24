@@ -63,7 +63,6 @@ import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.view.BadgeView;
 import apincer.android.mmate.ui.view.VerdictFormatter;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.authenticity.AudioAnalysisResult;
 import apincer.music.core.authenticity.AudioAuthenticityAnalyzer;
@@ -386,10 +385,12 @@ public class TagsActivity extends AppCompatActivity {
         ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
         ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
 
-        filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
+        //filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
+        filenameText.setText(track.getTitle());
         qualityScore.setText(R.string.analyzing);
 
         if (spinner != null) spinner.setVisibility(View.VISIBLE);
+        final boolean[] completedNext = {false};
 
         AudioAuthenticityAnalyzer.analyze(
                 track.getPath(),
@@ -416,7 +417,10 @@ public class TagsActivity extends AppCompatActivity {
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
 
-                            if (spinner != null) spinner.setVisibility(View.GONE);
+                            if(completedNext[0]) {
+                                if (spinner != null) spinner.setVisibility(View.GONE);
+                            }
+                            completedNext[0] = true;
                         });
                     }
 
@@ -448,6 +452,10 @@ public class TagsActivity extends AppCompatActivity {
                                 .target(new ImageViewTarget(spectrumView))
                                 .build();
                         SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
+                        if(completedNext[0]) {
+                            if (spinner != null) spinner.setVisibility(View.GONE);
+                        }
+                        completedNext[0] = true;
                     }
 
                     @Override

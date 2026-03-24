@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.PlaybackService;

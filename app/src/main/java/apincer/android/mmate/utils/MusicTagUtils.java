@@ -214,7 +214,7 @@ public class MusicTagUtils {
     }
 
     public static String getFormattedSubtitle(MusicTag tag) {
-        String album = StringUtils.trimTitle(tag.getAlbum());
+        String album = StringUtils.getSimplifiedAlbum(tag); //StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());
         if (isEmpty(artist)) {
             artist = StringUtils.trimTitle(tag.getAlbumArtist());
@@ -440,6 +440,26 @@ public class MusicTagUtils {
         }
 
         return context.getColor(R.color.quality_lc_text);
+    }
+
+    public static int getQualityBgColor(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_lc_background);
+
+        if(qualityInd.equals("MQA Studio")) {
+            return context.getColor(R.color.quality_mqa_studio_background);
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
+            return context.getColor(R.color.quality_mqa_background);
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return context.getColor(R.color.quality_cd_background);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return context.getColor(R.color.quality_cd_background);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
+            return context.getColor(R.color.quality_hr_background);
+        }else if(qualityInd.equals(LEGEND_DSD)) {
+            return context.getColor(R.color.quality_dsd_background);
+        }
+
+        return context.getColor(R.color.quality_lc_background);
     }
 
     public static Drawable getQualityBackground(Context context, String qualityInd) {

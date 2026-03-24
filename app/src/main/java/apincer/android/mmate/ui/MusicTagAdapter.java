@@ -17,7 +17,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -40,7 +39,6 @@ import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
-import apincer.android.mmate.ui.view.DurationView;
 import apincer.android.mmate.ui.view.DynamicRangeView;
 import apincer.android.mmate.ui.view.QualityIndicatorView;
 import apincer.android.mmate.ui.view.TriangleLabelView;
@@ -57,7 +55,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     private final List<MusicTag> localDataSet;
     private SelectionTracker<Long> mTracker;
     private OnListItemClick onListItemClick;
-    //private long totalSize;
+    private long totalSize;
     private double totalDuration;
     private PlaybackService playbackService;
     private final TagRepository tagRepos;
@@ -218,7 +216,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     @SuppressLint("NotifyDataSetChanged")
     public void setMusicTags(List<MusicTag> tags) {
         localDataSet.clear();
-        //totalSize = 0;
+        totalSize = 0;
         totalDuration = 0;
 
         if(tags == null) return;
@@ -227,7 +225,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(noFilters) {
             for (MusicTag tag : tags) {
                 localDataSet.add(tag);
-                //totalSize += tag.getFileSize();
+                totalSize += tag.getFileSize();
                 totalDuration += tag.getAudioDuration();
             }
         } else {
@@ -236,7 +234,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     continue;
                 }
                 localDataSet.add(tag);
-                //totalSize += tag.getFileSize();
+                totalSize += tag.getFileSize();
                 totalDuration += tag.getAudioDuration();
             }
         }
@@ -252,6 +250,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
+    public long getTotalSize() {
+        return totalSize;
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
@@ -260,17 +262,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         TextView mTitle;
         TextView mSubtitle;
         TextView mStatistic;
-       // TextView mAlbum;
 
-        //TextView mFileType;
-
-        //TextView mSampleRate;
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
-       // ImageView mPlaylistView;
         TriangleLabelView mNewLabelView;
-       // ResolutionView resolutionView;
        BadgeView codec;
         BadgeView resolution;
         DynamicRangeView drDbView;
@@ -295,9 +291,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mDurationView = view.findViewById(R.id.view_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
-            //this.mPlaylistView = view.findViewById(R.id.item_playlist);
 
-           // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
 
             this.codec = view.findViewById(R.id.icon_codec);
@@ -307,9 +301,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.qualityIndicatorView = view.findViewById(R.id.icon_quality_indicator);
            this.ratingIndicatorView = view.findViewById(R.id.rating_view);
 
-           // this.moreActions = view.findViewById(R.id.item_more_actions);
-          //  this.mFileType = view.findViewById(R.id.item_filetype);
-          //  this.mSampleRate = view.findViewById(R.id.item_sample_rate);
         }
 
         public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
@@ -487,11 +478,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mPlayerView.setVisibility(GONE);
         if(playbackService != null) {
             if (tag.equals(playbackService.getNowPlayingSong())) {
-             //   isPlaying = true;
-               // Drawable bg = AppCompatResources.getDrawable(holder.mContext, R.drawable.shape_round_background_playing);
-              //  Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_notification_default);
-               // holder.mPlayerView.setImageDrawable(drawable);
-              //  holder.mPlayerView.setBackground(bg);
                 holder.mPlayerView.setVisibility(VISIBLE);
                // holder.mPlaylistView.setVisibility(GONE);
             }
@@ -550,16 +536,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
           //  holder.codec.setBadge(tag.getAudioEncoding().toUpperCase());
         holder.codec.setBadge(tag.getAudioEncoding().toUpperCase(), txtColor, bgColor);
 
-        //String res = tag.getAudioBitsDepth() + "-bit • " + TagUtils.getSampleRate(tag);
-       // String res = tag.getAudioBitsDepth() + " / " + StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
-            holder.resolution.setBadge(TagUtils.getSampleRate(tag));
-          /*  if(holder.mFileType != null) {
-                holder.mFileType.setText(tag.getFileType());
-            }
-            if(holder.mSampleRate != null) {
-                holder.mSampleRate.setText(TagUtils.getSampleRate(tag));
-            } */
-       // }else if(tag.getDynamicRangeScore()>0){
+        holder.resolution.setBadge(TagUtils.getSampleRate(tag));
+        // }else if(tag.getDynamicRangeScore()>0){
        //     holder.drDbView.setVisibility(VISIBLE);
        //     holder.drDbView.setMusicItem(tag);
       //  }else{
@@ -569,8 +547,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.qualityIndicatorView.setVisibility(VISIBLE);
         holder.qualityIndicatorView.setMusicItem(tag);
 
-       // holder.ratingIndicatorView.setMusicItem(tag);
-       // holder.mDurationView.setMusicItem(tag);
         holder.mDurationView.setBadge(StringUtils.formatDuration(tag.getAudioDuration(), false));
     }
 
@@ -582,41 +558,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
         return !tag.isMusicManaged();
       // return criteria.getType().equals(SearchCriteria.TYPE.LIBRARY) && Constants.TITLE_DUPLICATE.equals(criteria.getKeyword());
-    }
-
-    private void showMoreActions(View anchorView, MusicTag song) {
-        // 1. Create a PopupMenu
-        PopupMenu popup = new PopupMenu(anchorView.getContext(), anchorView); // 'this' is the Context
-
-        // 2. Inflate your menu resource
-        popup.getMenuInflater().inflate(R.menu.item_more_actions_menu, popup.getMenu());
-        // Or, if you don't want to use an XML menu, you can add items programmatically:
-        // popup.getMenu().add(Menu.NONE, R.id.my_action_id, Menu.NONE, "My Action Title");
-
-        // 3. Set an OnMenuItemClickListener to handle menu item clicks
-        popup.setOnMenuItemClickListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.play_button) {
-                if(song != null && playbackService != null) {
-                    playbackService.playSong(song);
-                }
-                return true;
-            } else if (itemId == R.id.add_to_queue_button) {
-                if(song != null) {
-                    tagRepos.addToPlayingQueue(song);
-                }
-                return true;
-            }
-            return false; // Return false if the item click is not handled
-        });
-
-        // Optional: Set a dismiss listener
-        popup.setOnDismissListener(menu -> {
-            // Actions to perform when the popup is dismissed (optional)
-        });
-
-        // 4. Show the PopupMenu
-        popup.show();
     }
 
     // Return the size of your dataset (invoked by the layout manager)

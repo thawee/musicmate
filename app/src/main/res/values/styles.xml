@@ -503,6 +503,8 @@ M2
         <item name="strokeWidth">2dp</item>
     </style>
 
+
+<!--
     <style name="Text_MM_Verdict_Base" parent="android:TextAppearance">
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
@@ -511,15 +513,52 @@ M2
     <style name="Text_MM_Verdict_Genuine" parent="Text_MM_Verdict_Base">
         <item name="android:textColor">#FF2ECC71</item> <item name="android:textStyle">bold</item>
     </style>
-    <style name="Text_MM_Verdict_HighFidelity" parent="Text_MM_Verdict_Base">
+    <style name="Text_MM_Verdict_Lossless" parent="Text_MM_Verdict_Base">
         <item name="android:textColor">#FF2196F3</item> <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.02</item> </style>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:shadowColor">#80000000</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">2</item>
+        <item name="android:shadowRadius">4</item>
+    </style>
+
     <style name="Text_MM_Verdict_Warning" parent="Text_MM_Verdict_Base">
         <item name="android:textColor">#FFF1C40F</item> <item name="android:textStyle">bold</item>
     </style>
 
     <style name="Text_MM_Verdict_Lossy" parent="Text_MM_Verdict_Base">
         <item name="android:textColor">#FFE74C3C</item>
+    </style>
+    -->
+    <style name="Text_MM_Verdict_Base" parent="android:TextAppearance">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Text_MM_Verdict_Studio" parent="Text_MM_Verdict_Base">
+        <item name="android:textColor">#FFD700</item>
+        <item name="android:shadowColor">#AAFFD700</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">12</item>
+    </style>
+
+    <style name="Text_MM_Verdict_CD" parent="Text_MM_Verdict_Base">
+        <item name="android:textColor">#FF00BCD4</item>
+    </style>
+
+    <style name="Text_MM_Verdict_Warning" parent="Text_MM_Verdict_Base">
+        <item name="android:textColor">#E67E22</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <style name="Text_MM_Verdict_Lossy" parent="Text_MM_Verdict_Base">
+        <item name="android:textColor">#FFE74C3C</item>
+    </style>
+
+    <style name="Text_MM_Verdict_Vintage" parent="Text_MM_Verdict_Base">
+        <item name="android:textColor">#FF2ECC71</item>
     </style>
 
     <style name="Text_MM_Verdict_TechnicalNote">

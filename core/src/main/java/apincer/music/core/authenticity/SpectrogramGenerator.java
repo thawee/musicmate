@@ -8,7 +8,6 @@ import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import java.util.Locale;
 
-import apincer.android.utils.FileUtils;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.utils.ApplicationUtils;
 
@@ -43,8 +42,6 @@ public class SpectrogramGenerator {
         String outputPath = context.getCacheDir() + "/spectrogram.jpg";
         FileSystem.delete(outputPath);
 
-        String filename = FileUtils.getFileName(inputPath);
-        int visualMaxFreq = sampleRate / 2; //Math.min(sampleRate / 2, 24000);
         /*
          Mastering-grade spectrogram parameters:
 
@@ -75,6 +72,7 @@ public class SpectrogramGenerator {
                         "-frames:v 1 \"" + outputPath + "\"";
         */
 
+        String analyserName = "MusicMate Spectra";
         String fontPath = ApplicationUtils.getPathOnAndroidFiles(context, "/webui/noto_sans_thai.ttf");
         // Values retrieved from your MediaTrack or TagRepository
         String qualityInfo = String.format(Locale.ENGLISH,"%s | %d-bit | %s Hz",
@@ -82,31 +80,51 @@ public class SpectrogramGenerator {
                 bitDepth,
                 sampleRate);
 
+        //int visualMaxFreq = (sampleRate / 2) + 2000; //Math.min(sampleRate / 2, 24000);
+        // Professional Audiophile Logic
+        int visualMaxFreq;
+        if (sampleRate <= 48000) {
+            // Show the whole range plus a small buffer to see the "wall"
+            visualMaxFreq = (sampleRate / 2) + 1000;
+        } else if (sampleRate <= 96000) {
+            // Show up to 48kHz (High-Res territory)
+            visualMaxFreq = 48000 + 500;
+        } else {
+            // Even for 192kHz, showing above 48kHz usually just shows noise.
+            // 48kHz is enough to prove it's a High-Res file.
+            visualMaxFreq = 48000 + 500;
+        }
+
         String command =
                 "-y " +
                         "-hide_banner -loglevel error " +
-                        //"-ss 30 -t 20 " +
                         "-i \"" + inputPath + "\" " +
-                        "-ac 1 "+
+                        "-ar 48000 " + // Resample to max 48k to keep FFT math fast
+                        "-ac 1 "+  // merge to 1 channels for speed
                         "-filter_complex "+
                         "\"showspectrumpic=" +
-                        "s=1080x720:" +
+                        //"s=1080x720:" +
+                        "s=1080x1024:" +
                         "legend=1:" +
-                        "scale=log:" +
-                        "fscale=lin:" +
-                        "stop="+visualMaxFreq+":"+
+                        "scale=log:" + // Logarithmic intensity for better colors
+                        "fscale=lin:" + // Linear frequency for technical cutoff checks
+                        "stop="+visualMaxFreq+":"+  // maximum hz axis
                         "color=magma:" +
                         "drange=120:" +
-                        "win_func=hanning[v]; "+
+                        "win_func=hanning[v]; "+ // for analys audio file
                         "[v]drawtext=fontfile='"+
                         fontPath+
-                        "':text='MusicMate Analysis':x=48:y=16:fontcolor=white:fontsize=32, "
-                        +"drawtext=fontfile='"+
+                        "':text='"+
+                        qualityInfo +
+                        "':x=(w-text_w)/2:y=h-16:fontcolor=white:fontsize=24, "+
+                        "drawtext=fontfile='"+
                         fontPath+
-                        "':text='"
-                        +qualityInfo
-                        +"':x=420:y=20:fontcolor=white:fontsize=24\" "
-                        +"-frames:v 1 \"" + outputPath + "\"";
+                        "':text='"+
+                        analyserName+
+                        "':x=32:y=8:fontcolor=white:fontsize=32\" "+
+                        "-frames:v 1 \"" + outputPath + "\"";
+
+        //(w-text_w)/2 automatically centers the text regardless of image width.
 
         Log.d(TAG, "Running FFmpeg: " + command);
 
