@@ -51,13 +51,13 @@ public final class Constants {
     public static final String TITLE_INCOMING_SONGS = "Recently Added";
     public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
-    public static final String TITLE_HIRES = "Hi-Res Audio"; //""Hi-Res Lossless";
+    public static final String TITLE_HIRES_QUALITY = "Hi-Res Quality"; //""Hi-Res Lossless";
 
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_CD_EXT_QUALITY = "Studio 24-bit Quality";
+    public static final String TITLE_CD_EXT_QUALITY = "24-bit Studio Quality";
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Audio"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
-    public static final String TITLE_MQA_MASTER_AUDIO = "MQA Master"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Quality"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
+    public static final String TITLE_MQA_MASTER_QUALITY = "MQA Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
@@ -138,6 +138,8 @@ public final class Constants {
     public static final String DEFAULT_COVERART = "no_cover.png";
 
     public static final String LIBRARIES_INFO_FILE = "libraries.info";
+
+    public static final String PATH_MISSING_TRACK = "MissingTrack";
 
     public static String getPresentationName() {
         // Get the clean, friendly device model name

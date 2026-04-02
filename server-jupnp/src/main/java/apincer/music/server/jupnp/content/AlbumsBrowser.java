@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.StringUtils;
 import musicmate.jupnp.nio.R;
@@ -46,10 +46,10 @@ public class AlbumsBrowser extends AbstractContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
-        List<MusicFolder> groupings = tagRepos.getAlbumAndArtistWithChildrenCount();
-        for(MusicFolder group: groupings) {
-            String name = group.getName();
-            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), group.getName(), creator, 0);
+        List<Track> groupings = tagRepos.getAlbumAndArtistWithChildrenCount();
+        for(Track group: groupings) {
+            String name = group.getTitle();
+            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId() + group.getTitle(), ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), group.getTitle(), creator, 0);
             musicAlbum.setChildCount((int)group.getChildCount());
 
             // set artist

@@ -33,7 +33,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.music.core.Constants;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.spi.MediaServerHub;
 import coil3.BitmapImage;
@@ -105,7 +105,7 @@ public class MediaNotificationBuilder {
     }
 
     @Deprecated
-    private void notifyPlayingSong(Context context, PlaybackTarget player, final MediaTrack track,Bitmap albumArt) {
+    private void notifyPlayingSong(Context context, PlaybackTarget player, final Track track, Bitmap albumArt) {
         if(track == null || albumArt == null) return;
 
         final Bitmap albumArtBitmap = ensureSoftwareBitmap(albumArt);
@@ -132,7 +132,7 @@ public class MediaNotificationBuilder {
         });
     }
 
-    private void notifyPlayingSong(Context context, PlaybackTarget player, MediaTrack track, Bitmap albumArtBitmap, int bgColor, int textColor) {
+    private void notifyPlayingSong(Context context, PlaybackTarget player, Track track, Bitmap albumArtBitmap, int bgColor, int textColor) {
         boolean isPlaying = true;
 
         RemoteViews collapsed = new RemoteViews(context.getPackageName(), R.layout.notification_collapsed);
@@ -181,7 +181,7 @@ public class MediaNotificationBuilder {
      */
     private static NotificationCompat.Builder createStreamingNotification(
             Context context,
-            @Nullable MediaTrack track,
+            @Nullable Track track,
             @NonNull PlaybackTarget player,
             @NonNull Bitmap albumArt) {
 
@@ -319,7 +319,7 @@ public class MediaNotificationBuilder {
      * BigPictureStyle notification.
      */
     @Deprecated
-    public static void updateNotificationForStreaming(Context context, MediaTrack track, PlaybackTarget player) {
+    public static void updateNotificationForStreaming(Context context, Track track, PlaybackTarget player) {
         ImageLoader imageLoader = SingletonImageLoader.get(context);
 
         Target target = new Target() {
@@ -381,7 +381,7 @@ public class MediaNotificationBuilder {
      */
     public static void updateNotification(
             @NonNull Context context,
-            @Nullable MediaTrack track,
+            @Nullable Track track,
             @Nullable PlaybackTarget player,
             MediaServerHub.ServerStatus status,
             long totalTracks) {
@@ -439,7 +439,7 @@ public class MediaNotificationBuilder {
      * Uses Coil to asynchronously load album art and then displays it in a
      * BigPictureStyle notification.
      */
-    private static void showPlaybackNotification(Context context, MediaTrack track, PlaybackTarget player) {
+    private static void showPlaybackNotification(Context context, Track track, PlaybackTarget player) {
 
         Target target = new Target() {
             @Override

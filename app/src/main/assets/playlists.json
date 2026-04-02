@@ -1,12 +1,12 @@
 {
   "playlists": [
     {
-      "name": "The Audiophile Archive",
+      "name": "The Masterpieces Archive",
       "uuid": "HighFidelityArchive",
-      "type": "song",
+      "type": "title",
       "version": "1.3",
       "description": "Reference tracks for testing imaging and dynamics.",
-      "songs": [
+      "rules": [
         {
           "title": "500 Miles",
           "artist": "Felicia Wong",
@@ -3272,883 +3272,99 @@
       ]
     },
     {
-      "name": "The Orchestral Resonance",
-      "uuid": "OrchestralResonance",
-      "type": "song",
-      "version": "2026.03.04",
-      "description": "Reference recordings for Composer, Performer & Ensemble",
-      "songs": [
-        {
-          "title": "Symphony No. 5 in C Minor, Op. 67: I. Allegro con brio",
-          "artist": "Beethoven / Carlos Kleiber, Vienna Philharmonic",
-          "tag": "Iconic Motif / Dynamics"
-        },
-        {
-          "title": "The Four Seasons, Op. 8, Concerto No. 1 in E Major, 'Spring': I. Allegro",
-          "artist": "Vivaldi / I Musici",
-          "tag": "Essential Strings"
-        },
-        {
-          "title": "Canon and Gigue in D Major, P. 37",
-          "artist": "Pachelbel / Sir Neville Marriner, ASMF",
-          "tag": "Pop Culture Essential"
-        },
-        {
-          "title": "Suite bergamasque, L. 75: III. Clair de lune",
-          "artist": "Debussy / Seong-Jin Cho",
-          "tag": "Midrange Warmth"
-        },
-        {
-          "title": "1812 Overture, Op. 49",
-          "artist": "Tchaikovsky / Erich Kunzel, Cincinnati Pops",
-          "tag": "Sub-Bass Cannon Test"
-        },
-        {
-          "title": "Turandot, SC 91: Act III, 'Nessun Dorma!'",
-          "artist": "Puccini / Luciano Pavarotti, Zubin Mehta",
-          "tag": "Vocal Body & Power"
-        },
-        {
-          "title": "Serenade No. 13 in G Major, K. 525 'Eine kleine Nachtmusik': I. Allegro",
-          "artist": "Mozart / Sir Neville Marriner, ASMF",
-          "tag": "Rhythmic Air"
-        },
-        {
-          "title": "Carmina Burana: Fortuna Imperatrix Mundi, No. 1 'O Fortuna'",
-          "artist": "Orff / Eugen Jochum, Deutsche Oper Berlin",
-          "tag": "Maximum Choral Scale"
-        },
-        {
-          "title": "Also sprach Zarathustra, Op. 30: Einleitung (Introduction)",
-          "artist": "Richard Strauss / Fritz Reiner, Chicago Symphony",
-          "tag": "Sub-Bass Extension"
-        },
-        {
-          "title": "Piano Sonata No. 14 in C-Sharp Minor, Op. 27, No. 2 'Moonlight': I. Adagio sostenuto",
-          "artist": "Beethoven / Murray Perahia",
-          "tag": "Piano Harmonics"
-        },
-        {
-          "title": "Toccata and Fugue in D Minor, BWV 565",
-          "artist": "Bach / Helmut Walcha",
-          "tag": "Pipe Organ Depth"
-        },
-        {
-          "title": "Die Walküre, WWV 86B: Act III, 'Ride of the Valkyries'",
-          "artist": "Wagner / Sir Georg Solti, Vienna Philharmonic",
-          "tag": "Brass Texture"
-        },
-        {
-          "title": "An der schönen blauen Donau, Op. 314 (The Blue Danube)",
-          "artist": "Johann Strauss II / Carlos Kleiber, Vienna Philharmonic",
-          "tag": "Soundstage Bloom"
-        },
-        {
-          "title": "Cello Suite No. 1 in G Major, BWV 1007: I. Prélude",
-          "artist": "Bach / Pierre Fournier",
-          "tag": "Instrumental Imaging"
-        },
-        {
-          "title": "Boléro, M. 81",
-          "artist": "Ravel / Riccardo Chailly, Royal Concertgebouw",
-          "tag": "Incremental Dynamics"
-        },
-        {
-          "title": "The Planets, Op. 32: IV. Jupiter, the Bringer of Jollity",
-          "artist": "Holst / Charles Dutoit, Montreal Symphony",
-          "tag": "Orchestral Grandeur"
-        },
-        {
-          "title": "3 Gymnopédies: No. 1, Lent et douloureux",
-          "artist": "Satie / Pascal Rogé",
-          "tag": "Transparency & Decay"
-        },
-        {
-          "title": "Swan Lake, Op. 20: Act II, No. 10, Scene (Moderato)",
-          "artist": "Tchaikovsky / Ernest Ansermet, OSR",
-          "tag": "Melodic Flow"
-        },
-        {
-          "title": "Gianni Schicchi, SC 88: 'O mio babbino caro'",
-          "artist": "Puccini / Renée Fleming, Sir Charles Mackerras",
-          "tag": "Soprano Purity"
-        },
-        {
-          "title": "Messiah, HWV 56: Part II, No. 44, 'Hallelujah Chorus'",
-          "artist": "Handel / John Eliot Gardiner, EBS",
-          "tag": "Choral Separation"
-        },
-        {
-          "title": "Adagio for Strings, Op. 11",
-          "artist": "Barber / Leonard Bernstein, NYP",
-          "tag": "String Layering"
-        },
-        {
-          "title": "Peer Gynt Suite No. 1, Op. 46: IV. In the Hall of the Mountain King",
-          "artist": "Grieg / Sir Thomas Beecham, Royal Philharmonic",
-          "tag": "Transient Speed"
-        },
-        {
-          "title": "Piano Concerto No. 2 in C Minor, Op. 18: I. Moderato",
-          "artist": "Rachmaninoff / Sviatoslav Richter, Stanislaw Wislocki",
-          "tag": "Lush Romanticism"
-        },
-        {
-          "title": "Finlandia, Op. 26",
-          "artist": "Sibelius / Vladimir Ashkenazy, Philharmonia",
-          "tag": "Brass/Timpani Impact"
-        },
-        {
-          "title": "Bagatelle No. 25 in A Minor, WoO 59 'Für Elise'",
-          "artist": "Beethoven / Lang Lang",
-          "tag": "Piano Attack/Decay"
-        },
-        {
-          "title": "William Tell Overture: Finale (March of the Swiss Soldiers)",
-          "artist": "Rossini / Fritz Reiner, Chicago Symphony",
-          "tag": "Orchestral Sprint"
-        },
-        {
-          "title": "Lakmé: Act I, No. 2, 'Viens, Mallika' (Flower Duet)",
-          "artist": "Delibes / Joan Sutherland, Marilyn Horne",
-          "tag": "Vocal Harmony"
-        },
-        {
-          "title": "Rhapsody in Blue",
-          "artist": "Gershwin / Leonard Bernstein, Columbia Symphony",
-          "tag": "Jazz-Classical Timbre"
-        },
-        {
-          "title": "Scheherazade, Op. 35: IV. Festival at Baghdad",
-          "artist": "Rimsky-Korsakov / Fritz Reiner, Chicago Symphony",
-          "tag": "3D Imaging"
-        },
-        {
-          "title": "The Firebird Suite (1919 Version): IV. Infernal Dance of King Kastchei",
-          "artist": "Stravinsky / Antal Doráti, London Symphony",
-          "tag": "Violent Transients"
-        },
-        {
-          "title": "Orchestral Suite No. 3 in D Major, BWV 1068: II. Air",
-          "artist": "Bach / Sir Neville Marriner, ASMF",
-          "tag": "Silky Midrange"
-        },
-        {
-          "title": "Symphony No. 9 in E Minor, Op. 95 'From the New World': IV. Allegro con fuoco",
-          "artist": "Dvořák / István Kertész, London Symphony",
-          "tag": "Low-End Punch"
-        },
-        {
-          "title": "Brandenburg Concerto No. 3 in G Major, BWV 1048: I. Allegro",
-          "artist": "Bach / Trevor Pinnock, The English Concert",
-          "tag": "Baroque Detail"
-        },
-        {
-          "title": "Carmen Suite No. 1: No. 5, Les Toréadors",
-          "artist": "Bizet / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Rhythmic Snap"
-        },
-        {
-          "title": "Danse Macabre, Op. 40",
-          "artist": "Saint-Saëns / Charles Dutoit, Philharmonia",
-          "tag": "Percussion Realism"
-        },
-        {
-          "title": "Peer Gynt Suite No. 1, Op. 46: I. Morning Mood",
-          "artist": "Grieg / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Woodwind Timbre"
-        },
-        {
-          "title": "Symphony No. 40 in G Minor, K. 550: I. Molto Allegro",
-          "artist": "Mozart / Karl Böhm, Berlin Philharmonic",
-          "tag": "Classical Balance"
-        },
-        {
-          "title": "Hungarian Dance No. 5 in G Minor, WoO 1, No. 5",
-          "artist": "Brahms / Claudio Abbado, Vienna Philharmonic",
-          "tag": "Pizzicato Precision"
-        },
-        {
-          "title": "Pomp and Circumstance Marches, Op. 39: March No. 1 in D Major",
-          "artist": "Elgar / Sir Arthur Bliss, London Symphony",
-          "tag": "Orchestral Mass"
-        },
-        {
-          "title": "Nocturne in E-Flat Major, Op. 9, No. 2",
-          "artist": "Chopin / Arthur Rubinstein",
-          "tag": "Piano Texture"
-        },
-        {
-          "title": "Ellens dritter Gesang, Op. 52, No. 6 'Ave Maria'",
-          "artist": "Schubert / Barbara Bonney, Geoffrey Parsons",
-          "tag": "Vocal Clarity"
-        },
-        {
-          "title": "The Nutcracker, Op. 71: Act II, No. 14, Variation II 'Dance of the Sugar Plum Fairy'",
-          "artist": "Tchaikovsky / Antal Doráti, London Symphony",
-          "tag": "Micro-Detail"
-        },
-        {
-          "title": "Zadok the Priest, HWV 258",
-          "artist": "Handel / Trevor Pinnock, The English Concert",
-          "tag": "Grand Scale"
-        },
-        {
-          "title": "Symphony No. 7 in A Major, Op. 92: II. Allegretto",
-          "artist": "Beethoven / Carlos Kleiber, Vienna Philharmonic",
-          "tag": "Lower-Mid Resonance"
-        },
-        {
-          "title": "Thaïs: Méditation",
-          "artist": "Massenet / Nicola Benedetti",
-          "tag": "Violin Vibrato"
-        },
-        {
-          "title": "La Mer, L. 109: III. Dialogue du vent et de la mer",
-          "artist": "Debussy / Pierre Monteux, Boston Symphony",
-          "tag": "Orchestral Color"
-        },
-        {
-          "title": "Messa da Requiem: II. Dies Irae",
-          "artist": "Verdi / Sir Georg Solti, Chicago Symphony",
-          "tag": "Timpani Impact"
-        },
-        {
-          "title": "Rhapsody on a Theme of Paganini, Op. 43: Variation 18. Andante cantabile",
-          "artist": "Rachmaninoff / Vladimir Ashkenazy, André Previn",
-          "tag": "Melodic Bloom"
-        },
-        {
-          "title": "Symphony No. 3 in C Minor, Op. 78 'Organ': IIb. Maestoso - Allegro",
-          "artist": "Saint-Saëns / Charles Munch, Boston Symphony",
-          "tag": "Deep Pipe Organ"
-        },
-        {
-          "title": "Spiegel im Spiegel",
-          "artist": "Arvo Pärt / Nicola Benedetti, Alexei Grynyuk",
-          "tag": "Linearity/Transparency"
-        },
-        {
-          "title": "Goldberg Variations, BWV 988: Aria",
-          "artist": "Bach / Glenn Gould (1981)",
-          "tag": "Technical Precision"
-        },
-        {
-          "title": "Peer Gynt Suite No. 2, Op. 55: IV. Solveig's Song",
-          "artist": "Grieg / Lucia Popp, Neville Marriner",
-          "tag": "Pure Soprano Air"
-        },
-        {
-          "title": "Night on Bald Mountain",
-          "artist": "Mussorgsky / Fritz Reiner, Chicago Symphony",
-          "tag": "Orchestral Control"
-        },
-        {
-          "title": "Radetzky March, Op. 228",
-          "artist": "Johann Strauss I / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Percussion Snap"
-        },
-        {
-          "title": "Romeo and Juliet, Op. 64: Act I, No. 13 'Dance of the Knights'",
-          "artist": "Prokofiev / Claudio Abbado, Berlin Philharmonic",
-          "tag": "Brass Weight"
-        },
-        {
-          "title": "Enigma Variations, Op. 36: Variation IX (Adagio) 'Nimrod'",
-          "artist": "Elgar / Sir John Barbirolli, London Symphony",
-          "tag": "String Warmth"
-        },
-        {
-          "title": "Water Music Suite No. 2 in D Major, HWV 349: II. Alla Hornpipe",
-          "artist": "Handel / John Eliot Gardiner, EBS",
-          "tag": "Brass Brilliance"
-        },
-        {
-          "title": "Piano Concerto No. 21 in C Major, K. 467: II. Andante",
-          "artist": "Mozart / Géza Anda, Salzburg Mozarteum",
-          "tag": "Lush Piano Flow"
-        },
-        {
-          "title": "Lakmé: Act I, 'Viens, Mallika' (Flower Duet)",
-          "artist": "Delibes / Anna Netrebko, Elīna Garanča",
-          "tag": "Vocal Staging"
-        },
-        {
-          "title": "Tritsch-Tratsch-Polka, Op. 214",
-          "artist": "Johann Strauss II / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Dynamic Speed"
-        },
-        {
-          "title": "Le nozze di Figaro, K. 492: Overture",
-          "artist": "Mozart / René Jacobs, Concerto Köln",
-          "tag": "Woodwind Clarity"
-        },
-        {
-          "title": "Pavane pour une infante défunte, M. 19",
-          "artist": "Ravel / Charles Dutoit, Montreal Symphony",
-          "tag": "Timbre / Warmth"
-        },
-        {
-          "title": "Pictures at an Exhibition: X. The Great Gate of Kiev (Arr. Ravel)",
-          "artist": "Mussorgsky / Fritz Reiner, Chicago Symphony",
-          "tag": "Maximum Scale"
-        },
-        {
-          "title": "Libertango",
-          "artist": "Piazzolla / Yo-Yo Ma",
-          "tag": "Midrange Bite"
-        },
-        {
-          "title": "The Four Seasons, Op. 8, Concerto No. 4 in F Minor 'Winter': I. Allegro non molto",
-          "artist": "Vivaldi / Salvatore Accardo, I Musici",
-          "tag": "Violin Sharpness/Speed"
-        },
-        {
-          "title": "Symphony No. 3 in E-Flat Major, Op. 55 'Eroica': I. Allegro con brio",
-          "artist": "Beethoven / David Zinman, Zurich Tonhalle",
-          "tag": "Modern Transparency"
-        },
-        {
-          "title": "Miserere mei, Deus",
-          "artist": "Allegri / The Tallis Scholars",
-          "tag": "Acoustic Depth"
-        },
-        {
-          "title": "The Blue Notebooks: On the Nature of Daylight",
-          "artist": "Max Richter / Louisa Fuller",
-          "tag": "Black Floor / Layering"
-        },
-        {
-          "title": "Inception (OST): Time",
-          "artist": "Hans Zimmer / Hans Zimmer",
-          "tag": "Cinematic Sub-Bass"
-        },
-        {
-          "title": "Thunderstruck (Cello Version)",
-          "artist": "AC/DC (arr. 2CELLOS) / 2CELLOS",
-          "tag": "Instrument Attack"
-        },
-        {
-          "title": "Gayane: Sabre Dance",
-          "artist": "Khachaturian / Antal Doráti, London Symphony",
-          "tag": "Rhythmic Percussion"
-        },
-        {
-          "title": "Pines of Rome, P. 141: IV. The Pines of the Appian Way",
-          "artist": "Respighi / Fritz Reiner, Chicago Symphony",
-          "tag": "Crescendo Test"
-        },
-        {
-          "title": "Má Vlast, JB 1:112: II. Vltava (The Moldau)",
-          "artist": "Smetana / Ferenc Fricsay, Berlin Philharmonic",
-          "tag": "Liquid String Flow"
-        },
-        {
-          "title": "Symphony No. 5 in C-Sharp Minor: IV. Adagietto",
-          "artist": "Mahler / Claudio Abbado, Berlin Philharmonic",
-          "tag": "String Soul"
-        },
-        {
-          "title": "The Prince of Denmark's March (Trumpet Voluntary)",
-          "artist": "Clarke / Maurice André",
-          "tag": "Brass Imaging"
-        },
-        {
-          "title": "3 Gnossiennes: No. 1, Lent",
-          "artist": "Satie / Alexandre Tharaud",
-          "tag": "Modern Piano Tone"
-        },
-        {
-          "title": "Cavalleria Rusticana: Intermezzo",
-          "artist": "Mascagni / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Emotional Warmth"
-        },
-        {
-          "title": "Fanfare for the Common Man",
-          "artist": "Copland / Eiji Oue, Minnesota Orchestra",
-          "tag": "Timpani/Drum Impact"
-        },
-        {
-          "title": "The Lark Ascending",
-          "artist": "Vaughan Williams / Janine Jansen, Royal Philharmonic",
-          "tag": "HF Sweetness"
-        },
-        {
-          "title": "Symphony No. 6 in F Major, Op. 68 'Pastoral': I. Allegro ma non troppo",
-          "artist": "Beethoven / Karl Böhm, Vienna Philharmonic",
-          "tag": "Natural Bloom"
-        },
-        {
-          "title": "24 Preludes, Op. 28: No. 15 in D-Flat Major 'Raindrop Prelude'",
-          "artist": "Chopin / Maurizio Pollini",
-          "tag": "Micro-Dynamics"
-        },
-        {
-          "title": "The Tale of Tsar Saltan: Flight of the Bumblebee",
-          "artist": "Rimsky-Korsakov / Wynton Marsalis",
-          "tag": "Transient Speed"
-        },
-        {
-          "title": "Pavane, Op. 50",
-          "artist": "Fauré / Sir Neville Marriner, ASMF",
-          "tag": "Delicate Imaging"
-        },
-        {
-          "title": "Kuolema, Op. 44: No. 1, Valse Triste",
-          "artist": "Sibelius / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Darker Timbre"
-        },
-        {
-          "title": "Slavonic Dances, Op. 72: No. 2 in E Minor",
-          "artist": "Dvořák / George Szell, Cleveland Orchestra",
-          "tag": "String Texture"
-        },
-        {
-          "title": "An der schönen blauen Donau, Op. 314",
-          "artist": "Johann Strauss II / Carlos Kleiber, Vienna Philharmonic",
-          "tag": "Orchestral Sway"
-        },
-        {
-          "title": "Prince Igor: No. 17, Polovtsian Dances",
-          "artist": "Borodin / Sir Thomas Beecham, Royal Philharmonic",
-          "tag": "Choral/Orchestral Mix"
-        },
-        {
-          "title": "Symphony No. 1 in C Minor, Op. 68: IV. Adagio - Allegro non troppo",
-          "artist": "Brahms / Otto Klemperer, Philharmonia Orchestra",
-          "tag": "Deep String Body"
-        },
-        {
-          "title": "Waltz in C-Sharp Minor, Op. 64, No. 2",
-          "artist": "Chopin / Vladimir Ashkenazy",
-          "tag": "Piano Harmonic Decay"
-        },
-        {
-          "title": "Sleeping Beauty, Op. 66: Act I, No. 6, Waltz",
-          "artist": "Tchaikovsky / Mstislav Rostropovich, Berlin Philharmonic",
-          "tag": "Upper-Mid Air"
-        },
-        {
-          "title": "Stabat Mater, SC 532: II. Cujus animam gementem",
-          "artist": "Rossini / Luciano Pavarotti, Georg Solti",
-          "tag": "Vocal Power"
-        },
-        {
-          "title": "Marche Slave, Op. 31",
-          "artist": "Tchaikovsky / Fritz Reiner, Chicago Symphony",
-          "tag": "Brass Weight"
-        },
-        {
-          "title": "The Planets, Op. 32: IV. Jupiter",
-          "artist": "Holst / Charles Dutoit, Montreal Symphony",
-          "tag": "Wide Soundstage"
-        },
-        {
-          "title": "3 Gymnopédies: No. 3, Lent et grave",
-          "artist": "Satie / Reinbert de Leeuw",
-          "tag": "Atmospheric Silence"
-        },
-        {
-          "title": "Symphony No. 4 in F Minor, Op. 36: III. Scherzo. Pizzicato ostinato",
-          "artist": "Tchaikovsky / Evgeny Mravinsky, Leningrad Philharmonic",
-          "tag": "Pizzicato Precision"
-        },
-        {
-          "title": "Fanfare for the Common Man",
-          "artist": "Copland / Erich Kunzel, Cincinnati Pops",
-          "tag": "Drum Slam"
-        },
-        {
-          "title": "Les contes d'Hoffmann: Belle nuit, ô nuit d'amour (Barcarolle)",
-          "artist": "Offenbach / Herbert von Karajan, Berlin Philharmonic",
-          "tag": "Liquid Vocals"
-        },
-        {
-          "title": "1812 Overture, Op. 49: Finale",
-          "artist": "Tchaikovsky / Valery Gergiev, Kirov Orchestra",
-          "tag": "Modern Dynamics"
-        },
-        {
-          "title": "Requiem in D Minor, K. 626: III. Sequentia, No. 6, Lacrimosa",
-          "artist": "Mozart / Philippe Herreweghe, Collegium Vocale Gent",
-          "tag": "Choral Detail"
-        },
-        {
-          "title": "Le Carnaval des animaux, R. 125: XIII. Le Cygne (The Swan)",
-          "artist": "Saint-Saëns / Yo-Yo Ma, Kathryn Stott",
-          "tag": "Timbre / Resonance"
-        }
-      ]
-    },
-    {
-      "name": "The Masterwork Albums",
-      "uuid": "MasterworkAlbums",
-      "type": "album",
-      "description": "High-fidelity reference collection for listening",
-      "songs": [
-        {
-          "album": "The Nightfly",
-          "artist": "Donald Fagen",
-          "year": "1982",
-          "notes": "DDD Digital Precision / Timing"
-        },
-        {
-          "album": "…Nothing Like the Sun",
-          "artist": "Sting",
-          "year": "1987",
-          "notes": "Soundstage Depth / Layering"
-        },
-        {
-          "album": "Random Access Memories",
-          "artist": "Daft Punk",
-          "year": "2013",
-          "notes": "Sub-Bass / Analog-Digital Hybrid"
-        },
-        {
-          "album": "Rumours",
-          "artist": "Fleetwood Mac",
-          "year": "1977",
-          "notes": "Vocal Presence / Midrange Balance"
-        },
-        {
-          "album": "Brothers in Arms",
-          "artist": "Dire Straits",
-          "year": "1985",
-          "notes": "Micro-Detail / Guitar Timbre"
-        },
-        {
-          "album": "Hope",
-          "artist": "Hugh Masekela",
-          "year": "1994",
-          "notes": "Extreme Dynamics / Brass Impact"
-        },
-        {
-          "album": "Tracy Chapman",
-          "artist": "Tracy Chapman",
-          "year": "1988",
-          "notes": "Acoustic Naturalness / Vocal Weight"
-        },
-        {
-          "album": "Come Away With Me",
-          "artist": "Norah Jones",
-          "year": "2002",
-          "notes": "Piano Harmonics / Near-field Intimacy"
-        },
-        {
-          "album": "Café Blue",
-          "artist": "Patricia Barber",
-          "year": "1994",
-          "notes": "Spatial Cues / Percussive Decay"
-        },
-        {
-          "album": "4",
-          "artist": "Foreigner",
-          "year": "1981",
-          "notes": "Arena Rock Texture / EQ Balance"
-        },
-        {
-          "album": "Dark Side of the Moon",
-          "artist": "Pink Floyd",
-          "year": "1973",
-          "notes": "Phase Coherence / Pan Imaging"
-        },
-        {
-          "album": "This Left Feels Right",
-          "artist": "Bon Jovi",
-          "year": "2003",
-          "notes": "Acoustic Realism / Resonance"
-        },
-        {
-          "album": "Toto IV",
-          "artist": "Toto",
-          "year": "1982",
-          "notes": "Complex Arrangement Separation"
-        },
-        {
-          "album": "Famous Blue Raincoat",
-          "artist": "Jennifer Warnes",
-          "year": "1987",
-          "notes": "Liquid Vocals / Analog Warmth"
-        },
-        {
-          "album": "What's Going On",
-          "artist": "Marvin Gaye",
-          "year": "1971",
-          "notes": "Soulful Texture / Low-Mid Bloom"
-        },
-        {
-          "album": "Thriller",
-          "artist": "Michael Jackson",
-          "year": "1982",
-          "notes": "Dynamic Slam / Frequency Balance"
-        },
-        {
-          "album": "Sweet Baby James",
-          "artist": "James Taylor",
-          "year": "1970",
-          "notes": "Mellow Vocal Warmth"
-        },
-        {
-          "album": "Heart of the Congos",
-          "artist": "The Congos",
-          "year": "1977",
-          "notes": "Dub Bass Control / Rhythmic Grip"
-        },
-        {
-          "album": "MTV Unplugged in New York",
-          "artist": "Nirvana",
-          "year": "1994",
-          "notes": "Unprocessed Realism / Room Sound"
-        },
-        {
-          "album": "Pet Sounds",
-          "artist": "The Beach Boys",
-          "year": "1966",
-          "notes": "Midrange Complexity / Vocal Stack"
-        },
-        {
-          "album": "Aja",
-          "artist": "Steely Dan",
-          "year": "1977",
-          "notes": "The Absolute Reference / Center Image"
-        },
-        {
-          "album": "Kind of Blue",
-          "artist": "Miles Davis",
-          "year": "1959",
-          "notes": "Timbre / Breath / Instrumental Space"
-        },
-        {
-          "album": "Jazz at the Pawnshop",
-          "artist": "Arne Domnérus",
-          "year": "1977",
-          "notes": "Ambient Soundstage / Live Imaging"
-        },
-        {
-          "album": "Avalon",
-          "artist": "Roxy Music",
-          "year": "1982",
-          "notes": "Lushness / Ethereal Reverb Quality"
-        },
-        {
-          "album": "Mezzanine",
-          "artist": "Massive Attack",
-          "year": "1998",
-          "notes": "Sub-Woofer Stress / Bass Texture"
-        },
-        {
-          "album": "Vapor",
-          "artist": "Yosi Horikawa",
-          "year": "2013",
-          "notes": "360-Degree Object Imaging"
-        },
-        {
-          "album": "Folk Singer",
-          "artist": "Muddy Waters",
-          "year": "1964",
-          "notes": "Acoustic Reflection / Massive Echo"
-        },
-        {
-          "album": "Sea Change",
-          "artist": "Beck",
-          "year": "2002",
-          "notes": "Deep Acoustic Guitars / Width"
-        },
-        {
-          "album": "Live in Paris",
-          "artist": "Diana Krall",
-          "year": "2002",
-          "notes": "Piano Tone / Vocal Sibilance Test"
-        },
-        {
-          "album": "Graceland",
-          "artist": "Paul Simon",
-          "year": "1986",
-          "notes": "Transient Snap / Fretless Bass Detail"
-        },
-        {
-          "album": "The Hunter",
-          "artist": "Jennifer Warnes",
-          "year": "1992",
-          "notes": "Ultra-Low Frequency Linearity"
-        },
-        {
-          "album": "Songbird",
-          "artist": "Eva Cassidy",
-          "year": "1998",
-          "notes": "Vocal Purity / Emotional Dynamics"
-        },
-        {
-          "album": "In Rainbows",
-          "artist": "Radiohead",
-          "year": "2007",
-          "notes": "Layering / Modern Rhythmic Control"
-        },
-        {
-          "album": "Amused to Death",
-          "artist": "Roger Waters",
-          "year": "1992",
-          "notes": "Q-Sound 3D Surround Effects"
-        },
-        {
-          "album": "Touch",
-          "artist": "Yello",
-          "year": "2009",
-          "notes": "Electronic Speed / Tweeter Sparkle"
-        },
-        {
-          "album": "The Dark Knight (OST)",
-          "artist": "Hans Zimmer",
-          "year": "2008",
-          "notes": "Infrasonic Bass / Cinematic Scale"
-        },
-        {
-          "album": "Sessions from the 17th Ward",
-          "artist": "Amber Rubarth",
-          "year": "2012",
-          "notes": "Binaural Imaging (Headphone Test)"
-        },
-        {
-          "album": "Folklore",
-          "artist": "Taylor Swift",
-          "year": "2020",
-          "notes": "Intimate Mid-range / Close-mic Clarity"
-        },
-        {
-          "album": "Blue Train",
-          "artist": "John Coltrane",
-          "year": "1958",
-          "notes": "Hard-Bop Energy / Saxophone Bite"
-        },
-        {
-          "album": "Tapestry",
-          "artist": "Carole King",
-          "year": "1971",
-          "notes": "Organic Warmth / Tonal Balance"
-        }
-      ]
-    },
-    {
-      "name": "Timeless: Regional Echoes",
+      "name": "Timeless: Roots & Traditions",
       "uuid": "RegionalEchoes",
       "type": "genre",
       "note": "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ",
-      "description": "Regional folk and local legends for relaxed, nostalgic listening",
-      "songs": [
-        {
-          "genre": "Luk Thung"
-        },
-        {
-          "genre": "Mor Lum"
-        },
-        {
-          "genre": "Luk Krung"
-        },
-        {
-          "genre": "Phuea Chiwit"
-        },
-        {
-          "genre": "Kam Mueang"
-        },
-        {
-          "genre": "Kantrum"
-        },
-        {
-          "genre": "Thai, Traditional"
-        },
-        {
-          "genre": "Chines, Traditional"
-        },
-        {
-          "genre": "Asian, Traditional"
-        },
-        {
-          "genre": "Traditional"
-        }
+      "description": "Traditional music from around the world, rich in culture, history, and regional identity",
+      "rules": [
+        { "genre": "Traditional" },
+
+        { "genre": "Folk", "mood": "Chill" },
+        { "genre": "Folk", "mood": "Melancholy" },
+
+        { "genre": "Luk Thung", "mood": "Chill" },
+        { "genre": "Mor Lam", "mood": "Chill" },
+        { "genre": "Luk Krung", "mood": "Chill" },
+
+        { "genre": "Kam Mueang", "mood": "Chill" },
+        { "genre": "Kantrum", "mood": "Chill" }
+      ]
+    } ,
+    {
+      "name": "Timeless: ISan Vibe โจ๊ะๆ หน้าฮ้าน",
+      "uuid": "IsanPartyJoJo",
+      "type": "genre",
+      "note": "จังหวะโจ๊ะๆ สนุกสนาน ชวนขยับขา ม่วนมันส์หน้าฮ้านแบบไม่มีสะดุด",
+      "description": "High-energy, fast-paced Mor Lam and upbeat Luk Thung tracks to get you dancing.",
+      "rules": [
+        { "genre": "Mor Lam", "style": "Dance", "mood": "Party" },
+        { "genre": "Mor Lam", "style": "Dance", "mood": "Energetic" },
+        { "genre": "Mor Lam", "style": "Live", "mood": "Happy" },
+
+        { "genre": "Luk Thung", "style": "Dance", "mood": "Happy" },
+        { "genre": "Luk Thung", "style": "Dance", "mood": "Party" }
+      ]
+    },
+    {
+      "name": "Timeless: Road Trip II",
+      "uuid": "RoadTripII",
+      "type": "genre",
+      "note": "ขับรถชิลๆ ฟังเพลินๆ ระหว่างเดินทาง ให้บรรยากาศสบายๆ ไม่ง่วงไม่เร่งเกินไป",
+      "description": "Relaxed, feel-good tracks perfect for driving, blending chill pop, acoustic vibes, and light upbeat rhythms.",
+      "rules": [
+        { "genre": "Pop", "mood": "Chill" },
+        { "genre": "Pop", "mood": "Happy" },
+
+        { "genre": "Thai Pop", "mood": "Chill" },
+        { "genre": "Thai Pop", "mood": "Happy" },
+
+        { "genre": "Luk Thung", "mood": "Chill" },
+        { "genre": "Luk Thung", "mood": "Happy" },
+
+        { "genre": "Mor Lam", "mood": "Happy" },
+
+        { "genre": "Folk", "style": "Acoustic", "mood": "Chill" },
+
+        { "genre": "Indie", "mood": "Chill" },
+
+        { "style": "Acoustic", "mood": "Chill" },
+        { "style": "Vocal", "mood": "Chill" },
+
+        { "genre": "Thai Pop", "mood": "Energetic", "style": "Dance" }
+
       ]
     },
     {
       "name": "Timeless: Midnight Moods",
       "uuid": "MidnightMoods",
       "type": "genre",
-      "note": "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์",
-      "description": "Smooth relaxing music for calm nights and easy listening",
-      "songs": [
-        {
-          "genre": "Jazz"
-        },
-        {
-          "genre": "Jazz, Ballads"
-        },
-        {
-          "genre": "Jazz, Vocal"
-        },
-        {
-          "genre": "Jazz, Pop"
-        },
-        {
-          "genre": "Blues"
-        },
-        {
-          "genre": "Country"
-        },
-        {
-          "genre": "Folk"
-        },
-        {
-          "genre": "Blues, Country, Folk"
-        },
-        {
-          "genre": "Audiophile"
-        },
-        {
-          "genre": "Bossa Nova"
-        },
-        {
-          "genre": "Thai, Jazz"
-        },
-        {
-          "genre": "Thai, Vocal"
-        },
-        {
-          "genre": "Chinese, Vocal"
-        },
-        {
-          "genre": "Acoustic"
-        },
-        {
-          "genre": "Acoustic & Vocal"
-        },
-        {
-          "genre": "Vocal"
-        },
-        {
-          "genre": "Instrument, Vocal"
-        },
-        {
-          "genre": "Jazz, Vocal"
-        },
-        {
-          "genre": "Pop, Vocal"
-        },
-        {
-          "genre": "Thai, Acoustic & Vocal"
-        },
-        {
-          "genre": "Thai, Instrument Vocal"
-        },
-        {
-          "genre": "Thai, Pop Vocal"
-        }
+      "note": "ฟังง่ายๆ ผ่อนคลาย สบายอารมณ์ เหมาะสำหรับยามค่ำคืน",
+      "description": "Smooth, mellow, and intimate tracks for late-night listening, featuring jazz, acoustic, and soft vocals",
+      "rules": [
+        { "genre": "Jazz", "mood": "Chill" },
+        { "genre": "Jazz", "mood": "Romantic" },
+        { "genre": "Blues", "mood": "Chill" },
+        { "genre": "Blues", "mood": "Dark" },
+        { "genre": "Folk", "mood": "Chill" },
+        { "genre": "Folk", "mood": "Melancholy" },
+        { "genre": "Jazz", "style": "Bossa Nova", "mood": "Chill" },
+        { "genre": "Jazz", "style": "Bossa Nova", "mood": "Romantic" },
+        { "genre": "Pop", "mood": "Chill" },
+        { "style": "Easy Listening", "mood": "Chill" },
+        { "style": "Vocal", "mood": "Chill" },
+        { "style": "Vocal", "mood": "Romantic" },
+        { "genre": "Ambient", "mood": "Chill" },
+        { "genre": "Ambient", "mood": "Focus" }
       ]
     },
     {
-      "name": "Timeless: Essential Selects",
+      "name": "Timeless: Personal Essentials",
       "uuid": "EssentialSelects",
       "type": "genre",
       "note": "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป",
       "description": "Timeless hits and crowd favorites with great sound",
-      "songs": [
+      "rules": [
         {
           "genre": "Alternative"
         },
@@ -4173,11 +3389,20 @@
       ]
     },
     {
-      "name": "Timeless: Motion & Melody",
+      "name": "The Classical Masterworks",
+      "uuid": "ClassicalMasterworks",
+      "type": "genre",
+      "description": "The classical masterpieces with rich, immersive sound.",
+      "rules": [
+        { "genre": "Classical"}
+      ]
+    },
+    {
+      "name": "Timeless: Road Trip",
       "uuid": "MotionMelody",
-      "type": "song",
+      "type": "title",
       "description": "Rhythmic energy and memorable melodies in a timeless journey",
-      "songs": [
+      "rules": [
         {
           "title": "When You Say Nothing At All",
           "artist": "Ronan Keating",

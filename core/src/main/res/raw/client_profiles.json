@@ -1,0 +1,50 @@
+[
+  {
+    "name": "mpd",
+    "chunkSize": 49152,
+    "keepAlive": true,
+    "maxConnections": 3,
+    "supportsGapless": true,
+    "supportsHighRes": true,
+    "supportsDirectStreaming": false,
+    "supportsLosslessStreaming": true,
+    "supportsBitPerfectStreaming": true,
+    "userAgentKeywords": ["music player daemon", "mpd"]
+  },
+  {
+    "name": "mconnect",
+    "chunkSize": -1,
+    "keepAlive": true,
+    "maxConnections": 3,
+    "supportsGapless": true,
+    "supportsHighRes": true,
+    "supportsDirectStreaming": true,
+    "supportsLosslessStreaming": false,
+    "supportsBitPerfectStreaming": false,
+    "userAgentKeywords": ["mconnect"]
+  },
+  {
+    "name": "jplay",
+    "chunkSize": 49152,
+    "keepAlive": true,
+    "maxConnections": 2,
+    "supportsGapless": true,
+    "supportsHighRes": true,
+    "supportsDirectStreaming": true,
+    "supportsLosslessStreaming": false,
+    "supportsBitPerfectStreaming": true,
+    "userAgentKeywords": ["jplay"]
+  },
+  {
+    "name": "apple",
+    "chunkSize": -1,
+    "keepAlive": true,
+    "maxConnections": 4,
+    "supportsGapless": false,
+    "supportsHighRes": false,
+    "supportsDirectStreaming": false,
+    "supportsLosslessStreaming": false,
+    "supportsBitPerfectStreaming": false,
+    "userAgentKeywords": ["apple", "iphone", "ipad"]
+  }
+]

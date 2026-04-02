@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 
 import apincer.music.core.Constants;
 import apincer.music.core.playback.DMRPlayer;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
@@ -584,10 +584,10 @@ public class MediaServerHubImpl implements MediaServerHub {
     /**
      * Commands a remote renderer to play a specific track.
      * Performs a multi-step sequence: Resolves Renderer -> Sets Transport URI -> Sends Play Command.
-     * @param song The {@link MediaTrack} containing metadata and stream information.
+     * @param song The {@link Track} containing metadata and stream information.
      */
     @Override
-    public void playerPlaySong(MediaTrack song) {
+    public void playerPlaySong(Track song) {
         runOnUpnpThread(() -> {
             if(currentRendererId != null) {
                 internalPlaySong(currentRendererId, song);
@@ -599,16 +599,16 @@ public class MediaServerHubImpl implements MediaServerHub {
      * Commands a remote renderer to play a specific track.
      * Performs a multi-step sequence: Resolves Renderer -> Sets Transport URI -> Sends Play Command.
      * * @param udn The Unique Device Name of the target renderer.
-     * @param song The {@link MediaTrack} containing metadata and stream information.
+     * @param song The {@link Track} containing metadata and stream information.
      */
     @Override
-    public void playerPlaySong(String udn, MediaTrack song) {
+    public void playerPlaySong(String udn, Track song) {
         runOnUpnpThread(() -> {
             internalPlaySong(udn, song);
         });
     }
 
-    private void internalPlaySong(String udn, MediaTrack song) {
+    private void internalPlaySong(String udn, Track song) {
         if (upnpService == null) {
             Log.w(TAG, "UPnP not initialized");
             return;
@@ -695,13 +695,13 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     /**
-     * Translates a {@link MediaTrack} into a standard-compliant DIDL-Lite XML string.
+     * Translates a {@link Track} into a standard-compliant DIDL-Lite XML string.
      * Includes technical flags for bitrate, sample frequency, and bit depth.
      * * @param song The track metadata.
      * @param songUrl The internal streaming URL.
      * @return A well-formed XML string for UPnP renderers.
      */
-    private String createDidlLiteMetadata(MediaTrack song, String songUrl) {
+    private String createDidlLiteMetadata(Track song, String songUrl) {
         String objectClass = "object.item.audioItem.musicTrack";
         String duration = formatDurationForDidl((long) song.getAudioDuration());
         String bitrate = String.valueOf(song.getAudioBitRate() * 1024 / 8); // bps to Bps
@@ -780,7 +780,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     @Override
-    public void setNextTrack(MediaTrack nextSong) {
+    public void setNextTrack(Track nextSong) {
         if (controlPoint == null || nextSong == null) return;
 
         runOnUpnpThread(() -> {

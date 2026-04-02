@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 
 public class SourceFolderBrowser extends AbstractContentBrowser {
@@ -48,10 +48,10 @@ public class SourceFolderBrowser extends AbstractContentBrowser {
         List<Container> result = new ArrayList<>();
         Map<String,Integer> count = new HashMap<>();
         if(!id.endsWith(ALL_SONGS)) {
-            List<MusicTag> list = tagRepos.findInPath(id);
+            List<Track> list = tagRepos.findInPath(id);
             List<String> dirs = new ArrayList<>();
             int idlength = id.length();
-            for (MusicTag tag : list) {
+            for (Track tag : list) {
                 String path = tag.getPath();
                 int idx = path.indexOf("/", idlength + 1); // for
                 if (idx > idlength) {
@@ -100,10 +100,10 @@ public class SourceFolderBrowser extends AbstractContentBrowser {
             id = id.substring(0, id.length()-ALL_SONGS.length()-1);
         }
 
-        List<MusicTag> list = tagRepos.findInPath(id);
+        List<Track> list = tagRepos.findInPath(id);
         int idlength = id.length();
         int currentCount = 0;
-        for(MusicTag tag: list) {
+        for(Track tag: list) {
             String path = tag.getPath();
             int idx = path.indexOf("/", idlength+1); // for
             if(allSongs || (idx <= idlength)) {

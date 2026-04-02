@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 import io.nayuki.flac.common.StreamInfo;
 import io.nayuki.flac.decode.FlacDecoder;
@@ -36,7 +36,7 @@ public class AudioDecoder {
      * @return PCM audio bytes
      * @throws IOException if decoding fails
      */
-    public static byte[] decodeAudio(MusicTag tag, int maxDurationSeconds) throws IOException {
+    public static byte[] decodeAudio(Track tag, int maxDurationSeconds) throws IOException {
         String filePath = tag.getPath();
         String enc = StringUtils.toUpperCase(tag.getAudioEncoding());
         try {
@@ -56,7 +56,7 @@ public class AudioDecoder {
         }
     }
 
-    public static byte[] decodeAlac(MusicTag tag, int maxDurationSeconds) throws IOException {
+    public static byte[] decodeAlac(Track tag, int maxDurationSeconds) throws IOException {
         String filePath = tag.getPath();
         File inputFile = new File(filePath);
         if (!inputFile.exists()) {

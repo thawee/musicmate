@@ -34,14 +34,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.music.core.Constants;
+import apincer.music.core.model.Track;
 import apincer.music.core.provider.MusicFileProvider;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.SearchCriteria;
 import apincer.android.utils.FileUtils;
 
 public class ApplicationUtils {
 
-    public static void startAspect(Activity activity, MusicTag tag) {
+    public static void startAspect(Activity activity, Track tag) {
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null) {
                 intent.setAction(Intent.ACTION_SEND);
@@ -208,7 +208,7 @@ public class ApplicationUtils {
         }
     }
 
-    public static void webSearch(Activity activity, MusicTag item) {
+    public static void webSearch(Activity activity, Track item) {
         String text = "";
         // title and artist
         if(!StringUtils.isEmpty(item.getTitle())) {
@@ -251,7 +251,7 @@ public class ApplicationUtils {
         return isPlugged;
     }
 
-    public static void startFileExplorer(Activity activity, MusicTag displayTag) {
+    public static void startFileExplorer(Activity activity, Track displayTag) {
         File filePath = new File(displayTag.getPath());
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("pl.solidexplorer2");
         if(filePath.getParentFile() == null) return;

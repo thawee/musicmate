@@ -1,6 +1,7 @@
 package apincer.android.mmate.worker;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -24,7 +25,9 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.PlaylistEntry;
+import apincer.music.core.model.Track;
+import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.repository.FileRepository;
@@ -69,8 +72,16 @@ public class ScanAudioFileWorker extends Worker {
         int processedFiles;
 
         try {
-            // Only clean database on full scan
-            tagRepos.cleanMusicMate();
+            boolean isFullScan = getInputData().getBoolean("isFullScan", false);
+
+            if (isFullScan) {
+                // do full scan
+                tagRepos.purgeDatabase();
+                repos.cleanCacheCovers();
+            }else {
+                // Only clean database on not full scan
+                tagRepos.cleanInvalidTags();;
+            }
 
             List<File> list = pathList(getApplicationContext());
             List<Path> allPaths = new ArrayList<>();
@@ -83,29 +94,12 @@ public class ScanAudioFileWorker extends Worker {
             // Then process in batches
             processedFiles = processPaths(allPaths);
 
-            // start scan extras
-            MusicMateExecutors.lowPriority(() -> {
-                        List<MusicTag> BasicList = tagRepos.findMyNoDRMeterSongs();
-                        for (MusicTag basicTag : BasicList) {
-                            try {
-                                //full scan
-                                TagReader.readExtras(getApplicationContext(), basicTag);
-                               //     basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
-                                //}
+            // Export playlists (use DB as source)
+            //MusicMateExecutors.lowPriority(this::exportPlaylists);
+            exportPlaylists();
 
-                                basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
-
-                                // re-try to extract embed album art
-                                repos.saveCoverartToCache(basicTag);
-                                tagRepos.saveTag(basicTag);
-                            } catch(Exception e) {
-                                Log.e(TAG, "Error extracting cover art", e);
-                            }
-                        }
-                    });
-
-            // Save current time as last scan time
-           // Settings.setLastScanTime(getApplicationContext(), System.currentTimeMillis());
+            // start deep scan for mastering details
+            MusicMateExecutors.lowPriority(this::deepScan);
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)
@@ -114,6 +108,26 @@ public class ScanAudioFileWorker extends Worker {
         } catch (Exception e) {
             Log.e(TAG, "Failed to complete scan", e);
             return Result.failure();
+        }
+    }
+
+    private void deepScan() {
+        List<Track> BasicList = tagRepos.findMyNoDRMeterSongs();
+        for (Track basicTag : BasicList) {
+            try {
+                //full scan
+                TagReader.readExtras(getApplicationContext(), basicTag);
+               //     basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+                //}
+
+                basicTag.setIsManaged(repos.isManagedInLibrary(basicTag));
+
+                // re-try to extract embed album art
+                repos.saveCoverartToCache(basicTag);
+                tagRepos.saveTag(basicTag);
+            } catch(Exception e) {
+                Log.e(TAG, "Error extracting cover art", e);
+            }
         }
     }
 
@@ -133,6 +147,35 @@ public class ScanAudioFileWorker extends Worker {
         }
 
         return processedCount;
+    }
+
+    private void exportPlaylists() {
+        try {
+            // 1. Get all songs from DB (NOT from scan list)
+            List<Track> allSongs = tagRepos.findMySongs();
+
+            // 2. Ensure playlists are loaded + compiled
+            PlaylistRepository.loadPlaylists(getApplicationContext());
+
+            for (PlaylistEntry entry : PlaylistRepository.getPlaylists()) {
+                entry.compileRules(); // IMPORTANT
+            }
+
+            // 3. Export
+            File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+            File playlistDir = new File(musicDir, "00_Playlists");
+
+            if (!playlistDir.exists()) {
+                playlistDir.mkdirs();
+            }
+
+            PlaylistRepository.exportPlaylists(playlistDir, allSongs);
+
+            Log.d(TAG, "Playlists exported: " + playlistDir.getAbsolutePath());
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to export playlists", e);
+        }
     }
 
     private List<Path> search(String pathname) throws ExecutionException, InterruptedException {
@@ -194,8 +237,12 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     // One-time scan
-    public static void startScan(Context context) {
+    public static void startScan(Context context, boolean isFullScan) {
         WorkManager.getInstance(context).cancelAllWorkByTag(WORKER_TAG);
+
+        Data inputData = new Data.Builder()
+                .putBoolean("isFullScan", isFullScan)
+                .build();
 
         Constraints constraints = new Constraints.Builder()
                 //.setRequiresBatteryNotLow(true)
@@ -209,6 +256,7 @@ public class ScanAudioFileWorker extends Worker {
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 //.setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
                 .addTag(WORKER_TAG)
+                .setInputData(inputData)
                 .build();
 
        // WorkManager.getInstance(context).enqueue(scanRequest);

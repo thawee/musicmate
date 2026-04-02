@@ -22,7 +22,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
-import java.sql.SQLException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -36,14 +39,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import apincer.music.core.codec.MusicAnalyser;
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
 import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.QueueManager;
+import apincer.music.core.repository.QueueManager;
 import apincer.music.core.playback.WebStreamingPlayer;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
@@ -55,6 +56,7 @@ import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.service.spi.MusicMateServiceBinder;
 import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.StringUtils;
@@ -70,6 +72,8 @@ public class BaseServer {
     protected static final String CONTEXT_PATH_ROOT = "/";
     public static final String CONTEXT_PATH_COVERART = "/coverart/";
     public static final String CONTEXT_PATH_MUSIC = "/music/";
+
+    public static final String DEFAULT_PATH = "/index.html";
 
     protected final Context context;
     private final TagRepository tagRepos;
@@ -97,10 +101,6 @@ public class BaseServer {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    public PlaybackService getPlaybackService() {
-        return playbackService;
     }
 
     private PlaybackService playbackService;
@@ -194,7 +194,7 @@ public class BaseServer {
         return context;
     }
 
-    public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
+    private void notifyPlayback(String clientIp, String userAgent, Track tag) {
         // FIXME remove or not
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
@@ -222,7 +222,11 @@ public class BaseServer {
      * Returns a safe relative path or null if traversal is detected.
      */
     protected String normalizePath(String path) {
-        if (path == null) return null;
+        if (isEmpty(path)) return DEFAULT_PATH;
+
+        if (path.equals("/")) {
+            return DEFAULT_PATH;
+        }
         
         // 1. Remove query and fragment
         if (path.contains("?")) path = path.substring(0, path.indexOf("?"));
@@ -230,7 +234,7 @@ public class BaseServer {
 
         // 2. Decode URL-encoded characters (like %2e%2e for ..)
         try {
-            path = java.net.URLDecoder.decode(path, "UTF-8");
+            path = java.net.URLDecoder.decode(path, StandardCharsets.UTF_8);
         } catch (Exception ignored) {}
 
         // 3. Check for obvious traversal attempts
@@ -239,14 +243,14 @@ public class BaseServer {
         }
 
         // 4. Ensure it's treated as a relative path from the context root
-        while (path.startsWith("/")) {
-            path = path.substring(1);
-        }
+        //while (path.startsWith("/")) {
+        //    path = path.substring(1);
+        //}
 
-        return path.isEmpty() ? null : path;
+        return path.isEmpty() ? DEFAULT_PATH : path;
     }
 
-    protected File getWebResource(String requestUri) {
+    private File getWebResource(String requestUri) {
         String safePath = normalizePath(requestUri);
         if (safePath == null) return null;
 
@@ -270,7 +274,7 @@ public class BaseServer {
         return new File(webUiDir, "assets/no_cover.png");
     }
 
-    protected File getAlbumArt(String requestUri) {
+    private File getAlbumArt(String requestUri) {
         if (requestUri == null || !requestUri.startsWith(CONTEXT_PATH_COVERART)) {
             return getDefaultAlbumArt();
         }
@@ -289,7 +293,7 @@ public class BaseServer {
         return albumArt;
     }
 
-    protected MusicTag getSong(String uri) {
+    private Track getSong(String uri) {
         if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
             return null;
         }
@@ -311,11 +315,92 @@ public class BaseServer {
         return null;
     }
 
+    public ContentHolder resolveRequest(String requestUri, String remoteAddr, String userAgent) {
+
+        if (requestUri == null) return null;
+
+        // Decode (Jetty 12 behavior replicated)
+        try {
+            requestUri = URLDecoder.decode(requestUri, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return null;
+        }
+
+        // Remove query params (?a=b)
+        requestUri = normalizePath(requestUri);
+        // 🔥 Prevent path traversal
+        if (requestUri == null) {
+            return null;
+        }
+
+        // Skip WebSocket path
+        if (requestUri.startsWith(CONTEXT_PATH_WEBSOCKET)) {
+            return null;
+        }
+
+        // =========================
+        // ROUTING
+        // =========================
+        try {
+            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
+                File file = getAlbumArt(requestUri);
+                if (file == null) return null;
+
+                return new ContentHolder(
+                        MimeTypeUtils.getMimeTypeFromPath(file.getPath()),
+                        null,
+                        file.getAbsolutePath()
+                );
+
+            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
+                Track tag = getSong(requestUri);
+                if (tag == null) return null;
+
+                notifyPlayback(remoteAddr, userAgent, tag);
+                return new ContentHolder(
+                        MimeTypeUtils.getMimeTypeFromPath(tag.getPath()),
+                        tag,
+                        tag.getPath()
+                );
+
+            } else {
+                File file = getWebResource(requestUri);
+                if (file == null) return null;
+
+                return new ContentHolder(MimeTypeUtils.getMimeTypeFromPath(file.getPath()),
+                        null,
+                        file.getAbsolutePath()
+                );
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Routing error: " + requestUri, e);
+            return null;
+        }
+    }
+
+    protected static String generateETag(File file) {
+        String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
+            return "\"" + bytesToHex(hash).substring(0, 16) + "-" + Long.toHexString(file.length()) + "\"";
+        } catch (NoSuchAlgorithmException e) {
+            return "\"" + Integer.toHexString(value.hashCode()) + "-" + Long.toHexString(file.length()) + "\"";
+        }
+    }
+
+    protected static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+
     public List<String> getLibInfos() {
         return libInfos;
     }
 
-    public static String getMusicUrl(MediaTrack track) {
+    public static String getMusicUrl(Track track) {
         return "http://"+ NetworkUtils.getIpAddress()+":"+  WEB_SERVER_PORT+CONTEXT_PATH_MUSIC + track.getId() + "/file." + track.getFileType();
     }
 
@@ -384,7 +469,7 @@ public class BaseServer {
 
             registerPlaybackCallback(new PlaybackCallback() {
                 @Override
-                public void onMediaTrackChanged(MediaTrack track) {
+                public void onMediaTrackChanged(Track track) {
                     Map<String, Object> response = getNowPlaying(track);
                     if (response != null) {
                         try {
@@ -603,7 +688,7 @@ public class BaseServer {
          */
         @Nullable
         private Map<String, Object> handleGetTrackMetadata(long trackId) {
-            MusicTag song = tagRepos.findById(trackId);
+            Track song = tagRepos.findById(trackId);
             if (song == null) {
                 Log.w(TAG, "handleGetTrackMetadata: Track not found for ID " + trackId);
                 return null;
@@ -651,11 +736,11 @@ public class BaseServer {
          */
         public Map<String, Object> getLibraryStats() {
             // Consider caching these stats if the library is large and doesn't change often
-            List<MusicTag> list = tagRepos.getAllMusics();
+            List<Track> list = tagRepos.getAllMusics();
             long songCount = list.size();
             long totalSize = 0;
             long totalDuration = 0;
-            for (MusicTag tag : list) {
+            for (Track tag : list) {
                 if (tag != null) { // Add null check for safety
                     totalSize += tag.getFileSize();
                     totalDuration += (long) tag.getAudioDuration();
@@ -679,7 +764,7 @@ public class BaseServer {
             if (playbackService != null) {
                 try {
                     long trackId = Long.parseLong(id);
-                    MusicTag tag = tagRepos.findById(trackId);
+                    Track tag = tagRepos.findById(trackId);
                     if (tag != null) {
                         playbackService.playSong(tag);
                     } else {
@@ -730,7 +815,7 @@ public class BaseServer {
         private Map<String, Object> handleGetTrackDetails(String id) {
             try {
                 long trackId = Long.parseLong(id);
-                MusicTag tag = tagRepos.findById(trackId);
+                Track tag = tagRepos.findById(trackId);
                 if (tag != null) {
                     Map<String, Object> track = getMap(tag); // Use getMap for consistency
                     return Map.of("type", "trackDetailsResult", "track", track);
@@ -747,7 +832,7 @@ public class BaseServer {
          * Handles the "emptyQueue" command. Clears the current playback queue.
          */
         private void handleEmptyQueue() {
-            tagRepos.emptyPlayingQueue();
+            queueManager.emptyPlayingQueue();
         }
 
         /**
@@ -762,7 +847,7 @@ public class BaseServer {
 
             try {
                 long trackId = Long.parseLong(id);
-                MusicTag songToPlay = tagRepos.findById(trackId);
+                Track songToPlay = tagRepos.findById(trackId);
                 if(songToPlay == null) {
                     Log.w(TAG, "handlePlayFormContext: Track to play not found for ID " + id);
                     return;
@@ -770,7 +855,7 @@ public class BaseServer {
 
                 playbackService.setShuffleMode(false); // Reset shuffle mode for context playback
 
-                List<MusicTag> songsInContext = new ArrayList<>();
+                List<Track> songsInContext = new ArrayList<>();
                 // Determine the list of songs based on the path
                 if (path.equalsIgnoreCase("Library/All Songs")) {
                     songsInContext = tagRepos.getAllMusics();
@@ -861,14 +946,15 @@ public class BaseServer {
             try {
                 // Fetching QueueItems which contain the order and the MusicTag
                 // FIXME call queueManager.getSongs()
-                List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
-                List<Map<String, ?>> queueAsMaps = playingQueue.stream()
-                        .map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
+                //List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
+                List<Track> songs = queueManager.getSongs();
+                List<Map<String, ?>> queueAsMaps = songs.stream()
+                        //.map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
                         .filter(java.util.Objects::nonNull) // Filter out any null tracks
                         .map(this::getMap) // Convert MusicTag to Map
                         .collect(Collectors.toList());
                 return Map.of("type", "updateQueue", "path", "Playing Queue", "queue", queueAsMaps);
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Error fetching playing queue", e);
             }
             return null;
@@ -882,7 +968,7 @@ public class BaseServer {
         @Nullable
         public Map<String, Object> sendNowPlaying() {
             if (playbackService != null) {
-                MediaTrack nowPlaying = playbackService.getNowPlayingSong();
+                Track nowPlaying = playbackService.getNowPlayingSong();
                 if (nowPlaying != null) {
                     Map<String, Object> track = getMap(nowPlaying);
                     return Map.of("type", "nowPlaying", "track", track);
@@ -911,10 +997,10 @@ public class BaseServer {
                             Map.of("type", "folder", "name", "Playlists", "path", "Library/Playlists")
                     );
                 } else if (path.equalsIgnoreCase("Library/All Songs")) {
-                    List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
+                    List<Track> songs = tagRepos.getAllMusicsForPlaylist();
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
                 } else if (path.equalsIgnoreCase("Library/Recently Added")) {
-                    List<MusicTag> songs = tagRepos.findRecentlyAdded(0, 0);
+                    List<Track> songs = tagRepos.findRecentlyAdded(0, 0);
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
                 } else if (path.equalsIgnoreCase("Library/Genres")) {
                     List<String> genres = tagRepos.getActualGenreList();
@@ -923,7 +1009,7 @@ public class BaseServer {
                             .collect(Collectors.toList());
                 } else if (path.startsWith("Library/Genres/")) {
                     String name = path.substring("Library/Genres/".length());
-                    List<MusicTag> songs = tagRepos.findByGenre(name);
+                    List<Track> songs = tagRepos.findByGenre(name);
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
                 } else if (path.equalsIgnoreCase("Library/Artists")) {
                     List<String> artists = tagRepos.getArtistList(); // Assuming this method exists
@@ -932,7 +1018,7 @@ public class BaseServer {
                             .collect(Collectors.toList());
                 } else if (path.startsWith("Library/Artists/")) {
                     String name = path.substring("Library/Artists/".length());
-                    List<MusicTag> songs = tagRepos.findByArtist(name, 0, 0);
+                    List<Track> songs = tagRepos.findByArtist(name, 0, 0);
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
                 } else if (path.equalsIgnoreCase("Library/Playlists")) {
                     List<PlaylistEntry> list = PlaylistRepository.getPlaylists();
@@ -956,7 +1042,7 @@ public class BaseServer {
                     }else { */
                         // This might be inefficient if getAllMusicsForPlaylist is large
 
-                        List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
+                        List<Track> songs = tagRepos.getAllMusicsForPlaylist();
                         items = songs.stream()
                                 .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
                                 .map(this::getMap)
@@ -974,14 +1060,14 @@ public class BaseServer {
         }
 
         /**
-         * Converts a {@link MediaTrack} object (like {@link MusicTag}) into a Map suitable for sending as JSON.
+         * Converts a {@link Track} object (like {@link Track}) into a Map suitable for sending as JSON.
          * Contains basic track information used in various responses (browse, queue, nowPlaying, trackDetails).
          *
-         * @param song The {@link MediaTrack} to convert.
+         * @param song The {@link Track} to convert.
          * @return A Map containing key track details. Returns an empty map if the input song is null.
          */
         @NonNull
-        private Map<String, Object> getMap(@Nullable MediaTrack song) {
+        private Map<String, Object> getMap(@Nullable Track song) {
             if (song == null) return new HashMap<>();
 
             // Use Map.of for immutable core fields, then add optional fields to a HashMap
@@ -1002,7 +1088,7 @@ public class BaseServer {
                 track.put("year", song.getYear());
             }
 
-            if (song.getDynamicRangeScore()>0) {
+            if (song.getDrScore()>0) {
                 track.put("drs", getDynamicRangeScore(song));
             }
 
@@ -1044,11 +1130,11 @@ public class BaseServer {
         /**
          * Generates or retrieves the waveform data for a given track from the cache or by analysis.
          *
-         * @param tag The {@link MediaTrack} to get the waveform for.
+         * @param tag The {@link Track} to get the waveform for.
          * @return A float array representing the waveform peaks, or {@code null} if generation fails.
          */
         @Nullable
-        private float[] getWaveform(@NonNull MediaTrack tag) {
+        private float[] getWaveform(@NonNull Track tag) {
             String cacheKey = String.valueOf(tag.getId());
 
             // --- 1. First check (fast, no lock) ---
@@ -1152,11 +1238,11 @@ public class BaseServer {
          * This is a helper method used when the track object is already known and
          * needs to be prepared for sending via WebSocket.
          *
-         * @param song The {@link MediaTrack} to format.
+         * @param song The {@link Track} to format.
          * @return A Map representing the "nowPlaying" message, or {@code null} if the input song is null.
          */
         @Nullable // Add Nullable annotation
-        public Map<String, Object> getNowPlaying(@Nullable MediaTrack song) { // Add Nullable annotation
+        public Map<String, Object> getNowPlaying(@Nullable Track song) { // Add Nullable annotation
             if (song != null) {
                 Map<String, Object> track = getMap(song); // getMap already handles null check internally, but good practice
                 return Map.of("type", "nowPlaying", "track", track);

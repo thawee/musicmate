@@ -40,7 +40,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import apincer.music.core.Constants;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.android.mmate.R;
 import apincer.music.core.repository.TagRepository;
@@ -133,10 +133,10 @@ public class AboutActivity extends AppCompatActivity {
             renderMarkdown(content, qualityDetail);
 
             MusicMateExecutors.executeUI(() -> {
-                List<MusicTag> tags = tagRepos.getAllMusics();
+                List<Track> tags = tagRepos.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                // Map<String, Integer> grpList = new HashMap<>();
-                for(MusicTag tag: tags) {
+                for(Track tag: tags) {
 
                     String enc = TagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {

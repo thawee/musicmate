@@ -1,12 +1,13 @@
 package apincer.music.core.playback.spi;
 
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.PlaybackState;
 
 public abstract class PlaybackCallback {
     public PlaybackCallback() {
     }
 
-    public void onMediaTrackChanged(MediaTrack metadata) {
+    public void onMediaTrackChanged(Track metadata) {
         throw new RuntimeException("Stub!");
     }
 

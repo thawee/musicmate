@@ -7,6 +7,9 @@ public class RateLimitingHandler extends ChainedHandler {
     // Tracks the request count per IP address
     private final ConcurrentHashMap<String, ClientRecord> clients = new ConcurrentHashMap<>();
 
+    // Evict stale entries once every 60 seconds to prevent unbounded map growth.
+    private volatile long lastEvictSecond = 0;
+
     public RateLimitingHandler(int maxRequestsPerSecond, NioHttpServer.Handler next) {
         super(next);
         this.maxRequestsPerSecond = maxRequestsPerSecond;
@@ -18,6 +21,13 @@ public class RateLimitingHandler extends ChainedHandler {
 
         // Fast integer division to get the current second
         long currentSecond = System.currentTimeMillis() / 1000;
+
+        // Periodically remove entries that haven't been active for more than 2 seconds.
+        // Uses a non-synchronized check so only one thread triggers eviction per interval.
+        if (currentSecond - lastEvictSecond > 60) {
+            lastEvictSecond = currentSecond;
+            clients.entrySet().removeIf(e -> currentSecond - e.getValue().second > 2);
+        }
 
         // Get or create the record for this IP (almost zero allocation after first request)
         ClientRecord record = clients.computeIfAbsent(ip, k -> new ClientRecord(currentSecond));

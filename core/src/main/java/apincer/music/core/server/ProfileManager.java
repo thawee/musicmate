@@ -2,18 +2,26 @@ package apincer.music.core.server;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.util.Log;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import apincer.music.core.server.model.ClientProfile;
+
+import musicmate.core.R;
 
 public class ProfileManager {
+    private static final String TAG = "ProfileManager";
     private static final Map<String, ClientProfile> PROFILES = new ConcurrentHashMap<>();
     private final int globalBufferSize;
 
-    public ProfileManager(int globalBufferSize) {
+    public ProfileManager(Context context, int globalBufferSize) {
         this.globalBufferSize = globalBufferSize;
-        initProfiles();
+        initProfiles(context);
     }
 
     public static int calculateBufferSize(Context context) {
@@ -29,47 +37,57 @@ public class ProfileManager {
         }
     }
 
-    private void initProfiles() {
-        // 1. Default
+    private void initProfiles(Context context) {
+        // 1. Default Profile (Hardcoded fallback)
         PROFILES.put("default", ClientProfile.standard(globalBufferSize));
 
-        // 2. MPD (Audiophile)
-        PROFILES.put("mpd", new ClientProfile("mpd",
-                49152, true, 3,
-                true, true, false, true, true));
-
-        // 3. mConnect (Gapless + HighRes)
-        PROFILES.put("mconnect", new ClientProfile("mconnect",
-                globalBufferSize * 2, true, 3,
-                true, true, true, false, false));
-
-        // 4. JPlay (Strict Timing)
-        PROFILES.put("jplay", new ClientProfile("jplay",
-                49152, true, 2,
-                true, true, true, false, true));
-
-        // 5. Apple (ALAC friendly)
-        PROFILES.put("apple", new ClientProfile("apple",
-                globalBufferSize * 2, true, 4,
-                false, false, false, false, false));
+        // 2. Load from JSON
+        try (InputStream is = context.getResources().openRawResource(R.raw.client_profiles)) {
+            ObjectMapper mapper = new ObjectMapper();
+            List<ClientProfile> list = mapper.readValue(is, new TypeReference<List<ClientProfile>>() {});
+            
+            for (ClientProfile profile : list) {
+                ClientProfile finalProfile = profile;
+                // Replace placeholder with global buffer size if needed
+                if (profile.chunkSize == -1) {
+                    finalProfile = new ClientProfile(
+                            profile.name,
+                            globalBufferSize,
+                            profile.keepAlive,
+                            profile.maxConnections,
+                            profile.supportsGapless,
+                            profile.supportsHighRes,
+                            profile.supportsDirectStreaming,
+                            profile.supportsLosslessStreaming,
+                            profile.supportsBitPerfectStreaming,
+                            profile.userAgentKeywords
+                    );
+                }
+                PROFILES.put(profile.name.toLowerCase(), finalProfile);
+            }
+            Log.i(TAG, "Loaded " + PROFILES.size() + " client profiles from JSON");
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading client profiles", e);
+        }
     }
 
     /**
-     * The Single Source of Truth for detection
+     * Detects the client profile based on the User-Agent string.
      */
     public ClientProfile detect(String userAgentString) {
         if (userAgentString == null) return PROFILES.get("default");
 
         String ua = userAgentString.toLowerCase();
 
-        if (ua.contains("music player daemon") || ua.contains("mpd")) {
-            return PROFILES.get("mpd");
-        } else if (ua.contains("mconnect")) {
-            return PROFILES.get("mconnect");
-        } else if (ua.contains("jplay")) {
-            return PROFILES.get("jplay");
-        } else if (ua.contains("apple") || ua.contains("iphone") || ua.contains("ipad")) {
-            return PROFILES.get("apple");
+        // Iterate through loaded profiles and match keywords
+        for (ClientProfile profile : PROFILES.values()) {
+            if ("default".equalsIgnoreCase(profile.name)) continue;
+            
+            for (String keyword : profile.userAgentKeywords) {
+                if (ua.contains(keyword.toLowerCase())) {
+                    return profile;
+                }
+            }
         }
 
         return PROFILES.get("default");

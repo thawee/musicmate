@@ -67,8 +67,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.authenticity.AudioAnalysisResult;
 import apincer.music.core.authenticity.AudioAuthenticityAnalyzer;
 import apincer.music.core.authenticity.SpectrogramGenerator;
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.DynamicRangeView;
@@ -81,7 +80,6 @@ import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
-import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
@@ -110,7 +108,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView albumView ;
     private TextView genreView;
     private TextView encInfo;
-    private TextView pathInfo;
+   // private TextView pathInfo;
     private BadgeView codecView;
     private DynamicRangeView dynamicRangeView;
     private QualityIndicatorView qualityIndicatorView;
@@ -167,7 +165,7 @@ public class TagsActivity extends AppCompatActivity {
         startProgressBar();
         operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             @Override
-            public void onProgress(MusicTag tag, int progress, String status) {
+            public void onProgress(Track tag, int progress, String status) {
 
             }
 
@@ -263,7 +261,7 @@ public class TagsActivity extends AppCompatActivity {
                      }
                  databaseExecutor.execute(() -> {
                      if(viewModel != null) {
-                         List<MusicTag> musicTags = tagRepos.findByIds(ids);
+                         List<Track> musicTags = tagRepos.findByIds(ids);
                          viewModel.processAudioTagEditEvent(musicTags);
                      }
                  });
@@ -313,8 +311,6 @@ public class TagsActivity extends AppCompatActivity {
         albumView = findViewById(R.id.panel_album);
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
-        pathInfo = findViewById(R.id.panel_path);
-        //pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
         codecView = findViewById(R.id.icon_codec);
         dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
@@ -376,7 +372,7 @@ public class TagsActivity extends AppCompatActivity {
     private void doShowSpectrum() {
         if (getEditItems().isEmpty()) return;
 
-        MediaTrack track = getEditItems().get(0);
+        Track track = getEditItems().get(0);
         View cview = getLayoutInflater().inflate(R.layout.view_action_spectrum, null);
 
         TextView filenameText = cview.findViewById(R.id.filename);
@@ -400,7 +396,7 @@ public class TagsActivity extends AppCompatActivity {
 
                     @Override
                     public void onResult(AudioAnalysisResult r) {
-/*
+                    /*
                         Log.d("AudioAnalysis", "Verdict: " + r.verdict);
                         Log.d("AudioAnalysis", "DR: " + r.dynamicRange);
                         Log.d("AudioAnalysis", "Noise floor: " + r.noiseFloor);
@@ -507,14 +503,14 @@ public class TagsActivity extends AppCompatActivity {
       //  viewModel.drMeasurementStatus.observe(this, this::handleOperationStatus);
     }
 
-    private void updateViewPagers(MusicTag musicTag) {
+    private void updateViewPagers(Track musicTag) {
         if (activeFragment instanceof TagsEditorFragment) {
             ((TagsEditorFragment) activeFragment).initEditorInputs(musicTag);
         }
     }
 
     @SuppressLint("CheckResult")
-    protected void updateTitlePanel(MusicTag currentDisplayTag) {
+    protected void updateTitlePanel(Track currentDisplayTag) {
 
         if (currentDisplayTag == null) {
             // Handle null case, maybe clear fields or show placeholder
@@ -564,32 +560,38 @@ public class TagsActivity extends AppCompatActivity {
         genreView.setText(mediaTypeAndPublisher);
 
         // Tag
-        int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
-        int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
 
-        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> doBackToMainActivity(Constants.FILTER_TYPE_GENRE, currentDisplayTag.getGenre())).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(currentDisplayTag.getGenre())?Constants.UNKNOWN:currentDisplayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+        if((!isEmpty(currentDisplayTag.getGenre()) ||
+               // !isEmpty(currentDisplayTag.getMood()) ||
+                !isEmpty(currentDisplayTag.getStyle()) ||
+                !isEmpty(currentDisplayTag.getMood()))) {
+            boolean hasPrv = false;
+            if(!isEmpty(currentDisplayTag.getGenre())) {
+                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getGenre()).setTextSize(14).useTextBold());
+                hasPrv = true;
+            }
+            if(!isEmpty(currentDisplayTag.getMood())) {
+                if(hasPrv) {
+                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
+                }
+                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getMood()).setTextSize(14).useTextBold());
+                hasPrv = true;
+            }
+            if(!isEmpty(currentDisplayTag.getStyle())) {
+                if(hasPrv) {
+                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
+                }
+                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getStyle()).setTextSize(14).useTextBold());
+              //  hasPrv = true;
+            }
+        }else {
+            tagSpan.append(new SpecialTextUnit(Constants.UNKNOWN).setTextSize(14).useTextBold());
+        }
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());
-
-        // Path Info
-        String simplePath = currentDisplayTag.getSimpleName();
-        if(simplePath.contains("/")) {
-            simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
-        }
-        pathInfo.setText(simplePath);
-
-        pathInfo.setOnClickListener(view -> {
-            File file = new File(currentDisplayTag.getPath());
-            if (!file.isDirectory()) {
-                file = file.getParentFile();
-            }
-            String filterPath = file.getAbsolutePath() + File.separator;
-            doBackToMainActivity(Constants.FILTER_TYPE_PATH, filterPath);
-        });
 
         // ENC info
         try {
@@ -645,7 +647,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     // Create a separate method for image loading to reduce clutter
-    private void loadImages(MusicTag displayTag) {
+    private void loadImages(Track displayTag) {
         if(displayTag ==null) return;
 
         // Load all images in parallel
@@ -675,7 +677,7 @@ public class TagsActivity extends AppCompatActivity {
 
     public void doDeleteMediaItems() {
         String text;
-        List<MusicTag> editItems = getEditItems();
+        List<Track> editItems = getEditItems();
         if(editItems.size()>1) {
             text = "Move songs to the Trash?";
         }else {
@@ -697,7 +699,7 @@ public class TagsActivity extends AppCompatActivity {
             startProgressBar();
             operationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
                 @Override
-                public void onProgress(MusicTag tag, int progress, String status) {
+                public void onProgress(Track tag, int progress, String status) {
 
                 }
 
@@ -719,7 +721,7 @@ public class TagsActivity extends AppCompatActivity {
         operationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             boolean closeScreen = false;
             @Override
-            public void onProgress(MusicTag tag, int progress, String status) {
+            public void onProgress(Track tag, int progress, String status) {
                 if(playbackService!= null) {
                     closeScreen = tag.equals(playbackService.getNowPlayingSong());
                 }
@@ -738,11 +740,11 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
-    public List<MusicTag> getEditItems() {
+    public List<Track> getEditItems() {
         return viewModel.editItems.getValue();
     }
 
-    public MusicTag getDisplayTag() {
+    public Track getDisplayTag() {
         return viewModel.displayTag.getValue();
     }
 
@@ -754,7 +756,7 @@ public class TagsActivity extends AppCompatActivity {
         viewModel.redisplayTag(getEditItems());
     }
 
-    public void rebuildDisplayTag(List<MusicTag> items) {
+    public void rebuildDisplayTag(List<Track> items) {
         viewModel.redisplayTag(items);
     }
 

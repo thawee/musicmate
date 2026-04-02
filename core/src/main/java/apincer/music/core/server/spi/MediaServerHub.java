@@ -2,7 +2,7 @@ package apincer.music.core.server.spi;
 
 import java.util.List;
 
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -15,7 +15,7 @@ public interface MediaServerHub {
 
     void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting);
 
-    void setNextTrack(MediaTrack nextSong);
+    void setNextTrack(Track nextSong);
 
     enum ServerStatus {
         RUNNING,
@@ -45,7 +45,7 @@ public interface MediaServerHub {
 
     //void play(String renderer);
 
-    void playerPlaySong(String rendererUdn, MediaTrack song);
-    void playerPlaySong(MediaTrack song);
+    void playerPlaySong(String rendererUdn, Track song);
+    void playerPlaySong(Track song);
 
 }

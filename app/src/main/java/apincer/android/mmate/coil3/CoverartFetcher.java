@@ -14,8 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import coil3.ImageLoader;
 import coil3.decode.DataSource;
@@ -39,8 +38,8 @@ import okio.Path;
 
 public class CoverartFetcher implements Fetcher {
     Context context;
-    MediaTrack musicTag;
-    public CoverartFetcher(Context context, MediaTrack musicTag) {
+    Track musicTag;
+    public CoverartFetcher(Context context, Track musicTag) {
         this.context = context;
         this.musicTag = musicTag;
     }
@@ -88,7 +87,7 @@ public class CoverartFetcher implements Fetcher {
         return new File(getCoverartDir(context),DEFAULT_COVERART);
     }
 
-    public static class Factory implements Fetcher.Factory<MusicTag> {
+    public static class Factory implements Fetcher.Factory<Track> {
         Context context;
         public Factory(Context context) {
             this.context = context;
@@ -96,17 +95,17 @@ public class CoverartFetcher implements Fetcher {
 
         @Nullable
         @Override
-        public Fetcher create(@NonNull MusicTag musicTag, @NonNull Options options, @NonNull ImageLoader imageLoader) {
+        public Fetcher create(@NonNull Track musicTag, @NonNull Options options, @NonNull ImageLoader imageLoader) {
             return new CoverartFetcher(context, musicTag);
         }
     }
 
-    public static ImageRequest.Builder builder(Context context, MediaTrack tag) {
+    public static ImageRequest.Builder builder(Context context, Track tag) {
         ImageRequest.Builder builder = new ImageRequest.Builder(context);
         if(tag != null) {
             builder.diskCacheKey(tag.getAlbumArtFilename());
             builder.fetcherFactory(new Factory(context), new KClassMusicTag());
-            if (!tag.isMusicManaged()) {
+            if (!tag.isManaged()) {
                 builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching
                 builder.memoryCachePolicy(CachePolicy.DISABLED); // Disable memory caching
             }
@@ -114,10 +113,10 @@ public class CoverartFetcher implements Fetcher {
         return builder;
     }
 
-    private static class KClassMusicTag implements KClass<MusicTag> {
+    private static class KClassMusicTag implements KClass<Track> {
         @NonNull
         @Override
-        public Collection<KFunction<MusicTag>> getConstructors() {
+        public Collection<KFunction<Track>> getConstructors() {
             return Collections.emptyList();
         }
 
@@ -147,13 +146,13 @@ public class CoverartFetcher implements Fetcher {
 
         @Nullable
         @Override
-        public MusicTag getObjectInstance() {
+        public Track getObjectInstance() {
             return null;
         }
 
         @Override
         public boolean isInstance(@Nullable Object o) {
-            return o instanceof MusicTag;
+            return o instanceof Track;
         }
 
         @NonNull
@@ -170,7 +169,7 @@ public class CoverartFetcher implements Fetcher {
 
         @NonNull
         @Override
-        public List<KClass<? extends MusicTag>> getSealedSubclasses() {
+        public List<KClass<? extends Track>> getSealedSubclasses() {
             return Collections.emptyList();
         }
 

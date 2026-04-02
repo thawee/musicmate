@@ -93,6 +93,7 @@
         <item>54sp</item>
     </array>
 
+    <!--
     <string-array name="default_mediaType">
         <item>Digital</item>
         <item>Analog</item>
@@ -101,7 +102,9 @@
         <item>MC</item>
         <item>VINYL</item>
     </string-array>
+   -->
 
+<!--
     <string-array name="default_genres">
         <item>Alternative &amp; Indie</item>
         <item>Acoustic &amp; Vocal</item>
@@ -145,10 +148,12 @@
         <item>Thai, Rock</item>
         <item>Thai, Jazz</item>
         <item>Thai, Reggae &amp; Ska</item>
+        <item>Thai, Symphony</item>
 
         <item>Kantrum</item>
         <item>Kam Mueang</item>
         <item>Luk Thung</item>
+        <item>Luk Thung Isan</item>
         <item>Luk Krung</item>
         <item>Mor Lum</item>
         <item>Phuea Chiwit</item>
@@ -160,6 +165,7 @@
 
         <item>Traditional</item>
     </string-array>
+    -->
     <string-array name="default_groupings">
         <item>Lounge</item>
         <item>Traditional</item>
@@ -175,6 +181,7 @@
         <item>Thai</item>
         <item>World</item> -->
     </string-array>
+    <!--
     <string-array name="file_qualities">
         <item>Audiophile</item>
         <item>Recommended</item>
@@ -182,6 +189,7 @@
         <item>Bad</item>
         <item>Not Rated</item>
     </string-array>
+    -->
     <string-array name="output_formats" >
         <!--
         <item>PCM, Uncompressed, .aiff</item>
@@ -193,7 +201,7 @@
         -->
         <item>PCM (Uncompressed), .aiff</item>
         <item>FLAC (Fast – Larger Size), .flac</item>
-        <item>FLAC (Balanced – Recommended), .flac</item>
+        <item>FLAC (Balanced), .flac</item>
         <item>ALAC (Apple Lossless), .m4a</item>
     </string-array>
 </resources>

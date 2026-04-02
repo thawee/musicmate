@@ -14,7 +14,8 @@ import java.io.File;
 import java.util.Locale;
 
 import apincer.music.core.Constants;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
@@ -44,6 +45,11 @@ public abstract class TagReader {
 
     protected static TagReader getReader(Context context, String path) {
         return new JThinkReader(context);
+    }
+
+    public long generateId(String path, int seq) {
+        String key = path + "|" + seq;
+        return key.hashCode() & 0xffffffffL; // make it positive long
     }
 
     public static boolean isSupportedFileFormat(String path) {
@@ -83,7 +89,7 @@ public abstract class TagReader {
     }
 
 
-    protected static void readFileInfo(Context context, MusicTag tag) {
+    protected static void readFileInfo(Context context, Track tag) {
         File file = new File(tag.getPath());
         tag.setFileLastModified(file.lastModified());
         tag.setFileSize(file.length());
@@ -104,21 +110,21 @@ public abstract class TagReader {
         return "";
     }
 
-    public static MusicTag readBasicTag(Context context, String mediaPath) {
+    public static AudioTag readBasicTag(Context context, String mediaPath) {
         return getReader(context, mediaPath).readBasicTag(mediaPath);
     }
 
-    public static boolean readFullTag(Context context, MusicTag tag) {
+    public static boolean readFullTag(Context context, Track tag) {
         return getReader(context, tag.getPath()).readFullTag(tag);
     }
 
-    public static boolean readExtras(Context context, MusicTag tag) {
+    public static boolean readExtras(Context context, Track tag) {
         return getReader(context, tag.getPath()).readExtras(tag);
     }
 
-    protected abstract MusicTag readBasicTag(String mediaPath);
+    protected abstract AudioTag readBasicTag(String mediaPath);
 
-    protected abstract boolean readFullTag(MusicTag tag);
+    protected abstract boolean readFullTag(Track tag);
 
-    protected abstract boolean readExtras(MusicTag tag);
+    protected abstract boolean readExtras(Track tag);
 }

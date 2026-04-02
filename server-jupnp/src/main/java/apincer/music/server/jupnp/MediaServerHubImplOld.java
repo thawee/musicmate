@@ -64,9 +64,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.music.core.Constants;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.DMRPlayer;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
@@ -459,7 +458,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
                         }
                     }
 
-                    MusicTag song = tagRepos.findMusic(title, artist, album);
+                    Track song = tagRepos.findMusic(title, artist, album);
                     if (callback != null) {
                         callback.onMediaTrackChanged(song);
                     }
@@ -899,7 +898,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
     }
 
     @Override
-    public void setNextTrack(MediaTrack nextSong) {
+    public void setNextTrack(Track nextSong) {
 
     }
 
@@ -941,7 +940,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
     }
 
     @Override
-    public void playerPlaySong(String udn, MediaTrack song) {
+    public void playerPlaySong(String udn, Track song) {
         //auto resolve udn if, not found in registry
        // PlaybackTarget player = resolveRenderer(rendererUdn);
        // if(player == null) return;
@@ -1003,7 +1002,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
     }
 
     @Override
-    public void playerPlaySong(MediaTrack song) {
+    public void playerPlaySong(Track song) {
 
     }
 
@@ -1125,7 +1124,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
      * @param songUrl The URL where the song can be streamed from.
      * @return A well-formed DIDL-Lite XML string.
      */
-    private String createDidlLiteMetadata(MediaTrack song, String songUrl) {
+    private String createDidlLiteMetadata(Track song, String songUrl) {
         String objectClass = "object.item.audioItem.musicTrack";
         String duration = formatDurationForDidl((long) song.getAudioDuration());
         String bitrate = String.valueOf(song.getAudioBitRate() * 1024 / 8); // bps to Bps

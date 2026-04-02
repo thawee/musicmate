@@ -2,7 +2,6 @@ package apincer.android.jupnp.transport.jetty;
 
 import static apincer.music.core.server.ProfileManager.calculateBufferSize;
 import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
-import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.util.Log;
@@ -41,19 +40,18 @@ import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
+import apincer.music.core.server.ContentHolder;
 import apincer.music.core.server.ProfileManager;
-import apincer.music.core.server.model.ClientProfile;
+import apincer.music.core.server.ClientProfile;
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
@@ -87,9 +85,9 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
         int bufferSize = calculateBufferSize(context);
 
         // Initialize the shared manager
-        this.profileManager = new ProfileManager(bufferSize);
+        this.profileManager = new ProfileManager(context, bufferSize);
         this.notificationExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
-    }
+        }
 
     @Override
     public void restartServer(InetAddress bindAddress) {
@@ -136,6 +134,15 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
                 // 3. Connector Setup
                 ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig));
+
+                // DSCP tuning: 0x18 = Low Delay (0x10) | High Throughput (0x08)
+               /* connector.getHttpConnectionFactory().addCustomizer((connection, request, response) -> {
+                    try {
+                        java.net.Socket socket = ((org.eclipse.jetty.io.SocketChannelEndPoint)connection.getEndPoint()).getSocket();
+                        socket.setTrafficClass(0x18);
+                    } catch (Exception ignore) {}
+                }); */
+
                 connector.setHost("0.0.0.0");
                 connector.setPort(WEB_SERVER_PORT);
                 connector.setIdleTimeout(IDLE_TIMEOUT);
@@ -261,33 +268,29 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             }
 
             String rawPath = request.getHttpURI().getPath();
-            if (rawPath == null) return false;
-
-            // FIX: Jetty 12 is strict. Decode URL encoding (e.g., %20 -> Space)
-            String requestUri = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
+            String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
+            String remoteAddr = Request.getRemoteAddr(request);
 
             // Check if this request belongs to WebSocket context to avoid 404s
-            if (requestUri.startsWith(CONTEXT_PATH_WEBSOCKET)) {
+            if (rawPath.startsWith(CONTEXT_PATH_WEBSOCKET)) {
                 return false;
             }
 
-            if (isEmpty(requestUri) || requestUri.equals("/")) {
-                requestUri = "/index.html";
-            }
+            ContentHolder contentHolder = resolveRequest(rawPath, remoteAddr, userAgent);
 
-            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
-                File filePath = getAlbumArt(requestUri);
+            if (contentHolder.isImage()) {
+                File filePath = new File(contentHolder.getFilePath());
                 return sendResource(filePath, request, response, callback);
-            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-                MusicTag song = getSong(requestUri);
+            } else if (contentHolder.isMedia()) {
+                Track song = contentHolder.getTrack();// getSong(requestUri);
                 return sendSong(song, request, response, callback);
             } else {
-                File filePath = getWebResource(requestUri);
+                File filePath = new File(contentHolder.getFilePath());
                 return sendResource(filePath, request, response, callback);
             }
         }
 
-        private boolean sendSong(MusicTag song, Request request, Response response, Callback callback) throws Exception {
+        private boolean sendSong(Track song, Request request, Response response, Callback callback) throws Exception {
             if (song == null) return false;
 
             File audioFile = new File(song.getPath());
@@ -297,10 +300,6 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             ClientProfile profile = profileManager.detect(userAgent);
 
             prepareMusicStreamingHeaders(response, song, profile);
-
-            // Async notification to avoid blocking the IO thread
-            String remoteAddr = Request.getRemoteAddr(request);
-            notifyPlayback(remoteAddr, userAgent, song);
 
             return sendResource(audioFile, request, response, callback);
         }
@@ -313,6 +312,10 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 callback.succeeded();
                 return true;
             }
+
+            // Add dynamic ETag support
+            String etag = generateETag(filePath);
+            response.getHeaders().put(HttpHeader.ETAG, etag);
 
             // Jetty 12 ResourceService usage
             HttpContent content = getResourceService().getContent(filePath.getAbsolutePath(), request);
@@ -327,17 +330,17 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             return true;
         }
 
-        private void prepareMusicStreamingHeaders(Response response, MusicTag tag, ClientProfile profile) {
+        private void prepareMusicStreamingHeaders(Response response, Track tag, ClientProfile profile) {
             response.getHeaders().put("transferMode.dlna.org", "Streaming");
             response.getHeaders().put("contentFeatures.dlna.org", getDLNAContentFeatures(tag));
             response.getHeaders().put(HttpHeader.ACCEPT_RANGES, "bytes");
 
-            // High Res Info
-            if (profile.supportsHighRes) {
-                if (tag.getAudioSampleRate() > 0) response.getHeaders().put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
-                if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
-                if (tag.getAudioBitRate() > 0) response.getHeaders().put("X-Audio-Bitrate", tag.getAudioBitRate() + " kbps");
-            }
+            // Audiophile Dynamic Headers
+            if (tag.getAudioSampleRate() > 0) response.getHeaders().put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
+            if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
+            if (tag.getAudioBitRate() > 0) response.getHeaders().put("X-Audio-Bitrate", tag.getAudioBitRate()/1000 + " kbps");
+            response.getHeaders().put("X-Audio-Format", String.valueOf(tag.getFileType()));
+            response.getHeaders().put("X-Audio-Bit-Perfect", "true");
         }
     }
 

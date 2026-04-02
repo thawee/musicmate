@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
@@ -61,17 +61,15 @@ public class TagsEditorFragment extends Fragment {
     private TextView previewPath;
     private ImageView previewCoverart;
     private TextInputEditText txtTitle;
-    private TextInputEditText txtArtist;
+    private AutoCompleteTextView txtArtist;
     private TextInputEditText txtAlbum;
     private AutoCompleteTextView txtAlbumArtist;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
     private AutoCompleteTextView txtGenre;
-    //private AutoCompleteTextView txtGrouping;
-   // private TextInputEditText txtPublisher;
+    private AutoCompleteTextView txtStyle;
+    private AutoCompleteTextView txtMood;
     private AutoCompleteTextView txtPublisher;
-   // private FloatingActionButton fabSav;
-   // private AutoCompleteTextView qualityDropdown;
 
     private NestedScrollView scrollView;
     private MaterialButtonToggleGroup toggleGroup;
@@ -102,6 +100,9 @@ public class TagsEditorFragment extends Fragment {
         txtTrack = v.findViewById(R.id.input_track);
         txtYear = v.findViewById(R.id.input_year);
         txtGenre = v.findViewById(R.id.input_genre);
+        txtStyle = v.findViewById(R.id.input_style);
+       // txtRegion = v.findViewById(R.id.input_region);
+        txtMood = v.findViewById(R.id.input_mood);
         //txtGrouping = v.findViewById(R.id.input_grouping);
         txtPublisher = v.findViewById(R.id.input_publisher);
         //qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
@@ -131,12 +132,12 @@ public class TagsEditorFragment extends Fragment {
         });
 
         // popup list
-       // String[] qualityList = getResources().getStringArray(R.array.file_qualities);
-       // setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
-       // setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
-        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
-        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
-       // setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
+        setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
+       // setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
+        setupListValuePopupFullList(txtGenre, TagRepository.getDefaultGenreList(getContext()));
+        setupListValuePopupFullList(txtStyle, TagRepository.getDefaultStyleList(getContext()));
+        //setupListValuePopup(txtRegion, TagRepository.getDefaultRegionList(getContext()),1);
+        setupListValuePopupFullList(txtMood, TagRepository.getDefaultMoodList(getContext()));
         setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),1);
 
         return v;
@@ -171,9 +172,9 @@ public class TagsEditorFragment extends Fragment {
         input.setThreshold(0);
 
         // Disable keyboard input — dropdown only
-        input.setKeyListener(null);
-        input.setFocusable(false);
-        input.setClickable(true);
+       // input.setKeyListener(null);
+       // input.setFocusable(false);
+       // input.setClickable(true);
 
         // Always open dropdown when clicked
         input.setOnClickListener(v -> input.showDropDown());
@@ -185,7 +186,7 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        MusicTag musicTag = tagsActivity.getDisplayTag();
+        Track musicTag = tagsActivity.getDisplayTag();
         if(musicTag != null) {
             doPreviewMusicInfo(musicTag);
             initEditorInputs(musicTag);
@@ -307,8 +308,8 @@ public class TagsEditorFragment extends Fragment {
             try {
                 List<String> list = mTagListLayout.getTags();// that will return TagModel List
                 MusicPathTagParser parser = new MusicPathTagParser();
-                MusicTag item = tagsActivity.getEditItems().get(0);
-                MusicTag mdata = item.copy();
+                Track item = tagsActivity.getEditItems().get(0);
+                Track mdata = item.copy();
                 parser.parse(mdata, list);
                 title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
                 artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
@@ -331,8 +332,8 @@ public class TagsEditorFragment extends Fragment {
         btnOK.setOnClickListener(v -> {
             List<String> list = mTagListLayout.getTags();
             MusicPathTagParser parser = new MusicPathTagParser();
-            List<MusicTag> items = tagsActivity.getEditItems();
-            for(MusicTag item:items) {
+            List<Track> items = tagsActivity.getEditItems();
+            for(Track item:items) {
                 String mediaPath =  item.getPath();
                 File file = new File(mediaPath);
                 if(!file.exists()) continue;
@@ -351,7 +352,7 @@ public class TagsEditorFragment extends Fragment {
         tagsActivity.startProgressBar();
 
         // Get a snapshot of items to avoid concurrent modification
-        final List<MusicTag> itemsToSave = new ArrayList<>(tagsActivity.getEditItems());
+        final List<Track> itemsToSave = new ArrayList<>(tagsActivity.getEditItems());
         final int totalItems = itemsToSave.size();
         final AtomicInteger completedCount = new AtomicInteger(0);
 
@@ -368,14 +369,14 @@ public class TagsEditorFragment extends Fragment {
         // Process tags in a thread pool more efficiently
         CompletableFuture<Void> processingFuture = CompletableFuture.runAsync(() -> {
             // Build pending tags in bulk first
-            for (MusicTag item : itemsToSave) {
+            for (Track item : itemsToSave) {
                 buildPendingTags(item);
             }
         }).thenCompose(unused -> {
 
             // Process all items in parallel but with controlled concurrency
             List<CompletableFuture<Void>> futures = new ArrayList<>();
-            for (MusicTag tag : itemsToSave) {
+            for (Track tag : itemsToSave) {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     try {
                         boolean status = fileRepos.setMusicTag(tag);
@@ -404,28 +405,25 @@ public class TagsEditorFragment extends Fragment {
         });
     }
 
-    private void buildPendingTags(MusicTag tagUpdate) {
-        if(tagUpdate.getOriginTag()==null) {
-            // save original tag, the first copy is actual original
-            tagUpdate.setOriginTag(tagUpdate.copy());
-        }
-        MusicTag originTag = tagUpdate.getOriginTag();
-
-        tagUpdate.setTitle(buildTag(txtTitle, originTag.getTitle()));
-        tagUpdate.setTrack(buildTag(txtTrack, originTag.getTrack()));
-        tagUpdate.setAlbum(buildTag(txtAlbum, originTag.getAlbum()));
-        tagUpdate.setArtist(buildTag(txtArtist, originTag.getArtist()));
-        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, originTag.getAlbumArtist(), tagUpdate.getArtist()));
-        //tagUpdate.setGrouping(buildTag(txtGrouping, originTag.getGrouping()));
-        tagUpdate.setGenre(buildTag(txtGenre, originTag.getGenre()));
-        tagUpdate.setPublisher(buildTag(txtPublisher, originTag.getPublisher()));
-        tagUpdate.setYear(buildTag(txtYear, originTag.getYear()));
-       // tagUpdate.setQualityRating(buildQualityTag());
+    private void buildPendingTags(Track tagUpdate) {
+        tagUpdate.setTitle(buildTag(txtTitle, tagUpdate.getTitle()));
+        tagUpdate.setTrack(buildTag(txtTrack, tagUpdate.getTrack(), tagUpdate.getTrack()));
+        tagUpdate.setAlbum(buildTag(txtAlbum, tagUpdate.getAlbum()));
+        tagUpdate.setArtist(buildTag(txtArtist, tagUpdate.getArtist()));
+        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getArtist()));
+        tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre()));
+        tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood()));
+        tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle()));
+        //tagUpdate.setRegion(buildTag(txtRegion, tagUpdate.getRegion()));
+        tagUpdate.setPublisher(buildTag(txtPublisher, tagUpdate.getPublisher()));
+        tagUpdate.setYear(buildTag(txtYear, tagUpdate.getYear()));
     }
 
     private String buildTag(TextInputEditText txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(isEmpty(text) || isMultiValuesMarker(text)) {
+        if(isEmpty(text)) {
+            return "";
+        }else if (isMultiValuesMarker(text)) {
             return oldVal;
         }
         return text;
@@ -433,7 +431,9 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextView txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(isEmpty(text) || isMultiValuesMarker(text)) {
+        if(isEmpty(text)) {
+            return "";
+        }else if (isMultiValuesMarker(text)) {
             return oldVal;
         }
         return text;
@@ -458,9 +458,7 @@ public class TagsEditorFragment extends Fragment {
         tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
-                        MusicTag mItem = tag.copy();
-                        tag.setOriginTag(mItem);
+                    for(Track tag:tagsActivity.getEditItems()) {
                         tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
                         tag.setArtist(StringUtils.formatArtists(tag.getArtist()));
                         tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
@@ -470,9 +468,9 @@ public class TagsEditorFragment extends Fragment {
                             tag.setTrack(StringUtils.formatTrack(tag.getTrack()));
                         }
                         // clean albumArtist if same value as artist
-                        if(tag.getAlbumArtist().equals(tag.getArtist())) {
-                            tag.setAlbumArtist("");
-                        }
+                       // if(tag.getAlbumArtist().equals(tag.getArtist())) {
+                        //    tag.setAlbumArtist("");
+                        //}
                         // if album empty, add single
                         if(StringUtils.isEmpty(tag.getAlbum())) {
                             tag.setAlbum(StringUtils.formatTitle(MusicTagUtils.getDefaultAlbum(tag)));
@@ -493,7 +491,7 @@ public class TagsEditorFragment extends Fragment {
         );
     }
 
-    void initEditorInputs(MusicTag tag) {
+    void initEditorInputs(Track tag) {
         doPreviewMusicInfo(tag);
 
         txtTitle.setText(tag.getTitle());
@@ -503,6 +501,9 @@ public class TagsEditorFragment extends Fragment {
         txtTrack.setText(tag.getTrack());
         txtYear.setText(tag.getYear());
         txtGenre.setText(tag.getGenre());
+        txtMood.setText(tag.getMood());
+        txtStyle.setText(tag.getStyle());
+        //txtRegion.setText(tag.getRegion());
         txtPublisher.setText(tag.getPublisher());
 
         txtTitle.invalidate();
@@ -514,7 +515,7 @@ public class TagsEditorFragment extends Fragment {
         //qualityDropdown.setText(tag.getQualityRating());
     }
 
-    private void doPreviewMusicInfo(MusicTag tag) {
+    private void doPreviewMusicInfo(Track tag) {
         ImageLoader imageLoader = SingletonImageLoader.get(getContext());
         ImageRequest request = CoverartFetcher.builder(getContext(), tag)
                                 .data(tag)

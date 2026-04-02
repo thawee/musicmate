@@ -32,7 +32,8 @@ import javax.inject.Inject;
 import apincer.android.mmate.R;
 import apincer.music.core.codec.FFMPegReader;
 import apincer.music.core.codec.TagReader;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.codec.FFMpegHelper;
@@ -98,15 +99,15 @@ public class TagsTechnicalFragment extends Fragment {
         TextView metada = view.findViewById(R.id.ffmpeg_info);
         TableLayout table = view.findViewById(R.id.tags);
 
-        MusicTag tag = tagsActivity.getEditItems().get(0);
+        Track tag = tagsActivity.getEditItems().get(0);
         String musicMatePath = fileRepos.buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
-        MusicTag tt = tag.copy();
+        Track tt = tag.copy();
         TagReader.readFullTag(context, tt);
 
-        MusicTag ffmpegTag = (new FFMPegReader(getContext())).extractTagFromFile(tag.getPath());
-        metada.setText(ffmpegTag.getData());
+        AudioTag ffmpegTag = (new FFMPegReader(getContext())).extractTagFromFile(tag.getPath());
+        metada.setText(ffmpegTag.getRawOutput());
 
         TableRow tbrow0 = new TableRow(getContext());
         TextView tv0 = new TextView(getContext());
@@ -150,19 +151,20 @@ public class TagsTechnicalFragment extends Fragment {
         table.addView(tbrow0);
 
 
-        List<Field> fields =  ReflectUtil.getAllFields(MusicTag.class);
+        List<Field> fields =  ReflectUtil.getAllFields(tag.getClass());
        // String text = "\nField Name\t--> Library\t<>\tFFMPeg\n";
         for(Field field: fields) {
             if (field.getName().equals("path")
                     || field.getName().equals("simpleName")
-                    || field.getName().equals("mmManaged")
+                    || field.getName().equals("audioStartTime")
+                    || field.getName().equals("fileLastModified")
+                    || field.getName().equals("isManaged")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
                     || field.getName().equals("normalizedArtist")
                     || field.getName().equals("normalizedTitle")
-                   // || field.getName().equals("albumArtFilename")
                     || field.getName().equals("waveformData")
-                    || field.getName().equals("data")
+                    || field.getName().equals("rawOutput")
                     || field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
                     || field.getName().equals("originTag")
@@ -234,7 +236,7 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                    for(Track tag:tagsActivity.getEditItems()) {
                         FFMpegHelper.removeCoverArt(getContext(), tag);
                         fileRepos.scanMusicFile(new File(tag.getPath()), false);
                     }
@@ -253,7 +255,7 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                    for(Track tag:tagsActivity.getEditItems()) {
                         String path = tag.getPath();
                         File pathFile = new File(path);
                         pathFile = pathFile.getParentFile();
@@ -275,7 +277,7 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                    for(Track tag:tagsActivity.getEditItems()) {
                         tagRepos.removeTag(tag);
                         fileRepos.scanMusicFile(new File(tag.getPath()), true);
                     }

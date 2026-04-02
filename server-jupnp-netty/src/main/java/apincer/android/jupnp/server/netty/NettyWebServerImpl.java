@@ -1,495 +1,368 @@
 package apincer.android.jupnp.server.netty;
 
-import static apincer.music.core.server.ProfileManager.calculateBufferSize;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ThreadFactory;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.ProfileManager;
-import apincer.music.core.server.model.ClientProfile;
+import apincer.music.core.server.ContentHolder;
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.MimeTypeUtils;
-import apincer.music.core.utils.StringUtils;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
-import io.netty.handler.stream.ChunkedFile;
-import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.stream.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class NettyWebServerImpl extends BaseServer implements WebServer {
+
     private static final String TAG = "NettyWebServer";
-    private final Context context;
 
-    // Buffer settings
-    private final int HIGH_WATERMARK = 262144;
-    private final int LOW_WATERMARK = 131072;
-
-    private final TagRepository repos;
-    private final int serverPort;
-
-    // Netty Groups
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private final Object serverLock = new Object();
-
-    // CRITICAL: Separate thread pool for DB access and File checks to prevent blocking I/O threads
     private EventExecutorGroup logicExecutorGroup;
 
     private Channel serverChannel;
-    private Thread serverThread;
     private volatile boolean isRunning = false;
-    private final WebSocketFrameHandler wsHandler;
 
-    private final ProfileManager profileManager;
-    private final String serverSignature;
+    private final WebSocketFrameHandler wsHandler = new WebSocketFrameHandler();
 
     public NettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        this.context = context;
-        this.serverPort = WEB_SERVER_PORT;
-        this.repos = tagRepos;
-
-        addLibInfo("Netty", "");
-        serverSignature = getServerSignature();
-
-        // Calculate buffer size based on RAM once
-        int bufferSize = calculateBufferSize(context);
-
-        // Initialize the shared manager
-        this.profileManager = new ProfileManager(bufferSize);
-
-        // WebSocket handler is stateless regarding the pipeline, so we create it once
-        wsHandler = new WebSocketFrameHandler();
     }
 
     @Override
-    public void restartServer(InetAddress bindAddress) {
-        synchronized (serverLock) {
-            Log.d(TAG, "Restarting Undertow Server...");
-
-            // 1. Full Stop
+    public void restartServer(InetAddress bindAddress) throws Exception {
+        if(isRunning) {
             stopServer();
-
-            // 2. Small grace period for OS to release the socket
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException ignored) {}
-
-            // 3. Start New Instance
-            try {
-                initServer(bindAddress);
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to restart server: " + e.getMessage());
-            }
         }
+        initServer(bindAddress);
     }
 
+    // =========================
+    // SERVER LIFECYCLE
+    // =========================
     @Override
     public void initServer(InetAddress bindAddress) throws Exception {
         if (isRunning) return;
 
-        ThreadFactory bossFactory = new DefaultThreadFactory("netty-boss");
-        ThreadFactory workerFactory = new DefaultThreadFactory("netty-io");
-        ThreadFactory logicFactory = new DefaultThreadFactory("netty-logic"); // Thread pool for DB/Disk logic
+        bossGroup = new MultiThreadIoEventLoopGroup(
+                1,
+                NioIoHandler.newFactory()
+        );
 
-        this.bossGroup = new MultiThreadIoEventLoopGroup(1, bossFactory, NioIoHandler.newFactory());
-        // Limit IO threads on Android to save battery/resources
-        this.workerGroup = new MultiThreadIoEventLoopGroup(2, workerFactory, NioIoHandler.newFactory());
+        workerGroup = new MultiThreadIoEventLoopGroup(
+                2,
+                NioIoHandler.newFactory()
+        );
+        logicExecutorGroup = new DefaultEventExecutorGroup(4);
 
-        // This group handles the "business logic" (DB queries) so IO threads don't block
-        this.logicExecutorGroup = new DefaultEventExecutorGroup(4, logicFactory);
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(bossGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 128)
+                .option(ChannelOption.SO_REUSEADDR, true)
 
-        serverThread = new Thread(() -> {
-            try {
-                ServerBootstrap b = new ServerBootstrap();
-                b.group(bossGroup, workerGroup)
-                        .channel(NioServerSocketChannel.class)
-                        .option(ChannelOption.SO_BACKLOG, 128)
-                        .option(ChannelOption.SO_REUSEADDR, true)
-                        .option(ChannelOption.TCP_NODELAY, true)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
-                        .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
-                                new WriteBufferWaterMark(LOW_WATERMARK, HIGH_WATERMARK));
+                .childOption(ChannelOption.TCP_NODELAY, true)     // 🔥 important for streaming
+                .childOption(ChannelOption.SO_KEEPALIVE, true)    // 🔥 DLNA stability
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
+                        new WriteBufferWaterMark(131072, 262144))  // 🔥 backpressure
+                .childHandler(new ContentServerInitializer());
 
-                b.childHandler(new ContentServerInitializer());
+        serverChannel = b.bind(bindAddress, getListenPort()).sync().channel();
+        isRunning = true;
 
-                ChannelFuture f = b.bind(bindAddress.getHostAddress(), serverPort).sync();
-                serverChannel = f.channel();
-                isRunning = true;
-                Log.i(TAG, "Netty WebServer started on " + bindAddress.getHostAddress() + ":" + serverPort +" successfully.");
-
-                serverChannel.closeFuture().sync();
-            } catch (Exception ex) {
-                Log.e(TAG, "WebServer failed start", ex);
-                isRunning = false;
-            } finally {
-                stopServer();
-            }
-        }, "NettyServer");
-
-        serverThread.start();
+        Log.i(TAG, "Server started on " + bindAddress + ":" + getListenPort());
     }
 
     @Override
     public void stopServer() {
-        synchronized (serverLock) {
-            if (serverChannel != null) {
-                isRunning = false;
-                try {
-                    serverChannel.close();
-                    if (bossGroup != null) bossGroup.shutdownGracefully();
-                    if (workerGroup != null) workerGroup.shutdownGracefully();
-                } catch (Exception e) {
-                    Log.e(TAG, "Error stopping server", e);
-                } finally {
-                    serverChannel = null;
-                    bossGroup = null;
-                    workerGroup = null;
-                }
-            }
-
-            if (logicExecutorGroup != null) {
-                logicExecutorGroup.shutdownGracefully(); // Wait for thread to die
-            }
+        try {
+            if (serverChannel != null) serverChannel.close();
+            if (bossGroup != null) bossGroup.shutdownGracefully();
+            if (workerGroup != null) workerGroup.shutdownGracefully();
+            if (logicExecutorGroup != null) logicExecutorGroup.shutdownGracefully();
+        } catch (Exception e) {
+            Log.e(TAG, "Shutdown error", e);
+        } finally {
+            isRunning = false;
         }
     }
 
     @Override
-    public int getListenPort() { return serverPort; }
+    public int getListenPort() {
+        return WEB_SERVER_PORT;
+    }
 
-    public class ContentServerInitializer extends ChannelInitializer<SocketChannel> {
+    // =========================
+    // PIPELINE
+    // =========================
+    private class ContentServerInitializer extends ChannelInitializer<SocketChannel> {
         @Override
         protected void initChannel(SocketChannel ch) {
-            ChannelPipeline pipeline = ch.pipeline();
-            pipeline.addLast(new HttpServerCodec());
-            pipeline.addLast(new HttpObjectAggregator(65536));
-            pipeline.addLast(new ChunkedWriteHandler()); // Handles Async File IO writing
+            ChannelPipeline p = ch.pipeline();
 
-            pipeline.addLast(new WebSocketServerProtocolHandler(CONTEXT_PATH_WEBSOCKET, null, true));
-            // WebSocket logic is usually fast (JSON parsing), can stay on IO thread or move to logic group
-            pipeline.addLast(wsHandler);
+            p.addLast(new HttpServerCodec());
+            p.addLast(new HttpObjectAggregator(65536));
+            p.addLast(new ChunkedWriteHandler());
 
-            // CRITICAL: We pass 'logicExecutorGroup' here.
-            // This ensures channelRead0 in WebContentHandler runs on a background thread, NOT the IO thread.
-            pipeline.addLast(logicExecutorGroup, new WebContentHandler());
+            // WebSocket upgrade endpoint
+            p.addLast(new WebSocketServerProtocolHandler(
+                    CONTEXT_PATH_WEBSOCKET,   // your websocket path
+                    null,
+                    true
+            ));
+
+            // WebSocket handler (can stay on IO or move to logicExecutorGroup)
+            p.addLast(wsHandler);
+
+            // HTTP content handler (OFF IO thread)
+            ChannelHandler httpHandler = new WebContentHandler();
+            p.addLast(logicExecutorGroup, httpHandler);
         }
     }
 
-    // [ContentHolder class remains the same]
-    static class ContentHolder {
-        private final String contentType;
-        private final String filePath;
-        private final String fileName;
-        private final MusicTag musicTag;
+    // =========================
+    // RANGE SUPPORT (DLNA SAFE)
+    // =========================
+    static class Range {
+        long start;
+        long end;
+        boolean partial;
 
-        public ContentHolder(String contentType, String filePath, MusicTag tag) {
-            this.filePath = filePath;
-            this.contentType = contentType;
-            this.musicTag = tag;
-            this.fileName = new File(filePath).getName();
+        Range(long s, long e, boolean p) {
+            start = s;
+            end = e;
+            partial = p;
         }
-        public boolean exists() { return filePath != null && new File(filePath).exists(); }
-        public MusicTag getMusicTag() { return musicTag; }
     }
 
+    private Range parseRange(String header, long fileLength) {
+        if (header == null || !header.startsWith("bytes=")) {
+            return new Range(0, fileLength - 1, false);
+        }
+
+        try {
+            String value = header.substring(6).trim();
+
+            if (value.contains(",")) {
+                value = value.split(",")[0];
+            }
+
+            long start = 0;
+            long end = fileLength - 1;
+
+            if (value.startsWith("-")) {
+                long suffix = Long.parseLong(value.substring(1));
+                start = Math.max(fileLength - suffix, 0);
+            } else if (value.endsWith("-")) {
+                start = Long.parseLong(value.substring(0, value.length() - 1));
+            } else {
+                String[] parts = value.split("-");
+                start = Long.parseLong(parts[0]);
+                end = Long.parseLong(parts[1]);
+            }
+
+            if (end >= fileLength) end = fileLength - 1;
+            if (start < 0) start = 0;
+            if (start > end) start = 0;
+
+            return new Range(start, end, true);
+
+        } catch (Exception e) {
+            return new Range(0, fileLength - 1, false);
+        }
+    }
+
+    // =========================
+    // CONTENT HANDLER
+    // =========================
     private class WebContentHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
-            if (!request.method().equals(HttpMethod.GET) && !request.method().equals(HttpMethod.HEAD)) {
+            if (request.method() != HttpMethod.GET && request.method() != HttpMethod.HEAD) {
                 sendError(ctx, METHOD_NOT_ALLOWED);
                 return;
             }
 
+            String rawPath = request.uri();
+            String remoteAddr = request.headers().get(HttpHeaderNames.SERVER);
             String userAgent = request.headers().get(HttpHeaderNames.USER_AGENT);
+            if (rawPath == null) return;
 
-            // ONE LINE DETECTION
-            ClientProfile profile = profileManager.detect(userAgent);
+            // Skip WebSocket path
+            if (rawPath.startsWith(CONTEXT_PATH_WEBSOCKET)) {
+                return;
+            }
 
-            // Heavy Lifting: DB Lookup & File Access (Safe here because we are in logicExecutorGroup)
-            ContentHolder holder = getContent(ctx, request);
+            ContentHolder holder = resolveRequest(rawPath, remoteAddr, userAgent);
 
             if (holder == null || !holder.exists()) {
                 sendError(ctx, NOT_FOUND);
                 return;
             }
 
-            boolean keepAlive = HttpUtil.isKeepAlive(request) && profile.keepAlive;
-            serveContent(ctx, request, holder, keepAlive, profile);
+            boolean keepAlive = HttpUtil.isKeepAlive(request);
+
+            serveContent(ctx, request, holder, keepAlive);
         }
 
-        private void serveContent(ChannelHandlerContext ctx, HttpRequest request,
-                                  ContentHolder holder, boolean keepAlive, ClientProfile profile) {
+        private void serveContent(ChannelHandlerContext ctx, FullHttpRequest request, ContentHolder content, boolean keepAlive) {
             RandomAccessFile raf = null;
+
             try {
-                File file = new File(holder.filePath);
-                raf = new RandomAccessFile(file, "r");
+                raf = new RandomAccessFile(content.getFilePath(), "r");
                 long fileLength = raf.length();
 
-                long start = 0;
-                long length = fileLength;
+                Range range = parseRange(request.headers().get(HttpHeaderNames.RANGE), fileLength);
 
-                // Range Handling
-                String rangeHeader = request.headers().get(HttpHeaderNames.RANGE);
-                HttpResponseStatus status = OK;
+                long start = range.start;
+                long end = range.end;
+                long length = end - start + 1;
 
-                if (rangeHeader != null) {
-                    // Robust Range Parsing
-                    try {
-                        String rangeValue = rangeHeader.trim().substring("bytes=".length());
-                        int dashIdx = rangeValue.indexOf('-');
-                        start = Long.parseLong(rangeValue.substring(0, dashIdx));
-                        if (dashIdx < rangeValue.length() - 1) {
-                            length = Long.parseLong(rangeValue.substring(dashIdx + 1)) - start + 1;
-                        } else {
-                            length = fileLength - start;
-                        }
-                        status = PARTIAL_CONTENT;
-                    } catch (Exception e) {
-                        // If parsing fails, ignore range and send full file (fallback)
-                        Log.w(TAG, "Invalid range header: " + rangeHeader);
-                        start = 0;
-                        length = fileLength;
-                    }
-                }
+                HttpResponseStatus status = range.partial ? PARTIAL_CONTENT : OK;
 
                 HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
-                HttpUtil.setContentLength(response, length);
-                setContentTypeHeader(response, holder.contentType);
-                setDateAndCacheHeaders(response, holder.fileName);
-                setAudioHeaders(response, holder, profile);
 
-                if (status == PARTIAL_CONTENT) {
-                    response.headers().set(HttpHeaderNames.CONTENT_RANGE, "bytes " + start + "-" + (start + length - 1) + "/" + fileLength);
+                HttpUtil.setContentLength(response, length);
+
+                String mime = MimeTypeUtils.getMimeTypeFromPath(content.getFilePath());
+                if (mime == null) mime = "application/octet-stream";
+
+                response.headers().set(HttpHeaderNames.CONTENT_TYPE, mime);
+                response.headers().set(HttpHeaderNames.ACCEPT_RANGES, "bytes");
+
+                // Dynamic ETag support
+                File file = new File(content.getFilePath());
+                String etag = generateETag(file);
+                response.headers().set(HttpHeaderNames.ETAG, etag);
+                
+                if (range.partial) {
+                    response.headers().set(HttpHeaderNames.CONTENT_RANGE,
+                            "bytes " + start + "-" + end + "/" + fileLength);
                 }
+
+                // Audiophile Dynamic Headers
+                if (content.getTrack() != null) {
+                    Track tag = content.getTrack();
+                    if (tag.getAudioSampleRate() > 0) response.headers().set("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
+                    if (tag.getAudioBitsDepth() > 0) response.headers().set("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
+                    if (tag.getAudioBitRate() > 0) response.headers().set("X-Audio-Bitrate", tag.getAudioBitRate()/1000 + " kbps");
+                    response.headers().set("X-Audio-Format", String.valueOf(tag.getFileType()));
+                    response.headers().set("transferMode.dlna.org", "Streaming");
+                }
+
+                keepAlive = HttpUtil.isKeepAlive(request);
                 if (keepAlive) {
                     response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
                 }
 
                 ctx.write(response);
 
-                // ChunkedFile takes ownership of RAF and closes it when done
-                ctx.write(new HttpChunkedInput(new ChunkedFile(raf, start, length, profile.chunkSize)), ctx.newProgressivePromise());
+                // HEAD request (no body)
+                if (request.method() == HttpMethod.HEAD) {
+                    ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+                    return;
+                }
 
-                ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-                if (!keepAlive) {
-                    lastContentFuture.addListener(ChannelFutureListener.CLOSE);
+                boolean ssl = ctx.pipeline().get("ssl") != null;
+
+                if (!ssl) {
+                    // 🚀 ZERO COPY
+                    ctx.write(new DefaultFileRegion(raf.getChannel(), start, length));
+                    ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+
+                    if (!keepAlive) f.addListener(ChannelFutureListener.CLOSE);
+
+                } else {
+                    // fallback for SSL
+                    ctx.write(new HttpChunkedInput(
+                            new ChunkedFile(raf, start, length, 8192)
+                    ));
+                    ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+
+                    if (!keepAlive) f.addListener(ChannelFutureListener.CLOSE);
                 }
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to serve file", e);
-                // Ensure RAF is closed if we crash before ChunkedFile takes it
-                if (raf != null) {
-                    try { raf.close(); } catch (Exception ignored) {}
-                }
+                Log.e(TAG, "Streaming error", e);
                 sendError(ctx, INTERNAL_SERVER_ERROR);
-            }
-        }
 
-        // [Helper methods: setContentTypeHeader, setDateAndCacheHeaders, setAudioHeaders, getDLNAContentFeatures remain same]
-        private void setContentTypeHeader(HttpResponse response, String contentType) {
-            response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType);
-        }
-        private void setDateAndCacheHeaders(HttpResponse response, String fileName) {
-            response.headers().set(HttpHeaderNames.SERVER, serverSignature);
-            response.headers().set(HttpHeaderNames.DATE, formatDate(System.currentTimeMillis()));
-            response.headers().set(HttpHeaderNames.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"");
-            response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=30");
-        }
-        private void setAudioHeaders(HttpResponse response, ContentHolder holder, ClientProfile profile) {
-            // [Keep your detailed Audiophile/DLNA header logic]
-            response.headers().set(HttpHeaderNames.ACCEPT_RANGES, "bytes");
-            if (holder.getMusicTag() != null) {
-                MusicTag tag = holder.getMusicTag();
-                response.headers().set("TransferMode.DLNA.ORG", "Streaming");
-                // ... [Rest of your logic]
+                if (raf != null) {
+                    try { raf.close(); } catch (Exception ignore) {}
+                }
             }
         }
 
         private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
-                    Unpooled.copiedBuffer("Error: " + status + "\r\n", CharsetUtil.UTF_8));
-            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-        }
+            FullHttpResponse res = new DefaultFullHttpResponse(
+                    HTTP_1_1,
+                    status,
+                    Unpooled.copiedBuffer("Error: " + status, CharsetUtil.UTF_8)
+            );
 
-        private ContentHolder getContent(ChannelHandlerContext ctx, HttpRequest request) {
-            // FIX: Decode the URI (handling %20, etc.)
-            String requestUri = request.uri();
-            requestUri = URLDecoder.decode(requestUri, StandardCharsets.UTF_8);
-
-            // Remove Query params
-            if (requestUri.contains("?")) {
-                requestUri = requestUri.substring(0, requestUri.indexOf("?"));
-            }
-
-            if (requestUri.equals("/") || requestUri.isEmpty()) requestUri = "/index.html";
-            if (requestUri.contains("../")) return null; // Security check
-
-            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
-                return getAlbumArt(request, requestUri);
-            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-                return getSong(ctx, request, requestUri);
-            } else {
-                return getFile(ctx, request, requestUri);
-            }
-        }
-
-        private ContentHolder getSong(ChannelHandlerContext ctx, HttpRequest request, String requestUri) {
-            // [Keep your existing logic for ID parsing]
-            // ...
-            try {
-                String contentId = requestUri.substring(requestUri.lastIndexOf('/') + 1);
-                long id = StringUtils.toLong(contentId);
-                MusicTag tag = repos.findById(id); // This is safe now (running in logic group)
-
-                if (tag == null) return null;
-
-                // NOTIFICATION: Still safest to wrap this or assume getPlaybackService handles threading
-                if (getPlaybackService() != null) {
-                    getPlaybackService().onMediaTrackChanged(tag);
-                }
-
-                String mimeType = MimeTypeUtils.getMimeTypeFromPath(tag.getPath());
-                return new ContentHolder(mimeType, tag.getPath(), tag);
-            } catch (Exception e) { return null; }
-        }
-
-        private ContentHolder getAlbumArt(HttpRequest request, String uri) {
-            // [Keep your logic]
-            return null; // Placeholder for brevity
-        }
-
-        private ContentHolder getFile(ChannelHandlerContext ctx, HttpRequest request, String path) {
-            // [Keep your logic]
-            return null; // Placeholder for brevity
+            res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+            ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
-    // Must be Sharable to be reused or used in ChannelGroup correctly
     @ChannelHandler.Sharable
-    private class WebSocketFrameHandler extends WebSocketContent implements ChannelHandler {
-        private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        private final ObjectMapper mapper = new ObjectMapper()
-                .setSerializationInclusion(JsonInclude.Include.ALWAYS);
+    private class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
+
+        private final ChannelGroup channels =
+                new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
         @Override
-        public void handlerAdded(ChannelHandlerContext ctx) { channels.add(ctx.channel()); }
-
-        @Override
-        public void handlerRemoved(ChannelHandlerContext ctx) { channels.remove(ctx.channel()); }
-
-        @Override
-        protected void broadcastMessage(String jsonResponse) {
-            channels.writeAndFlush(new TextWebSocketFrame(jsonResponse));
-        }
-
-        /*
-        @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            if (msg instanceof WebSocketFrame frame) {
-                if (frame instanceof TextWebSocketFrame textFrame) {
-                    String text = textFrame.text();
-                    try {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> messageMap = mapper.readValue(text, Map.class);
-                        String command = String.valueOf(messageMap.getOrDefault("command", ""));
-                        if (!command.isEmpty()) {
-                            Map<String, Object> response = handleCommand(command, messageMap);
-                            if (response != null) {
-                                String jsonResponse = mapper.writeValueAsString(response);
-                                ctx.channel().writeAndFlush(new TextWebSocketFrame(jsonResponse));
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error processing WS message", e);
-                    }
-                }
-            } else {
-                ctx.fireChannelRead(msg);
-            }
+        public void handlerAdded(ChannelHandlerContext ctx) {
+            channels.add(ctx.channel());
         }
 
         @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            // Send welcome messages
-            for (Map<String, Object> message : getWelcomeMessages()) {
-                try {
-                    String jsonResponse = mapper.writeValueAsString(message);
-                    ctx.channel().writeAndFlush(new TextWebSocketFrame(jsonResponse));
-                } catch (JsonProcessingException e) {
-                    Log.e(TAG, "Error serializing welcome message", e);
-                }
-            }
-            ctx.fireChannelActive();
+        public void handlerRemoved(ChannelHandlerContext ctx) {
+            channels.remove(ctx.channel());
         }
 
         @Override
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-            ctx.fireChannelInactive();
+        protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
+            String text = msg.text();
+
+            // 🔥 handle message (JSON, commands, etc.)
+            Log.d(TAG, "WS Received: " + text);
+
+            // Example: echo or process
+            broadcast("Echo: " + text);
         }
 
-        @Override
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            ctx.fireUserEventTriggered(evt);
+        public void broadcast(String message) {
+            channels.writeAndFlush(new TextWebSocketFrame(message));
         }
-
-        @Override
-        public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-            ctx.fireChannelWritabilityChanged(ctx);
-        }
-
-        @Override
-        public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-            ctx.fireChannelReadComplete();
-        } */
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            Log.e(TAG, "WS Error", cause);
+            Log.e(TAG, "WebSocket error", cause);
             ctx.close();
         }
     }

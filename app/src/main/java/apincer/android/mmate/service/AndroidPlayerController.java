@@ -19,7 +19,7 @@ import java.io.File;
 import java.util.List;
 
 import apincer.music.core.playback.ExternalAndroidPlayer;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
 
@@ -192,7 +192,7 @@ public class AndroidPlayerController {
         }
     }
 
-    public void play(MediaTrack song) {
+    public void play(Track song) {
         if(NEUTRON_MUSIC_PACK_NAME.equals(playbackTargetId)) {
             playInNeutron(context, song);
         }else {
@@ -209,7 +209,7 @@ public class AndroidPlayerController {
 
 
 
-    public void playInNeutron(Context context, MediaTrack song) {
+    public void playInNeutron(Context context, Track song) {
         if (song == null || song.getPath() == null) return;
 
         /*

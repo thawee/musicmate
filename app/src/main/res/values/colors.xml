@@ -554,11 +554,15 @@
     <color name="dr_low">#9333ea</color>
     <color name="dr_medium">#16a34a</color>
     <color name="dr_high">#3b82f6</color>
-    -->
-    <color name="dr_none">#BDBDBD</color>
+
     <color name="dr_low">#C084FC</color>
     <color name="dr_medium">#4ADE80</color>
-    <color name="dr_high">#60A5FA</color>
+<color name="dr_high">#60A5FA</color>
+    -->
+    <color name="dr_none">#BDBDBD</color>
+    <color name="dr_low">#fca5a5</color>
+    <color name="dr_medium">#fde047</color>
+    <color name="dr_high">#22c55e</color>
 
     <color name="drdb_perfect">#FFC017</color>
     <color name="drdb_none">@color/grey600</color>

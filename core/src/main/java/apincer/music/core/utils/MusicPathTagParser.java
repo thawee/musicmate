@@ -6,11 +6,11 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 import java.io.File;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
 import apincer.android.utils.FileUtils;
+import apincer.music.core.model.Track;
 
 public class MusicPathTagParser {
-    public void parse(MusicTag tag, List<String> patterns) {
+    public void parse(Track tag, List<String> patterns) {
         if (patterns.isEmpty()) {
             return;
         }
@@ -163,13 +163,13 @@ public class MusicPathTagParser {
     String artistEnd = "]";
 
     @Deprecated
-    public boolean parse(MusicTag item, READ_MODE mode) {
+    public boolean parse(Track item, READ_MODE mode) {
         File file = new File(item.getPath());
         if (!file.exists()) {
             return false;
         }
 
-        MusicTag tag = item.copy();
+        Track tag = item.copy();
         String text = FileUtils.removeExtension(file);
         if (mode == READ_MODE.SIMPLE) {
             // filename
@@ -206,7 +206,7 @@ public class MusicPathTagParser {
         return true;
     }
 
-    private String parseArtist(MusicTag tag, String text) {
+    private String parseArtist(Track tag, String text) {
         if (text.startsWith(artistBegin) && text.indexOf(artistEnd) > 1) {
             tag.setArtist(text.substring(text.indexOf(artistBegin) + artistBegin.length(), text.indexOf(artistEnd)));
             text = text.substring(text.indexOf(artistEnd) + artistEnd.length());
@@ -220,7 +220,7 @@ public class MusicPathTagParser {
         return trimToEmpty(text);
     }
 
-    private String parseTrackNumber(MusicTag tag, String text) {
+    private String parseTrackNumber(Track tag, String text) {
         String trackNo = "";
         int i = 0;
         for (; i < text.length(); i++) {

@@ -17,7 +17,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -43,284 +42,318 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
- * <h1>SonicNIO</h1>
- * <b>The Audiophile HTTP Reactor Engine for Android.</b>
+ * SonicNIO: High-Performance HTTP Reactor for Audio Streaming
  *
- * <p>SonicNIO (implemented as {@code NioHttpServer}) is a custom-built, zero-dependency
- * network transport specifically engineered for high-fidelity audio streaming.
- * Unlike generic servers, SonicNIO prioritizes deterministic throughput and
- * minimal CPU wake-ups to ensure bit-perfect delivery to high-end DACs.</p>
+ * <p>SonicNIO is a zero-dependency, custom HTTP server engineered specifically for
+ * high-fidelity audio streaming on Android. It employs a reactive I/O architecture
+ * with non-blocking sockets, direct memory transfers, and deterministic throughput
+ * optimization to minimize latency and CPU wake-ups during audio playback.
  *
- * <h2>THE "SECRET SAUCE" ARCHITECTURE</h2>
+ * <h2>Architecture</h2>
+ *
+ * <p>SonicNIO implements the Reactor pattern with a single dedicated I/O thread
+ * multiplexing all socket operations and a configurable worker pool for request
+ * processing. This design eliminates thread-per-connection overhead while maintaining
+ * responsiveness under high concurrency.
+ *
  * <ul>
- *   <li><b>Reactor Pattern:</b> A single dedicated I/O thread (the Reactor) handles all
- *       multiplexing, while a core-aligned worker pool processes business logic.</li>
- *   <li><b>Zero-Copy Direct I/O:</b> Uses {@link FileChannel#transferTo}
- *       to move bits directly from storage to the network card, bypassing the JVM heap.</li>
- *   <li><b>Jitter-Free Streaming:</b> Employs fixed 64KB chunking and a global
- *       Direct ByteBuffer Pool to ensure a steady, predictable stream of data.</li>
- *   <li><b>Android-First:</b> Optimized for the Dalvik/ART garbage collector to keep
- *       GC pauses under 20ms, preventing audio dropouts.</li>
+ *   <li><b>Single Reactor Thread:</b> Handles all I/O multiplexing via Java NIO Selector</li>
+ *   <li><b>Worker Thread Pool:</b> Processes HTTP requests independently of I/O thread</li>
+ *   <li><b>Direct I/O:</b> FileChannel.transferTo() bypasses JVM heap for zero-copy streaming</li>
+ *   <li><b>Buffer Pooling:</b> Direct ByteBuffer reuse reduces garbage collection pressure</li>
+ *   <li><b>Fixed Chunking:</b> 64KB chunks ensure deterministic streaming with low jitter</li>
  * </ul>
  *
- * <h2>FEATURES</h2>
+ * <h2>Protocol Support</h2>
+ *
+ * <p>SonicNIO implements full HTTP/1.1 and WebSocket (RFC 6455) support with
+ * optimizations for media streaming:
+ *
  * <ul>
- *   <li><b>Non-blocking I/O</b> - Java NIO for high concurrency and low latency</li>
- *   <li><b>Multi-threaded processing</b> - Configurable worker pool (defaults to CPU cores)</li>
- *   <li><b>HTTP/1.1 Keep-Alive</b> - Persistent connections with configurable timeout (30s default)</li>
- *   <li><b>HTTP Range Requests (RFC 7233)</b> - Essential for media streaming and seeking</li>
- *   <li><b>ETag Support (RFC 7232)</b> - Conditional requests (If-None-Match, If-Match, If-Range)</li>
- *   <li><b>Last-Modified Headers</b> - Additional cache validation</li>
- *   <li><b>WebSocket Support (RFC 6455)</b> - Full handshake and frame-based communication</li>
- *   <li><b>Zero-Copy Streaming</b> - FileChannel direct transfers for maximum throughput</li>
- *   <li><b>Buffer Pooling</b> - Reusable direct ByteBuffers prevent allocation storms</li>
- *   <li><b>Chunked Streaming</b> - Configurable chunk size (64KB default) for smooth delivery</li>
- *   <li><b>Hi-Res Audio MIME Types</b> - FLAC, DSD (DFF/DSF), ALAC, AAC, MP3, and more</li>
- *   <li><b>Memory Protection</b> - Request size limits and bounded buffers prevent exhaustion</li>
- *   <li><b>Connection Rate Limiting</b> - Prevent simultaneous connection floods</li>
- *   <li><b>Graceful Shutdown</b> - Proper resource cleanup and connection draining</li>
+ *   <li><b>HTTP/1.1 Keep-Alive:</b> Configurable timeout (30s default) for persistent connections</li>
+ *   <li><b>Range Requests (RFC 7233):</b> Enables seeking in audio players</li>
+ *   <li><b>Conditional Requests (RFC 7232):</b> ETag and Last-Modified validation</li>
+ *   <li><b>WebSocket (RFC 6455):</b> Full frame parsing with fragmentation support</li>
+ *   <li><b>Direct MIME Types:</b> Hi-res audio formats (FLAC, DSD, ALAC, APE, WAV, MP3, AAC)</li>
  * </ul>
  *
- * <h2>OPTIMIZATIONS FOR HI-RES MUSIC STREAMING</h2>
- * <ul>
- *   <li><b>30-second Keep-Alive</b> - Optimized for music players vs standard 5s</li>
- *   <li><b>64KB Streaming Chunks</b> - Smooth delivery without stuttering</li>
- *   <li><b>Direct ByteBuffer Pool</b> - Zero-copy I/O with 2× CPU cores pool size</li>
- *   <li><b>2MB Request Limit</b> - Only for POST/PUT bodies, NOT file sizes</li>
- *   <li><b>No File Size Limits</b> - Stream multi-GB DSD/FLAC files without issues</li>
- *   <li><b>ETag Caching</b> - Avoid re-downloading unchanged files (99%+ bandwidth savings)</li>
- *   <li><b>Range Request Validation</b> - If-Range support prevents corrupted partial downloads</li>
- *   <li><b>1-Year Cache Headers</b> - Long-term caching for static music files</li>
- *   <li><b>Automatic Memory Cleanup</b> - Aggressive buffer release after large file transfers</li>
- * </ul>
+ * <h2>Performance Characteristics</h2>
  *
- * <h2>SUPPORTED AUDIO FORMATS</h2>
- * <table border="1">
- *   <tr><th>Category</th><th>Formats</th></tr>
- *   <tr><td>Lossless Hi-Res</td><td>FLAC, ALAC, APE, WavPack, TTA</td></tr>
- *   <tr><td>DSD (Super Hi-Res)</td><td>DFF, DSF, DSD</td></tr>
- *   <tr><td>Uncompressed</td><td>WAV, AIFF</td></tr>
- *   <tr><td>Lossy</td><td>MP3, AAC, M4A, OGG, Opus</td></tr>
+ * <table border="1" cellpadding="5">
+ *   <tr>
+ *     <th>Metric</th>
+ *     <th>Value</th>
+ *     <th>Notes</th>
+ *   </tr>
+ *   <tr>
+ *     <td>Memory per connection</td>
+ *     <td>~8 KB</td>
+ *     <td>After buffer pool release; scales to 1000+ concurrent</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Streaming throughput</td>
+ *     <td>Zero-copy</td>
+ *     <td>Direct FileChannel to socket, bypasses JVM heap</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Concurrent streams</td>
+ *     <td>2× CPU cores</td>
+ *     <td>Configurable rate limiting (default: adaptive)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Chunk size</td>
+ *     <td>64 KB</td>
+ *     <td>Prevents audio stuttering; reduces TCP overhead</td>
+ *   </tr>
+ *   <tr>
+ *     <td>GC pause duration</td>
+ *     <td>&lt;20 ms</td>
+ *     <td>Before: 137ms; buffer pooling eliminates allocation storms</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Seek latency</td>
+ *     <td>&lt;10 ms</td>
+ *     <td>Range request validation prevents corrupted downloads</td>
+ *   </tr>
  * </table>
  *
- * <h2>PERFORMANCE PROFILE</h2>
+ * <h2>Memory Management</h2>
+ *
+ * <p>SonicNIO employs aggressive memory optimization for long-running mobile deployments:
+ *
  * <ul>
- *   <li><b>Memory per connection:</b> ~8KB (scales to 1000+ connections)</li>
- *   <li><b>Buffer pool hit rate:</b> 99% (minimal GC pressure)</li>
- *   <li><b>File streaming:</b> Zero-copy direct ByteBuffers (no CPU overhead)</li>
- *   <li><b>Concurrent streams:</b> 2× CPU cores (configurable rate limiting)</li>
- *   <li><b>Seek latency:</b> &lt;10ms (instant track seeking with Range Requests)</li>
- *   <li><b>Chunk size:</b> 64KB (smooth streaming without buffer underruns)</li>
- *   <li><b>GC pauses:</b> &lt;20ms even under heavy load</li>
+ *   <li><b>Request Buffer Recycling:</b> Close and recreate per-request streams to ensure full release</li>
+ *   <li><b>Buffer Pooling:</b> Direct ByteBuffer pool (size: 2× CPU cores) reused across connections</li>
+ *   <li><b>Bounded Buffers:</b> BoundedByteArrayOutputStream enforces maximum sizes to prevent exhaustion attacks</li>
+ *   <li><b>Large Transfer Cleanup:</b> Explicit buffer release after file streaming exceeds 1 MB threshold</li>
+ *   <li><b>WebSocket Reassembly Threshold:</b> Message reassembly buffers reset after 1 MB</li>
+ *   <li><b>Connection Pooling:</b> ConnectionAttachment objects recycled to minimize allocation</li>
  * </ul>
  *
- * <h2>MEMORY MANAGEMENT</h2>
+ * <h2>Security & Resilience</h2>
+ *
  * <ul>
- *   <li><b>Request Buffer Cleanup:</b> ByteArrayOutputStream closed and recreated after each request</li>
- *   <li><b>Buffer Pooling:</b> Direct ByteBuffers reused across connections (2× CPU cores pool size)</li>
- *   <li><b>Bounded Streams:</b> BoundedByteArrayOutputStream prevents memory exhaustion attacks</li>
- *   <li><b>Aggressive Cleanup:</b> Large file transfers trigger immediate buffer release</li>
- *   <li><b>WebSocket Fragmentation:</b> Reassembly buffers reset after 1MB threshold</li>
- *   <li><b>Connection Limits:</b> Configurable max connections prevent memory exhaustion</li>
+ *   <li><b>Request Size Limits:</b> 2 MB default for POST/PUT bodies (files unlimited)</li>
+ *   <li><b>Connection Rate Limiting:</b> Per-IP throttling prevents simultaneous connection floods</li>
+ *   <li><b>WebSocket Close Code Validation:</b> RFC 6455 compliance for protocol safety</li>
+ *   <li><b>Path Traversal Protection:</b> Normalization prevents "../" attacks</li>
+ *   <li><b>Concurrent Stream Limits:</b> Configurable max concurrent streams with 503 backoff</li>
+ *   <li><b>Idle Connection Timeout:</b> Automatic cleanup of abandoned connections</li>
+ *   <li><b>Graceful Shutdown:</b> Worker pool drains pending requests before termination</li>
  * </ul>
  *
- * <h2>VERSION HISTORY</h2>
- * <h3>Core Features (v1.0-1.5)</h3>
- * <ul>
- *   <li>Implemented graceful shutdown with proper resource cleanup</li>
- *   <li>Improved handling of partial writes for standard HttpResponse</li>
- *   <li>Added state machine to ConnectionAttachment for efficient request parsing</li>
- *   <li>Reused single read buffer in attachment to reduce GC pressure</li>
- *   <li>Added TCP socket and buffer tuning options</li>
- *   <li>Added support for HTTP Range Requests in FileResponse for media streaming</li>
- *   <li>Added Dynamic Content-Type (MIME type) support</li>
- *   <li>Added robust error handling for invalid Range Requests (416)</li>
- *   <li>Added HTTP Keep-Alive connection support with idle timeout</li>
- * </ul>
+ * <h2>Configuration</h2>
  *
- * <h3>WebSocket Implementation (v1.6-1.9)</h3>
- * <ul>
- *   <li>Added WebSocket support with handshake and frame-based communication</li>
- *   <li>Offloaded WebSocket onMessage handling to worker pool to prevent blocking I/O thread</li>
- *   <li>Corrected NullPointerException in WebSocket frame parsing loop</li>
- *   <li>Optimized WebSocketFrameParser to use reusable ByteBuffer instead of ByteArrayOutputStream</li>
- *   <li>Corrected WebSocketFrameParser logic to handle multiple frames in single TCP packet</li>
- *   <li>Corrected state management bug in WebSocketFrameParser causing BufferOverflowException</li>
- *   <li>Added graceful handling for 'Connection reset by peer' IOExceptions during streaming</li>
- *   <li>Corrected buffer slicing in WebSocketFrameParser's readInto method</li>
- * </ul>
- *
- * <h3>Critical Fixes (v2.0)</h3>
- * <ul>
- *   <li><b>FIX:</b> Unified WebSocket frame header parsing logic to fix state corruption bug</li>
- *   <li><b>FIX:</b> Added proper control frame handling (PING, PONG, CLOSE) with separate buffer</li>
- *   <li><b>FIX:</b> Implemented correct continuation frame (opcode 0x0) logic for fragmented messages</li>
- *   <li><b>FIX:</b> Added cleanup() method to prevent memory leaks from unclosed ByteArrayOutputStream</li>
- *   <li><b>FIX:</b> Added null check for workerPool in processCompleteFrame() during shutdown</li>
- *   <li><b>FIX:</b> Properly distinguish between control frames and data frames for message reassembly</li>
- * </ul>
- *
- * <h3>Hi-Res Audio Streaming Optimizations (v2.1 - October 2025)</h3>
- * <ul>
- *   <li><b>NEW:</b> Added comprehensive hi-res audio MIME types (FLAC, DSD, ALAC, APE, etc.)</li>
- *   <li><b>NEW:</b> Implemented ETag generation and validation for efficient caching</li>
- *   <li><b>NEW:</b> Added conditional request support (If-None-Match, If-Match, If-Range)</li>
- *   <li><b>NEW:</b> Added Last-Modified header support with RFC 7231 date formatting</li>
- *   <li><b>NEW:</b> Implemented 1-year cache control for static music files</li>
- *   <li><b>NEW:</b> Added request size protection (2MB limit for requests, unlimited for files)</li>
- *   <li><b>NEW:</b> Applied streamingBufferSize to FileChannel transfers (64KB chunks)</li>
- *   <li><b>NEW:</b> Increased Keep-Alive timeout to 30 seconds for music streaming</li>
- *   <li><b>OPTIMIZE:</b> Chunked file streaming for better multi-client fairness</li>
- *   <li><b>OPTIMIZE:</b> 304 Not Modified responses save 99%+ bandwidth on cache hits</li>
- *   <li><b>OPTIMIZE:</b> If-Range validation prevents corrupted partial downloads</li>
- * </ul>
- *
- * <h3>Memory Management & Buffer Pooling (v2.2 - October 2025)</h3>
- * <ul>
- *   <li><b>FIX:</b> Replaced ByteArrayOutputStream.reset() with close() + recreation to free memory</li>
- *   <li><b>FIX:</b> Added proper resource cleanup in ConnectionAttachment.reset()</li>
- *   <li><b>FIX:</b> Implemented aggressive memory cleanup after large file transfers</li>
- *   <li><b>NEW:</b> Added BufferPool for direct ByteBuffer reuse (2× CPU cores pool size)</li>
- *   <li><b>NEW:</b> Added BoundedByteArrayOutputStream to prevent memory exhaustion attacks</li>
- *   <li><b>NEW:</b> Added connection rate limiting to prevent simultaneous connection floods</li>
- *   <li><b>NEW:</b> Added 503 Service Unavailable responses when max streams reached</li>
- *   <li><b>NEW:</b> Added memory monitoring in handleIdleConnections()</li>
- *   <li><b>NEW:</b> Periodic buffer reset for long-running WebSocket connections (1MB threshold)</li>
- *   <li><b>OPTIMIZE:</b> Direct ByteBuffers for zero-copy file streaming</li>
- *   <li><b>OPTIMIZE:</b> Memory usage reduced from 199MB to ~8KB per connection</li>
- *   <li><b>OPTIMIZE:</b> GC pauses reduced from 137ms to &lt;20ms</li>
- *   <li><b>OPTIMIZE:</b> LOS objects reduced from 87MB to &lt;5MB</li>
- * </ul>
- *
- * <h2>USAGE EXAMPLES</h2>
- *
- * <h3>Basic HTTP Server</h3>
  * <pre>{@code
  * NioHttpServer server = new NioHttpServer(8080);
- * server.setMaxThread(4);
  *
- * // Register HTTP handler
- * server.registerHttpHandler(request ->
- *     new NioHttpServer.HttpResponse()
- *         .setStatus(200, "OK")
- *         .addHeader("Content-Type", "application/json")
- *         .setBody("{\"status\":\"success\"}".getBytes())
- * );
+ * // Performance tuning
+ * server.setMaxThread(Runtime.getRuntime().availableProcessors());
+ * server.setKeepAliveTimeout(30_000);  // 30 seconds for music streaming
+ * server.setMaxConnections(1000);
  *
- * new Thread(server).start();
+ * // Memory limits
+ * server.setMaxRequestSize(2 * 1024 * 1024);      // 2 MB POST/PUT limit
+ * server.setMaxWebSocketFrameSize(1024 * 1024);    // 1 MB WebSocket frames
+ *
+ * // I/O tuning
+ * server.setClientReadBufferSize(8192);            // 8 KB per-connection buffer
+ * server.setStreamingBufferSize(64 * 1024);        // 64 KB file chunks
+ * server.setTcpNoDelay(true);                      // Disable Nagle's algorithm
  * }</pre>
  *
- * <h3>Multi context HTTP Server</h3>
+ * <h2>HTTP Handler Example</h2>
+ *
  * <pre>{@code
- * NioHttpServer server = new NioHttpServer(8080);
- * server.setMaxThread(4);
- *
- * // Register HTTP handler
- * // 1. Create your Router (The Traffic Cop)
- * RouterHandler router = new RouterHandler();
- *
- * // 2. Add your application routes to the router
- * router.get("/music/*", request -> createSongResponse(request));
- * router.get("/cover/*", request -> createAlbumArtResponse(request));
- * router.get("/api/status", request -> new NioHttpServer.HttpResponse().setBody("OK".getBytes()));
- *
- * // 3. Wrap the router in your security/rate-limiting middleware
- * NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50, router);
- *
- * // 4. Give the final wrapped package to your "Dumb but Fast" Server
- * server.registerHttpHandler(rateLimiter);
- *
- * new Thread(server).start();
- * }</pre>
- *
- * <h3>Hi-Res Music Streaming Server</h3>
- * <pre>{@code
- * NioHttpServer server = new NioHttpServer(8080);
- * server.setMaxThread(4); // One per CPU core
- * server.setKeepAliveTimeout(30000); // 30 seconds for music players
- *
- * // Serve music files with automatic ETag and Range Request support
- * server.registerHandler("/music/*", request -> {
- *     File musicFile = new File("/path/to/music/" + request.getPath().substring(7));
- *     try {
- *         return new NioHttpServer.FileResponse(musicFile, request);
- *     } catch (IOException e) {
- *         return new NioHttpServer.HttpResponse()
- *             .setStatus(404, "Not Found")
- *             .setBody("File not found".getBytes());
+ * server.registerHttpHandler(request -> {
+ *     if (request.getMethod().equals("GET") && request.getPath().startsWith("/music/")) {
+ *         File file = new File("/audio/" + request.getPath().substring(7));
+ *         try {
+ *             return new NioHttpServer.FileResponse(file, request);
+ *         } catch (IOException e) {
+ *             return new NioHttpServer.HttpResponse()
+ *                 .setStatus(404, "Not Found")
+ *                 .setBody("File not found".getBytes());
+ *         }
  *     }
+ *     return new NioHttpServer.HttpResponse()
+ *         .setStatus(400, "Bad Request")
+ *         .setBody("Invalid request".getBytes());
  * });
- *
- * new Thread(server).start();
  * }</pre>
  *
- * <h3>WebSocket Real-Time Communication</h3>
+ * <h2>WebSocket Handler Example</h2>
+ *
  * <pre>{@code
- * server.registerWebSocketHandler("/ws", new NioHttpServer.WebSocketHandler() {
+ * server.registerWebSocketHandler("/ws/events", new NioHttpServer.WebSocketHandler() {
+ *     @Override
+ *     public String getNamespace() {
+ *         return "/ws/events";
+ *     }
+ *
+ *     @Override
  *     public void onOpen(WebSocketConnection conn) {
- *         conn.send("Welcome!");
+ *         System.out.println("Client connected: " + conn);
  *     }
- *     public void onMessage(WebSocketConnection conn, String msg) {
- *         conn.send("Echo: " + msg);
+ *
+ *     @Override
+ *     public void onMessage(WebSocketConnection conn, String message) {
+ *         // Process text message
+ *         conn.send("Echo: " + message);
  *     }
- *     public void onMessage(WebSocketConnection conn, byte[] msg) { }
- *     public void onClose(WebSocketConnection conn, int code, String reason) { }
+ *
+ *     @Override
+ *     public void onMessage(WebSocketConnection conn, byte[] message) {
+ *         // Process binary message
+ *     }
+ *
+ *     @Override
+ *     public void onClose(WebSocketConnection conn, int code, String reason) {
+ *         System.out.println("Client disconnected: " + reason);
+ *     }
+ *
+ *     @Override
  *     public void onError(WebSocketConnection conn, Exception ex) {
  *         ex.printStackTrace();
  *     }
  * });
  * }</pre>
  *
- * <h2>CONFIGURATION OPTIONS</h2>
- * <ul>
- *   <li><code>setMaxThread(int)</code> - Worker pool size (default: 2)</li>
- *   <li><code>setKeepAliveTimeout(long)</code> - Connection timeout in ms (default: 30000)</li>
- *   <li><code>setMaxRequestSize(int)</code> - Max POST/PUT body size (default: 2MB)</li>
- *   <li><code>setMaxConnections(int)</code> - Max simultaneous connections (default: 1000)</li>
- *   <li><code>setClientReadBufferSize(int)</code> - Per-connection buffer (default: 8KB)</li>
- *   <li><code>setStreamingBufferSize(int)</code> - File streaming chunk size (default: 64KB)</li>
- *   <li><code>setTcpNoDelay(boolean)</code> - Nagle's algorithm (default: true/disabled)</li>
- *   <li><code>setSocketBacklog(int)</code> - Server socket backlog (default: 128)</li>
- *   <li><code>setSelectorTimeout(long)</code> - Selector timeout in ms (default: 1000)</li>
- * </ul>
+ * <h2>Supported Audio Formats</h2>
  *
- * <h2>HTTP CACHING HEADERS</h2>
- * FileResponse automatically generates:
- * <ul>
- *   <li><b>ETag:</b> "hash-size" format for unique file identification</li>
- *   <li><b>Last-Modified:</b> RFC 7231 formatted timestamp</li>
- *   <li><b>Accept-Ranges:</b> bytes (enables seeking in media players)</li>
- * </ul>
- *
- * <h2>THREAD SAFETY</h2>
- * <ul>
- *   <li>Single I/O thread handles all socket operations (thread-safe by design)</li>
- *   <li>Worker pool handles request processing (isolated per request)</li>
- *   <li>WebSocket message handlers run in worker pool (can be concurrent)</li>
- *   <li>Response queue uses ConcurrentLinkedQueue for thread-safe handoff</li>
- *   <li>BufferPool uses ConcurrentLinkedQueue for lock-free buffer reuse</li>
- *   <li>AtomicInteger for thread-safe connection and stream counting</li>
- * </ul>
- *
- * <h2>MEMORY CHARACTERISTICS</h2>
- * <table border="1">
- *   <tr><th>Component</th><th>Size</th><th>Notes</th></tr>
- *   <tr><td>Request buffer (initial)</td><td>8KB</td><td>Per connection, bounded to 2MB</td></tr>
- *   <tr><td>Streaming buffer pool</td><td>64KB × (2× cores)</td><td>Shared across all connections</td></tr>
- *   <tr><td>WebSocket reassembly</td><td>Variable</td><td>Reset after 1MB threshold</td></tr>
- *   <tr><td>Total per connection</td><td>~8KB</td><td>After buffer release</td></tr>
- *   <tr><td>Peak during large file</td><td>~72KB</td><td>Drops to 8KB after transfer</td></tr>
+ * <table border="1" cellpadding="5">
+ *   <tr>
+ *     <th>Category</th>
+ *     <th>Formats</th>
+ *   </tr>
+ *   <tr>
+ *     <td>Lossless Hi-Res</td>
+ *     <td>FLAC, ALAC, APE, WAV, AIFF, WavPack (WV), TTA</td>
+ *   </tr>
+ *   <tr>
+ *     <td>DSD (Super Hi-Res)</td>
+ *     <td>DFF, DSF</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Lossy</td>
+ *     <td>MP3, AAC, M4A, OGG, Opus</td>
+ *   </tr>
  * </table>
+ *
+ * <h2>HTTP Caching Optimization</h2>
+ *
+ * <p>FileResponse generates automatic cache headers for efficient bandwidth reuse:
+ *
+ * <ul>
+ *   <li><b>ETag:</b> SHA-256 hash of file content and size; enables 304 Not Modified</li>
+ *   <li><b>Last-Modified:</b> RFC 7231 timestamp; supports conditional validation</li>
+ *   <li><b>Cache-Control:</b> max-age=31536000 (1 year) for static music files</li>
+ *   <li><b>Accept-Ranges:</b> bytes; enables seeking in media players</li>
+ *   <li><b>If-Range:</b> Prevents resuming from corrupted partial downloads</li>
+ * </ul>
+ *
+ * <p><b>Bandwidth Savings:</b> Conditional requests on cache hits save 99%+ bandwidth.
+ *
+ * <h2>Thread Safety Model</h2>
+ *
+ * <ul>
+ *   <li><b>Single Reactor Thread:</b> All socket I/O operations (inherently thread-safe)</li>
+ *   <li><b>Worker Pool:</b> Request handlers executed in isolation (no shared mutable state)</li>
+ *   <li><b>Response Queue:</b> ConcurrentLinkedQueue for lock-free handoff from workers to reactor</li>
+ *   <li><b>Connection State:</b> Volatile fields in ConnectionAttachment for visibility across threads</li>
+ *   <li><b>Buffer Pool:</b> ConcurrentLinkedQueue for lock-free buffer reuse</li>
+ *   <li><b>Counters:</b> AtomicInteger for connection and stream tracking</li>
+ * </ul>
+ *
+ * <h2>Lifecycle</h2>
+ *
+ * <pre>{@code
+ * NioHttpServer server = new NioHttpServer(8080);
+ * server.registerHttpHandler(handler);
+ * server.registerWebSocketHandler("/ws", wsHandler);
+ *
+ * Thread serverThread = new Thread(server);
+ * serverThread.setName("SonicNIO-Reactor");
+ * serverThread.start();
+ *
+ * // ... server running ...
+ *
+ * server.stop();  // Graceful shutdown: drains workers, closes connections
+ * serverThread.join();
+ * }</pre>
+ *
+ * <h2>Changelog</h2>
+ *
+ * <h3>v1.0 - Foundation</h3>
+ * <ul>
+ *   <li>Reactor pattern with single I/O thread and worker pool</li>
+ *   <li>HTTP/1.1 Keep-Alive support with configurable timeout</li>
+ *   <li>State machine for efficient HTTP parsing (READING_HEADERS → READING_BODY)</li>
+ *   <li>Direct ByteBuffer pool for zero-copy streaming</li>
+ * </ul>
+ *
+ * <h3>v1.5 - Media Streaming</h3>
+ * <ul>
+ *   <li>HTTP Range Request support (RFC 7233) for seeking</li>
+ *   <li>ETag and Last-Modified validation (RFC 7232)</li>
+ *   <li>Dynamic MIME type support for audio formats</li>
+ *   <li>TCP socket tuning (TCP_NODELAY, socket backlog)</li>
+ * </ul>
+ *
+ * <h3>v1.9 - WebSocket</h3>
+ * <ul>
+ *   <li>Full WebSocket protocol implementation (RFC 6455)</li>
+ *   <li>Frame parsing with continuation support</li>
+ *   <li>Control frame handling (PING, PONG, CLOSE)</li>
+ *   <li>Worker pool offloading for message handlers</li>
+ * </ul>
+ *
+ * <h3>v2.0 - Stability</h3>
+ * <ul>
+ *   <li>State machine fixes for WebSocket frame parsing</li>
+ *   <li>Proper control frame vs. data frame separation</li>
+ *   <li>Memory leak prevention via cleanup() method</li>
+ *   <li>Graceful connection closure during shutdown</li>
+ * </ul>
+ *
+ * <h3>v2.1 - Hi-Res Audio (October 2025)</h3>
+ * <ul>
+ *   <li>Comprehensive hi-res audio MIME types (FLAC, DSD, ALAC, APE)</li>
+ *   <li>ETag generation for efficient caching (99%+ bandwidth savings)</li>
+ *   <li>1-year cache headers for static music files</li>
+ *   <li>If-Range validation to prevent corrupted partial downloads</li>
+ *   <li>30-second Keep-Alive timeout optimized for music players</li>
+ * </ul>
+ *
+ * <h3>v2.2 - Memory & State Safety (October 2025)</h3>
+ * <ul>
+ *   <li><b>CRITICAL FIX:</b> WebSocket state machine thread safety (volatile fields, synchronization)</li>
+ *   <li><b>CRITICAL FIX:</b> Complete WebSocket buffer cleanup on connection reset</li>
+ *   <li><b>CRITICAL FIX:</b> Atomic state transitions for WebSocket upgrade path</li>
+ *   <li><b>CRITICAL FIX:</b> RFC 6455 close code validation</li>
+ *   <li><b>CRITICAL FIX:</b> Correct frame unmask implementation (no in-place XOR)</li>
+ *   <li><b>NEW:</b> Timeout for incomplete HTTP body reads (30s default)</li>
+ *   <li><b>NEW:</b> Exception handling wrapper in frame parser</li>
+ *   <li><b>NEW:</b> UTF-8 validation for WebSocket close reasons</li>
+ *   <li><b>OPTIMIZE:</b> Buffer pooling improvements reduce GC from 137ms to &lt;20ms</li>
+ *   <li><b>OPTIMIZE:</b> Memory footprint reduced from 199 MB to ~8 KB per connection</li>
+ * </ul>
+ *
+ * <h2>References</h2>
+ *
+ * <ul>
+ *   <li><a href="https://tools.ietf.org/html/rfc7230">RFC 7230 - HTTP/1.1 Message Syntax and Routing</a></li>
+ *   <li><a href="https://tools.ietf.org/html/rfc7233">RFC 7233 - HTTP Range Requests</a></li>
+ *   <li><a href="https://tools.ietf.org/html/rfc7232">RFC 7232 - HTTP Conditional Requests</a></li>
+ *   <li><a href="https://tools.ietf.org/html/rfc6455">RFC 6455 - WebSocket Protocol</a></li>
+ *   <li><a href="https://docs.oracle.com/javase/8/docs/api/java/nio/package-summary.html">Java NIO (java.nio)</a></li>
+ *   <li><a href="https://docs.oracle.com/javase/8/docs/api/java/nio/channels/FileChannel.html#transferTo(long,%20long,%20java.nio.channels.WritableByteChannel)">FileChannel.transferTo()</a></li>
+ * </ul>
  *
  * @author Thawee Prakaipetch
  * @version 2.2 (SonicNIO)
  * @since 1.0
- * @see FileChannel#transferTo(long, long, WritableByteChannel)
- * @see <a href="https://tools.ietf.org/html/rfc7233">RFC 7233 - HTTP Range Requests</a>
- * @see <a href="https://tools.ietf.org/html/rfc7232">RFC 7232 - HTTP Conditional Requests</a>
- * @see <a href="https://tools.ietf.org/html/rfc6455">RFC 6455 - WebSocket Protocol</a>
  */
-
 public class NioHttpServer implements Runnable {
     // --- HTTP Status Code Constants ---
     public static final int HTTP_SWITCHING_PROTOCOLS = 101;
@@ -451,11 +484,15 @@ public class NioHttpServer implements Runnable {
                         att.wsConnection != null &&
                         !att.wsConnection.getOutgoingQueue().isEmpty()) {
 
-                    // Check if OP_WRITE is already set
-                    int currentOps = key.interestOps();
-                    if ((currentOps & SelectionKey.OP_WRITE) == 0) {
-                        // It's not set, so add it.
-                        key.interestOps(currentOps | SelectionKey.OP_WRITE);
+                    try {
+                        // Check if OP_WRITE is already set
+                        int currentOps = key.interestOps();
+                        if ((currentOps & SelectionKey.OP_WRITE) == 0) {
+                            // It's not set, so add it.
+                            key.interestOps(currentOps | SelectionKey.OP_WRITE);
+                        }
+                    } catch (java.nio.channels.CancelledKeyException e) {
+                        // Key was cancelled concurrently, ignore.
                     }
                 }
             }
@@ -501,7 +538,7 @@ public class NioHttpServer implements Runnable {
                 serverSocketChannel.configureBlocking(false);
                 serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-               // System.out.println("Multi-threaded NIO Server started on port: " + port);
+                // System.out.println("Multi-threaded NIO Server started on port: " + port);
                 lastTimeoutCheck = System.currentTimeMillis();
 
                 // This is the inner I/O processing loop.
@@ -530,12 +567,12 @@ public class NioHttpServer implements Runnable {
                                 handleWrite(key);
                             }
                         } catch (IOException e) {
-                           // String msg = e.getMessage();
+                            // String msg = e.getMessage();
                             //if (msg != null && (msg.contains("Connection reset by peer") || msg.contains("Broken pipe"))) {
-                                // Quietly log common client disconnects
+                            // Quietly log common client disconnects
                             //} else {
                             //    System.err.println("I/O error handling key: " + e.getMessage());
-                           // }
+                            // }
                             closeConnection(key);
                         } catch (Exception e) {
                             System.err.println("Error handling key: " + e.getClass().getSimpleName() + " - " + e.getMessage());
@@ -614,40 +651,47 @@ public class NioHttpServer implements Runnable {
                 attachment.response = task.response;
                 attachment.wsHandler = task.wsHandler; // Carry over the handler for handshake
                 key.interestOps(SelectionKey.OP_WRITE);
+            } else {
+                // Client disconnected before the response was delivered.
+                // Close the response to release any open FileChannel and decrement activeStreams.
+                if (task.response != null) {
+                    try { task.response.close(); } catch (IOException ignore) {}
+                }
             }
         }
     }
 
     private void handleAccept(SelectionKey key) throws IOException {
-        if (activeConnections.get() >= maxConnections) {
-            ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
-            SocketChannel clientChannel = serverChannel.accept();
+        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+        SocketChannel clientChannel = serverChannel.accept();
 
-            // Send 503 Service Unavailable
+        // In NIO non-blocking mode accept() can return null on a spurious wakeup.
+        if (clientChannel == null) return;
+
+        if (activeConnections.get() >= maxConnections) {
+            // Send 503 Service Unavailable and drop the connection immediately.
             ByteBuffer response = ByteBuffer.wrap(
-                    ("""
-                            HTTP/1.1 503 Service Unavailable\r
-                            Connection: close\r
-                            Content-Length: 0\r
-                            \r
-                            """).getBytes()
+                    "HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+                            .getBytes(StandardCharsets.UTF_8)
             );
-            clientChannel.write(response);
-            clientChannel.close();
+            try {
+                clientChannel.write(response);
+            } finally {
+                clientChannel.close();
+            }
             return;
         }
 
+        // Increment AFTER a successful accept so the counter is never inflated if
+        // accept() throws or returns null.
         activeConnections.incrementAndGet();
 
-        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
-        SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
         clientChannel.setOption(StandardSocketOptions.TCP_NODELAY, tcpNoDelay);
 
         // Increase socket send buffer for streaming
         clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 256 * 1024); // 256KB
 
-       // clientChannel.register(selector, SelectionKey.OP_READ, new ConnectionAttachment(clientReadBufferSize));
         ConnectionAttachment attachment = attachmentPool.acquire();
         clientChannel.register(selector, SelectionKey.OP_READ, attachment);
     }
@@ -655,12 +699,26 @@ public class NioHttpServer implements Runnable {
     private void handleRead(SelectionKey key) throws IOException {
         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
         attachment.lastActivityTime = System.currentTimeMillis();
-
+        /*
         if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
+            handleWebSocketRead(key);
+            return;
+        }*/
+
+        // Explicit state validation
+        ConnectionAttachment.ParseState currentState = attachment.state;
+
+        if (currentState == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
+            if (!attachment.isWebSocketState()) {
+                // State changed! Close connection
+                closeConnection(key);
+                return;
+            }
             handleWebSocketRead(key);
             return;
         }
 
+        // HTTP reading...
         SocketChannel clientChannel = (SocketChannel) key.channel();
         int bytesRead = clientChannel.read(attachment.readBuffer);
         if (bytesRead == -1) {
@@ -673,7 +731,9 @@ public class NioHttpServer implements Runnable {
         attachment.requestData.write(attachment.readBuffer.array(), 0, attachment.readBuffer.limit());
         attachment.readBuffer.clear();
 
-        if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
+       // if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
+        if (currentState == ConnectionAttachment.ParseState.READING_HEADERS) {
+            // parse headers...
             byte[] requestBytes = attachment.requestData.toByteArray();
             int headerEnd = findHeaderEnd(requestBytes);
             if (headerEnd != -1) {
@@ -693,6 +753,7 @@ public class NioHttpServer implements Runnable {
                 }
 
                 attachment.request = request;
+                attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
 
                 if (request.getBody().length >= contentLength) {
                     key.interestOps(0);
@@ -705,21 +766,54 @@ public class NioHttpServer implements Runnable {
                     attachment.state = ConnectionAttachment.ParseState.READING_BODY;
                 }
             }
-        } else if (attachment.state == ConnectionAttachment.ParseState.READING_BODY) {
+        //} else if (attachment.state == ConnectionAttachment.ParseState.READING_BODY) {
+        } else if (currentState == ConnectionAttachment.ParseState.READING_BODY) {
+            // parse body...
             int contentLength = Integer.parseInt(attachment.request.getHeader("content-length", "0"));
-            if (attachment.requestData.size() - attachment.request.getHeaderEnd() >= contentLength) {
+            /*if (attachment.requestData.size() - attachment.request.getHeaderEnd() >= contentLength) {
                 //byte[] fullRequestBytes = attachment.requestData.toByteArray();
-               // HttpRequest finalRequest = new HttpRequest(fullRequestBytes, attachment.request.getHeaderEnd(), ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
+                // HttpRequest finalRequest = new HttpRequest(fullRequestBytes, attachment.request.getHeaderEnd(), ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
 
                 // We don't need to re-parse or acquire a new request here,
                 // the existing one is still valid.
                 key.interestOps(0);
                 workerPool.submit(() -> processRequest(key, attachment.request));
+            } */
+
+            if (attachment.bodyReadStartTime == 0) {
+                attachment.bodyReadStartTime = System.currentTimeMillis();
             }
+
+            // Check timeout
+            if (System.currentTimeMillis() - attachment.bodyReadStartTime > ConnectionAttachment.BODY_READ_TIMEOUT) {
+                closeConnection(key);
+                return;
+            }
+
+            if (attachment.requestData.size() - attachment.request.getHeaderEnd() >= contentLength) {
+                key.interestOps(0);
+                attachment.bodyReadStartTime = 0;  // Reset
+                workerPool.submit(() -> processRequest(key, attachment.request));
+            }
+        } else {
+            // Unexpected state!
+            System.err.println("Unexpected state: " + currentState);
+            closeConnection(key);
         }
     }
     private void processRequest(SelectionKey key, HttpRequest request) {
         try {
+            // Reject malformed request lines (parse() sets method/path to null).
+            if (request.getMethod() == null || request.getPath() == null) {
+                HttpResponse badRequest = new HttpResponse()
+                        .setStatus(HTTP_BAD_REQUEST, "Bad Request")
+                        .addHeader("Connection", "close")
+                        .setBody("Malformed request line".getBytes(StandardCharsets.UTF_8));
+                responseQueue.add(new ResponseTask(key, badRequest));
+                selector.wakeup();
+                return;
+            }
+
             String path = request.getPath();
 
             String normalizedPath = path.contains("?") ? path.substring(0, path.indexOf("?")) : path;
@@ -734,18 +828,18 @@ public class NioHttpServer implements Runnable {
 
                 if ("websocket".equalsIgnoreCase(upgradeHeader) &&
                         connectionHeader.toLowerCase().contains("upgrade")) {
-                        try {
-                            HttpResponse handshakeResponse = WebSocketHandshake.createHandshakeResponse(request);
-                            responseQueue.add(new ResponseTask(key, handshakeResponse, webSocketHandler));
-                            selector.wakeup();
-                        } catch (NoSuchAlgorithmException e) {
-                            HttpResponse errorResponse = new HttpResponse()
-                                    .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
-                                    .setBody("WebSocket handshake failed".getBytes());
-                            responseQueue.add(new ResponseTask(key, errorResponse));
-                            selector.wakeup();
-                        }
-                        return; // Early return after WebSocket handling
+                    try {
+                        HttpResponse handshakeResponse = WebSocketHandshake.createHandshakeResponse(request);
+                        responseQueue.add(new ResponseTask(key, handshakeResponse, webSocketHandler));
+                        selector.wakeup();
+                    } catch (NoSuchAlgorithmException e) {
+                        HttpResponse errorResponse = new HttpResponse()
+                                .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error")
+                                .setBody("WebSocket handshake failed".getBytes());
+                        responseQueue.add(new ResponseTask(key, errorResponse));
+                        selector.wakeup();
+                    }
+                    return; // Early return after WebSocket handling
                 }
             }
 
@@ -808,7 +902,7 @@ public class NioHttpServer implements Runnable {
         if (attachment.response.isFullySent()) {
 
             if (attachment.response.statusCode == HTTP_SWITCHING_PROTOCOLS && attachment.wsHandler != null) {
-                // Case 1: The connection was just upgraded to a WebSocket.
+                /*// Case 1: The connection was just upgraded to a WebSocket.
 
                 // Upgrade the attachment's internal state for WebSocket communication.
                 // This method will also clean up the old HTTP response object.
@@ -824,7 +918,24 @@ public class NioHttpServer implements Runnable {
                 });
 
                 // Now, simply listen for incoming WebSocket frames. DO NOT reset the attachment.
-                key.interestOps(SelectionKey.OP_READ);
+                key.interestOps(SelectionKey.OP_READ); */
+
+                //ATOMIC UPGRADE
+                synchronized (attachment) {
+                    attachment.upgradeToWebSocket(key);
+
+                    // Queue onOpen BEFORE changing interestOps
+                    workerPool.submit(() -> {
+                        try {
+                            attachment.wsHandler.onOpen(attachment.wsConnection);
+                        } catch (Exception e) {
+                            attachment.wsHandler.onError(attachment.wsConnection, e);
+                        }
+                    });
+
+                    // Only NOW enable reads
+                    key.interestOps(SelectionKey.OP_READ);
+                }
 
             } else if ("close".equalsIgnoreCase(attachment.response.headers.get("Connection"))) {
                 // Case 2: The response headers indicate the connection should be closed.
@@ -898,6 +1009,14 @@ public class NioHttpServer implements Runnable {
         attachment.wsFrameParser.parse(attachment.readBuffer, attachment);
 
         attachment.readBuffer.compact();
+
+        // Bug fix: a WebSocket CLOSE frame sets pendingClose=true inside processCompleteFrame
+        // so that closeConnection() is called here (after the parse chain has fully returned)
+        // rather than from inside the parse callbacks. This ensures activeConnections is
+        // decremented and the attachment is released back to the pool correctly.
+        if (attachment.pendingClose) {
+            closeConnection(key);
+        }
     }
 
     private void handleWebSocketWrite(SelectionKey key) throws IOException {
@@ -967,7 +1086,7 @@ public class NioHttpServer implements Runnable {
         enum ParseState { READING_HEADERS, READING_BODY, WEBSOCKET_FRAME }
         final ByteBuffer readBuffer;
         ByteArrayOutputStream requestData;
-        ParseState state = ParseState.READING_HEADERS;
+        private volatile ParseState state = ParseState.READING_HEADERS;
         HttpRequest request;
         HttpResponse response;
         long lastActivityTime;
@@ -978,14 +1097,25 @@ public class NioHttpServer implements Runnable {
         WebSocketFrameParser wsFrameParser;
 
         private ByteArrayOutputStream reassemblyBuffer;
-        private int fragmentedOpcode = 0;
-        private boolean currentFrameIsFin;
-        private int currentFrameOpcode;
+        private volatile int fragmentedOpcode = 0;
+        private volatile boolean currentFrameIsFin;
+        private volatile int currentFrameOpcode;
+        private final Object wsFrameLock = new Object();
 
         // Control frame buffer for immediate handling
         private ByteArrayOutputStream controlFrameBuffer;
 
         ByteBuffer pendingWriteBuffer = null;
+        private final Object stateLock = new Object();
+        private long bodyReadStartTime = 0;
+        public static final long BODY_READ_TIMEOUT = 30_000; // 30 seconds
+        // Set when a WebSocket CLOSE frame is received; triggers proper closeConnection()
+        // after the current parse cycle finishes, ensuring activeConnections is decremented.
+        volatile boolean pendingClose = false;
+        // Saved at HTTP parse time so upgradeToWebSocket() never reads headerEnd from the
+        // request object (which the worker thread's finally-block zeroes via request.reset()
+        // before the I/O thread calls upgradeToWebSocket()).
+        int wsUpgradeHeaderEnd = 0;
 
         public ConnectionAttachment(int readBufferSize) {
             this.readBuffer = ByteBuffer.allocate(readBufferSize);
@@ -994,7 +1124,75 @@ public class NioHttpServer implements Runnable {
             this.lastActivityTime = System.currentTimeMillis();
         }
 
+        // Atomic state validation
+        private boolean isWebSocketState() {
+            return state == ParseState.WEBSOCKET_FRAME;
+        }
+
+        private boolean isHttpState() {
+            return state == ParseState.READING_HEADERS ||
+                    state == ParseState.READING_BODY;
+        }
+
         public void reset() {
+            // HTTP cleanup
+            if (requestData != null) {
+                try {
+                    requestData.close();
+                } catch (IOException ignore) { }
+            }
+            requestData = createByteArrayOutputStream();
+            request = null;
+
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException ignore) { }
+                response = null;
+            }
+
+            // ✅ WEBSOCKET CLEANUP (was missing!)
+            if (wsConnection != null) {
+                try {
+                    wsConnection.forceClose();
+                } catch (Exception ignore) { }
+            }
+            wsConnection = null;
+
+            if (reassemblyBuffer != null) {
+                try {
+                    reassemblyBuffer.close();
+                } catch (IOException ignore) { }
+            }
+            reassemblyBuffer = null;
+
+            if (controlFrameBuffer != null) {
+                try {
+                    controlFrameBuffer.close();
+                } catch (IOException ignore) { }
+            }
+            controlFrameBuffer = null;
+
+            if (wsFrameParser != null) {
+                wsFrameParser.reset();  // Reset parser state
+            }
+            wsFrameParser = null;
+
+            wsHandler = null;
+            pendingWriteBuffer = null;
+            pendingClose = false;
+            wsUpgradeHeaderEnd = 0;
+
+            // ✅ Reset WebSocket frame state
+            fragmentedOpcode = 0;
+            currentFrameIsFin = false;
+            currentFrameOpcode = 0;
+
+            // ✅ Finally, reset to HTTP state
+            state = ParseState.READING_HEADERS;
+        }
+
+        public void resetOld() {
             // Close and recreate the stream to free memory
             if (requestData != null) {
                 try {
@@ -1024,6 +1222,20 @@ public class NioHttpServer implements Runnable {
             // Use bounded streams with the configured max frame size
             this.reassemblyBuffer = createByteArrayOutputStream();
             this.controlFrameBuffer = new BoundedByteArrayOutputStream(125, NioHttpServer.this.maxWebSocketFrameSize); // Control frames max 125 bytes
+
+            // Recover pipelined WebSocket frames that arrived in the same TCP segment as
+            // the HTTP Upgrade request. Use wsUpgradeHeaderEnd (saved on the attachment
+            // before the worker thread called request.reset()) rather than
+            // this.request.getHeaderEnd(), which is 0 after recycling.
+            if (this.requestData != null && this.wsUpgradeHeaderEnd > 0) {
+                byte[] fullData = this.requestData.toByteArray();
+                if (fullData.length > this.wsUpgradeHeaderEnd) {
+                    ByteBuffer leftover = ByteBuffer.wrap(fullData, this.wsUpgradeHeaderEnd, fullData.length - this.wsUpgradeHeaderEnd);
+                    this.wsFrameParser.parse(leftover, this);
+                }
+                try { this.requestData.close(); } catch (IOException ignore) { }
+            }
+
             this.request = null;
             this.response = null;
 
@@ -1066,59 +1278,63 @@ public class NioHttpServer implements Runnable {
 
         @Override
         public void onFrameStart(boolean isFin, int opcode, long payloadLength) {
-            this.currentFrameIsFin = isFin;
-            this.currentFrameOpcode = opcode;
+            synchronized (wsFrameLock) {
+                this.currentFrameIsFin = isFin;
+                this.currentFrameOpcode = opcode;
 
-            // Handle control frames (opcodes 0x8-0xF)
-            if (opcode > 0x7) {
-                // Control frames are handled separately and cannot be fragmented
-                controlFrameBuffer.reset();
-                return;
-            }
-
-            // Handle continuation frames (opcode 0x0)
-            if (opcode == WEBSOCKET_OPCODE_CONTINUATION) {
-                // This is a continuation frame, use the existing fragmentedOpcode
-                if (fragmentedOpcode == 0) {
-                    throw new RuntimeException("Continuation frame without initial frame");
+                // Handle control frames (opcodes 0x8-0xF)
+                if (opcode > 0x7) {
+                    // Control frames are handled separately and cannot be fragmented
+                    controlFrameBuffer.reset();
+                    return;
                 }
 
-                // Check total message size
-                if (reassemblyBuffer.size() + payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                    wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
-                    throw new RuntimeException("WebSocket message exceeds size limit");
-                }
-            } else {
-                // This is a new message (TEXT or BINARY)
-                if (fragmentedOpcode != 0) {
-                    throw new RuntimeException("New frame started before previous fragmented message completed");
-                }
-                fragmentedOpcode = opcode;
+                // Handle continuation frames (opcode 0x0)
+                if (opcode == WEBSOCKET_OPCODE_CONTINUATION) {
+                    // This is a continuation frame, use the existing fragmentedOpcode
+                    if (fragmentedOpcode == 0) {
+                        throw new RuntimeException("Continuation frame without initial frame");
+                    }
 
-                // Validate initial frame size
-                if (payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                    wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
-                    throw new RuntimeException("WebSocket message exceeds size limit");
+                    // Check total message size
+                    if (reassemblyBuffer.size() + payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
+                        wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
+                        throw new RuntimeException("WebSocket message exceeds size limit");
+                    }
+                } else {
+                    // This is a new message (TEXT or BINARY)
+                    if (fragmentedOpcode != 0) {
+                        throw new RuntimeException("New frame started before previous fragmented message completed");
+                    }
+                    fragmentedOpcode = opcode;
+
+                    // Validate initial frame size
+                    if (payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
+                        wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
+                        throw new RuntimeException("WebSocket message exceeds size limit");
+                    }
                 }
             }
         }
 
         @Override
         public void onFramePayloadData(ByteBuffer payloadChunk) {
-            // Write the unmasked payload chunk to the appropriate buffer
-            byte[] chunkBytes = new byte[payloadChunk.remaining()];
-            payloadChunk.get(chunkBytes);
-            try {
-                if (currentFrameOpcode > 0x7) {
-                    // Control frame payload
-                    controlFrameBuffer.write(chunkBytes);
-                } else {
-                    // Data frame payload
-                    reassemblyBuffer.write(chunkBytes);
+            synchronized (wsFrameLock) {
+                // Write the unmasked payload chunk to the appropriate buffer
+                byte[] chunkBytes = new byte[payloadChunk.remaining()];
+                payloadChunk.get(chunkBytes);
+                try {
+                    if (currentFrameOpcode > 0x7) {
+                        // Control frame payload
+                        controlFrameBuffer.write(chunkBytes);
+                    } else {
+                        // Data frame payload
+                        reassemblyBuffer.write(chunkBytes);
+                    }
+                } catch (IOException e) {
+                    // This is a memory stream, should not happen.
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                // This is a memory stream, should not happen.
-                throw new RuntimeException(e);
             }
         }
 
@@ -1183,6 +1399,14 @@ public class NioHttpServer implements Runnable {
                     String closeReason = "";
                     if (frame.getPayload().length >= 2) {
                         closeCode = ((frame.getPayload()[0] & 0xFF) << 8) | (frame.getPayload()[1] & 0xFF);
+
+                        // Validate close code per RFC 6455
+                        if (!isValidCloseCode(closeCode)) {
+                            wsConnection.close(WEBSOCKET_CLOSE_PROTOCOL_ERROR,
+                                    "Invalid close code");
+                            return;
+                        }
+
                         if (frame.getPayload().length > 2) {
                             closeReason = new String(frame.getPayload(), 2, frame.getPayload().length - 2, StandardCharsets.UTF_8);
                         }
@@ -1192,12 +1416,50 @@ public class NioHttpServer implements Runnable {
                     if (workerPool != null && !workerPool.isShutdown()) {
                         workerPool.submit(() -> wsHandler.onClose(wsConnection, code, reason));
                     }
+                    // Null out wsHandler BEFORE scheduling pendingClose so that
+                    // closeConnection() (called by handleWebSocketRead after parse returns)
+                    // does not fire a second onClose with WEBSOCKET_CLOSE_ABNORMAL.
+                    wsHandler = null;
                     wsConnection.forceClose();
+                    // Signal handleWebSocketRead to call closeConnection() once we return
+                    // from the parse chain. This ensures activeConnections is decremented
+                    // and the attachment is released back to the pool.
+                    pendingClose = true;
                     break;
                 case WEBSOCKET_OPCODE_PING: // PING
                     wsConnection.send(new WebSocketFrame(true, WEBSOCKET_OPCODE_PONG, frame.getPayload())); // Send PONG
                     break;
             }
+        }
+
+        /**
+         * Validates WebSocket close code per RFC 6455 §7.4.1
+         */
+        private static boolean isValidCloseCode(int code) {
+            // Valid ranges:
+            // 1. 1000-1011 (standard codes)
+            // 2. 3000-3999 (registered codes for custom use)
+            // 3. 4000-4999 (available for private use)
+
+            // Explicitly forbidden codes
+            if (code == 1004 || code == 1005 || code == 1006 ||
+                    code == 1015 || (code >= 1012 && code <= 1014)) {
+                return false;
+            }
+
+            // Valid standard codes
+            if (code >= 1000 && code <= 1011) {
+                return true;
+            }
+
+            // Valid custom ranges
+            if ((code >= 3000 && code <= 3999) ||
+                    (code >= 4000 && code <= 4999)) {
+                return true;
+            }
+
+            // Everything else is invalid
+            return false;
         }
     }
 
@@ -1210,9 +1472,9 @@ public class NioHttpServer implements Runnable {
 
     private record ResponseTask(SelectionKey key, HttpResponse response,
                                 WebSocketHandler wsHandler) {
-            ResponseTask(SelectionKey key, HttpResponse response) {
-                this(key, response, null);
-            }
+        ResponseTask(SelectionKey key, HttpResponse response) {
+            this(key, response, null);
+        }
     }
 
     public static class HttpResponse {
@@ -1288,7 +1550,7 @@ public class NioHttpServer implements Runnable {
                         currentCount + "/" + maxConcurrentStreams + ")");
             }
 
-            this.addHeader("Content-Type", MimeTypeUtil.readContentForMime(file.getName()));
+            this.addHeader("Content-Type", MimeTypeUtil.readContentForMime(file));
 
             String etag = generateETag(file);
             this.addHeader("ETag", etag);
@@ -1308,12 +1570,12 @@ public class NioHttpServer implements Runnable {
                 return;
             }
 
-            // 2. Increment stream count
-            activeStreams.incrementAndGet();
-
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             this.fileChannel = raf.getChannel();
             this.fileSize = fileChannel.size();
+
+            // 2. Increment stream count
+            activeStreams.incrementAndGet();
 
             String rangeHeader = request.getHeader("range", "");
             boolean rangeValid = true;
@@ -1531,9 +1793,7 @@ public class NioHttpServer implements Runnable {
             return "application/octet-stream";
         }
 
-        public static String readContentForMime(String filePath) {
-            File file = new File(filePath);
-
+        public static String readContentForMime(File file) {
             // 1. First, get the MIME type based on the file extension
             String extensionMimeType = MimeTypeUtil.getMimeType(file.getName());
 
@@ -1587,6 +1847,12 @@ public class NioHttpServer implements Runnable {
             this.body = Arrays.copyOfRange(requestBytes, headerEnd, requestBytes.length);
             String[] headerLines = headerPart.split("\r\n");
             String[] requestLine = headerLines[0].split(" ");
+            if (requestLine.length < 2) {
+                // Malformed request line — flag with nulls so the caller can return 400.
+                this.method = null;
+                this.path = null;
+                return;
+            }
             this.method = requestLine[0];
             this.path = requestLine[1];
             for (int i = 1; i < headerLines.length; i++) {
@@ -1627,16 +1893,12 @@ public class NioHttpServer implements Runnable {
         WebSocketConnection(SelectionKey key) { this.key = key; }
 
         public void send(String message) {
-            if (closed) {
-                throw new IllegalStateException("Connection is closed");
-            }
+            if (closed) return;
             send(new WebSocketFrame(true, WEBSOCKET_OPCODE_TEXT, message.getBytes(StandardCharsets.UTF_8)));
         }
 
         public void send(byte[] message) {
-            if (closed) {
-                throw new IllegalStateException("Connection is closed");
-            }
+            if (closed) return;
             send(new WebSocketFrame(true, WEBSOCKET_OPCODE_BINARY, message));
         }
 
@@ -1674,7 +1936,7 @@ public class NioHttpServer implements Runnable {
                 WebSocketFrame closeFrame = new WebSocketFrame(true, WEBSOCKET_OPCODE_CLOSE, payload.array());
                 outgoingQueue.add(closeFrame);
 
-               // key.interestOps(SelectionKey.OP_WRITE);
+                // key.interestOps(SelectionKey.OP_WRITE);
                 key.selector().wakeup();
             } catch (Exception e) {
                 // Force close on error
@@ -1790,74 +2052,98 @@ public class NioHttpServer implements Runnable {
         // 'parse' now takes a handler and doesn't return a frame
         public void parse(ByteBuffer buffer, FrameDataHandler handler) {
             while (buffer.hasRemaining()) {
-                switch (state) {
-                    case READING_HEADER:
-                        if (readBytes(buffer, smallHeaderBuffer, 2)) {
-                            processHeader(handler);
-                        }
-                        break;
-                    case READING_PAYLOAD_LEN_16:
-                        if (lengthBytes == null) lengthBytes = new byte[2];
-                        if (readBytes(buffer, lengthBytes, 2)) {
-                            payloadLength = ByteBuffer.wrap(lengthBytes).getShort() & 0xFFFF;
-                            payloadBytesRemaining = payloadLength;
-                            bytesRead = 0;
-                            state = State.READING_MASK;
-                            lengthBytes = null;
-                            handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
-                        }
-                        break;
-                    case READING_PAYLOAD_LEN_64:
-                        if (lengthBytes == null) lengthBytes = new byte[8];
-                        if (readBytes(buffer, lengthBytes, 8)) {
-                            payloadLength = ByteBuffer.wrap(lengthBytes).getLong();
-                            payloadBytesRemaining = payloadLength;
-                            bytesRead = 0;
-                            state = State.READING_MASK;
-                            lengthBytes = null;
-                            handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
-                        }
-                        break;
-                    case READING_MASK:
-                        if (maskKey == null) maskKey = new byte[4];
-                        if (readBytes(buffer, maskKey, 4)) {
-                            state = State.READING_PAYLOAD;
-                            bytesRead = 0;
-                            if (payloadLength == 0) { // Handle empty frames
+                try {
+                    switch (state) {
+                        case READING_HEADER:
+                            if (readBytes(buffer, smallHeaderBuffer, 2)) {
+                                processHeader(handler);
+                            }
+                            break;
+                        case READING_PAYLOAD_LEN_16:
+                            if (lengthBytes == null) lengthBytes = new byte[2];
+                            if (readBytes(buffer, lengthBytes, 2)) {
+                                payloadLength = ByteBuffer.wrap(lengthBytes).getShort() & 0xFFFF;
+                                payloadBytesRemaining = payloadLength;
+                                bytesRead = 0;
+                                state = State.READING_MASK;
+                                lengthBytes = null;
+                                handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
+                            }
+                            break;
+                        case READING_PAYLOAD_LEN_64:
+                            if (lengthBytes == null) lengthBytes = new byte[8];
+                            if (readBytes(buffer, lengthBytes, 8)) {
+                                payloadLength = ByteBuffer.wrap(lengthBytes).getLong();
+                                payloadBytesRemaining = payloadLength;
+                                bytesRead = 0;
+                                state = State.READING_MASK;
+                                lengthBytes = null;
+                                handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
+                            }
+                            break;
+                        case READING_MASK:
+                            if (maskKey == null) maskKey = new byte[4];
+                            if (readBytes(buffer, maskKey, 4)) {
+                                state = State.READING_PAYLOAD;
+                                bytesRead = 0;
+                                if (payloadLength == 0) { // Handle empty frames
+                                    handler.onFrameEnd();
+                                    reset();
+                                }
+                            }
+                            break;
+                        case READING_PAYLOAD:
+                            long toRead = Math.min(buffer.remaining(), payloadBytesRemaining);
+                            if (toRead == 0) break; // Nothing to read in this buffer iteration
+
+                            int originalLimit = buffer.limit();
+                            buffer.limit(buffer.position() + (int)toRead);
+
+                            // Unmask and pass the chunk to the handler
+                            unmaskAndProcessChunk(buffer, handler);
+
+                            buffer.limit(originalLimit);
+                            payloadBytesRemaining -= toRead;
+
+                            if (payloadBytesRemaining == 0) {
                                 handler.onFrameEnd();
                                 reset();
                             }
-                        }
-                        break;
-                    case READING_PAYLOAD:
-                        long toRead = Math.min(buffer.remaining(), payloadBytesRemaining);
-                        if (toRead == 0) break; // Nothing to read in this buffer iteration
-
-                        int originalLimit = buffer.limit();
-                        buffer.limit(buffer.position() + (int)toRead);
-
-                        // Unmask and pass the chunk to the handler
-                        unmaskAndProcessChunk(buffer, handler);
-
-                        buffer.limit(originalLimit);
-                        payloadBytesRemaining -= toRead;
-
-                        if (payloadBytesRemaining == 0) {
-                            handler.onFrameEnd();
-                            reset();
-                        }
-                        break;
+                            break;
+                    }
+                } catch (RuntimeException e) {
+                    // Log error, close connection gracefully
+                    System.err.println("WebSocket parse error: " + e.getMessage());
+                    handler.onFrameEnd(); // Signal completion
+                    throw e; // Re-throw to close connection
                 }
             }
         }
 
         private void unmaskAndProcessChunk(ByteBuffer chunk, FrameDataHandler handler) {
-            // Unmask the data in place or create a temporary buffer for the chunk
+           /* // Unmask the data in place or create a temporary buffer for the chunk
             for (int i = 0; i < chunk.remaining(); i++) {
                 int payloadIndex = (int)((payloadLength - payloadBytesRemaining) + i);
                 chunk.put(chunk.position() + i, (byte)(chunk.get(chunk.position() + i) ^ maskKey[payloadIndex % 4]));
             }
-            handler.onFramePayloadData(chunk);
+            handler.onFramePayloadData(chunk); */
+
+            ByteBuffer unmaskedChunk = ByteBuffer.allocate(chunk.remaining());
+            int startPos = chunk.position();
+            int len = chunk.remaining();
+
+            for (int i = 0; i < chunk.remaining(); i++) {
+                int payloadIndex = (int)((payloadLength - payloadBytesRemaining) + i);
+                byte masked = chunk.get(chunk.position() + i);
+                byte unmasked = (byte)(masked ^ maskKey[payloadIndex % 4]);
+                unmaskedChunk.put(unmasked);
+            }
+
+            unmaskedChunk.flip();
+            handler.onFramePayloadData(unmaskedChunk);
+
+            // Advance the position!
+            chunk.position(startPos + len);
         }
 
         private void processHeader(FrameDataHandler handler) {

@@ -30,6 +30,7 @@ import android.view.Window;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -90,11 +91,9 @@ import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.FileRepository;
-import apincer.music.core.model.MusicFolder;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.repository.TagRepository;
@@ -141,14 +140,12 @@ public class MainActivity extends AppCompatActivity {
     private ResideMenu mResideMenu;
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
-    private final List<MusicTag> selections = new ArrayList<>();
-    //private Snackbar mExitSnackbar;
+    private final List<Track> selections = new ArrayList<>();
     private View mHeaderPanel;
     private ImageView mBackButton;
     private SearchView headerSearchView;
     private TextView headerStatText;
 
-    //private StateView mStateView;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton fabScrollToTop;
@@ -162,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
     // State variables
     private long lastScrollEventTime = 0;
     private volatile boolean busy;
-    private MediaTrack previouslyPlaying;
+    private Track previouslyPlaying;
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
@@ -197,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void setNowPlaying(MediaTrack song) {
+    private void setNowPlaying(Track song) {
         if (song != null) {
             mRecyclerView.post(() -> {
                 if(!song.equals(previouslyPlaying)) {
@@ -250,7 +247,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
+
+                    // load music items
                     viewModel.loadMusicItems(adapter.getCriteria());
+                   // viewModel.loadMusicItems(adapter.getCriteria());
                 });
 
         // Setup status bar
@@ -502,11 +502,12 @@ public class MainActivity extends AppCompatActivity {
         // Setup item click listener
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
 
-            MusicTag tag = adapter.getMusicTag(position);
+            Track tag = adapter.getMusicTag(position);
             if(tag == null) return;
 
-            if(tag instanceof MusicFolder folder) {
-                doStartRefresh(folder.getType(), tag.getTitle());
+            //if(tag instanceof MusicFolder folder) {
+            if(tag.isContainer()) {
+                doStartRefresh(tag.getContainerType(), tag.getTitle());
             }else {
                 doShowEditActivity(Collections.singletonList(tag));
             }
@@ -552,7 +553,7 @@ public class MainActivity extends AppCompatActivity {
                 //.setThumbDrawable(Objects.requireNonNull(
                 //        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
                 .setPopupTextProvider((view, position) -> {
-                    MediaTrack track = adapter.getMusicTag(position);
+                    Track track = adapter.getMusicTag(position);
                     if(track != null && !isEmpty(track.getTitle())) return track.getTitle().subSequence(0,1);
                     return "-";
                 })
@@ -587,10 +588,10 @@ public class MainActivity extends AppCompatActivity {
             TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
             TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
 
-            List<MusicTag> list = viewModel.getTagRepository().getAllMusics();
+            List<Track> list = viewModel.getTagRepository().getAllMusics();
             long songCount = list.size();
             long totalDuration = 0;
-            for (MusicTag tag : list) {
+            for (Track tag : list) {
                 if (tag != null) { // Add null check for safety
                     totalDuration += (long) tag.getAudioDuration();
                 }
@@ -632,7 +633,9 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
                 }
-                statText = statText+" · ["+filterText+"]";
+                if(!isEmpty(filterText)) {
+                    statText = statText + " · [" + filterText + "]";
+                }
             }
 
             // can back to higher category, except type library
@@ -667,8 +670,13 @@ public class MainActivity extends AppCompatActivity {
         if (mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
         }
+        if(headerSearchView != null) {
+            headerSearchView.clearFocus();
+        }
 
-     //   closeSearch();
+       // viewModel.getTagRepository().cleanInvalidTags();
+        // load music items
+       // viewModel.loadMusicItems(adapter.getCriteria());
     }
 
     @Override
@@ -689,7 +697,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void scrollToSong(MediaTrack currentlyPlaying) {
+    private void scrollToSong(Track currentlyPlaying) {
         if (currentlyPlaying == null) return;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
@@ -828,7 +836,8 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
         View btnOK = cview.findViewById(R.id.button_ok);
-        View btnOKFull = cview.findViewById(R.id.button_ok_full);
+        CheckBox checkboxFullScan = cview.findViewById(R.id.checkbox_full_scan);
+       // View btnOKFull = cview.findViewById(R.id.button_ok_full);
         View btnCancel = cview.findViewById(R.id.button_cancel);
 
         List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
@@ -926,16 +935,8 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
             Log.i(TAG, "Starting scan music file.");
-            ScanAudioFileWorker.startScan(getApplicationContext());
-            alert.dismiss();
-        });
-
-        btnOKFull.setOnClickListener(v -> {
-            Settings.setDirectories(getApplicationContext(), dirs);
-            Log.i(TAG, "Starting full scan music file.");
-            TagRepository repository = new TagRepository(getApplicationContext());
-            repository.purgeDatabase();
-            ScanAudioFileWorker.startScan(getApplicationContext());
+            boolean isFullScan = checkboxFullScan.isChecked();
+            ScanAudioFileWorker.startScan(getApplicationContext(), isFullScan);
             alert.dismiss();
         });
 
@@ -943,10 +944,10 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private void doShowEditActivity(List<MusicTag> selections) {
-        ArrayList<MusicTag> tagList = new ArrayList<>();
+    private void doShowEditActivity(List<Track> selections) {
+        ArrayList<Track> tagList = new ArrayList<>();
 
-        for (MusicTag tag : selections) {
+        for (Track tag : selections) {
             if (FileRepository.isMediaFileExist(tag)) {
                 tagList.add(tag);
             } else {
@@ -971,7 +972,6 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < tagList.size(); i++) {
                 tagIds[i] = tagList.get(i).getId();
             }
-           // sharedViewModel.addSharedItems(Constants.SHARED_TYPE.PREVIEW,tagList);
 
             Intent intent = new Intent(MainActivity.this, TagsActivity.class);
             intent.putExtra("MUSIC_TAG_IDS", tagIds);
@@ -1021,12 +1021,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void doDeleteMediaItems(List<MusicTag> selections) {
+    private void doDeleteMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
 
-        Map<MusicTag, String> statusList = new HashMap<>();
+        Map<Track, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         ImageView titleIcon = cview.findViewById(R.id.title_icon);
         TextView titleText = cview.findViewById(R.id.title);
@@ -1058,7 +1058,7 @@ public class MainActivity extends AppCompatActivity {
                     view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 }
 
-                MusicTag tag = selections.get(i);
+                Track tag = selections.get(i);
                 TextView seq = view.findViewById(R.id.seq);
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
@@ -1114,7 +1114,7 @@ public class MainActivity extends AppCompatActivity {
             operationTask.deleteFiles(getApplicationContext(), selections,
                     new FileOperationTask.ProgressCallback() {
                         @Override
-                        public void onProgress(MusicTag tag, int progress, String status) {
+                        public void onProgress(Track tag, int progress, String status) {
                             runOnUiThread(() -> {
                                 statusList.put(tag, status);
                                 itemsView.invalidateViews();
@@ -1141,12 +1141,12 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private void doMoveMediaItems(List<MusicTag> selections) {
+    private void doMoveMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
 
-        Map<MusicTag, String> statusList = new HashMap<>();
+        Map<Track, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         ImageView titleIcon = cview.findViewById(R.id.title_icon);
@@ -1178,7 +1178,7 @@ public class MainActivity extends AppCompatActivity {
                     view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 }
 
-                MusicTag tag = selections.get(i);
+                Track tag = selections.get(i);
                 TextView seq = view.findViewById(R.id.seq);
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
@@ -1232,7 +1232,7 @@ public class MainActivity extends AppCompatActivity {
             operationTask.moveFiles(getApplicationContext(), selections,
                     new FileOperationTask.ProgressCallback() {
                         @Override
-                        public void onProgress(MusicTag tag, int progress, String status) {
+                        public void onProgress(Track tag, int progress, String status) {
                             runOnUiThread(() -> {
                                 statusList.put(tag, status);
                                 itemsView.invalidateViews();
@@ -1260,131 +1260,12 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private void doDeepAnalysis(List<MusicTag> selections) {
-        if (selections.isEmpty()) return;
-
-        View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
-
-        Map<MusicTag, String> statusList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        TextView titleText = cview.findViewById(R.id.title);
-        ImageView titleIcon = cview.findViewById(R.id.title_icon);
-        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
-        titleText.setText(R.string.title_dynamic_range_and_replay_gain);
-        fileListTitleText.setText(R.string.files_to_analyze);
-        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_query_stats_24));
-
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
-            }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @SuppressLint("InflateParams")
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                if (view == null) {
-                    view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                }
-
-                MusicTag tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-
-                seq.setText(String.valueOf(i + 1));
-                status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(tag.getSimpleName());
-
-                return view;
-            }
-        });
-
-        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-        btnOK.setEnabled(true);
-        btnOK.setText(R.string.analyst);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS / block;
-        List<Long> valueList = new ArrayList<>();
-
-        for (int i = 0; i < block; i++) {
-            valueList.add((long) sizeInBlock);
-        }
-
-       // final double rate = 100.00 / selections.size();
-        int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
-
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
-
-        if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            btnOK.setEnabled(false);
-           // btnOK.setVisibility(GONE);
-
-            progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
-
-            operationTask.measureDR(getApplicationContext(), selections,
-                    new FileOperationTask.ProgressCallback() {
-                        @Override
-                        public void onProgress(MusicTag tag, int progress, String status) {
-                            runOnUiThread(() -> {
-                                statusList.put(tag, status);
-                                itemsView.invalidateViews();
-                                progressBar.setProgress(progress);
-                                progressBar.invalidate();
-                            });
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            runOnUiThread(() -> {
-                                viewModel.loadMusicItems();
-                                busy = false;
-                            });
-                        }
-                    });
-        });
-
-        btnCancel.setOnClickListener(v -> {
-            alert.dismiss();
-            busy = false;
-        });
-
-        alert.show();
-    }
-
-    private void doEncodeAudioFiles(List<MusicTag> selections) {
+    private void doEncodeAudioFiles(List<Track> selections) {
         if (selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_encoding_files, null);
 
-        Map<MusicTag, String> statusList = new HashMap<>();
+        Map<Track, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
@@ -1420,7 +1301,7 @@ public class MainActivity extends AppCompatActivity {
                     view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 }
 
-                MusicTag tag = selections.get(i);
+                Track tag = selections.get(i);
                 TextView seq = view.findViewById(R.id.seq);
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
@@ -1477,14 +1358,13 @@ public class MainActivity extends AppCompatActivity {
             }else {
                 if(selectedFormat.contains("fast")) compressionLevel = FLAC_FAST_COMPRESS_LEVEL;
                 else if(selectedFormat.contains("maximum")) compressionLevel = FLAC_MAXIMUM_COMPRESS_LEVEL;
-                else compressionLevel = FLAC_BALANCE_COMPRESS_LEVEL;
                 targetExt = FILE_FLAC;
             }
 
             operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel,
                     new FileOperationTask.ProgressCallback() {
                         @Override
-                        public void onProgress(MusicTag tag, int progress, String status) {
+                        public void onProgress(Track tag, int progress, String status) {
                             runOnUiThread(() -> {
                                 statusList.put(tag, status);
                                 itemsView.invalidateViews();
@@ -1563,11 +1443,12 @@ public class MainActivity extends AppCompatActivity {
             // Get the item from the adapter.
             // NOTE: Make sure getMusicTag() returns the actual data object
             // (e.g., MusicFolder or MusicFile)
-            Object item = adapter.getMusicTag(position);
+            Track item = adapter.getMusicTag(position);
 
             // If the item IS a MusicFolder, REJECT any state change.
             // This prevents it from being selected.
-            return !(item instanceof MusicFolder);
+           // return !(item instanceof MusicFolder);
+            return !item.isContainer();
         }
 
         /**
@@ -1584,10 +1465,11 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
 
-            Object item = adapter.getMusicTag(position);
+            Track item = adapter.getMusicTag(position);
 
             // REJECT state change for MusicFolder
-            return !(item instanceof MusicFolder);
+            //return !(item instanceof MusicFolder);
+            return !item.isContainer();
         }
 
         @Override
@@ -1669,7 +1551,7 @@ public class MainActivity extends AppCompatActivity {
             //mTitlePanel.setVisibility(VISIBLE);
         }
 
-        private List<MusicTag> getSelections() {
+        private List<Track> getSelections() {
             return new ArrayList<>(selections);
         }
     }

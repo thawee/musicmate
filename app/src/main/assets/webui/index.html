@@ -1081,7 +1081,8 @@
             const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
             if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${track.quality}</span>`;
             if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${track.quality}</span>`;
-            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES') || track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${track.quality}</span>`;
+            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${track.quality}</span>`;
+            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:blue-700 dark:text-blue-900">${track.quality}</span>`;
             if (track.quality.startsWith('CD')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${track.quality}</span>`;
             return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${track.quality}</span>`;
         }

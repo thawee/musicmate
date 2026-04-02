@@ -1,7 +1,5 @@
 package apincer.android.jupnp.server.httpcore;
 
-import static apincer.music.core.utils.StringUtils.isEmpty;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -47,12 +45,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
+import apincer.music.core.server.ContentHolder;
 import apincer.music.core.server.spi.WebServer;
-import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.server.jupnp.transport.DLNAHeaderHelper;
 
 public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
@@ -294,20 +292,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                         + " method not supported");
             }
 
-           // String requestUri = Uri.parse(request.getHead().getRequestUri()).getPath();
-            String requestUri = uri;
-            if (isEmpty(requestUri) || requestUri.equals("/")) {
-                requestUri = "/index.html";
-            }
-
-            ContentHolder contentHolder;
-            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
-                contentHolder = lookupAlbumArt(requestUri);
-            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-                contentHolder = lookupContent(requestUri, userAgent, remoteAddr);
-            } else {
-                contentHolder = lookupWebResource(requestUri);
-            }
+            ContentHolder contentHolder = resolveRequest(uri, remoteAddr, userAgent);
 
             if (contentHolder == null) {
                 submitError(responseTrigger, context, HttpStatus.SC_FORBIDDEN, "Access denied");
@@ -349,6 +334,10 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
             responseBuilder.addHeader("X-Content-Type-Options", "nosniff");
             responseBuilder.addHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate");
 
+            // Dynamic ETag support
+            String etag = generateETag(file);
+            responseBuilder.addHeader(HttpHeaders.ETAG, etag);
+
             // Updated Partial Content logic for 5.3.6
             if (isPartial) {
               //  responseBuilder.addHeader("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -358,21 +347,37 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
 
                 // Use the custom 5.3.6 compatible producer
                 responseBuilder.setEntity(new PartialFileProducer(
-                        file, start, contentLength, ContentType.parse(contentHolder.contentType)
+                        file, start, contentLength, ContentType.parse(contentHolder.getContentType())
                 ));
             } else {
                 // 604800 seconds = 7 days
                 //responseBuilder.addHeader("Cache-Control", "public, max-age=604800, immutable");
-                responseBuilder.setEntity(contentHolder.getEntityProducer(getContext()));
+                responseBuilder.setEntity(getEntityProducer(getContext(), contentHolder));
             }
 
-            // 5. Add DLNA Headers
-            responseBuilder.addHeader("transferMode.dlna.org", "Streaming");
-            if (contentHolder.dlnaContentFeatures != null) {
-                responseBuilder.addHeader("contentFeatures.dlna.org", contentHolder.dlnaContentFeatures);
+            // 5. Add Audiophile/DLNA Headers
+            if(contentHolder.isImage()) {
+                responseBuilder.addHeader("transferMode.dlna.org", "Streaming");
+                if (contentHolder.getTrack() != null) {
+                    Track tag = contentHolder.getTrack();
+                    responseBuilder.addHeader("contentFeatures.dlna.org", DLNAHeaderHelper.getDLNAContentFeatures(tag));
+                    if (tag.getAudioSampleRate() > 0)
+                        responseBuilder.addHeader("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
+                    if (tag.getAudioBitsDepth() > 0)
+                        responseBuilder.addHeader("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
+                    if (tag.getAudioBitRate() > 0)
+                        responseBuilder.addHeader("X-Audio-Bitrate", tag.getAudioBitRate() / 1000 + " kbps");
+                    responseBuilder.addHeader("X-Audio-Format", String.valueOf(tag.getFileType()));
+                    responseBuilder.addHeader("X-Audio-Bit-Perfect", "true");
+                }
             }
 
             responseTrigger.submitResponse(responseBuilder.build(), context);
+        }
+
+        private AsyncEntityProducer getEntityProducer(Context context, ContentHolder contentHolder) {
+            File file = new File(contentHolder.getFilePath());
+            return AsyncEntityProducers.create(file, ContentType.parse(contentHolder.getContentType()));
         }
 
         private void submitError(ResponseTrigger responseTrigger, HttpContext context, int status, String message) {
@@ -402,89 +407,5 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
             }
         }
 
-        /**
-         * Lookup content in the media library
-         *
-         * @param contentId the id of the content
-         * @return the content description
-         */
-        private ContentHolder lookupContent(String contentId, String userAgent, String remoteAddr) {
-            ContentHolder result = null;
-
-            if (contentId == null) {
-                return null;
-            }
-
-            try {
-                MusicTag song = getSong(contentId);
-                notifyPlayback(remoteAddr, userAgent, song);
-                if (song != null) {
-                    String contentType = MimeTypeUtils.getMimeTypeFromPath(song.getPath());
-                    if (contentType == null) contentType = "audio/*";
-                    String dlnaContentFeatures = DLNAHeaderHelper.getDLNAContentFeatures(song);
-                    result = new ContentHolder(contentType, String.valueOf(song.getId()), song.getPath(), dlnaContentFeatures);
-                }
-            } catch (Exception ex) {
-                Log.e(TAG, "lookupContent: - " + contentId, ex);
-            }
-
-            return result;
-        }
-
-        /**
-         * Lookup content in the media library
-         *
-         * @param requestUri the id of the album
-         * @return the content description
-         */
-        private ContentHolder lookupAlbumArt(String requestUri) {
-            File filePath = getAlbumArt(requestUri);
-            String contentType = MimeTypeUtils.getMimeTypeFromPath(filePath.getPath());
-            if (contentType == null) contentType = "image/*";
-            return new ContentHolder(contentType, requestUri, filePath.getAbsolutePath(), null);
-        }
-
-        private ContentHolder lookupWebResource(String requestUri) {
-            File filePath = getWebResource(requestUri);
-            String contentType = MimeTypeUtils.getMimeTypeFromPath(filePath.getPath());
-            if (contentType == null) contentType = "text/*";
-            return new ContentHolder(contentType, filePath.getName(), filePath.getPath());
-        }
-
-        /**
-         * ValueHolder for media content.
-         */
-        static class ContentHolder {
-            private final String contentType;
-            private final String resId;
-            private final String filePath;
-            // private byte[] content;
-            private String dlnaContentFeatures;
-
-            public ContentHolder(String contentType, String resId, String filePath) {
-                this.resId = resId;
-                this.filePath = filePath;
-                this.contentType = contentType;
-            }
-
-            public ContentHolder(String contentType, String resId, String filePath, String dlnaContentFeatures) {
-                this.resId = resId;
-                this.filePath = filePath;
-                this.contentType = contentType;
-                this.dlnaContentFeatures = dlnaContentFeatures;
-            }
-
-            /**
-             * @return the uri
-             */
-            public String getFilePath() {
-                return filePath;
-            }
-
-            public AsyncEntityProducer getEntityProducer(Context context) {
-                File file = new File(getFilePath());
-                return AsyncEntityProducers.create(file, ContentType.parse(contentType));
-            }
-        }
     }
 }

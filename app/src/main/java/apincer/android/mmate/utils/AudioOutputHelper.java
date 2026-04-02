@@ -25,7 +25,7 @@ import androidx.core.content.res.ResourcesCompat;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
@@ -127,7 +127,7 @@ public class AudioOutputHelper {
     }
 
     @SuppressLint("MissingPermission")
-    public static Device getOutputDevice(Context context, MediaTrack track) {
+    public static Device getOutputDevice(Context context, Track track) {
         Device outputDevice = new Device();
         MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
        // MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);

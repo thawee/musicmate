@@ -1,170 +1,74 @@
 package apincer.music.core.repository;
 
 import static apincer.music.core.Constants.DEFAULT_COVERART;
-import static apincer.music.core.utils.StringUtils.trim;
-import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.Constants.PATH_MISSING_TRACK;
+import static apincer.music.core.model.PlaylistEntry.TYPE_TITLE;
+import static apincer.music.core.model.PlaylistEntry.songKey;
 
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.PlaylistCollection;
 import apincer.music.core.model.PlaylistEntry;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.PlaylistRule;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.ApplicationUtils;
 
 public class PlaylistRepository {
     private static final String TAG = "PlaylistRepository";
     private static List<PlaylistEntry> playlists = new ArrayList<>();
 
-    public static final String TYPE_SONG = "song";
-    //public static final String TYPE_TITLE_ARTIST = "title_artist";
-    public static final String TYPE_ALBUM = "album";
-    public static final String TYPE_GENRE = "genre";
-    //public static final String TYPE_GROUPING = "grouping";
-    public static final String TYPE_RATING = "rating";
+    public static synchronized void loadPlaylists(Context context) {
+        if (!playlists.isEmpty()) return; // Early exit
 
-    public static void loadPlaylists(Context context) {
-        if (playlists.isEmpty()) { // Ensure it's loaded only once
-            ObjectMapper mapper = new ObjectMapper();
-            // Assuming playlists.json is directly under assets
-            InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlists.json");
+        // Ensure it's loaded only once
+        ObjectMapper mapper = new ObjectMapper();
+        // Assuming playlists.json is directly under assets
+        InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlists.json");
 
-            if (in != null) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                    PlaylistCollection collection = mapper.readValue(reader, PlaylistCollection.class);
-                    if (collection != null && collection.getPlaylists() != null) {
-                        playlists = collection.getPlaylists();
-                        Log.d(TAG, "Loaded " + playlists.size() + " playlist entries from JSON.");
-                    } else {
-                        Log.e(TAG, "Failed to parse playlists.json or it's empty.");
-                        playlists = Collections.emptyList(); // Ensure it's not null
-                    }
-                    populatePlaylistMap(playlists);
-                } catch (IOException e) { // Catch parsing errors too
-                    Log.e(TAG, "Error reading or parsing playlists.json", e);
-                    playlists = Collections.emptyList();
+        if (in != null) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                PlaylistCollection collection = mapper.readValue(reader, PlaylistCollection.class);
+                if (collection != null && collection.getPlaylists() != null) {
+                    collection.compileRules();
+                    playlists = collection.getPlaylists();
+                    Log.d(TAG, "Loaded " + playlists.size() + " playlist entries from JSON.");
+                } else {
+                    Log.e(TAG, "Failed to parse playlists.json or it's empty.");
+                    playlists = Collections.emptyList(); // Ensure it's not null
                 }
-            } else {
-                Log.e(TAG, "Could not find playlists.json in assets");
+                //populatePlaylistMap(playlists);
+            } catch (IOException e) { // Catch parsing errors too
+                Log.e(TAG, "Error reading or parsing playlists.json", e);
                 playlists = Collections.emptyList();
             }
+        } else {
+            Log.e(TAG, "Could not find playlists.json in assets");
+            playlists = Collections.emptyList();
         }
-    }
-
-    private static void populatePlaylistMap(List<PlaylistEntry> allPlaylists) {
-        //for each entry, add to it's mappedSong with key based on type
-        // song - key is title|artist|album
-        // album - key is album|artist
-        // genre - key is genre
-        if (allPlaylists == null) {
-            return;
-        }
-        for (PlaylistEntry entry : allPlaylists) {
-            if (entry == null) {
-                continue;
-            }
-
-            String type = entry.getType() == null ? "" : entry.getType().toLowerCase();
-
-            switch (type) {
-                case TYPE_SONG:
-                    if (entry.getSongs() != null) {
-                        for (MusicTag song : entry.getSongs()) {
-                            if (song != null && song.getTitle() != null && song.getArtist() != null) {
-                                String key = getKeyForSong(song.getTitle(), song.getArtist(), song.getAlbum());
-                                entry.getMappedSongs().put(key, song);
-                            }
-                        }
-                    }
-                    break;
-
-                case TYPE_ALBUM:
-                    if (entry.getSongs() != null) {
-                        for (MusicTag song : entry.getSongs()) {
-                            if (song != null && song.getAlbum() != null && song.getArtist() != null) {
-                                String key = getKeyForAlbum(song);
-                                entry.getMappedSongs().put(key, song);
-                            }
-                        }
-                    }
-                    break;
-
-                case TYPE_GENRE:
-                    if (entry.getSongs() != null) {
-                        for (MusicTag song : entry.getSongs()) {
-                            if (song != null && song.getGenre() != null ) {
-                                String genre = getKeyForGenre(song);
-                                entry.getMappedSongs().put(genre, song);
-                            }
-                        }
-                    }
-                    break;
-
-                case TYPE_RATING:
-                    if (entry.getSongs() != null) {
-                        for (MusicTag song : entry.getSongs()) {
-                            if (song != null && song.getQualityRating() != null) {
-                                String grouping = getKeyForRating(song);
-                                entry.getMappedSongs().put(grouping, song);
-                            }
-                        }
-                    }
-                    break;
-
-                default:
-                   // Log.w(TAG, "populatePlaylistMaps: Unhandled playlist type: " + entry.getType() + " for playlist UUID: " + playlistUuid);
-                    break;
-            }
-        }
-    }
-
-    @NonNull
-    private static String getKeyForGenre(MediaTrack song) {
-        return trimToEmpty(song.getGenre()).toLowerCase();
-    }
-
-    @NonNull
-    private static String getKeyForAlbum(MediaTrack song) {
-        String albumTitle = trimString(song.getAlbum()).toLowerCase();
-        String artist = trimString(song.getArtist()).toLowerCase();
-        return albumTitle + "|" + artist;
-    }
-
-    @NonNull
-    private static String getKeyForSong(String title, String artist, String album) {
-        title = trimString(title).toLowerCase();
-        artist = trimString(artist).toLowerCase();
-        album = trim(album, "*").toLowerCase();
-        return title + "|" + artist + "|" + album;
-    }
-
-    private static String trimString(String title) {
-        title = trimToEmpty(title).toLowerCase();
-        title = title.replaceAll(" {2}", " ");
-
-        return title;
     }
 
     private static Optional<PlaylistEntry> findPlaylistByName(String playlistName) {
@@ -189,61 +93,93 @@ public class PlaylistRepository {
         return playlists;
     }
 
-    public static boolean isSongInPlaylistName(MusicTag tagToCheck, String name) {
+    public static void exportPlaylists(File playlistDir, List<Track> songs) {
+        if (playlists == null || playlists.isEmpty() || songs == null) return;
+
+        if (!playlistDir.exists()) {
+            playlistDir.mkdirs();
+        }
+
+        // 1. Group songs per playlist
+        Map<PlaylistEntry, List<Track>> playlistMap = new HashMap<>();
+
+        for (PlaylistEntry entry : playlists) {
+            playlistMap.put(entry, new ArrayList<>());
+        }
+
+        for (Track song : songs) {
+            if (song == null) continue;
+
+            for (PlaylistEntry entry : playlists) {
+                if (entry.isInPlaylist(song)) {
+                    playlistMap.get(entry).add(song);
+                }
+            }
+        }
+
+        // 2. Write each playlist to M3U
+        for (Map.Entry<PlaylistEntry, List<Track>> e : playlistMap.entrySet()) {
+            PlaylistEntry entry = e.getKey();
+            List<Track> tracks = e.getValue();
+
+            if (tracks.isEmpty()) continue;
+
+            File m3uFile = new File(playlistDir, sanitizeFileName(entry.getName()) + ".m3u");
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(m3uFile))) {
+
+                writer.write("#EXTM3U\n");
+
+                for (Track track : tracks) {
+                    if (track == null) continue;
+
+                    String title = safe(track.getTitle());
+                    String artist = safe(track.getArtist());
+                    String path = safe(track.getPath());
+
+                    // Duration unknown → use -1
+                    writer.write("#EXTINF:-1," + artist + " - " + title + "\n");
+                    writer.write(path + "\n");
+                }
+
+            } catch (IOException ex) {
+                Log.e(TAG, "Error writing playlist: " + entry.getName(), ex);
+            }
+        }
+    }
+    private static String sanitizeFileName(String name) {
+        if (name == null) return "playlist";
+        return name.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    private static String safe(String s) {
+        return s == null ? "" : s;
+    }
+
+    public static boolean isSongInPlaylistName(Track track, String name) {
         Optional<PlaylistEntry> playlistOpt = findPlaylistByName(name);
         if (playlistOpt.isEmpty()) { // || !TYPE_GROUPING.equalsIgnoreCase(playlistOpt.get().getType())) {
             return false;
         }
 
         PlaylistEntry entry = playlistOpt.get();
-        if (entry.getSongs() == null) {
+        if (entry.getRules() == null) {
             return false;
         }
-        return isSongInPlaylist(tagToCheck, entry);
+        return entry.isInPlaylist(track);
     }
 
-    public static boolean isSongInPlaylist(MusicTag tagToCheck, String playlistUuid) {
+    public static boolean isSongInPlaylistUuid(Track track, String playlistUuid) {
         Optional<PlaylistEntry> playlistOpt = findPlaylistByUuid(playlistUuid);
         if (playlistOpt.isEmpty()) { // || !TYPE_GROUPING.equalsIgnoreCase(playlistOpt.get().getType())) {
             return false;
         }
 
         PlaylistEntry entry = playlistOpt.get();
-        if (entry.getSongs() == null) {
+        if (entry.getRules() == null) {
             return false;
         }
-        return isSongInPlaylist(tagToCheck, entry);
-    }
-
-    private static boolean isSongInPlaylist(MusicTag tagToCheck, PlaylistEntry entry) {
-        List<String> keys = getKeyForPlaylist(entry, tagToCheck);
-        for(String key: keys) {
-             if(entry.getMappedSongs().containsKey(key)) {
-                 return true;
-             }
-        }
-        return false;
-    }
-
-    private static List<String> getKeyForPlaylist(PlaylistEntry entry, MusicTag tagToCheck) {
-        List<String> keys = new ArrayList<>();
-        switch (entry.getType()) {
-            case TYPE_SONG -> {
-                keys.add(getKeyForSong(tagToCheck.getTitle(), tagToCheck.getArtist(), tagToCheck.getAlbum()));
-                keys.add(getKeyForSong(tagToCheck.getTitle(), tagToCheck.getArtist(), "*"));
-            }
-           // case TYPE_TITLE_ARTIST -> getKeyForTitleArtist(tagToCheck);
-            case TYPE_ALBUM -> keys.add(getKeyForAlbum(tagToCheck));
-            case TYPE_GENRE -> keys.add(getKeyForGenre(tagToCheck));
-           // case TYPE_GROUPING -> getKeyForGrouping(tagToCheck);
-            case TYPE_RATING -> keys.add(getKeyForRating(tagToCheck));
-           // default -> "";
-        }
-        return keys;
-    }
-
-    private static String getKeyForRating(@UnknownNullability MediaTrack song) {
-        return trimToEmpty(song.getQualityRating()).toLowerCase();
+        return entry.isInPlaylist(track);
     }
 
     public static PlaylistEntry getPlaylistByName(String playlistName) {
@@ -251,15 +187,9 @@ public class PlaylistRepository {
         return playlistOpt.orElse(null);
     }
 
-    public static boolean isInPlaylist(@NotNull MusicTag tag) {
-        List<String> focusTypes = Arrays.asList("song", "album", "title_artist");
-
+    public static boolean isInPlaylist(@NotNull Track tag) {
         for(PlaylistEntry entry: playlists) {
-            if(focusTypes.contains(entry.getType())) {
-                if (isSongInPlaylistName(tag, entry.getName())) {
-                    return true;
-                }
-            }
+            return entry.isInTitlePlaylist(tag);
         }
         return false;
     }
@@ -270,50 +200,47 @@ public class PlaylistRepository {
      //* @param existingMusicTagsInLibrary List of MusicTags representing the user's current music library.
      * @return List of MusicTags for songs defined in the playlist but not found in the library.
      */
-    public static List<MusicTag> getMissingSongs(String playlistName, List<MusicTag> existingMusicTagsInLibrary) {
+    public static List<Track> getMissingSongs(String playlistName, List<Track> existingMusicTagsInLibrary) {
         Optional<PlaylistEntry> playlistOpt = findPlaylistByName(playlistName);
-        if (playlistOpt.isEmpty() || !TYPE_SONG.equalsIgnoreCase(playlistOpt.get().getType()) || playlistOpt.get().getSongs() == null) {
+        if (playlistOpt.isEmpty() || !TYPE_TITLE.equalsIgnoreCase(playlistOpt.get().getType()) || playlistOpt.get().getRules() == null) {
             return Collections.emptyList();
         }
 
-        List<MusicTag> songsInJsonPlaylist = new ArrayList<>(playlistOpt.get().getSongs());
-        List<MusicTag> missingTags = new ArrayList<>();
+        List<PlaylistRule> playlistRules = new ArrayList<>(playlistOpt.get().getRules());
+        List<Track> missingTags = new ArrayList<>();
         AtomicInteger pseudoIdCounter = new AtomicInteger(2999000);
 
-        Map<String, String> foundMapped = new HashMap<>();
-        for(MusicTag song: existingMusicTagsInLibrary) {
-            String key = getKeyForSong(song.getTitle(), song.getArtist(), song.getAlbum());
-            foundMapped.put(key, key);
-            key = getKeyForSong(song.getTitle(), song.getArtist(), "*");
-            foundMapped.put(key, key);
+        Set<Long> libraryIndex = new HashSet<>();
+        for (Track song : existingMusicTagsInLibrary) {
+            libraryIndex.add(songKey(song.getTitle(), song.getArtist()));
         }
 
-        for (MediaTrack songFromPlaylist : songsInJsonPlaylist) {
-            if (songFromPlaylist == null) continue;
+        for (PlaylistRule rule : playlistRules) {
+            long key = songKey(rule.getTitle(), rule.getArtist());
 
-            String key = getKeyForSong(songFromPlaylist.getTitle(), songFromPlaylist.getArtist(), songFromPlaylist.getAlbum());
-            if(!foundMapped.containsKey(key)) {
-                MusicTag missingTag = new MusicTag(); //songFromPlaylist;
-                missingTag.setTitle(songFromPlaylist.getTitle());
-                missingTag.setArtist(songFromPlaylist.getArtist());
-                missingTag.setAlbum(songFromPlaylist.getAlbum());
-                missingTag.setMusicManaged(true); // prevent new label
+            if (!libraryIndex.contains(key)) {
+                // missing song
+                AudioTag missingTag = new AudioTag(pseudoIdCounter.getAndIncrement()); //songFromPlaylist;
+                missingTag.setTitle(rule.getTitle());
+                missingTag.setArtist(rule.getArtist());
+                missingTag.setAlbum(rule.getAlbum());
+                missingTag.setIsManaged(true); // prevent new label
                 missingTag.setFileType("None");
                 missingTag.setAudioEncoding("None");
-                missingTag.setPath("Missing");
-                missingTag.setId(pseudoIdCounter.getAndIncrement());
+                missingTag.setPath(PATH_MISSING_TRACK);
                 missingTag.setUniqueKey(String.valueOf(missingTag.getId()));
-                missingTag.setMusicManaged(true);
                 missingTag.setQualityInd("--");
                 missingTag.setAlbumArtFilename(DEFAULT_COVERART);
                 missingTags.add(missingTag);
             }
         }
-       // missingTags.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
+
+        // missingTags.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
 
         missingTags.sort(Comparator
-                .comparing(MediaTrack::getArtist, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(MediaTrack::getTitle, String.CASE_INSENSITIVE_ORDER));
+                .comparing(Track::getArtist, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Track::getTitle, String.CASE_INSENSITIVE_ORDER));
         return missingTags;
     }
+
 }

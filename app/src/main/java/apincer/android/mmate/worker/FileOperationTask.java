@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import apincer.android.mmate.service.MusicMateServiceImpl;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.FFMpegHelper;
@@ -53,7 +53,7 @@ public class FileOperationTask {
          * @param progress The progress value (0-100)
          * @param status Status message
          */
-        void onProgress(MusicTag tag, int progress, String status);
+        void onProgress(Track tag, int progress, String status);
 
         /**
          * Called when all operations are complete
@@ -65,17 +65,18 @@ public class FileOperationTask {
      * Delete multiple media files
      */
     public void deleteFiles(@NonNull Context context,
-                                   @NonNull List<MusicTag> selections,
+                                   @NonNull List<Track> selections,
                                    @NonNull ProgressCallback callback) {
 
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
-        for (MusicTag tag : selections) {
+        for (Track tag : selections) {
             MusicMateExecutors.executeParallel(() -> {
                 try {
                     skipToNext(context, tag);
                     boolean status = fileRepos.deleteMediaItem(tag);
+                    //tagRepos.deleteMediaTag(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (status) {
@@ -102,12 +103,12 @@ public class FileOperationTask {
      * Move/import files to music directory
      */
     public void moveFiles(@NonNull Context context,
-                                 @NonNull List<MusicTag> selections,
+                                 @NonNull List<Track> selections,
                                  @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
-        for (MusicTag tag : selections) {
+        for (Track tag : selections) {
             MusicMateExecutors.executeParallel(() -> {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Moving");
@@ -135,7 +136,7 @@ public class FileOperationTask {
         }
     }
 
-    private static void skipToNext(Context context, MusicTag tag) {
+    private static void skipToNext(Context context, Track tag) {
         // Create an Intent for the service
         Intent intent = new Intent(context, MusicMateServiceImpl.class);
 
@@ -151,7 +152,7 @@ public class FileOperationTask {
      * Encode audio files to different format
      */
     public void encodeFiles(@NonNull Context context,
-                                   @NonNull List<MusicTag> selections,
+                                   @NonNull List<Track> selections,
                                    @NonNull String targetFormat,
                                    int compressionLevel,
                                    @NonNull ProgressCallback callback) {
@@ -159,7 +160,7 @@ public class FileOperationTask {
         final double rate = MAX_PROGRESS / selections.size();
 
         MusicMateExecutors.execute(() -> {
-            for (MusicTag tag : selections) {
+            for (Track tag : selections) {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Encoding");
 
@@ -204,12 +205,12 @@ public class FileOperationTask {
      * Measure dynamic range for multiple files
      */
     public void measureDR(@NonNull Context context,
-                                 @NonNull List<MusicTag> selections,
+                                 @NonNull List<Track> selections,
                                  @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
-        for (MusicTag tag : selections) {
+        for (Track tag : selections) {
             MusicMateExecutors.execute(() -> {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Evaluating");
@@ -223,7 +224,7 @@ public class FileOperationTask {
                         // if
                         fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
                         tag.setQualityInd(TagUtils.getQualityIndicator(tag));
-                        tag.setMusicManaged(fileRepos.isManagedInLibrary(tag));
+                        tag.setIsManaged(fileRepos.isManagedInLibrary(tag));
                         // Update tag in repository
                         tagRepos.saveTag(tag);
 

@@ -7,8 +7,7 @@ import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import javax.inject.Singleton;
 
-import apincer.android.jupnp.transport.netty.NettyWebServerImpl;
-import apincer.android.jupnp.transport.netty.NettyUPnpServerImpl;
+import apincer.android.jupnp.server.netty.NettyWebServerImpl;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.WebServer;
@@ -16,8 +15,8 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.server.jupnp.MediaServerConfiguration;
 import apincer.music.server.jupnp.MediaServerHubImpl;
-import apincer.music.server.jupnp.transport.NioUPnpServerImpl;
 import apincer.music.server.jupnp.transport.StreamServerConfigurationImpl;
+import apincer.music.server.nio.NioUPnpServerImpl;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;

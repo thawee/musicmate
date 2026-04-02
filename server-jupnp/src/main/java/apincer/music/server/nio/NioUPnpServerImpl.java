@@ -25,13 +25,13 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
      */
     class UpnpHandler implements NioHttpServer.Handler {
         private final ProtocolFactory protocolFactory;
-        private long lastDateUpdate = 0;
-        private String cachedDateString = "";
+        private volatile long lastDateUpdate = 0;
+        private volatile String cachedDateString = "";
 
         public UpnpHandler(ProtocolFactory protocolFactory) {
             this.protocolFactory = protocolFactory;
         }
-        
+
         private String getCachedDate() {
             long now = System.currentTimeMillis();
             // Cache the formatted date for 1 second to reduce GC churn
@@ -65,7 +65,8 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                 }
             } catch (Exception t) {
                 Log.e(TAG, TAG+" - Exception occurred during UPnP stream processing: " + t.getMessage());
-                return new NioHttpServer.HttpResponse().setStatus(500, "Internal Server Error").setBody(t.getMessage().getBytes());
+                String errMsg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+                return new NioHttpServer.HttpResponse().setStatus(500, "Internal Server Error").setBody(errMsg.getBytes());
             }
         }
 
@@ -130,7 +131,7 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
 
     public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("SonicNIO",  "2.2");
+        addLibInfo("SonicNIO",  "");
         serverSignature = getServerSignature();
     }
 
@@ -157,23 +158,29 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
     }
 
     public void initServer(InetAddress bindAddress, Object router) throws Exception {
-        Router router1 = (Router) router;
-        server = new NioHttpServer(getListenPort());
+        synchronized (serverLock) {
+            if (serverThread != null && serverThread.isAlive()) {
+                Log.w(TAG, "initServer called while server is already running — ignoring.");
+                return;
+            }
+            Router router1 = (Router) router;
+            server = new NioHttpServer(getListenPort());
 
-        NioHttpServer.Handler upnpHandler = new UpnpHandler(router1.getProtocolFactory());
-        // Register the outermost layer as the fallback handler
-        server.registerHttpHandler(upnpHandler);
-        server.setMaxThread(2);
-        
-        // UPnP messages are small SOAP XMLs, we don't need the default 2MB request size
-        server.setMaxRequestSize(64 * 1024); // 64KB is plenty for UPnP control messages
-        server.setClientReadBufferSize(4 * 1024); // 4KB read buffer per connection to save memory
-        server.setTcpNoDelay(true);
+            NioHttpServer.Handler upnpHandler = new UpnpHandler(router1.getProtocolFactory());
+            // Register the outermost layer as the fallback handler
+            server.registerHttpHandler(upnpHandler);
+            server.setMaxThread(2);
 
-        serverThread = new Thread(server);
-        serverThread.setName("nio-upnp-runner");
-        serverThread.start();
-        Log.i(TAG, TAG+" - SonicNIO UPnP Server running on " + bindAddress.getHostAddress() + ":" + getListenPort());
+            // UPnP messages are small SOAP XMLs, we don't need the default 2MB request size
+            server.setMaxRequestSize(64 * 1024); // 64KB is plenty for UPnP control messages
+            server.setClientReadBufferSize(4 * 1024); // 4KB read buffer per connection to save memory
+            server.setTcpNoDelay(true);
+
+            serverThread = new Thread(server);
+            serverThread.setName("nio-upnp-runner");
+            serverThread.start();
+            Log.i(TAG, TAG+" - SonicNIO UPnP Server running on " + bindAddress.getHostAddress() + ":" + getListenPort());
+        }
     }
 
     public void stopServer() {
@@ -184,20 +191,24 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                     Log.i(TAG, "SonicNIO UPnP Server stopped successfully.");
                 } catch (Exception e) {
                     Log.e(TAG, "Error during server shutdown", e);
-                } finally {
-                    server = null;
                 }
-
+                // Join the reactor thread BEFORE nulling fields so that a subsequent
+                // initServer() call cannot start a new reactor while the old one is still
+                // alive and holding the port.
                 if (serverThread != null) {
                     try {
-                        serverThread.join(2000); // Wait for thread to die
+                        serverThread.join(5000);
+                        if (serverThread.isAlive()) {
+                            Log.w(TAG, "Server thread did not stop within 5s; forcing interrupt.");
+                            serverThread.interrupt();
+                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         Log.i(TAG, TAG + " - Interrupted while waiting for server thread to stop.");
-                    }finally {
-                        serverThread = null;
                     }
                 }
+                server = null;
+                serverThread = null;
             }
         }
     }

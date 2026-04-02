@@ -11,7 +11,7 @@ junit = "4.13.2"
 #junitBom = "6.0.1"
 junitVersion = "1.3.0"
 media = "1.7.1"
-media3Session = "1.9.3"
+media3Session = "1.10.0"
 minSdkVersion    = "36" # support running on 31 - 12, 34 - 14, 35 - 15, 36 - 16
 #noinspection OldTargetApi
 #nanohttpd = "2.3.1"
@@ -89,7 +89,7 @@ anggrayudi-storage = {module = "com.anggrayudi:storage", version="2.2.0"}
 ffmpegkit-audio = {module = "com.antonkarpenko:ffmpeg-kit-full", version="2.1.0"}
 # greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
 slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.17"}
-log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.25.3"}
+log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.25.4"}
 # https://github.com/jupnp/jupnp/releases
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.4"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
@@ -100,19 +100,19 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
 #cling-support = {module="org.fourthline.cling:cling-support", version="2.1.2"}
 
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.7"}
+jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.8"}
 #jetty-websocket-core = {module = "org.eclipse.jetty.websocket:jetty-websocket-core-common", version="12.1.7"}
-jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.7"}
-jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.7"}
+jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.8"}
+jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.8"}
 #// Add this to your dependencies block
 #implementation 'org.eclipse.jetty:jetty-websocket-server:12.0.11' // Use the specific Jetty 12 version you are targeting
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}
 
-netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.10.Final"}
+netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.12.Final"}
 
 # 2.4.0.Beta1
 # 2.3.18.Final
-io-undertow-core = {module = "io.undertow:undertow-core", version = "2.4.0.RC3"}
+io-undertow-core = {module = "io.undertow:undertow-core", version = "2.4.0.RC4"}
 # jboss-logging 3.6.x not work on andoid
 #jboss-logging = {module = "org.jboss.logging:jboss-logging", version="3.5.3.Final"}
 # jboss-logging 3.6.x not work on andoid
@@ -137,12 +137,12 @@ skydoves-progressview = {module = "com.github.skydoves:progressview", version="1
 skydoves-androidribbon = {module = "com.github.skydoves:androidribbon", version="1.0.4"}
 skydoves-elasticviews = {module = "com.github.skydoves:elasticviews", version="2.1.0"}
 iwgang-simplifyspan = {module = "com.github.iwgang:simplifyspan", version="2.2"}
-vanniktech-textbuilder = {module = "com.vanniktech:textbuilder", version="0.4.0"}
+vanniktech-textbuilder = {module = "com.vanniktech:textbuilder", version="0.5.0"}
 sparrow007-carouselrecyclerview = {module = "com.github.sparrow007:carouselrecyclerview", version="1.2.6"}
 philjay-mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version="v3.1.0"}
 # mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
 # rouhim-jaudiotagger = {module="net.jthink:jaudiotagger", version="2.3.15"}
-commonmark = {module="com.atlassian.commonmark:commonmark", version="0.17.0"}
+#commonmark = {module="org.commonmark:commonmark", version="0.28.0"}
 
 #seamless-util = {module="org.seamless:seamless-util", version="1.1.2"}
 #seamless-http = {module="org.seamless:seamless-http", version="1.1.2"}
@@ -175,7 +175,7 @@ androidx-lifecycle-process = {module = "androidx.lifecycle:lifecycle-process", v
 #androidx-paging = {module = "androidx.paging:paging-runtime", version="3.3.6"}
 #androidx-paging-common = {module = "androidx.paging:paging-common", version="3.3.6"}
 #androidx-paging-rxjava2 = {module = "androidx.paging:paging-rxjava2", version="3.3.6"}
-androidx-work = {module = "androidx.work:work-runtime", version="2.11.1"}
+androidx-work = {module = "androidx.work:work-runtime", version="2.11.2"}
 coilkt-coil3 = {module="io.coil-kt.coil3:coil", version="3.4.0"}
 iirj = {module="uk.me.berndporr:iirj", version="1.7"}
 markwon-core = {module="io.noties.markwon:core", version="4.6.2"}
@@ -198,4 +198,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 #kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = {id="com.google.dagger.hilt.android", version.ref="hilt"}
-objectbox = { id = "io.objectbox", version = "5.3.0" }
+objectbox = { id = "io.objectbox", version = "5.4.1" }

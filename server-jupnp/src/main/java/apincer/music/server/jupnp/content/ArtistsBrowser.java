@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import musicmate.jupnp.nio.R;
 
@@ -40,9 +40,9 @@ public class ArtistsBrowser extends AbstractContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
-        List<MusicFolder> groupings = tagRepos.getArtistWithChildrenCount();
-        for(MusicFolder group: groupings) {
-            MusicArtist musicAlbum = new MusicArtist(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), group.getName(), "", 0);
+        List<Track> groupings = tagRepos.getArtistWithChildrenCount();
+        for(Track group: groupings) {
+            MusicArtist musicAlbum = new MusicArtist(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId() + group.getTitle(), ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), group.getTitle(), "", 0);
             musicAlbum.setChildCount((int)group.getChildCount());
             result.add(musicAlbum);
         }

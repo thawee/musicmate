@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 
 public class RatingIndicatorView extends LinearLayout {
     private TextView textView;
@@ -68,7 +68,7 @@ public class RatingIndicatorView extends LinearLayout {
     }
 
     @SuppressLint("CheckResult")
-    public void setMusicItem(MusicTag tag) {
+    public void setMusicItem(Track tag) {
         if("icon".equals(mode)) {
             textView.setBackground(getContext().getDrawable(R.drawable.bg_transparent));
             TextBuilder builder = new TextBuilder(getContext());

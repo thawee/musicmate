@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.PlaylistRepository;
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.repository.TagRepository;
 import musicmate.jupnp.nio.R;
@@ -54,16 +54,16 @@ public class CollectionsBrowser extends AbstractContentBrowser {
 
         PlaylistRepository.loadPlaylists(getContext());
 
-        Map<String, MusicFolder> mapped = new HashMap<>();
+        Map<String, Track> mapped = new HashMap<>();
         for(PlaylistEntry pls: playlists) {
-            MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.PLAYLIST, pls.getName());
+            Track dir = new AudioTag(SearchCriteria.TYPE.PLAYLIST, pls.getName());
             PlaylistEntry entry = PlaylistRepository.getPlaylistByName(pls.getName());
             dir.setUniqueKey(entry.getUuid());
             mapped.put(pls.getName(), dir);
         }
 
-        List<MusicTag> songs = tagRepos.findMySongs();
-        for(MusicTag tag: songs) {
+        List<Track> songs = tagRepos.findMySongs();
+        for(Track tag: songs) {
             for (PlaylistEntry name : PlaylistRepository.getPlaylists()) {
                 if(PlaylistRepository.isSongInPlaylistName(tag, name.getName())) {
                     Objects.requireNonNull(mapped.get(name.getName())).increaseChildCount();
@@ -71,8 +71,8 @@ public class CollectionsBrowser extends AbstractContentBrowser {
             }
         }
 
-        for(MusicFolder group: mapped.values()) {
-            MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getUniqueKey(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getName(), "", 0);
+        for(Track group: mapped.values()) {
+            MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getUniqueKey(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getTitle(), "", 0);
             musicAlbum.setChildCount((int)group.getChildCount());
             result.add(musicAlbum);
         }

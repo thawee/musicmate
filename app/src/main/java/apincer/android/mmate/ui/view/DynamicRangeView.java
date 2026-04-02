@@ -17,7 +17,7 @@ import androidx.annotation.Nullable;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 
 public class DynamicRangeView extends LinearLayout {
     private TextView dynamicRangeDbTextView;
@@ -50,12 +50,12 @@ public class DynamicRangeView extends LinearLayout {
     }
 
     @SuppressLint("CheckResult")
-    public void setMusicItem(MusicTag tag) {
+    public void setMusicItem(Track tag) {
         if(tag == null) {
             dynamicRangeDbTextView.setText("-");
            // setVisibility(GONE);
         }else {
-            int drsColor = getDRScoreColor(getContext(), (int) tag.getDynamicRangeScore());
+            int drsColor = getDRScoreColor(getContext(), (int) tag.getDrScore());
             String drs = getDynamicRangeScore(tag);
             if(isEmpty(drs)) {
                 drs = " -- ";

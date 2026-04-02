@@ -2,10 +2,7 @@ package apincer.android.mmate.provider;
 
 import static apincer.music.core.Constants.QUALITY_FAVORITE;
 import static apincer.music.core.Constants.QUALITY_RECOMMENDED;
-import static apincer.music.core.codec.MusicAnalyser.THRESHOLD_RESAMPLED;
-import static apincer.music.core.codec.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.music.core.utils.TagUtils.getBPSAndSampleRate;
-import static apincer.music.core.utils.TagUtils.getDynamicRange;
 import static apincer.music.core.utils.TagUtils.getDynamicRangeAsString;
 import static apincer.music.core.utils.TagUtils.getDynamicRangeScore;
 import static apincer.android.mmate.utils.MusicTagUtils.getEncodingColor;
@@ -24,7 +21,6 @@ import static apincer.music.core.utils.TagUtils.isMQAStudio;
 import static apincer.music.core.utils.TagUtils.isWavFile;
 import static apincer.music.core.utils.StringUtils.getAbvByUpperCase;
 import static apincer.music.core.utils.StringUtils.isEmpty;
-import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -54,7 +50,7 @@ import java.util.Locale;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.music.core.Constants;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.ColorUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -62,7 +58,7 @@ import apincer.android.utils.FileUtils;
 public class IconProviders {
     private static final String TAG = "IconProviders";
 
-    public static Drawable getFileFormatBackground(Context context, MusicTag tag) {
+    public static Drawable getFileFormatBackground(Context context, Track tag) {
         if(isDSD(tag) ||
                 isWavFile(tag) ||
                 isAIFFile(tag)) {
@@ -77,7 +73,7 @@ public class IconProviders {
     }
 
     @Deprecated
-    public static Bitmap getSourceIcon(Context context, MusicTag tag) {
+    public static Bitmap getSourceIcon(Context context, Track tag) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
         String letter = ""; //tag.getMediaType();
@@ -101,7 +97,8 @@ public class IconProviders {
         }
     }
 
-    public static File getTrackQualityIcon(Context context, MusicTag tag) {
+    /*
+    public static File getTrackQualityIcon(Context context, TrackMeta tag) {
         //TrackQuality_DR_DRS_UP_RE.png
         File dir = context.getExternalCacheDir();
         String quality = String.format("%s_%s_%s_%s_%s.png", getTrackQuality(tag), getDynamicRange(tag), getDynamicRangeScore(tag), getUpscaledScore(tag), getResampledScore(tag));
@@ -123,14 +120,14 @@ public class IconProviders {
             }
         }
         return pathFile;
-    }
+    } */
 
-    private static int getResampledScore(MusicTag tag) {
+    private static int getResampledScore(Track tag) {
       //  return (int) Math.round(tag.getResampledScore() * 100);
         return 1;
     }
 
-    private static int getUpscaledScore(MusicTag tag) {
+    private static int getUpscaledScore(Track tag) {
        // return (int) Math.round(tag.getUpscaledScore() * 100);
         return 1;
     }
@@ -143,16 +140,16 @@ public class IconProviders {
         else return ContextCompat.getColor(context, R.color.dr_very_high_trans);
     }
 
-    private static Object getTrackQuality(MusicTag tag) {
+  /*  private static Object getTrackQuality(TrackMeta tag) {
         return trim(tag.getQualityRating(), "None");
-    }
+    } */
 
-    public static File getFileResolutionIcon( Context context, MusicTag tag) {
+    public static File getFileResolutionIcon( Context context, Track tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
         String path = "/Icons/Res/";
 
-        if(tag.isDSD()) {
+        if(isDSD(tag)) {
             // dsd use bitrate
             path = path+"DSD" + tag.getAudioBitRate();
         }else if(isMQA(tag)) {
@@ -186,12 +183,12 @@ public class IconProviders {
         return pathFile;
     }
 
-    public static File getResolutionIcon( Context context, MusicTag tag) {
+    public static File getResolutionIcon( Context context, Track tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
         String path = "/Icons/Res/";
 
-        if(tag.isDSD()) {
+        if(isDSD(tag)) {
             // dsd use bitrate
             path = path+"DSD" + tag.getAudioBitRate();
         }else if(isMQA(tag)) {
@@ -225,8 +222,9 @@ public class IconProviders {
         return pathFile;
     }
 
+    /*
     @Deprecated
-    public static File getSourceQualityIcon(Context context, MusicTag tag) {
+    public static File getSourceQualityIcon(Context context, TrackMeta tag) {
         //AudiophileRecords.png
         File dir = context.getExternalCacheDir();
         String quality = trimToEmpty(tag.getQualityRating());
@@ -249,11 +247,12 @@ public class IconProviders {
             }
         }
         return pathFile;
-    }
+    } */
 
 
+    /*
     @Deprecated
-    public static Object getSourceQualityIconMini(Context context, MusicTag tag) {
+    public static Object getSourceQualityIconMini(Context context, TrackMeta tag) {
         File dir = context.getExternalCacheDir();
         String quality = trimToEmpty(tag.getQualityRating());
         String path = "/Icons/Quality"+quality+"RecordsMini.png";
@@ -275,7 +274,7 @@ public class IconProviders {
             }
         }
         return pathFile;
-    }
+    } */
 
     /*** private functions **/
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, int drawableId, int borderColor, int backgroundColor) {
@@ -407,7 +406,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    private static Bitmap createFileResolutionIcon(Context context, MusicTag tag) {
+    private static Bitmap createFileResolutionIcon(Context context, Track tag) {
         int width = 400; //340; // 24x105, 18x78 , 16x70
         int height = 96; //4.2
         int padding = 8;
@@ -424,7 +423,7 @@ public class IconProviders {
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
 
-        if(tag.isDSD()) {
+        if(isDSD(tag)) {
             // dsd use bitrate
             label = "DSD";
             long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());
@@ -561,7 +560,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
+    private static Bitmap createEncodingSamplingRateIcon(Context context, Track tag) {
         int width = 400; //340; // 24x105, 18x78 , 16x70
         int height = 96; //4.2
         int padding = 8;
@@ -578,7 +577,7 @@ public class IconProviders {
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
 
-        if(tag.isDSD()) {
+        if(isDSD(tag)) {
             // dsd use bitrate
             label = "DSD";
             long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());
@@ -927,14 +926,15 @@ public class IconProviders {
         return myBitmap;
     }
 
-    private static Bitmap createQualityIcon(Context context, MusicTag tag) {
+    /*
+    private static Bitmap createQualityIcon(Context context, TrackMeta tag) {
         int width = 340; // 16x46, 24x70
         int height = 100;
         String qualityText = trimToEmpty(tag.getQualityRating());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
         int drColor = context.getColor(R.color.white); //context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
         int drsColor = context.getColor(R.color.grey200); //context.getColor(R.color.white);
-        int drsHexagonColor = getDRBackgroundColor(context, (int) tag.getDynamicRangeScore());
+        int drsHexagonColor = getDRBackgroundColor(context, (int) tag.getDrScore());
         int drsHexagonBroaderColor = context.getColor(R.color.material_color_green_400);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.quality_good);
@@ -1254,16 +1254,17 @@ public class IconProviders {
                 mLetterPaint);
 
         return myBitmap;
-    }
+    } */
 
-    private static Bitmap createQualityIconBak(Context context, MusicTag tag) {
+    /*
+    private static Bitmap createQualityIconBak(Context context, TrackMeta tag) {
         int width = 280; // 16x46, 24x70
         int height = 96;
         String qualityText = trimToEmpty(tag.getQualityRating());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
         int drColor = context.getColor(R.color.white); //context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
         int drsColor = context.getColor(R.color.grey200); //context.getColor(R.color.white);
-        int drsHexagonColor = getDRBackgroundColor(context, (int) tag.getDynamicRangeScore());
+        int drsHexagonColor = getDRBackgroundColor(context, (int) tag.getDrScore());
         int drsHexagonBroaderColor = context.getColor(R.color.material_color_green_400);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.quality_good);
@@ -1584,7 +1585,7 @@ public class IconProviders {
                 mLetterPaint);
 
         return myBitmap;
-    }
+    } */
 
     @Deprecated
     public static Bitmap createSourceQualityIcon(Context context) {
@@ -1834,7 +1835,7 @@ public class IconProviders {
     }
 
     @Deprecated
-    public static Bitmap createTrackQualityIcon(Context context, MusicTag tag) {
+    public static Bitmap createTrackQualityIcon(Context context, Track tag) {
         int width =  144; //280; // 16x46, 24x70
         int height = 96; //1.5
 

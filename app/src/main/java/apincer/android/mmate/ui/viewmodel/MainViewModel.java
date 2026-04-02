@@ -12,8 +12,8 @@ import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 import apincer.android.mmate.ui.MusicTagAdapter;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -25,8 +25,8 @@ public class MainViewModel extends ViewModel {
     private final FileRepository fileRepos;
 
    // 1. LiveData for the list of music items
-    private final MutableLiveData<List<MusicTag>> _musicItems = new MutableLiveData<>();
-    public final LiveData<List<MusicTag>> musicItems = _musicItems;
+    private final MutableLiveData<List<Track>> _musicItems = new MutableLiveData<>();
+    public final LiveData<List<Track>> musicItems = _musicItems;
 
     private final MutableLiveData<Boolean> _musicItemsLoading = new MutableLiveData<>(false);
     public final LiveData<Boolean> musicItemsLoading = _musicItemsLoading;
@@ -51,7 +51,7 @@ public class MainViewModel extends ViewModel {
 
         backgroundExecutor.execute(() -> {
             try {
-                List<MusicTag> items = repos.findMusic(criteria);
+                List<Track> items = repos.findMusic(criteria);
                 _musicItems.postValue(items);
                 _musicItemsLoading.postValue(false);
             } catch (Exception e) {

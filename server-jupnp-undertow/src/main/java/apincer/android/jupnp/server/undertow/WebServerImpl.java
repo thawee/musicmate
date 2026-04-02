@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import apincer.music.core.model.Track;
+import apincer.music.core.server.ContentHolder;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
@@ -34,18 +36,14 @@ import org.xnio.Options;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.WebServer;
-import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.server.jupnp.transport.DLNAHeaderHelper;
 
 public class WebServerImpl extends BaseServer implements WebServer {
@@ -122,29 +120,18 @@ public class WebServerImpl extends BaseServer implements WebServer {
                             }
 
                             String rawPath = exchange.getRequestPath();
-                            String requestUri = rawPath;
-                            try {
-                                requestUri = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
-                            } catch (Exception ignore) {}
-
-                            if (isEmpty(requestUri) || requestUri.equals("/")) {
-                                requestUri = "/index.html";
-                            }
-
                             String userAgent = exchange.getRequestHeaders().getFirst(Headers.USER_AGENT);
                             String remoteAddr = exchange.getSourceAddress() != null ? exchange.getSourceAddress().getAddress().getHostAddress() : "";
 
-                            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
-                                ContentHolder contentHolder = lookupAlbumArt(requestUri);
+                            ContentHolder contentHolder = resolveRequest(rawPath, remoteAddr, userAgent);
+
+                            if (contentHolder.isImage()) {
                                 serveContent(exchange, contentHolder);
-                            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-                                ContentHolder contentHolder = lookupContent(requestUri, userAgent, remoteAddr);
+                            } else if (contentHolder.isMedia()) {
                                 serveContent(exchange, contentHolder);
                             } else {
-                                File filePath = getWebResource(requestUri);
-                                if (filePath != null && filePath.exists() && filePath.canRead()) {
-                                    String mimeType = MimeTypeUtils.getMimeTypeFromPath(filePath.getAbsolutePath());
-                                    ContentHolder contentHolder = new ContentHolder(mimeType != null ? mimeType : "application/octet-stream", requestUri, filePath.getAbsolutePath(), null);
+                                File filePath = new File(contentHolder.getFilePath());
+                                if (filePath.exists() && filePath.canRead()) {
                                     serveContent(exchange, contentHolder);
                                 } else {
                                     exchange.setStatusCode(404);
@@ -216,6 +203,10 @@ public class WebServerImpl extends BaseServer implements WebServer {
     private void serveContent(HttpServerExchange exchange, ContentHolder contentHolder) throws Exception {
         File file = new File(contentHolder.getFilePath());
         if (file.exists()) {
+            // Dynamic ETag support
+            String etag = generateETag(file);
+            exchange.getResponseHeaders().put(Headers.ETAG, etag);
+
             if(contentHolder.isMedia()) {
                 // 1. Bit-Perfect & Live Streaming Headers
                 // 'no-transform' is the most critical for audiophiles: it forbids network compression.
@@ -231,11 +222,19 @@ public class WebServerImpl extends BaseServer implements WebServer {
                 String codec = contentHolder.getContentType().replace("audio/", "").toUpperCase();
                 exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Codec"), codec);
 
-                // 3. DLNA Specifics
-                if (contentHolder.getDlnaContentFeatures() != null) {
-                    exchange.getResponseHeaders().put(new HttpString("transferMode.dlna.org"), "Streaming");
-                    exchange.getResponseHeaders().put(new HttpString("contentFeatures.dlna.org"), contentHolder.getDlnaContentFeatures());
+                // Audiophile Dynamic Headers
+                Track tag =  contentHolder.getTrack();
+                if (tag != null) {
+                    if (tag.getAudioSampleRate() > 0) exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Sample-Rate"), tag.getAudioSampleRate() + " Hz");
+                    if (tag.getAudioBitsDepth() > 0) exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Bit-Depth"), tag.getAudioBitsDepth() + " bit");
+                    if (tag.getAudioBitRate() > 0) exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Bitrate"), tag.getAudioBitRate()/1000 + " kbps");
+                    exchange.getResponseHeaders().put(HttpString.tryFromString("X-Audio-Format"), String.valueOf(tag.getFileType()));
                 }
+
+                // 3. DLNA Specifics
+                String dlnaContentFeatures = DLNAHeaderHelper.getDLNAContentFeatures(contentHolder.getTrack());
+                exchange.getResponseHeaders().put(new HttpString("transferMode.dlna.org"), "Streaming");
+                exchange.getResponseHeaders().put(new HttpString("contentFeatures.dlna.org"), dlnaContentFeatures);
             }else if (contentHolder.isImage()) {
                 // Optimize for Library Scrolling: 1 hour cache is good,
                 // but for a camper setup with slow Wi-Fi, 24h (86400) is even better.
@@ -297,67 +296,6 @@ public class WebServerImpl extends BaseServer implements WebServer {
     @Override
     public int getListenPort() {
         return WEB_SERVER_PORT;
-    }
-
-    private ContentHolder lookupContent(String contentId, String userAgent, String remoteAddr) {
-        ContentHolder result = null;
-        if (contentId == null) {
-            return null;
-        }
-        try {
-            MusicTag song = getSong(contentId);
-            notifyPlayback(remoteAddr, userAgent, song);
-            if (song != null) {
-                String contentType = MimeTypeUtils.getMimeTypeFromPath(song.getPath());
-                if (contentType == null) contentType = "audio/*";
-                String dlnaContentFeatures = DLNAHeaderHelper.getDLNAContentFeatures(song);
-                result = new ContentHolder(contentType, String.valueOf(song.getId()), song.getPath(), dlnaContentFeatures);
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, "lookupContent: - " + contentId, ex);
-        }
-        return result;
-    }
-
-    private ContentHolder lookupAlbumArt(String requestUri) {
-        File filePath = getAlbumArt(requestUri);
-        return new ContentHolder("image/png", requestUri, filePath.getAbsolutePath(), null);
-    }
-
-    static class ContentHolder {
-        private final String contentType;
-        private final String resId;
-        private final String filePath;
-        private final String dlnaContentFeatures;
-
-        public ContentHolder(String contentType, String resId, String filePath, String dlnaContentFeatures) {
-            this.resId = resId;
-            this.filePath = filePath;
-            this.contentType = contentType;
-            this.dlnaContentFeatures = dlnaContentFeatures;
-        }
-
-        public String getFilePath() {
-            return filePath;
-        }
-
-        public String getContentType() {
-            return contentType;
-        }
-
-        public String getDlnaContentFeatures() {
-            return dlnaContentFeatures;
-        }
-
-        public boolean isMedia() {
-            if(isEmpty(contentType)) return false;
-            return contentType.startsWith("audio/") || contentType.startsWith("video/");
-        }
-
-        public boolean isImage() {
-            if(isEmpty(contentType)) return false;
-            return contentType.startsWith("image/");
-        }
     }
 
     public class WebSocketHandler extends WebSocketContent {

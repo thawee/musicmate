@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 import apincer.music.core.Constants;
 import apincer.android.storage.StorageVolume;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 
 public class StringUtils {
     // ·  \u00b7
@@ -61,7 +61,7 @@ public class StringUtils {
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
 
-    public static String getSimplifiedAlbum(MediaTrack track) {
+    public static String getSimplifiedAlbum(Track track) {
         if (track == null) {
             return null;
         }

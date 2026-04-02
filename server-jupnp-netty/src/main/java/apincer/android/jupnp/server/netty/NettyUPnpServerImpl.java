@@ -292,7 +292,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
                 buf.release();
 
                 String uri = request.uri();
-                NettyContentHolder contentHolder;
+                UpnpContentHolder contentHolder;
 
                 if (uri.startsWith(upnpPath)) {
                    // Log.d(TAG, "Processing UPnP request: " + request.method() + " " + uri);
@@ -318,7 +318,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
             }
         }
 
-        private NettyContentHolder handleUPnpStream(FullHttpRequest request, byte[] bodyBytes) {
+        private UpnpContentHolder handleUPnpStream(FullHttpRequest request, byte[] bodyBytes) {
             try {
                 StreamRequestMessage requestMessage = readRequestMessage(request, bodyBytes);
 
@@ -328,14 +328,14 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
                     return buildResponseMessage(responseMessage);
                 } else {
                     Log.d(TAG, "UPnP stream returned null response for: " + request.uri());
-                    return new NettyContentHolder(null,
+                    return new UpnpContentHolder(
                             HttpHeaderValues.TEXT_PLAIN,
                             HttpResponseStatus.NOT_FOUND,
                             "Resource not found");
                 }
             } catch (Throwable t) {
                 Log.e(TAG, "Exception in UPnP stream processing: ", t);
-                return new NettyContentHolder(null,
+                return new UpnpContentHolder(
                         HttpHeaderValues.TEXT_PLAIN,
                         HttpResponseStatus.INTERNAL_SERVER_ERROR,
                         "Error: " + t.getMessage());
@@ -381,7 +381,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
             return requestMessage;
         }
 
-        protected NettyContentHolder buildResponseMessage(StreamResponseMessage responseMessage) {
+        protected UpnpContentHolder buildResponseMessage(StreamResponseMessage responseMessage) {
             // Create response body
             byte[] responseBodyBytes = responseMessage.hasBody() ? responseMessage.getBodyBytes() : new byte[0];
 
@@ -390,7 +390,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
                 contentType = responseMessage.getContentTypeHeader().getValue().toString();
             }
 
-            NettyContentHolder holder = new NettyContentHolder(null,
+            UpnpContentHolder holder = new UpnpContentHolder(
                     new AsciiString(contentType),
                     HttpResponseStatus.valueOf(responseMessage.getOperation().getStatusCode()),
                     responseBodyBytes);

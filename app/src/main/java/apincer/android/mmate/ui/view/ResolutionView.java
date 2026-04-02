@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui.view;
 import static apincer.music.core.utils.TagUtils.getBPSAndSampleRate;
+import static apincer.music.core.utils.TagUtils.isDSD;
 import static apincer.music.core.utils.TagUtils.isMQA;
 import static apincer.android.mmate.utils.MusicTagUtils.getFileEncodingColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getResolutionBackground;
@@ -14,7 +15,7 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import apincer.android.mmate.R;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 
 public class ResolutionView extends RelativeLayout {
@@ -52,14 +53,14 @@ public class ResolutionView extends RelativeLayout {
         setPadding(padding, padding, padding, padding);
     }
 
-    public void setMusicItem(MusicTag tag) {
+    public void setMusicItem(Track tag) {
         if(tag == null) {
             encodingTextView.setText("");
             resolutionTextView.setText("");
         }else {
             String label;
             String samplingRate = getBPSAndSampleRate(tag);
-            if(tag.isDSD()) {
+            if(isDSD(tag)) {
                 // dsd use bitrate
                 label = "DSD";
                 long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());

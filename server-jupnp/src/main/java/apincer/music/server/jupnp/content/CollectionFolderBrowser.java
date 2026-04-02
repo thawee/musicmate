@@ -12,8 +12,8 @@ import org.jupnp.support.model.item.MusicTrack;
 import java.util.ArrayList;
 import java.util.List;
 
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.PlaylistRepository;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.TagUtils;
 
@@ -35,15 +35,15 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         return getItems(contentDirectory, name).size();
     }
 
-    private List<MusicTag> getItems(ContentDirectory contentDirectory, String uuid) {
-        List<MusicTag> results = new ArrayList<>();
-        List<MusicTag> list = tagRepos.getAllMusicsForPlaylist();
-        for(MusicTag tag: list) {
+    private List<Track> getItems(ContentDirectory contentDirectory, String uuid) {
+        List<Track> results = new ArrayList<>();
+        List<Track> list = tagRepos.getAllMusicsForPlaylist();
+        for(Track tag: list) {
             if (CollectionsBrowser.ALL_SONGS.equals(uuid)) {
                 results.add(tag);
             }else if (CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid) && TagUtils.isOnDownloadDir(tag)) {
                 results.add(tag);
-            }else if (PlaylistRepository.isSongInPlaylist(tag, uuid)) {
+            }else if (PlaylistRepository.isSongInPlaylistUuid(tag, uuid)) {
                 results.add(tag);
             }
         }
@@ -62,8 +62,8 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String uuid = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
-        List<MusicTag> tags = getItems(contentDirectory, uuid);
-        for(MusicTag tag: tags) {
+        List<Track> tags = getItems(contentDirectory, uuid);
+        for(Track tag: tags) {
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
         }

@@ -13,8 +13,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import musicmate.jupnp.nio.R;
 
@@ -36,20 +35,20 @@ public class SourcesBrowser extends AbstractContentBrowser {
        // Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
         // return rootDIRs.size(); // +1; // +1 for Downloads folder
         List<Container> result = new ArrayList<>();
-        Collection<MusicFolder> rootDIRs = tagRepos.getRootDIRs();
+        Collection<Track> rootDIRs = tagRepos.getRootDIRs();
 
-        List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
-        for(MusicTag tag: songs) {
-            for(MusicFolder dir: rootDIRs) {
+        List<Track> songs = tagRepos.getAllMusicsForPlaylist();
+        for(Track tag: songs) {
+            for(Track dir: rootDIRs) {
                 if(tag.getPath().startsWith(dir.getUniqueKey())) {
-                    dir.setChildCount(dir.getChildCount()+1);
+                    dir.increaseChildCount();
                 }
             }
         }
 
-        for(MusicFolder dir: rootDIRs) {
+        for(Track dir: rootDIRs) {
             if(dir.getChildCount() > 0) {
-                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
+                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getTitle(), "", 0, null);
                 musicDir.setChildCount((int) dir.getChildCount());
                 result.add(musicDir);
             }
@@ -60,20 +59,20 @@ public class SourcesBrowser extends AbstractContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
-        Collection<MusicFolder> rootDIRs = tagRepos.getRootDIRs();
+        Collection<Track> rootDIRs = tagRepos.getRootDIRs();
 
-        List<MusicTag> songs = tagRepos.getAllMusicsForPlaylist();
-        for(MusicTag tag: songs) {
-                for(MusicFolder dir: rootDIRs) {
+        List<Track> songs = tagRepos.getAllMusicsForPlaylist();
+        for(Track tag: songs) {
+                for(Track dir: rootDIRs) {
                     if(tag.getPath().startsWith(dir.getUniqueKey())) {
-                        dir.setChildCount(dir.getChildCount()+1);
+                        dir.increaseChildCount();
                     }
                 }
         }
 
-        for(MusicFolder dir: rootDIRs) {
+        for(Track dir: rootDIRs) {
             if(dir.getChildCount() > 0) {
-                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
+                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getTitle(), "", 0, null);
                 musicDir.setChildCount((int) dir.getChildCount());
                 result.add(musicDir);
             }

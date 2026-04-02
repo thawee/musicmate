@@ -13,7 +13,7 @@ import org.jupnp.support.model.item.MusicTrack;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 
 /**
@@ -48,8 +48,8 @@ public class ArtistFolderBrowser extends AbstractContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_ARTIST_PREFIX);
-        List<MusicTag> tags = tagRepos.findByArtist(name, firstResult, maxResults);
-        for(MusicTag tag: tags) {
+        List<Track> tags = tagRepos.findByArtist(name, firstResult, maxResults);
+        for(Track tag: tags) {
             try {
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
                 result.add(musicTrack);

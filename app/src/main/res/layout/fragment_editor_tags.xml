@@ -65,7 +65,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Format"
+                    android:text=""
                     app:icon="@drawable/round_auto_awesome_24"
                     app:iconGravity="textStart"
                     app:iconPadding="@dimen/dimen_4_dp" />
@@ -76,7 +76,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Filename"
+                    android:text=""
                     app:icon="@drawable/ic_file_rename_outline_24"
                     app:iconGravity="textStart"
                     app:iconPadding="@dimen/dimen_4_dp" />
@@ -87,7 +87,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Save"
+                    android:text=""
                     app:icon="@drawable/ic_round_save_24"
                     app:iconGravity="textStart"
                     app:iconPadding="@dimen/dimen_4_dp" />
@@ -153,8 +153,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:paddingTop="@dimen/dimen_8_dp"
-        android:padding="16dp"
+        android:paddingTop="@dimen/dimen_4_dp"
+        android:padding="@dimen/dimen_2_dp"
         android:layout_marginBottom="@dimen/editor_bottom_bar_height"
         android:clipToPadding="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -165,6 +165,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
             <!-- Tag Fields -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_8_dp">
             <com.google.android.material.textfield.TextInputLayout
                 android:hint="Title"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -174,19 +183,35 @@
                     android:id="@+id/input_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium.Emphasized"
                     android:text="Uptown Girl (Live at Ulster Hall)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:hint="Artist"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp">
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/input_artist"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium.Emphasized"
+                    android:text="Westlife" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:hint="Album Artist"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                <AutoCompleteTextView
+                    android:id="@+id/input_album_artist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:text="Westlife" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -200,31 +225,154 @@
                     android:id="@+id/input_album"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:text="Wild Dreams" />
             </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:hint="Album Artist"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp">
-                <AutoCompleteTextView
-                    android:id="@+id/input_album_artist"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Westlife" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="vertical"
+                    android:padding="@dimen/dimen_8_dp">
 
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:hint="Genre"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_gravity="center">
+                        <AutoCompleteTextView
+                            android:id="@+id/input_genre"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall.Emphasized"
+                            android:text="Genre"
+                            android:minWidth="@dimen/dimen_92_dp"
+                            tools:ignore="LabelFor" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/dimen_4_dp"
+                android:weightSum="2">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Mood"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_mood"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                        android:text="Mood" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Style"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_style"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                        android:text="Style" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+
+            </LinearLayout>
+
+                    <!--
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="8dp"
                 android:weightSum="2">
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Mood"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_mood"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mood" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="wrap_content" />
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:hint="Song number"
+                    android:hint="Region"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_region"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Region" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+            -->
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!--
+            <com.google.android.material.textfield.TextInputLayout
+                android:hint="Genre"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                <AutoCompleteTextView
+                    android:id="@+id/input_genre"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pop" />
+            </com.google.android.material.textfield.TextInputLayout>
+            -->
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_8_dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/dimen_1_dp"
+                android:weightSum="2">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Track"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_weight="1"
                     android:layout_width="0dp"
@@ -233,6 +381,7 @@
                         android:id="@+id/input_track"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                         android:inputType="number"
                         android:text="13" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -251,37 +400,29 @@
                         android:id="@+id/input_year"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                         android:inputType="number"
                         android:text="2021" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:hint="Genre"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
-                <AutoCompleteTextView
-                    android:id="@+id/input_genre"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Pop" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
                 android:hint="Publisher"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/dimen_4_dp">
                 <AutoCompleteTextView
                     android:id="@+id/input_publisher"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:minWidth="@dimen/dimen_72_dp"
                     android:text="None"/>
             </com.google.android.material.textfield.TextInputLayout>
-
+        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
             <!--
             <com.google.android.material.textfield.TextInputLayout
                 android:hint="Quality Indicator"

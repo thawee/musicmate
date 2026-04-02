@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.util.List;
 
 public interface WebServer {
-    void restartServer(InetAddress bindAddress);
+    void restartServer(InetAddress bindAddress) throws Exception;
 
     void initServer(InetAddress bindAddress) throws Exception;
     void stopServer();

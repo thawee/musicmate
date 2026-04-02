@@ -33,11 +33,10 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import apincer.music.core.Constants;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.QueueManager;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.repository.QueueManager;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
@@ -96,11 +95,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private final BehaviorSubject<apincer.music.core.playback.PlaybackState> playbackStateSubject =
             BehaviorSubject.createDefault(new apincer.music.core.playback.PlaybackState());
-    private final BehaviorSubject<Optional<MediaTrack>> currentTrackSubject =
+    private final BehaviorSubject<Optional<Track>> currentTrackSubject =
             BehaviorSubject.createDefault(Optional.empty());
     private final BehaviorSubject<Optional<PlaybackTarget>> currentPlayerSubject =
             BehaviorSubject.createDefault(Optional.empty());
-    private final BehaviorSubject<List<MediaTrack>> playingQueueSubject =
+    private final BehaviorSubject<List<Track>> playingQueueSubject =
             BehaviorSubject.createDefault(new ArrayList<>());
 
    //TODO: change to playing/monitor mode
@@ -119,13 +118,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private final PlaybackCallback playbackCallback = new PlaybackCallback() {
 
         @Override
-        public void onMediaTrackChanged(MediaTrack metadata) {
+        public void onMediaTrackChanged(Track metadata) {
             MusicMateServiceImpl.this.onMediaTrackChanged(metadata);
         }
 
         @Override
         public void onMediaTrackChanged(String title, String artist, String album, long duration) {
-            MediaTrack song = tagRepos.findMusic(title, artist, album);
+            Track song = tagRepos.findMusic(title, artist, album);
             if(song != null) {
                 onMediaTrackChanged(song);
             }
@@ -367,7 +366,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     // ==================== Playback Control (Unified) ====================
 
     @Override
-    public void playSong(MediaTrack song) {
+    public void playSong(Track song) {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
             runningMode = RUNNING_MODE.CONTROL;
             if (isControllable(playbackTarget)) {
@@ -395,7 +394,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // get next song from queuemanager
         queueManager.setCurrentTrack(getNowPlayingSong());
-        MediaTrack song = queueManager.getNextTrack();
+        Track song = queueManager.getNextTrack();
         if(song != null) {
             mediaHub.playerPlaySong(song);
         }
@@ -475,7 +474,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     // ==================== Streaming Player Management ====================
 
-    private void internalPlayOnDMRPlayer(PlaybackTarget player, MediaTrack song) {
+    private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song) {
         if (song == null) return;
 
         // 1. Start playback
@@ -526,7 +525,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void preloadNextTrack() {
-        MediaTrack next = queueManager.getNextTrack();
+        Track next = queueManager.getNextTrack();
 
         if (next != null) {
             Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
@@ -537,8 +536,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void fallbackToNextTrack(PlaybackTarget player) {
-        MediaTrack current = getNowPlayingSong();
-        MediaTrack expectedNext = queueManager.getNextTrack();
+        Track current = getNowPlayingSong();
+        Track expectedNext = queueManager.getNextTrack();
 
         if (expectedNext == null) {
             Log.w(TAG, "Fallback: No next track");
@@ -620,7 +619,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void setNextSongInQueue() {
         // get next track from que manager
         queueManager.setPlaybackTrack(getNowPlayingSong());
-        MediaTrack track = queueManager.getNextTrack();
+        Track track = queueManager.getNextTrack();
         if(track != null) {
             mediaHub.setNextTrack(track);
         }
@@ -730,7 +729,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     //
     @Override
-    public MediaTrack getNowPlayingSong() {
+    public Track getNowPlayingSong() {
         return currentTrackSubject.getValue().orElse(null);
     }
 
@@ -747,7 +746,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     // ==================== State Notifications ====================
 
-    private synchronized void handleTrackStartEvent(MediaTrack track) {
+    private synchronized void handleTrackStartEvent(Track track) {
         if (track == null) return;
 
         long trackId = track.getId();
@@ -773,7 +772,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void preloadNextTrackSafe() {
-        MediaTrack next = queueManager.getNextTrack();
+        Track next = queueManager.getNextTrack();
 
         if (next == null) {
             Log.d(TAG, "Gapless: No next track");
@@ -792,7 +791,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         mediaHub.setNextTrack(next); // SetNextAVTransportURI
     }
 
-    private void scheduleFallback(MediaTrack song) {
+    private void scheduleFallback(Track song) {
         if (nextTrackTask != null && !nextTrackTask.isDone()) {
             nextTrackTask.cancel(false);
         }
@@ -824,7 +823,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     @Override
-    public void onMediaTrackChanged(MediaTrack song) {
+    public void onMediaTrackChanged(Track song) {
         currentTrackSubject.onNext(Optional.ofNullable(song));
         runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
@@ -838,7 +837,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     @Override
-    public void onAccessMediaTrack(MusicTag song) {
+    public void onAccessMediaTrack(Track song) {
         currentTrackSubject.onNext(Optional.ofNullable(song));
         runningMode = RUNNING_MODE.MONITOR;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
@@ -870,7 +869,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public @NonNull Disposable subscribeNowPlayingSong(
-            Consumer<Optional<MediaTrack>> onNextConsumer,
+            Consumer<Optional<Track>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     ) {
         // Use the subscribe overload that takes both

@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import apincer.android.mmate.R;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 
 public class DurationView extends LinearLayout {
@@ -45,7 +45,7 @@ public class DurationView extends LinearLayout {
     }
 
     @SuppressLint("CheckResult")
-    public void setMusicItem(MusicTag tag) {
+    public void setMusicItem(Track tag) {
         if(tag == null || tag.getAudioDuration() == 0) {
             textView.setText("00:00");
         }else {

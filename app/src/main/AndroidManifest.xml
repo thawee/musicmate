@@ -179,7 +179,7 @@
 
         <provider
             android:name="apincer.music.core.provider.MusicFileProvider"
-            android:authorities="apincer.music.core.provider"
+            android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
         <!--

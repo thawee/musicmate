@@ -11,8 +11,8 @@ import com.antonkarpenko.ffmpegkit.Session;
 import java.io.File;
 import java.util.Locale;
 
+import apincer.music.core.model.Track;
 import apincer.music.core.provider.FileSystem;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.LogHelper;
 import apincer.android.utils.FileUtils;
 
@@ -37,7 +37,7 @@ public class FFMpegHelper {
         }
     }
 
-    public static void removeCoverArt(Context context, MusicTag tag) {
+    public static void removeCoverArt(Context context, Track tag) {
             String pathFile = tag.getPath();
             String ext = FileUtils.getExtension(pathFile);
             pathFile = pathFile.replace("."+ext, "no_embed."+ext);

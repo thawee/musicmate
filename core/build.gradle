@@ -51,7 +51,7 @@ dependencies {
     ksp libs.dagger.hilt.compiler
 
     // OrmLite
-    implementation libs.ormlite.android
+   // implementation libs.ormlite.android
 
     // network
    // implementation libs.netty.codec.http

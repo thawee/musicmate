@@ -3,7 +3,7 @@ package apincer.music.core.playback.spi;
 import java.util.List;
 import java.util.Optional;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.PlaybackState;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -30,7 +30,7 @@ public interface PlaybackService {
 
     void switchPlayer(String targetId, boolean controlled);
 
-    void playSong(MediaTrack song);
+    void playSong(Track song);
     void pausePlayer();
 
    void skipToNextInQueue();
@@ -44,7 +44,7 @@ public interface PlaybackService {
     @NonNull Disposable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
 
     @NonNull Disposable subscribeNowPlayingSong(
-            Consumer<Optional<MediaTrack>> onNextConsumer,
+            Consumer<Optional<Track>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     );
 
@@ -56,11 +56,11 @@ public interface PlaybackService {
 
     void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting);
 
-    MediaTrack getNowPlayingSong();
+    Track getNowPlayingSong();
 
     PlaybackTarget getPlayer();
 
-    void onMediaTrackChanged(MediaTrack tag);
+    void onMediaTrackChanged(Track tag);
 
-    void onAccessMediaTrack(MusicTag tag);
+    void onAccessMediaTrack(Track tag);
 }

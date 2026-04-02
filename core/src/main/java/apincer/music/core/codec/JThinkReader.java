@@ -26,6 +26,9 @@ import org.jaudiotagger.tag.TagField;
 import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.TagTextField;
 import org.jaudiotagger.tag.flac.FlacTag;
+import org.jaudiotagger.tag.id3.AbstractID3v2Frame;
+import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
@@ -39,7 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
@@ -68,7 +72,7 @@ public class JThinkReader extends TagReader{
     }
 
     @Override
-    protected MusicTag readBasicTag(String mediaPath) {
+    protected AudioTag readBasicTag(String mediaPath) {
         //Log.i(TAG, "readBasicTag: " + mediaPath);
         // Ensure this method is called from a background thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -76,7 +80,7 @@ public class JThinkReader extends TagReader{
             return null;
         }
 
-        MusicTag tag = new MusicTag();
+        AudioTag tag = new AudioTag(generateId(mediaPath,0));
 
         // Only read file info, skip audio processing
         tag.setPath(mediaPath);
@@ -94,7 +98,7 @@ public class JThinkReader extends TagReader{
     }
 
     @Override
-    protected boolean readFullTag(MusicTag tag) {
+    protected boolean readFullTag(Track tag) {
         Log.i(TAG, "readFullTag: " + tag.getPath());
 
         // Ensure this method is called from a background thread
@@ -118,7 +122,7 @@ public class JThinkReader extends TagReader{
     }
 
     @Override
-    protected boolean readExtras(MusicTag tag) {
+    protected boolean readExtras(Track tag) {
         Log.i(TAG, "readExtras: " + tag.getPath());
         if (Looper.myLooper() == Looper.getMainLooper()) {
             Log.w(TAG, "Tag reading should not be done on the main thread");
@@ -134,7 +138,7 @@ public class JThinkReader extends TagReader{
         return false;
     }
 
-    private void readHeader(AudioFile read, MusicTag metadata) {
+    private void readHeader(AudioFile read, Track metadata) {
         try {
             AudioHeader header = read.getAudioHeader();
             if(header != null) {
@@ -187,24 +191,24 @@ public class JThinkReader extends TagReader{
         instance.setId3v24UnicodeTextEncoding(TextEncoding.UTF_16);
     }
 
-    private void readTags(AudioFile audioFile, MusicTag metadata) {
+    private void readTags(AudioFile audioFile, Track metadata) {
         Tag tag = audioFile.getTag();
         if (tag != null && !tag.isEmpty()) {
             try {
                 // Get title or use filename
-                String title = getId3TagValue(tag, FieldKey.TITLE);
+                String title = getTagValue(tag, FieldKey.TITLE);
                 metadata.setTitle(!isEmpty(title) ? title : audioFile.getFile().getName());
 
                 // Read common metadata fields in batch
-                metadata.setAlbum(getId3TagValue(tag, FieldKey.ALBUM));
-                metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
-                metadata.setAlbumArtist(getId3TagValue(tag, FieldKey.ALBUM_ARTIST));
-                metadata.setGenre(getId3TagValue(tag, FieldKey.GENRE));
-              //  metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-                metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
-                metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
-                metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
-                metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
+                metadata.setAlbum(getTagValue(tag, FieldKey.ALBUM));
+                metadata.setArtist(getTagValue(tag, FieldKey.ARTIST));
+                metadata.setAlbumArtist(getTagValue(tag, FieldKey.ALBUM_ARTIST));
+                metadata.setGenre(getTagValue(tag, FieldKey.GENRE));
+                metadata.setYear(getTagValue(tag, FieldKey.YEAR));
+                metadata.setTrack(getTagValue(tag, FieldKey.TRACK));
+                //metadata.setBpm(getTagValue(tag, FieldKey.BPM));
+                metadata.setComposer(getTagValue(tag, FieldKey.COMPOSER));
+                metadata.setCompilation(toBoolean(getTagValue(tag, FieldKey.IS_COMPILATION)));
 
                 // Process format-specific tags
                 processFormatSpecificTags(tag, metadata);
@@ -214,7 +218,7 @@ public class JThinkReader extends TagReader{
         }
     }
 
-    private void processFormatSpecificTags(Tag tag, MusicTag metadata) {
+    private void processFormatSpecificTags(Tag tag, Track metadata) {
         // Clear reusable map for this operation
         tempTagsMap.clear();
 
@@ -223,7 +227,7 @@ public class JThinkReader extends TagReader{
 
         // Extract values from map that we're interested in
         metadata.setPublisher(tempTagsMap.get(KEY_TAG_PUBLISHER));
-        metadata.setQualityRating(tempTagsMap.get(KEY_TAG_QUALITY));
+       // metadata.setQualityRating(tempTagsMap.get(KEY_TAG_QUALITY));
         if (tempTagsMap.containsKey(KEY_TAG_MQA_ENCODER)) {
             metadata.setQualityInd("MQA");
             metadata.setMqaSampleRate(toLong(tempTagsMap.get(KEY_TAG_ORIGINALSAMPLERATE)));
@@ -232,26 +236,86 @@ public class JThinkReader extends TagReader{
             }
         }
 
-        // Handle format-specific tags
-       // if (TagUtils.isWavFile(metadata)) {
-           // metadata.setGrouping(getId3TagValue(tag, FieldKey.RECORD_LABEL));
-           // processWaveSpecificTags(metadata, tempTagsMap, tag);
-       // } else if (MusicTagUtils.isMPegFile(metadata)) {
-       //     processMpegSpecificTags(metadata, tempTagsMap);
-       // } else {
         if (!TagUtils.isWavFile(metadata)) {
             // Standard files support these tags directly
-            metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
-            //metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-            metadata.setQualityRating(getId3TagValue(tag, FieldKey.QUALITY));
-          //  metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
-            metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
+           // metadata.setDisc(getTagValue(tag, FieldKey.DISC_NO));
+           // metadata.setQualityRating(getTagValue(tag, FieldKey.QUALITY));
+            metadata.setComment(getTagValue(tag, FieldKey.COMMENT));
+        }else {
+            // wave file
+            Map<String, String> tags = parseTxx(tag); //parseWaveGenre(metadata.getComment());
+            //if (metadata.getGenre().equals(tags.get("GENRE"))) {
+                metadata.setGenre(tags.get("GENRE"));
+                metadata.setStyle(tags.get("STYLE"));
+                metadata.setMood(tags.get("MOOD"));
+              //  metadata.setRegion(tags.get("REGION"));
+            //}
+        }
+
+        if(TagUtils.isFLACFile(metadata)) {
+            metadata.setMood(tag.getFirst("MOOD"));
+            metadata.setStyle(tag.getFirst("STYLE"));
+           // metadata.setRegion(tag.getFirst("REGION"));
+        }else if(TagUtils.isAIFFile(metadata) || TagUtils.isAACFile(metadata) || TagUtils.isALACFile(metadata)) {
+            metadata.setMood(tag.getFirst("----:com.apple.iTunes:MOOD"));
+            metadata.setStyle(tag.getFirst("----:com.apple.iTunes:STYLE"));
+           // metadata.setRegion(tag.getFirst("----:com.apple.iTunes:REGION"));
+        }else if (tag instanceof AbstractID3v2Tag id3) {
+            List<TagField> moodFields = id3.getFields("TXXX");
+            for (TagField field : moodFields) {
+                if (field instanceof AbstractID3v2Frame frame) {
+                    String desc = frame.getBody().getObjectValue("Description").toString();
+                    String value = frame.getBody().getObjectValue("Text").toString();
+
+                    if ("MOOD".equalsIgnoreCase(desc)) metadata.setMood(value);
+                    if ("STYLE".equalsIgnoreCase(desc)) metadata.setStyle(value);
+                   // if ("REGION".equalsIgnoreCase(desc)) metadata.setRegion(value);
+                }
+            }
         }
     }
 
-    private String getId3TagValue(Tag id3Tag, FieldKey key) {
-        if (id3Tag != null && id3Tag.hasField(key)) {
-            return StringUtils.trimToEmpty(id3Tag.getFirst(key));
+    private Map<String, String> parseTxx(Tag tag) {
+        List<TagField> fields = tag.getFields("TXXX");
+        Map<String, String> mapped = new HashMap<>();
+        for (TagField field : fields) {
+            AbstractID3v2Frame frame = (AbstractID3v2Frame) field;
+            FrameBodyTXXX body = (FrameBodyTXXX) frame.getBody();
+
+            String key = body.getDescription();
+            String value = body.getText();
+            mapped.put(key, value);
+        }
+        return mapped;
+    }
+
+    private Map<String, String> parseWaveGenre(String raw) {
+        Map<String, String> result = new HashMap<>();
+
+        if (raw == null) return result;
+
+        String[] parts = raw.split(";");
+
+        //GENRE = "genre;style;mood;region"
+        if(parts.length >0) {
+            result.put("GENRE", parts[0]);
+        }
+        if(parts.length > 1) {
+            result.put("STYLE", parts[1]);
+        }
+        if(parts.length > 2) {
+            result.put("MOOD", parts[2]);
+        }
+        if(parts.length > 3) {
+            result.put("REGION", parts[3]);
+        }
+
+        return result;
+    }
+
+    private String getTagValue(Tag tag, FieldKey key) {
+        if (tag != null && tag.hasField(key)) {
+            return StringUtils.trimToEmpty(tag.getFirst(key));
         }
         return "";
     }

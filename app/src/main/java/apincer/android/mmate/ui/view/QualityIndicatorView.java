@@ -18,7 +18,7 @@ import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 
 public class QualityIndicatorView extends LinearLayout {
     private TextView textView;
@@ -87,7 +87,7 @@ public class QualityIndicatorView extends LinearLayout {
 
 
     @SuppressLint("CheckResult")
-    public void setMusicItem(MusicTag tag) {
+    public void setMusicItem(Track tag) {
         if(tag == null) {
             textView.setText("-");
         }else {

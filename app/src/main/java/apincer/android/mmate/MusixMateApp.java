@@ -101,7 +101,8 @@ public class MusixMateApp extends Application {
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
             // On normal startup, do a quick incremental scan
             Log.i(TAG, "Normal startup, performing incremental music scan");
-            ScanAudioFileWorker.startScan(getApplicationContext());
+            boolean isFullScan = false;
+            ScanAudioFileWorker.startScan(getApplicationContext(), isFullScan);
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }

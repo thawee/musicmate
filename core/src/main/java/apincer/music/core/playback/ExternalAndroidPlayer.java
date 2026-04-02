@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -69,7 +69,7 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
     }
 
     //@Override
-    public boolean play(MediaTrack track) {
+    public boolean play(Track track) {
         if(!SUPPORTED_PLAYERS.contains(targetId)) return false;
 
         Uri musicUri = Uri.parse(track.getPath());

@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
@@ -24,11 +24,11 @@ public class TagsViewModel extends ViewModel {
     public static final String MULTIPLE_EMPTY = "";
 
     // --- Core Data ---
-    private final MutableLiveData<List<MusicTag>> _editItems = new MutableLiveData<>(Collections.emptyList());
-    public final LiveData<List<MusicTag>> editItems = _editItems;
+    private final MutableLiveData<List<Track>> _editItems = new MutableLiveData<>(Collections.emptyList());
+    public final LiveData<List<Track>> editItems = _editItems;
 
-    private final MutableLiveData<MusicTag> _displayTag = new MutableLiveData<>();
-    public final LiveData<MusicTag> displayTag = _displayTag;
+    private final MutableLiveData<Track> _displayTag = new MutableLiveData<>();
+    public final LiveData<Track> displayTag = _displayTag;
 
     private final TagRepository repos;
 
@@ -37,47 +37,47 @@ public class TagsViewModel extends ViewModel {
         this.repos = repos;
     }
 
-    public void processAudioTagEditEvent(List<MusicTag> items) {
+    public void processAudioTagEditEvent(List<Track> items) {
         //_searchCriteria.postValue(criteria);
         _editItems.postValue(items); // Post a copy
         redisplayTag(items);
     }
 
-    public void updateWithPlayingSong(MusicTag playingSong) {
+    public void updateWithPlayingSong(Track playingSong) {
         if (playingSong == null) return;
         // This is a simplified version of your updatePreview logic
         // You might need more sophisticated logic to decide if the current editItems
         // should be completely replaced or if this is just for preview.
         repos.load(playingSong); // Assuming this is synchronous or you handle async
-        List<MusicTag> singleItemList = new ArrayList<>();
+        List<Track> singleItemList = new ArrayList<>();
         singleItemList.add(playingSong.copy()); // Work with a copy
         _editItems.postValue(singleItemList);
         redisplayTag(singleItemList);
     }
 
-    public void redisplayTag(List<MusicTag> currentItems) {
+    public void redisplayTag(List<Track> currentItems) {
         if (currentItems == null || currentItems.isEmpty()) {
             _displayTag.postValue(null);
             return;
         }
         // This is your logic from TagsActivity.buildDisplayTag()
         // For simplicity, I'm just taking the first item. Adapt as needed.
-        MusicTag newDisplayTag = currentItems.get(0).copy(); // Make a copy for display
+        Track newDisplayTag = currentItems.get(0).copy(); // Make a copy for display
         if (currentItems.size() > 1) {
             // Your logic to create a "common" or summary tag
             newDisplayTag.setTitle("["+currentItems.size() + " songs selected]");
             // Use the generic helper for each field
-            newDisplayTag.setAlbum(getCommonStringValue(currentItems, MusicTag::getAlbum, MULTIPLE_ALBUMS, MULTIPLE_EMPTY));
-            newDisplayTag.setArtist(getCommonStringValue(currentItems, MusicTag::getArtist, MULTIPLE_ARTISTS, MULTIPLE_EMPTY));
-            newDisplayTag.setAlbumArtist(getCommonStringValue(currentItems, MusicTag::getAlbumArtist, MULTIPLE_ALBUM_ARTISTS, MULTIPLE_EMPTY));
-            newDisplayTag.setGenre(getCommonStringValue(currentItems, MusicTag::getGenre, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+            newDisplayTag.setAlbum(getCommonStringValue(currentItems, Track::getAlbum, MULTIPLE_ALBUMS, MULTIPLE_EMPTY));
+            newDisplayTag.setArtist(getCommonStringValue(currentItems, Track::getArtist, MULTIPLE_ARTISTS, MULTIPLE_EMPTY));
+            newDisplayTag.setAlbumArtist(getCommonStringValue(currentItems, Track::getAlbumArtist, MULTIPLE_ALBUM_ARTISTS, MULTIPLE_EMPTY));
+            newDisplayTag.setGenre(getCommonStringValue(currentItems, Track::getGenre, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
           //  newDisplayTag.setGrouping(getCommonStringValue(currentItems, MusicTag::getGrouping, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setTrack(getCommonStringValue(currentItems, MusicTag::getTrack, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setYear(getCommonStringValue(currentItems, MusicTag::getYear, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setDisc(getCommonStringValue(currentItems, MusicTag::getDisc, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+            newDisplayTag.setTrack(getCommonStringValue(currentItems, Track::getTrack, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+            newDisplayTag.setYear(getCommonStringValue(currentItems, Track::getYear, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+          //  newDisplayTag.setDisc(getCommonStringValue(currentItems, TrackMeta::getDisc, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
            // newDisplayTag.setMediaType(getCommonStringValue(currentItems, MusicTag::getMediaType, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setPublisher(getCommonStringValue(currentItems, MusicTag::getPublisher, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setQualityRating(getCommonStringValue(currentItems, MusicTag::getQualityRating, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+            newDisplayTag.setPublisher(getCommonStringValue(currentItems, Track::getPublisher, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+           // newDisplayTag.setQualityRating(getCommonStringValue(currentItems, MusicTag::getQualityRating, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
         }
         _displayTag.postValue(newDisplayTag);
     }
@@ -91,8 +91,8 @@ public class TagsViewModel extends ViewModel {
      * @param defaultValueForNullCommon If all non-null tags have a null value for the field, what to return (e.g., "", or null).
      * @return The common string value, multipleValueString, or defaultValueForNullCommon.
      */
-    public static String getCommonStringValue(List<MusicTag> tags,
-                                              Function<MusicTag, String> valueExtractor,
+    public static String getCommonStringValue(List<Track> tags,
+                                              Function<Track, String> valueExtractor,
                                               String multipleValueString,
                                               String defaultValueForNullCommon) {
         if (tags == null || tags.isEmpty()) {
@@ -120,8 +120,8 @@ public class TagsViewModel extends ViewModel {
     }
 
     public void refreshDisplayTag() {
-        List<MusicTag> items = _editItems.getValue();
-        List<MusicTag> updatedItems = new ArrayList<>(); // Or refetch
+        List<Track> items = _editItems.getValue();
+        List<Track> updatedItems = new ArrayList<>(); // Or refetch
         //should reload music tags
         items.forEach(musicTag -> {
             repos.load(musicTag);

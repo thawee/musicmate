@@ -12,7 +12,7 @@ import org.jupnp.support.model.item.MusicTrack;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 
 
@@ -49,8 +49,8 @@ public class GenreFolderBrowser extends AbstractContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_GENRE_PREFIX);
-        List<MusicTag> tags = tagRepos.findByGenre(name, firstResult, maxResults);
-        for(MusicTag tag: tags) {
+        List<Track> tags = tagRepos.findByGenre(name, firstResult, maxResults);
+        for(Track tag: tags) {
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
                 result.add(musicTrack);
         }

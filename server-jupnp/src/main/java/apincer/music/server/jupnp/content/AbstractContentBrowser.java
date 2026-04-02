@@ -22,8 +22,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.music.core.server.BaseServer;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.TagUtils;
@@ -67,11 +66,11 @@ public abstract class AbstractContentBrowser {
         return name;
     }
 
-    public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
+    public String getUriString(ContentDirectory contentDirectory, Track tag) {
         return "http://" + NetworkUtils.getIpAddress() + ":" +WEB_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
 
-    protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
+    protected URI getAlbumArtUri(ContentDirectory contentDirectory, Track tag) {
         return getAlbumArtUri(contentDirectory, tag.getAlbumArtFilename());
     }
 
@@ -82,7 +81,7 @@ public abstract class AbstractContentBrowser {
                 + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + name);
     }
 
-    protected MusicTrack buildMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
+    protected MusicTrack buildMusicTrack(ContentDirectory contentDirectory, Track tag, String folderId, String itemPrefix) {
         long id = tag.getId();
         String title = tag.getTitle();
         String parentId = buildParentId(tag, folderId);
@@ -150,7 +149,7 @@ public abstract class AbstractContentBrowser {
         return musicTrack;
     }
 
-    private String buildParentId(MusicTag tag, String folderId) {
+    private String buildParentId(Track tag, String folderId) {
         String parentId;
         // album, artist, genre, grouping
         if(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().equalsIgnoreCase(folderId)) {
@@ -171,7 +170,7 @@ public abstract class AbstractContentBrowser {
         return  parentId;
     }
 
-    private ProtocolInfo getProtocolInfo(MusicTag tag) {
+    private ProtocolInfo getProtocolInfo(Track tag) {
         // DLNA parameters for streaming optimization - enabling seeking and other features
         String formatSuffix = ";DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
 

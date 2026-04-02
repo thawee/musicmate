@@ -12,7 +12,6 @@ import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_COMPILATION;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_COMPOSER;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_DISC;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_GENRE;
-import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_GROUPING;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_MP4_ALBUM_ARTIST;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_MP4_COMPOSER;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_MP4_PUBLISHER;
@@ -23,9 +22,7 @@ import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_TRACK;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_ALBUM_ARTIST;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_DISC;
-import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_GROUP;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
-import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_WAVE_YEAR;
 import static apincer.music.core.codec.FFMpegHelper.KEY_TAG_YEAR;
 import static apincer.music.core.utils.TagUtils.isMp4File;
@@ -43,8 +40,6 @@ import android.util.Log;
 
 import com.antonkarpenko.ffmpegkit.FFmpegKit;
 import com.antonkarpenko.ffmpegkit.FFmpegSession;
-import com.antonkarpenko.ffmpegkit.FFprobeKit;
-import com.antonkarpenko.ffmpegkit.FFprobeSession;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import java.util.HashMap;
@@ -53,7 +48,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
@@ -125,13 +121,13 @@ public static class Loudness {
         return null;
     } */
 
-    protected MusicTag readBasicTag(String path) {
+    protected AudioTag readBasicTag(String path) {
         Log.d(TAG, "read: "+path);
         return extractTagFromFile(path);
        // return List.of(tag);
     }
 
-    protected boolean readFullTag(MusicTag tag) {
+    protected boolean readFullTag(Track tag) {
        // Log.d(TAG, "readFully: "+path);
         //return extractTagFromFile(path);
         //detectMQA(tag,50000); // timeout 50 seconds
@@ -140,11 +136,11 @@ public static class Loudness {
     }
 
     @Override
-    protected boolean readExtras(MusicTag tag) {
+    protected boolean readExtras(Track tag) {
         return false;
     }
 
-    public MusicTag extractTagFromFile(String path) {
+    public AudioTag extractTagFromFile(String path) {
 
         String cmd ="-hide_banner -nostats -i \""+path+"\" -f null -";
         LogHelper.setFFMpegOn();
@@ -153,8 +149,8 @@ public static class Loudness {
             LogHelper.setFFMpegOff();
             String data = getFFmpegOutputData(session);
             String output = session.getOutput();
-            MusicTag tag = new MusicTag();
-            tag.setData("\nRunning Time:"+session.getDuration()+"\n"+data);
+            AudioTag tag = new AudioTag(generateId(path,0));
+            tag.setRawOutput("\nRunning Time:"+session.getDuration()+"\n"+data);
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
@@ -166,10 +162,10 @@ public static class Loudness {
         }else {
             LogHelper.setFFMpegOff();
             // try to get from file name
-            MusicTag tag = new MusicTag();
+            AudioTag tag = new AudioTag(generateId(path, 0));
             String data = getFFmpegOutputData(session);
             String output = session.getOutput();
-            tag.setData("Running Time (error):"+session.getDuration()+"\n"+data);
+            tag.setRawOutput("Running Time (error):"+session.getDuration()+"\n"+data);
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
@@ -181,7 +177,7 @@ public static class Loudness {
         }
     }
 
-    private static void parseDurationInfo(MusicTag tag, String data) {
+    private static void parseDurationInfo(AudioTag tag, String data) {
         try {
             //Duration: 00:04:49.11, start: 0.047889, bitrate: 305 kb/s
             //Duration: 00:04:13.33, start: 0.000000, bitrate: 2358 kb/s
@@ -205,12 +201,12 @@ public static class Loudness {
         }
     }
 
-    private static void parseTagsInfo(MusicTag tag) {
+    private static void parseTagsInfo(AudioTag tag) {
         // Input #0,
         // Output #0,
         // Stream #0:0: Audio:
        // Pattern pattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Video):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
-       String data = tag.getData();
+       String data = tag.getRawOutput();
        String []lines = data.split("\n");
         Map<String, String> tags = new HashMap<>();
         String prevKey="";
@@ -277,7 +273,7 @@ public static class Loudness {
        // tag.setRating(toInt(getValueForKey(tags, KEY_TAG_RATING)));
 
         //KEY_TAG_QUALITY
-        tag.setQualityRating(getValueForKey(tags, KEY_TAG_QUALITY));
+      //  tag.setQualityRating(getValueForKey(tags, KEY_TAG_QUALITY));
 
         //KEY_TAG_TITLE
         tag.setTitle(getValueForKey(tags, KEY_TAG_TITLE));
@@ -327,7 +323,7 @@ public static class Loudness {
           //  tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
-            tag.setQualityRating(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
+           // tag.setQualityRating(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
             tag.setDisc(getValueForKey(tags, KEY_TAG_WAVE_DISC));
             parseMMComment(tag);
         }else if(TagUtils.isMPegFile(tag)) {
@@ -337,61 +333,27 @@ public static class Loudness {
         }
     }
 
-    private static void parseOverallDRMeter(MusicTag tag, String data) {
+    private static void parseOverallDRMeter(AudioTag tag, String data) {
         try {
             // Overall DR: 14.0357
             Pattern pattern = Pattern.compile("\\s*Overall DR:\\s*(\\S*)");
             Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setDynamicRangeScore(toDouble(info));
+                tag.setDrScore(toDouble(info));
             }
         }catch (Exception ex) {
             Log.e(TAG, "parseOverallDRMeter", ex);
         }
     }
 
-    @Deprecated
-    public static MusicTag readFFprobe(Context context, String path) {
-       // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
-        String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format \""+path+"\"";
-
-        FFprobeSession session = FFprobeKit.execute(cmd);
-        if (ReturnCode.isSuccess(session.getReturnCode())) {
-            String data = session.getOutput();
-            MusicTag tag = new MusicTag();
-            tag.setData("Running Time:"+session.getDuration()+"\n"+data);
-            tag.setPath(path);
-            readFileInfo(context, tag);
-            parseStreamInfo(tag,data);
-            parseFormatInfo(tag);
-            //detectFileFormat(tag);
-
-            parseDurationInfo(tag, session.getOutput());
-            parseTagsInfo(tag);
-            // parseReplayGain(tag);
-            parseOverallDRMeter(tag, data);
-           // detectFileFormat(tag);
-            return tag;
-        }else {
-            // try to get from file name
-            MusicTag tag = new MusicTag();
-            tag.setData(session.getOutput());
-            tag.setPath(path);
-           // detectFileFormat(tag);
-            session.cancel();
-            Log.d(TAG, session.getOutput());
-            return tag;
-        }
-    }
-
-    private static void parseFormatInfo(MusicTag tag) {
+    private static void parseFormatInfo(AudioTag tag) {
         String FORMAT_START = "[FORMAT]";
         String FORMAT_END = "[/FORMAT]";
-        int start = tag.getData().indexOf(FORMAT_START);
-        int end = tag.getData().indexOf(FORMAT_END,start);
+        int start = tag.getRawOutput().indexOf(FORMAT_START);
+        int end = tag.getRawOutput().indexOf(FORMAT_END,start);
         if(start >0 && end >0 ) {
-            String info = trimToEmpty(tag.getData().substring(start+FORMAT_START.length(), end));
+            String info = trimToEmpty(tag.getRawOutput().substring(start+FORMAT_START.length(), end));
             String []lines = info.split("\n");
             Map<String, String> tags = new HashMap<>();
             for (String line: lines) {
@@ -448,7 +410,7 @@ public static class Loudness {
           //  tag.setRating(toInt(getTagforKey(tags, KEY_TAG_RATING)));
 
             //KEY_TAG_QUALITY
-            tag.setQualityRating(getTagforKey(tags, KEY_TAG_QUALITY));
+           // tag.setQualityRating(getTagforKey(tags, KEY_TAG_QUALITY));
 
             //KEY_TAG_TITLE
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
@@ -490,7 +452,7 @@ public static class Loudness {
         }
     }
 
-    private static void parseMMComment(MusicTag tag) {
+    private static void parseMMComment(AudioTag tag) {
         String comment = StringUtils.trimToEmpty(tag.getComment());
         /*
          StringUtils.trimToEmpty(musicTag.getDisc())+
@@ -517,10 +479,10 @@ public static class Loudness {
 
             tag.setDisc(extractField(text, 0));
            // tag.setGrouping(extractField(text, 1));
-            tag.setQualityRating(extractField(text,2));
+           // tag.setQualityRating(extractField(text,2));
             tag.setAlbumArtist(extractField(text, 4));
             tag.setComposer(extractField(text, 5));
-            tag.setDynamicRangeScore(toDouble(extractField(text, 6)));
+            tag.setDrScore(toDouble(extractField(text, 6)));
             tag.setDynamicRange(toDouble(extractField(text, 7)));
         }
 
@@ -545,7 +507,7 @@ public static class Loudness {
         return "";
     }
 
-    private static void parseStreamInfo(MusicTag tag, String output) {
+    private static void parseStreamInfo(AudioTag tag, String output) {
         // need to parse from whole output to support ALAC/AAC on M4A container
         // Stream #0:0: Audio:
         // Stream #0:0[0x1](eng): Audio:

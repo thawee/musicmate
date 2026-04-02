@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import apincer.android.mmate.R;
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.TagUtils;
 
 public class NewIndicatorView extends LinearLayout {
@@ -46,8 +46,8 @@ public class NewIndicatorView extends LinearLayout {
     }
 
     @SuppressLint("CheckResult")
-    public void setMusicItem(MusicTag tag) {
-        if(tag == null || tag.isMusicManaged()) {
+    public void setMusicItem(Track tag) {
+        if(tag == null || tag.isManaged()) {
             setVisibility(GONE);
         }else {
             Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.backgound_new_indicator);

@@ -9,7 +9,7 @@ import static apincer.music.core.utils.TagUtils.isMPegFile;
 import static apincer.music.core.utils.TagUtils.isPCM;
 import static apincer.music.core.utils.TagUtils.isWavFile;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.MimeTypeUtils;
 
 public class DLNAHeaderHelper {
@@ -21,7 +21,7 @@ public class DLNAHeaderHelper {
      * Generate DLNA content features string based on audio format
      * Enhanced for audiophile quality streaming with format-specific profiles
      */
-    public static String getDLNAContentFeatures(MusicTag tag) {
+    public static String getDLNAContentFeatures(Track tag) {
         //String flags = tag.isGapless() ? DLNA_FLAGS_GAPLESS : DLNA_FLAGS_STREAMING_LOSSLESS;
         String flags = DLNA_FLAGS_STREAMING_LOSSLESS;
 
@@ -39,9 +39,11 @@ public class DLNAHeaderHelper {
             }
         } else if (isWavFile(tag)) {
             if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-                return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+               // return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
             } else {
-                return "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+               // return "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
             }
         } else if (isAACFile(tag)) {
             if (tag.getAudioBitRate() >= 320) {
@@ -73,7 +75,7 @@ public class DLNAHeaderHelper {
     /**
      * Get appropriate MIME type with additional parameters for audiophile streaming
      */
-    public static String getEnhancedContentType(MusicTag tag) {
+    public static String getEnhancedContentType(Track tag) {
         String mimeType = MimeTypeUtils.getMimeTypeFromPath(tag.getPath());
 
         // Add quality parameters for audiophile streaming

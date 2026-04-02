@@ -31,11 +31,9 @@ import apincer.music.core.Constants;
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.codec.TagWriter;
-import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.provider.FileSystem;
-import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -51,10 +49,11 @@ public class FileRepository {
     private final Context context;
     private final TagRepository tagRepos;
 
-    public static File getCoverArt(Context context, MediaTrack music) {
+    public static File getCoverArt(Context context, Track music) {
         File cacheDir =  getCoverartDir(context);
-        if(music instanceof MusicFolder folder) {
-            SearchCriteria.TYPE type = folder.getType();
+        //if(music instanceof MusicFolder folder) {
+        if(music.isContainer()) {
+            SearchCriteria.TYPE type = music.getContainerType();
 
             File cover = switch (type) {
                 case ARTIST -> {
@@ -101,7 +100,7 @@ public class FileRepository {
     }
 
    //also save albumArtName
-    private String extractEmbedCoverArt(MusicTag tag) {
+    private String extractEmbedCoverArt(Track tag) {
         try {
             //CacheDir/Covers/HEX.EXT
             //Music/xxx/Cover.EXT
@@ -133,7 +132,7 @@ public class FileRepository {
         return DEFAULT_COVERART;
     }
 
-    public boolean isManagedInLibrary(MusicTag tag) {
+    public boolean isManagedInLibrary(Track tag) {
         String path = buildCollectionPath(tag, true);
         return StringUtils.compare(path, tag.getPath());
     }
@@ -155,7 +154,7 @@ public class FileRepository {
             File cover = new File(dir, albumArtFilename);
             if(!cover.exists()) {
                 // try to get folder cover art
-                MusicTag song = tagRepos.getByAlbumArtFilename(albumArtFilename);
+                Track song = tagRepos.getByAlbumArtFilename(albumArtFilename);
                 if(song != null) {
                     return getFolderCoverArt(song.getPath());
                 }
@@ -294,20 +293,20 @@ public class FileRepository {
         return null;
     }
 
-    public boolean setMusicTag(MusicTag item) {
+    public boolean setMusicTag(Track item) {
         if (item == null || item.getPath() == null) {
             return false;
         }
 
-        if(item.getOriginTag()==null) {
+       /* if(item.getOriginTag()==null) {
             return false;
-        }
+        } */
 
-        item.setMusicManaged(isManagedInLibrary(item));
+        item.setIsManaged(isManagedInLibrary(item));
 
         if(TagWriter.isSupportedFileFormat(item.getPath())) {
             TagWriter.writeTagToFile(getContext(), item);
-            item.setOriginTag(null); // reset pending tag
+           // item.setOriginTag(null); // reset pending tag
             tagRepos.saveTag(item);
             return true;
        /* }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
@@ -332,18 +331,19 @@ public class FileRepository {
         try {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
-            if(file.length() == 0) {
+            //if(file.length() == 0) {
+            if(file.length() < 1024) { // 1 kb
                 Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
                 return;
             }
 
-            List<MusicTag> tags = tagRepos.getByPath(mediaPath);
+            List<Track> tags = tagRepos.getByPath(mediaPath);
 
             forceRead = forceRead || tags == null || tags.isEmpty();
 
             if(forceRead || tagRepos.isOutdated(tags.get(0), lastModified)) {
                 // Read minimal tag data first
-                MusicTag basicTag = TagReader.readBasicTag(context, mediaPath);
+                Track basicTag = TagReader.readBasicTag(context, mediaPath);
                 if(tags != null && !tags.isEmpty()) {
                     // maintain id
                     basicTag.setId(tags.get(0).getId());
@@ -351,9 +351,9 @@ public class FileRepository {
 
                 if(basicTag != null) {
                     // Save basic tag immediately
-                    basicTag.setMusicManaged(isManagedInLibrary(basicTag));
+                    basicTag.setIsManaged(isManagedInLibrary(basicTag));
                     saveCoverartToCache(basicTag); // must call before save tag, update albumArtName
-                    basicTag.setOriginTag(null);
+                   // basicTag.setOriginTag(null);
                     tagRepos.saveTag(basicTag);
                 }
             }
@@ -362,7 +362,7 @@ public class FileRepository {
         }
     }
 
-    public void saveCoverartToCache(MusicTag basicTag) {
+    public void saveCoverartToCache(Track basicTag) {
         try {
             File folderCover = getFolderCoverArt(basicTag.getPath());
             if(folderCover != null && folderCover.exists()) {
@@ -381,11 +381,11 @@ public class FileRepository {
         }
     }
 
-    private String buildCollectionPath(MusicTag metadata) {
+    private String buildCollectionPath(Track metadata) {
         return buildCollectionPath(metadata, true);
     }
 
-    public String buildCollectionPath(@NotNull MusicTag metadata, boolean includeStorageDir) {
+    public String buildCollectionPath(@NotNull Track metadata, boolean includeStorageDir) {
         // hierarchy directory
         // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc.)
         // 2. hires, lossless, mqa, etc.
@@ -444,7 +444,7 @@ public class FileRepository {
                 if (!StringUtils.isEmpty(title)) {
                     filename.append(StringUtils.formatFilePath(title));
                 } else {
-                    filename.append(StringUtils.formatFilePath(FileUtils.removeExtension(metadata.getPath())));
+                    filename.append(StringUtils.formatFilePath(FileUtils.getFileName(metadata.getPath())));
                 }
 
             String newPath =  filename.toString();
@@ -466,7 +466,7 @@ public class FileRepository {
         return metadata.getPath();
     }
 
-    public static boolean isMediaFileExist(MusicTag item) {
+    public static boolean isMediaFileExist(Track item) {
         if(item == null || item.getPath()==null) {
             return false;
         }
@@ -484,10 +484,10 @@ public class FileRepository {
         return file.exists();
     }
 
-    private boolean moveMusicFiles(MusicTag tag) {
+    private boolean moveMusicFiles(Track tag) {
             String newPath = buildCollectionPath(tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
-                tag.setMusicManaged(true);
+                tag.setIsManaged(true);
                 tagRepos.saveTag(tag);
                 return true;
             }
@@ -498,7 +498,7 @@ public class FileRepository {
                 File file = new File(tag.getPath());
                 cleanMediaDirectory(file.getParentFile());
                 tag.setPath(newPath);
-                tag.setMusicManaged(true);
+                tag.setIsManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
                 tag.setFileLastModified(file.lastModified());
@@ -547,7 +547,7 @@ public class FileRepository {
         }
      }
 
-    public boolean importAudioFile(MusicTag item) {
+    public boolean importAudioFile(Track item) {
         boolean status;
         try {
             status = moveMusicFiles(item);
@@ -559,7 +559,7 @@ public class FileRepository {
         return status;
     }
 
-    public boolean deleteMediaItem(MusicTag item) {
+    public boolean deleteMediaItem(Track item) {
         boolean status = false;
         try {
             // more others tag shared same file, skip delete file
@@ -582,7 +582,7 @@ public class FileRepository {
         return status;
     }
 
-    private void cleanCacheCover(MusicTag item) {
+    private void cleanCacheCover(Track item) {
         String covertName = item.getAlbumArtFilename();
         if(isEmpty(covertName) || covertName.contains(DEFAULT_COVERART)) return;
 

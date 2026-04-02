@@ -26,7 +26,7 @@ import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.utils.ApplicationUtils;
@@ -127,7 +127,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         qualityIndicator.setText("");
 
         // Step 1: Song
-        MediaTrack song = playbackService.getNowPlayingSong();
+        Track song = playbackService.getNowPlayingSong();
         if (song != null) {
             String quality = MusicTagUtils.getQualityIndFullString(song);
 

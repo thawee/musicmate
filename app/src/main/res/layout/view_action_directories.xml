@@ -69,6 +69,35 @@
         android:background="@color/grey900">
     </ListView>
 
+        <!--
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/dimen_8_dp">
+
+            <com.developer.filepicker.widget.MaterialCheckbox
+                android:id="@+id/checkbox_full_scan"
+                android:layout_width="@dimen/dimen_24_dp"
+                android:layout_height="@dimen/dimen_24_dp"
+                android:clickable="true"/>
+
+            <TextView
+                android:id="@+id/label_full_scan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Full scan (rescan all music files)"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+        -->
+        <CheckBox
+            android:id="@+id/checkbox_full_scan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Full scan (rescan all music files)"
+            android:layout_marginTop="@dimen/dimen_8_dp"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -108,7 +137,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:background="?attr/colorOutline" />
-
+<!--
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_ok_full"
             style="@style/Widget.Material3.Button.TonalButton"
@@ -123,7 +152,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:background="?attr/colorOutline" />
-
+-->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_ok"
             style="@style/Widget.Material3.Button.TonalButton"

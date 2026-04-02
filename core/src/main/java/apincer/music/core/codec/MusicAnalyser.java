@@ -28,8 +28,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.model.Track;
 import apincer.music.core.utils.TagUtils;
 
 public class MusicAnalyser {
@@ -66,13 +65,13 @@ public class MusicAnalyser {
     private boolean isMQAStudio = false;
     private long originalSampleRate;
 
-    public static boolean analyse(MusicTag tag) {
+    public static boolean analyse(Track tag) {
         MusicAnalyser analyser = new MusicAnalyser();
         analyser.doAnalyst(tag);
         return true;
     }
 
-    private void doAnalyst(MusicTag tag) {
+    private void doAnalyst(Track tag) {
         int durationInSeconds = 30;
         this.sampleRate = (int) tag.getAudioSampleRate();
         this.bitsPerSample = tag.getAudioBitsDepth();
@@ -100,7 +99,7 @@ public class MusicAnalyser {
                 runGcIfNeeded();
         }
         tag.setDynamicRange(getDynamicRange());
-        tag.setDynamicRangeScore(getDynamicRangeScore());
+        tag.setDrScore(getDynamicRangeScore());
 
         if(isMQAStudio()) {
             tag.setQualityInd("MQA Studio");
@@ -1055,7 +1054,7 @@ public class MusicAnalyser {
      *
      * @return A float array representing the waveform, or null on failure.
      */
-    public static float[] generateWaveform(Context context, MediaTrack tag, int points, double logPower) {
+    public static float[] generateWaveform(Context context, Track tag, int points, double logPower) {
         String inputPath = tag.getPath();
         if (inputPath == null || inputPath.isEmpty()) {
             Log.e(TAG, "generateWaveform: MusicTag has no path.");

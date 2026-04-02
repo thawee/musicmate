@@ -156,6 +156,7 @@
                     android:layout_marginEnd="@dimen/dimen_4_dp"
                     android:layout_gravity="center"
                     android:orientation="vertical">
+                    <!--
                 <TextView
                     android:id="@+id/panel_path"
                     android:layout_width="wrap_content"
@@ -175,6 +176,7 @@
                     android:singleLine="true"
                     android:background="@drawable/shape_background_filename"
                     tools:ignore="HardcodedText,SmallSp" />
+                    -->
                     <!--
                     <View
                         android:id="@+id/panel_path_line"

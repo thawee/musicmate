@@ -11,7 +11,7 @@ import org.jupnp.support.model.item.Item;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.model.Track;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.StringUtils;
 
@@ -37,7 +37,7 @@ public class MusicItemBrowser extends AbstractContentBrowser {
         Item result = null;
 
         String id = myId.substring(itemPrefix.length());
-        MusicTag tag = tagRepos.findById(StringUtils.toLong(id));
+        Track tag = tagRepos.findById(StringUtils.toLong(id));
         result = buildMusicTrack(contentDirectory, tag, folderId, itemPrefix);
 
         return result;
