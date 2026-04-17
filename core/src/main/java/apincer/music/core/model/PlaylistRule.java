@@ -2,32 +2,18 @@ package apincer.music.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlaylistRule {
     private String title;
     private String artist;
     private String album;
-    private String genre;
-    private String mood;
-    private String style;
+    private List<String> genre;
+    private List<String> mood;
+    private List<String> style;
 
-    /*
-    public boolean matchesGenre(TrackMeta track) {
-        return match(genre, track.getGenre())
-                && match(mood, track.getMood())
-                && match(style, track.getStyle());
-    }
-
-    public boolean matchesTitle(TrackMeta track) {
-        return match(title, track.getTitle())
-                && match(artist, track.getArtist())
-                && match(album, track.getAlbum());
-    }
-
-    private boolean match(String rule, String value) {
-        return rule == null || rule.isBlank() || "*".equals(rule)
-                || rule.equalsIgnoreCase(value);
-    } */
+    private ExcludeRule exclude;
 
     public String getTitle() {
         return title;
@@ -53,27 +39,35 @@ public class PlaylistRule {
         this.album = album;
     }
 
-    public String getGenre() {
+    public List<String> getGenre() {
         return genre;
     }
 
-    public void setGenre(String genre) {
+    public void setGenre(List<String> genre) {
         this.genre = genre;
     }
 
-    public String getMood() {
+    public List<String> getMood() {
         return mood;
     }
 
-    public void setMood(String mood) {
+    public void setMood(List<String> mood) {
         this.mood = mood;
     }
 
-    public String getStyle() {
+    public List<String> getStyle() {
         return style;
     }
 
-    public void setStyle(String style) {
+    public void setStyle(List<String> style) {
         this.style = style;
+    }
+
+    public ExcludeRule getExclude() {
+        return exclude;
+    }
+
+    public void setExclude(ExcludeRule exclude) {
+        this.exclude = exclude;
     }
 }

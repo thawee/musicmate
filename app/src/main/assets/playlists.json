@@ -3272,67 +3272,32 @@
       ]
     },
     {
-      "name": "Timeless: Roots & Traditions",
-      "uuid": "RegionalEchoes",
-      "type": "genre",
-      "note": "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ",
-      "description": "Traditional music from around the world, rich in culture, history, and regional identity",
-      "rules": [
-        { "genre": "Traditional" },
-
-        { "genre": "Folk", "mood": "Chill" },
-        { "genre": "Folk", "mood": "Melancholy" },
-
-        { "genre": "Luk Thung", "mood": "Chill" },
-        { "genre": "Mor Lam", "mood": "Chill" },
-        { "genre": "Luk Krung", "mood": "Chill" },
-
-        { "genre": "Kam Mueang", "mood": "Chill" },
-        { "genre": "Kantrum", "mood": "Chill" }
-      ]
-    } ,
-    {
-      "name": "Timeless: ISan Vibe โจ๊ะๆ หน้าฮ้าน",
+      "name": "Timeless: Isan Party Vibes",
       "uuid": "IsanPartyJoJo",
       "type": "genre",
       "note": "จังหวะโจ๊ะๆ สนุกสนาน ชวนขยับขา ม่วนมันส์หน้าฮ้านแบบไม่มีสะดุด",
       "description": "High-energy, fast-paced Mor Lam and upbeat Luk Thung tracks to get you dancing.",
       "rules": [
-        { "genre": "Mor Lam", "style": "Dance", "mood": "Party" },
-        { "genre": "Mor Lam", "style": "Dance", "mood": "Energetic" },
-        { "genre": "Mor Lam", "style": "Live", "mood": "Happy" },
-
-        { "genre": "Luk Thung", "style": "Dance", "mood": "Happy" },
-        { "genre": "Luk Thung", "style": "Dance", "mood": "Party" }
+        { "genre": ["Luk Thung","Mor Lam"],
+          "exclude": {
+            "mood": ["Calm","focus", "romantic","sad","Nostalgic"],
+            "style": ["acoustic","orchestral","Ambient"]
+          }}
       ]
     },
     {
-      "name": "Timeless: Road Trip II",
+      "name": "Timeless: Road Trip",
       "uuid": "RoadTripII",
       "type": "genre",
       "note": "ขับรถชิลๆ ฟังเพลินๆ ระหว่างเดินทาง ให้บรรยากาศสบายๆ ไม่ง่วงไม่เร่งเกินไป",
       "description": "Relaxed, feel-good tracks perfect for driving, blending chill pop, acoustic vibes, and light upbeat rhythms.",
       "rules": [
-        { "genre": "Pop", "mood": "Chill" },
-        { "genre": "Pop", "mood": "Happy" },
-
-        { "genre": "Thai Pop", "mood": "Chill" },
-        { "genre": "Thai Pop", "mood": "Happy" },
-
-        { "genre": "Luk Thung", "mood": "Chill" },
-        { "genre": "Luk Thung", "mood": "Happy" },
-
-        { "genre": "Mor Lam", "mood": "Happy" },
-
-        { "genre": "Folk", "style": "Acoustic", "mood": "Chill" },
-
-        { "genre": "Indie", "mood": "Chill" },
-
-        { "style": "Acoustic", "mood": "Chill" },
-        { "style": "Vocal", "mood": "Chill" },
-
-        { "genre": "Thai Pop", "mood": "Energetic", "style": "Dance" }
-
+        { "genre": ["Alternative","Rock"],
+          "exclude": {
+            "mood": ["Calm","focus", "romantic","sad","Nostalgic"],
+            "style": ["acoustic","Orchestral","Ambient"]
+          }},
+        { "genre": ["Mor Lam","Luk Thung", "Pop"], "style": ["Groove"] }
       ]
     },
     {
@@ -3342,20 +3307,7 @@
       "note": "ฟังง่ายๆ ผ่อนคลาย สบายอารมณ์ เหมาะสำหรับยามค่ำคืน",
       "description": "Smooth, mellow, and intimate tracks for late-night listening, featuring jazz, acoustic, and soft vocals",
       "rules": [
-        { "genre": "Jazz", "mood": "Chill" },
-        { "genre": "Jazz", "mood": "Romantic" },
-        { "genre": "Blues", "mood": "Chill" },
-        { "genre": "Blues", "mood": "Dark" },
-        { "genre": "Folk", "mood": "Chill" },
-        { "genre": "Folk", "mood": "Melancholy" },
-        { "genre": "Jazz", "style": "Bossa Nova", "mood": "Chill" },
-        { "genre": "Jazz", "style": "Bossa Nova", "mood": "Romantic" },
-        { "genre": "Pop", "mood": "Chill" },
-        { "style": "Easy Listening", "mood": "Chill" },
-        { "style": "Vocal", "mood": "Chill" },
-        { "style": "Vocal", "mood": "Romantic" },
-        { "genre": "Ambient", "mood": "Chill" },
-        { "genre": "Ambient", "mood": "Focus" }
+        { "genre": ["Jazz","Blues","Folk","Pop","Mor Lam","Luk Thung"], "mood": ["Ambient","Calm", "Romantic","Focus","Nostalgic"]}
       ]
     },
     {
@@ -3366,25 +3318,7 @@
       "description": "Timeless hits and crowd favorites with great sound",
       "rules": [
         {
-          "genre": "Alternative"
-        },
-        {
-          "genre": "Pop"
-        },
-        {
-          "genre": "Pop, Rock"
-        },
-        {
-          "genre": "Thai, Alternative"
-        },
-        {
-          "genre": "Thai, Pop"
-        },
-        {
-          "genre": "Thai, Pop Rock"
-        },
-        {
-          "genre": "Rock"
+          "genre": ["Alternative", "Pop", "Rock","Jazz","Folk","Country"]
         }
       ]
     },
@@ -3394,11 +3328,11 @@
       "type": "genre",
       "description": "The classical masterpieces with rich, immersive sound.",
       "rules": [
-        { "genre": "Classical"}
+        { "genre": ["Classical"]}
       ]
     },
     {
-      "name": "Timeless: Road Trip",
+      "name": "Timeless: Road Trip (Original)",
       "uuid": "MotionMelody",
       "type": "title",
       "description": "Rhythmic energy and memorable melodies in a timeless journey",

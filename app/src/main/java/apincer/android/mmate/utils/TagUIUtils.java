@@ -5,10 +5,18 @@ import static apincer.music.core.Constants.LEGEND_DSD;
 import static apincer.music.core.Constants.LEGEND_HIRES;
 import static apincer.music.core.Constants.LEGEND_MQA;
 import static apincer.music.core.Constants.LEGEND_STUDIO;
-import static apincer.music.core.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.music.core.Constants.TITLE_DSD;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.isDSD;
+import static apincer.music.core.utils.TagUtils.isDSD256;
+import static apincer.music.core.utils.TagUtils.isDSD64;
+import static apincer.music.core.utils.TagUtils.isHiRes;
+import static apincer.music.core.utils.TagUtils.isLossless;
+import static apincer.music.core.utils.TagUtils.isLossy;
+import static apincer.music.core.utils.TagUtils.isMQA;
+import static apincer.music.core.utils.TagUtils.isMQAStudio;
+import static apincer.music.core.utils.TagUtils.isPCM24Bits;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -27,24 +35,17 @@ import apincer.music.core.model.Track;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
-public class MusicTagUtils {
+public class TagUIUtils {
     private static final String TAG = "MusicTagUtils";
 
-    public static String getBPSAndSampleRate(Track tag) {
-        long sampleRate = tag.getAudioSampleRate();
-        if(isMQA(tag)) {
-            sampleRate = tag.getMqaSampleRate();
-        }
-        return String.format("%s/%s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
-    }
-
+    /*
     public static boolean isMQAStudio(Track tag) {
         return trimToEmpty(tag.getQualityInd()).contains("MQA Studio");
     }
 
     public static boolean isMQA(Track tag) {
         return trimToEmpty(tag.getQualityInd()).contains("MQA");
-    }
+    } */
 
     public static int getResolutionColor(Context context, Track tag) {
         // DSD - DSD
@@ -168,12 +169,9 @@ public class MusicTagUtils {
         }
     }
 
+    /*
     public static boolean isPCM24Bits(Track tag) {
         return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
-    }
-
-    public static boolean isPCM(Track tag) {
-        return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= 16));
     }
 
     public static boolean isDSD(@UnknownNullability Track tag) {
@@ -193,7 +191,7 @@ public class MusicTagUtils {
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
         return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
-    }
+    } */
 
     public static String getFormattedTitle(Context context, @UnknownNullability Track tag) {
         String title =  trimToEmpty(tag.getTitle());
@@ -228,13 +226,14 @@ public class MusicTagUtils {
         return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
     }
 
+    /*
     public static boolean isLossless(Track tag) {
         return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
     }
 
     public static boolean isLossy(Track tag) {
         return isMPegFile(tag) || isAACFile(tag);
-    }
+    } */
 
     @Deprecated
     public static String getDynamicRangeScore(Track tag) {
@@ -337,10 +336,11 @@ public class MusicTagUtils {
         }
     } */
 
+    /*
     public static boolean isOnDownloadDir(Track tag) {
        // return !tag.isMusicManaged();
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
-    }
+    } */
 
     public static String getDefaultAlbum(@UnknownNullability Track tag) {
         // if album empty, add single
@@ -366,23 +366,13 @@ public class MusicTagUtils {
         return artist;
     }
 
+    /*
     public static boolean isWavFile(Track musicTag) {
         return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getAudioEncoding()));
     }
 
     public static boolean isFLACFile(Track musicTag) {
         return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getAudioEncoding()));
-    }
-
-    public static boolean isDSDFile(Track tag) {
-        return (Constants.MEDIA_ENC_DSF.equalsIgnoreCase(tag.getAudioEncoding()) ||
-                Constants.MEDIA_ENC_DFF.equalsIgnoreCase(tag.getAudioEncoding()) );
-    }
-
-    public static boolean isMp4File(Track tag) {
-        // m4a, mov, ,p4
-        return (Constants.MEDIA_ENC_AAC.equalsIgnoreCase(tag.getAudioEncoding()) ||
-                Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
     public static boolean isMPegFile(@UnknownNullability Track tag) {
@@ -405,11 +395,6 @@ public class MusicTagUtils {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
     }
 
-    public static int getChannels(Track tag) {
-       // String chStr = tag.getAudioChannels();
-        return 2;
-    }
-
     // Helper to determine if a format is lossless (for audiophile renderers)
     @Deprecated
     public static boolean isLosslessFormat(Track tag) {
@@ -423,7 +408,7 @@ public class MusicTagUtils {
                 path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
                 path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
                 path.endsWith(".dsf");
-    }
+    } */
 
     public static int getQualityTextColor(Context context, String qualityInd) {
         if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_unknown);
@@ -485,15 +470,15 @@ public class MusicTagUtils {
 
     public static String getQualityIndFullString(Track song) {
         String name = Constants.TITLE_CD_QUALITY;
-        if(TagUtils.isDSD(song)) {
+        if(isDSD(song)) {
             name = TITLE_DSD;
-        }else if(TagUtils.isMQA(song)) {
+        }else if(isMQA(song)) {
             name = Constants.TITLE_MQA_MASTER_QUALITY;
         }else if(TagUtils.isHiRes48(song)) {
             name = Constants.TITLE_CD_EXT_QUALITY;
-        }else if(TagUtils.isHiRes(song)) {
+        }else if(isHiRes(song)) {
             name = Constants.TITLE_HIRES_QUALITY;
-        }else if(TagUtils.isLossy(song)) {
+        }else if(isLossy(song)) {
             name = Constants.TITLE_HIGH_QUALITY;
         }
         return name;

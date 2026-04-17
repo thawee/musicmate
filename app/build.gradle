@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias libs.plugins.android.application
-    //alias libs.plugins.kotlin.android
     alias libs.plugins.devtools.ksp
     alias libs.plugins.dagger.hilt
 }
@@ -33,8 +32,8 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 106
-        versionName  = "3.16.0-"+ getDate()
+        versionCode = 107
+        versionName  = "3.17.0-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true

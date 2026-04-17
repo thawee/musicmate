@@ -70,7 +70,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
-    private static final int DATABASE_VERSION = 15;
+    private static final int DATABASE_VERSION = 16;
     public static final List<Track> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
     private static final String LIKE_LITERAL = "%";

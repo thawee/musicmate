@@ -6,6 +6,7 @@ import static apincer.music.core.Constants.PATH_MISSING_TRACK;
 import static apincer.music.core.utils.StringUtils.formatSongSize;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.isOnDownloadDir;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -41,7 +42,7 @@ import apincer.music.core.model.SearchCriteria;
 import apincer.android.mmate.ui.view.DynamicRangeView;
 import apincer.android.mmate.ui.view.QualityIndicatorView;
 import apincer.android.mmate.ui.view.TriangleLabelView;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 import coil3.ImageLoader;
@@ -444,7 +445,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .build();
         imageLoader.enqueue(request);
 
-        holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, item));
+        holder.mTitle.setText(TagUIUtils.getFormattedTitle(holder.mContext, item));
 
         holder.mSubtitle.setText(item.getDescription());
 
@@ -503,7 +504,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // download label
         if (tag.isManaged()) {
             holder.mNewLabelView.setVisibility(GONE);
-        } else if (MusicTagUtils.isOnDownloadDir(tag)) {
+        } else if (isOnDownloadDir(tag)) {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.new_indicator_background);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.new_download_indicator_text);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
@@ -523,8 +524,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .build();
         imageLoader.enqueue(request);
 
-        holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
-        holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
+        holder.mTitle.setText(TagUIUtils.getFormattedTitle(holder.mContext, tag));
+        holder.mSubtitle.setText(TagUIUtils.getFormattedSubtitle(tag));
        // holder.mSubtitle.setText(tag.getArtist());
       //  holder.mAlbum.setText(StringUtils.getSimplifiedAlbum(tag));
 

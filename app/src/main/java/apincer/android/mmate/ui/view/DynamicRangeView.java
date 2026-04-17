@@ -3,7 +3,7 @@ package apincer.android.mmate.ui.view;
 import static apincer.music.core.utils.TagUtils.getDynamicRangeScore;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
-import static apincer.android.mmate.utils.MusicTagUtils.getDRScoreColor;
+import static apincer.android.mmate.utils.TagUIUtils.getDRScoreColor;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

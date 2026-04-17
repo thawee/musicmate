@@ -243,23 +243,21 @@ public class JThinkReader extends TagReader{
             metadata.setComment(getTagValue(tag, FieldKey.COMMENT));
         }else {
             // wave file
-            Map<String, String> tags = parseTxx(tag); //parseWaveGenre(metadata.getComment());
-            //if (metadata.getGenre().equals(tags.get("GENRE"))) {
+            Map<String, String> tags = parseTxx(tag);
                 metadata.setGenre(tags.get("GENRE"));
                 metadata.setStyle(tags.get("STYLE"));
                 metadata.setMood(tags.get("MOOD"));
-              //  metadata.setRegion(tags.get("REGION"));
-            //}
+                metadata.setOrigin(tags.get("ORIGIN"));
         }
 
         if(TagUtils.isFLACFile(metadata)) {
             metadata.setMood(tag.getFirst("MOOD"));
             metadata.setStyle(tag.getFirst("STYLE"));
-           // metadata.setRegion(tag.getFirst("REGION"));
+            metadata.setOrigin(tag.getFirst("ORIGIN"));
         }else if(TagUtils.isAIFFile(metadata) || TagUtils.isAACFile(metadata) || TagUtils.isALACFile(metadata)) {
             metadata.setMood(tag.getFirst("----:com.apple.iTunes:MOOD"));
             metadata.setStyle(tag.getFirst("----:com.apple.iTunes:STYLE"));
-           // metadata.setRegion(tag.getFirst("----:com.apple.iTunes:REGION"));
+            metadata.setOrigin(tag.getFirst("----:com.apple.iTunes:ORIGIN"));
         }else if (tag instanceof AbstractID3v2Tag id3) {
             List<TagField> moodFields = id3.getFields("TXXX");
             for (TagField field : moodFields) {
@@ -269,7 +267,7 @@ public class JThinkReader extends TagReader{
 
                     if ("MOOD".equalsIgnoreCase(desc)) metadata.setMood(value);
                     if ("STYLE".equalsIgnoreCase(desc)) metadata.setStyle(value);
-                   // if ("REGION".equalsIgnoreCase(desc)) metadata.setRegion(value);
+                    if ("ORIGIN".equalsIgnoreCase(desc)) metadata.setOrigin(value);
                 }
             }
         }
@@ -288,31 +286,7 @@ public class JThinkReader extends TagReader{
         }
         return mapped;
     }
-
-    private Map<String, String> parseWaveGenre(String raw) {
-        Map<String, String> result = new HashMap<>();
-
-        if (raw == null) return result;
-
-        String[] parts = raw.split(";");
-
-        //GENRE = "genre;style;mood;region"
-        if(parts.length >0) {
-            result.put("GENRE", parts[0]);
-        }
-        if(parts.length > 1) {
-            result.put("STYLE", parts[1]);
-        }
-        if(parts.length > 2) {
-            result.put("MOOD", parts[2]);
-        }
-        if(parts.length > 3) {
-            result.put("REGION", parts[3]);
-        }
-
-        return result;
-    }
-
+  
     private String getTagValue(Tag tag, FieldKey key) {
         if (tag != null && tag.hasField(key)) {
             return StringUtils.trimToEmpty(tag.getFirst(key));

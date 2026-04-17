@@ -42,7 +42,7 @@ import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.MusicPathTagParser;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.utils.StringUtils;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
@@ -66,6 +66,7 @@ public class TagsEditorFragment extends Fragment {
     private AutoCompleteTextView txtAlbumArtist;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
+    private AutoCompleteTextView txtOrigin;
     private AutoCompleteTextView txtGenre;
     private AutoCompleteTextView txtStyle;
     private AutoCompleteTextView txtMood;
@@ -101,7 +102,7 @@ public class TagsEditorFragment extends Fragment {
         txtYear = v.findViewById(R.id.input_year);
         txtGenre = v.findViewById(R.id.input_genre);
         txtStyle = v.findViewById(R.id.input_style);
-       // txtRegion = v.findViewById(R.id.input_region);
+        txtOrigin = v.findViewById(R.id.input_origin);
         txtMood = v.findViewById(R.id.input_mood);
         //txtGrouping = v.findViewById(R.id.input_grouping);
         txtPublisher = v.findViewById(R.id.input_publisher);
@@ -136,7 +137,7 @@ public class TagsEditorFragment extends Fragment {
        // setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
         setupListValuePopupFullList(txtGenre, TagRepository.getDefaultGenreList(getContext()));
         setupListValuePopupFullList(txtStyle, TagRepository.getDefaultStyleList(getContext()));
-        //setupListValuePopup(txtRegion, TagRepository.getDefaultRegionList(getContext()),1);
+        setupListValuePopupFullList(txtOrigin, TagRepository.getDefaultOriginList(getContext()));
         setupListValuePopupFullList(txtMood, TagRepository.getDefaultMoodList(getContext()));
         setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),1);
 
@@ -411,10 +412,10 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setAlbum(buildTag(txtAlbum, tagUpdate.getAlbum()));
         tagUpdate.setArtist(buildTag(txtArtist, tagUpdate.getArtist()));
         tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getArtist()));
-        tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre()));
-        tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood()));
-        tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle()));
-        //tagUpdate.setRegion(buildTag(txtRegion, tagUpdate.getRegion()));
+        tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre(), tagUpdate.getGenre()));
+        tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood(), tagUpdate.getMood()));
+        tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle(), tagUpdate.getStyle()));
+        tagUpdate.setOrigin(buildTag(txtOrigin, tagUpdate.getOrigin(),tagUpdate.getOrigin()));
         tagUpdate.setPublisher(buildTag(txtPublisher, tagUpdate.getPublisher()));
         tagUpdate.setYear(buildTag(txtYear, tagUpdate.getYear()));
     }
@@ -467,13 +468,9 @@ public class TagsEditorFragment extends Fragment {
                         if(!StringUtils.isEmpty(tag.getTrack())) {
                             tag.setTrack(StringUtils.formatTrack(tag.getTrack()));
                         }
-                        // clean albumArtist if same value as artist
-                       // if(tag.getAlbumArtist().equals(tag.getArtist())) {
-                        //    tag.setAlbumArtist("");
-                        //}
                         // if album empty, add single
                         if(StringUtils.isEmpty(tag.getAlbum())) {
-                            tag.setAlbum(StringUtils.formatTitle(MusicTagUtils.getDefaultAlbum(tag)));
+                            tag.setAlbum(StringUtils.formatTitle(TagUIUtils.getDefaultAlbum(tag)));
                         }
                     }
                 }
@@ -503,7 +500,7 @@ public class TagsEditorFragment extends Fragment {
         txtGenre.setText(tag.getGenre());
         txtMood.setText(tag.getMood());
         txtStyle.setText(tag.getStyle());
-        //txtRegion.setText(tag.getRegion());
+        txtOrigin.setText(tag.getOrigin());
         txtPublisher.setText(tag.getPublisher());
 
         txtTitle.invalidate();
@@ -524,7 +521,7 @@ public class TagsEditorFragment extends Fragment {
                 .build();
         imageLoader.enqueue(request);
 
-        previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));
+        previewTitle.setText(TagUIUtils.getFormattedTitle(getContext(),tag));
         previewPath.setText(tag.getSimpleName());
     }
 

@@ -3,9 +3,12 @@ package apincer.music.core.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlaylistEntry {
@@ -63,18 +66,26 @@ public class PlaylistEntry {
 
         for (PlaylistRule r : rules) {
             if(TYPE_GENRE.equals(type)) {
-                GenreRule c = new GenreRule();
 
-                    c.genre = normalize(r.getGenre()); //StringUtils.normalizeName(r.getGenre());
-                    c.mood = normalize(r.getMood()); //StringUtils.normalizeName(r.getMood());
-                    c.style = normalize(r.getStyle()); //StringUtils.normalizeName(r.getStyle());
+                  //  c.genre = normalize(r.getGenre()); //StringUtils.normalizeName(r.getGenre());
+                  //  c.mood = normalize(r.getMood()); //StringUtils.normalizeName(r.getMood());
+                  //  c.style = normalize(r.getStyle()); //StringUtils.normalizeName(r.getStyle());
+                r.setGenre(normalizeList(r.getGenre()));
+                r.setMood(normalizeList(r.getMood()));
+                r.setStyle(normalizeList(r.getStyle()));
+                if (r.getExclude() != null) {
+                    r.getExclude().setMood(normalizeList(r.getExclude().getMood()));
+                    r.getExclude().setStyle(normalizeList(r.getExclude().getStyle()));
+                }
 
-                    c.anyGenre = "*".equals(r.getGenre()) || c.genre.isEmpty();
-                    c.anyMood = "*".equals(r.getMood()) || c.mood.isEmpty();
-                    c.anyStyle = "*".equals(r.getStyle()) || c.style.isEmpty();
+                boolean anyGenre = isAny(r.getGenre());
+                boolean anyMood  = isAny(r.getMood());
+                boolean anyStyle = isAny(r.getStyle());
+                GenreRule c = new GenreRule(r, anyGenre, anyMood, anyStyle);
 
                     if (c.isSimpleGenre()) {
-                        genreIndexRules.add(c.genre);   // FAST PATH
+                        // FAST PATH
+                        genreIndexRules.addAll(r.getGenre());
                     } else {
                         genreComplexRules.add(c);       // SLOW PATH
                     }
@@ -83,6 +94,16 @@ public class PlaylistEntry {
                 titleIndexRules.add(key);
             }
         }
+    }
+
+    private List<String> normalizeList(List<String> values) {
+        if (values == null) return Collections.emptyList();
+
+        return values.stream()
+                .filter(Objects::nonNull)
+                .map(this::normalize)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     public boolean isInTitlePlaylist(Track track) {
@@ -104,8 +125,11 @@ public class PlaylistEntry {
         }
 
         if (genreComplexRules.isEmpty()) return false;
+        String genre = normalize(track.getGenre());
+        String mood = normalize(track.getMood());
+        String style = normalize(track.getStyle());
         for (GenreRule rule : genreComplexRules) {
-            if (rule.matches(track)) {
+            if (rule.matches(genre, mood, style)) {
                 return true;
             }
         }
@@ -124,8 +148,12 @@ public class PlaylistEntry {
         return ((long) t << 32) | (a & 0xffffffffL);
     }
 
-    public static String normalize(String s) {
+    public String normalize(String s) {
         if (s == null) return "";
         return s.trim().toLowerCase();
+    }
+
+    private boolean isAny(List<String> values) {
+        return values == null || values.isEmpty() || values.contains("*");
     }
 }

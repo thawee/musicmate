@@ -160,5 +160,9 @@ public interface Track {
 
     String getMood();
 
-  //  String getRegion();
+    String getOrigin();
+
+    void setOrigin(String origin);
+
+    //  String getRegion();
 }

@@ -25,7 +25,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.music.core.model.PlaylistEntry;
+import apincer.android.utils.FileUtils;import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.Track;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.MusicMateExecutors;
@@ -80,7 +80,7 @@ public class ScanAudioFileWorker extends Worker {
                 repos.cleanCacheCovers();
             }else {
                 // Only clean database on not full scan
-                tagRepos.cleanInvalidTags();;
+                tagRepos.cleanInvalidTags();
             }
 
             List<File> list = pathList(getApplicationContext());
@@ -163,11 +163,12 @@ public class ScanAudioFileWorker extends Worker {
 
             // 3. Export
             File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-            File playlistDir = new File(musicDir, "00_Playlists");
+            File playlistDir = new File(musicDir, "AA_Playlists");
 
-            if (!playlistDir.exists()) {
-                playlistDir.mkdirs();
+            if (playlistDir.exists()) {
+                FileUtils.delete(playlistDir);
             }
+            playlistDir.mkdirs();
 
             PlaylistRepository.exportPlaylists(playlistDir, allSongs);
 

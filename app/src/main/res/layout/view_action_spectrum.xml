@@ -21,6 +21,7 @@
             android:id="@+id/title_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:contentDescription="TODO"
             android:src="@drawable/ic_round_audio_file_24"
             app:tint="@color/white" />
 
@@ -55,25 +56,136 @@
 
         <TextView
             android:id="@+id/filename"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/grey400"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:alpha="0.7"
             android:textSize="12sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="start"
+            android:padding="@dimen/dimen_4_dp"
+            tools:text="14 - ขอบใจที่หาเจอ.flac" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:weightSum="2"
+            android:padding="@dimen/dimen_4_dp">
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                tools:ignore="UselessParent">
+                <TextView
+                    android:id="@+id/format_labels"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/grey400"
+                    android:alpha="0.7"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:maxLines="5"
+                    android:ellipsize="start"
+                    android:layout_marginBottom="8dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
+                    tools:text="FORMAT" />
+                <TextView
+                    android:id="@+id/format_values"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:alpha="0.7"
+                    android:textSize="12sp"
+                    android:maxLines="5"
+                    android:gravity="end"
+                    android:layout_marginBottom="8dp"
+                    tools:text="-" />
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                tools:ignore="UselessParent">
+                <TextView
+                    android:id="@+id/analytics_labels"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/grey400"
+                    android:alpha="0.7"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:maxLines="6"
+                    android:ellipsize="start"
+                    android:layout_marginBottom="8dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
+                    tools:text="ANALYTICS"
+                    tools:ignore="RtlSymmetry" />
+                <TextView
+                    android:id="@+id/analytics_values"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:alpha="0.7"
+                    android:textSize="12sp"
+                    android:maxLines="6"
+                    android:gravity="end"
+                    android:layout_marginBottom="8dp"
+                    tools:text="-" />
+
+            </LinearLayout>
+                <!--
+        <TextView
+            android:id="@+id/format"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:alpha="0.7"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:maxLines="5"
+            android:ellipsize="start"
             android:layout_marginBottom="8dp"
             tools:text="14 - ขอบใจที่หาเจอ.flac" />
+            <TextView
+                android:id="@+id/analytics"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:alpha="0.7"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:maxLines="5"
+                android:ellipsize="start"
+                android:layout_marginBottom="8dp"
+                tools:text="14 - ขอบใจที่หาเจอ.flac" />
+                -->
+        </LinearLayout>
+        <TextView
+            android:id="@+id/quality_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textColor="@color/grey200"
+            android:textSize="11sp"
+            android:maxLines="2"
+            android:textStyle="italic"
+            tools:text="Verified Lossless" />
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dimen_4_dp"
             app:cardCornerRadius="8dp"
             app:cardBackgroundColor="#1A1A1A"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="@dimen/dimen_4_dp">
 
             <apincer.android.mmate.ui.view.AspectRatioPhotoView
                 android:id="@+id/spectrum_view"
@@ -82,6 +194,7 @@
                 android:scaleType="fitXY" />
         </androidx.cardview.widget.CardView>
 
+        <!--
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -100,6 +213,7 @@
                     android:textStyle="italic"
                     tools:text="Verified Lossless" />
         </LinearLayout>
+        -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

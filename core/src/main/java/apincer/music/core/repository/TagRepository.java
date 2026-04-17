@@ -87,6 +87,19 @@ public class TagRepository {
         return list;
     }
 
+    public static List<String> getDefaultOriginList(Context context) {
+        List<String> list = new ArrayList<>();
+        String[] arrays =  context.getResources().getStringArray(R.array.origins);
+        for(String genre: arrays) {
+            if(!list.contains(genre)) {
+                list.add(genre);
+            }
+        }
+
+        Collections.sort(list);
+        return list;
+    }
+
     public void saveTag(Track tag) {
         String path = StringUtils.trimToEmpty(tag.getPath()).toLowerCase();
         if(StringUtils.isEmpty(tag.getUniqueKey())) {

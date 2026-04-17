@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui;
 
+import static apincer.music.core.utils.StringUtils.formatAudioBitRate;
+import static apincer.music.core.utils.StringUtils.formatAudioBitsDepth;
+import static apincer.music.core.utils.StringUtils.formatAudioSampleRate;
+import static apincer.music.core.utils.StringUtils.formatStorageSize;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
@@ -51,6 +55,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,6 +68,7 @@ import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.view.BadgeView;
 import apincer.android.mmate.ui.view.VerdictFormatter;
 import apincer.android.mmate.utils.UIUtils;
+import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.authenticity.AudioAnalysisResult;
 import apincer.music.core.authenticity.AudioAuthenticityAnalyzer;
@@ -369,20 +375,64 @@ public class TagsActivity extends AppCompatActivity {
         popup.show();
     }
 
+    @SuppressLint("SetTextI18n")
     private void doShowSpectrum() {
         if (getEditItems().isEmpty()) return;
 
         Track track = getEditItems().get(0);
         View cview = getLayoutInflater().inflate(R.layout.view_action_spectrum, null);
 
+        TextView formatLabel = cview.findViewById(R.id.format_labels);
+        TextView formatText = cview.findViewById(R.id.format_values);
+        TextView analyticsLabel = cview.findViewById(R.id.analytics_labels);
+        TextView analyticsText = cview.findViewById(R.id.analytics_values);
         TextView filenameText = cview.findViewById(R.id.filename);
-        //TextView resolution = cview.findViewById(R.id.resolution);
         TextView qualityScore = cview.findViewById(R.id.quality_score);
         ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
         ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
 
-        //filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
-        filenameText.setText(track.getTitle());
+        filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
+        SimplifySpanBuild formatSpan = new SimplifySpanBuild("");
+        SimplifySpanBuild analyticsSpan = new SimplifySpanBuild("");
+
+        // format
+        final int textSize = 11;
+        int labelColor = Color.GRAY;
+        int valueColor = Color.WHITE;
+
+        formatSpan.append(new SpecialTextUnit("FORMAT\n", labelColor).setTextSize(textSize).useTextBold());
+        formatSpan.append(new SpecialTextUnit("  Type:\n", labelColor).setTextSize(textSize).useTextBold());
+        formatSpan.append(new SpecialTextUnit("  Sample Rate:\n", labelColor).setTextSize(textSize).useTextBold());
+        formatSpan.append(new SpecialTextUnit("  Bit Depth:\n", labelColor).setTextSize(textSize).useTextBold());
+        formatSpan.append(new SpecialTextUnit("  Size:\n", labelColor).setTextSize(textSize).useTextBold());
+        formatLabel.setText(formatSpan.build());
+
+        formatSpan = new SimplifySpanBuild("\n");
+
+        String textValue = track.getFileType().toUpperCase();
+        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+        textValue = formatAudioSampleRate(track.getAudioSampleRate(), true);
+        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+        textValue = formatAudioBitsDepth(track.getAudioBitsDepth());
+        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+        textValue = formatStorageSize(track.getFileSize());
+        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+        formatText.setText(formatSpan.build());
+
+        // analytics
+        //Signal Analytics, Nyquist, Dynamic Range, Peak Amplitude, RMS Level
+        analyticsSpan.append(new SpecialTextUnit("ANALYTICS\n", labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append(new SpecialTextUnit("  Nyquist:\n", labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append(new SpecialTextUnit("  Spectral Cutoff:\n", labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append(new SpecialTextUnit("  Dynamic Range:\n", labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append(new SpecialTextUnit("  True Peak:\n", labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append(new SpecialTextUnit("  RMS Level:",labelColor).setTextSize(textSize).useTextBold());
+        analyticsLabel.setText(analyticsSpan.build());
+
         qualityScore.setText(R.string.analyzing);
 
         if (spinner != null) spinner.setVisibility(View.VISIBLE);
@@ -413,6 +463,25 @@ public class TagsActivity extends AppCompatActivity {
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
 
+                            SimplifySpanBuild analyticsSpan = new SimplifySpanBuild("\n");
+
+                            String textValue = formatAudioSampleRate(track.getAudioSampleRate() /2, true);
+                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+                            textValue = formatAudioSampleRate((long) r.rolloff, true);
+                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.dynamicRange);
+                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.peak);
+                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.rms);
+                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+
+                            analyticsText.setText(analyticsSpan.build());
+
                             if(completedNext[0]) {
                                 if (spinner != null) spinner.setVisibility(View.GONE);
                             }
@@ -422,9 +491,7 @@ public class TagsActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(String error) {
-
                         Log.e("AudioAnalysis", error);
-
                     }
                 });
 
@@ -564,11 +631,18 @@ public class TagsActivity extends AppCompatActivity {
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
 
         if((!isEmpty(currentDisplayTag.getGenre()) ||
-               // !isEmpty(currentDisplayTag.getMood()) ||
+                !isEmpty(currentDisplayTag.getOrigin()) ||
                 !isEmpty(currentDisplayTag.getStyle()) ||
                 !isEmpty(currentDisplayTag.getMood()))) {
             boolean hasPrv = false;
+            if(!isEmpty(currentDisplayTag.getOrigin())) {
+                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getOrigin()).setTextSize(14).useTextBold());
+                hasPrv = true;
+            }
             if(!isEmpty(currentDisplayTag.getGenre())) {
+                if(hasPrv) {
+                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
+                }
                 tagSpan.append(new SpecialTextUnit(currentDisplayTag.getGenre()).setTextSize(14).useTextBold());
                 hasPrv = true;
             }
@@ -613,7 +687,7 @@ public class TagsActivity extends AppCompatActivity {
             }
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
@@ -622,6 +696,11 @@ public class TagsActivity extends AppCompatActivity {
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
 
             encInfo.setText(spannableEnc.build());
+            encInfo.setOnClickListener(v -> {
+                //filter by path
+                File f = new File(currentDisplayTag.getPath());
+                doBackToMainActivity(Constants.FILTER_TYPE_PATH,  f.getParentFile().getPath());
+            });
         }catch (Exception ex) {
             Log.e(TAG, "updateTitlePanel", ex);
         }

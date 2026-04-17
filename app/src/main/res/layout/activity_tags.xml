@@ -253,7 +253,7 @@
                         -->
                     </LinearLayout>
                 </RelativeLayout>
-                <include layout="@layout/view_tag_layout" />
+                <include layout="@layout/fragment_editor_preview" />
             </LinearLayout>
 
             <!--

@@ -1,9 +1,9 @@
 package apincer.android.mmate.ui.view;
+import static apincer.android.mmate.utils.TagUIUtils.getFileEncodingColor;
+import static apincer.android.mmate.utils.TagUIUtils.getResolutionBackground;
 import static apincer.music.core.utils.TagUtils.getBPSAndSampleRate;
 import static apincer.music.core.utils.TagUtils.isDSD;
 import static apincer.music.core.utils.TagUtils.isMQA;
-import static apincer.android.mmate.utils.MusicTagUtils.getFileEncodingColor;
-import static apincer.android.mmate.utils.MusicTagUtils.getResolutionBackground;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;

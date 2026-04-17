@@ -241,6 +241,7 @@
                     android:orientation="vertical"
                     android:padding="@dimen/dimen_8_dp">
 
+                    <!--
                     <com.google.android.material.textfield.TextInputLayout
                         android:hint="Genre"
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -257,7 +258,46 @@
                             android:minWidth="@dimen/dimen_92_dp"
                             tools:ignore="LabelFor" />
                     </com.google.android.material.textfield.TextInputLayout>
+                    -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:weightSum="2">
 
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:hint="Origin"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content">
+                            <AutoCompleteTextView
+                                android:id="@+id/input_origin"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                                android:text="Origin" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <Space
+                            android:layout_width="8dp"
+                            android:layout_height="wrap_content" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:hint="Genre"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content">
+                            <AutoCompleteTextView
+                                android:id="@+id/input_genre"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                                android:text="Genre" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -296,8 +336,6 @@
                         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                         android:text="Style" />
                 </com.google.android.material.textfield.TextInputLayout>
-
-
             </LinearLayout>
 
                     <!--

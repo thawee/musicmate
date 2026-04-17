@@ -90,8 +90,8 @@ public class TrackEntity implements Track {
     protected String mood = "";
     @DatabaseField()
     protected String style = "";
-   // @DatabaseField()
-  //  protected String region = "";
+    @DatabaseField()
+    protected String origin = "";
     @DatabaseField
     protected String track = "";
    // @DatabaseField
@@ -416,7 +416,7 @@ public class TrackEntity implements Track {
         tag.genre = genre;
         tag.mood = mood;
         tag.style = style;
-       // tag.region = region;
+        tag.origin = origin;
         tag.year = year;
         tag.track = track;
        // tag.disc = disc;
@@ -464,7 +464,7 @@ public class TrackEntity implements Track {
         this.genre = tag.getGenre();
         this.mood = tag.getMood();
         this.style = tag.getStyle();
-        //this.region = tag.getRegion();
+        this.origin = tag.getOrigin();
         this.year = tag.getYear();
         this.track = tag.getTrack();
        // this.disc = tag.getDisc();
@@ -578,4 +578,17 @@ public class TrackEntity implements Track {
         this.dynamicRange = measuredDR;
     }
 
+    @Override
+    public String getOrigin() {
+        return origin;
+    }
+
+    @Override
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public double getBpm() {
+        return bpm;
+    }
 }

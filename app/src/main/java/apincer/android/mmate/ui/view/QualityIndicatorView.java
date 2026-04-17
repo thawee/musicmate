@@ -17,7 +17,7 @@ import androidx.annotation.Nullable;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.model.Track;
 
 public class QualityIndicatorView extends LinearLayout {
@@ -71,7 +71,7 @@ public class QualityIndicatorView extends LinearLayout {
 
     public void setLabel(String label) {
         if(label != null) {
-            int textColor = MusicTagUtils.getQualityTextColor(getContext(), label);
+            int textColor = TagUIUtils.getQualityTextColor(getContext(), label);
             if(isEmpty(label)) {
                 label = "-";
             }else if(label.startsWith("MQA")) {
@@ -80,7 +80,7 @@ public class QualityIndicatorView extends LinearLayout {
             TextBuilder builder = new TextBuilder(getContext());
             builder.addColoredText(label, textColor);
             builder.into(textView);
-            Drawable background = MusicTagUtils.getQualityBackground(getContext(), label);
+            Drawable background = TagUIUtils.getQualityBackground(getContext(), label);
             textView.setBackground(background);
         }
     }
@@ -91,8 +91,8 @@ public class QualityIndicatorView extends LinearLayout {
         if(tag == null) {
             textView.setText("-");
         }else {
-            int textColor = MusicTagUtils.getQualityTextColor(getContext(), tag.getQualityInd());
-            int bgColor = MusicTagUtils.getQualityBgColor(getContext(), tag.getQualityInd());
+            int textColor = TagUIUtils.getQualityTextColor(getContext(), tag.getQualityInd());
+            int bgColor = TagUIUtils.getQualityBgColor(getContext(), tag.getQualityInd());
             String label = tag.getQualityInd();
             if(isEmpty(label)) {
                 label = "-";

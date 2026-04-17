@@ -1,6 +1,7 @@
 package apincer.android.mmate.ui.view;
 
 import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
+import static apincer.music.core.utils.TagUtils.isLossy;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,7 +24,7 @@ import com.google.android.material.textview.MaterialTextView;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MusicMateServiceImpl;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.model.Track;
@@ -129,7 +130,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         // Step 1: Song
         Track song = playbackService.getNowPlayingSong();
         if (song != null) {
-            String quality = MusicTagUtils.getQualityIndFullString(song);
+            String quality = TagUIUtils.getQualityIndFullString(song);
 
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
@@ -163,7 +164,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
                 addSignalPathStep(signalPathContainer, "MusicMate Core", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Network Endpoint", playerDetails, false);
-                if(!MusicTagUtils.isLossy(song)) {
+                if(!isLossy(song)) {
                     qualityIndicator.setText(Constants.TITLE_PLAYER_CAST);
                 }
             }

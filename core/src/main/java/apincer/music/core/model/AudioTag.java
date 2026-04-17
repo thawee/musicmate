@@ -34,7 +34,8 @@ public class AudioTag implements Track {
     protected String genre = "";
     protected String mood = "";
     protected String style = "";
-    protected String region = "";
+    protected String origin = "";
+    //protected String region = "";
     protected String track = "";
     protected String disc = "";
     protected String comment = "";
@@ -506,4 +507,13 @@ public class AudioTag implements Track {
         childCount++;
     }
 
+    @Override
+    public String getOrigin() {
+        return origin;
+    }
+
+    @Override
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
 }

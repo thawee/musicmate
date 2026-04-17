@@ -13,7 +13,7 @@ public class VerdictFormatter {
         if (verdict == null) return "No Analysis Data";
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
-        builder.append("Verdict: ");
+       // builder.append("Verdict: ");
         int start = builder.length();
         builder.append(verdict);
         int end = builder.length();

@@ -108,73 +108,58 @@
     <string-array name="genres_core">
         <item>Pop</item>
         <item>Rock</item>
-        <item>Hip-Hop</item>
+        <item>Hip-Hop/Rap</item>
         <item>R&amp;B</item>
         <item>Jazz</item>
         <item>Blues</item>
         <item>Classical</item>
         <item>Electronic</item>
-        <item>Traditional</item>
         <item>Country</item>
         <item>Folk</item>
         <item>Latin</item>
         <item>Reggae</item>
-        <item>Soul</item>
-        <item>Funk</item>
+        <item>Soul &amp; Funk</item>
         <item>Metal</item>
         <item>Punk</item>
-        <item>Ambient</item>
         <item>Alternative</item>
     </string-array>
 
     <string-array name="genres_thai">
-        <item>Thai Jazz</item>
-        <item>Thai Pop</item>
-        <item>Thai Rock</item>
         <item>Luk Thung</item>
         <item>Luk Krung</item>
         <item>Mor Lam</item>
-        <item>Phuea Chiwit</item>
     </string-array>
-
-    <!--
-    <string-array name="regions">
-        <item>Global</item>
-        <item>Thailand</item>
-        <item>Laos</item>
-        <item>Asia</item>
-        <item>Europe</item>
-        <item>US-UK</item>
-    </string-array>
-    -->
 
     <string-array name="moods">
-        <item>Chill</item>
+        <item> - </item>
+        <item>Calm</item>
         <item>Energetic</item>
         <item>Happy</item>
         <item>Sad</item>
         <item>Romantic</item>
-        <item>Dark</item>
-        <item>Party</item>
+        <item>Moody</item>
         <item>Focus</item>
         <item>Nostalgic</item>
-        <item>Emotional</item>
     </string-array>
 
     <string-array name="styles">
+        <!-- only audio/sound style -->
+        <item> - </item>
         <item>Acoustic</item>
-        <item>Instrumental</item>
-        <item>Vocal</item>
-        <item>Bossa Nova</item>
-        <item>Orchestral</item>
-        <item>Synth</item>
         <item>Ballad</item>
-        <item>Dance</item>
-        <item>Remix</item>
-        <item>Live</item>
-        <item>Cover</item>
-        <item>Soft</item>
-        <item>Hard</item>
+        <item>Orchestral</item>
+        <item>Synth-based</item>
+        <item>Indie</item>
+        <item>Ambient</item>
+        <item>Groove</item>
+    </string-array>
+
+    <string-array name="origins">
+        <item> - </item>
+        <item>Thai</item>
+        <item>Laos</item>
+        <item>Asia</item>
+        <item>Chinese</item>
     </string-array>
 
     <!--

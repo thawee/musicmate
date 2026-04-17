@@ -6,8 +6,6 @@ import android.util.Log;
 import com.antonkarpenko.ffmpegkit.FFmpegKit;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
 
-import java.util.Locale;
-
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.utils.ApplicationUtils;
 
@@ -75,10 +73,10 @@ public class SpectrogramGenerator {
         String analyserName = "MusicMate Spectra";
         String fontPath = ApplicationUtils.getPathOnAndroidFiles(context, "/webui/noto_sans_thai.ttf");
         // Values retrieved from your MediaTrack or TagRepository
-        String qualityInfo = String.format(Locale.ENGLISH,"%s | %d-bit | %s Hz",
-                codec.toUpperCase(),
-                bitDepth,
-                sampleRate);
+        //String qualityInfo = String.format(Locale.ENGLISH,"%s | %d-bit | %s Hz",
+        //        codec.toUpperCase(),
+        //        bitDepth,
+        //        sampleRate);
 
         //int visualMaxFreq = (sampleRate / 2) + 2000; //Math.min(sampleRate / 2, 24000);
         // Professional Audiophile Logic
@@ -112,16 +110,16 @@ public class SpectrogramGenerator {
                         "color=magma:" +
                         "drange=120:" +
                         "win_func=hanning[v]; "+ // for analys audio file
+                        //"[v]drawtext=fontfile='"+
+                       // fontPath+
+                       // "':text='"+
+                       // qualityInfo +
+                       // "':x=(w-text_w)/2:y=h-16:fontcolor=white:fontsize=24, "+
                         "[v]drawtext=fontfile='"+
                         fontPath+
                         "':text='"+
-                        qualityInfo +
-                        "':x=(w-text_w)/2:y=h-16:fontcolor=white:fontsize=24, "+
-                        "drawtext=fontfile='"+
-                        fontPath+
-                        "':text='"+
                         analyserName+
-                        "':x=32:y=8:fontcolor=white:fontsize=32\" "+
+                        "':x=32:y=8:fontcolor=gray:fontsize=32\" "+
                         "-frames:v 1 \"" + outputPath + "\"";
 
         //(w-text_w)/2 automatically centers the text regardless of image width.

@@ -105,7 +105,7 @@ public class JThinkWriter extends  TagWriter {
             setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
         }else {
             // wave file
-            String genreTags = formatWaveGenre(musicTag.getGenre(), musicTag.getStyle(), musicTag.getMood());
+           // String genreTags = formatWaveGenre(musicTag.getGenre(), musicTag.getStyle(), musicTag.getMood());
             if (tag instanceof WavTag) {
                 WavTag wavTag = (WavTag) tag;
                 AbstractID3v2Tag id3 = wavTag.getID3Tag();
@@ -121,7 +121,7 @@ public class JThinkWriter extends  TagWriter {
                // id3.setField(FieldKey.COMMENT, genreTags);
                 addTxxx(id3, "STYLE", safe(musicTag.getStyle()));
                 addTxxx(id3, "MOOD", safe(musicTag.getMood()));
-               // addTxxx(id3, "REGION", safe(musicTag.getRegion()));
+                addTxxx(id3, "ORIGIN", safe(musicTag.getOrigin()));
             }
         }
 
@@ -131,12 +131,12 @@ public class JThinkWriter extends  TagWriter {
             if (vorbis != null) {
                 addVorbisField(vorbis, "MOOD", safe(musicTag.getMood()));
                 addVorbisField(vorbis, "STYLE", safe(musicTag.getStyle()));
-               // addVorbisField(vorbis, "REGION", safe(musicTag.getRegion()));
+                addVorbisField(vorbis, "ORIGIN", safe(musicTag.getOrigin()));
             }
         }else if(TagUtils.isAIFFile(musicTag) || TagUtils.isAACFile(musicTag) || TagUtils.isALACFile(musicTag)) {
             addIfNotNull(tag, createItunesField("MOOD", safe(musicTag.getMood())));
             addIfNotNull(tag, createItunesField("STYLE", safe(musicTag.getStyle())));
-           // addIfNotNull(tag, createItunesField("REGION", safe(musicTag.getRegion())));
+            addIfNotNull(tag, createItunesField("ORIGIN", safe(musicTag.getOrigin())));
         }
     }
 
