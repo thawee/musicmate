@@ -450,6 +450,7 @@ public class BaseServer {
         // Cache for generated waveforms to avoid repeated heavy processing.
         private final LruCache<String, float[]> memoryCache;
         final int cacheSize = 10240; // Approx 10 MB based on average waveform size
+        private PlaybackState currentPlaybackState;
 
         protected static final ObjectMapper MAPPER = new ObjectMapper()
                 .setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
@@ -485,6 +486,7 @@ public class BaseServer {
 
                 @Override
                 public void onPlaybackStateChanged(PlaybackState state) {
+                    currentPlaybackState = state;
                     Map<String, Object> response = getPlaybackState(state);
                     if (response != null) {
                         try {
@@ -536,6 +538,10 @@ public class BaseServer {
                     case "browse":
                         String path = getOptionalString(message, "path", "Library");
                         return sendBrowseResult(path);
+
+                    case "search":
+                        String query = getRequiredString(message, "query");
+                        return handleSearch(query);
 
                     case "getTrackMetadata":
                         long trackIdMeta = getRequiredTrackIdAsLong(message);
@@ -593,7 +599,7 @@ public class BaseServer {
                         return sendNowPlaying();
 
                     case "togglePlayPause":
-                        handlePlayPause();
+                        handleTogglePlayPause();
                         break; // Playback state update will be pushed
                     default:
                         Log.w(TAG, "Unknown command received: " + command);
@@ -611,6 +617,22 @@ public class BaseServer {
                 return createErrorResponse("Internal server error");
             }
             return null; // Return null for commands that don't send a direct response
+        }
+
+        private Map<String, Object> handleSearch(String query) {
+            List<Track> results = tagRepos.getDbHelper().findByKeyword(query);
+            List<Map<String, ?>> items = results.stream().map(this::getMap).collect(Collectors.toList());
+            return Map.of("type", "browseResult", "items", items, "path", "Search: " + query);
+        }
+
+        private void handleTogglePlayPause() {
+            if (playbackService != null && currentPlaybackState != null) {
+                if (currentPlaybackState.currentState == PlaybackState.State.PLAYING) {
+                    playbackService.pausePlayer();
+                } else if (currentPlaybackState.currentTrack != null) {
+                    playbackService.playSong(currentPlaybackState.currentTrack);
+                }
+            }
         }
 
         /**

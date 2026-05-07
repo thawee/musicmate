@@ -125,15 +125,19 @@
             <div id="breadcrumb" class="text-sm text-gray-500 dark:text-gray-400 truncate"></div>
         </div>
         <div class="flex items-center space-x-2 flex-shrink-0">
-            <div class="flex items-center">
+            <div class="flex items-center relative">
                 <button class="bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-300 py-1 px-3 rounded-l-md inline-flex items-center text-sm"><span>Title</span></button>
-                <input type="text" class="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500 block w-48 p-1" placeholder="Search...">
+                <input id="search-input" type="text" class="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500 block w-48 p-1 pr-7" placeholder="Search...">
+                <i id="clear-search-btn" class="bi bi-x-circle-fill absolute right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer hidden"></i>
             </div>
             <i id="empty-queue-btn" class="bi bi-trash text-xl text-gray-500 dark:text-gray-400 cursor-pointer hover:text-black dark:hover:text-white" title="Empty Queue"></i>
         </div>
     </div>
 
-    <main id="main-content-area" class="flex-grow overflow-y-auto p-4">
+    <main id="main-content-area" class="flex-grow overflow-y-auto p-4 relative">
+        <div id="global-spinner" class="absolute inset-0 bg-gray-100/50 dark:bg-gray-900/50 backdrop-blur-sm z-30 flex items-center justify-center hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
         <div id="library-content" class="">
             <div id="library-grid-view"><div id="album-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4"></div></div>
             <div id="library-list-view" class="hidden"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-200 dark:bg-gray-800"><tr><th scope="col" class="px-6 py-3">Name</th><th scope="col" class="px-6 py-3">Artist</th><th scope="col" class="px-6 py-3">Album</th><th scope="col" class="px-6 py-3 text-right"><i class="bi bi-clock"></i></th></tr></thead><tbody id="song-list"></tbody></table></div>
@@ -169,7 +173,7 @@
             </div>
             <div class="w-full flex items-center space-x-2 text-xs font-mono text-gray-500 dark:text-gray-400 mt-1">
                 <span id="player-time-current">0:00</span>
-                <progress id="player-progress" class="w-full h-1.5 cursor-pointer" value="0" max="100"></progress>
+                <progress id="player-progress" class="w-full h-1.5" value="0" max="100"></progress>
                 <span id="player-time-duration">0:00</span>
             </div>
         </div>
@@ -416,6 +420,9 @@
             statsSongs: document.getElementById('stats-songs'),
             statsSize: document.getElementById('stats-total-size'),
             statsDuration: document.getElementById('stats-total-duration'),
+            searchInput: document.getElementById('search-input'),
+            clearSearchBtn: document.getElementById('clear-search-btn'),
+            globalSpinner: document.getElementById('global-spinner'),
 
             // Player Controls (grouped)
             desktopPlayer: {
@@ -478,12 +485,33 @@
         ui.modalCancelBtn.addEventListener('click', () => closeOverlay(ui.confirmationModal));
         window.addEventListener('resize', resizeWaveformCanvas);
 
+        ui.searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = ui.searchInput.value.trim();
+                if (query) {
+                    currentMainView = 'library';
+                    renderView();
+                    ui.globalSpinner.classList.remove('hidden');
+                    sendMessage({ command: 'search', query: query });
+                }
+            }
+        });
+        ui.searchInput.addEventListener('input', () => {
+            ui.clearSearchBtn.classList.toggle('hidden', !ui.searchInput.value);
+        });
+        ui.clearSearchBtn.addEventListener('click', () => {
+            ui.searchInput.value = '';
+            ui.clearSearchBtn.classList.add('hidden');
+            sendMessage({ command: 'browse', path: 'Library' });
+        });
+
 
         // --- EVENT HANDLERS & UI LOGIC ---
         function handleItemClick(e) {
             const folderLink = e.target.closest('a[data-path]');
             if (folderLink) {
                 e.preventDefault();
+                ui.globalSpinner.classList.remove('hidden');
                 sendMessage({ command: 'browse', path: folderLink.dataset.path });
                 return;
             }
@@ -516,6 +544,7 @@
 
             const type = itemElement.dataset.type;
             if (type === 'folder') {
+                ui.globalSpinner.classList.remove('hidden');
                 sendMessage({ command: 'browse', path: itemElement.dataset.path });
             }
             else if (type === 'song') {
@@ -571,6 +600,7 @@
         function setMainView(view) {
             if (view === 'library') {
                 if (currentMainView === 'library') {
+                    ui.globalSpinner.classList.remove('hidden');
                     sendMessage({ command: 'browse', path: 'Library' });
                 } else {
                     currentMainView = 'library';
@@ -579,6 +609,7 @@
             } else if (view === 'queue') {
                 if (currentMainView === 'queue') return;
                 currentMainView = 'queue';
+                ui.globalSpinner.classList.remove('hidden');
                 sendMessage({ command: 'getQueue' });
                 renderView();
             }
@@ -665,6 +696,7 @@
 
             socket.onopen = () => {
                 //console.log("WebSocket connected. Requesting library content...");
+                ui.globalSpinner.classList.remove('hidden');
                 sendMessage({ command: 'browse', path: currentBrowsePath });
             };
             socket.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
@@ -679,6 +711,7 @@
                     currentBrowsePath = data.path;
                     updateLibraryItems(data.items);
                     updateBreadcrumb(data.path, data.items);
+                    ui.globalSpinner.classList.add('hidden');
                     break;
                 case 'nowPlayingOld':
                     currentTrack = data.track;
@@ -780,6 +813,7 @@
                 case 'updateQueue':
                     updateQueueItems(data.queue);
                     updateBreadcrumb("Playing Queue", data.queue);
+                    ui.globalSpinner.classList.add('hidden');
                     break;
                 case 'trackInfoResult':
                     ui.infoLoadingSpinner.classList.add('hidden');
@@ -1082,7 +1116,7 @@
             if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${track.quality}</span>`;
             if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${track.quality}</span>`;
             if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${track.quality}</span>`;
-            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:blue-700 dark:text-blue-900">${track.quality}</span>`;
+            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-900">${track.quality}</span>`;
             if (track.quality.startsWith('CD')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${track.quality}</span>`;
             return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${track.quality}</span>`;
         }
