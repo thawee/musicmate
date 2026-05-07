@@ -57,6 +57,7 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
+import io.netty.util.Version;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
 public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
@@ -79,9 +80,14 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     public NettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos)  {
         super(context, fileRepos, tagRepos);
-        addLibInfo("Netty", "");
+        addLibInfo("Netty", getVersion());
         serverSignature = getServerSignature();
     }
+
+    private String getVersion() {
+        return Version.identify().get("netty-common").artifactVersion();
+    }
+
     @Override
     public void restartServer(InetAddress bindAddress, Object router) {
         synchronized (serverLock) {

@@ -131,7 +131,7 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
 
     public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("SonicNIO",  "");
+        addLibInfo("SonicNIO",  "2.2");
         serverSignature = getServerSignature();
     }
 

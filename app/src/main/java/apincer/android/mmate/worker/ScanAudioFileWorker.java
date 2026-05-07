@@ -112,8 +112,10 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     private void deepScan() {
-        List<Track> BasicList = tagRepos.findMyNoDRMeterSongs();
-        for (Track basicTag : BasicList) {
+        List<Track> basicList = tagRepos.findMyNoDRMeterSongs();
+        if(basicList == null || basicList.isEmpty()) return;
+
+        for (Track basicTag : basicList) {
             try {
                 //full scan
                 TagReader.readExtras(getApplicationContext(), basicTag);

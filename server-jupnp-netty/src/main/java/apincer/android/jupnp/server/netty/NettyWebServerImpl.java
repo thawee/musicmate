@@ -32,6 +32,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.Version;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
@@ -51,6 +52,12 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
 
     public NettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
+        addLibInfo("Netty", getVersion());
+       // serverSignature = getServerSignature();
+    }
+
+    private String getVersion() {
+        return Version.identify().get("netty-common").artifactVersion();
     }
 
     @Override

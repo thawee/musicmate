@@ -333,7 +333,7 @@ public class FileRepository {
             long lastModified = file.lastModified();
             //if(file.length() == 0) {
             if(file.length() < 1024) { // 1 kb
-                Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
+               // Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
                 return;
             }
 

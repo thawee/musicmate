@@ -59,10 +59,10 @@ android {
                 dimension = "server"
                 // Gradle will look for code in `src/undertow/java`
             }
-        httpcore {
-            dimension = "server"
-            // Gradle will look for code in `src/httpcore/java`
-        }
+            httpcore {
+                dimension = "server"
+                // Gradle will look for code in `src/httpcore/java`
+            }
     }
 
     compileOptions {

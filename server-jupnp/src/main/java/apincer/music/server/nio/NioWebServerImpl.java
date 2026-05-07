@@ -2,8 +2,8 @@ package apincer.music.server.nio;
 
 import static apincer.music.core.http.NioHttpServer.HTTP_INTERNAL_ERROR;
 import static apincer.music.core.http.NioHttpServer.HTTP_NOT_FOUND;
-import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_GOING_AWAY;
-import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_SERVER_FULL;
+import static apincer.music.core.http.WebSocket.CLOSE_GOING_AWAY;
+import static apincer.music.core.http.WebSocket.CLOSE_SERVER_FULL;
 import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 
 import android.content.Context;
@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.http.RateLimitingHandler;
+import apincer.music.core.http.WebSocket;
 import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -48,7 +49,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
     public NioWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("SonicNIO",  "");
+        addLibInfo("SonicNIO",  "2.2");
        // this.profileManager = new ProfileManager(context, calculateBufferSize(context));
     }
 
@@ -179,15 +180,15 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     @Override
     public int getListenPort() { return WEB_SERVER_PORT; }
 
-    private class WebSocketHandlerImpl extends WebSocketContent implements NioHttpServer.WebSocketHandler {
-        private final CopyOnWriteArraySet<NioHttpServer.WebSocketConnection> sessions = new CopyOnWriteArraySet<>();
+    private class WebSocketHandlerImpl extends WebSocketContent implements WebSocket.Handler {
+        private final CopyOnWriteArraySet<WebSocket.Connection> sessions = new CopyOnWriteArraySet<>();
         private static final int MAX_SESSIONS = 100;
         private static final ObjectMapper MAPPER = new ObjectMapper().setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
 
         @Override
         protected void broadcastMessage(String jsonResponse) {
             if(sessions ==null) return;
-            for (NioHttpServer.WebSocketConnection session : sessions) {
+            for (WebSocket.Connection session : sessions) {
                 if (session.isClosed()) {
                     sessions.remove(session);
                     continue;
@@ -200,20 +201,20 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         public String getNamespace() { return CONTEXT_PATH_WEBSOCKET; }
 
         @Override
-        public void onOpen(NioHttpServer.WebSocketConnection connection) {
-            if (sessions.size() >= MAX_SESSIONS) { connection.close(WEBSOCKET_CLOSE_SERVER_FULL, "Server full"); return; }
+        public void onOpen(WebSocket.Connection connection) {
+            if (sessions.size() >= MAX_SESSIONS) { connection.close(WebSocket.CLOSE_SERVER_FULL, "Server full"); return; }
             sessions.add(connection);
             for (Map<String, Object> message : getWelcomeMessages()) { sendMessage(connection, message); }
         }
 
-        private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
+        private void sendMessage(WebSocket.Connection connection, Map<String, Object> response) {
             if (response != null) {
                 try { connection.send(MAPPER.writeValueAsString(response)); } catch (JsonProcessingException e) { Log.e(TAG, "Error serializing response", e); }
             }
         }
 
         @Override
-        public void onMessage(NioHttpServer.WebSocketConnection connection, String message) {
+        public void onMessage(WebSocket.Connection connection, String message) {
             try {
                 Map<String, Object> messageMap = MAPPER.readValue(message, Map.class);
                 String command = String.valueOf(messageMap.getOrDefault("command", ""));
@@ -222,16 +223,16 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         }
 
         @Override
-        public void onMessage(NioHttpServer.WebSocketConnection connection, byte[] message) {}
+        public void onMessage(WebSocket.Connection connection, byte[] message) {}
 
         @Override
-        public void onClose(NioHttpServer.WebSocketConnection connection, int code, String reason) { sessions.remove(connection); }
+        public void onClose(WebSocket.Connection connection, int code, String reason) { sessions.remove(connection); }
 
         @Override
-        public void onError(NioHttpServer.WebSocketConnection connection, Exception ex) { Log.e(TAG, "WS Error", ex); }
+        public void onError(WebSocket.Connection connection, Exception ex) { Log.e(TAG, "WS Error", ex); }
 
         public void shutdown() {
-            for (NioHttpServer.WebSocketConnection session : sessions) { session.close(WEBSOCKET_CLOSE_GOING_AWAY, "Server shutting down"); }
+            for (WebSocket.Connection session : sessions) { session.close(WebSocket.CLOSE_GOING_AWAY, "Server shutting down"); }
             sessions.clear();
         }
     }

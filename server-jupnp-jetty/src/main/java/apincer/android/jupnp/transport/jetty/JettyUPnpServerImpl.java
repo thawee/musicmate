@@ -15,6 +15,7 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.jupnp.model.message.StreamRequestMessage;
 import org.jupnp.model.message.StreamResponseMessage;
@@ -53,8 +54,12 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     public JettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context,fileRepos, tagRepos);
-        addLibInfo("Jetty", "");
+        addLibInfo("Jetty", getVersion());
         serverSignature = getServerSignature();
+    }
+
+    private String getVersion() {
+        return Jetty.VERSION;
     }
 
     @Override

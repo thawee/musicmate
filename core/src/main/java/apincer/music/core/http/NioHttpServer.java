@@ -185,35 +185,35 @@ import java.util.function.Supplier;
  * <h2>WebSocket Handler Example</h2>
  *
  * <pre>{@code
- * server.registerWebSocketHandler("/ws/events", new NioHttpServer.WebSocketHandler() {
+ * server.registerWebSocketHandler("/ws/events", new WebSocket.Handler() {
  *     @Override
  *     public String getNamespace() {
  *         return "/ws/events";
  *     }
  *
  *     @Override
- *     public void onOpen(WebSocketConnection conn) {
+ *     public void onOpen(NioWebSocketConnection conn) {
  *         System.out.println("Client connected: " + conn);
  *     }
  *
  *     @Override
- *     public void onMessage(WebSocketConnection conn, String message) {
+ *     public void onMessage(NioWebSocketConnection conn, String message) {
  *         // Process text message
  *         conn.send("Echo: " + message);
  *     }
  *
  *     @Override
- *     public void onMessage(WebSocketConnection conn, byte[] message) {
+ *     public void onMessage(NioWebSocketConnection conn, byte[] message) {
  *         // Process binary message
  *     }
  *
  *     @Override
- *     public void onClose(WebSocketConnection conn, int code, String reason) {
+ *     public void onClose(NioWebSocketConnection conn, int code, String reason) {
  *         System.out.println("Client disconnected: " + reason);
  *     }
  *
  *     @Override
- *     public void onError(WebSocketConnection conn, Exception ex) {
+ *     public void onError(NioWebSocketConnection conn, Exception ex) {
  *         ex.printStackTrace();
  *     }
  * });
@@ -367,22 +367,6 @@ public class NioHttpServer implements Runnable {
     public static final int HTTP_RANGE_NOT_SATISFIABLE = 416;
     public static final int HTTP_INTERNAL_ERROR = 500;
 
-    // --- WebSocket Opcode Constants ---
-    private static final int WEBSOCKET_OPCODE_CONTINUATION = 0x0;
-    private static final int WEBSOCKET_OPCODE_TEXT = 0x1;
-    private static final int WEBSOCKET_OPCODE_BINARY = 0x2;
-    private static final int WEBSOCKET_OPCODE_CLOSE = 0x8;
-    private static final int WEBSOCKET_OPCODE_PING = 0x9;
-    private static final int WEBSOCKET_OPCODE_PONG = 0xA;
-
-    // --- WebSocket Close Constants ---
-    public static final int WEBSOCKET_CLOSE_NORMAL = 1000;
-    public static final int WEBSOCKET_CLOSE_GOING_AWAY = 1001;
-    public static final int WEBSOCKET_CLOSE_PROTOCOL_ERROR = 1002;
-    public static final int WEBSOCKET_CLOSE_ABNORMAL = 1006;
-    public static final int WEBSOCKET_CLOSE_SERVER_FULL = 1008;
-    public static final int WEBSOCKET_CLOSE_TOO_LARGE = 1009;
-
     public boolean isRunning() {
         return isRunning;
     }
@@ -390,10 +374,11 @@ public class NioHttpServer implements Runnable {
     private volatile boolean isRunning = false;
     private final int port;
     private Handler httpHandler = null;
-    private WebSocketHandler webSocketHandler = null;
+    private WebSocket.Handler webSocketHandler = null;
     private Selector selector;
     private ExecutorService workerPool;
     private int maxThread = 0;
+
 
     private final AtomicInteger activeStreams = new AtomicInteger(0);
 
@@ -438,7 +423,7 @@ public class NioHttpServer implements Runnable {
      * Registers a WebSocket handler for the given path.
      * @param handler the WebSocket handler instance
      */
-    public void registerWebSocketHandler(WebSocketHandler handler) {
+    public void registerWebSocketHandler(WebSocket.Handler handler) {
         this.webSocketHandler = handler;
     }
 
@@ -957,7 +942,7 @@ public class NioHttpServer implements Runnable {
                 if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
                     workerPool.submit(() -> {
                         try {
-                            attachment.wsHandler.onClose(attachment.wsConnection, WEBSOCKET_CLOSE_ABNORMAL, "Connection closed abnormally");
+                            attachment.wsHandler.onClose(attachment.wsConnection, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
                         } catch (Exception e) {
                             // Log error during close if necessary
                         }
@@ -1022,13 +1007,13 @@ public class NioHttpServer implements Runnable {
     private void handleWebSocketWrite(SelectionKey key) throws IOException {
         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
         SocketChannel channel = (SocketChannel) key.channel();
-        Queue<WebSocketFrame> queue = attachment.wsConnection.getOutgoingQueue();
+        Queue<WebSocket.Frame> queue = attachment.wsConnection.getOutgoingQueue();
 
         while (true) {
             // 1. Get a buffer to write.
             // If we have a partially written one, use it. Otherwise, poll the queue.
             if (attachment.pendingWriteBuffer == null) {
-                WebSocketFrame frame = queue.poll();
+                WebSocket.Frame frame = queue.poll();
                 if (frame == null) {
                     // Queue is empty. Remove OP_WRITE and stop.
                     key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
@@ -1073,16 +1058,83 @@ public class NioHttpServer implements Runnable {
     @FunctionalInterface
     public interface Handler { HttpResponse handle(HttpRequest request); }
 
-    public interface WebSocketHandler {
-        String getNamespace();
-        void onOpen(WebSocketConnection connection);
-        void onMessage(WebSocketConnection connection, String message);
-        void onMessage(WebSocketConnection connection, byte[] message);
-        void onClose(WebSocketConnection connection, int code, String reason);
-        void onError(WebSocketConnection connection, Exception ex);
+    public static class NioWebSocketConnection implements WebSocket.Connection {
+        private final SelectionKey key;
+        private final Queue<WebSocket.Frame> outgoingQueue = new ConcurrentLinkedQueue<>();
+        private volatile boolean closed = false;
+
+        NioWebSocketConnection(SelectionKey key) { this.key = key; }
+
+        public void send(String message) {
+            if (closed) return;
+            send(new WebSocket.Frame(true, WebSocket.OPCODE_TEXT, message.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        public void send(byte[] message) {
+            if (closed) return;
+            send(new WebSocket.Frame(true, WebSocket.OPCODE_BINARY, message));
+        }
+
+        public void send(WebSocket.Frame frame) {
+            if (closed) return;
+            outgoingQueue.add(frame);
+
+            // CRITICAL: Only wake up the selector.
+            // Do NOT call key.interestOps() here as it is not thread-safe.
+            if (key.selector() != null) {
+                key.selector().wakeup();
+            }
+        }
+
+        /**
+         * Closes the WebSocket connection gracefully.
+         * @param code Close status code (e.g., 1000 for normal closure)
+         * @param reason Close reason message
+         */
+        public void close(int code, String reason) {
+            if (closed) return;
+            closed = true;
+
+            try {
+                // Send WebSocket close frame (opcode 0x8)
+                ByteBuffer payload = ByteBuffer.allocate(2 + reason.getBytes(StandardCharsets.UTF_8).length);
+                payload.putShort((short) code);
+                payload.put(reason.getBytes(StandardCharsets.UTF_8));
+
+                WebSocket.Frame closeFrame = new WebSocket.Frame(true, WebSocket.OPCODE_CLOSE, payload.array());
+                outgoingQueue.add(closeFrame);
+
+                key.selector().wakeup();
+            } catch (Exception e) {
+                forceClose();
+            }
+        }
+
+        /**
+         * Closes without sending a close frame.
+         */
+        public void forceClose() {
+            if (closed) return;
+            closed = true;
+
+            try {
+                outgoingQueue.clear();
+                SocketChannel channel = (SocketChannel) key.channel();
+                key.cancel();
+                channel.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
+
+        public boolean isClosed() {
+            return closed;
+        }
+
+        Queue<WebSocket.Frame> getOutgoingQueue() { return outgoingQueue; }
     }
 
-    private class ConnectionAttachment implements WebSocketFrameParser.FrameDataHandler { // MODIFIED: implements handler
+    private class ConnectionAttachment implements WebSocket.FrameParser.FrameDataHandler { // MODIFIED: implements handler
         enum ParseState { READING_HEADERS, READING_BODY, WEBSOCKET_FRAME }
         final ByteBuffer readBuffer;
         ByteArrayOutputStream requestData;
@@ -1092,9 +1144,9 @@ public class NioHttpServer implements Runnable {
         long lastActivityTime;
 
         // WebSocket specific fields
-        WebSocketHandler wsHandler;
-        WebSocketConnection wsConnection;
-        WebSocketFrameParser wsFrameParser;
+        WebSocket.Handler wsHandler;
+        NioWebSocketConnection wsConnection;
+        WebSocket.FrameParser wsFrameParser;
 
         private ByteArrayOutputStream reassemblyBuffer;
         private volatile int fragmentedOpcode = 0;
@@ -1216,8 +1268,8 @@ public class NioHttpServer implements Runnable {
 
         public void upgradeToWebSocket(SelectionKey key) {
             this.state = ParseState.WEBSOCKET_FRAME;
-            this.wsFrameParser = new WebSocketFrameParser();
-            this.wsConnection = new WebSocketConnection(key);
+            this.wsFrameParser = new WebSocket.FrameParser();
+            this.wsConnection = new NioWebSocketConnection(key);
 
             // Use bounded streams with the configured max frame size
             this.reassemblyBuffer = createByteArrayOutputStream();
@@ -1290,7 +1342,7 @@ public class NioHttpServer implements Runnable {
                 }
 
                 // Handle continuation frames (opcode 0x0)
-                if (opcode == WEBSOCKET_OPCODE_CONTINUATION) {
+                if (opcode == WebSocket.OPCODE_CONTINUATION) {
                     // This is a continuation frame, use the existing fragmentedOpcode
                     if (fragmentedOpcode == 0) {
                         throw new RuntimeException("Continuation frame without initial frame");
@@ -1298,7 +1350,7 @@ public class NioHttpServer implements Runnable {
 
                     // Check total message size
                     if (reassemblyBuffer.size() + payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                        wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
+                        wsConnection.close(WebSocket.CLOSE_TOO_LARGE, "Message too large");
                         throw new RuntimeException("WebSocket message exceeds size limit");
                     }
                 } else {
@@ -1310,7 +1362,7 @@ public class NioHttpServer implements Runnable {
 
                     // Validate initial frame size
                     if (payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                        wsConnection.close(WEBSOCKET_CLOSE_TOO_LARGE, "Message too large");
+                        wsConnection.close(WebSocket.CLOSE_TOO_LARGE, "Message too large");
                         throw new RuntimeException("WebSocket message exceeds size limit");
                     }
                 }
@@ -1343,7 +1395,7 @@ public class NioHttpServer implements Runnable {
             // Handle control frames immediately
             if (currentFrameOpcode > 0x7) {
                 byte[] controlPayload = controlFrameBuffer.toByteArray();
-                WebSocketFrame controlFrame = new WebSocketFrame(true, currentFrameOpcode, controlPayload);
+                WebSocket.Frame controlFrame = new WebSocket.Frame(true, currentFrameOpcode, controlPayload);
                 processCompleteFrame(controlFrame);
                 controlFrameBuffer.reset();
                 return;
@@ -1356,7 +1408,7 @@ public class NioHttpServer implements Runnable {
                 int finalOpcode = fragmentedOpcode;
 
                 // Create a logical frame representing the complete message
-                WebSocketFrame completeFrame = new WebSocketFrame(true, finalOpcode, fullPayload);
+                WebSocket.Frame completeFrame = new WebSocket.Frame(true, finalOpcode, fullPayload);
                 processCompleteFrame(completeFrame);
 
                 // Reset for the next message
@@ -1367,14 +1419,14 @@ public class NioHttpServer implements Runnable {
         }
 
         // Method to process a complete logical frame
-        private void processCompleteFrame(final WebSocketFrame frame) {
+        private void processCompleteFrame(final WebSocket.Frame frame) {
             switch (frame.getOpcode()) {
-                case WEBSOCKET_OPCODE_TEXT: // TEXT
-                case WEBSOCKET_OPCODE_BINARY: // BINARY
+                case WebSocket.OPCODE_TEXT: // TEXT
+                case WebSocket.OPCODE_BINARY: // BINARY
                     if (workerPool != null && !workerPool.isShutdown()) {
                         try {
-                            final String msg = (frame.getOpcode() == WEBSOCKET_OPCODE_TEXT) ? frame.getPayloadAsText() : null;
-                            final byte[] binMsg = (frame.getOpcode() == WEBSOCKET_OPCODE_BINARY) ? frame.getPayload() : null;
+                            final String msg = (frame.getOpcode() == WebSocket.OPCODE_TEXT) ? frame.getPayloadAsText() : null;
+                            final byte[] binMsg = (frame.getOpcode() == WebSocket.OPCODE_BINARY) ? frame.getPayload() : null;
                             workerPool.submit(() -> {
                                 try {
                                     if (msg != null) wsHandler.onMessage(wsConnection, msg);
@@ -1394,15 +1446,15 @@ public class NioHttpServer implements Runnable {
                     }
 
                     break;
-                case WEBSOCKET_OPCODE_CLOSE: // CLOSE
-                    int closeCode = WEBSOCKET_CLOSE_NORMAL;
+                case WebSocket.OPCODE_CLOSE: // CLOSE
+                    int closeCode = WebSocket.CLOSE_NORMAL;
                     String closeReason = "";
                     if (frame.getPayload().length >= 2) {
                         closeCode = ((frame.getPayload()[0] & 0xFF) << 8) | (frame.getPayload()[1] & 0xFF);
 
                         // Validate close code per RFC 6455
                         if (!isValidCloseCode(closeCode)) {
-                            wsConnection.close(WEBSOCKET_CLOSE_PROTOCOL_ERROR,
+                            wsConnection.close(WebSocket.CLOSE_PROTOCOL_ERROR,
                                     "Invalid close code");
                             return;
                         }
@@ -1418,7 +1470,7 @@ public class NioHttpServer implements Runnable {
                     }
                     // Null out wsHandler BEFORE scheduling pendingClose so that
                     // closeConnection() (called by handleWebSocketRead after parse returns)
-                    // does not fire a second onClose with WEBSOCKET_CLOSE_ABNORMAL.
+                    // does not fire a second onClose with WebSocket.CLOSE_ABNORMAL.
                     wsHandler = null;
                     wsConnection.forceClose();
                     // Signal handleWebSocketRead to call closeConnection() once we return
@@ -1426,8 +1478,8 @@ public class NioHttpServer implements Runnable {
                     // and the attachment is released back to the pool.
                     pendingClose = true;
                     break;
-                case WEBSOCKET_OPCODE_PING: // PING
-                    wsConnection.send(new WebSocketFrame(true, WEBSOCKET_OPCODE_PONG, frame.getPayload())); // Send PONG
+                case WebSocket.OPCODE_PING: // PING
+                    wsConnection.send(new WebSocket.Frame(true, WebSocket.OPCODE_PONG, frame.getPayload())); // Send PONG
                     break;
             }
         }
@@ -1471,7 +1523,7 @@ public class NioHttpServer implements Runnable {
     }
 
     private record ResponseTask(SelectionKey key, HttpResponse response,
-                                WebSocketHandler wsHandler) {
+                                WebSocket.Handler wsHandler) {
         ResponseTask(SelectionKey key, HttpResponse response) {
             this(key, response, null);
         }
@@ -1884,90 +1936,6 @@ public class NioHttpServer implements Runnable {
         public int getHeaderEnd() { return headerEnd; }
     }
 
-    // --- NEW WebSocket Helper Classes ---
-    public static class WebSocketConnection {
-        private final SelectionKey key;
-        private final Queue<WebSocketFrame> outgoingQueue = new ConcurrentLinkedQueue<>();
-        private volatile boolean closed = false;
-
-        WebSocketConnection(SelectionKey key) { this.key = key; }
-
-        public void send(String message) {
-            if (closed) return;
-            send(new WebSocketFrame(true, WEBSOCKET_OPCODE_TEXT, message.getBytes(StandardCharsets.UTF_8)));
-        }
-
-        public void send(byte[] message) {
-            if (closed) return;
-            send(new WebSocketFrame(true, WEBSOCKET_OPCODE_BINARY, message));
-        }
-
-        public void send(WebSocketFrame frame) {
-            if (closed) return;
-            outgoingQueue.add(frame);
-
-            // CRITICAL: Only wake up the selector.
-            // Do NOT call key.interestOps() here as it is not thread-safe.
-            if (key.selector() != null) {
-                key.selector().wakeup();
-            }
-        }
-
-        /**
-         * Closes the WebSocket connection gracefully.
-         * @param code Close status code (e.g., 1000 for normal closure)
-         * @param reason Close reason message
-         * Common status codes:
-         * 1000 - Normal closure
-         * 1001 - Going away (server shutdown)
-         * 1008 - Policy violation (e.g., too many connections)
-         * 1011 - Internal server error
-         */
-        public void close(int code, String reason) {
-            if (closed) return;
-            closed = true;
-
-            try {
-                // Send WebSocket close frame (opcode 0x8)
-                ByteBuffer payload = ByteBuffer.allocate(2 + reason.getBytes(StandardCharsets.UTF_8).length);
-                payload.putShort((short) code);
-                payload.put(reason.getBytes(StandardCharsets.UTF_8));
-
-                WebSocketFrame closeFrame = new WebSocketFrame(true, WEBSOCKET_OPCODE_CLOSE, payload.array());
-                outgoingQueue.add(closeFrame);
-
-                // key.interestOps(SelectionKey.OP_WRITE);
-                key.selector().wakeup();
-            } catch (Exception e) {
-                // Force close on error
-                forceClose();
-            }
-        }
-
-        /**
-         * Closes without sending a close frame.
-         */
-        public void forceClose() {
-            if (closed) return;
-            closed = true;
-
-            try {
-                outgoingQueue.clear();
-                SocketChannel channel = (SocketChannel) key.channel();
-                key.cancel();
-                channel.close();
-            } catch (IOException e) {
-                // Ignore
-            }
-        }
-
-        public boolean isClosed() {
-            return closed;
-        }
-
-        Queue<WebSocketFrame> getOutgoingQueue() { return outgoingQueue; }
-    }
-
     private static class WebSocketHandshake {
         private static final String WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -1984,201 +1952,6 @@ public class NioHttpServer implements Runnable {
                     .addHeader("Upgrade", "websocket")
                     .addHeader("Connection", "Upgrade")
                     .addHeader("Sec-WebSocket-Accept", acceptKey);
-        }
-    }
-
-    private static class WebSocketFrame {
-        private final boolean isFin;
-        private final int opcode;
-        private final byte[] payload;
-
-        WebSocketFrame(boolean isFin, int opcode, byte[] payload) {
-            this.isFin = isFin; this.opcode = opcode; this.payload = payload;
-        }
-
-        public int getOpcode() { return opcode; }
-        public byte[] getPayload() { return payload; }
-        public String getPayloadAsText() { return new String(payload, StandardCharsets.UTF_8); }
-
-        public ByteBuffer toByteBuffer() {
-            int payloadLength = payload.length;
-            int headerSize = 2;
-            if (payloadLength > 65535) headerSize += 8;
-            else if (payloadLength > 125) headerSize += 2;
-            ByteBuffer buffer = ByteBuffer.allocate(headerSize + payloadLength);
-
-            byte b0 = 0;
-            if (isFin) b0 |= (byte) 0x80;
-            b0 |= (byte) (opcode & 0x0F);
-            buffer.put(b0);
-
-            byte b1 = 0; // Mask bit is 0 for server-to-client
-            if (payloadLength <= 125) {
-                b1 |= (byte) payloadLength;
-                buffer.put(b1);
-            } else if (payloadLength <= 65535) {
-                b1 |= 126;
-                buffer.put(b1);
-                buffer.putShort((short) payloadLength);
-            } else {
-                b1 |= 127;
-                buffer.put(b1);
-                buffer.putLong(payloadLength);
-            }
-
-            buffer.put(payload);
-            buffer.flip();
-            return buffer;
-        }
-    }
-
-    private static class WebSocketFrameParser {
-        // Callback interface for streaming frame data
-        public interface FrameDataHandler {
-            void onFrameStart(boolean isFin, int opcode, long payloadLength);
-            void onFramePayloadData(ByteBuffer payloadChunk);
-            void onFrameEnd();
-        }
-
-        private enum State { READING_HEADER, READING_PAYLOAD_LEN_16, READING_PAYLOAD_LEN_64, READING_MASK, READING_PAYLOAD }
-        private State state = State.READING_HEADER;
-        private final byte[] smallHeaderBuffer = new byte[2];
-        private int bytesRead = 0;
-        private long payloadLength;
-        private long payloadBytesRemaining; // MODIFIED: Track remaining bytes instead of using a buffer position
-        private byte[] maskKey;
-        private byte[] lengthBytes;
-
-        // 'parse' now takes a handler and doesn't return a frame
-        public void parse(ByteBuffer buffer, FrameDataHandler handler) {
-            while (buffer.hasRemaining()) {
-                try {
-                    switch (state) {
-                        case READING_HEADER:
-                            if (readBytes(buffer, smallHeaderBuffer, 2)) {
-                                processHeader(handler);
-                            }
-                            break;
-                        case READING_PAYLOAD_LEN_16:
-                            if (lengthBytes == null) lengthBytes = new byte[2];
-                            if (readBytes(buffer, lengthBytes, 2)) {
-                                payloadLength = ByteBuffer.wrap(lengthBytes).getShort() & 0xFFFF;
-                                payloadBytesRemaining = payloadLength;
-                                bytesRead = 0;
-                                state = State.READING_MASK;
-                                lengthBytes = null;
-                                handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
-                            }
-                            break;
-                        case READING_PAYLOAD_LEN_64:
-                            if (lengthBytes == null) lengthBytes = new byte[8];
-                            if (readBytes(buffer, lengthBytes, 8)) {
-                                payloadLength = ByteBuffer.wrap(lengthBytes).getLong();
-                                payloadBytesRemaining = payloadLength;
-                                bytesRead = 0;
-                                state = State.READING_MASK;
-                                lengthBytes = null;
-                                handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
-                            }
-                            break;
-                        case READING_MASK:
-                            if (maskKey == null) maskKey = new byte[4];
-                            if (readBytes(buffer, maskKey, 4)) {
-                                state = State.READING_PAYLOAD;
-                                bytesRead = 0;
-                                if (payloadLength == 0) { // Handle empty frames
-                                    handler.onFrameEnd();
-                                    reset();
-                                }
-                            }
-                            break;
-                        case READING_PAYLOAD:
-                            long toRead = Math.min(buffer.remaining(), payloadBytesRemaining);
-                            if (toRead == 0) break; // Nothing to read in this buffer iteration
-
-                            int originalLimit = buffer.limit();
-                            buffer.limit(buffer.position() + (int)toRead);
-
-                            // Unmask and pass the chunk to the handler
-                            unmaskAndProcessChunk(buffer, handler);
-
-                            buffer.limit(originalLimit);
-                            payloadBytesRemaining -= toRead;
-
-                            if (payloadBytesRemaining == 0) {
-                                handler.onFrameEnd();
-                                reset();
-                            }
-                            break;
-                    }
-                } catch (RuntimeException e) {
-                    // Log error, close connection gracefully
-                    System.err.println("WebSocket parse error: " + e.getMessage());
-                    handler.onFrameEnd(); // Signal completion
-                    throw e; // Re-throw to close connection
-                }
-            }
-        }
-
-        private void unmaskAndProcessChunk(ByteBuffer chunk, FrameDataHandler handler) {
-           /* // Unmask the data in place or create a temporary buffer for the chunk
-            for (int i = 0; i < chunk.remaining(); i++) {
-                int payloadIndex = (int)((payloadLength - payloadBytesRemaining) + i);
-                chunk.put(chunk.position() + i, (byte)(chunk.get(chunk.position() + i) ^ maskKey[payloadIndex % 4]));
-            }
-            handler.onFramePayloadData(chunk); */
-
-            ByteBuffer unmaskedChunk = ByteBuffer.allocate(chunk.remaining());
-            int startPos = chunk.position();
-            int len = chunk.remaining();
-
-            for (int i = 0; i < chunk.remaining(); i++) {
-                int payloadIndex = (int)((payloadLength - payloadBytesRemaining) + i);
-                byte masked = chunk.get(chunk.position() + i);
-                byte unmasked = (byte)(masked ^ maskKey[payloadIndex % 4]);
-                unmaskedChunk.put(unmasked);
-            }
-
-            unmaskedChunk.flip();
-            handler.onFramePayloadData(unmaskedChunk);
-
-            // Advance the position!
-            chunk.position(startPos + len);
-        }
-
-        private void processHeader(FrameDataHandler handler) {
-            payloadLength = smallHeaderBuffer[1] & 0x7F;
-            if ((smallHeaderBuffer[1] & 0x80) == 0) throw new RuntimeException("Client frame must be masked");
-
-            if (payloadLength <= 125) {
-                payloadBytesRemaining = payloadLength;
-                state = State.READING_MASK;
-                // We have all header info, so we can call onFrameStart now
-                handler.onFrameStart((smallHeaderBuffer[0] & 0x80) != 0, smallHeaderBuffer[0] & 0x0F, payloadLength);
-            } else if (payloadLength == 126) {
-                state = State.READING_PAYLOAD_LEN_16;
-            } else {
-                state = State.READING_PAYLOAD_LEN_64;
-            }
-            bytesRead = 0;
-        }
-
-        private void reset() {
-            state = State.READING_HEADER;
-            bytesRead = 0;
-            maskKey = null;
-            lengthBytes = null;
-            payloadLength = 0;
-            payloadBytesRemaining = 0;
-        }
-
-        // readBytes method remains the same
-        private boolean readBytes(ByteBuffer buffer, byte[] dest, int length) {
-            int needed = length - bytesRead;
-            int canRead = Math.min(buffer.remaining(), needed);
-            buffer.get(dest, bytesRead, canRead);
-            bytesRead += canRead;
-            return bytesRead == length;
         }
     }
 

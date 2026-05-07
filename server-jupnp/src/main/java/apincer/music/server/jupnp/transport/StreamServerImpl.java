@@ -86,7 +86,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
     private void writeLibrariesInfo() {
         try {
             List<String> libs = new ArrayList<>();
-            libs.add("jUPnP");
+            libs.add("jUPnP/3.0.4");
             libs.addAll(upnpServer.getLibInfos());
             libs.addAll(webServer.getLibInfos());
 

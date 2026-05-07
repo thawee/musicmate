@@ -141,104 +141,12 @@ public class AudioAuthenticityAnalyzer {
             double hfEnergy = e2024 + e24;
             double totalEnergy = e16 + e1620 + e2024 + e24;
 
-            r.hfRatio = hfEnergy / totalEnergy;
+           // r.hfRatio = hfEnergy / totalEnergy;
+            r.hfRatio = totalEnergy > 1e-12 ? hfEnergy / totalEnergy : 0.0;
 
             // 4. MATH & CLASSIFY
             r.dynamicRange = Math.abs(r.peak - r.rms);
             classify(r, rms16, rms1620, rms2024, rms24);
-
-            callback.onResult(r);
-
-        });
-    }
-    public static void analyze2(String inputPath,
-                               int sampleRate,
-                               int bitDepth,
-                               Callback callback) {
-
-        //String freqFilter = sampleRate > Constants.QUALITY_SAMPLING_RATE_44?"21000":"18000";
-        // Professional Quality Detection Logic
-        double freqFilter;
-        if (sampleRate <= 44100) {
-            // 18.5kHz is the "Danger Zone" for MP3/AAC.
-            // True Lossless stays strong here; Lossy starts the 'cliff' dive.
-            freqFilter = 18500;
-        } else if (sampleRate <= 48000) {
-            // For 48kHz (Studio/DVD): Content above 20kHz is the indicator of quality.
-            freqFilter = 20000;
-        } else {
-            // For Hi-Res (96k/192k): Content MUST exist above the CD-limit (24kHz).
-            // This is the "Truth Line" for upsampled files.
-            freqFilter = 24000;
-        }
-
-        String command =
-                "-hide_banner -loglevel info " +
-                        "-ss 30 -t 30 " +
-                        "-i \"" + inputPath + "\" " +
-                        "-filter_complex \"" +
-                        "[0:a]asplit=4[a][b][c];" +
-
-                        "[a]astats=metadata=1:reset=0[a_full];" +
-
-                        "[b]highpass=f="+freqFilter+",astats=metadata=1:reset=0[a_high];" +
-
-                        "[c]lowpass=f="+freqFilter+",astats=metadata=1:reset=0[a_low];" +
-
-                       // "[d]aspectralstats[a_spec]" +
-                       // "[d]aspectralstats=measure=flatness+entropy+rolloff[a_spec]" +
-                        //"[d]aspectralstats=measure=rolloff+flatness+entropy,ametadata=print:key=lavfi.aspectralstats.rolloff[a_spec]"+
-                        "\" " +
-
-                        "-map \"[a_full]\" -f null - " +
-                        "-map \"[a_high]\" -f null - " +
-                        "-map \"[a_low]\" -f null - ";
-
-        FFmpegKit.executeAsync(command, session -> {
-
-            if (!ReturnCode.isSuccess(session.getReturnCode())) {
-                callback.onError("FFmpeg analysis failed");
-                return;
-            }
-
-            String log = session.getOutput();
-
-            AudioAnalysisResult r = new AudioAnalysisResult();
-
-          //  r.rolloff = freqFilter;
-
-            r.sampleRate = sampleRate;
-            r.bitDepth = bitDepth;
-
-            // 1. BASELINE (Full Signal) - Always use Parsed_astats_1
-            r.rms = parseValue(log, "Parsed_astats_1", "Overall", "RMS level dB");
-            r.peak = parseValue(log, "Parsed_astats_1", "Overall", "Peak level dB");
-            r.noiseFloor = parseValue(log, "Parsed_astats_1", "Overall", "Noise floor dB");
-            r.spectralEntropy = parseValue(log, "Parsed_astats_1", "Overall", "Entropy");
-
-            // 2. BANDS - Targeted using their Filter IDs
-            // [b]highpass -> Parsed_astats_3
-            r.highBandRms = parseValue(log, "Parsed_astats_3", "Overall", "RMS level dB");
-            //r.noiseFloor = parseValue(log, "Parsed_astats_3", "Overall", "Noise floor dB");
-            double hNoiseFloor = parseValue(log, "Parsed_astats_3", "Overall", "Noise floor dB");
-
-            // [c]lowpass -> Parsed_astats_5
-            r.lowBandRms = parseValue(log, "Parsed_astats_5", "Overall", "RMS level dB");
-           // double lNoiseFloor = parseValue(log, "Parsed_astats_5", "Overall", "Noise floor dB");
-
-            double highEnergy = dbToEnergy(r.highBandRms);
-            double lowEnergy  = dbToEnergy(r.lowBandRms);
-
-            r.hfRatio = highEnergy / (highEnergy + lowEnergy);
-            double hSnr = r.highBandRms - hNoiseFloor;
-           // double lSnr = r.lowBandRms - lNoiseFloor;
-
-            if (hSnr > 10 && r.highBandRms > -65) r.rolloff = sampleRate/2.0;
-            else r.rolloff = freqFilter;
-
-            // 4. MATH & CLASSIFY
-            r.dynamicRange = Math.abs(r.peak - r.rms);
-            classify(r);
 
             callback.onResult(r);
 
@@ -311,6 +219,9 @@ public class AudioAuthenticityAnalyzer {
         double nyquist = r.sampleRate / 2.0;
         double rolloffRatio = r.rolloff / nyquist;
 
+        //r2024 = safeDb(r2024);
+        //r24   = safeDb(r24);
+       // r.noiseFloor = safeDb(r.noiseFloor);
         double snrHigh = (r2024 + r24) / 2.0 - r.noiseFloor;
 
         // --- Signals

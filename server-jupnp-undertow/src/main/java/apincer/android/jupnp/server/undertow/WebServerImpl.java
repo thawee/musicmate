@@ -14,6 +14,7 @@ import apincer.music.core.server.ContentHolder;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
+import io.undertow.Version;
 import io.undertow.server.DefaultByteBufferPool;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -58,7 +59,7 @@ public class WebServerImpl extends BaseServer implements WebServer {
 
     public WebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("Undertow", "");
+        addLibInfo("Undertow", getVersion());
 
         // Undertow's resource handler to serve actual files.
         // Paths.get("/") acts as the root file system for Android
@@ -70,6 +71,10 @@ public class WebServerImpl extends BaseServer implements WebServer {
         int transferMinSize = 1024 * 100; // 100kB is plenty for file metadata
         resourceHandler = new ResourceHandler(new PathResourceManager(Paths.get("/"), transferMinSize, true, true, safePaths))
                 .setDirectoryListingEnabled(false);
+    }
+
+    private String getVersion() {
+        return Version.getVersionString();
     }
 
     @Override

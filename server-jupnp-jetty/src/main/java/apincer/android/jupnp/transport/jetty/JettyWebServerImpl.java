@@ -27,6 +27,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 // Jetty 12 Specific WebSocket Imports
@@ -79,7 +80,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
     public JettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("Jetty", "");
+        addLibInfo("Jetty", getVersion());
 
         // Calculate buffer size based on RAM once
         int bufferSize = calculateBufferSize(context);
@@ -88,6 +89,11 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
         this.profileManager = new ProfileManager(context, bufferSize);
         this.notificationExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
         }
+
+
+    private String getVersion() {
+        return Jetty.VERSION;
+    }
 
     @Override
     public void restartServer(InetAddress bindAddress) {
