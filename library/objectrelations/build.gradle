@@ -1,0 +1,50 @@
+apply plugin: 'com.android.library'
+android {
+	compileSdkVersion = versions.compileSdk
+	buildToolsVersion = versions.buildTools
+
+	defaultConfig {
+		minSdk = versions.minSdk
+		targetSdk = versions.targetSdk
+	}
+	compileOptions {
+		sourceCompatibility = JavaLanguageVersion.of(17)
+		targetCompatibility = JavaLanguageVersion.of(17)
+	}
+	buildTypes {
+		release {
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+	lint {
+		abortOnError = true
+	}
+	namespace = 'org.obrel.objectrelations'
+}
+
+// substitute local project dependencies if available
+configurations.configureEach {
+    resolutionStrategy.dependencySubstitution.all { DependencySubstitution dependency ->
+        if (dependency.requested instanceof ModuleComponentSelector && 
+            ["org.obrel" ,"de.esoco"].contains(dependency.requested.group)) {
+            def targetProject = findProject(":${dependency.requested.module}")
+            if (targetProject != null) {
+                dependency.useTarget (targetProject, "prefer local project")
+                if (name.startsWith("compile")) // only log once
+                    println "$project.name using local $targetProject as dependency"
+            }
+        }
+    }
+}
+
+dependencies
+{
+	//api 'de.esoco:esoco-monads:1.0.+'
+	api project(':library:esoco-monads')
+	
+	testImplementation platform(libs.junit.bom)
+	testImplementation libs.junit.junit.jupiter
+	testImplementation libs.junit
+	
+	testRuntimeOnly libs.junit.vintage.engine // JUnit4 support
+}

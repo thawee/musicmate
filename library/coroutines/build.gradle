@@ -1,0 +1,32 @@
+apply plugin: 'com.android.library'
+android {
+	compileSdkVersion versions.compileSdk
+	buildToolsVersion versions.buildTools
+
+	defaultConfig {
+		minSdkVersion versions.minSdk
+		targetSdkVersion versions.targetSdk
+	}
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_17
+		targetCompatibility JavaVersion.VERSION_17
+	}
+	buildTypes {
+		release {
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+	lint {
+		abortOnError = true
+	}
+	namespace = 'de.esoco.coroutines'
+}
+
+dependencies {
+
+	implementation project(':library:objectrelations')
+    implementation project(':library:esoco-common')
+
+
+	testImplementation libs.junit
+}

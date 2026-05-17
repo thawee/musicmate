@@ -1,0 +1,34 @@
+apply plugin: 'com.android.library'
+android {
+	compileSdkVersion = versions.compileSdk
+	buildToolsVersion = versions.buildTools
+
+	defaultConfig {
+		minSdk = versions.minSdk
+		targetSdk = versions.targetSdk
+	}
+	compileOptions {
+		sourceCompatibility = JavaLanguageVersion.of(17)
+		targetCompatibility = JavaLanguageVersion.of(17)
+	}
+	buildTypes {
+		release {
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+	lint {
+		abortOnError = true
+	}
+	namespace = 'de.esoco.monads'
+}
+
+dependencies {
+	//api 'de.esoco:esoco-common:1.4.+'
+	api project(':library:esoco-common')
+	
+	testImplementation platform(libs.junit.bom)
+	testImplementation libs.jupiter.junit.jupiter
+	testImplementation libs.junit
+
+	testRuntimeOnly 'org.junit.vintage:junit-vintage-engine' // JUnit4 support
+}

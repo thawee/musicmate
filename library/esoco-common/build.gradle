@@ -1,0 +1,29 @@
+apply plugin: 'com.android.library'
+android {
+	compileSdkVersion = versions.compileSdk
+	buildToolsVersion = versions.buildTools
+
+	defaultConfig {
+		minSdk = versions.minSdk
+		targetSdk = versions.targetSdk
+	}
+	compileOptions {
+		sourceCompatibility = JavaLanguageVersion.of(17)
+		targetCompatibility = JavaLanguageVersion.of(17)
+	}
+	buildTypes {
+		release {
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+	lint {
+		abortOnError = true
+	}
+	namespace = 'de.esoco.common'
+}
+dependencies {
+    implementation libs.validation.api
+    
+	testImplementation platform(libs.junit.bom)
+	testImplementation libs.junit.jupiter
+}
