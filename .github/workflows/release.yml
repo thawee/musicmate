@@ -1,0 +1,43 @@
+name: Build Release APKs
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build All Release APKs
+        run: ./gradlew assembleNioRelease assembleJettyRelease assembleNettyRelease assembleUndertowRelease assembleHttpcoreRelease
+
+      - name: Upload APKs to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            app/build/outputs/apk/nio/release/*.apk
+            app/build/outputs/apk/jetty/release/*.apk
+            app/build/outputs/apk/netty/release/*.apk
+            app/build/outputs/apk/undertow/release/*.apk
+            app/build/outputs/apk/httpcore/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
