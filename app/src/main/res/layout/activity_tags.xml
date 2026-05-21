@@ -15,6 +15,7 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
+        android:background="?attr/colorSurface"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -22,7 +23,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/toolbar_layout"
             android:fitsSystemWindows="true"
-            app:contentScrim="@color/colorPrimary"
+            app:contentScrim="?attr/colorSurface"
             app:statusBarScrim="@android:color/transparent"
             app:titleEnabled="false"
             app:scrimVisibleHeightTrigger="200dp"
