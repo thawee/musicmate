@@ -286,7 +286,7 @@
             android:id="@+id/tabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:tabBackground="?attr/colorOnPrimary"
+            android:background="?attr/colorSurface"
             app:tabIndicatorColor="?attr/colorPrimary"
             app:tabTextAppearance="@style/TextAppearance.Material3.TitleMedium"
             app:tabRippleColor="?attr/colorSurfaceVariant"

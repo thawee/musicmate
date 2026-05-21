@@ -122,6 +122,7 @@ public class TagsActivity extends AppCompatActivity {
     private NewIndicatorView newIndicatorView;
 
     private int toolbar_to_color;
+    private int surfaceBgColor;
     private Fragment activeFragment;
 
     private boolean previewState = true;
@@ -232,8 +233,20 @@ public class TagsActivity extends AppCompatActivity {
         int height = UIUtils.getScreenHeight(this);
         //toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
-        //toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
-        toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
+        
+        // Resolve primary and surface colors dynamically from active theme
+        int colorPrimary = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        if (getTheme().resolveAttribute(R.attr.colorPrimary, typedValue, true)) {
+            colorPrimary = typedValue.data;
+        }
+        toolbar_to_color = colorPrimary;
+
+        int colorSurface = ContextCompat.getColor(getApplicationContext(), R.color.bgColor);
+        if (getTheme().resolveAttribute(R.attr.colorSurface, typedValue, true)) {
+            colorSurface = typedValue.data;
+        }
+        surfaceBgColor = colorSurface;
 
         setupTitlePanelViews(); // Method to findViewById all title panel views
         setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.
@@ -917,20 +930,18 @@ public class TagsActivity extends AppCompatActivity {
                         tabLayout,
                         "backgroundColor",
                         argbEvaluator,
-                        ContextCompat.getColor(getApplicationContext(), R.color.bgColor),
+                        surfaceBgColor,
                         toolbar_to_color);
                 tabColorAnimation.setDuration(200); // Shorter duration for better performance
                 tabColorAnimation.start();
             } else if (scrollRatio < 0.8 && tabColorAnimation == null) {
-                // Animate back to background color
+                // Animate back to surface background color
                 tabColorAnimation = ObjectAnimator.ofObject(
                         tabLayout,
                         "backgroundColor",
                         argbEvaluator,
-                        //tabLayout.getBackground() != null ?
-                        //        tabLayout.getBackground() :
-                                Color.TRANSPARENT,
-                        ContextCompat.getColor(getApplicationContext(), R.color.bgColor));
+                        toolbar_to_color,
+                        surfaceBgColor);
                 tabColorAnimation.setDuration(200);
                 tabColorAnimation.start();
             }

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:fitsSystemWindows="true"
     tools:context="com.balsikandar.crashreporter.ui.LogMessageActivity">
 
     <LinearLayout
@@ -35,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
-                android:textColor="#ff0000" />
+                android:textColor="?attr/colorError" />
         </HorizontalScrollView>
 
         <TextView
@@ -44,6 +45,6 @@
             android:layout_height="wrap_content"
             android:padding="10dp"
             android:layout_marginTop="10dp"
-            android:textColor="@color/black"/>
+            android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
 </ScrollView>
