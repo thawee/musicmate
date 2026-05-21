@@ -83,7 +83,7 @@ anggrayudi-storage = {module = "com.anggrayudi:storage", version="2.2.0"}
 #ffmpegkit-audio = {module = "com.arthenica:ffmpeg-kit-audio", version="6.0-2.LTS"}
 ffmpegkit-audio = {module = "com.antonkarpenko:ffmpeg-kit-full", version="2.1.0"}
 # greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
-slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.17"}
+slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.18"}
 log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.26.0"}
 # https://github.com/jupnp/jupnp/releases
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.4"}

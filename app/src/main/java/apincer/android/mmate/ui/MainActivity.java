@@ -16,10 +16,25 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+
+import androidx.core.graphics.ColorUtils;
+import androidx.palette.graphics.Palette;
+
+import apincer.android.mmate.coil3.CoverartFetcher;
+import coil3.BitmapImage;
+import coil3.Image;
+import coil3.SingletonImageLoader;
+import coil3.request.ImageRequest;
+import coil3.target.Target;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
@@ -41,6 +56,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -151,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fabScrollToTop;
 
     private TextView nowPlayingLabel;
+    private ImageView mBlurBackground;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -217,7 +234,60 @@ public class MainActivity extends AppCompatActivity {
                 }
                 nowPlayingLabel.setText(StringUtils.truncate(song.getTitle(), 24, StringUtils.TruncateType.SUFFIX));
                 previouslyPlaying = song;
+                updateGlassyPanelsColor(song);
             });
+        }
+    }
+
+    private void updateGlassyPanelsColor(Track song) {
+        ImageRequest request = CoverartFetcher.builder(this, song)
+                .data(song)
+                .size(300, 300) // Small size is fine for heavy blur
+                .target(new Target() {
+                    @Override
+                    public void onStart(@Nullable Image placeholder) {}
+
+                    @Override
+                    public void onSuccess(@NonNull Image image) {
+                        if (image instanceof BitmapImage) {
+                            Bitmap bitmap = ((BitmapImage) image).getBitmap();
+                            
+                            // Apply to full screen background with heavy blur
+                            if (mBlurBackground != null) {
+                                mBlurBackground.setImageBitmap(bitmap);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    mBlurBackground.setRenderEffect(
+                                            RenderEffect.createBlurEffect(100f, 100f, Shader.TileMode.CLAMP)
+                                    );
+                                }
+                            }
+
+                            Palette.from(bitmap).generate(palette -> {
+                                if (palette != null) {
+                                    int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
+                                    applyGlassyColor(color);
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(@Nullable Image errorDrawable) {}
+                })
+                .build();
+        SingletonImageLoader.get(this).enqueue(request);
+    }
+
+    private void applyGlassyColor(int color) {
+        int alphaColor = ColorUtils.setAlphaComponent(color, 64); // ~25% opacity for better glass effect
+        if (mHeaderPanel.getBackground() != null) {
+            mHeaderPanel.getBackground().setTint(alphaColor);
+            mHeaderPanel.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+        }
+        BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
+        if (bottomAppBar.getBackground() != null) {
+            bottomAppBar.getBackground().setTint(alphaColor);
+            bottomAppBar.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
     }
 
@@ -304,15 +374,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupHeaderPanel() {
+        mBlurBackground = findViewById(R.id.main_background_blur);
         mHeaderPanel = findViewById(R.id.header_panel);
         mBackButton = findViewById(R.id.header_back_btn);
         headerSearchView = findViewById(R.id.search_view);
         headerStatText = findViewById(R.id.header_stats_text);
 
-      //  mHeaderPanel.setRenderEffect(
-      //          RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
-      //  );
-        mHeaderPanel.getBackground().setAlpha(90); // 0–255, lower = more transparent
+        // Glassy effect is handled by semi-transparent background drawables
+        // and dynamic tints in applyGlassyColor().
+        // setRenderEffect is disabled here to keep text and icons sharp.
 
         setupSearchView();
         openSearch();
@@ -323,12 +393,10 @@ public class MainActivity extends AppCompatActivity {
         BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
         setSupportActionBar(bottomAppBar);
 
-        /*bottomAppBar.setRenderEffect(
-                RenderEffect.createBlurEffect(25f, 25f, Shader.TileMode.CLAMP)
-        ); */
+        // setRenderEffect is disabled here to keep navigation icons sharp.
 
-        bottomAppBar.getBackground().setAlpha(200); // optional, 0–255
-        bottomAppBar.setElevation(dpToPx(getApplicationContext(), 8));
+        // bottomAppBar.getBackground().setAlpha(200); // optional, 0–255
+        bottomAppBar.setElevation(0f);
 
         View leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
         nowPlayingLabel = bottomAppBar.findViewById(R.id.navigation_now_playing);
