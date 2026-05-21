@@ -75,6 +75,8 @@ public class AboutActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_fragement);
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.settings_toolbar);
+        setSupportActionBar(toolbar);
         if(getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.app_name);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

@@ -30,9 +30,13 @@ public class SettingsActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_fragement);
-        getSupportActionBar().setTitle(R.string.app_settings);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.settings_toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(R.string.app_settings);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_content, new SettingsFragment())

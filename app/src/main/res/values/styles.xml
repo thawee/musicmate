@@ -200,7 +200,7 @@
         <item name="android:background">@drawable/context_menu</item>
     </style>
 
-    <style name="AboutAppTheme" parent="Theme.Material3.DayNight">
+    <style name="AboutAppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Core color system -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorOnPrimary">@color/colorOnPrimary</item>
