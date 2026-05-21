@@ -33,7 +33,7 @@
             <!-- Default -->
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="?attr/colorSurface" />
+                    <solid android:color="@android:color/transparent" />
                     <corners android:radius="12dp" />
                 </shape>
             </item>

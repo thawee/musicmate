@@ -1,20 +1,16 @@
-# Checklist: Resolve Permission Activity Blinding White Screen Defect
+# Checklist: Harmonize UI to Premium Glassy / Frosted Theme
 
 ## Phase 1: Planning and Setup
-- [x] Analyze Permission screen background and text color root causes (completed in planning phase)
-- [x] Formulate and obtain approval for the implementation plan (completed)
+- [x] Identify non-glassy components and formulate the implementation plan (completed)
+- [x] Obtain user approval on the implementation plan (approved)
 
 ## Phase 2: Core Refactoring
-- [x] Modify [activity_permissions.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/activity_permissions.xml) to:
-  - [x] Change root container background from `@android:color/white` to `?attr/colorSurface`
-  - [x] Change description text color from `@color/black` to `?attr/colorOnSurfaceVariant`
-  - [x] Change confirm button background from `@color/colorPrimary` to `?attr/colorPrimary`
-  - [x] Change confirm button text color from `@color/colorAccent` to `?attr/colorOnPrimary`
-- [x] Modify [view_permission_item.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_permission_item.xml) to:
-  - [x] Update permission title text color to use dynamic `?attr/colorPrimary`
-  - [x] Update required label text color to use dynamic `?attr/colorPrimary`
-  - [x] Add explicit description text color `?attr/colorOnSurfaceVariant`
+- [x] Modify [selector_item.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/selector_item.xml) to make default background transparent
+- [x] Modify [shape_bottom_appbar_background.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_bottom_appbar_background.xml) to make bottom bar translucent
+- [x] Modify [shape_device_background.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_device_background.xml) to use translucent white background and white border stroke
+- [x] Modify [border_back_label.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/border_back_label.xml) to use translucent white border stroke
+- [x] Modify [shape_border_playing_black.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_border_playing_black.xml) to use translucent white border stroke
 
 ## Phase 3: Verification
-- [/] Verify build compiles successfully using `./gradlew compileDebugJavaWithJavac` and `assembleDebug`
-- [ ] Document final results in walkthrough and update task checklist
+- [x] Verify build compiles successfully using `./gradlew compileDebugJavaWithJavac`
+- [x] Document final results in walkthrough and update task checklists

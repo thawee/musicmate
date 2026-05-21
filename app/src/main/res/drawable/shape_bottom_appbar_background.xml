@@ -45,7 +45,7 @@
               This is the main color of your Bottom App Bar.
               REPLACE #121212 with your theme's dark surface color (e.g., "?attr/colorSurface").
             -->
-            <solid android:color="#121212" />
+            <solid android:color="#E6121212" />
 
             <!--
               NEW: Added a border (stroke).

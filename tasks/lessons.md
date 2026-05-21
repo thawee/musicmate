@@ -8,3 +8,10 @@
   - Set `android:background="?attr/colorSurface"` on the `AppBarLayout`.
   - Set `app:contentScrim="?attr/colorSurface"` on the `CollapsingToolbarLayout`.
   - This ensures that in both collapsed and expanded states, the status bar and toolbar blend seamlessly into `#121212` (dark mode) or `#FFFFFF` (light mode).
+
+### Glassmorphic Design and Solid Component Pitfalls
+- **Problem**: When aiming for a premium glassmorphic or frosted glass visual aesthetic, having intermediate UI views (such as list item background selectors, bottom app bar containers, or device detail widgets) draw with solid opaque backgrounds (e.g. `?attr/colorSurface` or hardcoded `@color/material_color_blue_grey_800`) completely blocks the underlying blurred wallpaper/background container (`@id/main_background_blur`). This invalidates the frosted glass effect, making the UI feel segmented and opaque.
+- **Solution**: 
+  - Ensure that intermediate container item selectors (such as the default state of `selector_item.xml`) default to transparent (`@android:color/transparent`) so the background blur floats through unhindered.
+  - Swap solid dark backgrounds for modern translucent equivalents (e.g. `90%` opacity dark colors like `#E6121212` or translucent white base layers like `#1AFFFFFF` - 10% opacity).
+  - Swap solid dark/black borders/strokes with a fine, semi-transparent white stroke (`#33FFFFFF` - 20% opacity) to cleanly delineate glass edges against dark/blurred backgrounds.
