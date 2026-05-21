@@ -121,8 +121,6 @@ public class TagsActivity extends AppCompatActivity {
     private RatingIndicatorView ratingIndicatorView;
     private NewIndicatorView newIndicatorView;
 
-    private int toolbar_to_color;
-    private int surfaceBgColor;
     private Fragment activeFragment;
 
     private boolean previewState = true;
@@ -233,21 +231,6 @@ public class TagsActivity extends AppCompatActivity {
         int height = UIUtils.getScreenHeight(this);
         //toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
-        
-        // Resolve primary and surface colors dynamically from active theme
-        int colorPrimary = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
-        android.util.TypedValue typedValue = new android.util.TypedValue();
-        if (getTheme().resolveAttribute(R.attr.colorPrimary, typedValue, true)) {
-            colorPrimary = typedValue.data;
-        }
-        toolbar_to_color = colorPrimary;
-
-        int colorSurface = ContextCompat.getColor(getApplicationContext(), R.color.bgColor);
-        if (getTheme().resolveAttribute(R.attr.colorSurface, typedValue, true)) {
-            colorSurface = typedValue.data;
-        }
-        surfaceBgColor = colorSurface;
-
         setupTitlePanelViews(); // Method to findViewById all title panel views
         setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.
 
@@ -881,9 +864,6 @@ public class TagsActivity extends AppCompatActivity {
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
         double prevScrollOffset = -1;
-        // Reuse these objects to avoid GC pressure
-        private final ArgbEvaluator argbEvaluator = new ArgbEvaluator();
-        private ObjectAnimator tabColorAnimation;
         // Track state to avoid redundant updates
         private boolean wasFullyExpanded = true;
         private boolean wasFullyCollapsed = false;
@@ -921,39 +901,6 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyExpanded = false;
                 previewState = false;
                // setupMenuToolbar();
-            }
-
-            // Handle tab layout color fade based on scroll position
-            if (scrollRatio >= 0.8 && tabColorAnimation == null) {
-                // Animate to toolbar color only when needed
-                tabColorAnimation = ObjectAnimator.ofObject(
-                        tabLayout,
-                        "backgroundColor",
-                        argbEvaluator,
-                        surfaceBgColor,
-                        toolbar_to_color);
-                tabColorAnimation.setDuration(200); // Shorter duration for better performance
-                tabColorAnimation.start();
-            } else if (scrollRatio < 0.8 && tabColorAnimation == null) {
-                // Animate back to surface background color
-                tabColorAnimation = ObjectAnimator.ofObject(
-                        tabLayout,
-                        "backgroundColor",
-                        argbEvaluator,
-                        toolbar_to_color,
-                        surfaceBgColor);
-                tabColorAnimation.setDuration(200);
-                tabColorAnimation.start();
-            }
-
-            // Clean up animation reference when done
-            if (tabColorAnimation != null && tabColorAnimation.isRunning()) {
-                tabColorAnimation.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        tabColorAnimation = null;
-                    }
-                });
             }
         }
     }

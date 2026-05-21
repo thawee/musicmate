@@ -1,24 +1,17 @@
-# Checklist: TagsActivity Tab Layout and Theme Alignment
+# Checklist: Fix TabLayout Active Tab Title Visibility
 
-## Phase 1: Research and Planning
-- [x] Analyze `TagsActivity` and `activity_tags.xml` tab container issues
-- [x] Identify hardcoded/mismatched theme values for TabLayout container
-- [x] Create detailed implementation plan and obtain approval
+## Phase 1: Planning and Setup
+- [x] Analyze the theme overlay and background color animation mismatch root causes
+- [x] Create implementation plan and obtain approval
 
-## Phase 2: Core TabLayout Refactoring
-- [x] Remove blocky container style `app:tabBackground="?attr/colorOnPrimary"` from `activity_tags.xml`
-- [x] Apply theme-aware background `android:background="?attr/colorSurface"` in `activity_tags.xml`
-- [x] Introduce dynamic `surfaceBgColor` and `colorPrimary` theme resolution in `TagsActivity.java`
-- [x] Update programmatic `tabColorAnimation` in `TagsActivity.java` to animate symmetrically between `surfaceBgColor` and `toolbar_to_color`
+## Phase 2: Core Refactoring
+- [x] Modify [activity_tags.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/activity_tags.xml) to set TabLayout theme to `@style/AdaptiveTheme.MusicMateApp`
+- [x] Modify [TagsActivity.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsActivity.java) to remove the redundant `tabColorAnimation` logic
 
 ## Phase 3: Verification
 - [x] Verify build compiles successfully using `./gradlew compileDebugJavaWithJavac`
-- [x] Perform detailed AI code review to ensure zero side effects
-- [x] Document final results and lessons learned
+- [x] Document final results in walkthrough
 
 ## Review & Design Decisions
-- **Standardized TabLayout Aesthetics:** Removed custom solid backgrounds on tab items, allowing them to render as modern transparent components. Established a dynamic surface background fallback in the XML.
-- **Eliminated Hardcoded Fades:** Replaced the static flat dark-gray color fade (`#252525`) in `TagsActivity.java` with dynamic runtime attribute resolution of `?attr/colorSurface` and `?attr/colorPrimary`.
-- **Symmetric & Flicker-Free Transitions:** Redesigned the programmatic `ObjectAnimator` transitions to fade symmetrically between `surfaceBgColor` and `toolbar_to_color` depending on the collapse threshold, avoiding any visual flicker or mode mismatch in light/dark systems.
-- **Compile Verification:** Validated that the entire app and all Gradle flavor subprojects compile flawlessly under Gradle.
-
+- **Bound TabLayout to Active Host Theme Context**: Added `android:theme="@style/AdaptiveTheme.MusicMateApp"` to `TabLayout` in `activity_tags.xml` so that the view resolves its text and indicator colors correctly using the active Day-Night theme context rather than inheriting `ThemeOverlay.Material3.Dark.ActionBar` from `AppBarLayout`.
+- **Removed Redundant and Problematic Animations**: Cleaned up the scroll-based background color transitions on the `TabLayout` in `TagsActivity.java`, keeping it consistently on the correct Material 3 standard `?attr/colorSurface` background. This ensures excellent text legibility at all scroll levels and saves CPU cycles.
