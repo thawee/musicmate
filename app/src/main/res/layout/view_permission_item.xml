@@ -32,7 +32,7 @@
                 android:id="@+id/item_needs_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorPrimary"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:fontFamily="sans-serif"
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="6dp"
-                android:textColor="@color/colorPrimary"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"
                 app:fontFamily="sans-serif"
                 tools:text="(needs)" />
@@ -55,6 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_marginTop="5dp"
+            android:textColor="?attr/colorOnSurfaceVariant"
             app:fontFamily="sans-serif"
             tools:text="description" />
     </LinearLayout>
