@@ -375,6 +375,7 @@
     <color name="warningColor">#FF8A65</color>
     <color name="normalColor">#353A3E</color>
     <color name="material_color_green_400">#66BB6A</color>
+    <color name="material_color_amber_400">#FFCA28</color>
     <color name="meteial_color_deep_orange_300">#FF8A65</color>
     <color name="meteial_color_deep_orange_A400">#FF3D00</color>
     <color name="material_color_light_green_800">#558B2F</color>

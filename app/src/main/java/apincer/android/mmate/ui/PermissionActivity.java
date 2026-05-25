@@ -85,7 +85,7 @@ public class PermissionActivity extends AppCompatActivity {
                 REQUEST_CODE_STORAGE_PERMISSION));
 
         // Internet
-        LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
 
         panel.addView(getPermissionView(layoutInflater,null, "Access Audio Files", "(Required)", "Read audio media files on device."));
         panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write music files on device to manage music collection."));

@@ -16,9 +16,14 @@ import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -26,6 +31,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -34,15 +40,22 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.palette.graphics.Palette;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.appbar.AppBarLayout;
@@ -61,6 +74,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
+
+import android.view.ViewGroup.MarginLayoutParams;
+import static apincer.android.mmate.utils.UIUtils.dpToPx;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
@@ -87,6 +103,8 @@ import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
+import coil3.BitmapImage;
+import coil3.Image;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.CachePolicy;
@@ -94,6 +112,7 @@ import coil3.request.ImageRequest;
 import coil3.size.Precision;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
+import coil3.target.Target;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -200,50 +219,64 @@ public class TagsActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
+        // Enable Edge-to-Edge
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         //Enable Dynamic Colors
         DynamicColors.applyToActivitiesIfAvailable(getApplication());
 
         // set status bar color to black
         Window window = getWindow();
-       // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        //window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
         WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
-        // If the background is dark, use light icons
         insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_tags);
+        
+        // Handle Status Bar Insets for Header
+        appBarLayout = findViewById(R.id.appbar);
+        ViewCompat.setOnApplyWindowInsetsListener(appBarLayout, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
         viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
 
         long[] tagIds = getIntent().getLongArrayExtra("MUSIC_TAG_IDS");
         if (tagIds != null && tagIds.length > 0) {
-            // Load the data from the database on a background thread.
-            // For example, using a ViewModel that calls a repository.
             loadMusicTagsFromDb(tagIds);
         }
 
-        // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         coverArtView = findViewById(R.id.panel_cover_art);
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
-        int statusBarHeight = getStatusBarHeight();
+        
+        // Set dynamic height for the collapsing header
         int height = UIUtils.getScreenHeight(this);
-        //toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
-        toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
-        setupTitlePanelViews(); // Method to findViewById all title panel views
-        setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.
+        toolBarLayout.getLayoutParams().height = (int) (height * 0.85); // 85% of screen height for a better balance
+        
+        setupTitlePanelViews();
+        setupActionButtons();
 
-        // --- Observe LiveData from ViewModel ---
+        // Handle Navigation Bar Insets for Bottom Capsule
+        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        if (bottomNav != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                if (v.getLayoutParams() instanceof MarginLayoutParams) {
+                    MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
+                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 12);
+                    v.setLayoutParams(mlp);
+                }
+                return insets;
+            });
+        }
+
         observeViewModel();
-
-        // Initial setup for ViewPager might depend on data, or can be done once
-        // Consider if setupPageViewer() needs data from ViewModel before being called
-        // If data is ready, call it. If not, observe some "dataReady" LiveData.
-        // For now, let's assume it can be setup and fragments will observe ViewModel.
         setupPageViewer();
 
-        // Bind to the MediaServerService as soon as this service is created
         Intent intent = new Intent(this, MusicMateServiceImpl.class);
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
@@ -307,7 +340,10 @@ public class TagsActivity extends AppCompatActivity {
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
     }
 
+    private ImageView mBlurBackground;
+
     private void setupTitlePanelViews() {
+        mBlurBackground = findViewById(R.id.main_background_blur);
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
         albumView = findViewById(R.id.panel_album);
@@ -321,16 +357,11 @@ public class TagsActivity extends AppCompatActivity {
         ratingIndicatorView = findViewById(R.id.rating_view);
         newIndicatorView = findViewById(R.id.new_view);
     }
-
     private void setupActionButtons() {
         findViewById(R.id.button_edit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
-        findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems()); // This method would now likely call a ViewModel method
-        findViewById(R.id.button_import).setOnClickListener(v -> doMoveMediaItems()); // Call ViewModel
-
-        findViewById(R.id.button_more).setOnClickListener(v -> {
-             doShowMoreActions(findViewById(R.id.button_more));
-            // create popup menu
-        });
+        findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems());
+        findViewById(R.id.button_import).setOnClickListener(v -> doMoveMediaItems());
+        findViewById(R.id.button_more).setOnClickListener(this::doShowMoreActions);
     }
 
     private void doShowMoreActions(View anchorView) {
@@ -721,7 +752,19 @@ public class TagsActivity extends AppCompatActivity {
         finish();
     }
 
-    // Create a separate method for image loading to reduce clutter
+    private void applyGlassyColor(int color) {
+        int alphaColor = ColorUtils.setAlphaComponent(color, 64); // ~25% opacity
+        if (appBarLayout != null && appBarLayout.getBackground() != null) {
+            appBarLayout.getBackground().setTint(alphaColor);
+            appBarLayout.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+        }
+        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        if (bottomNav != null && bottomNav.getBackground() != null) {
+            bottomNav.getBackground().setTint(alphaColor);
+            bottomNav.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+        }
+    }
+
     private void loadImages(Track displayTag) {
         if(displayTag ==null) return;
 
@@ -732,7 +775,45 @@ public class TagsActivity extends AppCompatActivity {
         ImageRequest coverRequest = CoverartFetcher.builder(getApplicationContext(), displayTag)
                 .size(Size.ORIGINAL)
                 .data(displayTag)
-                .target(new ImageViewTarget(coverArtView))
+                .target(new Target() {
+                    @Override
+                    public void onStart(@Nullable Image placeholder) {}
+
+                    @Override
+                    public void onSuccess(@NonNull Image image) {
+                        if (image instanceof BitmapImage) {
+                            Bitmap bitmap = ((BitmapImage) image).getBitmap();
+                            coverArtView.setImageBitmap(bitmap);
+
+                            // Apply to full screen background with heavy blur
+                            if (mBlurBackground != null) {
+                                mBlurBackground.setImageBitmap(bitmap);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    mBlurBackground.setRenderEffect(
+                                            RenderEffect.createBlurEffect(100f, 100f, Shader.TileMode.CLAMP)
+                                    );
+                                }
+                            }
+
+                            // Palette needs direct pixel access, so we cannot use hardware bitmaps.
+                            // If the bitmap is hardware-accelerated, we must copy it to a software-compatible config.
+                            Bitmap paletteBitmap = bitmap;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && bitmap.getConfig() == Bitmap.Config.HARDWARE) {
+                                paletteBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                            }
+
+                            Palette.from(paletteBitmap).generate(palette -> {
+                                if (palette != null) {
+                                    int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
+                                    applyGlassyColor(color);
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(@Nullable Image errorDrawable) {}
+                })
                 .memoryCachePolicy(CachePolicy.ENABLED)
                // .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();

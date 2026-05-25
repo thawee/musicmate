@@ -4,6 +4,7 @@ import static apincer.music.core.utils.StringUtils.format;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -113,29 +114,38 @@ public class TagsTechnicalFragment extends Fragment {
         TextView tv0 = new TextView(getContext());
         TableRow.LayoutParams llp = new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         llp.setMargins(2, 0, 2, 2);//2px right-margin
+        int headerBgColor = Color.parseColor("#33FFFFFF"); // 20% white
+        int rowBgColor = Color.parseColor("#1AFFFFFF");    // 10% white
+
         LinearLayout cell = new LinearLayout(getContext());
-        cell.setBackgroundColor(Color.DKGRAY);
-        cell.setLayoutParams(llp);//2px border on the right for the cell
+        cell.setBackgroundColor(headerBgColor);
+        cell.setLayoutParams(llp);
         tv0.setText(R.string.label_field);
         tv0.setTextColor(Color.WHITE);
+        tv0.setTypeface(null, Typeface.BOLD);
+        tv0.setPadding(24, 12, 24, 12);
         cell.addView(tv0);
         tbrow0.addView(cell);
 
         cell = new LinearLayout(getContext());
-        cell.setBackgroundColor(Color.DKGRAY);
-        cell.setLayoutParams(llp);//2px border on the right for the cell
+        cell.setBackgroundColor(headerBgColor);
+        cell.setLayoutParams(llp);
         TextView tv1 = new TextView(getContext());
         tv1.setText(R.string.label_current);
         tv1.setTextColor(Color.WHITE);
+        tv1.setTypeface(null, Typeface.BOLD);
+        tv1.setPadding(24, 12, 24, 12);
         cell.addView(tv1);
         tbrow0.addView(cell);
 
         cell = new LinearLayout(getContext());
-        cell.setBackgroundColor(Color.DKGRAY);
-        cell.setLayoutParams(llp);//2px border on the right for the cell
+        cell.setBackgroundColor(headerBgColor);
+        cell.setLayoutParams(llp);
         TextView tv = new TextView(getContext());
         tv.setText(R.string.label_default_reader);
         tv.setTextColor(Color.WHITE);
+        tv.setTypeface(null, Typeface.BOLD);
+        tv.setPadding(24, 12, 24, 12);
         cell.addView(tv);
         tbrow0.addView(cell);
 
@@ -187,34 +197,36 @@ public class TagsTechnicalFragment extends Fragment {
             //String stdVal = ReflectUtil.getFieldValue(field,tt).toString();
 
             cell = new LinearLayout(getContext());
-            cell.setBackgroundColor(Color.DKGRAY);
-            cell.setLayoutParams(llp);//2px border on the right for the cell
+            cell.setBackgroundColor(rowBgColor);
+            cell.setLayoutParams(llp);
             TextView t1v = new TextView(getContext());
             t1v.setText(field.getName());
             //t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
             t1v.setTextColor(StringUtils.equals(stdVal, mateVal)?Color.WHITE:Color.RED);
             t1v.setGravity(Gravity.START);
-            t1v.setPadding(24,0,0,0);
+            t1v.setPadding(24, 8, 24, 8);
             cell.addView(t1v);
             tr.addView(cell);
 
             cell = new LinearLayout(getContext());
-            cell.setBackgroundColor(Color.GRAY);
-            cell.setLayoutParams(llp);//2px border on the right for the cell
+            cell.setBackgroundColor(rowBgColor);
+            cell.setLayoutParams(llp);
             TextView t2v = new TextView(getContext());
             t2v.setText(mateVal);
             t2v.setTextColor(Color.WHITE);
             t2v.setGravity(Gravity.CENTER);
+            t2v.setPadding(12, 8, 12, 8);
             cell.addView(t2v);
             tr.addView(cell);
 
             cell = new LinearLayout(getContext());
-            cell.setBackgroundColor(Color.GRAY);
-            cell.setLayoutParams(llp);//2px border on the right for the cell
+            cell.setBackgroundColor(rowBgColor);
+            cell.setLayoutParams(llp);
             TextView t3v = new TextView(getContext());
             t3v.setText(stdVal);
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
+            t3v.setPadding(12, 8, 12, 8);
             cell.addView(t3v);
             tr.addView(cell);
 

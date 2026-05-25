@@ -30,6 +30,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 
 import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.music.core.utils.TagUtils;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
@@ -80,7 +81,6 @@ import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
-import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -101,6 +101,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import androidx.core.graphics.Insets;
+import android.view.ViewGroup.MarginLayoutParams;
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MediaServerManager;
 import apincer.android.mmate.service.MusicMateServiceImpl;
@@ -164,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private View emptyStateView;
     private FloatingActionButton fabScrollToTop;
 
     private TextView nowPlayingLabel;
@@ -236,6 +239,15 @@ public class MainActivity extends AppCompatActivity {
                 previouslyPlaying = song;
                 updateGlassyPanelsColor(song);
             });
+        } else {
+            mRecyclerView.post(() -> {
+                if (!PermissionUtils.isNotificationListenerEnabled(getApplicationContext())) {
+                    nowPlayingLabel.setText("System is blocking the signal");
+                } else {
+                    nowPlayingLabel.setText("Awaiting sound");
+                }
+                previouslyPlaying = null;
+            });
         }
     }
 
@@ -262,7 +274,14 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-                            Palette.from(bitmap).generate(palette -> {
+                            // Palette needs direct pixel access, so we cannot use hardware bitmaps.
+                            // If the bitmap is hardware-accelerated, we must copy it to a software-compatible config.
+                            Bitmap paletteBitmap = bitmap;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && bitmap.getConfig() == Bitmap.Config.HARDWARE) {
+                                paletteBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                            }
+
+                            Palette.from(paletteBitmap).generate(palette -> {
                                 if (palette != null) {
                                     int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
                                     applyGlassyColor(color);
@@ -280,14 +299,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyGlassyColor(int color) {
         int alphaColor = ColorUtils.setAlphaComponent(color, 64); // ~25% opacity for better glass effect
-        if (mHeaderPanel.getBackground() != null) {
+        if (mHeaderPanel != null && mHeaderPanel.getBackground() != null) {
             mHeaderPanel.getBackground().setTint(alphaColor);
             mHeaderPanel.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
-        BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
-        if (bottomAppBar.getBackground() != null) {
-            bottomAppBar.getBackground().setTint(alphaColor);
-            bottomAppBar.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        if (bottomNav != null && bottomNav.getBackground() != null) {
+            bottomNav.getBackground().setTint(alphaColor);
+            bottomNav.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+        }
+        if (fabScrollToTop != null && fabScrollToTop.getBackground() != null) {
+            fabScrollToTop.getBackground().setTint(alphaColor);
+            fabScrollToTop.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
     }
 
@@ -299,6 +322,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the server here, where we are guaranteed to be in the foreground!
         mediaServerManager.startServer();
+
+        // Enable Edge-to-Edge
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         //Enable Dynamic Colors
         DynamicColors.applyToActivitiesIfAvailable(getApplication());
@@ -368,6 +394,13 @@ public class MainActivity extends AppCompatActivity {
                        // refreshLayout.finishRefresh();
                     });
             updateHeaderPanel();
+            if (musicTags == null || musicTags.isEmpty()) {
+                emptyStateView.setVisibility(View.VISIBLE);
+                swipeRefreshLayout.setVisibility(View.GONE);
+            } else {
+                emptyStateView.setVisibility(View.GONE);
+                swipeRefreshLayout.setVisibility(View.VISIBLE);
+            }
         });
 
         viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
@@ -380,6 +413,14 @@ public class MainActivity extends AppCompatActivity {
         headerSearchView = findViewById(R.id.search_view);
         headerStatText = findViewById(R.id.header_stats_text);
 
+        // Handle Status Bar Insets for Header
+        ViewCompat.setOnApplyWindowInsetsListener(mHeaderPanel, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), systemBars.top + (int)dpToPx(this, 8), 
+                        v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
         // Glassy effect is handled by semi-transparent background drawables
         // and dynamic tints in applyGlassyColor().
         // setRenderEffect is disabled here to keep text and icons sharp.
@@ -390,20 +431,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupBottomAppBar() {
         // Find components
-        BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
-        setSupportActionBar(bottomAppBar);
+        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        // setSupportActionBar(bottomNav); // Removed as CardView is not a Toolbar
 
-        // setRenderEffect is disabled here to keep navigation icons sharp.
+        // Handle Navigation Bar Insets for Bottom Capsule
+        if (bottomNav != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                if (v.getLayoutParams() instanceof MarginLayoutParams mlp) {
+                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 24);
+                    v.setLayoutParams(mlp);
+                }
+                return insets;
+            });
+            bottomNav.setElevation(8f);
+        }
 
-        // bottomAppBar.getBackground().setAlpha(200); // optional, 0–255
-        bottomAppBar.setElevation(0f);
+        View leftMenu = findViewById(R.id.navigation_collections);
+        nowPlayingLabel = findViewById(R.id.navigation_now_playing);
+        nowPlayingLabel.setText("Awaiting sound");
 
-        View leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
-        nowPlayingLabel = bottomAppBar.findViewById(R.id.navigation_now_playing);
+        ImageView rightMenu = findViewById(R.id.navigation_settings);
 
-        ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
-
-        View mediaServer = bottomAppBar.findViewById(R.id.navigation_media_server);
+        View mediaServer = findViewById(R.id.navigation_media_server);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
@@ -450,6 +500,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup RecyclerView
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        emptyStateView = findViewById(R.id.empty_state_view);
         int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
         swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
 
@@ -539,6 +590,18 @@ public class MainActivity extends AppCompatActivity {
                 // Safety check: Always hide if we're at the top
                 if (firstVisibleItemPosition == 0 && fabScrollToTop.isShown()) {
                     fabScrollToTop.hide();
+                }
+
+                // --- Pagination ---
+                if (dy > 0) { // scrolling down
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    
+                    // Trigger load more when we're close to the bottom (e.g. within 10 items)
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 10
+                            && firstVisibleItemPosition >= 0) {
+                        viewModel.loadMoreMusicItems();
+                    }
                 }
             }
 
@@ -656,18 +719,24 @@ public class MainActivity extends AppCompatActivity {
             TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
             TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
 
-            List<Track> list = viewModel.getTagRepository().getAllMusics();
-            long songCount = list.size();
-            long totalDuration = 0;
-            for (Track tag : list) {
-                if (tag != null) { // Add null check for safety
-                    totalDuration += (long) tag.getAudioDuration();
-                }
-            }
+            long songCount = viewModel.getTagRepository().getTotalSongs();
+            long totalDuration = viewModel.getTagRepository().getTotalDuration();
 
             totalSongText.setText(StringUtils.formatSongSize(songCount));
             totalDurationText.setText(StringUtils.formatDuration(totalDuration, true));
             UIUtils.buildStoragesStatus(getApplication(), panel);
+            
+            // Apply dynamic tint if we have a current track
+            if (previouslyPlaying != null) {
+                int color = TagUtils.getCodecColor(getApplicationContext(), previouslyPlaying);
+                int alphaColor = ColorUtils.setAlphaComponent(color, 64);
+                View container = storageView.findViewById(R.id.bottom_frosted_panel);
+                if (container != null && container.getBackground() != null) {
+                    container.getBackground().setTint(alphaColor);
+                    container.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
+                }
+            }
+
             mResideMenu.setLeftHeader(storageView);
         }
         mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
@@ -682,13 +751,11 @@ public class MainActivity extends AppCompatActivity {
         Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
 
         int count = adapter.getTotalItems();
-        String statText;
+        String statText = "";
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
             // total songs
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " Songs";
-            }else {
-                statText = "No Results";
             }
 
             // filter details or duration
@@ -721,13 +788,10 @@ public class MainActivity extends AppCompatActivity {
             // total songs
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
-            }else {
-                statText = "No Results";
             }
         }
 
-       // headerSearchView.setQueryHint("Search "+StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
-        headerSearchView.setQueryHint(StringUtils.truncate(adapter.getHeaderTitle(), 32, StringUtils.TruncateType.SUFFIX));
+        headerSearchView.setQueryHint("Search " + StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
         headerStatText.setText(statText);
     }
 

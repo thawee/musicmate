@@ -20,23 +20,25 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_dialog_header_gradient"
-        android:padding="@dimen/dimen_14_dp">
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp">
 
         <ImageView
             android:id="@+id/title_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_notification_default"
-            android:layout_marginEnd="8dp"
-            app:tint="@color/white" />
+            android:src="@drawable/ic_musicmate_logo"
+            android:layout_marginEnd="12dp"
+            app:tint="#FFD700" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/audio_path"
+            android:text="Signal Mastery"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:letterSpacing="-0.02"/>
 
         <!-- Spacer -->
         <View
@@ -48,8 +50,8 @@
             android:id="@+id/quality_indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lossless"
-            android:textColor="#8BC34A"
+            android:text="Local Path"
+            android:textColor="#FFD700"
             android:textStyle="bold"
             android:textSize="14sp" />
 

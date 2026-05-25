@@ -3,7 +3,7 @@
     <!-- Base translucent surface -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#40121212" /> <!-- 25% dark base -->
+            <solid android:color="#1A121212" /> <!-- 10% dark base for more transparency -->
         </shape>
     </item>
 
@@ -11,8 +11,8 @@
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#20FFFFFF"
-                android:endColor="#05FFFFFF"
+                android:startColor="#1AFFFFFF"
+                android:endColor="#00000000"
                 android:angle="90" />
         </shape>
     </item>
@@ -21,7 +21,7 @@
     <item android:gravity="bottom">
         <shape android:shape="rectangle">
             <size android:height="1dp" />
-            <solid android:color="#33FFFFFF" />
+            <solid android:color="#4DFFFFFF" />
         </shape>
     </item>
 

@@ -54,7 +54,6 @@
                 android:background="@drawable/search_bar_frosted"
                 android:queryHint="@string/search_music_hint"
                 app:iconifiedByDefault="false"
-                app:searchIcon="@null"
                 android:textColor="?attr/colorOnSurface"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/header_back_btn"
@@ -74,25 +73,79 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- 🔹 Content List -->
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipe_refresh_layout"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginBottom="@dimen/dimen_36_dp">
+            android:layout_weight="1">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view"
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingBottom="104dp"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                    tools:listitem="@layout/view_list_item" />
+
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+            <FrameLayout
+                android:id="@+id/empty_state_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                tools:listitem="@layout/view_list_item" />
+                android:visibility="gone"
+                tools:visibility="visible">
 
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+                <!-- 🌟 Secondary glow behind the icon -->
+                <View
+                    android:layout_width="240dp"
+                    android:layout_height="240dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/shape_empty_state_glow"
+                    android:alpha="0.8" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:src="@drawable/ic_musicmate_logo"
+                        android:alpha="0.9"
+                        app:tint="?attr/colorOnSurface"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="Library awaits sound"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                        android:gravity="center"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Ready for your first addition."
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </FrameLayout>
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- 🔹 Scroll-to-top FAB -->
+    <!-- 🔹 Scroll-to-top FAB (Liquid Glass) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_scroll_to_top"
         android:layout_width="wrap_content"
@@ -100,16 +153,17 @@
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginStart="@dimen/dimen_8_dp"
         android:layout_marginEnd="@dimen/dimen_8_dp"
-        android:layout_marginBottom="@dimen/dimen_96_dp"
+        android:layout_marginBottom="112dp"
         android:src="@drawable/rounded_arrow_shape_up_stack_24"
         android:contentDescription="@string/scroll_to_top"
         app:fabSize="mini"
         android:visibility="gone"
         tools:visibility="visible"
 
-        app:shapeAppearanceOverlay="@style/Fab.Stroke"
-        app:backgroundTint="@color/black_transparent_80"
-        app:tint="?attr/colorPrimary"/>
+        app:backgroundTint="@null"
+        android:background="@drawable/glass_fab_background"
+        app:elevation="4dp"
+        app:tint="?attr/colorOnSurface"/>
 
     <!--
     <sakout.mehdi.StateViews.StateView
@@ -128,21 +182,24 @@
     </sakout.mehdi.StateViews.StateView>
     -->
 
-    <!-- 🔹 Bottom App Bar -->
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottom_app_bar"
+    <!-- 🔹 Floating Glass Capsule Navigation -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_64_dp"
+        android:layout_height="64dp"
         android:layout_gravity="bottom"
-        app:fabAlignmentMode="center"
-        app:hideOnScroll="false"
-        style="@style/RoundedBottomAppBar"
-        app:backgroundTint="@null"
-        android:background="@drawable/shape_bottom_frosted_panel">
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="24dp"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:strokeWidth="1dp"
+        app:strokeColor="#33FFFFFF">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/shape_bottom_frosted_panel"
             android:paddingHorizontal="@dimen/dimen_8_dp"
             android:gravity="center_vertical">
 
@@ -171,16 +228,20 @@
                 android:id="@+id/navigation_now_playing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_38_dp"
-                android:layout_marginEnd="@dimen/dimen_96_dp"
+                android:layout_marginStart="@dimen/dimen_42_dp"
+                android:layout_marginEnd="@dimen/dimen_104_dp"
                 android:padding="@dimen/dimen_12_dp"
                 android:text="@string/app_name"
                 android:gravity="center"
                 android:lines="1"
                 android:maxLines="1"
                 android:layout_centerVertical="true"
-                android:background="@drawable/shape_border_playing_black"
+                android:background="@null"
                 android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:drawableStart="@drawable/ic_musicmate_logo"
+                android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_right_24"
+                android:drawablePadding="@dimen/dimen_4_dp"
+                app:drawableTint="?attr/colorOnSurface"
                 tools:ignore="RtlSymmetry" />
 
             <!-- Right section -->
@@ -216,7 +277,7 @@
                     android:contentDescription="@string/settings" />
             </LinearLayout>
         </RelativeLayout>
-    </com.google.android.material.bottomappbar.BottomAppBar>
+    </com.google.android.material.card.MaterialCardView>
 
     <!--
     <com.google.android.material.bottomappbar.BottomAppBar

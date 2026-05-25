@@ -1,137 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/editor_scroll_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/activity_horizontal_margin"
-    android:clipToPadding="false"
-    android:paddingBottom="?attr/actionBarSize"
-    android:orientation="vertical">
+    android:fillViewport="true"
+    android:background="@android:color/transparent">
 
-    <!-- Action buttons group -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/actionGroup"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_8_dp"
-        android:elevation="8dp"
-        android:background="?attr/colorSurface"
-        android:gravity="center"
-        app:singleSelection="true"
-        app:selectionRequired="false">
+        android:orientation="vertical"
+        android:padding="8dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_reload_tag"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Reload"
-            android:icon="@drawable/round_restore_page_24"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_extract_coverart"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Extract Cover"
-            android:icon="@drawable/ic_round_image_24"
-            app:iconGravity="textStart"
-            android:insetBottom="4dp"
-            android:insetTop="4dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_remove_coverart"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Remove Cover"
-            android:icon="@drawable/ic_round_hide_image_24"
-            app:iconGravity="textStart"
-            android:insetBottom="4dp"
-            android:insetTop="4dp" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <!-- File name -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/filename"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_4_dp"
-        android:layout_gravity="center"
-        android:textStyle="italic"
-        android:textSize="12sp"
-        android:textColor="?attr/colorOnSurfaceVariant" />
-
-    <!-- Main scroll content -->
-    <ScrollView
-        android:id="@+id/scrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:clipToPadding="false"
-        android:paddingBottom="?attr/actionBarSize">
-
-        <LinearLayout
+        <!-- Action Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_margin="@dimen/dimen_4_dp">
+            android:layout_margin="8dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:strokeWidth="1dp"
+            app:strokeColor="#1AFFFFFF">
 
-            <com.google.android.material.textview.MaterialTextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_12_dp"
-                android:textSize="16sp"
-                android:text="Music Tags:"
-                android:textColor="?attr/colorOnSurface" />
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:background="@drawable/shape_bottom_frosted_panel">
 
-            <HorizontalScrollView
-                android:id="@+id/horizontalView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:scrollbars="horizontal|vertical"
-                android:scrollbarStyle="outsideInset"
-                android:fillViewport="true">
-
-                <TableLayout
-                    android:id="@+id/tags"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/actionGroup"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:isScrollContainer="true" />
-            </HorizontalScrollView>
+                    android:gravity="center"
+                    app:singleSelection="true"
+                    app:selectionRequired="false">
 
-            <com.google.android.material.textview.MaterialTextView
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_reload_tag"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/round_restore_page_24"
+                        app:iconTint="#FFD700" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:background="#1AFFFFFF" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_extract_coverart"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/ic_round_image_24"
+                        app:iconTint="#FFD700" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:background="#1AFFFFFF" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_remove_coverart"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:icon="@drawable/ic_round_hide_image_24"
+                        app:iconTint="#FFD700" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- File System Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:strokeWidth="1dp"
+            app:strokeColor="#1AFFFFFF">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_12_dp"
-                android:textSize="16sp"
-                android:text="FFMPEG Output:"
-                android:textColor="?attr/colorOnSurface" />
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/shape_bottom_frosted_panel">
 
-            <com.google.android.material.card.MaterialCardView
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Storage Intelligence"
+                    android:textColor="#FFD700"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp"
+                    android:textAllCaps="true"/>
+
+                <TextView
+                    android:id="@+id/filename"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Current Path:\n/storage/music/track.flac\n\nMusicMate Path:\n/storage/music/Masterpieces/track.flac" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Music Tags Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:strokeWidth="1dp"
+            app:strokeColor="#1AFFFFFF">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_8_dp"
-                app:cardElevation="1dp"
-                app:cardCornerRadius="12dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp">
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/shape_bottom_frosted_panel">
 
-                <com.google.android.material.textview.MaterialTextView
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Raw Metadata"
+                    android:textColor="#FFD700"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp"
+                    android:textAllCaps="true"/>
+
+                <HorizontalScrollView
+                    android:id="@+id/horizontalView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
+
+                    <TableLayout
+                        android:id="@+id/tags"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- FFMPEG Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:strokeWidth="1dp"
+            app:strokeColor="#1AFFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/shape_bottom_frosted_panel">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Engine Output"
+                    android:textColor="#FFD700"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp"
+                    android:textAllCaps="true"/>
+
+                <TextView
                     android:id="@+id/ffmpeg_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/dimen_8_dp"
-                    android:textSize="14sp"
+                    android:layout_marginTop="12dp"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
                     android:textColor="?attr/colorOnSurfaceVariant" />
-            </com.google.android.material.card.MaterialCardView>
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -153,26 +153,23 @@ public class ScanAudioFileWorker extends Worker {
 
     private void exportPlaylists() {
         try {
-            // 1. Get all songs from DB (NOT from scan list)
-            List<Track> allSongs = tagRepos.findMySongs();
+            // 1. Ensure playlists are loaded + compiled
+            apincer.music.core.repository.PlaylistRepository.loadPlaylists(getApplicationContext());
 
-            // 2. Ensure playlists are loaded + compiled
-            PlaylistRepository.loadPlaylists(getApplicationContext());
-
-            for (PlaylistEntry entry : PlaylistRepository.getPlaylists()) {
+            for (apincer.music.core.model.PlaylistEntry entry : apincer.music.core.repository.PlaylistRepository.getPlaylists()) {
                 entry.compileRules(); // IMPORTANT
             }
 
-            // 3. Export
-            File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-            File playlistDir = new File(musicDir, "AA_Playlists");
+            // 2. Export
+            java.io.File musicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_MUSIC);
+            java.io.File playlistDir = new java.io.File(musicDir, "AA_Playlists");
 
             if (playlistDir.exists()) {
-                FileUtils.delete(playlistDir);
+                apincer.android.utils.FileUtils.delete(playlistDir);
             }
             playlistDir.mkdirs();
 
-            PlaylistRepository.exportPlaylists(playlistDir, allSongs);
+            apincer.music.core.repository.PlaylistRepository.exportPlaylists(playlistDir, tagRepos);
 
             Log.d(TAG, "Playlists exported: " + playlistDir.getAbsolutePath());
 

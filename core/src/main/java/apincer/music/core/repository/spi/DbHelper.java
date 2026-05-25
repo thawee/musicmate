@@ -11,7 +11,11 @@ public interface DbHelper {
 
     void purgeDatabase() throws SQLException;
 
+    void processAllMusics(TrackProcessor processor);
+
     List<Track> findMySongs();
+
+    List<Track> findMySongs(long firstResult, long maxResults);
 
     List<Track> findByTitle(String title);
 
@@ -58,8 +62,12 @@ public interface DbHelper {
 
     List<Track> findByKeyword(String keyword);
 
+    List<Track> findByKeyword(String keyword, long firstResult, long maxResults);
+
     // In your OrmLiteHelper.java class
     List<Track> findSimilarSongs(boolean artistAware);
+
+    List<Track> findSimilarSongs(boolean artistAware, long firstResult, long maxResults);
 
     List<String> getGenres() ;
 
@@ -94,6 +102,8 @@ public interface DbHelper {
     void cleanInvalidTag() throws Exception;
 
     List<Track> findForPlaylist();
+
+    List<Track> findForPlaylist(long firstResult, long maxResults);
 
     long getTotalSongs() throws SQLException;
 

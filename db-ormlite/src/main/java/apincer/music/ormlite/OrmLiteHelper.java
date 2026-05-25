@@ -148,6 +148,33 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         }
     }
 
+    @Override
+    public List<Track> findMySongs(long firstResult, long maxResults)  {
+        try {
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            QueryBuilder<TrackEntity, ?> qb = dao.queryBuilder().orderBy("normalizedTitle", true).orderByNullsFirst("normalizedArtist", true);
+            qb.offset(firstResult).limit(maxResults);
+            List<TrackEntity> results = qb.query();
+            return new ArrayList<>(results);
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
+    }
+
+    @Override
+    public void processAllMusics(apincer.music.core.repository.spi.TrackProcessor processor) {
+        try {
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            try (com.j256.ormlite.dao.CloseableIterator<TrackEntity> iterator = dao.iterator()) {
+                while (iterator.hasNext()) {
+                    processor.process(iterator.next());
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "processAllMusics", ex);
+        }
+    }
+
     public List<Track> findByTitle(String title)  {
         try {
             Dao<TrackEntity, ?> dao =getMusicTagDao();
@@ -490,11 +517,21 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
     }
 
     public List<Track> findByKeyword(String keyword) {
+        return findByKeyword(keyword, 0, 0);
+    }
+
+    public List<Track> findByKeyword(String keyword, long firstResult, long maxResults) {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
             keyword = "'"+LIKE_LITERAL+keyword.replace("'","''")+LIKE_LITERAL+"'";
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
             builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
+            if(firstResult > 0) {
+                builder.offset(firstResult);
+            }
+            if(maxResults > 0) {
+                builder.limit(maxResults);
+            }
             List<TrackEntity> results = builder.query();
             return new ArrayList<>(results);
         } catch (SQLException e) {
@@ -502,8 +539,11 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         }
     }
 
-    // In your OrmLiteHelper.java class
     public List<Track> findSimilarSongs(boolean artistAware) {
+        return findSimilarSongs(artistAware, 0, 0);
+    }
+
+    public List<Track> findSimilarSongs(boolean artistAware, long firstResult, long maxResults) {
         try {
             Dao<TrackEntity, Long> dao = getMusicTagDao();
 
@@ -515,6 +555,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                         "IN (SELECT normalizedTitle, normalizedArtist FROM musictag " +
                         "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) " +
                         "ORDER BY normalizedTitle, normalizedArtist";
+
+                if (maxResults > 0) {
+                    rawQuery += " LIMIT " + maxResults;
+                }
+                if (firstResult > 0) {
+                    rawQuery += " OFFSET " + firstResult;
+                }
 
                 try (GenericRawResults<TrackEntity> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper())) {
                     // Use getResults() which is the correct method to get the list
@@ -537,6 +584,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                 // Use the SubQuery in the outer query's WHERE IN (...) clause
                 outerQb.where().in("normalizedTitle", subQb);
                 outerQb.orderBy("normalizedTitle", true).orderBy("normalizedArtist", true);
+
+                if (firstResult > 0) {
+                    outerQb.offset(firstResult);
+                }
+                if (maxResults > 0) {
+                    outerQb.limit(maxResults);
+                }
 
                 List<TrackEntity> results =  outerQb.query();
                 return new ArrayList<>(results);
@@ -864,6 +918,36 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
     public List<Track> findForPlaylist() {
         OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
         return findMySongs(aristAlbum);
+    }
+
+    @Override
+    public List<Track> findForPlaylist(long firstResult, long maxResults) {
+        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
+        try {
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
+            if(aristAlbum != null) {
+                for(ORDERED_BY orderBy: aristAlbum) {
+                    if (orderBy == ORDERED_BY.TITLE) {
+                        builder.orderByNullsFirst("title", true);
+                    }else if (orderBy == ORDERED_BY.ARTIST) {
+                        builder.orderByNullsFirst("artist", true);
+                    }else if (orderBy == ORDERED_BY.ALBUM) {
+                        builder.orderByNullsFirst("album", true);
+                    }
+                }
+            }
+            if(firstResult > 0) {
+                builder.offset(firstResult);
+            }
+            if(maxResults > 0) {
+                builder.limit(maxResults);
+            }
+            List<TrackEntity> results = builder.query();
+            return new ArrayList<>(results);
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
     }
 
     @Override

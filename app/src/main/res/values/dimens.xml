@@ -33,11 +33,13 @@
     <dimen name="spacing_large">16dp</dimen>
 
     <dimen name="dimen_4_dp">4dp</dimen>
+    <dimen name="dimen_8_dp">8dp</dimen>
     <dimen name="dimen_16_dp">16dp</dimen>
     <dimen name="dimen_24_dp">24dp</dimen>
     <dimen name="dimen_48_dp">48dp</dimen>
     <dimen name="dimen_64_dp">64dp</dimen>
     <dimen name="dimen_96_dp">96dp</dimen>
+    <dimen name="dimen_104_dp">104dp</dimen>
 
     <dimen name="dimen_info_sample_rate_dp">96dp</dimen>
 
@@ -106,5 +108,6 @@
     <dimen name="dimen_164_dp">164dp</dimen>
     <dimen name="dimen_80_dp">80dp</dimen>
     <dimen name="dimen_84_dp">84dp</dimen>
-    <dimen name="editor_bottom_bar_height">64dp</dimen> <!-- Match your shapeAppearance -->
+    <dimen name="editor_bottom_bar_height">64dp</dimen>
+    <dimen name="dimen_156_dp">156dp</dimen> <!-- Match your shapeAppearance -->
 </resources>

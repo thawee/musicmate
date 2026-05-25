@@ -276,13 +276,17 @@ public class TagRepository {
     }
 
     public List<Track> findMusic(SearchCriteria criteria) {
+        return findMusic(criteria, 0, 0);
+    }
+
+    public List<Track> findMusic(SearchCriteria criteria, long firstResult, long maxResults) {
         if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
-            return findPlaylist(criteria);
+            return findPlaylist(criteria); // Playlist pagination can be complex, skip for now
         }else {
-            List<Track> results = findMusicOrEmpty(criteria);
+            List<Track> results = findMusicOrEmpty(criteria, firstResult, maxResults);
             if (results == null || results.isEmpty()) {
                 // try again
-                results = findMusicOrEmpty(criteria);
+                results = findMusicOrEmpty(criteria, firstResult, maxResults);
             }
             return results;
         }
@@ -351,28 +355,32 @@ public class TagRepository {
     }
 
     private List<Track> findMusicOrEmpty(SearchCriteria criteria) {
+        return findMusicOrEmpty(criteria, 0, 0);
+    }
+
+    private List<Track> findMusicOrEmpty(SearchCriteria criteria, long firstResult, long maxResults) {
         try {
-            return findByCriteria(criteria);
+            return findByCriteria(criteria, firstResult, maxResults);
         }catch (Exception e) {
             // retry one more time
             return EMPTY_LIST;
         }
     }
 
-    private List<Track> findByCriteria(SearchCriteria criteria) {
+    private List<Track> findByCriteria(SearchCriteria criteria, long firstResult, long maxResults) {
         List<Track> list = new ArrayList<>();
         if (criteria.isSearchMode()) {
             // search title only, limit 5 songs
-            list = dbHelper.findByKeyword(criteria.getSearchText());
+            list = dbHelper.findByKeyword(criteria.getSearchText(), firstResult, maxResults);
         }else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
                 if (StringUtils.isEmpty(criteria.getKeyword())) {
                     criteria.setKeyword(Constants.TITLE_ALL_SONGS);
                 }
 
                 if(Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
-                    list = dbHelper.findMySongs();
+                    list = dbHelper.findMySongs(firstResult, maxResults);
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                    list = findRecentlyAdded(0, 0);
+                    list = findRecentlyAdded(firstResult, maxResults);
                // } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                 //    list = dbHelper.findMyUnsatisfiedSongs();
                 } else if (Constants.TITLE_TO_ANALYST_DR.equals(criteria.getKeyword())) {
@@ -380,7 +388,7 @@ public class TagRepository {
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                    // list = dbHelper.findDuplicateSong();
                     boolean includeArtist = Settings.isArtistAwareSimilarSongs(context);
-                    list = dbHelper.findSimilarSongs(includeArtist);
+                    list = dbHelper.findSimilarSongs(includeArtist, firstResult, maxResults);
                 } else if (Constants.TITLE_NO_COVERART.equals(criteria.getKeyword())) {
                     list = dbHelper.findNoEmbedCoverArtSong();
                 }
@@ -389,29 +397,29 @@ public class TagRepository {
             } else if (criteria.getType() == SearchCriteria.TYPE.ARTIST) {
                 String keyword = criteria.getKeyword();
                 if(isEmpty(keyword)) {
-                    list = findArtistItems();
+                    list = findArtistItems(); // These don't support pagination easily yet
                 }else {
                     if (isEmpty(keyword) || StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
                         keyword = "";
                     }
-                    list = dbHelper.findByArtist(keyword, 0, 0);
+                    list = dbHelper.findByArtist(keyword, firstResult, maxResults);
                 }
             //} else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             //    list = dbHelper.findByMediaQuality(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && isEmpty(criteria.getKeyword())) {
-                list = findQualityItems();
+                list = findQualityItems(); // These don't support pagination easily yet
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
-                list = dbHelper.findDSDSongs(0, 0);
+                list = dbHelper.findDSDSongs(firstResult, maxResults);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_MQA_MASTER_QUALITY.equals(criteria.getKeyword())) {
-                list = dbHelper.findMQASongs(0, 0);
+                list = dbHelper.findMQASongs(firstResult, maxResults);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
-                list = dbHelper.findHighQuality(0, 0);
+                list = dbHelper.findHighQuality(firstResult, maxResults);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_CD_QUALITY.equals(criteria.getKeyword())) {
-                list = dbHelper.findCDQuality(0, 0);
+                list = dbHelper.findCDQuality(firstResult, maxResults);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIRES_QUALITY.equals(criteria.getKeyword())) {
-                list = dbHelper.findHiRes(0, 0);
+                list = dbHelper.findHiRes(firstResult, maxResults);
             } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_CD_EXT_QUALITY.equals(criteria.getKeyword())) {
-            list = dbHelper.findHiRes48(0, 0);
+            list = dbHelper.findHiRes48(firstResult, maxResults);
            /* } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 String keyword = criteria.getKeyword();
                 if(isEmpty(keyword)) {
@@ -420,17 +428,17 @@ public class TagRepository {
                     if (isEmpty(keyword) || StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
                         keyword = "";
                     }
-                    list = dbHelper.findByGrouping(keyword, 0, 0);
+                    list = dbHelper.findByGrouping(keyword, firstResult, maxResults);
                 } */
             } else if (criteria.getType() == SearchCriteria.TYPE.GENRE) {
                 String keyword = criteria.getKeyword();
                 if(isEmpty(keyword)) {
-                    list = findGenreItems();
+                    list = findGenreItems(); // These don't support pagination easily yet
                 }else {
                     if (StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
                         keyword = "";
                     }
-                    list = dbHelper.findByGenre(keyword);
+                    list = dbHelper.findByGenre(keyword, firstResult, maxResults); // Assuming this exists or falls back
                 }
           //  } else if (criteria.getType() == SearchCriteria.TYPE.SEARCH) {
                 // search title only, limit 5 songs
@@ -444,8 +452,7 @@ public class TagRepository {
 
     private List<Track> findQualityItems() {
         Map<String, AudioTag> mapped = new HashMap<>();
-        List<Track> list = getAllMusics();
-        for(Track song: list) {
+        processAllMusics(song -> {
             String codec = Constants.TITLE_CD_QUALITY;
             String codecAlt = null;
             if(TagUtils.isDSD(song)) {
@@ -491,7 +498,7 @@ public class TagRepository {
                     }
                 }
             }
-        }
+        });
 
         // This is the line you already have
         List<Track> folderList = new ArrayList<>(mapped.values());
@@ -523,8 +530,7 @@ public class TagRepository {
     private List<Track> findGenreItems() {
        // List<MusicTag> genres = new ArrayList<>();
         Map<String, AudioTag> mapped = new HashMap<>();
-        List<Track> list = getAllMusics();
-        for(Track song: list) {
+        processAllMusics(song -> {
             String genre = song.getGenre();
             if(isEmpty(genre)) {
                 genre = EMPTY;
@@ -535,7 +541,7 @@ public class TagRepository {
                 folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
                 mapped.put(genre, folder);
             }
-        }
+        });
 
         // This is the line you already have
         List<Track> folderList = new ArrayList<>(mapped.values());
@@ -549,9 +555,7 @@ public class TagRepository {
     private List<Track> findArtistItems() {
        // List<MusicTag> artists = new ArrayList<>();
         Map<String, AudioTag> mapped = new HashMap<>();
-        List<Track> list = getAllMusics();
-
-        for (Track song : list) {
+        processAllMusics(song -> {
             String artistString = song.getArtist();
 
             if (isEmpty(artistString)) {
@@ -583,7 +587,7 @@ public class TagRepository {
                     }
                 }
             }
-        }
+        });
 
         // This is the line you already have
         List<Track> folderList = new ArrayList<>(mapped.values());
@@ -596,6 +600,10 @@ public class TagRepository {
 
     public List<Track> getAllMusics() {
         return dbHelper.findMySongs();
+    }
+
+    public void processAllMusics(apincer.music.core.repository.spi.TrackProcessor processor) {
+        dbHelper.processAllMusics(processor);
     }
 
     public List<Track> getAllMusicsForPlaylist() {

@@ -5,8 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/dimen_56_dp"
-    android:background="@drawable/shadow"
+    android:layout_marginBottom="12dp"
+    android:background="@android:color/transparent"
     android:layout_gravity="bottom"
     app:barrierDirection="right"
     tools:showIn="@layout/activity_tags">
@@ -189,83 +189,7 @@
                         android:background="@color/grey100"/>
                         -->
                 </LinearLayout>
-            </LinearLayout>
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_8_dp"
-            android:layout_marginBottom="@dimen/dimen_8_dp"
-            android:layout_gravity="center"
-            android:padding="@dimen/dimen_8_dp"
-            android:background="@drawable/btn_dent_background">
-
-            <LinearLayout
-                android:id="@+id/main_menu_panel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="@dimen/dimen_12_dp"
-                android:gravity="end">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_delete"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="Delete"
-                    tools:ignore="HardcodedText" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="?attr/colorOutline" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_import"
-                    style="@style/Widget.Material3.Button"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Import"
-                    tools:ignore="HardcodedText" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="?attr/colorOutline" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_more"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_marginStart="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="More..."
-                    tools:ignore="HardcodedText" />
-            </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_edit"
-                style="@style/Widget.Material3.Button"
-                android:layout_below="@+id/main_menu_panel"
-                android:gravity="center"
-                android:layout_marginTop="@dimen/dimen_8_dp"
-                android:layout_centerInParent="true"
-                android:layout_width="@dimen/dimen_164_dp"
-                android:layout_height="wrap_content"
-                android:text="Edit Song Info"
-                tools:ignore="HardcodedText" />
-        </RelativeLayout>
+        </LinearLayout>
     </LinearLayout>
     <FrameLayout
         android:layout_width="match_parent"

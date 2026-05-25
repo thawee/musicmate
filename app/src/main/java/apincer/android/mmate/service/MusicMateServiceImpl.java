@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
@@ -200,18 +201,22 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
         androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
         ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
-        try {
-            List<MediaController> controllers = mediaSessionManager.getActiveSessions(notificationListener);
-            // initial with external player
-            updateAvailableExternalPlayers(controllers);
-            mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
-
-            // Load queue from database
-            if(queueManager != null) {
-                playingQueueSubject.onNext(queueManager.getSongs());
+        if (PermissionUtils.isNotificationListenerEnabled(this)) {
+            try {
+                List<MediaController> controllers = mediaSessionManager.getActiveSessions(notificationListener);
+                // initial with external player
+                updateAvailableExternalPlayers(controllers);
+                mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
+            } catch (SecurityException e) {
+                Log.e(TAG, "Missing notification listener permission despite check", e);
             }
-        } catch (SecurityException e) {
-            Log.e(TAG, "Missing notification listener permission", e);
+        } else {
+            Log.w(TAG, "Notification listener permission not granted.");
+        }
+
+        // Load queue from database
+        if(queueManager != null) {
+            playingQueueSubject.onNext(queueManager.getSongs());
         }
 
         initWebUIAssets(this);

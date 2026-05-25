@@ -4,21 +4,30 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 
@@ -39,6 +48,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.music.core.Constants;
 import apincer.music.core.model.Track;
 import apincer.music.core.utils.MusicMateExecutors;
@@ -47,6 +57,11 @@ import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.android.mmate.utils.UIUtils;
+import coil3.BitmapImage;
+import coil3.Image;
+import coil3.SingletonImageLoader;
+import coil3.request.ImageRequest;
+import coil3.target.Target;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.noties.markwon.Markwon;
 import io.noties.markwon.html.HtmlPlugin;
@@ -66,19 +81,51 @@ public class AboutActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
-        // set status bar color to black
-        Window window = getWindow();
-        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        //window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
-        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
-        // If the background is dark, use light icons
-        insetsController.setAppearanceLightStatusBars(false);
+        // Enable Edge-to-Edge
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         setContentView(R.layout.activity_fragement);
+
+        ImageView blurBackground = findViewById(R.id.fragment_background_blur);
+        MusicMateExecutors.execute(() -> {
+            List<Track> recentTracks = tagRepos.findRecentlyAdded(0, 1);
+            if (recentTracks != null && !recentTracks.isEmpty()) {
+                Track representativeTrack = recentTracks.get(0);
+                runOnUiThread(() -> {
+                    ImageRequest request = CoverartFetcher.builder(this, representativeTrack)
+                            .data(representativeTrack)
+                            .size(300, 300)
+                            .target(new Target() {
+                                @Override
+                                public void onSuccess(@NonNull Image image) {
+                                    if (image instanceof BitmapImage) {
+                                        Bitmap bitmap = ((BitmapImage) image).getBitmap();
+                                        blurBackground.setImageBitmap(bitmap);
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            blurBackground.setRenderEffect(
+                                                    RenderEffect.createBlurEffect(100f, 100f, Shader.TileMode.CLAMP)
+                                            );
+                                        }
+                                    }
+                                }
+                                @Override public void onStart(@Nullable Image placeholder) {}
+                                @Override public void onError(@Nullable Image errorDrawable) {}
+                            })
+                            .build();
+                    SingletonImageLoader.get(this).enqueue(request);
+                });
+            }
+        });
+
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.settings_toolbar);
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
         setSupportActionBar(toolbar);
         if(getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(R.string.app_name);
+            getSupportActionBar().setTitle("About MusicMate");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
@@ -135,18 +182,15 @@ public class AboutActivity extends AppCompatActivity {
             renderMarkdown(content, qualityDetail);
 
             MusicMateExecutors.executeUI(() -> {
-                List<Track> tags = tagRepos.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
-               // Map<String, Integer> grpList = new HashMap<>();
-                for(Track tag: tags) {
-
-                    String enc = TagUtils.getEncodingTypeShort(tag);
+                tagRepos.processAllMusics(tag -> {
+                    String enc = apincer.music.core.utils.TagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {
                         encList.compute(enc, (k, cnt) -> cnt + 1);
                     }else {
                         encList.put(enc, 1);
                     }
-                }
+                });
                 getActivity().runOnUiThread(() -> {
                     // storage
                     LinearLayout panel = v.findViewById(R.id.storage_bar);

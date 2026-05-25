@@ -1,173 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
-    android:clipToOutline="true"
-    android:outlineProvider="background"
     android:layout_margin="12dp"
-    tools:ignore="UseCompoundDrawables">
+    app:cardCornerRadius="24dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:strokeWidth="1dp"
+    app:strokeColor="#33FFFFFF">
 
-    <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_dialog_header_gradient"
-        android:padding="@dimen/dimen_14_dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/rounded_label_24"
-            android:layout_marginEnd="8dp"
-            app:tint="@color/white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/update_library"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/dimen_12_dp">
-    <LinearLayout
-        android:id="@+id/btn_add_panel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:orientation="horizontal"
-        >
-        <Button
-            android:id="@+id/btn_add"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/dimen_8_dp"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:text="Add..."
-            android:gravity="end"
-            android:layout_gravity="end"
-            />
-    </LinearLayout>
-    <ListView
-        android:id="@+id/itemListView"
-        android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:divider="@color/material_blue_grey_800"
-        android:scrollbars="vertical"
-        android:dividerHeight="1dp"
-        android:background="@color/grey900">
-    </ListView>
+        android:background="@drawable/shape_bottom_frosted_panel">
 
-        <!--
+        <!-- Header -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="@dimen/dimen_8_dp">
+            android:background="@drawable/bg_dialog_header_gradient"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="16dp">
 
-            <com.developer.filepicker.widget.MaterialCheckbox
-                android:id="@+id/checkbox_full_scan"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:clickable="true"/>
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/rounded_label_24"
+                android:layout_marginEnd="12dp"
+                app:tint="#FFD700" />
 
             <TextView
-                android:id="@+id/label_full_scan"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Full scan (rescan all music files)"
-                android:layout_marginStart="8dp"/>
+                android:text="Library Expansion"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02"/>
         </LinearLayout>
-        -->
-        <CheckBox
-            android:id="@+id/checkbox_full_scan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Full scan (rescan all music files)"
-            android:layout_marginTop="@dimen/dimen_8_dp"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/dimen_24_dp"
-        android:gravity="end">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_cancel"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/close"/>
+            <LinearLayout
+                android:id="@+id/btn_add_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end">
 
-        <!--
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/colorOutline" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Path"
+                    app:icon="@drawable/rounded_add_diamond_24"
+                    app:cornerRadius="20dp"/>
+            </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_fetch_songs_info"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/fetch_songs_info"/>
-        -->
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/colorOutline" />
-<!--
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_ok_full"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/scan_full"/>
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/colorOutline" />
--->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_ok"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/scan"/>
+            <ListView
+                android:id="@+id/itemListView"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginTop="16dp"
+                android:divider="#1AFFFFFF"
+                android:dividerHeight="1dp"
+                android:background="@drawable/shape_border_playing_black"
+                android:scrollbars="none"/>
+
+            <CheckBox
+                android:id="@+id/checkbox_full_scan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Deep Audit (Full Scan)"
+                android:textColor="?attr/colorOnSurfaceVariant"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="24dp"
+                android:gravity="end">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_cancel"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cancel"
+                    android:textColor="#FF5252"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_ok"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Execute Scan"
+                    app:cornerRadius="20dp"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
-    </LinearLayout>
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_2_dp"
-        android:background="@color/grays_charcoal"
-        android:layout_marginStart="@dimen/dimen_24_dp"
-        android:layout_marginEnd="@dimen/dimen_24_dp"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginBottom="@dimen/dimen_8_dp"/>
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

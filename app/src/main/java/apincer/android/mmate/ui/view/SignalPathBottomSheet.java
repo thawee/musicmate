@@ -127,14 +127,14 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         TextView qualityIndicator = requireView().findViewById(R.id.quality_indicator);
         qualityIndicator.setText("");
 
-        // Step 1: Song
+            // Step 1: Song
         Track song = playbackService.getNowPlayingSong();
         if (song != null) {
             String quality = TagUIUtils.getQualityIndFullString(song);
 
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
-            resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_green_light, getContext().getTheme()));
+            resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), apincer.android.mmate.R.color.material_color_amber_400, getContext().getTheme()));
             resolutionIndicator.setTextSize(14f);
             resolutionIndicator.setPadding(0, 0, 0, 8);
             signalPathContainer.addView(resolutionIndicator);
@@ -146,7 +146,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                     SYMBOL_ENC_SEP+
                     TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());
 
-            addSignalPathStep(signalPathContainer, "Source", sourceText, true);
+            addSignalPathStep(signalPathContainer, "High-Fidelity Source", sourceText, true);
         }
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
@@ -154,18 +154,18 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             String playerDetails = playbackTarget.getDisplayName();
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
                 //playerDetails = playerDetails +" ["+ formatPlayerDetail(player.getDescription())+"]";
-                addSignalPathStep(signalPathContainer, "Music Player", playerDetails, true);
+                addSignalPathStep(signalPathContainer, "Ultimate Player", playerDetails, true);
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
-                addSignalPathStep(signalPathContainer, "Output", deviceDetails, false);
-                qualityIndicator.setText(Constants.TITLE_PLAYER_LOCAL);
+                addSignalPathStep(signalPathContainer, "Refined Output", deviceDetails, false);
+                qualityIndicator.setText("Wired Excellence");
             }else {
                 String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" " + ApplicationUtils.getVersionNumber(getContext()); //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
                 playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
-                addSignalPathStep(signalPathContainer, "MusicMate Core", serverDetails, true);
-                addSignalPathStep(signalPathContainer, "Network Endpoint", playerDetails, false);
+                addSignalPathStep(signalPathContainer, "MusicMate Engine", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Network Mastery", playerDetails, false);
                 if(!isLossy(song)) {
-                    qualityIndicator.setText(Constants.TITLE_PLAYER_CAST);
+                    qualityIndicator.setText("Wireless Purity");
                 }
             }
         }

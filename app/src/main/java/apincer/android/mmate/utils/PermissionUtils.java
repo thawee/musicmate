@@ -9,6 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
 
+import android.provider.Settings;
+import android.text.TextUtils;
+import android.content.ComponentName;
+
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
 
@@ -17,6 +21,24 @@ public class PermissionUtils {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.READ_MEDIA_AUDIO};
+
+    public static boolean isNotificationListenerEnabled(Context context) {
+        String pkgName = context.getPackageName();
+        final String flat = Settings.Secure.getString(context.getContentResolver(),
+                "enabled_notification_listeners");
+        if (!TextUtils.isEmpty(flat)) {
+            final String[] names = flat.split(":");
+            for (String name : names) {
+                final ComponentName cn = ComponentName.unflattenFromString(name);
+                if (cn != null) {
+                    if (TextUtils.equals(pkgName, cn.getPackageName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public static boolean hasPermissions(@NonNull Context context, @Size(min = 1) @NonNull String... perms) {
         for (String perm : perms) {

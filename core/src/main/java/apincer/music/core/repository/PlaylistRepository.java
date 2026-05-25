@@ -93,9 +93,7 @@ public class PlaylistRepository {
         return playlists;
     }
 
-    public static void exportPlaylists(File playlistDir, List<Track> songs) {
-        if (playlists == null || playlists.isEmpty() || songs == null) return;
-
+    public static void exportPlaylists(File playlistDir, apincer.music.core.repository.TagRepository tagRepos) {
         if (!playlistDir.exists()) {
             playlistDir.mkdirs();
         }
@@ -107,15 +105,15 @@ public class PlaylistRepository {
             playlistMap.put(entry, new ArrayList<>());
         }
 
-        for (Track song : songs) {
-            if (song == null) continue;
-
-            for (PlaylistEntry entry : playlists) {
-                if (entry.isInPlaylist(song)) {
-                    playlistMap.get(entry).add(song);
+        tagRepos.processAllMusics(song -> {
+            if (song != null) {
+                for (PlaylistEntry entry : playlists) {
+                    if (entry.isInPlaylist(song)) {
+                        playlistMap.get(entry).add(song);
+                    }
                 }
             }
-        }
+        });
 
         // 2. Write each playlist to M3U
         for (Map.Entry<PlaylistEntry, List<Track>> e : playlistMap.entrySet()) {

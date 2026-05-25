@@ -62,14 +62,13 @@ public class CollectionsBrowser extends AbstractContentBrowser {
             mapped.put(pls.getName(), dir);
         }
 
-        List<Track> songs = tagRepos.findMySongs();
-        for(Track tag: songs) {
+        tagRepos.processAllMusics(tag -> {
             for (PlaylistEntry name : PlaylistRepository.getPlaylists()) {
                 if(PlaylistRepository.isSongInPlaylistName(tag, name.getName())) {
                     Objects.requireNonNull(mapped.get(name.getName())).increaseChildCount();
                 }
             }
-        }
+        });
 
         for(Track group: mapped.values()) {
             MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getUniqueKey(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getTitle(), "", 0);

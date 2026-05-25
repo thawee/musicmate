@@ -1,222 +1,168 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/selector_item"
-    android:minHeight="88dp"
-    android:paddingVertical="@dimen/dimen_4_dp"
-    android:paddingHorizontal="@dimen/dimen_4_dp"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:strokeWidth="1dp"
+    app:strokeColor="#1AFFFFFF"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Album Art -->
-    <FrameLayout
-        android:id="@+id/item_imageFrame"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/shape_item_coverart_background"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/item_image_coverart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:importantForAccessibility="no"
-            tools:src="@tools:sample/avatars"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
-
-        <apincer.android.mmate.ui.view.TriangleLabelView
-            android:id="@+id/item_new_label"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="top|end"
-            android:padding="@dimen/dimen_4_dp"
-            app:backgroundColor="@color/material_color_yellow_900"
-            app:corner="rightTop"
-            app:primaryText="New"
-            app:primaryTextColor="@color/material_color_yellow_500"
-            app:primaryTextSize="8sp" />
-    </FrameLayout>
-
-    <!-- Title + Subtitle + Metadata -->
-    <LinearLayout
-        android:id="@+id/item_title_layout"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="@dimen/dimen_8_dp"
-        app:layout_constraintStart_toEndOf="@id/item_imageFrame"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/item_imageFrame"
-        app:layout_constraintBottom_toBottomOf="@id/item_imageFrame"
-        tools:ignore="RtlSymmetry">
+        android:background="@drawable/shape_bottom_frosted_panel"
+        android:minHeight="88dp"
+        android:padding="8dp">
 
-        <TextView
-            android:id="@+id/item_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:paddingEnd="@dimen/dimen_24_dp"
-            android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-            android:fontFamily="@font/noto_sans_thai_bold"
-            android:textColor="?attr/colorOnSurface"
-            tools:text="A Way Back Home" />
+        <!-- Album Art -->
+        <FrameLayout
+            android:id="@+id/item_imageFrame"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <TextView
-            android:id="@+id/item_subtitle"
-            android:layout_width="match_parent"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_coverart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
+
+            <apincer.android.mmate.ui.view.TriangleLabelView
+                android:id="@+id/item_new_label"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="top|end"
+                app:backgroundColor="#FFD700"
+                app:corner="rightTop"
+                app:primaryText="New"
+                app:primaryTextColor="#000000"
+                app:primaryTextSize="8sp" />
+        </FrameLayout>
+
+        <!-- Title + Subtitle -->
+        <LinearLayout
+            android:id="@+id/item_title_layout"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_1_dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:fontFamily="@font/noto_sans_thai_semi_bold"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Allan Taylor" />
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            app:layout_constraintStart_toEndOf="@id/item_imageFrame"
+            app:layout_constraintEnd_toStartOf="@id/item_indicators"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/item_metadata_row">
+
+            <TextView
+                android:id="@+id/item_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                android:fontFamily="@font/noto_sans_thai_bold"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Song Title" />
+
+            <TextView
+                android:id="@+id/item_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:fontFamily="@font/noto_sans_thai_semi_bold"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Artist Name" />
+        </LinearLayout>
 
         <!-- Metadata Row -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/item_metadata_row"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="@dimen/dimen_1_dp"
-            android:gravity="center_vertical">
-
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toEndOf="@id/item_imageFrame"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_title_layout">
 
             <apincer.android.mmate.ui.view.BadgeView
                 android:id="@+id/icon_codec"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                />
+                android:layout_height="wrap_content" />
 
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/icon_quality_indicator"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"/>
+                android:layout_marginStart="6dp"/>
 
             <apincer.android.mmate.ui.view.BadgeView
                 android:id="@+id/icon_resolution"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"/>
-
-            <!--
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <apincer.android.mmate.ui.view.DynamicRangeView
-                android:id="@+id/dynamic_range_db_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
-               -->
-            <!--
-            <apincer.android.mmate.ui.view.RatingIndicatorView
-                android:id="@+id/rating_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:mode="mini" />
-            -->
+                android:layout_marginStart="6dp"/>
+            
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
-                android:layout_weight="1" />
-<!--
-            <apincer.android.mmate.ui.view.DurationView
-                android:id="@+id/view_duration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/dimen_2_dp" />
-                -->
-<!--
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp"/>
--->
+                android:layout_weight="1"/>
+
             <apincer.android.mmate.ui.view.DynamicRangeView
                 android:id="@+id/dynamic_range_db_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
+                android:layout_marginEnd="4dp"
+                app:dr="DR12"/>
 
             <apincer.android.mmate.ui.view.BadgeView
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp" />
-
-            <!--
-            <ImageView
-                android:id="@+id/item_more_actions"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:padding="@dimen/dimen_2_dp"
-                android:contentDescription="@string/more_options"
-                android:src="@drawable/rounded_more_vert_24" />
-                -->
+                android:layout_marginEnd="4dp"/>
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- Currently Playing Indicator -->
-    <apincer.android.mmate.ui.view.RatingIndicatorView
-        android:id="@+id/rating_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="@dimen/dimen_2_dp"
-        app:mode="icon"
-        tools:ignore="MissingConstraints" />
-    <!--
-    <ImageView
-        android:id="@+id/item_playlist"
-        android:layout_width="@dimen/dimen_24_dp"
-        android:layout_height="@dimen/dimen_24_dp"
-        android:layout_marginEnd="@dimen/dimen_64_dp"
-        android:layout_margin="@dimen/dimen_4_dp"
-        android:background="@drawable/bg_transparent"
-        android:padding="@dimen/dimen_6_dp"
-        android:scaleType="fitXY"
-        android:contentDescription="@string/currently_playing"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/round_favorite_border_24"
-        tools:src="@drawable/round_favorite_border_24" />
-        -->
+        <!-- Status Indicators (Top Right) -->
+        <LinearLayout
+            android:id="@+id/item_indicators"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <ImageView
-        android:id="@+id/item_player"
-        android:layout_width="@dimen/dimen_24_dp"
-        android:layout_height="@dimen/dimen_24_dp"
-        android:layout_margin="@dimen/dimen_4_dp"
-        android:background="@drawable/shape_round_background_playing"
-        android:padding="@dimen/dimen_6_dp"
-        android:scaleType="fitXY"
-        android:contentDescription="@string/currently_playing"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/ic_notification_default"
-        tools:src="@drawable/ic_notification_default" />
+            <apincer.android.mmate.ui.view.RatingIndicatorView
+                android:id="@+id/rating_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:mode="icon" />
 
+            <ImageView
+                android:id="@+id/item_player"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/shape_round_background_playing"
+                android:padding="4dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_notification_default"
+                app:tint="#FFD700"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
