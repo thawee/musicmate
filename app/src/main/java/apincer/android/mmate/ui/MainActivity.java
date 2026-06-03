@@ -114,6 +114,7 @@ import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.view.MediaServerManagementSheet;
@@ -391,9 +392,9 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.post(() -> {
                         adapter.setMusicTags(musicTags);
                         swipeRefreshLayout.setRefreshing(false);
-                       // refreshLayout.finishRefresh();
                     });
-            updateHeaderPanel();
+            // Use null stats initially; updateHeaderPanel will fall back to adapter counts
+            updateHeaderPanel(viewModel.searchStats.getValue());
             if (musicTags == null || musicTags.isEmpty()) {
                 emptyStateView.setVisibility(View.VISIBLE);
                 swipeRefreshLayout.setVisibility(View.GONE);
@@ -402,6 +403,9 @@ public class MainActivity extends AppCompatActivity {
                 swipeRefreshLayout.setVisibility(View.VISIBLE);
             }
         });
+
+        // When DB aggregate stats arrive, refresh the subtitle with accurate totals
+        viewModel.searchStats.observe(this, stats -> updateHeaderPanel(stats));
 
         viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
     }
@@ -744,10 +748,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderPanel() {
+        updateHeaderPanel(null);
+    }
+
+    private void updateHeaderPanel(SearchResultStats stats) {
         SearchCriteria.TYPE type = adapter.getCriteria().getType();
         Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
 
-        int count = adapter.getTotalItems();
+        // Prefer DB aggregate stats for accurate category-wide totals.
+        // Fall back to adapter counts if stats not yet available (e.g. initial load).
+        int count = (stats != null) ? stats.getTotalCount() : adapter.getTotalItems();
+        long totalSize = (stats != null) ? stats.getTotalSize() : adapter.getTotalSize();
+        double totalDuration = (stats != null) ? stats.getTotalDuration() : adapter.getTotalDuration();
+
         String statText = "";
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
             // total songs
@@ -757,12 +770,12 @@ public class MainActivity extends AppCompatActivity {
 
             // filter details or duration
             if(isEmpty(adapter.getCriteria().getFilterType()) && count > 0) {
-                statText = statText+ SYMBOL_ENC_SEP +StringUtils.formatStorageSize(adapter.getTotalSize())+SYMBOL_ENC_SEP+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
-            }else {
+                statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
+            } else {
                 String filterText = adapter.getCriteria().getFilterText();
                 if ("Folder".equals(adapter.getCriteria().getFilterType())) {
                     filterText = StringUtils.truncate(DocumentFileCompat.getBasePath(getApplicationContext(), filterText), 38, StringUtils.TruncateType.PREFIX);
-                }else {
+                } else {
                     filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
                 }
                 if(!isEmpty(filterText)) {
@@ -773,7 +786,7 @@ public class MainActivity extends AppCompatActivity {
             // can back to higher category, except type library
             if(SearchCriteria.TYPE.LIBRARY.equals(type)){
                 mBackButton.setImageDrawable(icon);
-            }else {
+            } else {
                 mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
                 mHeaderPanel.setOnClickListener(view -> {
                     adapter.resetFilter();
@@ -781,10 +794,14 @@ public class MainActivity extends AppCompatActivity {
                     viewModel.loadMusicItems(adapter.getCriteria());
                 });
             }
-        }else {
-            // total songs
+        } else {
+            // top-level category: show total count + category label
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
+                // Also show total storage + duration for the all-songs view
+                if (stats != null && isEmpty(adapter.getCriteria().getFilterType())) {
+                    statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
+                }
             }
         }
 

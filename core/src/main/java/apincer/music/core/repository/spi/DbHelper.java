@@ -4,8 +4,14 @@ import java.sql.SQLException;
 import java.util.List;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.model.SearchResultStats;
+import apincer.music.core.model.SearchCriteria;
 
 public interface DbHelper {
+
+    SearchResultStats getSearchStats(SearchCriteria criteria);
+
+    SearchResultStats getSimilarSongsStats(boolean artistAware);
 
     Track findByUniqueKey(String uniqueKey);
 

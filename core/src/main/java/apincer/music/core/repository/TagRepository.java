@@ -31,6 +31,7 @@ import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.Track;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.spi.DbHelper;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
@@ -273,6 +274,31 @@ public class TagRepository {
 
     public List<Track> findByTitle(String title) {
         return dbHelper.findByTitle(title);
+    }
+
+    public SearchResultStats getSearchStats(SearchCriteria criteria) {
+        if (criteria == null) {
+            return new SearchResultStats(0, 0, 0.0);
+        }
+        if (criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
+            List<Track> list = findPlaylist(criteria);
+            int count = 0;
+            long size = 0;
+            double duration = 0.0;
+            for (Track t : list) {
+                if (t != null && !t.isContainer()) {
+                    count++;
+                    size += t.getFileSize();
+                    duration += t.getAudioDuration();
+                }
+            }
+            return new SearchResultStats(count, size, duration);
+        } else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY && Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
+            boolean includeArtist = Settings.isArtistAwareSimilarSongs(context);
+            return dbHelper.getSimilarSongsStats(includeArtist);
+        } else {
+            return dbHelper.getSearchStats(criteria);
+        }
     }
 
     public List<Track> findMusic(SearchCriteria criteria) {

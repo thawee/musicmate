@@ -1,46 +1,39 @@
-# Checklist: Fix "No Network" in Server Management Dialog on Hotspot Mode
-
-## Phase 4: Cover Art Border Alignment Fix
-- [x] Write implementation plan for fixing cover art corner overlapping with border (completed)
-- [x] Add precise padding (`paddingLeft="1dp"`, `paddingTop="1dp"`, `paddingRight="3dp"`, `paddingBottom="3dp"`) to `item_imageFrame` in layout files:
-  - [x] [view_list_item.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item.xml)
-  - [x] [view_list_item2.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item2.xml)
-  - [x] [view_list_item_compared.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item_compared.xml)
-- [x] Verify compilation after UI layout changes
-
-## Phase 5: Harmonize Card & Cover Art Corner Radius
-- [x] Modify `app/src/main/res/values/styles.xml` to update `ShapeAppearance.RoundedImageView` `cornerSize` to `16dp`
-- [x] Modify `app/src/main/res/layout/view_list_music_tag.xml` to set `cardCornerRadius` to `24dp`
-- [x] Modify `app/src/main/res/drawable/selector_item.xml` to set corner radius to `24dp`
-- [x] Re-compile and verify the changes
-
+# Checklist: Category-wide Subtitle Stats UX Improvement
 
 ## Phase 1: Planning and Verification
-- [x] Research and confirm current SSID and network check implementation
-- [x] Submit plan for user approval (completed)
+- [ ] Define the `SearchResultStats` data class in the `core` module to hold aggregate statistics (count, size, duration)
+- [ ] Extend the `DbHelper` interface and implement the aggregate statistics query in `OrmLiteHelper` using efficient SQLite COUNT/SUM/GROUP BY calculations
+- [ ] Update `TagRepository` to expose a method for fetching `SearchResultStats` for a given `SearchCriteria`
+- [ ] Expose `SearchResultStats` via a new LiveData in `MainViewModel` and fetch it asynchronously in the background when loading music items
+- [ ] Update `MainActivity` to observe the new LiveData and update the subtitle with full category statistics
 
-## Phase 2: Implementation
-- [x] Modify `app/src/main/res/values/strings.xml`:
-  - [x] Update `notification_server_not_running` to `"Required WiFi or Hotspot network"`
-  - [x] Add a new string resource `server_url_not_available` with value `"Server URL: Not Available (Server Stopped)"`
-- [x] Modify `app/src/main/java/apincer/android/mmate/ui/view/MediaServerManagementSheet.java`:
-  - [x] Use `NetworkUtils.isServerNetworkAvailable(context)` instead of `NetworkUtils.isWifiConnected(context)` for overall availability checks
-  - [x] When the server is `RUNNING` and SSID is empty, check `NetworkUtils.isHotspotActive(context)`. If active, set status text to `"Online (Hotspot)"` instead of `"No Network"`
-  - [x] Under `STOPPED` / `ERROR`, enable `btnStartServer` if `isServerNetworkAvailable` is true (allowing start when in hotspot mode)
-  - [x] Update warning text display based on `isServerNetworkAvailable` instead of `isWifiConnected`, using `R.string.server_url_not_available` when network is available but server is stopped.
-- [x] Modify `core/src/main/java/apincer/music/core/utils/NetworkUtils.java`:
-  - [x] Expand `isOnCellularNetwork` to identify different cellular interface names (`rmnet`, `ccmni`, `pdp`, `wwan`, `sipc`, `spipe`, `lte`, `ppp`).
-  - [x] Use `isOnCellularNetwork(ni, null)` in the fallback step of `getIpAddress()` to prevent returning cellular IP addresses.
-  - [x] Support `wslan` interface prefix and add checks for secondary interfaces / dual STA+AP concurrent mode hotspot interfaces in `isHotspotActive()`.
+## Phase 2: Create Data Model
+- [ ] Create `core/src/main/java/apincer/music/core/model/SearchResultStats.java`
+  - Needs `totalCount`, `totalSize`, `totalDuration` fields and getters
 
-## Phase 3: Verification
-- [x] Re-compile the project using `./gradlew compileDebugJavaWithJavac`
-- [x] Update the review section with results
+## Phase 3: Extend Database Layer
+- [ ] Modify `core/src/main/java/apincer/music/core/repository/spi/DbHelper.java`
+  - Add `SearchResultStats getSearchStats(SearchCriteria criteria);`
+- [ ] Modify `db-ormlite/src/main/java/apincer/music/ormlite/OrmLiteHelper.java`
+  - Add helper to construct ORMLite `QueryBuilder<TrackEntity, ?>` from `SearchCriteria` (shared between track list query and stats query)
+  - Implement `getSearchStats` using the shared query builder, querying the database using raw aggregates (`COUNT(*)`, `SUM(fileSize)`, `SUM(audioDuration)`)
+  - Correctly handle grouping cases (like grouping by title/artist) by either aggregating over results or using subqueries
 
-## Review & Results
-- **Hotspot Mode Support**: Updated [MediaServerManagementSheet.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/MediaServerManagementSheet.java) to check `NetworkUtils.isServerNetworkAvailable()` (checks both Wi-Fi Client & Hotspot) instead of `NetworkUtils.isWifiConnected()`.
-- **Accurate SSID Status**: When in Hotspot mode (active server but empty client Wi-Fi SSID), the sheet now displays `Online (Hotspot)` rather than `No Network`.
-- **Improved Dialog State**: Enabled starting the media server while on a hotspot network and updated status message when stopped to clearly display `Server URL: Not Available (Server Stopped)` via the new `server_url_not_available` string in [strings.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/values/strings.xml).
-- **Cellular IP Filtering & Diagnostics**: Expanded [NetworkUtils.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/utils/NetworkUtils.java)'s cellular check to support prefixes like `rmnet`, `ccmni`, `pdp`, `wwan`, `sipc`, `spipe`, `lte`, and `ppp`. Added interface names display to the server URL (e.g. `(ap0)` or `(wslan0)`) for visibility.
-- **wslan Support**: Added full support for `wslan` interface name prefix (commonly found on vivo/iQOO devices) in Wi-Fi and AP mode matching so that `wslan0` and `wslan1` are resolved correctly.
-- **Successful Build**: Verified that the changes compile cleanly using `./gradlew compileDebugJavaWithJavac`.
+## Phase 4: Extend Repository & ViewModel
+- [ ] Modify `core/src/main/java/apincer/music/core/repository/TagRepository.java`
+  - Add `public SearchResultStats getSearchStats(SearchCriteria criteria)` method that delegates to `dbHelper`
+- [ ] Modify `app/src/main/java/apincer/android/mmate/ui/viewmodel/MainViewModel.java`
+  - Add `private final MutableLiveData<SearchResultStats> _searchStats = new MutableLiveData<>();`
+  - Add public `LiveData<SearchResultStats> searchStats = _searchStats;`
+  - In `loadMusicItems(SearchCriteria)`, clear/reset `_searchStats` (e.g. set to null/empty)
+  - Execute the stats query asynchronously on the background thread and post value to `_searchStats`
+
+## Phase 5: Update UI in MainActivity
+- [ ] Modify `app/src/main/java/apincer/android/mmate/ui/MainActivity.java`
+  - Observe `viewModel.searchStats`
+  - Update `updateHeaderPanel()` to accept or use the observed `SearchResultStats` instead of reading totals from the adapter
+  - Fall back to the adapter's totals if `SearchResultStats` is null (e.g. during loading) to maintain smooth UI states
+
+## Phase 6: Verification
+- [ ] Compile and build project using `./gradlew compileDebugJavaWithJavac`
+- [ ] Verify that there are no compilation errors

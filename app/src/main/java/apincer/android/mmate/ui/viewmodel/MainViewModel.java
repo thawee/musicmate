@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import apincer.android.mmate.ui.MusicTagAdapter;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.Track;
+import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -30,6 +31,9 @@ public class MainViewModel extends ViewModel {
 
     private final MutableLiveData<Boolean> _musicItemsLoading = new MutableLiveData<>(false);
     public final LiveData<Boolean> musicItemsLoading = _musicItemsLoading;
+
+    private final MutableLiveData<SearchResultStats> _searchStats = new MutableLiveData<>();
+    public final LiveData<SearchResultStats> searchStats = _searchStats;
 
     private SearchCriteria currentCriteria;
 
@@ -144,6 +148,7 @@ public class MainViewModel extends ViewModel {
         currentPage = 0;
         isLastPage = false;
         _musicItemsLoading.setValue(true);
+        _searchStats.setValue(null); // Reset stats to clear old/stale values
 
         backgroundExecutor.execute(() -> {
             try {
@@ -155,6 +160,10 @@ public class MainViewModel extends ViewModel {
                     currentPage = 1;
                 }
                 _musicItemsLoading.postValue(false);
+
+                // Fetch total stats matching criteria from DB
+                SearchResultStats stats = repos.getSearchStats(criteria);
+                _searchStats.postValue(stats);
             } catch (Exception e) {
                 // Handle error
                 _musicItems.postValue(Collections.emptyList());
