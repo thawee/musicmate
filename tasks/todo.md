@@ -8,6 +8,12 @@
   - [x] [view_list_item_compared.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item_compared.xml)
 - [x] Verify compilation after UI layout changes
 
+## Phase 5: Harmonize Card & Cover Art Corner Radius
+- [x] Modify `app/src/main/res/values/styles.xml` to update `ShapeAppearance.RoundedImageView` `cornerSize` to `16dp`
+- [x] Modify `app/src/main/res/layout/view_list_music_tag.xml` to set `cardCornerRadius` to `24dp`
+- [x] Modify `app/src/main/res/drawable/selector_item.xml` to set corner radius to `24dp`
+- [x] Re-compile and verify the changes
+
 
 ## Phase 1: Planning and Verification
 - [x] Research and confirm current SSID and network check implementation
