@@ -15,3 +15,7 @@
   - Ensure that intermediate container item selectors (such as the default state of `selector_item.xml`) default to transparent (`@android:color/transparent`) so the background blur floats through unhindered.
   - Swap solid dark backgrounds for modern translucent equivalents (e.g. `90%` opacity dark colors like `#E6121212` or translucent white base layers like `#1AFFFFFF` - 10% opacity).
   - Swap solid dark/black borders/strokes with a fine, semi-transparent white stroke (`#33FFFFFF` - 20% opacity) to cleanly delineate glass edges against dark/blurred backgrounds.
+
+## Clear Service/Server Manager UI States
+- **Problem**: Showing a generic "Not Available" text for URL/connection fields when the server is offline or stopped causes user confusion regarding whether the issue lies with network connectivity or the server process.
+- **Solution**: Always use clear, descriptive labels specifying both the field and the reason. For example, instead of a plain `"Not Available"`, display a text like `"Server URL: Not Available (Server Stopped)"` to explicitly communicate the state. Ensure that requirements messages (like `"Required WiFi network"`) are updated to include all supported connectivity modes (e.g. `"Required WiFi or Hotspot network"`).

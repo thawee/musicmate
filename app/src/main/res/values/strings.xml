@@ -331,7 +331,8 @@
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
-    <string name="notification_server_not_running">Required WiFi network</string>
+    <string name="notification_server_not_running">Required WiFi or Hotspot network</string>
+    <string name="server_url_not_available">Server URL: Not Available (Server Stopped)</string>
     <string name="update_library">Music Library</string>
     <string name="label_library_all_songs">All Songs</string>
     <string name="label_library_recently_added">Recently Added</string>

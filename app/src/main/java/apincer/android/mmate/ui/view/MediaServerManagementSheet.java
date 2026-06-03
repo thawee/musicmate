@@ -160,7 +160,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                 status = MediaServerHub.ServerStatus.STOPPED;
             }
 
-            boolean isWifiConnected = NetworkUtils.isWifiConnected(requireContext());
+            boolean isNetworkAvailable = NetworkUtils.isServerNetworkAvailable(requireContext());
 
             switch (status) {
                 case RUNNING:
@@ -175,7 +175,11 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     String ssid = ApplicationUtils.getWifiSSID(getContext());
                     if(!isEmpty(ssid)) {
                         tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX+" ("+ssid+")");
-                    }else {
+                    } else if (NetworkUtils.isHotspotActive(requireContext())) {
+                        tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX+" (Hotspot)");
+                    } else if (NetworkUtils.isWifiConnected(requireContext())) {
+                        tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX);
+                    } else {
                         tvServerStatus.setText(SERVER_STATUS_NO_WIFI);
                     }
                     tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_green);
@@ -188,18 +192,18 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                 case ERROR:
                     btnStartServer.setVisibility(VISIBLE);
                     btnStopServer.setVisibility(GONE);
-                    btnStartServer.setEnabled(isWifiConnected); // Only enable start if Wi-Fi is on
+                    btnStartServer.setEnabled(isNetworkAvailable); // Enable start if network (WiFi or Hotspot) is available
                    // btnStopServer.setEnabled(false);
                     qrCodeImage.setVisibility(GONE);
 
                     tvServerStatus.setText(SERVER_STATUS_OFFLINE);
                     tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_red);
-                    if (!isWifiConnected) {
+                    if (!isNetworkAvailable) {
                         tvServerAddress.setText(R.string.notification_server_not_running);
                         tvServerAddress.setVisibility(VISIBLE);
                     } else {
                         tvServerAddress.setVisibility(VISIBLE);
-                        tvServerAddress.setText(R.string.not_available);
+                        tvServerAddress.setText(R.string.server_url_not_available);
                     }
                     break;
                 case STARTING:

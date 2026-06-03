@@ -1,32 +1,31 @@
-# Checklist: Harmonize UI to Premium Glassy / Frosted Theme
+# Checklist: Fix "No Network" in Server Management Dialog on Hotspot Mode
 
-## Phase 1: Planning and Setup
-- [x] Identify non-glassy components and formulate the implementation plan (completed)
-- [x] Obtain user approval on the implementation plan (approved)
+## Phase 1: Planning and Verification
+- [x] Research and confirm current SSID and network check implementation
+- [x] Submit plan for user approval (completed)
 
-## Phase 2: Core Refactoring
-- [x] Modify [selector_item.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/selector_item.xml) to make default background transparent
-- [x] Modify [shape_bottom_appbar_background.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_bottom_appbar_background.xml) to make bottom bar translucent
-- [x] Modify [shape_device_background.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_device_background.xml) to use translucent white background and white border stroke
-- [x] Modify [border_back_label.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/border_back_label.xml) to use translucent white border stroke
-- [x] Modify [shape_border_playing_black.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/drawable/shape_border_playing_black.xml) to use translucent white border stroke
+## Phase 2: Implementation
+- [x] Modify `app/src/main/res/values/strings.xml`:
+  - [x] Update `notification_server_not_running` to `"Required WiFi or Hotspot network"`
+  - [x] Add a new string resource `server_url_not_available` with value `"Server URL: Not Available (Server Stopped)"`
+- [x] Modify `app/src/main/java/apincer/android/mmate/ui/view/MediaServerManagementSheet.java`:
+  - [x] Use `NetworkUtils.isServerNetworkAvailable(context)` instead of `NetworkUtils.isWifiConnected(context)` for overall availability checks
+  - [x] When the server is `RUNNING` and SSID is empty, check `NetworkUtils.isHotspotActive(context)`. If active, set status text to `"Online (Hotspot)"` instead of `"No Network"`
+  - [x] Under `STOPPED` / `ERROR`, enable `btnStartServer` if `isServerNetworkAvailable` is true (allowing start when in hotspot mode)
+  - [x] Update warning text display based on `isServerNetworkAvailable` instead of `isWifiConnected`, using `R.string.server_url_not_available` when network is available but server is stopped.
+- [x] Modify `core/src/main/java/apincer/music/core/utils/NetworkUtils.java`:
+  - [x] Expand `isOnCellularNetwork` to identify different cellular interface names (`rmnet`, `ccmni`, `pdp`, `wwan`, `sipc`, `spipe`, `lte`, `ppp`).
+  - [x] Use `isOnCellularNetwork(ni, null)` in the fallback step of `getIpAddress()` to prevent returning cellular IP addresses.
+  - [x] Support `wslan` interface prefix and add checks for secondary interfaces / dual STA+AP concurrent mode hotspot interfaces in `isHotspotActive()`.
 
 ## Phase 3: Verification
-- [x] Verify build compiles successfully using `./gradlew compileDebugJavaWithJavac`
-- [x] Document final results in walkthrough and update task checklists
-
-## Phase 4: Screen Flows Documentation
-- [x] Research and analyze layout files and view controllers (completed)
-- [x] Create comprehensive `screen_flows.md` artifact with detailed Mermaid diagrams (completed)
-- [x] Document WebSocket state synchronization & audiophile analysis flows (completed)
-- [x] Verify diagram syntax and map layouts to Java/Kotlin classes (completed)
-- [x] Deliver final results with walkthrough (completed)
+- [x] Re-compile the project using `./gradlew compileDebugJavaWithJavac`
+- [x] Update the review section with results
 
 ## Review & Results
-- **Design Artifact**: Created a high-fidelity documentation hub: [screen_flows.md](file:///Users/thawee.p/.gemini/antigravity-cli/brain/369d13c6-b22c-4b6e-977b-fb00553d6c00/screen_flows.md) mapping all Android views and Web Remote interfaces.
-- **Mermaid Visualizations**: Integrated four interactive Mermaid diagrams tracing:
-  1. The complete Android App Screen Flow (Launch -> Drawer -> Sheets -> Editor).
-  2. The responsive Single Page App (SPA) Web Remote UI flows.
-  3. The real-time bi-directional WebSocket state sync mechanism.
-  4. The multi-stage audiophile metadata scanner & streaming pipeline.
-- **UI Design Mockup**: Generated and embedded a stunning, premium glassmorphic dark-mode UI design representing the Music Mate application: [musicmate_nowplaying_mockup_1779368000944.png](file:///Users/thawee.p/.gemini/antigravity-cli/brain/369d13c6-b22c-4b6e-977b-fb00553d6c00/musicmate_nowplaying_mockup_1779368000944.png).
+- **Hotspot Mode Support**: Updated [MediaServerManagementSheet.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/MediaServerManagementSheet.java) to check `NetworkUtils.isServerNetworkAvailable()` (checks both Wi-Fi Client & Hotspot) instead of `NetworkUtils.isWifiConnected()`.
+- **Accurate SSID Status**: When in Hotspot mode (active server but empty client Wi-Fi SSID), the sheet now displays `Online (Hotspot)` rather than `No Network`.
+- **Improved Dialog State**: Enabled starting the media server while on a hotspot network and updated status message when stopped to clearly display `Server URL: Not Available (Server Stopped)` via the new `server_url_not_available` string in [strings.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/values/strings.xml).
+- **Cellular IP Filtering & Diagnostics**: Expanded [NetworkUtils.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/utils/NetworkUtils.java)'s cellular check to support prefixes like `rmnet`, `ccmni`, `pdp`, `wwan`, `sipc`, `spipe`, `lte`, and `ppp`. Added interface names display to the server URL (e.g. `(ap0)` or `(wslan0)`) for visibility.
+- **wslan Support**: Added full support for `wslan` interface name prefix (commonly found on vivo/iQOO devices) in Wi-Fi and AP mode matching so that `wslan0` and `wslan1` are resolved correctly.
+- **Successful Build**: Verified that the changes compile cleanly using `./gradlew compileDebugJavaWithJavac`.
