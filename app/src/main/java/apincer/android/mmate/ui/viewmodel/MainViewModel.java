@@ -151,6 +151,12 @@ public class MainViewModel extends ViewModel {
 
         backgroundExecutor.execute(() -> {
             try {
+                // Fetch category-wide aggregate stats first so they are dispatched
+                // to the main thread before musicItems. This ensures getValue() returns
+                // the correct total when the musicItems observer calls updateHeaderPanel().
+                SearchResultStats stats = repos.getSearchStats(criteria);
+                _searchStats.postValue(stats);
+
                 List<Track> items = repos.findMusic(criteria, 0, PAGE_SIZE);
                 _musicItems.postValue(items);
                 if (items.size() < PAGE_SIZE) {
@@ -159,10 +165,6 @@ public class MainViewModel extends ViewModel {
                     currentPage = 1;
                 }
                 _musicItemsLoading.postValue(false);
-
-                // Fetch total stats matching criteria from DB
-                SearchResultStats stats = repos.getSearchStats(criteria);
-                _searchStats.postValue(stats);
             } catch (Exception e) {
                 // Handle error
                 _musicItems.postValue(Collections.emptyList());

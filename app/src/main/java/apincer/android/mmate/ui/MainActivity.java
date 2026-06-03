@@ -390,11 +390,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
             mRecyclerView.post(() -> {
-                        adapter.setMusicTags(musicTags);
-                        swipeRefreshLayout.setRefreshing(false);
-                    });
-            // Use null stats initially; updateHeaderPanel will fall back to adapter counts
-            updateHeaderPanel(viewModel.searchStats.getValue());
+                adapter.setMusicTags(musicTags);
+                swipeRefreshLayout.setRefreshing(false);
+                // Update header after adapter is populated; stats observer will correct later
+                updateHeaderPanel(viewModel.searchStats.getValue());
+            });
             if (musicTags == null || musicTags.isEmpty()) {
                 emptyStateView.setVisibility(View.VISIBLE);
                 swipeRefreshLayout.setVisibility(View.GONE);
