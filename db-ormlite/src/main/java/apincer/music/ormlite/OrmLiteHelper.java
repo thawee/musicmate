@@ -1078,91 +1078,33 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         if (criteria == null) {
             return new SearchResultStats(0, 0, 0.0);
         }
-
         try {
-            Dao<TrackEntity, ?> dao = getMusicTagDao();
-            QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-            boolean hasGroup = false;
-
-            if (criteria.isSearchMode()) {
-                String keyword = criteria.getSearchText();
-                keyword = "'%" + keyword.replace("'", "''") + "%'";
-                builder.where().raw("title like " + keyword + " or artist like " + keyword + " or album like " + keyword);
-            } else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
-                String keyword = criteria.getKeyword();
-                if (StringUtils.isEmpty(keyword)) {
-                    keyword = Constants.TITLE_ALL_SONGS;
-                }
-
-                if (Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(keyword))) {
-                    // No where clause needed
-                } else if (Constants.TITLE_INCOMING_SONGS.equals(keyword)) {
-                    builder.where().eq("isManaged", false);
-                } else if (Constants.TITLE_TO_ANALYST_DR.equals(keyword)) {
-                    builder.where().eq("drScore", 0).or().eq("dynamicRange", 0);
-                } else if (Constants.TITLE_NO_COVERART.equals(keyword)) {
-                    builder.where().raw("coverartMime is null or coverartMime = ''");
-                }
-            } else if (criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-                String keyword = criteria.getKeyword();
-                if (isEmpty(keyword) || Constants.UNKNOWN.equals(keyword)) {
-                    builder.where().raw("publisher is null");
-                } else {
-                    builder.where().raw("publisher = " + escapeString(keyword));
-                }
-            } else if (criteria.getType() == SearchCriteria.TYPE.ARTIST) {
-                String keyword = criteria.getKeyword();
-                if (isEmpty(keyword)) {
-                    return new SearchResultStats(0, 0, 0.0);
-                } else {
-                    builder.where().like("artist", "%" + keyword + "%");
-                    builder.groupBy("title").groupBy("artist");
-                    hasGroup = true;
-                }
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC) {
-                String keyword = criteria.getKeyword();
-                if (isEmpty(keyword)) {
-                    return new SearchResultStats(0, 0, 0.0);
-                } else if (Constants.TITLE_DSD.equals(keyword)) {
-                    builder.where().raw("audioEncoding in ('dsd', 'dff')");
-                } else if (Constants.TITLE_MQA_MASTER_QUALITY.equals(keyword)) {
-                    builder.where().raw("qualityInd like 'MQA%'");
-                } else if (Constants.TITLE_HIGH_QUALITY.equals(keyword)) {
-                    builder.where().raw("audioEncoding in ('aac', 'mpeg')");
-                } else if (Constants.TITLE_CD_QUALITY.equals(keyword)) {
-                    builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and audioSampleRate = 44100");
-                } else if (Constants.TITLE_HIRES_QUALITY.equals(keyword)) {
-                    builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wave', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and qualityInd not like 'MQA%'");
-                } else if (Constants.TITLE_CD_EXT_QUALITY.equals(keyword)) {
-                    builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wave', 'wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'");
-                }
-            } else if (criteria.getType() == SearchCriteria.TYPE.GENRE) {
-                String keyword = criteria.getKeyword();
-                if (isEmpty(keyword)) {
-                    return new SearchResultStats(0, 0, 0.0);
-                } else {
-                    builder.where().eq("genre", keyword);
-                    builder.groupBy("title").groupBy("artist");
-                    hasGroup = true;
-                }
-            }
+            Dao<TrackEntity, Long> dao = getMusicTagDao();
+            String whereClause = buildWhereClause(criteria);
+            boolean useGroupDedup = needsGroupDedup(criteria);
 
             int count = 0;
             long totalSize = 0;
             double totalDuration = 0.0;
 
-            if (hasGroup) {
-                builder.selectRaw("fileSize", "audioDuration");
-                try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
-                    for (String[] vals : results.getResults()) {
-                        count++;
-                        totalSize += StringUtils.toLong(vals[0]);
-                        totalDuration += StringUtils.toDouble(vals[1]);
+            if (useGroupDedup) {
+                // Wrap in subquery so COUNT/SUM respects GROUP BY deduplication
+                String inner = "SELECT fileSize, audioDuration FROM musictag"
+                        + (whereClause.isEmpty() ? "" : " WHERE " + whereClause)
+                        + " GROUP BY title, artist";
+                String rawQuery = "SELECT COUNT(*), SUM(fileSize), SUM(audioDuration) FROM (" + inner + ")";
+                try (GenericRawResults<String[]> results = dao.queryRaw(rawQuery)) {
+                    String[] vals = results.getFirstResult();
+                    if (vals != null) {
+                        count = StringUtils.toInt(vals[0]);
+                        totalSize = StringUtils.toLong(vals[1]);
+                        totalDuration = StringUtils.toDouble(vals[2]);
                     }
                 }
             } else {
-                builder.selectRaw("COUNT(*)", "SUM(fileSize)", "SUM(audioDuration)");
-                try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
+                String rawQuery = "SELECT COUNT(*), SUM(fileSize), SUM(audioDuration) FROM musictag"
+                        + (whereClause.isEmpty() ? "" : " WHERE " + whereClause);
+                try (GenericRawResults<String[]> results = dao.queryRaw(rawQuery)) {
                     String[] vals = results.getFirstResult();
                     if (vals != null) {
                         count = StringUtils.toInt(vals[0]);
@@ -1171,12 +1113,62 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                     }
                 }
             }
-
             return new SearchResultStats(count, totalSize, totalDuration);
-
         } catch (Exception e) {
             Log.e("OrmLiteHelper", "Error getting search stats: " + e.getMessage(), e);
             return new SearchResultStats(0, 0, 0.0);
+        }
+    }
+
+    /** Returns true if this criteria type needs GROUP BY title,artist deduplication */
+    private boolean needsGroupDedup(SearchCriteria criteria) {
+        if (criteria.getType() == SearchCriteria.TYPE.ARTIST && !isEmpty(criteria.getKeyword())) return true;
+        if (criteria.getType() == SearchCriteria.TYPE.GENRE && !isEmpty(criteria.getKeyword())) return true;
+        return false;
+    }
+
+    /** Builds a raw SQL WHERE clause (without the "WHERE" keyword) matching a given SearchCriteria. */
+    private String buildWhereClause(SearchCriteria criteria) {
+        if (criteria.isSearchMode()) {
+            String kw = criteria.getSearchText().replace("'", "''");
+            return "title like '%" + kw + "%' or artist like '%" + kw + "%' or album like '%" + kw + "%'";
+        }
+        switch (criteria.getType()) {
+            case LIBRARY: {
+                String keyword = StringUtils.trimToEmpty(criteria.getKeyword());
+                if (keyword.isEmpty() || Constants.TITLE_ALL_SONGS.equals(keyword)) return "";
+                if (Constants.TITLE_INCOMING_SONGS.equals(keyword)) return "isManaged = 0";
+                if (Constants.TITLE_TO_ANALYST_DR.equals(keyword)) return "drScore = 0 or dynamicRange = 0";
+                if (Constants.TITLE_NO_COVERART.equals(keyword)) return "coverartMime is null or coverartMime = ''";
+                return "";
+            }
+            case PUBLISHER: {
+                String kw = StringUtils.trimToEmpty(criteria.getKeyword());
+                if (kw.isEmpty() || Constants.UNKNOWN.equals(kw)) return "publisher is null";
+                return "publisher = '" + kw.replace("'", "''") + "'";
+            }
+            case ARTIST: {
+                String kw = criteria.getKeyword();
+                if (isEmpty(kw)) return "";
+                return "artist like '%" + kw.replace("'", "''") + "%'";
+            }
+            case CODEC: {
+                String kw = criteria.getKeyword();
+                if (isEmpty(kw)) return "";
+                if (Constants.TITLE_DSD.equals(kw)) return "audioEncoding in ('dsd', 'dff')";
+                if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw)) return "qualityInd like 'MQA%'";
+                if (Constants.TITLE_HIGH_QUALITY.equals(kw)) return "audioEncoding in ('aac', 'mpeg')";
+                if (Constants.TITLE_CD_QUALITY.equals(kw)) return "audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and audioSampleRate = 44100";
+                if (Constants.TITLE_HIRES_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and qualityInd not like 'MQA%'";
+                if (Constants.TITLE_CD_EXT_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'";
+                return "";
+            }
+            case GENRE: {
+                String kw = criteria.getKeyword();
+                if (isEmpty(kw)) return "";
+                return "genre = '" + kw.replace("'", "''") + "'";
+            }
+            default: return "";
         }
     }
 

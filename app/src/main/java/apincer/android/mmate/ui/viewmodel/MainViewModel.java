@@ -148,7 +148,6 @@ public class MainViewModel extends ViewModel {
         currentPage = 0;
         isLastPage = false;
         _musicItemsLoading.setValue(true);
-        _searchStats.setValue(null); // Reset stats to clear old/stale values
 
         backgroundExecutor.execute(() -> {
             try {
