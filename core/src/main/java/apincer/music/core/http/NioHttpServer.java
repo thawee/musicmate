@@ -102,7 +102,7 @@ import java.util.function.Supplier;
  *   </tr>
  *   <tr>
  *     <td>Chunk size</td>
- *     <td>64 KB</td>
+ *     <td>256 KB</td>
  *     <td>Prevents audio stuttering; reduces TCP overhead</td>
  *   </tr>
  *   <tr>
@@ -407,30 +407,63 @@ public class NioHttpServer implements Runnable {
         this.port = port;
     }
 
-    public void setMaxThread(int maxThread) { this.maxThread = maxThread; }
-    public void setMaxRequestSize(int maxRequestSize) { this.maxRequestSize = maxRequestSize; }
-    public void setMaxWebSocketFrameSize(int maxWebSocketFrameSize) { this.maxWebSocketFrameSize = maxWebSocketFrameSize; }
-    public void setSelectorTimeout(long milliseconds) { this.selectorTimeout = milliseconds; }
-    public void setMaxConnections(int max) {this.maxConnections = max;}
-    public void setMaxConcurrentStreams(int max) { this.maxConcurrentStreams = max;}
+    public void setMaxThread(int maxThread) {
+        this.maxThread = maxThread;
+    }
+
+    public void setMaxRequestSize(int maxRequestSize) {
+        this.maxRequestSize = maxRequestSize;
+    }
+
+    public void setMaxWebSocketFrameSize(int maxWebSocketFrameSize) {
+        this.maxWebSocketFrameSize = maxWebSocketFrameSize;
+    }
+
+    public void setSelectorTimeout(long milliseconds) {
+        this.selectorTimeout = milliseconds;
+    }
+
+    public void setMaxConnections(int max) {
+        this.maxConnections = max;
+    }
+
+    public void setMaxConcurrentStreams(int max) {
+        this.maxConcurrentStreams = max;
+    }
 
     /**
      * Registers a main http handler.
+     *
      * @param handler the handler instance
      */
-    public void registerHttpHandler(Handler handler) { this.httpHandler = handler; }
+    public void registerHttpHandler(Handler handler) {
+        this.httpHandler = handler;
+    }
+
     /**
      * Registers a WebSocket handler for the given path.
+     *
      * @param handler the WebSocket handler instance
      */
     public void registerWebSocketHandler(WebSocket.Handler handler) {
         this.webSocketHandler = handler;
     }
 
-    public void setSocketBacklog(int socketBacklog) { this.socketBacklog = socketBacklog; }
-    public void setClientReadBufferSize(int clientReadBufferSize) { this.clientReadBufferSize = clientReadBufferSize; }
-    public void setTcpNoDelay(boolean tcpNoDelay) { this.tcpNoDelay = tcpNoDelay; }
-    public void setKeepAliveTimeout(long milliseconds) { this.keepAliveTimeout = milliseconds; }
+    public void setSocketBacklog(int socketBacklog) {
+        this.socketBacklog = socketBacklog;
+    }
+
+    public void setClientReadBufferSize(int clientReadBufferSize) {
+        this.clientReadBufferSize = clientReadBufferSize;
+    }
+
+    public void setTcpNoDelay(boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
+    public void setKeepAliveTimeout(long milliseconds) {
+        this.keepAliveTimeout = milliseconds;
+    }
 
     public void stop() {
         isRunning = false;
@@ -640,7 +673,10 @@ public class NioHttpServer implements Runnable {
                 // Client disconnected before the response was delivered.
                 // Close the response to release any open FileChannel and decrement activeStreams.
                 if (task.response != null) {
-                    try { task.response.close(); } catch (IOException ignore) {}
+                    try {
+                        task.response.close();
+                    } catch (IOException ignore) {
+                    }
                 }
             }
         }
@@ -676,6 +712,7 @@ public class NioHttpServer implements Runnable {
 
         // Increase socket send buffer for streaming
         clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 256 * 1024); // 256KB
+        clientChannel.setOption(StandardSocketOptions.IP_TOS, 0x18); // 0x18 = Low Delay (0x10) | High Throughput (0x08)
 
         ConnectionAttachment attachment = attachmentPool.acquire();
         clientChannel.register(selector, SelectionKey.OP_READ, attachment);
@@ -716,7 +753,7 @@ public class NioHttpServer implements Runnable {
         attachment.requestData.write(attachment.readBuffer.array(), 0, attachment.readBuffer.limit());
         attachment.readBuffer.clear();
 
-       // if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
+        // if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
         if (currentState == ConnectionAttachment.ParseState.READING_HEADERS) {
             // parse headers...
             byte[] requestBytes = attachment.requestData.toByteArray();
@@ -751,7 +788,7 @@ public class NioHttpServer implements Runnable {
                     attachment.state = ConnectionAttachment.ParseState.READING_BODY;
                 }
             }
-        //} else if (attachment.state == ConnectionAttachment.ParseState.READING_BODY) {
+            //} else if (attachment.state == ConnectionAttachment.ParseState.READING_BODY) {
         } else if (currentState == ConnectionAttachment.ParseState.READING_BODY) {
             // parse body...
             int contentLength = Integer.parseInt(attachment.request.getHeader("content-length", "0"));
@@ -786,6 +823,7 @@ public class NioHttpServer implements Runnable {
             closeConnection(key);
         }
     }
+
     private void processRequest(SelectionKey key, HttpRequest request) {
         try {
             // Reject malformed request lines (parse() sets method/path to null).
@@ -806,7 +844,7 @@ public class NioHttpServer implements Runnable {
                 normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
             }
 
-            if(webSocketHandler != null && webSocketHandler.getNamespace().equals(normalizedPath)) {
+            if (webSocketHandler != null && webSocketHandler.getNamespace().equals(normalizedPath)) {
                 // Check for WebSocket upgrade first
                 String upgradeHeader = request.getHeader("upgrade", "");
                 String connectionHeader = request.getHeader("connection", "");
@@ -838,7 +876,7 @@ public class NioHttpServer implements Runnable {
                     System.err.println("Handler error: " + e.getMessage());
                     response = new HttpResponse()
                             .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
-                    if(e.getMessage() != null) {
+                    if (e.getMessage() != null) {
                         response.setBody(e.getMessage().getBytes());
                     }
                 }
@@ -857,7 +895,7 @@ public class NioHttpServer implements Runnable {
             System.err.println("Error processing request: " + e.getMessage());
             HttpResponse errorResponse = new HttpResponse()
                     .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
-            if(e.getMessage() != null) {
+            if (e.getMessage() != null) {
                 errorResponse.setBody(e.getMessage().getBytes());
             }
             responseQueue.add(new ResponseTask(key, errorResponse));
@@ -887,34 +925,27 @@ public class NioHttpServer implements Runnable {
         if (attachment.response.isFullySent()) {
 
             if (attachment.response.statusCode == HTTP_SWITCHING_PROTOCOLS && attachment.wsHandler != null) {
-                /*// Case 1: The connection was just upgraded to a WebSocket.
-
-                // Upgrade the attachment's internal state for WebSocket communication.
-                // This method will also clean up the old HTTP response object.
-                attachment.upgradeToWebSocket(key);
-
-                // Trigger the onOpen event in the background.
-                workerPool.submit(() -> {
-                    try {
-                        attachment.wsHandler.onOpen(attachment.wsConnection);
-                    } catch (Exception e) {
-                        attachment.wsHandler.onError(attachment.wsConnection, e);
-                    }
-                });
-
-                // Now, simply listen for incoming WebSocket frames. DO NOT reset the attachment.
-                key.interestOps(SelectionKey.OP_READ); */
-
-                //ATOMIC UPGRADE
+                // Case 1: The connection was just upgraded to a WebSocket.
+                // ATOMIC UPGRADE with proper handler cleanup and volatile flag check
                 synchronized (attachment) {
                     attachment.upgradeToWebSocket(key);
 
-                    // Queue onOpen BEFORE changing interestOps
+                    // Clear the old HTTP handler immediately to prevent stale references
+                    WebSocket.Handler currentWsHandler = attachment.wsHandler;
+                    attachment.wsHandler = null;
+
+                    // Check if WebSocket has queued messages (using volatile flag)
+                    if (attachment.wsConnection.hasOutgoingQueue) {
+                        attachment.wsConnection.hasOutgoingQueue = false;
+                        selector.wakeup();
+                    }
+
+                    // Queue onOpen in the background
                     workerPool.submit(() -> {
                         try {
-                            attachment.wsHandler.onOpen(attachment.wsConnection);
+                            currentWsHandler.onOpen(attachment.wsConnection);
                         } catch (Exception e) {
-                            attachment.wsHandler.onError(attachment.wsConnection, e);
+                            currentWsHandler.onError(attachment.wsConnection, e);
                         }
                     });
 
@@ -960,8 +991,7 @@ public class NioHttpServer implements Runnable {
                 key.attach(null); // Detach from key to prevent reuse issues
             }
             if (key.channel() != null) key.channel().close();
-        } catch (IOException e) { /* ignore */ }
-        finally {
+        } catch (IOException e) { /* ignore */ } finally {
             key.cancel();
             activeConnections.decrementAndGet();
         }
@@ -969,7 +999,7 @@ public class NioHttpServer implements Runnable {
 
     private int findHeaderEnd(byte[] data) {
         for (int i = 0; i < data.length - 3; i++) {
-            if (data[i] == '\r' && data[i+1] == '\n' && data[i+2] == '\r' && data[i+3] == '\n') {
+            if (data[i] == '\r' && data[i + 1] == '\n' && data[i + 2] == '\r' && data[i + 3] == '\n') {
                 return i + 4;
             }
         }
@@ -1042,7 +1072,7 @@ public class NioHttpServer implements Runnable {
         try {
             return new FileResponse(file, request);
         } catch (IOException e) {
-            if (e.getMessage()!= null && e.getMessage().startsWith("Service Unavailable")) {
+            if (e.getMessage() != null && e.getMessage().startsWith("Service Unavailable")) {
                 return new HttpResponse()
                         .setStatus(503, "Service Unavailable")
                         .addHeader("Retry-After", "5")
@@ -1056,14 +1086,20 @@ public class NioHttpServer implements Runnable {
 
     // --- INNER CLASSES AND INTERFACES ---
     @FunctionalInterface
-    public interface Handler { HttpResponse handle(HttpRequest request); }
+    public interface Handler {
+        HttpResponse handle(HttpRequest request);
+    }
 
     public static class NioWebSocketConnection implements WebSocket.Connection {
         private final SelectionKey key;
         private final Queue<WebSocket.Frame> outgoingQueue = new ConcurrentLinkedQueue<>();
         private volatile boolean closed = false;
+        private volatile boolean hasOutgoingQueue = false; // Volatile flag for safe wake-up
+        private volatile long lastActivityTime = 0; // Track activity for idle timeout
 
-        NioWebSocketConnection(SelectionKey key) { this.key = key; }
+        NioWebSocketConnection(SelectionKey key) {
+            this.key = key;
+        }
 
         public void send(String message) {
             if (closed) return;
@@ -1078,9 +1114,7 @@ public class NioHttpServer implements Runnable {
         public void send(WebSocket.Frame frame) {
             if (closed) return;
             outgoingQueue.add(frame);
-
-            // CRITICAL: Only wake up the selector.
-            // Do NOT call key.interestOps() here as it is not thread-safe.
+            hasOutgoingQueue = true; // Set volatile flag for thread-safe wake-up
             if (key.selector() != null) {
                 key.selector().wakeup();
             }
@@ -1088,12 +1122,14 @@ public class NioHttpServer implements Runnable {
 
         /**
          * Closes the WebSocket connection gracefully.
-         * @param code Close status code (e.g., 1000 for normal closure)
+         *
+         * @param code   Close status code (e.g., 1000 for normal closure)
          * @param reason Close reason message
          */
         public void close(int code, String reason) {
             if (closed) return;
             closed = true;
+            lastActivityTime = System.currentTimeMillis(); // Track close time
 
             try {
                 // Send WebSocket close frame (opcode 0x8)
@@ -1103,6 +1139,7 @@ public class NioHttpServer implements Runnable {
 
                 WebSocket.Frame closeFrame = new WebSocket.Frame(true, WebSocket.OPCODE_CLOSE, payload.array());
                 outgoingQueue.add(closeFrame);
+                hasOutgoingQueue = true; // Wake up selector
 
                 key.selector().wakeup();
             } catch (Exception e) {
@@ -1131,11 +1168,14 @@ public class NioHttpServer implements Runnable {
             return closed;
         }
 
-        Queue<WebSocket.Frame> getOutgoingQueue() { return outgoingQueue; }
+        Queue<WebSocket.Frame> getOutgoingQueue() {
+            return outgoingQueue;
+        }
     }
 
     private class ConnectionAttachment implements WebSocket.FrameParser.FrameDataHandler { // MODIFIED: implements handler
-        enum ParseState { READING_HEADERS, READING_BODY, WEBSOCKET_FRAME }
+        enum ParseState {READING_HEADERS, READING_BODY, WEBSOCKET_FRAME}
+
         final ByteBuffer readBuffer;
         ByteArrayOutputStream requestData;
         private volatile ParseState state = ParseState.READING_HEADERS;
@@ -1191,7 +1231,8 @@ public class NioHttpServer implements Runnable {
             if (requestData != null) {
                 try {
                     requestData.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             requestData = createByteArrayOutputStream();
             request = null;
@@ -1199,7 +1240,8 @@ public class NioHttpServer implements Runnable {
             if (response != null) {
                 try {
                     response.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
                 response = null;
             }
 
@@ -1207,21 +1249,24 @@ public class NioHttpServer implements Runnable {
             if (wsConnection != null) {
                 try {
                     wsConnection.forceClose();
-                } catch (Exception ignore) { }
+                } catch (Exception ignore) {
+                }
             }
             wsConnection = null;
 
             if (reassemblyBuffer != null) {
                 try {
                     reassemblyBuffer.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             reassemblyBuffer = null;
 
             if (controlFrameBuffer != null) {
                 try {
                     controlFrameBuffer.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             controlFrameBuffer = null;
 
@@ -1249,7 +1294,8 @@ public class NioHttpServer implements Runnable {
             if (requestData != null) {
                 try {
                     requestData.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             requestData = createByteArrayOutputStream(); // Fresh small buffer
 
@@ -1260,7 +1306,8 @@ public class NioHttpServer implements Runnable {
             if (response != null) {
                 try {
                     response.close();
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
                 response = null;
             }
             pendingWriteBuffer = null;
@@ -1285,14 +1332,20 @@ public class NioHttpServer implements Runnable {
                     ByteBuffer leftover = ByteBuffer.wrap(fullData, this.wsUpgradeHeaderEnd, fullData.length - this.wsUpgradeHeaderEnd);
                     this.wsFrameParser.parse(leftover, this);
                 }
-                try { this.requestData.close(); } catch (IOException ignore) { }
+                try {
+                    this.requestData.close();
+                } catch (IOException ignore) {
+                }
             }
 
             this.request = null;
             this.response = null;
 
             if (this.requestData != null) {
-                try { this.requestData.close(); } catch (IOException ignore) { }
+                try {
+                    this.requestData.close();
+                } catch (IOException ignore) {
+                }
             }
             this.requestData = null; // No longer needed
         }
@@ -1302,27 +1355,31 @@ public class NioHttpServer implements Runnable {
                 try {
                     reassemblyBuffer.close();
                     reassemblyBuffer = null; // Help GC
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             if (controlFrameBuffer != null) {
                 try {
                     controlFrameBuffer.close();
                     controlFrameBuffer = null; // Help GC
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             // Clean up requestData
             if (requestData != null) {
                 try {
                     requestData.close();
                     requestData = null;
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
             // Clean up response
             if (response != null) {
                 try {
                     response.close();
                     response = null;
-                } catch (IOException ignore) { }
+                } catch (IOException ignore) {
+                }
             }
         }
 
@@ -1537,15 +1594,28 @@ public class NioHttpServer implements Runnable {
         protected ByteBuffer bodyBuffer;
         protected boolean headersSent = false;
 
-        public HttpResponse() { headers.put("Connection", "keep-alive"); }
-        public HttpResponse setStatus(int code, String text) { this.statusCode = code; this.statusText = text; return this; }
-        public HttpResponse addHeader(String name, String value) { this.headers.put(name, value); return this; }
+        public HttpResponse() {
+            headers.put("Connection", "keep-alive");
+        }
+
+        public HttpResponse setStatus(int code, String text) {
+            this.statusCode = code;
+            this.statusText = text;
+            return this;
+        }
+
+        public HttpResponse addHeader(String name, String value) {
+            this.headers.put(name, value);
+            return this;
+        }
+
         public HttpResponse setBody(byte[] body) {
             byte[] bodyData = (body == null) ? new byte[0] : body;
             this.addHeader("Content-Length", String.valueOf(bodyData.length));
             this.bodyBuffer = ByteBuffer.wrap(bodyData);
             return this;
         }
+
         protected void buildHeaders() {
             StringBuilder sb = new StringBuilder();
             sb.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusText).append("\r\n");
@@ -1553,6 +1623,7 @@ public class NioHttpServer implements Runnable {
             sb.append("\r\n");
             this.headerBuffer = ByteBuffer.wrap(sb.toString().getBytes(StandardCharsets.UTF_8));
         }
+
         public void write(SocketChannel channel) throws IOException {
             if (headerBuffer == null) buildHeaders();
             if (!headersSent) {
@@ -1561,8 +1632,13 @@ public class NioHttpServer implements Runnable {
             }
             if (headersSent && bodyBuffer != null) channel.write(bodyBuffer);
         }
-        public boolean isFullySent() { return headersSent && (bodyBuffer == null || !bodyBuffer.hasRemaining()); }
-        public void close() throws IOException {}
+
+        public boolean isFullySent() {
+            return headersSent && (bodyBuffer == null || !bodyBuffer.hasRemaining());
+        }
+
+        public void close() throws IOException {
+        }
     }
 
     private class FileResponse extends HttpResponse {
@@ -1790,6 +1866,7 @@ public class NioHttpServer implements Runnable {
 
     public static class MimeTypeUtil {
         private static final Map<String, String> MIME_MAP = new HashMap<>();
+
         static {
             // Lossless Audio Formats (Hi-Res)
             MIME_MAP.put("flac", "audio/flac");
@@ -1927,13 +2004,33 @@ public class NioHttpServer implements Runnable {
             headerEnd = 0;
         }
 
-        public String getMethod() { return method; }
-        public String getPath() { return path; }
-        public String getRemoteHost() {return remoteHost;}
-        public Map<String, String> getHeaders() { return Collections.unmodifiableMap(headers); }
-        public String getHeader(String name, String defaultValue) { return headers.getOrDefault(name.toLowerCase(), defaultValue); }
-        public byte[] getBody() { return body; }
-        public int getHeaderEnd() { return headerEnd; }
+        public String getMethod() {
+            return method;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public String getRemoteHost() {
+            return remoteHost;
+        }
+
+        public Map<String, String> getHeaders() {
+            return Collections.unmodifiableMap(headers);
+        }
+
+        public String getHeader(String name, String defaultValue) {
+            return headers.getOrDefault(name.toLowerCase(), defaultValue);
+        }
+
+        public byte[] getBody() {
+            return body;
+        }
+
+        public int getHeaderEnd() {
+            return headerEnd;
+        }
     }
 
     private static class WebSocketHandshake {
@@ -2007,5 +2104,104 @@ public class NioHttpServer implements Runnable {
             }
             super.write(b);
         }
+    }
+
+    /**
+     * Metrics monitoring for production use.
+     * Returns JSON metrics about the server state.
+     */
+    public Map<String, Object> getMetrics() {
+        Map<String, Object> metrics = new HashMap<>();
+        metrics.put("activeConnections", activeConnections.get());
+        metrics.put("activeStreams", activeStreams.get());
+        metrics.put("maxConnections", maxConnections);
+        metrics.put("maxThread", maxThread);
+        metrics.put("maxConcurrentStreams", maxConcurrentStreams);
+        metrics.put("maxRequestSize", maxRequestSize);
+        metrics.put("maxWebSocketFrameSize", maxWebSocketFrameSize);
+        metrics.put("keepAliveTimeout", keepAliveTimeout);
+        metrics.put("socketBacklog", socketBacklog);
+        metrics.put("clientReadBufferSize", clientReadBufferSize);
+
+        // Pool sizes
+        metrics.put("attachmentPoolSize", attachmentPool != null ?
+                Math.min(attachmentPool.pool.size(), 50) : 0);
+        metrics.put("requestPoolSize", requestPool != null ?
+                Math.min(requestPool.pool.size(), 50) : 0);
+
+        // Response queue size
+        metrics.put("responseQueueSize", responseQueue.size());
+
+        // WebSocket sessions
+        metrics.put("activeWebSocketSessions", getActiveWebSocketSessions());
+
+        // Memory usage
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        long freeMemory = Runtime.getRuntime().freeMemory();
+        metrics.put("memoryTotal", totalMemory);
+        metrics.put("memoryFree", freeMemory);
+        metrics.put("memoryUsed", totalMemory - freeMemory);
+        metrics.put("memoryUsagePercent", ((double) (totalMemory - freeMemory) / maxMemory) * 100);
+
+        // GC info
+        // Note: java.lang.management is not available on Android
+        metrics.put("gcCount", 0);
+        metrics.put("gcMemoryPercent", ((double) totalMemory / maxMemory) * 100);
+
+        // Thread info
+        metrics.put("threadCount", Thread.activeCount());
+        metrics.put("workerPoolThreads", (workerPool instanceof ThreadPoolExecutor) ?
+                ((ThreadPoolExecutor) workerPool).getActiveCount() : 0);
+
+        return metrics;
+    }
+
+    /**
+     * Health check endpoint - returns 200 if server is healthy.
+     */
+    public boolean isHealthy() {
+        return isRunning && selector != null;
+    }
+
+    /**
+     * Graceful shutdown with metrics dump.
+     */
+    public void shutdownAndDumpMetrics() {
+        System.out.println("=== SonicNIO Server Metrics ===");
+        System.out.println("Active Connections: " + activeConnections.get());
+        System.out.println("Active Streams: " + activeStreams.get());
+        System.out.println("WebSocket Sessions: " +
+                getActiveWebSocketSessions());
+        System.out.println("Response Queue: " + responseQueue.size());
+        System.out.println("Memory Usage: " + (getMemoryUsagePercent() + "%"));
+        System.out.println("Thread Count: " + Thread.activeCount());
+        System.out.println("Worker Pool Active: " +
+                ((workerPool instanceof ThreadPoolExecutor) ? ((ThreadPoolExecutor) workerPool).getActiveCount() : 0));
+        System.out.println("================================");
+        System.out.println("Shutting down...");
+        stop();
+    }
+
+    private int getActiveWebSocketSessions() {
+        int count = 0;
+        for (SelectionKey key : selector.keys()) {
+            if (key.isValid() && key.attachment() instanceof ConnectionAttachment att) {
+                if (att.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME &&
+                        att.wsConnection != null) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private double getMemoryUsagePercent() {
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        if (maxMemory > 0) {
+            return ((double) (totalMemory - Runtime.getRuntime().freeMemory()) / maxMemory) * 100;
+        }
+        return 0;
     }
 }

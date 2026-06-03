@@ -103,7 +103,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private final BehaviorSubject<List<Track>> playingQueueSubject =
             BehaviorSubject.createDefault(new ArrayList<>());
 
-   //TODO: change to playing/monitor mode
     private RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
     private String controlledPlayerTargetId;
     private final ScheduledExecutorService scheduler =
@@ -281,9 +280,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void startServers() {
       //  if (mediaServer.isInitialized()) return;
 
-        if (!NetworkUtils.isWifiConnected(this)) {
+        if (!NetworkUtils.isServerNetworkAvailable(this)) {
             statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
-            Log.d(TAG, TAG+" - Error, Required WiFi network");
+            Log.d(TAG, TAG+" - Error, Required WiFi or Hotspot network");
             return;
         }
 
@@ -844,12 +843,15 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void onAccessMediaTrack(Track song) {
         currentTrackSubject.onNext(Optional.ofNullable(song));
-        runningMode = RUNNING_MODE.MONITOR;
+        runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
         state.currentTrack = song;
         state.currentPositionSecond = 0;
         onPlaybackStateChanged(state);
+        
+        // EVENT-DRIVEN PIPELINE ENTRY
+        handleTrackStartEvent(song);
     }
 
     @Override

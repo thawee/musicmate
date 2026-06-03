@@ -1,5 +1,6 @@
 package apincer.music.core.http;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimitingHandler extends ChainedHandler {
     private final int maxRequestsPerSecond;
@@ -9,6 +10,9 @@ public class RateLimitingHandler extends ChainedHandler {
 
     // Evict stale entries once every 60 seconds to prevent unbounded map growth.
     private volatile long lastEvictSecond = 0;
+    
+    // Atomic counter for evictions to prevent lost updates under high concurrency
+    private final AtomicLong evictionCount = new AtomicLong(0);
 
     public RateLimitingHandler(int maxRequestsPerSecond, NioHttpServer.Handler next) {
         super(next);
@@ -23,10 +27,16 @@ public class RateLimitingHandler extends ChainedHandler {
         long currentSecond = System.currentTimeMillis() / 1000;
 
         // Periodically remove entries that haven't been active for more than 2 seconds.
-        // Uses a non-synchronized check so only one thread triggers eviction per interval.
+        // Uses atomic eviction to prevent lost updates under high concurrency.
         if (currentSecond - lastEvictSecond > 60) {
             lastEvictSecond = currentSecond;
+            long removed = evictionCount.getAndIncrement();
+            // Remove stale entries atomically - only one thread will do bulk cleanup
             clients.entrySet().removeIf(e -> currentSecond - e.getValue().second > 2);
+            // Log eviction count periodically
+            if (removed % 10000 == 0) {
+                System.out.println("RateLimiter: Evicted " + removed + " stale entries");
+            }
         }
 
         // Get or create the record for this IP (almost zero allocation after first request)

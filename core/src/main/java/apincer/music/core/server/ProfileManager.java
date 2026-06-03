@@ -29,11 +29,11 @@ public class ProfileManager {
         int memoryClass = am.getMemoryClass();
 
         if (memoryClass > 256) {
-            return 131072; // 128KB for high-end devices
+            return 262144; // 256KB for high-end devices (Hi-Res Audio Sweet Spot)
         } else if (memoryClass > 128) {
-            return 65536;  // 64KB standard
+            return 131072;  // 128KB standard
         } else {
-            return 32768;  // 32KB low mem
+            return 65536;  // 64KB low mem
         }
     }
 

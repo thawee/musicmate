@@ -513,7 +513,7 @@ public class TagRepository {
         // This new line sorts the list in-place alphabetically by title
         //folderList.sort(Comparator.comparing(MusicTag::getTitle));
 
-        //todo: add notes to every items
+
 
 
         final int defaultPriority = Integer.MAX_VALUE;

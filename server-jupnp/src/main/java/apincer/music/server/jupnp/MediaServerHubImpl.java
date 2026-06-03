@@ -1,7 +1,10 @@
 package apincer.music.server.jupnp;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.*;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
@@ -149,9 +152,13 @@ public class MediaServerHubImpl implements MediaServerHub {
     private final Object stateLock = new Object();
     private volatile State state = State.IDLE;
 
-    // Network
+    // Network — WiFi / Ethernet client
     private final ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
+
+    // Network — Hotspot / AP mode
+    private BroadcastReceiver hotspotReceiver;
+    private volatile boolean hotspotAvailable = false;
 
     // Locks
     private PowerManager.WakeLock wakeLock;
@@ -196,6 +203,10 @@ public class MediaServerHubImpl implements MediaServerHub {
     /**
      * Starts the UPnP service stack, acquires system locks, and begins device discovery.
      * This operation is thread-safe and asynchronous.
+     *
+     * <p>The {@link ConnectivityManager.NetworkCallback} is registered here (not inside the
+     * UPnP thread) so that it survives stop/start cycles and can trigger auto-restart when
+     * WiFi is restored after a loss.
      */
     @Override
     public void start() {
@@ -207,12 +218,16 @@ public class MediaServerHubImpl implements MediaServerHub {
             state = State.STARTING;
         }
 
+        // Register both network watchers BEFORE starting the UPnP thread so they survive
+        // the stop() → IDLE transition and can fire evaluateNetworkState() on recovery.
+        startNetworkMonitoring();
+        startHotspotMonitoring();
+
         runOnUpnpThread(() -> {
             try {
                 acquireLocks();
                 initUpnp();
 
-                startNetworkMonitoring();
                 startPeriodicDiscovery();
 
                 synchronized (stateLock) {
@@ -253,6 +268,11 @@ public class MediaServerHubImpl implements MediaServerHub {
     /**
      * Gracefully shuts down the UPnP stack, releases all system locks, and notifies
      * the network of the device's departure (SSDP Bye-Bye).
+     *
+     * <p>The {@link ConnectivityManager.NetworkCallback} is intentionally <b>not</b> unregistered
+     * here. It must remain active so that {@link #evaluateNetworkState()} can detect when WiFi
+     * is restored and automatically restart the server. The callback is only torn down in
+     * {@link #release()}.
      */
     @Override
     public void stop() {
@@ -267,7 +287,8 @@ public class MediaServerHubImpl implements MediaServerHub {
         runOnUpnpThread(() -> {
             try {
                 stopPeriodicDiscovery();
-                stopNetworkMonitoring();
+                // ✅ Do NOT call stopNetworkMonitoring() here — the callback must stay
+                //    alive across stop/start cycles to enable WiFi-loss auto-recovery.
 
                 if (upnpService != null) {
                     try { sendByebye(); } catch (Exception ignored) {}
@@ -379,14 +400,16 @@ public class MediaServerHubImpl implements MediaServerHub {
     private void startNetworkMonitoring() {
         if (networkCallback != null) return; // ✅ prevent duplicate
 
+        // Include TRANSPORT_ETHERNET so the server also responds to wired network changes.
         NetworkRequest request = new NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
                 .build();
 
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "WiFi available");
+                Log.d(TAG, "Network available");
                 if (network.equals(currentNetwork)) {
                     Log.d(TAG, "Same network → ignore");
                     return;
@@ -395,12 +418,13 @@ public class MediaServerHubImpl implements MediaServerHub {
                 currentNetwork = network;
                 wifiAvailable = true;
 
+                // 1-second delay avoids racing DHCP/IP assignment on reconnect.
                 scheduler.schedule(() -> evaluateNetworkState(), 1, TimeUnit.SECONDS);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-                Log.d(TAG, "WiFi lost");
+                Log.d(TAG, "Network lost");
 
                 if (!network.equals(currentNetwork)) return;
 
@@ -412,13 +436,15 @@ public class MediaServerHubImpl implements MediaServerHub {
         };
 
         connectivityManager.registerNetworkCallback(request, networkCallback);
+        Log.d(TAG, "Network monitoring started");
     }
 
     private void evaluateNetworkState() {
         synchronized (stateLock) {
-            Log.d(TAG, "Evaluate → state=" + state + ", wifi=" + wifiAvailable);
+            boolean networkUp = wifiAvailable || hotspotAvailable;
+            Log.d(TAG, "Evaluate → state=" + state + ", wifi=" + wifiAvailable + ", hotspot=" + hotspotAvailable);
 
-            if (wifiAvailable) {
+            if (networkUp) {
                 if (state == State.IDLE) {
                     Log.d(TAG, "Network OK → starting");
                     start();
@@ -441,6 +467,48 @@ public class MediaServerHubImpl implements MediaServerHub {
         }
     }
 
+    private void startHotspotMonitoring() {
+        if (hotspotReceiver != null) return; // already registered
+
+        hotspotReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context ctx, Intent intent) {
+                // isHotspotActive() does the real detection by scanning network interfaces.
+                boolean nowActive = apincer.music.core.utils.NetworkUtils.isHotspotActive(context);
+                if (nowActive != hotspotAvailable) {
+                    hotspotAvailable = nowActive;
+                    Log.d(TAG, "Hotspot " + (nowActive ? "started" : "stopped"));
+                    if (nowActive) {
+                        // 2-second delay so the AP interface is fully up before UPnP binds.
+                        scheduler.schedule(() -> evaluateNetworkState(), 2, TimeUnit.SECONDS);
+                    } else {
+                        evaluateNetworkState();
+                    }
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED");
+        context.registerReceiver(hotspotReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        Log.d(TAG, "Hotspot monitoring started");
+
+        // Evaluate immediately in case hotspot was already on when we registered.
+        hotspotAvailable = apincer.music.core.utils.NetworkUtils.isHotspotActive(context);
+        if (hotspotAvailable) {
+            Log.d(TAG, "Hotspot already active at startup");
+        }
+    }
+
+    private void stopHotspotMonitoring() {
+        if (hotspotReceiver != null) {
+            try {
+                context.unregisterReceiver(hotspotReceiver);
+            } catch (Exception ignored) {}
+            hotspotReceiver = null;
+            hotspotAvailable = false;
+        }
+    }
+
     // =========================================================
     // LOCKS
     // =========================================================
@@ -451,7 +519,9 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         if (pm != null && wakeLock == null) {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MM:Wake");
-            wakeLock.acquire(10*60*1000L /*10 minutes*/);
+            // No timeout — streaming sessions can last hours. releaseLocks() MUST be called
+            // on stop to avoid a leak. This is guaranteed by the finally block in stop().
+            wakeLock.acquire();
         }
 
         if (wm != null && wifiLock == null) {
@@ -481,6 +551,9 @@ public class MediaServerHubImpl implements MediaServerHub {
     // =========================================================
 
     public void release() {
+        // Unregister all network callbacks only on full hub teardown.
+        stopNetworkMonitoring();
+        stopHotspotMonitoring();
         stop();
         upnpExecutor.shutdownNow();
         scheduler.shutdownNow();
@@ -942,8 +1015,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                         }
                     }
             );
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
+        } catch (Exception e) {
+            Log.w(TAG, "getAvTransportPosition failed", e);
         }
     }
 

@@ -6,7 +6,7 @@
 
     <RelativeLayout
         android:id="@+id/sv_left_header_holder"
-        android:layout_width="180dp"
+        android:layout_width="260dp"
         android:layout_alignParentLeft="true"
         android:layout_height="wrap_content" >
     </RelativeLayout>

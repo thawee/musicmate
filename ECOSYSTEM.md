@@ -14,7 +14,7 @@ This is the heart of the system, running as a background service inside the Musi
 -   **Web Server (HTTP Server):**
     -   **Purpose:** Control.
     -   **Function:** Serves a modern web application that acts as the **MusicMate Remote**.
-    -   **Technology:** `jetty-server12` is perfect for embedding a powerful web server directly in the app.
+    -   **Technology:** Pluggable HTTP engine — **SonicNIO** (default), **CoreHTTP** (Apache HttpCore 5), or **Netty 4.2** — selected at compile time via Gradle flavors.
 
 #### 2. The Players (The "Endpoints" / DMRs)
 -   These can be any standard DLNA Digital Media Renderer on the network.

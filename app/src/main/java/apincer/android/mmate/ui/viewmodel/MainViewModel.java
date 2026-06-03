@@ -79,6 +79,66 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    public void loadUntilFound(Track target, Runnable onLoaded) {
+        if (target == null) {
+            if (onLoaded != null) onLoaded.run();
+            return;
+        }
+
+        // Check if already loaded
+        List<Track> currentItems = _musicItems.getValue();
+        if (currentItems != null && currentItems.contains(target)) {
+            if (onLoaded != null) onLoaded.run();
+            return;
+        }
+        
+        if (isLastPage) {
+            if (onLoaded != null) onLoaded.run();
+            return;
+        }
+
+        _musicItemsLoading.setValue(true);
+        backgroundExecutor.execute(() -> {
+            try {
+                boolean found = false;
+                List<Track> current = _musicItems.getValue();
+                if (current == null) {
+                    current = new java.util.ArrayList<>();
+                } else {
+                    current = new java.util.ArrayList<>(current);
+                }
+
+                while (!found && !isLastPage) {
+                    List<Track> items = repos.findMusic(currentCriteria, currentPage * PAGE_SIZE, PAGE_SIZE);
+                    if (items.isEmpty()) {
+                        isLastPage = true;
+                        break;
+                    }
+                    current.addAll(items);
+                    currentPage++;
+                    if (items.size() < PAGE_SIZE) {
+                        isLastPage = true;
+                    }
+                    if (items.contains(target)) {
+                        found = true;
+                    }
+                }
+
+                _musicItems.postValue(current);
+                _musicItemsLoading.postValue(false);
+                
+                if (onLoaded != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(onLoaded);
+                }
+            } catch (Exception e) {
+                _musicItemsLoading.postValue(false);
+                if (onLoaded != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(onLoaded);
+                }
+            }
+        });
+    }
+
     public void loadMusicItems(SearchCriteria criteria) {
         currentCriteria = criteria;
         currentPage = 0;

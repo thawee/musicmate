@@ -213,9 +213,9 @@ dependencies {
     nioImplementation project(':server-jupnp')
 
     // jetty
-    jettyImplementation libs.jupnp.android
-    jettyImplementation project(':server-jupnp')
-    jettyImplementation project(':server-jupnp-jetty')
+   // jettyImplementation libs.jupnp.android
+   // jettyImplementation project(':server-jupnp')
+   // jettyImplementation project(':server-jupnp-jetty')
 
     //netty
     nettyImplementation libs.jupnp.android
@@ -223,9 +223,9 @@ dependencies {
     nettyImplementation project(':server-jupnp-netty')
 
     //undertow
-    undertowImplementation libs.jupnp.android
-    undertowImplementation project(':server-jupnp')
-    undertowImplementation project(':server-jupnp-undertow')
+  //  undertowImplementation libs.jupnp.android
+   // undertowImplementation project(':server-jupnp')
+   // undertowImplementation project(':server-jupnp-undertow')
 
     //httpcore
     httpcoreImplementation libs.jupnp.android

@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doShowSignalPath() {
-        //TODO: if selected player is local, reset player for song title refresh
+
         if(playbackService != null && playbackService.getPlayer() != null) {
             if(!playbackService.getPlayer().isStreaming()) {
                 playbackService.switchPlayer(playbackService.getPlayer(), true);
@@ -715,6 +715,14 @@ public class MainActivity extends AppCompatActivity {
     private void doShowLeftMenus() {
         if (Settings.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
+            // Explicitly set layout params because inflating with null root discards them
+            android.widget.RelativeLayout.LayoutParams params = new android.widget.RelativeLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, 
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            int marginPx = (int) (12 * getResources().getDisplayMetrics().density);
+            params.setMargins(marginPx, marginPx, marginPx, marginPx);
+            storageView.setLayoutParams(params);
+                    
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
             TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
             TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
@@ -725,17 +733,6 @@ public class MainActivity extends AppCompatActivity {
             totalSongText.setText(StringUtils.formatSongSize(songCount));
             totalDurationText.setText(StringUtils.formatDuration(totalDuration, true));
             UIUtils.buildStoragesStatus(getApplication(), panel);
-            
-            // Apply dynamic tint if we have a current track
-            if (previouslyPlaying != null) {
-                int color = TagUtils.getCodecColor(getApplicationContext(), previouslyPlaying);
-                int alphaColor = ColorUtils.setAlphaComponent(color, 64);
-                View container = storageView.findViewById(R.id.bottom_frosted_panel);
-                if (container != null && container.getBackground() != null) {
-                    container.getBackground().setTint(alphaColor);
-                    container.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
-                }
-            }
 
             mResideMenu.setLeftHeader(storageView);
         }
@@ -832,8 +829,12 @@ public class MainActivity extends AppCompatActivity {
     private void scrollToSong(Track currentlyPlaying) {
         if (currentlyPlaying == null) return;
 
-        int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
-        scrollToPosition(positionToScroll);
+        viewModel.loadUntilFound(currentlyPlaying, () -> {
+            int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
+            if (positionToScroll != RecyclerView.NO_POSITION) {
+                scrollToPosition(positionToScroll);
+            }
+        });
     }
 
     private void scrollToPosition(int position) {

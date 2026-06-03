@@ -308,22 +308,7 @@ public class CacheImageDownloader {
 					OutputStream outputStream = null;
 					try {
 						inputStream = entity.getContent();
-						final ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
-						outputStream = new BufferedOutputStream(dataStream,
-								BitmapDownloaderTask.IO_BUFFER_SIZE);
-						copy(inputStream, outputStream);
-						outputStream.flush();
-
-						final byte[] data = dataStream.toByteArray();
-						final Bitmap bitmap = BitmapFactory.decodeByteArray(
-								data, 0, data.length);
-
-						// FIXME : Should use
-						// BitmapFactory.decodeStream(inputStream) instead.
-						// final Bitmap bitmap =
-						// BitmapFactory.decodeStream(inputStream);
-
-						return bitmap;
+						return BitmapFactory.decodeStream(inputStream);
 
 					} finally {
 						if (inputStream != null) {

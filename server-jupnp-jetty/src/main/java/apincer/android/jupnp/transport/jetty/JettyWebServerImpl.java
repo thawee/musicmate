@@ -65,8 +65,8 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
     private static final int MIN_THREADS = 4;
     private static final int IDLE_TIMEOUT = 300_000; // 5 mins
 
-    // 128KB buffer is a sweet spot for high-res audio on Android memory limits
-    private static final int OUTPUT_BUFFER_SIZE = 131_072;
+    // 256KB buffer is a sweet spot for high-res audio on Android memory limits
+    private static final int OUTPUT_BUFFER_SIZE = 262_144;
 
     private Thread serverThread;
     private final Object serverLock = new Object();

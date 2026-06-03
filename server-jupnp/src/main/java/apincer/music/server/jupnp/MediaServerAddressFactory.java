@@ -21,7 +21,9 @@ public class MediaServerAddressFactory extends NetworkAddressFactoryImpl {
             return false;
         }
 
-        // Now, add our specific condition: the interface name must be for WiFi.
-        return NetworkUtils.isOnWifiNetwork(networkInterface, address) || NetworkUtils.isOnCellularNetwork(networkInterface, address);
+        // Allow WiFi client interfaces (wlan*) AND hotspot/AP interfaces (ap*, swlan*).
+        return NetworkUtils.isOnWifiNetwork(networkInterface, address)
+                || NetworkUtils.isOnHotspotInterface(networkInterface, address)
+                || NetworkUtils.isOnCellularNetwork(networkInterface, address);
     }
 }

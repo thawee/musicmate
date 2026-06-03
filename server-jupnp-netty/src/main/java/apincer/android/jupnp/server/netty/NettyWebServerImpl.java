@@ -94,8 +94,9 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
 
                 .childOption(ChannelOption.TCP_NODELAY, true)     // 🔥 important for streaming
                 .childOption(ChannelOption.SO_KEEPALIVE, true)    // 🔥 DLNA stability
+                .childOption(ChannelOption.IP_TOS, 0x18)          // 🔥 priority tagging
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
-                        new WriteBufferWaterMark(131072, 262144))  // 🔥 backpressure
+                        new WriteBufferWaterMark(262144, 524288))  // 256KB low, 512KB high watermark
                 .childHandler(new ContentServerInitializer());
 
         serverChannel = b.bind(bindAddress, getListenPort()).sync().channel();

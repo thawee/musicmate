@@ -195,7 +195,7 @@ public class BaseServer {
     }
 
     private void notifyPlayback(String clientIp, String userAgent, Track tag) {
-        // FIXME remove or not
+
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
                 PlaybackTarget player = WebStreamingPlayer.Factory.create(clientIp, userAgent, clientIp);
@@ -967,7 +967,7 @@ public class BaseServer {
         public Map<String, Object> sendQueueUpdate() {
             try {
                 // Fetching QueueItems which contain the order and the MusicTag
-                // FIXME call queueManager.getSongs()
+
                 //List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
                 List<Track> songs = queueManager.getSongs();
                 List<Map<String, ?>> queueAsMaps = songs.stream()
