@@ -1,5 +1,14 @@
 # Checklist: Fix "No Network" in Server Management Dialog on Hotspot Mode
 
+## Phase 4: Cover Art Border Alignment Fix
+- [x] Write implementation plan for fixing cover art corner overlapping with border (completed)
+- [x] Add precise padding (`paddingLeft="1dp"`, `paddingTop="1dp"`, `paddingRight="3dp"`, `paddingBottom="3dp"`) to `item_imageFrame` in layout files:
+  - [x] [view_list_item.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item.xml)
+  - [x] [view_list_item2.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item2.xml)
+  - [x] [view_list_item_compared.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_list_item_compared.xml)
+- [x] Verify compilation after UI layout changes
+
+
 ## Phase 1: Planning and Verification
 - [x] Research and confirm current SSID and network check implementation
 - [x] Submit plan for user approval (completed)
