@@ -47,18 +47,18 @@ android {
                 dimension = "server"
                 // Gradle will look for code in `src/nio/java`
             }
-            jetty {
-                dimension = "server"
+           // jetty {
+            //    dimension = "server"
                 // Gradle will look for code in `src/jetty/java`
-            }
+           // }
             netty {
                 dimension = "server"
                 // Gradle will look for code in `src/netty/java`
             }
-            undertow {
-                dimension = "server"
+           // undertow {
+            //    dimension = "server"
                 // Gradle will look for code in `src/undertow/java`
-            }
+            //}
             httpcore {
                 dimension = "server"
                 // Gradle will look for code in `src/httpcore/java`

@@ -156,8 +156,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            app:tabIndicatorColor="#FFD700"
-            app:tabSelectedTextColor="#FFD700"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabSelectedTextColor="?attr/colorPrimary"
             app:tabTextColor="#80FFFFFF"
             app:tabTextAppearance="@style/TextAppearance.Material3.TitleSmall"/>
 
@@ -218,6 +218,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Import"
+                    android:textColor="@color/colorPrimary"
                     app:cornerRadius="20dp" />
 
                 <View
@@ -235,18 +236,111 @@
                     android:textColor="@color/white" />
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_edit"
-                style="@style/Widget.Material3.Button"
-                android:layout_below="@+id/main_menu_panel"
-                android:gravity="center"
-                android:layout_marginTop="12dp"
-                android:layout_centerInParent="true"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/preview_action_group"
                 android:layout_width="match_parent"
-                android:layout_marginHorizontal="24dp"
                 android:layout_height="wrap_content"
-                android:text="Edit Song Info"
-                app:cornerRadius="24dp" />
+                android:layout_below="@+id/main_menu_panel"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                app:singleSelection="true"
+                app:selectionRequired="false">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_editor"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Edit Song Info"
+                    android:textColor="@color/colorPrimary"
+                    app:cornerRadius="20dp"/>
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/editor_action_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/main_menu_panel"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                app:singleSelection="true"
+                app:selectionRequired="false">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_reformat"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/round_auto_awesome_24" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="#1AFFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_read_tag"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_file_rename_outline_24" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="#1AFFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_save"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_round_save_24" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/tech_action_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/main_menu_panel"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                app:singleSelection="true"
+                app:selectionRequired="false">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_reload_tag"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/round_restore_page_24" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="#1AFFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_extract_coverart"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_round_image_24" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="#1AFFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_remove_coverart"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_round_hide_image_24" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 

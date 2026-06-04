@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/shape_bottom_frosted_panel">
+        android:background="@drawable/bg_dialog_dark_blur">
 
         <!-- Header -->
         <LinearLayout
@@ -32,12 +32,12 @@
                 android:layout_height="24dp"
                 android:src="@drawable/rounded_label_24"
                 android:layout_marginEnd="12dp"
-                app:tint="#FFD700" />
+                app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Library Expansion"
+                android:text="Discover Music Folders"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:textStyle="bold"

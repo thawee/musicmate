@@ -342,12 +342,11 @@ public class MainActivity extends AppCompatActivity {
                                 adapter.getCriteria().setFilterType(filterType);
                                 adapter.getCriteria().setFilterText(filterText);
                             }
+                            viewModel.loadMusicItems(adapter.getCriteria());
+                        } else {
+                            viewModel.reloadMusicItems();
                         }
                     }
-
-                    // load music items
-                    viewModel.loadMusicItems(adapter.getCriteria());
-                   // viewModel.loadMusicItems(adapter.getCriteria());
                 });
 
         // Setup status bar
@@ -390,10 +389,20 @@ public class MainActivity extends AppCompatActivity {
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
             mRecyclerView.post(() -> {
+                // Save layout manager state to restore scroll position
+                android.os.Parcelable state = null;
+                if (mRecyclerView.getLayoutManager() != null) {
+                    state = mRecyclerView.getLayoutManager().onSaveInstanceState();
+                }
+
                 adapter.setMusicTags(musicTags);
                 swipeRefreshLayout.setRefreshing(false);
                 // Update header after adapter is populated; stats observer will correct later
                 updateHeaderPanel(viewModel.searchStats.getValue());
+
+                if (state != null && mRecyclerView.getLayoutManager() != null) {
+                    mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+                }
             });
             if (musicTags == null || musicTags.isEmpty()) {
                 emptyStateView.setVisibility(View.VISIBLE);
@@ -721,18 +730,20 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             // Explicitly set layout params because inflating with null root discards them
             android.widget.RelativeLayout.LayoutParams params = new android.widget.RelativeLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, 
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
             int marginPx = (int) (12 * getResources().getDisplayMetrics().density);
             params.setMargins(marginPx, marginPx, marginPx, marginPx);
             storageView.setLayoutParams(params);
-                    
+
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
             TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
             TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
 
-            long songCount = viewModel.getTagRepository().getTotalSongs();
-            long totalDuration = viewModel.getTagRepository().getTotalDuration();
+            // Re-use the already-computed SearchResultStats from the ViewModel (avoids a redundant DB query)
+            SearchResultStats stats = viewModel.searchStats.getValue();
+            long songCount = (stats != null) ? stats.getTotalCount() : 0;
+            double totalDuration = (stats != null) ? stats.getTotalDuration() : 0;
 
             totalSongText.setText(StringUtils.formatSongSize(songCount));
             totalDurationText.setText(StringUtils.formatDuration(totalDuration, true));
@@ -1108,7 +1119,7 @@ public class MainActivity extends AppCompatActivity {
                             if(isPlaybackServiceBound) {
                                 playbackService.playSong(tag);
                             }
-                            viewModel.getTagRepository().deleteMediaTag(tag);
+                            viewModel.deleteMediaTag(tag);
                            // repos.deleteMediaItem(tag);
                             viewModel.loadMusicItems(adapter.getCriteria());
                             dialogInterface.dismiss();

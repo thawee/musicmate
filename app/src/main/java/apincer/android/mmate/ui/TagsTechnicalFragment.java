@@ -21,8 +21,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.button.MaterialButtonToggleGroup;
-
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -47,8 +45,12 @@ public class TagsTechnicalFragment extends Fragment {
     protected Context context;
     protected TagsActivity tagsActivity;
     private AlertDialog progressDialog;
+    
+    private TextView filename;
+    private TextView metada;
+    private TableLayout table;
 
-    private MaterialButtonToggleGroup toggleGroup;
+   // private MaterialButtonToggleGroup toggleGroup;
 
     @Inject
     TagRepository tagRepos;
@@ -66,16 +68,17 @@ public class TagsTechnicalFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v =  inflater.inflate(R.layout.fragment_editor_tech, container, false);
 
-        toggleGroup = v.findViewById(R.id.actionGroup);
+        //toggleGroup = v.findViewById(R.id.actionGroup);
        // MaterialButton buttonReadTag = v.findViewById(R.id.btn_reload_tag);
        // MaterialButton buttonExtractCoverart = v.findViewById(R.id.btn_extract_coverart);
        // MaterialButton buttonRemoveCoverart = v.findViewById(R.id.btn_remove_coverart);
 
-        setupActions();
+       // setupActions();
 
         return v;
     }
 
+    /*
     private void setupActions() {
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return; // avoid double-trigger on uncheck
@@ -91,16 +94,28 @@ public class TagsTechnicalFragment extends Fragment {
             // Deselect after action (to act like toolbar buttons)
             group.clearChecked();
         });
-    }
+    } */
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        TextView filename = view.findViewById(R.id.filename);
-        TextView metada = view.findViewById(R.id.ffmpeg_info);
-        TableLayout table = view.findViewById(R.id.tags);
+        filename = view.findViewById(R.id.filename);
+        metada = view.findViewById(R.id.ffmpeg_info);
+        table = view.findViewById(R.id.tags);
 
-        Track tag = tagsActivity.getEditItems().get(0);
+        List<Track> editItems = tagsActivity.getEditItems();
+        if (!editItems.isEmpty()) {
+            displayTechnicalInfo(editItems.get(0));
+        }
+    }
+
+    public void displayTechnicalInfo(Track tag) {
+        if (tag == null || getContext() == null || filename == null || metada == null || table == null) {
+            return;
+        }
+
+        table.removeAllViews();
+
         String musicMatePath = fileRepos.buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
@@ -149,20 +164,9 @@ public class TagsTechnicalFragment extends Fragment {
         cell.addView(tv);
         tbrow0.addView(cell);
 
-
-       // cell = new LinearLayout(getContext());
-       // cell.setBackgroundColor(Color.DKGRAY);
-       // cell.setLayoutParams(llp);//2px border on the right for the cell
-       // tv = new TextView(getContext());
-       // tv.setText(R.string.label_ffmpeg_reader);
-     //   tv.setTextColor(Color.WHITE);
-      //  cell.addView(tv);
-      //  tbrow0.addView(cell);
         table.addView(tbrow0);
 
-
         List<Field> fields =  ReflectUtil.getAllFields(tag.getClass());
-       // String text = "\nField Name\t--> Library\t<>\tFFMPeg\n";
         for(Field field: fields) {
             if (field.getName().equals("path")
                     || field.getName().equals("simpleName")
@@ -185,23 +189,15 @@ public class TagsTechnicalFragment extends Fragment {
             tr.setBackgroundColor(Color.BLACK);
             tr.setPadding(4, 0, 4, 2); //Border between rows
 
-           // TableRow.LayoutParams llp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-           // llp.setMargins(0, 0, 2, 0);//2px right-margin
-
             //New Cell
             String mateVal = format(ReflectUtil.getFieldValue(field,tag),20,"\n");
             String stdVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
-           // String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
-
-            //String mateVal = ReflectUtil.getFieldValue(field,tag).toString();
-            //String stdVal = ReflectUtil.getFieldValue(field,tt).toString();
 
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(rowBgColor);
             cell.setLayoutParams(llp);
             TextView t1v = new TextView(getContext());
             t1v.setText(field.getName());
-            //t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
             t1v.setTextColor(StringUtils.equals(stdVal, mateVal)?Color.WHITE:Color.RED);
             t1v.setGravity(Gravity.START);
             t1v.setPadding(24, 8, 24, 8);
@@ -230,21 +226,11 @@ public class TagsTechnicalFragment extends Fragment {
             cell.addView(t3v);
             tr.addView(cell);
 
-           /* cell = new LinearLayout(getContext());
-            cell.setBackgroundColor(Color.GRAY);
-            cell.setLayoutParams(llp);//2px border on the right for the cell
-            t3v = new TextView(getContext());
-            t3v.setText(ffmpegVal);
-            t3v.setTextColor(Color.WHITE);
-            t3v.setGravity(Gravity.CENTER);
-            cell.addView(t3v);
-            tr.addView(cell); */
-
             table.addView(tr);
         }
     }
 
-    private void doRemoveEmbedCoverart() {
+    void doRemoveEmbedCoverart() {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
@@ -263,7 +249,7 @@ public class TagsTechnicalFragment extends Fragment {
         );
     }
 
-    private void doExtractEmbedCoverart() {
+    void doExtractEmbedCoverart() {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
@@ -285,7 +271,7 @@ public class TagsTechnicalFragment extends Fragment {
         );
     }
 
-    private void doResetTagFromFile() {
+    void doResetTagFromFile() {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {

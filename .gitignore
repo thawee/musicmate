@@ -12,3 +12,4 @@ build/
 */*/build/
 *~
 *.swp
+node_modules/

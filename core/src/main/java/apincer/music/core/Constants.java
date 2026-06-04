@@ -51,13 +51,13 @@ public final class Constants {
     public static final String TITLE_INCOMING_SONGS = "Recently Added";
     public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
-    public static final String TITLE_HIRES_QUALITY = "Hi-Res Quality"; //""Hi-Res Lossless";
+    public static final String TITLE_HIRES_QUALITY = "Hi-Res Lossless"; //"Hi-Res Quality";
 
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_CD_EXT_QUALITY = "24-bit Studio Quality";
+    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality"; //"24-bit Studio Quality";
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "Lossy Compressed Quality"; //"Lossy Quality"; //"Lossy Codec"; //""High Quality";
-    public static final String TITLE_MQA_MASTER_QUALITY = "MQA Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_HIGH_QUALITY = "Compressed"; //"Lossy Compressed Quality";
+    public static final String TITLE_MQA_MASTER_QUALITY = "MQA Master"; //"MQA Master Quality";
     //public static final String TITLE_MASTER_QUALITY = "Master Quality"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 

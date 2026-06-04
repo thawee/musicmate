@@ -23,49 +23,11 @@
         android:title="@string/label_library"
         app:showAsAction="always" />
 -->
+    <!-- Browse -->
     <item
         android:icon="@drawable/rounded_library_music_24"
         android:id="@+id/menu_library_all_songs"
         android:title="@string/label_library_all_songs"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:icon="@drawable/rounded_add_diamond_24"
-        android:id="@+id/menu_library_recently_added"
-        android:title="@string/label_library_recently_added"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:icon="@drawable/rounded_auto_awesome_motion_24"
-        android:id="@+id/menu_library_similar_songs"
-        android:title="@string/label_library_similar_songs"
-        app:showAsAction="ifRoom" />
-
-    <!--
-        <item
-            android:icon="@drawable/ic_round_local_play_24"
-            android:id="@+id/menu_groupings"
-            android:title="@string/label_groupings"
-            app:showAsAction="ifRoom" />
-
-        <item
-            android:icon="@drawable/ic_round_copyright_24"
-            android:id="@+id/menu_publisher"
-            android:title="Publisher"
-            app:showAsAction="always" />
-    -->
-    <!--
-    <item
-        android:icon="@drawable/ic_round_audio_file_24"
-        android:id="@+id/menu_recordings_quality"
-        android:title="Quality"
-        app:showAsAction="always" />
--->
-
-    <item
-        android:icon="@drawable/rounded_order_play_24"
-        android:id="@+id/menu_collection"
-        android:title="@string/label_collections"
         app:showAsAction="ifRoom" />
 
     <item
@@ -80,32 +42,32 @@
         android:title="@string/label_genres"
         app:showAsAction="ifRoom" />
 
+    <!-- Curate -->
+    <item
+        android:icon="@drawable/rounded_order_play_24"
+        android:id="@+id/menu_collection"
+        android:title="@string/label_collections"
+        app:showAsAction="ifRoom" />
 
+    <!-- Discover -->
+    <item
+        android:icon="@drawable/rounded_add_diamond_24"
+        android:id="@+id/menu_library_recently_added"
+        android:title="@string/label_library_recently_added"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:icon="@drawable/rounded_auto_awesome_motion_24"
+        android:id="@+id/menu_library_similar_songs"
+        android:title="@string/label_library_similar_songs"
+        app:showAsAction="ifRoom" />
+
+    <!-- Technical -->
     <item
         android:icon="@drawable/rounded_equalizer_24"
         android:id="@+id/menu_resolution"
         android:title="@string/menu_quality"
         app:showAsAction="ifRoom" />
-    <!--
-    <item
-        android:icon="@drawable/ic_touch_app_white_24dp"
-        android:id="@+id/menu_tag_group"
-        android:title="Group"
-        app:showAsAction="always" />
-    -->
-<!--
-    <item
-        android:icon="@drawable/format_white"
-        android:id="@+id/menu_tag_sampling"
-        android:title="Audio Format"
-        app:showAsAction="always" />
--->
-<!--
-    <item
-        android:icon="@drawable/format_white"
-        android:id="@+id/menu_tag_format"
-        android:title="Media Format"
-        app:showAsAction="always" />
--->
 
 </menu>
+

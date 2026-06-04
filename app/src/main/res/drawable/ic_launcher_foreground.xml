@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Glowing solid-color capsule equalizer bars aligned to safety margins -->
+    <group>
+        <!-- Bar 1 (Left - Cyan) -->
+        <path
+            android:pathData="M36,66 L36,42"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeColor="#00E5FF" />
+        
+        <!-- Bar 2 (Mid-Left - Sky Blue) -->
+        <path
+            android:pathData="M45,74 L45,34"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeColor="#29B6F6" />
+
+        <!-- Bar 3 (Center High - Neon Purple) -->
+        <path
+            android:pathData="M54,82 L54,26"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeColor="#AB47BC" />
+
+        <!-- Bar 4 (Mid-Right - Hot Pink) -->
+        <path
+            android:pathData="M63,76 L63,32"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeColor="#FF4081" />
+
+        <!-- Bar 5 (Right - Orange) -->
+        <path
+            android:pathData="M72,68 L72,40"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:strokeColor="#FF9100" />
+    </group>
+</vector>

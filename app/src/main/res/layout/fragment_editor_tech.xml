@@ -15,6 +15,7 @@
         android:padding="8dp">
 
         <!-- Action Card -->
+        <!--
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -78,6 +79,7 @@
                 </com.google.android.material.button.MaterialButtonToggleGroup>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+        -->
 
         <!-- File System Card -->
         <com.google.android.material.card.MaterialCardView
@@ -100,8 +102,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Storage Intelligence"
-                    android:textColor="#FFD700"
+                    android:text="File Storage &amp; Location"
+                    android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:letterSpacing="0.05"
@@ -140,8 +142,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Raw Metadata"
-                    android:textColor="#FFD700"
+                    android:text="Embedded Metadata Map"
+                    android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:letterSpacing="0.05"
@@ -184,8 +186,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Engine Output"
-                    android:textColor="#FFD700"
+                    android:text="Audio Stream Diagnostics"
+                    android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:letterSpacing="0.05"

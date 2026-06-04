@@ -398,6 +398,7 @@ public class NioHttpServer implements Runnable {
 
     // A thread-safe queue for worker threads to hand off completed responses to the I/O thread.
     private final Queue<ResponseTask> responseQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<NioWebSocketConnection> pendingWebSocketWrites = new ConcurrentLinkedQueue<>();
 
     // --- Define the Object Pools ---
     private ObjectPool<ConnectionAttachment> attachmentPool;
@@ -487,31 +488,20 @@ public class NioHttpServer implements Runnable {
     }
 
     /**
-     * Iterates all keys and registers OP_WRITE for WebSockets
-     * with non-empty outgoing queues.
-     * This is "edge-triggered" write registration.
+     * Registers OP_WRITE for WebSockets with pending outgoing frames.
      */
-    private void checkWebSocketQueues() {
-        for (SelectionKey key : selector.keys()) {
-            if (key.isValid() && key.attachment() instanceof ConnectionAttachment) {
-                ConnectionAttachment att = (ConnectionAttachment) key.attachment();
-
-                // If it's a WebSocket and its queue is not empty,
-                // ensure OP_WRITE is registered.
-                if (att.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME &&
-                        att.wsConnection != null &&
-                        !att.wsConnection.getOutgoingQueue().isEmpty()) {
-
-                    try {
-                        // Check if OP_WRITE is already set
-                        int currentOps = key.interestOps();
-                        if ((currentOps & SelectionKey.OP_WRITE) == 0) {
-                            // It's not set, so add it.
-                            key.interestOps(currentOps | SelectionKey.OP_WRITE);
-                        }
-                    } catch (java.nio.channels.CancelledKeyException e) {
-                        // Key was cancelled concurrently, ignore.
+    private void processWebSocketWrites() {
+        NioWebSocketConnection conn;
+        while ((conn = pendingWebSocketWrites.poll()) != null) {
+            conn.writeInterestQueued.set(false);
+            if (!conn.closed && conn.key.isValid()) {
+                try {
+                    int currentOps = conn.key.interestOps();
+                    if ((currentOps & SelectionKey.OP_WRITE) == 0) {
+                        conn.key.interestOps(currentOps | SelectionKey.OP_WRITE);
                     }
+                } catch (java.nio.channels.CancelledKeyException e) {
+                    // Key was cancelled concurrently, ignore.
                 }
             }
         }
@@ -529,9 +519,9 @@ public class NioHttpServer implements Runnable {
             maxThread = Runtime.getRuntime().availableProcessors();
         }
         int coreCount = Math.max(2, maxThread);
-        workerPool = new ThreadPoolExecutor(
-                coreCount, // corePoolSize: Threads to keep alive
-                coreCount * 2, // maximumPoolSize: Max threads to create for bursts
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                coreCount, // corePoolSize
+                coreCount, // maximumPoolSize (queue is unbounded, so setting maximumPoolSize higher is a no-op)
                 60L, // keepAliveTime: Time for idle threads to live
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(), // The queue for waiting tasks
@@ -541,6 +531,8 @@ public class NioHttpServer implements Runnable {
                     return t;
                 }
         );
+        executor.allowCoreThreadTimeOut(true); // Allow idle core threads to time out and release native stack memory
+        workerPool = executor;
         //System.out.println("Worker pool started with " + coreCount + " threads.");
 
         // The "supervisor" loop is now on the outside.
@@ -560,44 +552,81 @@ public class NioHttpServer implements Runnable {
                 lastTimeoutCheck = System.currentTimeMillis();
 
                 // This is the inner I/O processing loop.
-                while (isRunning) {
-                    processResponseQueue();
-                    checkWebSocketQueues();
-                    if (selector.select(selectorTimeout) == 0 && isRunning) {
-                        handleIdleConnections();
-                        continue;
-                    }
-                    if (!isRunning) break;
+                try {
+                    int selectCnt = 0;
+                    while (isRunning) {
+                        processResponseQueue();
+                        processWebSocketWrites();
 
-                    Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                    Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+                        long selectStart = System.currentTimeMillis();
+                        int selectedKeysCount = selector.select(selectorTimeout);
+                        long selectDuration = System.currentTimeMillis() - selectStart;
 
-                    while (keyIterator.hasNext()) {
-                        SelectionKey key = keyIterator.next();
-                        keyIterator.remove();
-                        try {
-                            if (!key.isValid()) continue;
-                            if (key.isAcceptable()) {
-                                handleAccept(key);
-                            } else if (key.isReadable()) {
-                                handleRead(key);
-                            } else if (key.isWritable()) {
-                                handleWrite(key);
+                        if (selectedKeysCount == 0 && isRunning) {
+                            handleIdleConnections();
+
+                            // Check for spin bug: select returned 0 too quickly
+                            if (selectDuration < 50) { // Should have blocked for selectorTimeout (e.g. 1000ms)
+                                selectCnt++;
+                                if (selectCnt > 10) {
+                                    // Spurious selector wakeup, apply a small backoff sleep to protect CPU
+                                    try {
+                                        Thread.sleep(20);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                }
+                            } else {
+                                selectCnt = 0;
                             }
-                        } catch (IOException e) {
-                            // String msg = e.getMessage();
-                            //if (msg != null && (msg.contains("Connection reset by peer") || msg.contains("Broken pipe"))) {
-                            // Quietly log common client disconnects
-                            //} else {
-                            //    System.err.println("I/O error handling key: " + e.getMessage());
-                            // }
-                            closeConnection(key);
-                        } catch (Exception e) {
-                            System.err.println("Error handling key: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-                            closeConnection(key);
+                            continue;
                         }
+                        selectCnt = 0;
+
+                        if (!isRunning) break;
+
+                        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                        Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+
+                        while (keyIterator.hasNext()) {
+                            SelectionKey key = keyIterator.next();
+                            keyIterator.remove();
+                            try {
+                                if (!key.isValid()) continue;
+                                if (key.isAcceptable()) {
+                                    handleAccept(key);
+                                } else if (key.isReadable()) {
+                                    handleRead(key);
+                                } else if (key.isWritable()) {
+                                    handleWrite(key);
+                                }
+                            } catch (IOException e) {
+                                // String msg = e.getMessage();
+                                //if (msg != null && (msg.contains("Connection reset by peer") || msg.contains("Broken pipe"))) {
+                                // Quietly log common client disconnects
+                                //} else {
+                                //    System.err.println("I/O error handling key: " + e.getMessage());
+                                // }
+                                closeConnection(key);
+                            } catch (Exception e) {
+                                System.err.println("Error handling key: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                                closeConnection(key);
+                            }
+                        }
+                        handleIdleConnections();
                     }
-                    handleIdleConnections();
+                } finally {
+                    // Close all remaining client channels registered with this selector
+                    // to prevent socket/file descriptor leaks when recreating the selector.
+                    try {
+                        for (SelectionKey key : newSelector.keys()) {
+                            try {
+                                if (key.channel() != null) {
+                                    key.channel().close();
+                                }
+                            } catch (IOException ignored) {}
+                        }
+                    } catch (Exception ignored) {}
                 }
             } catch (Exception e) {
                 // This now catches errors with binding the socket or with the selector itself.
@@ -625,6 +654,14 @@ public class NioHttpServer implements Runnable {
 
             for (SelectionKey key : selector.keys()) {
                 if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
+                    // Skip connections currently being processed on worker threads (interestOps is 0)
+                    try {
+                        if (key.interestOps() == 0) {
+                            continue;
+                        }
+                    } catch (java.nio.channels.CancelledKeyException e) {
+                        continue;
+                    }
 
                     // Track memory usage
                     if (attachment.requestData != null) {
@@ -636,9 +673,15 @@ public class NioHttpServer implements Runnable {
                         activeFileStreams++;
                     }
 
-                    if (attachment.state != ConnectionAttachment.ParseState.WEBSOCKET_FRAME &&
-                            now - attachment.lastActivityTime > keepAliveTimeout) {
-                        System.out.println("Closing idle HTTP connection.");
+                    long idleTimeout = (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME)
+                            ? keepAliveTimeout * 4  // 2 minutes for WebSockets
+                            : keepAliveTimeout;     // 30 seconds for HTTP
+                    if (now - attachment.lastActivityTime > idleTimeout) {
+                        if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
+                            System.out.println("Closing idle WebSocket connection.");
+                        } else {
+                            System.out.println("Closing idle HTTP connection.");
+                        }
                         closeConnection(key);
                     }
                 }
@@ -966,34 +1009,102 @@ public class NioHttpServer implements Runnable {
         }
     }
 
+    private boolean tryEvictOldestStream() {
+        SelectionKey oldestKey = null;
+        long oldestActivityTime = Long.MAX_VALUE;
+
+        // Copy keys set to avoid ConcurrentModificationException
+        java.util.Set<SelectionKey> keysCopy = null;
+        for (int i = 0; i < 3; i++) {
+            try {
+                synchronized (selector) {
+                    keysCopy = new java.util.HashSet<>(selector.keys());
+                }
+                break;
+            } catch (java.util.ConcurrentModificationException | NullPointerException e) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {}
+            }
+        }
+
+        if (keysCopy == null) {
+            return false;
+        }
+
+        for (SelectionKey key : keysCopy) {
+            try {
+                if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
+                    if (attachment.response instanceof FileResponse) {
+                        if (attachment.lastActivityTime < oldestActivityTime) {
+                            oldestActivityTime = attachment.lastActivityTime;
+                            oldestKey = key;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (oldestKey != null) {
+            System.out.println("Evicting oldest active stream connection. Last activity: " + 
+                    (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
+            closeConnection(oldestKey);
+            selector.wakeup();
+            return true;
+        }
+        return false;
+    }
+
     private void closeConnection(SelectionKey key) {
-        try {
-            if (key.attachment() instanceof ConnectionAttachment) {
-                ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
+        if (key == null) return;
+
+        if (key.channel() instanceof SocketChannel socketChannel) {
+            Object attachmentObj = key.attachment();
+            if (attachmentObj instanceof ConnectionAttachment attachment) {
+                key.attach(null); // Clear attachment immediately to prevent double close
+
+                // Release leaked HttpRequest back to the pool
+                if (attachment.request != null) {
+                    attachment.request.reset();
+                    requestPool.release(attachment.request);
+                    attachment.request = null;
+                }
+
                 if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
+                    WebSocket.Handler currentWsHandler = attachment.wsHandler;
+                    NioWebSocketConnection currentWsConn = attachment.wsConnection;
+                    attachment.wsHandler = null; // Clear to prevent double calls
                     workerPool.submit(() -> {
                         try {
-                            attachment.wsHandler.onClose(attachment.wsConnection, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
+                            currentWsHandler.onClose(currentWsConn, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
                         } catch (Exception e) {
                             // Log error during close if necessary
                         }
                     });
                 }
                 if (attachment.response != null) {
-                    attachment.response.close();
+                    try {
+                        attachment.response.close();
+                    } catch (IOException ignore) {}
+                    attachment.response = null;
                 }
                 // Clean up WebSocket buffers
                 attachment.cleanup();
-
-                // --- Release the attachment to the pool ---
                 attachment.reset();
                 attachmentPool.release(attachment);
-                key.attach(null); // Detach from key to prevent reuse issues
+
+                try {
+                    socketChannel.close();
+                } catch (IOException e) { /* ignore */ }
+                key.cancel();
+                activeConnections.decrementAndGet();
+            } else {
+                // If attachment is already null, but channel is open, close it without double decrementing
+                try {
+                    socketChannel.close();
+                } catch (IOException e) { /* ignore */ }
+                key.cancel();
             }
-            if (key.channel() != null) key.channel().close();
-        } catch (IOException e) { /* ignore */ } finally {
-            key.cancel();
-            activeConnections.decrementAndGet();
         }
     }
 
@@ -1091,13 +1202,16 @@ public class NioHttpServer implements Runnable {
     }
 
     public static class NioWebSocketConnection implements WebSocket.Connection {
+        private final NioHttpServer server;
         private final SelectionKey key;
         private final Queue<WebSocket.Frame> outgoingQueue = new ConcurrentLinkedQueue<>();
         private volatile boolean closed = false;
         private volatile boolean hasOutgoingQueue = false; // Volatile flag for safe wake-up
         private volatile long lastActivityTime = 0; // Track activity for idle timeout
+        final AtomicBoolean writeInterestQueued = new AtomicBoolean(false);
 
-        NioWebSocketConnection(SelectionKey key) {
+        NioWebSocketConnection(NioHttpServer server, SelectionKey key) {
+            this.server = server;
             this.key = key;
         }
 
@@ -1115,6 +1229,9 @@ public class NioHttpServer implements Runnable {
             if (closed) return;
             outgoingQueue.add(frame);
             hasOutgoingQueue = true; // Set volatile flag for thread-safe wake-up
+            if (writeInterestQueued.compareAndSet(false, true)) {
+                server.pendingWebSocketWrites.add(this);
+            }
             if (key.selector() != null) {
                 key.selector().wakeup();
             }
@@ -1316,7 +1433,7 @@ public class NioHttpServer implements Runnable {
         public void upgradeToWebSocket(SelectionKey key) {
             this.state = ParseState.WEBSOCKET_FRAME;
             this.wsFrameParser = new WebSocket.FrameParser();
-            this.wsConnection = new NioWebSocketConnection(key);
+            this.wsConnection = new NioWebSocketConnection(NioHttpServer.this, key);
 
             // Use bounded streams with the configured max frame size
             this.reassemblyBuffer = createByteArrayOutputStream();
@@ -1650,7 +1767,7 @@ public class NioHttpServer implements Runnable {
         private final long rangeLength;
         private final AtomicBoolean hasClosed = new AtomicBoolean(false);
 
-        private static final long CHUNK_SIZE = 256 * 1024; // 256KB (DLNA-friendly)
+        private static final long CHUNK_SIZE = 64 * 1024; // 64KB (yield-friendly for multi-client fairness)
 
         private FileResponse(File file, HttpRequest request) throws IOException {
             super();
@@ -1673,6 +1790,12 @@ public class NioHttpServer implements Runnable {
 
             // 1. Stream limit check
             int currentCount = activeStreams.get();
+            if (currentCount >= maxConcurrentStreams) {
+                if (tryEvictOldestStream()) {
+                    currentCount = activeStreams.get();
+                }
+            }
+
             if (currentCount >= maxConcurrentStreams) {
                 throw new IOException("Service Unavailable - max concurrent streams reached (" +
                         currentCount + "/" + maxConcurrentStreams + ")");
@@ -1705,48 +1828,53 @@ public class NioHttpServer implements Runnable {
             // 2. Increment stream count
             activeStreams.incrementAndGet();
 
-            String rangeHeader = request.getHeader("range", "");
-            boolean rangeValid = true;
+            try {
+                String rangeHeader = request.getHeader("range", "");
+                boolean rangeValid = true;
 
-            if (rangeHeader.startsWith("bytes=")) {
-                String ifRange = request.getHeader("if-range", null);
-                if (ifRange != null) {
-                    rangeValid = ifRange.equals(etag);
-                }
-
-                if (rangeValid && parseRangeHeader(rangeHeader)) {
-
-                    if (parsedStart >= fileSize) {
-                        setStatus(HTTP_RANGE_NOT_SATISFIABLE, "Range Not Satisfiable");
-                        addHeader("Content-Range", "bytes */" + fileSize);
-
-                        rangeStart = 0;
-                        rangeEnd = 0;
-                        rangeLength = 0;
-
-                        close();
-                        return;
+                if (rangeHeader.startsWith("bytes=")) {
+                    String ifRange = request.getHeader("if-range", null);
+                    if (ifRange != null) {
+                        rangeValid = ifRange.equals(etag);
                     }
 
-                    tempStart = parsedStart;
-                    tempEnd = Math.min(parsedEnd, fileSize - 1);
+                    if (rangeValid && parseRangeHeader(rangeHeader)) {
+
+                        if (parsedStart >= fileSize) {
+                            setStatus(HTTP_RANGE_NOT_SATISFIABLE, "Range Not Satisfiable");
+                            addHeader("Content-Range", "bytes */" + fileSize);
+
+                            rangeStart = 0;
+                            rangeEnd = 0;
+                            rangeLength = 0;
+
+                            close();
+                            return;
+                        }
+
+                        tempStart = parsedStart;
+                        tempEnd = Math.min(parsedEnd, fileSize - 1);
+                    }
                 }
+
+                this.rangeStart = tempStart;
+                this.rangeEnd = tempEnd;
+                this.rangeLength = this.rangeEnd - this.rangeStart + 1;
+
+                if (rangeHeader.isEmpty() || !rangeValid) {
+                    setStatus(HTTP_OK, "OK");
+                } else {
+                    setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
+                    addHeader("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize);
+                }
+
+                addHeader("Content-Length", String.valueOf(rangeLength));
+                addHeader("Accept-Ranges", "bytes");
+                addHeader("Connection", "keep-alive"); // DLNA stability
+            } catch (Exception e) {
+                close();
+                throw e;
             }
-
-            this.rangeStart = tempStart;
-            this.rangeEnd = tempEnd;
-            this.rangeLength = this.rangeEnd - this.rangeStart + 1;
-
-            if (rangeHeader.isEmpty() || !rangeValid) {
-                setStatus(HTTP_OK, "OK");
-            } else {
-                setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
-                addHeader("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize);
-            }
-
-            addHeader("Content-Length", String.valueOf(rangeLength));
-            addHeader("Accept-Ranges", "bytes");
-            addHeader("Connection", "keep-alive"); // DLNA stability
         }
 
         private long parsedStart, parsedEnd;
@@ -1824,7 +1952,7 @@ public class NioHttpServer implements Runnable {
                 long position = rangeStart + bytesSent;
                 long remaining = rangeLength - bytesSent;
 
-                int maxTries = 3;
+                int maxTries = 1; // Yield after each chunk to ensure other HTTP requests (like cover art or metadata) aren't starved
 
                 while (remaining > 0 && maxTries-- > 0) {
                     long chunk = Math.min(remaining, CHUNK_SIZE);

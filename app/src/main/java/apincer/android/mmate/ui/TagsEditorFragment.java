@@ -23,7 +23,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -73,7 +72,6 @@ public class TagsEditorFragment extends Fragment {
     private AutoCompleteTextView txtPublisher;
 
     private NestedScrollView scrollView;
-    private MaterialButtonToggleGroup toggleGroup;
 
     @Inject
     TagRepository tagRepos;
@@ -108,10 +106,6 @@ public class TagsEditorFragment extends Fragment {
         txtPublisher = v.findViewById(R.id.input_publisher);
         //qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
 
-        toggleGroup = v.findViewById(R.id.editor_action_group);
-
-        setupActions();
-
         // --- FIX #1: Fix the NestedScrollView crash ---
         NestedScrollView myScrollView = v.findViewById(R.id.editor_scroll_view);
         myScrollView.setNestedScrollingEnabled(false);
@@ -142,23 +136,6 @@ public class TagsEditorFragment extends Fragment {
         setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),1);
 
         return v;
-    }
-
-    private void setupActions() {
-        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (!isChecked) return; // avoid double-trigger on uncheck
-
-            if (checkedId == R.id.action_reformat) {
-                doFormatTags();
-            } else if (checkedId == R.id.action_read_tag) {
-                doShowReadTagsPreview();
-            } else if (checkedId == R.id.action_save) {
-                doSaveMediaItem();
-            }
-
-            // Deselect after action (to act like toolbar buttons)
-            group.clearChecked();
-        });
     }
 
     private void setupListValuePopup(AutoCompleteTextView input, List<String> dropdownList, int minChar) {
@@ -204,10 +181,14 @@ public class TagsEditorFragment extends Fragment {
         super.onPause();
     }
 
-    private void doShowReadTagsPreview() {
+    public void doShowReadTagsPreview() {
+        List<Track> editItems = tagsActivity.getEditItems();
+        if (editItems.isEmpty()) return;
+        Track firstItem = editItems.get(0);
+
         View cview = getLayoutInflater().inflate(R.layout.view_actionview_tags_from_filename, null);
         TextView filename = cview.findViewById(R.id.full_filename);
-        filename.setText(tagsActivity.getEditItems().get(0).getSimpleName());
+        filename.setText(firstItem.getSimpleName());
 
         EditText title = cview.findViewById(R.id.title);
         EditText artist = cview.findViewById(R.id.artist);
@@ -224,10 +205,10 @@ public class TagsEditorFragment extends Fragment {
         TextView spaceLabel = cview.findViewById(R.id.btn_add_space);
         TextView freeTextLabel = cview.findViewById(R.id.btn_add_free_text);
 
-        title.setText(tagsActivity.getEditItems().get(0).getTitle());
-        artist.setText(tagsActivity.getEditItems().get(0).getArtist());
-        album.setText(tagsActivity.getEditItems().get(0).getAlbum());
-        track.setText(tagsActivity.getEditItems().get(0).getTrack());
+        title.setText(firstItem.getTitle());
+        artist.setText(firstItem.getArtist());
+        album.setText(firstItem.getAlbum());
+        track.setText(firstItem.getTrack());
 
         TagContainerLayout mTagListLayout = cview.findViewById(R.id.tagcontainerLayout);
         mTagListLayout.setTheme(ColorFactory.NONE);
@@ -309,7 +290,9 @@ public class TagsEditorFragment extends Fragment {
             try {
                 List<String> list = mTagListLayout.getTags();// that will return TagModel List
                 MusicPathTagParser parser = new MusicPathTagParser();
-                Track item = tagsActivity.getEditItems().get(0);
+                List<Track> previewItems = tagsActivity.getEditItems();
+                if (previewItems.isEmpty()) return;
+                Track item = previewItems.get(0);
                 Track mdata = item.copy();
                 parser.parse(mdata, list);
                 title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
@@ -349,7 +332,7 @@ public class TagsEditorFragment extends Fragment {
         alert.show();
     }
 
-    private void doSaveMediaItem() {
+    public void doSaveMediaItem() {
         tagsActivity.startProgressBar();
 
         // Get a snapshot of items to avoid concurrent modification
@@ -397,7 +380,9 @@ public class TagsEditorFragment extends Fragment {
 
         // Handle completion
         processingFuture.whenComplete((result, exception) -> {
-            if (exception != null) {
+            if (exception == null) {
+                tagsActivity.setSaved(true);
+            } else {
                 Log.e(TAG, "Error saving tags", exception);
             }
 
@@ -455,7 +440,7 @@ public class TagsEditorFragment extends Fragment {
         return text.startsWith("[") && text.endsWith("]");
     }
 
-    private void doFormatTags() {
+    public void doFormatTags() {
         tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
@@ -489,6 +474,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     void initEditorInputs(Track tag) {
+        if (tag == null) return;
         doPreviewMusicInfo(tag);
 
         txtTitle.setText(tag.getTitle());

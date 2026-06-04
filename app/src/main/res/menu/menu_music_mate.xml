@@ -40,7 +40,7 @@
 	<item
 		android:id="@+id/menu_directories"
 		android:icon="@drawable/rounded_label_24"
-		android:title="Music Library"
+		android:title="Manage Library"
 		app:showAsAction="always" />
 
 	<item
@@ -74,13 +74,13 @@
 	<item
 		android:id="@+id/menu_files_permission"
 		android:icon="@drawable/rounded_folder_managed_24"
-		android:title="File Access Permission"
+		android:title="Storage Access"
 		app:showAsAction="always" />
 
 	<item
 		android:id="@+id/menu_notification_access"
 		android:icon="@drawable/rounded_admin_panel_settings_24"
-		android:title="Notification Permission"
+		android:title="Notifications"
 		app:showAsAction="always" />
 
 	<!--
@@ -101,7 +101,7 @@
 	<item
 		android:id="@+id/menu_about_crash"
 		android:icon="@drawable/rounded_bug_report_24"
-		android:title="View Log"
+		android:title="Activity Log"
 		app:showAsAction="always" />
 
 	<item

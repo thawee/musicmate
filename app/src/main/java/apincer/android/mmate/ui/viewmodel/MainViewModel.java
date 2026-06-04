@@ -173,6 +173,34 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    public void reloadMusicItems() {
+        if (currentCriteria == null) return;
+        _musicItemsLoading.setValue(true);
+        final int limit = Math.max(1, currentPage) * PAGE_SIZE;
+
+        backgroundExecutor.execute(() -> {
+            try {
+                SearchResultStats stats = repos.getSearchStats(currentCriteria);
+                _searchStats.postValue(stats);
+
+                List<Track> items = repos.findMusic(currentCriteria, 0, limit);
+                _musicItems.postValue(items);
+                if (items.isEmpty()) {
+                    currentPage = 0;
+                    isLastPage = true;
+                } else {
+                    currentPage = (int) Math.ceil((double) items.size() / PAGE_SIZE);
+                    if (items.size() < limit || (items.size() % PAGE_SIZE != 0)) {
+                        isLastPage = true;
+                    }
+                }
+                _musicItemsLoading.postValue(false);
+            } catch (Exception e) {
+                _musicItemsLoading.postValue(false);
+            }
+        });
+    }
+
     @Override
     protected void onCleared() {
         super.onCleared();
@@ -185,6 +213,14 @@ public class MainViewModel extends ViewModel {
 
     public FileRepository getFileRepository() {
         return fileRepos;
+    }
+
+    /**
+     * Removes a stale/invalid track entry from the database.
+     * Runs on the background executor to keep DB work off the main thread.
+     */
+    public void deleteMediaTag(Track tag) {
+        backgroundExecutor.execute(() -> repos.deleteMediaTag(tag));
     }
 
     public void search(MusicTagAdapter adapter, String query) {

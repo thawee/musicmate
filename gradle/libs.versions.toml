@@ -17,7 +17,7 @@ buildTools = "37.0.0" #"36.1.0" #""35.0.1"
 #buildTools ="36.0.0"
 androidGradlePlugin = "9.2.1"
 aboutlibraries = "14.2.1"
-kotlin = "2.3.21"
+kotlin = "2.4.0"
 kotlinxSerializationCore = "1.11.0"
 coroutines = "1.11.0"
 # ksp version is <kotlin>-ksp
@@ -92,10 +92,10 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
 #cling-support = {module="org.fourthline.cling:cling-support", version="2.1.2"}
 
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.9"}
+jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.10"}
 #jetty-websocket-core = {module = "org.eclipse.jetty.websocket:jetty-websocket-core-common", version="12.1.7"}
-jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.9"}
-jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.9"}
+jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.10"}
+jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.10"}
 #// Add this to your dependencies block
 #implementation 'org.eclipse.jetty:jetty-websocket-server:12.0.11' // Use the specific Jetty 12 version you are targeting
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}

@@ -47,15 +47,15 @@
     <string name="alert_template_fail">"%1$s failed."</string>
 
     <!-- Use with String.format() and R.string resources -->
-    <string name="operation_delete">Deleting \"%1$s\"</string>
+    <string name="operation_delete">Removing \"%1$s\"</string>
     <string name="operation_write_tag">Saving tags on \"%1$s\"</string>
     <string name="operation_organize">Importing \"%1$s\"</string>
 
     <string name="alert_delete_success">\"%1$s\" is removed from storage.</string>
-    <string name="alert_delete_inprogress">Deleting \"%1$s\"</string>
-    <string name="alert_delete_fail">Cannot delete \"%1$s\"</string>
+    <string name="alert_delete_inprogress">Removing \"%1$s\"</string>
+    <string name="alert_delete_fail">Cannot remove \"%1$s\"</string>
 
-    <string name="alert_delete_inprogress_many">Deleting %1$d songs</string>
+    <string name="alert_delete_inprogress_many">Removing %1$d tracks</string>
 
     <string name="alert_write_tag_inprogress">Saving tags on \"%1$s\"</string>
     <string name="alert_write_tag_success">\"%1$s\" is saved</string>
@@ -95,7 +95,7 @@
     <!-- Action -->
 
     <!-- Action Mode -->
-    <string name="action_delete">Delete songs</string>
+    <string name="action_delete">Remove tracks</string>
     <string name="action_select_all">Select All</string>
 
     <!-- Scrollable Headers/Footer/ProgressItem -->
@@ -112,14 +112,14 @@
     <string name="search_view_query_input_hint">Search</string>
     <string name="import_songs_underline"><u>Import</u></string>
     <string name="edit_tags_underline"><u>Edit Tags</u></string>
-    <string name="delete_song_underline"><u>Delete</u></string>
+    <string name="delete_song_underline"><u>Remove</u></string>
     <string name="aspect_underline"><u>Spectrogram</u></string>
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
     <string name="import_songs_label">Import</string>
     <string name="measure_dr_label">DR</string>
     <string name="edit_tags_label">TAG</string>
-    <string name="delete_song_label">Delete</string>
+    <string name="delete_song_label">Remove</string>
     <string name="aspect_label">View Spectrum</string>
     <string name="websearch_label">Web Search</string>
     <string name="convert_label">Convert</string>
@@ -136,7 +136,7 @@
     <string name="sync_to_hiby_label">Sync</string>
     <string name="sample_dr">DR14</string>
     <string name="preferences_sub_streaming">Streaming</string>
-    <string name="title_removing_music_files">Move songs to the Trash</string>
+    <string name="title_removing_music_files">Remove tracks from Library</string>
 
     <string name="this_device">this device</string>
     <string name="play">Play</string>
@@ -328,7 +328,9 @@
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
     <string name="analyze_music">Mastering Analysis</string>
-    <string name="move_to_trash">Move to Trash</string>
+    <string name="move_to_trash">Remove Song</string>
+    <string name="remove_track_confirm_single">Remove this track from your Library?</string>
+    <string name="remove_track_confirm_multiple">Remove these tracks from your Library?</string>
     <string name="analyst">Analyst</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
     <string name="notification_server_not_running">Required WiFi or Hotspot network</string>
@@ -336,7 +338,7 @@
     <string name="update_library">Music Library</string>
     <string name="label_library_all_songs">All Songs</string>
     <string name="label_library_recently_added">Recently Added</string>
-    <string name="label_library_similar_songs">Similar Songs</string>
+    <string name="label_library_similar_songs">Discover Similar</string>
     <string name="currently_playing">Current Player</string>
     <string name="more_options">More Options</string>
     <string name="fetch_songs_info">Get Infos</string>
@@ -346,7 +348,7 @@
     <string name="files_to_convert">Files to Convert</string>
     <string name="convert">Convert</string>
     <string name="files">Files</string>
-    <string name="files_to_delete">Files to Delete</string>
+    <string name="files_to_delete">Tracks to Remove</string>
     <string name="files_to_analyze">Files to Analyze</string>
     <string name="files_to_move">Files to Move</string>
     <string name="play_pause">Play</string>
@@ -364,6 +366,6 @@
     <string name="analysis_failed">Analysis Failed</string>
     <string name="analyzing">Analyzing…</string>
     <string name="scan_full">Full Scan</string>
-    <string name="menu_quality">Audio Quality</string>
+    <string name="menu_quality">Sound Grade</string>
 
 </resources>

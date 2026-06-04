@@ -112,8 +112,13 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             filePath = new File(content.getFilePath());
         }
         if (filePath == null || !filePath.exists()) return createErrorResponse(HTTP_NOT_FOUND, "Art not found");
+
+        String contentType = content != null ? content.getContentType() : null;
+
         NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
-        response.addHeader("Content-Type", content.getContentType());
+        if (contentType != null) {
+            response.addHeader("Content-Type", contentType);
+        }
         response.addHeader("Cache-Control", "public, max-age=604800");
         return response;
     }
@@ -124,16 +129,28 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         if (song.getPath() == null) return createErrorResponse(HTTP_NOT_FOUND, MSG_SONG_NOT_FOUND);
         File audioFile = new File(song.getPath());
         if (!audioFile.exists() || !audioFile.canRead()) return createErrorResponse(HTTP_NOT_FOUND, MSG_FILE_NOT_ACCESSIBLE);
+
+        // Prepare headers first to avoid exceptions after response creation
+        String dlnaFeatures = getDLNAContentFeatures(song);
+        String contentType = content.getContentType();
+        String serverSignature = getServerSignature();
+        String cachedDate = getCachedDate();
+
         NioHttpServer.HttpResponse response = server.createFileResponse(audioFile, request);
-        //response.addHeader("Cache-Control", "no-store, no-transform, max-age=0");
         response.addHeader("Cache-Control", "no-cache");
-        //response.addHeader("Pragma", "no-cache");
         response.addHeader("transferMode.dlna.org", "Streaming");
-        response.addHeader("contentFeatures.dlna.org", getDLNAContentFeatures(song));
-        response.addHeader("Content-Type", content.getContentType());
-        response.addHeader("Server", getServerSignature());
-        response.addHeader("Date", getCachedDate());
-      //  addAudiophileHeaders(response, song);
+        if (dlnaFeatures != null) {
+            response.addHeader("contentFeatures.dlna.org", dlnaFeatures);
+        }
+        if (contentType != null) {
+            response.addHeader("Content-Type", contentType);
+        }
+        if (serverSignature != null) {
+            response.addHeader("Server", serverSignature);
+        }
+        if (cachedDate != null) {
+            response.addHeader("Date", cachedDate);
+        }
         return response;
     }
 
@@ -144,8 +161,13 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
     private NioHttpServer.HttpResponse createResourceResponse(ContentHolder content, NioHttpServer.HttpRequest request) throws IOException {
         if (content == null || content.getFilePath() == null) return createErrorResponse(HTTP_NOT_FOUND, "Resource not found");
-        NioHttpServer.HttpResponse response = server.createFileResponse(new File(content.getFilePath()), request);
-        response.addHeader("Content-Type", content.getContentType());
+        File file = new File(content.getFilePath());
+        String contentType = content.getContentType();
+
+        NioHttpServer.HttpResponse response = server.createFileResponse(file, request);
+        if (contentType != null) {
+            response.addHeader("Content-Type", contentType);
+        }
         response.addHeader("Cache-Control", "public, max-age=604800");
         return response;
     }
@@ -154,13 +176,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         return new NioHttpServer.HttpResponse().setStatus(code, message).setBody(message.getBytes()).addHeader("Content-Type", "text/plain; charset=utf-8").addHeader("Connection", "close");
     }
 
-    private void addAudiophileHeaders(NioHttpServer.HttpResponse response, Track tag) {
-        if (tag.getAudioSampleRate() > 0) response.addHeader("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
-        if (tag.getAudioBitsDepth() > 0) response.addHeader("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
-        if (tag.getAudioBitRate() > 0) response.addHeader("X-Audio-Bitrate", tag.getAudioBitRate()/1000 + " kbps");
-        if (TagUtils.getChannels(tag) > 0) response.addHeader("X-Audio-Channels", String.valueOf(TagUtils.getChannels(tag)));
-        response.addHeader("X-Audio-Format", Objects.toString(tag.getFileType(), ""));
-    }
 
     public void stopServer() {
         synchronized (serverLock) {

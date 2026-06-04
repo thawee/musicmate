@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static apincer.music.core.utils.StringUtils.formatAudioBitRate;
 import static apincer.music.core.utils.StringUtils.formatAudioBitsDepth;
 import static apincer.music.core.utils.StringUtils.formatAudioSampleRate;
@@ -8,10 +10,6 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -31,7 +29,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -61,6 +58,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
@@ -148,6 +146,9 @@ public class TagsActivity extends AppCompatActivity {
 
     private final AtomicLong lastProgressUpdate = new AtomicLong(0);
 
+    private boolean isSaved = false;
+    private boolean resultAlreadySet = false;
+
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
 
@@ -190,7 +191,8 @@ public class TagsActivity extends AppCompatActivity {
         operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             @Override
             public void onProgress(Track tag, int progress, String status) {
-
+                Log.d(TAG, "Mastering analysis: " + tag.getSimpleName() + " -> " + status);
+                updateProgressBar(status);
             }
 
             @Override
@@ -258,7 +260,7 @@ public class TagsActivity extends AppCompatActivity {
         toolBarLayout.getLayoutParams().height = (int) (height * 0.85); // 85% of screen height for a better balance
         
         setupTitlePanelViews();
-        setupActionButtons();
+        setupActionButtons(0);
 
         // Handle Navigation Bar Insets for Bottom Capsule
         View bottomNav = findViewById(R.id.bottom_navigation_container);
@@ -325,7 +327,11 @@ public class TagsActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 activeFragment = adapter.fragments.get(position);
-                //setupMenuToolbar();
+                if(previewState) {
+                    setupActionButtons(0);
+                }else {
+                    setupActionButtons(1);
+                }
             }
 
             @Override
@@ -357,11 +363,68 @@ public class TagsActivity extends AppCompatActivity {
         ratingIndicatorView = findViewById(R.id.rating_view);
         newIndicatorView = findViewById(R.id.new_view);
     }
-    private void setupActionButtons() {
-        findViewById(R.id.button_edit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
+    private void setupActionButtons(int mode) {
+        MaterialButtonToggleGroup previewToggleGroup = findViewById(R.id.preview_action_group);
+        MaterialButtonToggleGroup editorToggleGroup = findViewById(R.id.editor_action_group);
+        MaterialButtonToggleGroup techToggleGroup = findViewById(R.id.tech_action_group);
+
+        // Clear listeners to avoid memory leaks and duplicate triggers
+        previewToggleGroup.clearOnButtonCheckedListeners();
+        editorToggleGroup.clearOnButtonCheckedListeners();
+        techToggleGroup.clearOnButtonCheckedListeners();
+
         findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems());
         findViewById(R.id.button_import).setOnClickListener(v -> doMoveMediaItems());
         findViewById(R.id.button_more).setOnClickListener(this::doShowMoreActions);
+
+        if(mode ==0) {
+            previewToggleGroup.setVisibility(VISIBLE);
+            editorToggleGroup.setVisibility(GONE);
+            techToggleGroup.setVisibility(GONE);
+            findViewById(R.id.action_editor).setOnClickListener(v -> {
+                appBarLayout.setExpanded(false, true);
+                setupActionButtons(1);
+            });
+        }else if (mode ==1) {
+            if (activeFragment instanceof TagsEditorFragment fragment) {
+                // editor
+                previewToggleGroup.setVisibility(GONE);
+                editorToggleGroup.setVisibility(VISIBLE);
+                techToggleGroup.setVisibility(GONE);
+
+                editorToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                    if (!isChecked) return; // avoid double-trigger on uncheck
+                        if (checkedId == R.id.action_reformat) {
+                            fragment.doFormatTags();
+                        } else if (checkedId == R.id.action_read_tag) {
+                            fragment.doShowReadTagsPreview();
+                        } else if (checkedId == R.id.action_save) {
+                            fragment.doSaveMediaItem();
+                        }
+
+                    // Deselect after action (to act like toolbar buttons)
+                    group.clearChecked();
+                });
+            } else if (activeFragment instanceof TagsTechnicalFragment fragment) {
+                previewToggleGroup.setVisibility(GONE);
+                editorToggleGroup.setVisibility(GONE);
+                techToggleGroup.setVisibility(VISIBLE);
+
+                techToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                    if (!isChecked) return; // avoid double-trigger on uncheck
+                    if (checkedId == R.id.btn_reload_tag) {
+                        fragment.doResetTagFromFile();
+                    } else if (checkedId == R.id.btn_extract_coverart) {
+                        fragment.doExtractEmbedCoverart();
+                    } else if (checkedId == R.id.btn_remove_coverart) {
+                        fragment.doRemoveEmbedCoverart();
+                    }
+
+                    // Deselect after action (to act like toolbar buttons)
+                    group.clearChecked();
+                });
+            }
+        }
     }
 
     private void doShowMoreActions(View anchorView) {
@@ -462,7 +525,7 @@ public class TagsActivity extends AppCompatActivity {
 
         qualityScore.setText(R.string.analyzing);
 
-        if (spinner != null) spinner.setVisibility(View.VISIBLE);
+        if (spinner != null) spinner.setVisibility(VISIBLE);
         final boolean[] completedNext = {false};
 
         AudioAuthenticityAnalyzer.analyze(
@@ -510,7 +573,7 @@ public class TagsActivity extends AppCompatActivity {
                             analyticsText.setText(analyticsSpan.build());
 
                             if(completedNext[0]) {
-                                if (spinner != null) spinner.setVisibility(View.GONE);
+                                if (spinner != null) spinner.setVisibility(GONE);
                             }
                             completedNext[0] = true;
                         });
@@ -543,7 +606,7 @@ public class TagsActivity extends AppCompatActivity {
                                 .build();
                         SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
                         if(completedNext[0]) {
-                            if (spinner != null) spinner.setVisibility(View.GONE);
+                            if (spinner != null) spinner.setVisibility(GONE);
                         }
                         completedNext[0] = true;
                     }
@@ -600,6 +663,8 @@ public class TagsActivity extends AppCompatActivity {
     private void updateViewPagers(Track musicTag) {
         if (activeFragment instanceof TagsEditorFragment) {
             ((TagsEditorFragment) activeFragment).initEditorInputs(musicTag);
+        } else if (activeFragment instanceof TagsTechnicalFragment) {
+            ((TagsTechnicalFragment) activeFragment).displayTechnicalInfo(musicTag);
         }
     }
 
@@ -748,6 +813,7 @@ public class TagsActivity extends AppCompatActivity {
 
         // Set the result to RESULT_OK and pass the intent containing the data
         setResult(AppCompatActivity.RESULT_OK, resultIntent);
+        resultAlreadySet = true;
 
         finish();
     }
@@ -832,13 +898,12 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void doDeleteMediaItems() {
-        String text;
         List<Track> editItems = getEditItems();
-        if(editItems.size()>1) {
-            text = "Move songs to the Trash?";
-        }else {
-            text = "Move this song to the Trash?";
-        }
+        if (editItems.isEmpty()) return;
+
+        String text = editItems.size() > 1
+                ? getString(R.string.remove_track_confirm_multiple)
+                : getString(R.string.remove_track_confirm_single);
 
         final BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this); // Or pass 'context'
         View sheetView = LayoutInflater.from(this).inflate(R.layout.view_action_trash_bottom_sheet_dialog, null);
@@ -856,12 +921,14 @@ public class TagsActivity extends AppCompatActivity {
             operationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
                 @Override
                 public void onProgress(Track tag, int progress, String status) {
-
+                    Log.d(TAG, "Removing: " + tag.getSimpleName() + " -> " + status);
+                    updateProgressBar(status);
                 }
 
                 @Override
                 public void onComplete() {
                     stopProgressBar();
+                    setSaved(true);
                     finish(); // back to prev activity
                 }
             });
@@ -887,9 +954,11 @@ public class TagsActivity extends AppCompatActivity {
             public void onComplete() {
                 if(closeScreen) {
                     stopProgressBar();
+                    setSaved(true);
                     finish(); // back to prev activity
                 }else {
                     stopProgressBar();
+                    setSaved(true);
                     viewModel.refreshDisplayTag();
                 }
             }
@@ -897,7 +966,8 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public List<Track> getEditItems() {
-        return viewModel.editItems.getValue();
+        List<Track> items = viewModel.editItems.getValue();
+        return items != null ? items : java.util.Collections.emptyList();
     }
 
     public Track getDisplayTag() {
@@ -930,16 +1000,7 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
-            if (previewState) {
-                // In preview mode, return to main activity
-                finish();
-            } else {
-                // In edit mode, return to preview mode
-                appBarLayout.setExpanded(true, true);
-
-                // Refresh display tag to show any changes
-                viewModel.refreshDisplayTag();
-            }
+            finish();
         }
     }
 
@@ -970,10 +1031,12 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyExpanded = true;
                 wasFullyCollapsed = false;
                 previewState = true;
+                setupActionButtons(0);
                 //setupMenuToolbar();
 
                 // No need to rebuild the display tag if it's not dirty
                 viewModel.refreshDisplayTag();
+               // setupActionButtons(0);
             }
             // Fully collapsed state
             else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange() && !wasFullyCollapsed) {
@@ -982,8 +1045,21 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyExpanded = false;
                 previewState = false;
                // setupMenuToolbar();
+                setupActionButtons(1);
             }
         }
+    }
+
+    public void setSaved(boolean saved) {
+        this.isSaved = saved;
+    }
+
+    @Override
+    public void finish() {
+        if (isSaved && !resultAlreadySet) {
+            setResult(AppCompatActivity.RESULT_OK);
+        }
+        super.finish();
     }
 
     @Override
@@ -1035,21 +1111,31 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the progress bar text with animation and throttling to prevent UI overload
-     * @param label Text to display in the progress bar
+     * Updates the progress bar label text with throttling to prevent UI overload.
+     * @param label Text to display in the progress bar dialog
      */
     public void updateProgressBar(final String label) {
-        // Check if enough time has passed since the last update to avoid too many UI updates
         long now = System.currentTimeMillis();
         long lastUpdate = lastProgressUpdate.get();
-        // Limit updates to every 100ms
         long PROGRESS_UPDATE_THROTTLE_MS = 100;
         if (now - lastUpdate < PROGRESS_UPDATE_THROTTLE_MS) {
-            return; // Skip this update to avoid overloading the UI thread
+            return;
         }
-
-        // Try to update the timestamp - if another thread beat us, return
-        lastProgressUpdate.compareAndSet(lastUpdate, now);
+        if (!lastProgressUpdate.compareAndSet(lastUpdate, now)) {
+            return;
+        }
+        runOnUiThread(() -> {
+            if (progressDialog != null && progressDialog.isShowing()) {
+                View dialogView = progressDialog.getWindow() != null
+                        ? progressDialog.getWindow().getDecorView() : null;
+                if (dialogView != null) {
+                    TextView labelView = dialogView.findViewById(R.id.progress_label);
+                    if (labelView != null) {
+                        labelView.setText(label);
+                    }
+                }
+            }
+        });
     }
 
     /**

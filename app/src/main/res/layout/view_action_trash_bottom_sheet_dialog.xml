@@ -15,7 +15,7 @@
 android:id="@+id/bottom_sheet_title"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
-android:text="Move this song to the Trash?"
+android:text="Remove this track from your Library?"
 android:textAppearance="?attr/textAppearanceTitleLarge"
 android:textColor="#FFFFFF"
 android:layout_marginBottom="16dp"/>

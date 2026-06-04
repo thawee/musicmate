@@ -1,7 +1,6 @@
 package apincer.android.mmate.worker;
 
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -25,9 +24,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.utils.FileUtils;import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.Track;
-import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.repository.FileRepository;
@@ -48,8 +45,6 @@ public class ScanAudioFileWorker extends Worker {
     public ScanAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
-           // FileRepository repos, // 3. Hilt provides this dependency automatically!
-           // TagRepository tagRepos) {
         super(context, parameters);
 
         this.repos = ((MusixMateApp)getApplicationContext()).getFileRepository();
