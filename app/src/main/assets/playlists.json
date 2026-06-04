@@ -4,7 +4,7 @@
       "name": "The Masterpieces Archive",
       "uuid": "HighFidelityArchive",
       "type": "title",
-      "version": "1.3",
+      "version": "1.5",
       "description": "Reference tracks for testing imaging and dynamics.",
       "rules": [
         {
@@ -128,12 +128,6 @@
           "notes": "The 'Vocal Clarity' test. Jascha Richter’s voice is mixed very 'forward.' On your iFi setup, his voice should sound intimate and dry, with no digital 'grain.' Perfect for testing if your Isuzu MU-X's center image is stable."
         },
         {
-          "title": "25 Minutes",
-          "artist": "Michael Learns to Rock",
-          "album": "Colours (2014 Remaster)",
-          "notes": "The 'Vocal Clarity' test. Jascha Richter’s voice is mixed very 'forward.' On your iFi setup, his voice should sound intimate and dry, with no digital 'grain.' Perfect for testing if your Isuzu MU-X's center image is stable."
-        },
-        {
           "title": "Sleeping Child",
           "artist": "Michael Learns to Rock",
           "album": "Colours (2014 Remaster)",
@@ -148,20 +142,14 @@
         {
           "title": "That's Why (You Go Away)",
           "artist": "Michael Learns to Rock",
-          "album": "Played on Pepper",
-          "notes": "Reference for 'Piano Resonance' and vocal layering. The acoustic guitar in the intro should sound metallic and physical. The iFi Velvet signature prevents the high-tenor harmonies from sounding 'thin' or 'digital'."
+          "album": "Paint My Love - Greatest Hits",
+          "notes": "The 'Piano & Timbre' test. The opening piano notes are legendary. Your Java code will see a very healthy dynamic range here. On your system, the piano should have a natural 'weight' and decay. Perfect for checking for digital 'jitter'."
         },
         {
           "title": "Paint My Love",
           "artist": "Michael Learns to Rock",
           "album": "Paint My Love - Greatest Hits",
           "notes": "The ultimate 'String Lushness' test. Features a wide orchestral backing. Perfect for evaluating 'Soundstage Width' in your Isuzu MU-X—the strings should bloom from the A-pillars, wrapping around the cabin while the piano stays dead-center."
-        },
-        {
-          "title": "That's Why (You Go Away)",
-          "artist": "Michael Learns to Rock",
-          "album": "Paint My Love - Greatest Hits",
-          "notes": "The 'Piano & Timbre' test. The opening piano notes are legendary. Your Java code will see a very healthy dynamic range here. On your system, the piano should have a natural 'weight' and decay. Perfect for checking for digital 'jitter'."
         },
         {
           "title": "The Actor",
@@ -379,19 +367,18 @@
           "artist": "Elvis Presley",
           "notes": "Stereo version from the 20th Century Fox stage recordings. Distinguishable by the count-in and the wider soundstage compared to the mono hit."
         },
-
-          {
-            "title": "Heartbreak Hotel",
-            "artist": "Elvis Presley",
-            "album": "Elvis' Golden Records (1958 Mono)",
-            "notes": "The 'Echo Chamber' Benchmark. Recorded in Nashville with a very distinctive, dark reverb. Tests for 'Low-Level Detail'—on your iFi DAC, you should hear the 'decay' of the room clearly. If it sounds 'dry,' your file is likely a low-quality MP3."
-          },
-          {
-            "title": "All Shook Up",
-            "artist": "Elvis Presley",
-            "album": "Elvis' Golden Records (1958 Mono)",
-            "notes": "Reference for 'Percussive Rhythm'. Features the famous 'slapping' of the back of Elvis's guitar. Tests for 'Transient Attack'—the slaps should be sharp and instantaneous. Great for verifying the speed of your MU-X mid-bass drivers."
-          },
+        {
+          "title": "Heartbreak Hotel",
+          "artist": "Elvis Presley",
+          "album": "Elvis' Golden Records (1958 Mono)",
+          "notes": "The 'Echo Chamber' Benchmark. Recorded in Nashville with a very distinctive, dark reverb. Tests for 'Low-Level Detail'—on your iFi DAC, you should hear the 'decay' of the room clearly. If it sounds 'dry,' your file is likely a low-quality MP3."
+        },
+        {
+          "title": "All Shook Up",
+          "artist": "Elvis Presley",
+          "album": "Elvis' Golden Records (1958 Mono)",
+          "notes": "Reference for 'Percussive Rhythm'. Features the famous 'slapping' of the back of Elvis's guitar. Tests for 'Transient Attack'—the slaps should be sharp and instantaneous. Great for verifying the speed of your MU-X mid-bass drivers."
+        },
         {
           "title": "Love Me Tender",
           "artist": "Elvis Presley",
@@ -408,7 +395,7 @@
           "title": "Anyway You Want Me (That's How I Will Be)",
           "artist": "Elvis Presley",
           "album": "Elvis' Golden Records (1958 Mono)",
-          "notes": "The 'Deep Vibrato' benchmark. Recorded at RCA New York. Focuses on Elvis's lower register. Tests 'Mid-Bass Texture' (150Hz-300Hz). In your MU-X, the bass-baritone should feel physically weighty."
+          "notes": "The 'Deep Baritone' test. Elvis uses his lower register here. The iFi 'Velvet' signature excels at rendering the vibration in his chest. Perfect for testing 'Mid-Bass Texture' (150Hz-300Hz) in your Honda Accord."
         },
         {
           "title": "That's When Your Heartaches Begin",
@@ -427,12 +414,6 @@
           "artist": "Elvis Presley",
           "album": "Elvis' Golden Records (1958 Mono)",
           "notes": "Reference for 'Slap-back Echo'. The echo was created using a dedicated tape machine. In your MU-X, this should feel like the voice is 'expanding' forward from the windshield. If the echo sounds muddy, your DSP 2kHz-4kHz crossover is too wide."
-        },
-        {
-          "title": "Anyway You Want Me (That's How I Will Be)",
-          "artist": "Elvis Presley",
-          "album": "Elvis' Golden Records (1958 Mono)",
-          "notes": "The 'Deep Baritone' test. Elvis uses his lower register here. The iFi 'Velvet' signature excels at rendering the vibration in his chest. Perfect for testing 'Mid-Bass Texture' (150Hz-300Hz) in your Honda Accord."
         },
         {
           "title": "In the Ghetto",
@@ -861,12 +842,6 @@
           "notes": "Retro-style production with a modern wide soundstage. Excellent for testing 'Phase Coherence' and the separation of the layered backing vocals and Wurlitzer piano."
         },
         {
-          "title": "Goodbye My Lover",
-          "artist": "James Blunt",
-          "album": "Back to Bedlam",
-          "notes": "Piano-driven reference for midrange transparency. Tests for 'digital glare' in the upper-mids. A genuine 24-bit master should show a very low noise floor (-110dB+) due to modern silent recording environments."
-        },
-        {
           "title": "Thinking Out Loud",
           "artist": "Ed Sheeran",
           "album": "x (Multiply)",
@@ -895,12 +870,6 @@
           "artist": "Noon",
           "album": "My Fairy Tales",
           "notes": "Minimalist jazz arrangement. Features deep acoustic bass and delicate piano. Tests for 'Black Background'—there should be zero digital hiss between her vocal phrases. Genuine 24-bit Hi-Res is the target version."
-        },
-        {
-          "title": "500 Miles",
-          "artist": "Noon",
-          "album": "Smilin'",
-          "notes": "Tests for midrange 'texture'. Her breathing and the 'wetness' of the vocal recording should be clearly audible. Evaluates the soundstage depth and instrument separation of the iFi ZEN DAC."
         },
         {
           "title": "Everybody Plays the Fool",
@@ -1233,12 +1202,6 @@
           "notes": "Reference for vocal imaging. The two voices should be perfectly placed and distinct within the stereo field."
         },
         {
-          "title": "Take Me Home",
-          "artist": "Phil Collins",
-          "album": "Serious Hits... Live!",
-          "notes": "An 8-minute stress test for system headroom and layering. The climax should be massive but never muddy."
-        },
-        {
           "title": "In The Air Tonight (2015 Remastered)",
           "artist": "Phil Collins",
           "album": "Face Value (Deluxe Edition)",
@@ -1255,12 +1218,6 @@
           "artist": "Phil Collins",
           "album": "...Hits (Deluxe Version)",
           "notes": "A 'Velvet' reference for piano resonance and vocal micro-dynamics. Requires a low system noise floor to capture the intimate intro. Pure Resonance: The Jazz 200."
-        },
-        {
-          "title": "Against All Odds (Take a Look at Me Now)",
-          "artist": "Phil Collins",
-          "album": "Against All Odds (Original Soundtrack)",
-          "notes": "Produced by Arif Mardin. The ultimate test for 'Vocal Intimacy' vs. 'Orchestral Power'. The piano intro requires a silent noise floor, while the final chorus tests for midrange congestion. Look for the 2016 'Take a Look at Me Now' remasters."
         },
         {
           "title": "Can't Turn Back the Years (2016 Remastered)",
@@ -1389,12 +1346,6 @@
           "notes": "Elite test for transparency and tonal accuracy. The guitar vibrato and layered analogue synths demand high-level resolution. Pure Resonance: The Jazz 200."
         },
         {
-          "title": "Colour to the Moon",
-          "artist": "Allan Taylor",
-          "album": "Colour to the Moon",
-          "notes": "Stockfisch reference for vocal texture. Tests lower-midrange 'woodiness' and chest-voice resonance. Pure Resonance: The Jazz 200."
-        },
-        {
           "title": "The Beat Hotel",
           "artist": "Allan Taylor",
           "album": "Hotels & Dreamers",
@@ -1422,7 +1373,7 @@
           "title": "I Can't Stand the Rain",
           "artist": "Sara K.",
           "album": "Hell or High Water",
-          "notes": "Reference for vocal texture and high-frequency air. Tests tweeter naturalness and center-imaging stability. Pure Resonance: The Jazz 200."
+          "notes": "Features Chris Jones. Reference for transient speed and soundstage depth. Instrument separation must remain absolute against a silent background."
         },
         {
           "title": "Closer",
@@ -1557,24 +1508,6 @@
           "notes": "Reference for vocal rawness and emotional nuance. The 'forgiveness' lyrics demand a clear, centered midrange presence."
         },
         {
-          "title": "Fever",
-          "artist": "Elvis Presley",
-          "album": "Elvis Is Back!",
-          "notes": "Audiophile holy grail. Elite test for center-imaging, vocal intimacy, and finger-snap transients. Requires a dead-quiet noise floor. Pure Resonance: The Jazz 200."
-        },
-        {
-          "title": "In the Ghetto",
-          "artist": "Elvis Presley",
-          "album": "From Elvis in Memphis",
-          "notes": "Reference for soundstage depth and atmospheric layering. The orchestration must stay perfectly separated from the centered vocal."
-        },
-        {
-          "title": "Suspicious Minds",
-          "artist": "Elvis Presley",
-          "album": "Single / From Memphis to Vegas",
-          "notes": "Complex soul-rock production. Tests for rhythmic precision, timing, and low-level resolution during the famous fade-out/in. Pure Resonance: The Jazz 200."
-        },
-        {
           "title": "It’s Now or Never",
           "artist": "Elvis Presley",
           "album": "Elvis Is Back!",
@@ -1645,12 +1578,6 @@
           "artist": "Eagles",
           "album": "Hell Freezes Over",
           "notes": "The legendary 1994 acoustic live version. Famous for the 'thumping' conga drums in the intro. If your iFi DAC is set correctly, you should feel the air from the drum skin. Use this to test your Isuzu MU-X's subwoofer crossover."
-        },
-        {
-          "title": "Hotel California",
-          "artist": "Eagles",
-          "album": "Hotel California (2023 MFSL One-Step)",
-          "notes": "The absolute 'cleanest' studio version. Mastered from the original analog tapes. Tests for 'Black Background' and the decay of the 12-string guitar. Expect your validator to show an 18-bit to 20-bit real noise floor (analog tape limit)."
         },
         {
           "title": "Hotel California",
@@ -1809,7 +1736,7 @@
           "notes": "Sheffield Lab reference for uncompressed dynamic range. Tests amplifier slew rate and transient speed. Snare hits should be startlingly realistic."
         },
         {
-          "title": "The Spanish规格",
+          "title": "Spanish Harlem",
           "artist": "Rebecca Pidgeon",
           "album": "The Raven",
           "notes": "Chesky Records minimalist reference. Tests for natural vocal timbre and the ability to resolve the 'size' of the recording room (reverb decay)."
@@ -2065,12 +1992,6 @@
           "artist": "Sara K.",
           "album": "Water Falls",
           "notes": "Stockfisch reference for vocal transparency and 4-string guitar resonance. Elite test for midrange texture and detail. Pure Resonance: The Jazz 200."
-        },
-        {
-          "title": "I Can't Stand the Rain",
-          "artist": "Sara K.",
-          "album": "Hell or High Water",
-          "notes": "Features Chris Jones. Reference for transient speed and soundstage depth. Instrument separation must remain absolute against a silent background."
         },
         {
           "title": "Water Falls",
@@ -2347,12 +2268,6 @@
           "artist": "John Coltrane",
           "album": "Blue Train",
           "notes": "A masterclass in instrument separation, depth, and jazz club ambiance."
-        },
-        {
-          "title": "No Sanctuary Here",
-          "artist": "Chris Jones",
-          "album": "Roadhouses & Automobiles",
-          "notes": "Rich spatial layering in both the vocals and deep, textured bass."
         },
         {
           "title": "Royals",
@@ -2756,334 +2671,241 @@
           "notes": "Cathedral-scale reference. Tests for absolute soundstage height and the decay of piano notes in a cavernous stone space."
         },
         {
-          "title": "A Night In Tunisia (Remastered 2005)",
-          "artist": "Art Blakey & The Jazz Messengers",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Blue Train (Remastered 2012)",
-          "artist": "John Coltrane",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "The Girl From Ipanema",
-          "artist": "Stan Getz",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Bitches Brew",
-          "artist": "Miles Davis",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
           "title": "Track A - Solo Dancer (Stop! Look! And Listen, Sinner Jim Whitney!)",
           "artist": "Charles Mingus",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "St. Thomas",
-          "artist": "Sonny Rollins",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Heavy Dipper",
-          "artist": "Lee Morgan",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Alfie's Theme Differently",
-          "artist": "Sonny Rollins",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Midnight Blue (2012 Remaster)",
-          "artist": "Kenny Burrell",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Giant Steps (2020 Remaster)",
-          "artist": "John Coltrane",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "The Touch Of Your Lips",
-          "artist": "Ben Webster",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "So What",
-          "artist": "Miles Davis",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "Take Five",
-          "artist": "The Dave Brubeck Quartet",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Charles Mingus."
         },
         {
           "title": "Take The 'A' Train",
           "artist": "Duke Ellington",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Benchmark for big band layering and orchestral soundstage."
         },
         {
           "title": "'Round Midnight",
           "artist": "Thelonious Monk",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Thelonious Monk."
         },
         {
           "title": "My Favorite Things",
           "artist": "John Coltrane",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for John Coltrane."
         },
         {
           "title": "A Love Supreme (Acknowledgment)",
           "artist": "John Coltrane",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for John Coltrane."
         },
         {
           "title": "All Blues",
           "artist": "Miles Davis",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Miles Davis."
         },
         {
           "title": "Birdland",
           "artist": "Weather Report",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Weather Report."
         },
         {
           "title": "Sing, Sing, Sing",
           "artist": "Benny Goodman",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Reference for drum dynamics and big band swing timing."
         },
         {
           "title": "Strange Fruit",
           "artist": "Billie Holiday",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Tests for vocal emotional transparency and midrange detail."
         },
         {
           "title": "Blue Rondo a la Turk",
           "artist": "The Dave Brubeck Quartet",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for The Dave Brubeck Quartet."
         },
         {
           "title": "West End Blues",
           "artist": "Louis Armstrong",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Louis Armstrong."
         },
         {
           "title": "God Bless The Child",
           "artist": "Billie Holiday",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Billie Holiday."
         },
         {
           "title": "Cantaloupe Island",
           "artist": "Herbie Hancock",
-          "notes": "Pure Resonance: The Jazz 200"
+          "album": "Empyrean Isles",
+          "notes": "The iconic blueprint of 1960s soul-jazz. Pure Resonance: The Jazz 200."
         },
         {
           "title": "My Funny Valentine",
           "artist": "Chet Baker",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Tests for trumpet intimacy and cool-jazz vocal texture."
         },
         {
           "title": "Body And Soul",
           "artist": "Coleman Hawkins",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Coleman Hawkins."
         },
         {
           "title": "Song For My Father",
           "artist": "Horace Silver",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Horace Silver."
         },
         {
           "title": "Spain",
           "artist": "Chick Corea",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Chick Corea."
         },
         {
           "title": "Naima (2020 Remaster)",
           "artist": "John Coltrane",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for John Coltrane."
         },
         {
           "title": "Autumn Leaves",
           "artist": "Cannonball Adderley",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Cannonball Adderley."
         },
         {
           "title": "What A Wonderful World",
           "artist": "Louis Armstrong",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Louis Armstrong."
         },
         {
           "title": "Freddie Freeloader",
           "artist": "Miles Davis",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Miles Davis."
         },
         {
           "title": "Summertime",
           "artist": "Louis Armstrong & Ella Fitzgerald",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Louis Armstrong & Ella Fitzgerald."
         },
         {
           "title": "Watermelon Man",
           "artist": "Herbie Hancock",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Herbie Hancock."
         },
         {
           "title": "Moanin'",
           "artist": "Art Blakey",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Art Blakey."
         },
         {
           "title": "Mack the Knife",
           "artist": "Ella Fitzgerald",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Ella Fitzgerald."
         },
         {
           "title": "In the Mood",
           "artist": "Glenn Miller",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Glenn Miller."
         },
         {
           "title": "Desafinado",
           "artist": "Stan Getz",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Stan Getz."
         },
         {
           "title": "Rhapsody in Blue",
           "artist": "George Gershwin",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for George Gershwin."
         },
         {
           "title": "Caravan",
           "artist": "Duke Ellington",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Duke Ellington."
         },
         {
           "title": "Red Clay",
           "artist": "Freddie Hubbard",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Freddie Hubbard."
         },
         {
           "title": "Maiden Voyage (Remastered)",
           "artist": "Herbie Hancock",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Herbie Hancock."
         },
         {
           "title": "Mood Indigo",
           "artist": "Duke Ellington",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Duke Ellington."
         },
         {
           "title": "At Last",
           "artist": "Etta James",
-          "notes": "Pure Resonance: The Jazz 200"
+          "album": "At Last!",
+          "notes": "A definitive soulful performance that shines on high-end systems. Pure Resonance: The Jazz 200."
         },
         {
           "title": "Fever (Remastered 1998)",
           "artist": "Peggy Lee",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Peggy Lee."
         },
         {
           "title": "Satin Doll",
           "artist": "Duke Ellington",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Duke Ellington."
         },
         {
           "title": "Autumn in New York",
           "artist": "Billie Holiday",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Billie Holiday."
         },
         {
           "title": "I Loves You Porgy",
           "artist": "Nina Simone",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Nina Simone."
         },
         {
           "title": "Milestones",
           "artist": "Miles Davis",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Miles Davis."
         },
         {
           "title": "Georgia on My Mind",
           "artist": "Ray Charles",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Ray Charles."
         },
         {
           "title": "Feeling Good",
           "artist": "Nina Simone",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Nina Simone."
         },
         {
           "title": "Misty",
           "artist": "Erroll Garner",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Erroll Garner."
         },
         {
           "title": "Fly Me to the Moon (Remastered 2008)",
           "artist": "Frank Sinatra",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Frank Sinatra."
         },
         {
           "title": "Sinnerman",
           "artist": "Nina Simone",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Nina Simone."
         },
         {
           "title": "Nature Boy",
           "artist": "Nat King Cole",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Nat King Cole."
         },
         {
           "title": "Unforgettable",
           "artist": "Nat King Cole",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "L-O-V-E",
-          "artist": "Gregory Porter",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Nat King Cole."
         },
         {
           "title": "My Foolish Heart",
           "artist": "Bill Evans",
-          "notes": "Pure Resonance: The Jazz 200"
+          "notes": "Technical testing reference for Bill Evans."
         },
         {
           "title": "Peace Piece",
           "artist": "Bill Evans",
-          "notes": "Pure Resonance: The Jazz 200"
-        },
-        {
-          "title": "When the Levee Breaks",
-          "artist": "Led Zeppelin",
-          "album": "Led Zeppelin IV",
-          "notes": "Deep, resonant kick drum to expose speaker flaws."
-        },
-        {
-          "title": "Summer Madness",
-          "artist": "Kool & The Gang",
-          "album": "Light Of Worlds",
-          "notes": "Warm, well-articulated bassline."
-        },
-        {
-          "title": "Doin' It Right",
-          "artist": "Daft Punk",
-          "album": "Random Access Memories",
-          "notes": "Layered clarity in deep low frequencies."
-        },
-        {
-          "title": "Hallelujah",
-          "artist": "Jeff Buckley",
-          "album": "Grace",
-          "notes": "Intimate vocals with incredible depth and breath control."
-        },
-        {
-          "title": "Strange Fruit",
-          "artist": "Nina Simone",
-          "album": "Pastel Blues",
-          "notes": "Tonal accuracy and raw emotional presence."
+          "notes": "Technical testing reference for Bill Evans."
         },
         {
           "title": "Blue in Green",
@@ -3121,12 +2943,6 @@
           "notes": "Sophisticated cool jazz with rich vibraphone textures. Pure Resonance: The Jazz 200."
         },
         {
-          "title": "Cantaloupe Island",
-          "artist": "Herbie Hancock",
-          "album": "Empyrean Isles",
-          "notes": "The iconic blueprint of 1960s soul-jazz. Pure Resonance: The Jazz 200."
-        },
-        {
           "title": "Cheek to Cheek",
           "artist": "Louis Armstrong & Ella Fitzgerald",
           "album": "Ella and Louis",
@@ -3160,12 +2976,6 @@
           "artist": "Buddy Guy",
           "album": "Damn Right, I've Got the Blues",
           "notes": "Masterful electric blues phrasing and raw energy. Pure Resonance: The Jazz 200."
-        },
-        {
-          "title": "At Last",
-          "artist": "Etta James",
-          "album": "At Last!",
-          "notes": "A definitive soulful performance that shines on high-end systems. Pure Resonance: The Jazz 200."
         },
         {
           "title": "St. Louis Blues",
@@ -3214,12 +3024,6 @@
           "artist": "Jennifer Warnes",
           "album": "Famous Blue Raincoat",
           "notes": "Pristine vocal layering and a classic audiophile reference. Pure Resonance: The Jazz 200."
-        },
-        {
-          "title": "Keith Don't Go (Live)",
-          "artist": "Nils Lofgren",
-          "album": "Acoustic Live",
-          "notes": "Unrivaled test for acoustic guitar transients and string detail. Pure Resonance: The Jazz 200."
         },
         {
           "title": "The Look of Love",
@@ -3278,8 +3082,27 @@
       "note": "จังหวะโจ๊ะๆ สนุกสนาน ชวนขยับขา ม่วนมันส์หน้าฮ้านแบบไม่มีสะดุด",
       "description": "High-energy, fast-paced Mor Lam and upbeat Luk Thung tracks to get you dancing.",
       "rules": [
-        { "genre": ["Luk Thung","Mor Lam"], "mood": ["Energetic","Happy"]},
-        { "genre": ["Luk Thung","Mor Lam"], "style": ["Groove","Indie","Synth-based"]}
+        {
+          "genre": [
+            "Luk Thung",
+            "Mor Lam"
+          ],
+          "mood": [
+            "Energetic",
+            "Happy"
+          ]
+        },
+        {
+          "genre": [
+            "Luk Thung",
+            "Mor Lam"
+          ],
+          "style": [
+            "Groove",
+            "Indie",
+            "Synth-based"
+          ]
+        }
       ]
     },
     {
@@ -3289,8 +3112,40 @@
       "note": "ขับรถชิลๆ ฟังเพลินๆ ระหว่างเดินทาง ให้บรรยากาศสบายๆ ไม่ง่วงไม่เร่งเกินไป",
       "description": "Relaxed vibes and high-energy classics across pop, rock, and country. The ultimate driving companion.",
       "rules": [
-        { "genre": ["Alternative","Mor Lam","Luk Thung", "Pop","Rock","Country","Folk"], "mood": ["Happy", "Calm", "Energetic", "Nostalgic"]},
-        { "genre": ["Alternative","Mor Lam","Luk Thung", "Pop","Rock","Country","Folk"], "style": ["Ambient","Ballad","Groove","Indie"] }
+        {
+          "genre": [
+            "Alternative",
+            "Mor Lam",
+            "Luk Thung",
+            "Pop",
+            "Rock",
+            "Country",
+            "Folk"
+          ],
+          "mood": [
+            "Happy",
+            "Calm",
+            "Energetic",
+            "Nostalgic"
+          ]
+        },
+        {
+          "genre": [
+            "Alternative",
+            "Mor Lam",
+            "Luk Thung",
+            "Pop",
+            "Rock",
+            "Country",
+            "Folk"
+          ],
+          "style": [
+            "Ambient",
+            "Ballad",
+            "Groove",
+            "Indie"
+          ]
+        }
       ]
     },
     {
@@ -3300,8 +3155,35 @@
       "note": "ฟังง่ายๆ ผ่อนคลาย สบายอารมณ์ เหมาะสำหรับยามค่ำคืน",
       "description": "Smooth, mellow tracks for late-night listening, featuring jazz, acoustic, and soft vocals.",
       "rules": [
-        { "genre": ["Jazz","Blues","Folk","Pop","Mor Lam","Luk Thung"], "mood": ["Calm", "Romantic","Focus","Nostalgic"]},
-        { "genre": ["Jazz","Blues","Folk","Pop","Mor Lam","Luk Thung"], "style": ["Ambient"]}
+        {
+          "genre": [
+            "Jazz",
+            "Blues",
+            "Folk",
+            "Pop",
+            "Mor Lam",
+            "Luk Thung"
+          ],
+          "mood": [
+            "Calm",
+            "Romantic",
+            "Focus",
+            "Nostalgic"
+          ]
+        },
+        {
+          "genre": [
+            "Jazz",
+            "Blues",
+            "Folk",
+            "Pop",
+            "Mor Lam",
+            "Luk Thung"
+          ],
+          "style": [
+            "Ambient"
+          ]
+        }
       ]
     },
     {
@@ -3312,7 +3194,14 @@
       "description": "Timeless hits and crowd favorites with great sound",
       "rules": [
         {
-          "genre": ["Alternative", "Pop", "Rock","Jazz","Folk","Country"]
+          "genre": [
+            "Alternative",
+            "Pop",
+            "Rock",
+            "Jazz",
+            "Folk",
+            "Country"
+          ]
         }
       ]
     },
@@ -3322,12 +3211,16 @@
       "type": "genre",
       "description": "The classical masterpieces with rich, immersive sound.",
       "rules": [
-        { "genre": ["Classical"]}
+        {
+          "genre": [
+            "Classical"
+          ]
+        }
       ]
     }
   ],
   "metadata": {
-    "version": "1.0",
+    "version": "1.5",
     "description": "Predefined MusicMate playlists."
   }
 }

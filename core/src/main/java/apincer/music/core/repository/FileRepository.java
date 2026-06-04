@@ -68,16 +68,37 @@ public class FileRepository {
                     }
                     yield image;
                 }
-                case GENRE, CODEC -> new File(cacheDir, music.getPath());
+                case GENRE -> {
+                    String genre = music.getTitle().toLowerCase().replace("/", " ");
+                    File image = new File(cacheDir, "/genre/" + genre + ".png");
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/genre/" + genre + ".jpg");
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
+                case CODEC -> {
+                    String codec = music.getTitle().replace("/", " ");
+                    File image = new File(cacheDir, "/codec/" + codec + ".png");
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/codec/" + codec + ".jpg");
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
                 case PLAYLIST -> {
-                    File image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".jpg");
+                    File image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".png");
 
                     if(!image.exists()) {
-                        image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".png");
+                        image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".jpg");
                     }
 
                     if(!image.exists()) {
-                        new File(cacheDir, music.getPath());
+                        image = new File(cacheDir, music.getPath());
                     }
                     yield image;
                 }
