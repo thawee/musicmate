@@ -30,7 +30,6 @@ import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 
 import apincer.android.mmate.coil3.CoverartFetcher;
-import apincer.music.core.utils.TagUtils;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
@@ -75,6 +74,8 @@ import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
@@ -167,6 +168,9 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private WorkInfo.State lastWorkState = null;
+    private View scanProgressDots;
+    private android.animation.AnimatorSet dotAnimator = null;
     private View emptyStateView;
     private FloatingActionButton fabScrollToTop;
 
@@ -417,6 +421,39 @@ public class MainActivity extends AppCompatActivity {
         viewModel.searchStats.observe(this, stats -> updateHeaderPanel(stats));
 
         viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
+
+        WorkManager.getInstance(getApplicationContext())
+                .getWorkInfosForUniqueWorkLiveData("MusicScanWork")
+                .observe(this, workInfos -> {
+                    if (workInfos != null && !workInfos.isEmpty()) {
+                        WorkInfo workInfo = workInfos.get(0);
+                        WorkInfo.State currentState = workInfo.getState();
+                        boolean isRunning = currentState == WorkInfo.State.RUNNING;
+                        if (isRunning) {
+                            if (scanProgressDots != null) {
+                                scanProgressDots.setVisibility(View.VISIBLE);
+                                startDotAnimation();
+                            }
+                            int progress = workInfo.getProgress().getInt("progress_value", 0);
+                            int total = workInfo.getProgress().getInt("total_files", 0);
+                            if (total > 0) {
+                                headerStatText.setText("Scanning: " + progress + "/" + total + " files");
+                            } else {
+                                headerStatText.setText("Scanning...");
+                            }
+                        } else if (currentState.isFinished()) {
+                            if (scanProgressDots != null) {
+                                scanProgressDots.setVisibility(View.GONE);
+                                stopDotAnimation();
+                            }
+                            // Only trigger reload/ui update if we transitioned from RUNNING to a finished state
+                            if (lastWorkState == WorkInfo.State.RUNNING) {
+                                viewModel.loadMusicItems(adapter.getCriteria());
+                            }
+                        }
+                        lastWorkState = currentState;
+                    }
+                });
     }
 
     private void setupHeaderPanel() {
@@ -514,6 +551,7 @@ public class MainActivity extends AppCompatActivity {
         // Setup RecyclerView
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         emptyStateView = findViewById(R.id.empty_state_view);
+        scanProgressDots = findViewById(R.id.scan_progress_dots);
         int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
         swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
 
@@ -848,6 +886,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        stopDotAnimation();
         if(isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -858,10 +897,12 @@ public class MainActivity extends AppCompatActivity {
         if (currentlyPlaying == null) return;
 
         viewModel.loadUntilFound(currentlyPlaying, () -> {
-            int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
-            if (positionToScroll != RecyclerView.NO_POSITION) {
-                scrollToPosition(positionToScroll);
-            }
+            mRecyclerView.post(() -> {
+                int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
+                if (positionToScroll != RecyclerView.NO_POSITION) {
+                    scrollToPosition(positionToScroll);
+                }
+            });
         });
     }
 
@@ -1768,6 +1809,45 @@ public class MainActivity extends AppCompatActivity {
                     viewModel.loadMusicItems(adapter.getCriteria());
                 }
             }
+        }
+    }
+
+    private void startDotAnimation() {
+        if (dotAnimator != null) return;
+
+        View dot1 = findViewById(R.id.scan_dot1);
+        View dot2 = findViewById(R.id.scan_dot2);
+        View dot3 = findViewById(R.id.scan_dot3);
+
+        if (dot1 == null || dot2 == null || dot3 == null) return;
+
+        // Bounce up (negative translationY) by 10 pixels
+        android.animation.ObjectAnimator anim1 = android.animation.ObjectAnimator.ofFloat(dot1, "translationY", 0f, -10f, 0f);
+        anim1.setDuration(1000);
+        anim1.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        anim1.setRepeatMode(android.animation.ValueAnimator.RESTART);
+
+        android.animation.ObjectAnimator anim2 = android.animation.ObjectAnimator.ofFloat(dot2, "translationY", 0f, -10f, 0f);
+        anim2.setDuration(1000);
+        anim2.setStartDelay(250);
+        anim2.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        anim2.setRepeatMode(android.animation.ValueAnimator.RESTART);
+
+        android.animation.ObjectAnimator anim3 = android.animation.ObjectAnimator.ofFloat(dot3, "translationY", 0f, -10f, 0f);
+        anim3.setDuration(1000);
+        anim3.setStartDelay(500);
+        anim3.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        anim3.setRepeatMode(android.animation.ValueAnimator.RESTART);
+
+        dotAnimator = new android.animation.AnimatorSet();
+        dotAnimator.playTogether(anim1, anim2, anim3);
+        dotAnimator.start();
+    }
+
+    private void stopDotAnimation() {
+        if (dotAnimator != null) {
+            dotAnimator.cancel();
+            dotAnimator = null;
         }
     }
 }

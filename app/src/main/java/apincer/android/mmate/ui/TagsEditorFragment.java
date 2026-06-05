@@ -267,7 +267,6 @@ public class TagsEditorFragment extends Fragment {
                     .setNegativeButton(R.string.cancel, null);
 
             AlertDialog dialog = builder.create();
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
             dialog.show();
 
             // Show keyboard automatically

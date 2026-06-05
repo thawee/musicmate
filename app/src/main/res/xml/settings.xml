@@ -48,7 +48,7 @@
             android:key="preference_list_follows_now_playing"
             android:summary="Auto scroll to currently listening song."
             android:title="Auto Scroll to now playing"
-            android:defaultValue="false"/>
+            android:defaultValue="true"/>
 
         <SwitchPreferenceCompat
             android:key="preference_similar_songs_match_artist"

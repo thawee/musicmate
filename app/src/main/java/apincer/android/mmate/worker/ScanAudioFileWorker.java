@@ -19,8 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
@@ -83,18 +81,25 @@ public class ScanAudioFileWorker extends Worker {
 
             // First gather all paths
             for (File file : list) {
+                if (isStopped()) {
+                    return Result.failure();
+                }
                 allPaths.addAll(search(file.getAbsolutePath()));
             }
 
             // Then process in batches
             processedFiles = processPaths(allPaths);
 
+            if (isStopped()) {
+                return Result.failure();
+            }
+
             // Export playlists (use DB as source)
             //MusicMateExecutors.lowPriority(this::exportPlaylists);
             exportPlaylists();
 
             // start deep scan for mastering details
-            MusicMateExecutors.lowPriority(this::deepScan);
+            deepScan();
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)
@@ -111,6 +116,9 @@ public class ScanAudioFileWorker extends Worker {
         if(basicList == null || basicList.isEmpty()) return;
 
         for (Track basicTag : basicList) {
+            if (isStopped()) {
+                break;
+            }
             try {
                 //full scan
                 TagReader.readExtras(getApplicationContext(), basicTag);
@@ -129,21 +137,49 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     private int processPaths(List<Path> paths) {
-        int processedCount = 0;
+        final int totalFiles = paths.size();
+        final java.util.concurrent.atomic.AtomicInteger processedCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
         // Process in smaller batches to reduce memory pressure
         for (int i = 0; i < paths.size(); i += optimalBatchSize) {
+            if (isStopped()) {
+                break;
+            }
             int end = Math.min(i + optimalBatchSize, paths.size());
             List<Path> batch = paths.subList(i, end);
 
-            // Sequential processing within the batch to reduce CPU load
+            java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(batch.size());
+
+            // Submit tasks in parallel within the batch
             for (Path path : batch) {
-                MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false));
-                processedCount++;
+                MusicMateExecutors.scan(() -> {
+                    try {
+                        repos.scanMusicFile(path.toFile(), false);
+                    } finally {
+                        int current = processedCount.incrementAndGet();
+                        // Throttle progress updates to reduce Binder IPC overhead
+                        if (current % 5 == 0 || current == totalFiles) {
+                            androidx.work.Data progressData = new androidx.work.Data.Builder()
+                                    .putInt("progress_value", current)
+                                    .putInt("total_files", totalFiles)
+                                    .build();
+                            setProgressAsync(progressData);
+                        }
+                        latch.countDown();
+                    }
+                });
+            }
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Batch processing interrupted", e);
+                Thread.currentThread().interrupt();
+                break;
             }
         }
 
-        return processedCount;
+        return processedCount.get();
     }
 
     private void exportPlaylists() {
@@ -173,30 +209,18 @@ public class ScanAudioFileWorker extends Worker {
         }
     }
 
-    private List<Path> search(String pathname) throws ExecutionException, InterruptedException {
+    private List<Path> search(String pathname) {
         List<Path> result = new ArrayList<>();
-      //  try {
-            // Use optimal thread count for file searching
-            try (ForkJoinPool customThreadPool = new ForkJoinPool(optimalThreadCount)) {
-
-                customThreadPool.submit(() -> {
-                    try {
-                        // First do a quick filter by extension to improve performance
-                        try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
-                            pathStream
-                                    .filter(this::filter)
-                                    .forEach(result::add);
-                        }
-                    } catch (IOException ignored) {
-                    }
-                }).get();
-
-                // Explicitly shutdown the pool to free resources
-                customThreadPool.shutdown();
+        try {
+            // First do a quick filter by extension to improve performance
+            try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
+                pathStream
+                        .filter(this::filter)
+                        .forEach(result::add);
             }
-      //  } catch (Exception e) {
-      //      Log.e(TAG, "Error searching path: " + pathname, e);
-      //  }
+        } catch (IOException e) {
+            Log.e(TAG, "Error searching path: " + pathname, e);
+        }
         return result;
     }
 

@@ -139,7 +139,7 @@ philjay-mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version=
 #seamless-util = {module="org.seamless:seamless-util", version="1.1.2"}
 #seamless-http = {module="org.seamless:seamless-http", version="1.1.2"}
 
-androidx-core = {module = "androidx.core:core", version="1.18.0"}
+androidx-core = {module = "androidx.core:core", version="1.19.0"}
 androidx-activity = {module = "androidx.activity:activity", version="1.13.0"}
 androidx-annotation = {module = "androidx.annotation:annotation", version="1.10.0"}
 androidx-appCompat = {module = "androidx.appcompat:appcompat", version="1.7.1"}

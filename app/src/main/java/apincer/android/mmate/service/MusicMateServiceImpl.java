@@ -69,10 +69,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public static final String CHANNEL_ID = "musicmate_service_channel";
     public static final int SERVICE_ID = 1;
 
-    public static final String ACTION_PLAY_PAUSE = "apincer.musicmate.ACTION_PLAY_PAUSE";
-    public static final String ACTION_NEXT = "apincer.musicmate.ACTION_NEXT";
-    public static final String ACTION_PREVIOUS = "apincer.musicmate.ACTION_PREVIOUS";
-    public static final String ACTION_STOP = "apincer.musicmate.ACTION_STOP";
+
 
     public static final String SERVER_STATUS_NO_WIFI = "No Network"; // Red circle for Offline
     // Used as a prefix for the dynamic SSID
@@ -242,39 +239,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 case MediaServerManager.ACTION_STOP_SERVER:
                     stopServers();
                     break;
-
-                // --- Notification Media Control Actions ---
-                case ACTION_PLAY_PAUSE:
-                    // Add your logic to toggle play/pause for the current player
-                    handlePlayPause();
-                    break;
-                case ACTION_NEXT:
-                    // Add your logic to skip to the next track
-                    skipToNextInQueue();
-                    break;
-                case ACTION_PREVIOUS:
-                    // Add your logic to go to the previous track
-                    skipToPrevious();
-                    break;
-                case ACTION_STOP:
-                    // Add your logic to stop playback completely
-                    // This is often triggered when the notification is swiped away
-                    stopPlaying();
-                    break;
-
             }
         }
-        // Change this from START_STICKY to START_NOT_STICKY
         return START_NOT_STICKY;
-    }
-
-    private void handlePlayPause() {
-        if (isPlaying()) {
-            pausePlayer();
-        } else {
-            // Find current track and resume
-            currentPlayerSubject.getValue().ifPresent(target -> playSong(getNowPlayingSong()));
-        }
     }
 
     public void startServers() {

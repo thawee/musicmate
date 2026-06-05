@@ -21,7 +21,7 @@ public class Settings {
     public static boolean isListFollowNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_LIST_FOLLOW_NOW_PLAYING,false);
+        return prefs.getBoolean(Constants.PREF_LIST_FOLLOW_NOW_PLAYING,true);
     }
 
     public static boolean isShowTrackNumber(Context context) {

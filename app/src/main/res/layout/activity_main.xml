@@ -70,6 +70,41 @@
                 app:layout_constraintStart_toStartOf="@id/header_back_btn"
                 app:layout_constraintBottom_toBottomOf="parent"
                 tools:text="622 songs · 44 hrs 24 min" />
+
+            <LinearLayout
+                android:id="@+id/scan_progress_dots"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:visibility="gone"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginTop="@dimen/dimen_4_dp"
+                app:layout_constraintTop_toBottomOf="@id/search_view"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <View
+                    android:id="@+id/scan_dot1"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/shape_dot_indicator" />
+
+                <View
+                    android:id="@+id/scan_dot2"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/shape_dot_indicator" />
+
+                <View
+                    android:id="@+id/scan_dot3"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/shape_dot_indicator" />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- 🔹 Content List -->

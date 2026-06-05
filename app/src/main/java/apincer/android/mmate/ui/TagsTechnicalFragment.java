@@ -44,7 +44,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class TagsTechnicalFragment extends Fragment {
     protected Context context;
     protected TagsActivity tagsActivity;
-    private AlertDialog progressDialog;
+
     
     private TextView filename;
     private TextView metada;
@@ -231,7 +231,7 @@ public class TagsTechnicalFragment extends Fragment {
     }
 
     void doRemoveEmbedCoverart() {
-        startProgressBar();
+        tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
                     for(Track tag:tagsActivity.getEditItems()) {
@@ -240,17 +240,17 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> stopProgressBar()
+                unused -> tagsActivity.stopProgressBar()
         ).exceptionally(
                 throwable -> {
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     return null;
                 }
         );
     }
 
     void doExtractEmbedCoverart() {
-        startProgressBar();
+        tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
                     for(Track tag:tagsActivity.getEditItems()) {
@@ -262,17 +262,17 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> stopProgressBar()
+                unused -> tagsActivity.stopProgressBar()
         ).exceptionally(
                 throwable -> {
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     return null;
                 }
         );
     }
 
     void doResetTagFromFile() {
-        startProgressBar();
+        tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
                     for(Track tag:tagsActivity.getEditItems()) {
@@ -283,45 +283,13 @@ public class TagsTechnicalFragment extends Fragment {
         ).thenAccept(
                 unused -> {
                     tagsActivity.refreshDisplayTag();
-                    stopProgressBar();}
+                    tagsActivity.stopProgressBar();}
         ).exceptionally(
                 throwable -> {
                     tagsActivity.refreshDisplayTag();
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     return null;
                 }
         );
-    }
-
-    private void startProgressBar() {
-        if (!isAdded() || getActivity() == null) return;
-
-        getActivity().runOnUiThread(() -> {
-            try {
-                if (!isAdded() || getActivity() == null) return;
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
-                dialogBuilder.setView(R.layout.progress_dialog_layout);
-                dialogBuilder.setCancelable(false);
-                progressDialog = dialogBuilder.create();
-                progressDialog.show();
-            } catch (Exception e) {
-                Log.e("TagsTechnicalFragment", "Error showing progress dialog", e);
-            }
-        });
-    }
-
-    private void stopProgressBar() {
-        if (!isAdded() || getActivity() == null) return;
-
-        getActivity().runOnUiThread(() -> {
-            try {
-                if(progressDialog != null && progressDialog.isShowing()) {
-                    progressDialog.dismiss();
-                    progressDialog = null;
-                }
-            } catch (Exception e) {
-                Log.e("TagsTechnicalFragment", "Error dismissing progress dialog", e);
-            }
-        });
     }
 }
