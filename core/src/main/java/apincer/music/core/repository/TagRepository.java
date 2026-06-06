@@ -432,19 +432,19 @@ public class TagRepository {
                 }
             //} else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             //    list = dbHelper.findByMediaQuality(criteria.getKeyword());
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && isEmpty(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && isEmpty(criteria.getKeyword())) {
                 list = findQualityItems(); // These don't support pagination easily yet
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
                 list = dbHelper.findDSDSongs(firstResult, maxResults);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_MQA_MASTER_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_MQA_MASTER_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findMQASongs(firstResult, maxResults);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findHighQuality(firstResult, maxResults);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_CD_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_CD_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findCDQuality(firstResult, maxResults);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIRES_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_HIRES_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findHiRes(firstResult, maxResults);
-            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_CD_EXT_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE && Constants.TITLE_CD_EXT_QUALITY.equals(criteria.getKeyword())) {
             list = dbHelper.findHiRes48(firstResult, maxResults);
            /* } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 String keyword = criteria.getKeyword();
@@ -493,7 +493,7 @@ public class TagRepository {
                 codec = Constants.TITLE_HIGH_QUALITY;
             }
 
-            AudioTag folder = mapped.getOrDefault(codec, new AudioTag(SearchCriteria.TYPE.CODEC, codec));
+            AudioTag folder = mapped.getOrDefault(codec, new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, codec));
             if(folder != null) {
                 if (folder.getChildCount() == 0) {
                     //first time created
@@ -512,7 +512,7 @@ public class TagRepository {
                 }
 
                 if (codecAlt != null) {
-                    folder = mapped.getOrDefault(codecAlt, new AudioTag(SearchCriteria.TYPE.CODEC, codecAlt));
+                    folder = mapped.getOrDefault(codecAlt, new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, codecAlt));
                     if(folder != null) {
                         if (folder.getChildCount() == 0) {
                             //first time created

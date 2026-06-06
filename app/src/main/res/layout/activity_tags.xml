@@ -213,11 +213,11 @@
                     android:background="#33FFFFFF" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_import"
+                    android:id="@+id/button_organize"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Import"
+                    android:text="Organize"
                     android:textColor="@color/colorPrimary"
                     app:cornerRadius="20dp" />
 

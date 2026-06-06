@@ -186,23 +186,6 @@ public class TagsActivity extends AppCompatActivity {
         dismissProgressDialog(); // Ensure progress dialog is dismissed
     }
 
-    private void doDeepScan() {
-        startProgressBar();
-        operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
-            @Override
-            public void onProgress(Track tag, int progress, String status) {
-                Log.d(TAG, "Mastering analysis: " + tag.getSimpleName() + " -> " + status);
-                updateProgressBar(status);
-            }
-
-            @Override
-            public void onComplete() {
-                stopProgressBar();
-                viewModel.refreshDisplayTag();
-            }
-        });
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -374,7 +357,7 @@ public class TagsActivity extends AppCompatActivity {
         techToggleGroup.clearOnButtonCheckedListeners();
 
         findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems());
-        findViewById(R.id.button_import).setOnClickListener(v -> doMoveMediaItems());
+        findViewById(R.id.button_organize).setOnClickListener(v -> doMoveMediaItems());
         findViewById(R.id.button_more).setOnClickListener(this::doShowMoreActions);
 
         if(mode ==0) {
@@ -439,10 +422,7 @@ public class TagsActivity extends AppCompatActivity {
         // 3. Set an OnMenuItemClickListener to handle menu item clicks
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_deep_analysis) {
-                doDeepScan();
-                return true;
-            } else if (itemId == R.id.action_web_search) {
+            if (itemId == R.id.action_web_search) {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
                 return true;
             } else if (itemId == R.id.action_spectrum) {
@@ -945,22 +925,34 @@ public class TagsActivity extends AppCompatActivity {
             boolean closeScreen = false;
             @Override
             public void onProgress(Track tag, int progress, String status) {
-                if(playbackService!= null) {
-                    closeScreen = tag.equals(playbackService.getNowPlayingSong());
+                if(playbackService != null && tag.equals(playbackService.getNowPlayingSong())) {
+                    closeScreen = true;
                 }
+                updateProgressBar(status + ": " + tag.getSimpleName());
             }
 
             @Override
             public void onComplete() {
-                if(closeScreen) {
-                    stopProgressBar();
-                    setSaved(true);
-                    finish(); // back to prev activity
-                }else {
-                    stopProgressBar();
-                    setSaved(true);
-                    viewModel.refreshDisplayTag();
-                }
+                operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+                    @Override
+                    public void onProgress(Track tag, int progress, String status) {
+                        Log.d(TAG, "Mastering analysis: " + tag.getSimpleName() + " -> " + status);
+                        updateProgressBar(status + ": " + tag.getSimpleName());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if(closeScreen) {
+                            stopProgressBar();
+                            setSaved(true);
+                            finish(); // back to prev activity
+                        }else {
+                            stopProgressBar();
+                            setSaved(true);
+                            viewModel.refreshDisplayTag();
+                        }
+                    }
+                });
             }
         });
     }

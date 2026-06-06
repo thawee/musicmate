@@ -502,8 +502,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-           // builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioSampleRate < 96000 and qualityInd not like 'MQA%' order by title, artist");
-            builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and audioSampleRate = 44100 order by title, artist");
+            builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and qualityInd not like 'MQA%' order by title, artist");
             if(firstResult>0) {
                 builder.offset(firstResult);
             }
@@ -1152,13 +1151,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                 if (isEmpty(kw)) return "";
                 return "artist like '%" + kw.replace("'", "''") + "%'";
             }
-            case CODEC: {
+            case SOUND_GRADE: {
                 String kw = criteria.getKeyword();
                 if (isEmpty(kw)) return "";
                 if (Constants.TITLE_DSD.equals(kw)) return "audioEncoding in ('dsd', 'dff')";
                 if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw)) return "qualityInd like 'MQA%'";
                 if (Constants.TITLE_HIGH_QUALITY.equals(kw)) return "audioEncoding in ('aac', 'mpeg')";
-                if (Constants.TITLE_CD_QUALITY.equals(kw)) return "audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and audioSampleRate = 44100";
+                if (Constants.TITLE_CD_QUALITY.equals(kw)) return "audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and qualityInd not like 'MQA%'";
                 if (Constants.TITLE_HIRES_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and qualityInd not like 'MQA%'";
                 if (Constants.TITLE_CD_EXT_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'";
                 return "";

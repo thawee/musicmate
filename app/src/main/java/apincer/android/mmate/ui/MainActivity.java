@@ -39,6 +39,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -183,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
 
     // State variables
     private long lastScrollEventTime = 0;
+    private boolean isScrollStoppingTouch = false;
     private volatile boolean busy;
     private Track previouslyPlaying;
 
@@ -609,6 +611,22 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
+        // add on item touch listener to detect and block touch selections that stop a fast move/scroll
+        mRecyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                int action = e.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    if (rv.getScrollState() != RecyclerView.SCROLL_STATE_IDLE) {
+                        isScrollStoppingTouch = true;
+                    }
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    rv.post(() -> isScrollStoppingTouch = false);
+                }
+                return false;
+            }
+        });
+
         // add on scroll listener
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -662,27 +680,28 @@ public class MainActivity extends AppCompatActivity {
 
                 if (newState != RecyclerView.SCROLL_STATE_IDLE) {
                     // We are DRAGGING (state 1) or SETTLING (state 2).
-
-                    // 1. Update the timestamp *every time* the state changes to non-idle.
+                    // Update the timestamp *every time* the state changes to non-idle.
                     lastScrollEventTime = SystemClock.elapsedRealtime();
-
-                    // 2. Disable the view.
-                    recyclerView.setEnabled(false);
                 } else {
                     // We are IDLE (state 0).
-
-                    // 1. Re-enable immediately.
-                    recyclerView.setEnabled(true);
-
-                    // 2. Update the timestamp ONE LAST TIME as we become idle.
-                    //    This ensures the guard is active for the next 200ms.
+                    // Update the timestamp ONE LAST TIME as we become idle.
+                    // This ensures the guard is active for the next 500ms.
                     lastScrollEventTime = SystemClock.elapsedRealtime();
                 }
             }
         });
 
-        // Setup item click listener
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
+            if (isSelectionBlocked()) return;
+
+            if (mTracker != null && mTracker.hasSelection()) {
+                if (mTracker.isSelected((long) position)) {
+                    mTracker.deselect((long) position);
+                } else {
+                    mTracker.select((long) position);
+                }
+                return;
+            }
 
             Track tag = adapter.getMusicTag(position);
             if(tag == null) return;
@@ -719,6 +738,9 @@ public class MainActivity extends AppCompatActivity {
                             if (actionMode == null) {
                                 actionMode = startSupportActionMode(actionModeCallback);
                             }
+                        } else if (actionMode != null) {
+                            actionMode.finish();
+                            return;
                         }
                         if (actionMode != null) {
                             actionMode.setTitle(StringUtils.formatSongSize(count));
@@ -806,9 +828,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Prefer DB aggregate stats for accurate category-wide totals.
         // Fall back to adapter counts if stats not yet available (e.g. initial load).
-        int count = (stats != null) ? stats.getTotalCount() : adapter.getTotalItems();
-        long totalSize = (stats != null) ? stats.getTotalSize() : adapter.getTotalSize();
-        double totalDuration = (stats != null) ? stats.getTotalDuration() : adapter.getTotalDuration();
+        // For top-level category directories (where keyword is empty and type is not LIBRARY),
+        // we display the category count itself, which is the total items in the adapter.
+        boolean isTopLevelCategoryDir = isEmpty(adapter.getCriteria().getKeyword())
+                && !SearchCriteria.TYPE.LIBRARY.equals(type);
+        boolean hasActiveFilter = adapter.hasFilter();
+        int count = (isTopLevelCategoryDir || hasActiveFilter) ? adapter.getTotalItems()
+                : ((stats != null) ? stats.getTotalCount() : adapter.getTotalItems());
+        long totalSize = hasActiveFilter ? adapter.getTotalSize() : ((stats != null) ? stats.getTotalSize() : adapter.getTotalSize());
+        double totalDuration = hasActiveFilter ? adapter.getTotalDuration() : ((stats != null) ? stats.getTotalDuration() : adapter.getTotalDuration());
 
         String statText = "";
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
@@ -835,6 +863,7 @@ public class MainActivity extends AppCompatActivity {
             // can back to higher category, except type library
             if(SearchCriteria.TYPE.LIBRARY.equals(type)){
                 mBackButton.setImageDrawable(icon);
+                mHeaderPanel.setOnClickListener(null);
             } else {
                 mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
                 mHeaderPanel.setOnClickListener(view -> {
@@ -847,10 +876,23 @@ public class MainActivity extends AppCompatActivity {
             // top-level category: show total count + category label
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
-                // Also show total storage + duration for the all-songs view
-                if (stats != null && isEmpty(adapter.getCriteria().getFilterType())) {
+                // Also show total storage + duration for the all-songs view (Library)
+                if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(adapter.getCriteria().getFilterType())) {
                     statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
                 }
+            }
+
+            // Allow back navigation to Library (All Songs) from top-level category lists (e.g. Codecs, Artists, Genres)
+            if(SearchCriteria.TYPE.LIBRARY.equals(type)){
+                mBackButton.setImageDrawable(icon);
+                mHeaderPanel.setOnClickListener(null);
+            } else {
+                mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
+                mHeaderPanel.setOnClickListener(view -> {
+                    adapter.resetFilter();
+                    adapter.search("");
+                    doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
+                });
             }
         }
 
@@ -955,10 +997,9 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_DUPLICATE);
             return true;
-        } else if (item.getItemId() == R.id.menu_resolution) {
+        } else if (item.getItemId() == R.id.menu_sound_grade) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.CODEC, null);
-            //doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.SOUND_GRADE, null);
             return true;
         } else if (item.getItemId() == R.id.menu_collection) {
             doHideSearch();
@@ -1615,6 +1656,12 @@ public class MainActivity extends AppCompatActivity {
         input.setDropDownBackgroundResource(R.color.black_transparent_64);
     }
 
+    private boolean isSelectionBlocked() {
+        return mRecyclerView.getScrollState() != RecyclerView.SCROLL_STATE_IDLE 
+                || (SystemClock.elapsedRealtime() - lastScrollEventTime < 500)
+                || isScrollStoppingTouch;
+    }
+
     // You can put this class inside your Activity/Fragment
     private class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
 
@@ -1678,13 +1725,6 @@ public class MainActivity extends AppCompatActivity {
         public boolean canSelectMultiple() {
             // You still want to allow multi-select for the files
             return true;
-        }
-
-        private boolean isSelectionBlocked() {
-            // This is the only guard we need.
-            // We block if any scroll-related activity (drag, fling, or
-            // stopping) has happened in the last 200 milliseconds.
-            return (SystemClock.elapsedRealtime() - lastScrollEventTime < 200);
         }
     }
 

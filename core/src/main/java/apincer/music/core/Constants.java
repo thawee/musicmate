@@ -40,8 +40,8 @@ public final class Constants {
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
-    public static final String TITLE_QUALITY = "Audio Quality";
-    public static final String TITLE_CODEC = "Codecs";
+    public static final String TITLE_QUALITY = "Sound Grade";
+    public static final String TITLE_CODEC = "Sound Grade";
     public static final String TITLE_GENRE = "Genres";
     public static final String TITLE_ARTIST = "Artists";
     public static final String TITLE_NO_COVERART = "No Embed Coverart";

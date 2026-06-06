@@ -63,7 +63,26 @@ public class FileRepository {
                     if(dir != null) {
                         image = getFolderCoverArt(new File(dir, DEFAULT_COVERART));
                     }
-                    if(image == null || !image.exists()) {
+                    if (image == null || !image.exists() || image.isDirectory()) {
+                        String artist = music.getTitle().toLowerCase().replace("/", " ");
+                        image = new File(cacheDir, "/artist/" + artist + ".png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/artist/" + artist + ".png", image);
+                        }
+                        if (!image.exists()) {
+                            image = new File(cacheDir, "/artist/" + artist + ".jpg");
+                            if (!image.exists()) {
+                                copyAssetCover(context, "Covers/artist/" + artist + ".jpg", image);
+                            }
+                        }
+                        if (!image.exists()) {
+                            image = new File(cacheDir, "/artist/folder.png");
+                            if (!image.exists()) {
+                                copyAssetCover(context, "Covers/artist/folder.png", image);
+                            }
+                        }
+                    }
+                    if (image == null || !image.exists() || image.isDirectory()) {
                         image = new File(cacheDir, music.getPath());
                     }
                     yield image;
@@ -72,18 +91,33 @@ public class FileRepository {
                     String genre = music.getTitle().toLowerCase().replace("/", " ");
                     File image = new File(cacheDir, "/genre/" + genre + ".png");
                     if (!image.exists()) {
+                        copyAssetCover(context, "Covers/genre/" + genre + ".png", image);
+                    }
+                    if (!image.exists()) {
                         image = new File(cacheDir, "/genre/" + genre + ".jpg");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/genre/" + genre + ".jpg", image);
+                        }
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/genre/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/genre/folder.png", image);
+                        }
                     }
                     if (!image.exists()) {
                         image = new File(cacheDir, music.getPath());
                     }
                     yield image;
                 }
-                case CODEC -> {
+                case SOUND_GRADE -> {
                     String codec = music.getTitle().replace("/", " ");
-                    File image = new File(cacheDir, "/codec/" + codec + ".png");
+                    File image = new File(cacheDir, "/sound_grade/" + codec + ".png");
                     if (!image.exists()) {
-                        image = new File(cacheDir, "/codec/" + codec + ".jpg");
+                        copyAssetCover(context, "Covers/sound_grade/" + codec + ".png", image);
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/sound_grade/" + codec + ".jpg");
                     }
                     if (!image.exists()) {
                         image = new File(cacheDir, music.getPath());
@@ -92,11 +126,21 @@ public class FileRepository {
                 }
                 case PLAYLIST -> {
                     File image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".png");
-
+                    if (!image.exists()) {
+                        copyAssetCover(context, "Covers/playlist/" + music.getUniqueKey() + ".png", image);
+                    }
                     if(!image.exists()) {
                         image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".jpg");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/playlist/" + music.getUniqueKey() + ".jpg", image);
+                        }
                     }
-
+                    if(!image.exists()) {
+                        image = new File(cacheDir, "/playlist/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/playlist/folder.png", image);
+                        }
+                    }
                     if(!image.exists()) {
                         image = new File(cacheDir, music.getPath());
                     }
@@ -109,12 +153,16 @@ public class FileRepository {
 
             return getFolderCoverArt(cover);
         }else {
-            File cover = getFolderCoverArt(music.getPath());
-            if (cover == null) { // || !(isEmpty(music.getAlbumArtFilename()) && music.getAlbumArtFilename().contains(DEFAULT_COVERART))) {
-                if(!DEFAULT_COVERART.equals(music.getAlbumArtFilename())) {
-                    cover = new File(cacheDir, music.getAlbumArtFilename());
-                    Log.d(TAG, "getCoverArt: no folder image, check " + cover.getAbsolutePath());
+            File cover = null;
+            String albumArtFilename = music.getAlbumArtFilename();
+            if (!isEmpty(albumArtFilename) && !DEFAULT_COVERART.equals(albumArtFilename)) {
+                File cachedCover = new File(cacheDir, albumArtFilename);
+                if (cachedCover.exists()) {
+                    cover = cachedCover;
                 }
+            }
+            if (cover == null) {
+                cover = getFolderCoverArt(music.getPath());
             }
             return cover;
         }
@@ -645,5 +693,23 @@ public class FileRepository {
             }
         }
         return files;
+    }
+
+    private static void copyAssetCover(Context context, String assetPath, File destFile) {
+        try {
+            if (!destFile.getParentFile().exists()) {
+                destFile.getParentFile().mkdirs();
+            }
+            try (java.io.InputStream in = context.getAssets().open(assetPath);
+                 java.io.OutputStream out = new java.io.FileOutputStream(destFile)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+        } catch (java.io.IOException e) {
+            // Ignore if asset is not found (e.g. for custom genres/codecs without predefined images)
+        }
     }
 }

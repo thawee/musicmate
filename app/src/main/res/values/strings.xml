@@ -49,7 +49,7 @@
     <!-- Use with String.format() and R.string resources -->
     <string name="operation_delete">Removing \"%1$s\"</string>
     <string name="operation_write_tag">Saving tags on \"%1$s\"</string>
-    <string name="operation_organize">Importing \"%1$s\"</string>
+    <string name="operation_organize">Organizing \"%1$s\"</string>
 
     <string name="alert_delete_success">\"%1$s\" is removed from storage.</string>
     <string name="alert_delete_inprogress">Removing \"%1$s\"</string>
@@ -63,11 +63,11 @@
 
     <string name="alert_write_tag_inprogress_many">Saving tags for %1$d songs.</string>
 
-    <string name="alert_organize_success">\"%1$s\" is imported to Music Directory</string>
-    <string name="alert_organize_inprogress">Import \"%1$s\" to Music Directory;</string>
-    <string name="alert_organize_fail">Cannot import \"%1$s\"</string>
+    <string name="alert_organize_success">\"%1$s\" is organized to Music Directory</string>
+    <string name="alert_organize_inprogress">Organize \"%1$s\" to Music Directory;</string>
+    <string name="alert_organize_fail">Cannot organize \"%1$s\"</string>
 
-    <string name="alert_organize_inprogress_many">Importing %1$d songs to Music Directory</string>
+    <string name="alert_organize_inprogress_many">Organizing %1$d songs to Music Directory</string>
 
     <string name="alert_scan_title">Start running media scan…</string>
     <string name="alert_scan_success">Media scan run completed</string>
@@ -110,13 +110,13 @@
 
     <string name="preferences_sub_others">Others</string>
     <string name="search_view_query_input_hint">Search</string>
-    <string name="import_songs_underline"><u>Import</u></string>
+    <string name="import_songs_underline"><u>Organize</u></string>
     <string name="edit_tags_underline"><u>Edit Tags</u></string>
     <string name="delete_song_underline"><u>Remove</u></string>
     <string name="aspect_underline"><u>Spectrogram</u></string>
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
-    <string name="import_songs_label">Import</string>
+    <string name="import_songs_label">Organize</string>
     <string name="measure_dr_label">DR</string>
     <string name="edit_tags_label">TAG</string>
     <string name="delete_song_label">Remove</string>
@@ -186,7 +186,7 @@
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
     <string name="title_dynamic_range_and_replay_gain">Analyze Dynamic Range</string>
-    <string name="title_import_to_music_directory">Move to Music Directory</string>
+    <string name="title_import_to_music_directory">Organize Music Files</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
     <string name="label_quality_indicator">Quality</string>

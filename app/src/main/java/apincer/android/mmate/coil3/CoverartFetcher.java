@@ -9,10 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.repository.FileRepository;
@@ -27,12 +23,6 @@ import coil3.request.CachePolicy;
 import coil3.request.ImageRequest;
 import coil3.request.Options;
 import kotlin.coroutines.Continuation;
-import kotlin.reflect.KCallable;
-import kotlin.reflect.KClass;
-import kotlin.reflect.KFunction;
-import kotlin.reflect.KType;
-import kotlin.reflect.KTypeParameter;
-import kotlin.reflect.KVisibility;
 import okio.FileSystem;
 import okio.Path;
 
@@ -65,7 +55,7 @@ public class CoverartFetcher implements Fetcher {
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
         File covertFile = FileRepository.getCoverArt(context, musicTag);
         String cacheKey = musicTag.getAlbumArtFilename();
-        if(covertFile == null || !covertFile.exists()) {
+        if(covertFile == null || !covertFile.exists() || covertFile.isDirectory()) {
             covertFile = getDefaultCover();
             cacheKey = null;
         }
@@ -84,7 +74,25 @@ public class CoverartFetcher implements Fetcher {
     }
 
     private File getDefaultCover() {
-        return new File(getCoverartDir(context),DEFAULT_COVERART);
+        File defaultCover = new File(getCoverartDir(context), DEFAULT_COVERART);
+        if (!defaultCover.exists()) {
+            try {
+                if (!defaultCover.getParentFile().exists()) {
+                    defaultCover.getParentFile().mkdirs();
+                }
+                try (java.io.InputStream in = context.getAssets().open("Covers/" + DEFAULT_COVERART);
+                     java.io.OutputStream out = new java.io.FileOutputStream(defaultCover)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+                }
+            } catch (java.io.IOException e) {
+                android.util.Log.e("CoverartFetcher", "Failed to copy default cover art from assets", e);
+            }
+        }
+        return defaultCover;
     }
 
     public static class Factory implements Fetcher.Factory<Track> {
@@ -104,130 +112,12 @@ public class CoverartFetcher implements Fetcher {
         ImageRequest.Builder builder = new ImageRequest.Builder(context);
         if(tag != null) {
             builder.diskCacheKey(tag.getAlbumArtFilename());
-            builder.fetcherFactory(new Factory(context), new KClassMusicTag());
+            builder.fetcherFactory(new Factory(context), kotlin.jvm.JvmClassMappingKt.getKotlinClass(Track.class));
             if (!tag.isManaged()) {
                 builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching
                 builder.memoryCachePolicy(CachePolicy.DISABLED); // Disable memory caching
             }
         }
         return builder;
-    }
-
-    private static class KClassMusicTag implements KClass<Track> {
-        @NonNull
-        @Override
-        public Collection<KFunction<Track>> getConstructors() {
-            return Collections.emptyList();
-        }
-
-        @Nullable
-        @Override
-        public String getSimpleName() {
-            return "";
-        }
-
-        @Nullable
-        @Override
-        public String getQualifiedName() {
-            return "";
-        }
-
-        @NonNull
-        @Override
-        public Collection<KCallable<?>> getMembers() {
-            return Collections.emptyList();
-        }
-
-        @NonNull
-        @Override
-        public Collection<KClass<?>> getNestedClasses() {
-            return Collections.emptyList();
-        }
-
-        @Nullable
-        @Override
-        public Track getObjectInstance() {
-            return null;
-        }
-
-        @Override
-        public boolean isInstance(@Nullable Object o) {
-            return o instanceof Track;
-        }
-
-        @NonNull
-        @Override
-        public List<KTypeParameter> getTypeParameters() {
-            return Collections.emptyList();
-        }
-
-        @NonNull
-        @Override
-        public List<KType> getSupertypes() {
-            return Collections.emptyList();
-        }
-
-        @NonNull
-        @Override
-        public List<KClass<? extends Track>> getSealedSubclasses() {
-            return Collections.emptyList();
-        }
-
-        @Nullable
-        @Override
-        public KVisibility getVisibility() {
-            return null;
-        }
-
-        @Override
-        public boolean isFinal() {
-            return false;
-        }
-
-        @Override
-        public boolean isOpen() {
-            return false;
-        }
-
-        @Override
-        public boolean isAbstract() {
-            return false;
-        }
-
-        @Override
-        public boolean isSealed() {
-            return false;
-        }
-
-        @Override
-        public boolean isData() {
-            return false;
-        }
-
-        @Override
-        public boolean isInner() {
-            return false;
-        }
-
-        @Override
-        public boolean isCompanion() {
-            return false;
-        }
-
-        @Override
-        public boolean isFun() {
-            return false;
-        }
-
-        @Override
-        public boolean isValue() {
-            return false;
-        }
-
-        @NonNull
-        @Override
-        public List<Annotation> getAnnotations() {
-            return Collections.emptyList();
-        }
     }
 }

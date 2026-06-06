@@ -70,8 +70,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 #junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 #nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
-jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.21.4"}
-jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.21.4"}
+jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.0"}
+jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.0"}
 #airbnb-lottie={module="com.airbnb.android:lottie", version="6.7.1"}
 
 #glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}

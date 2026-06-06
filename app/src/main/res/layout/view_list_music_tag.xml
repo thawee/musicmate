@@ -17,7 +17,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/shape_bottom_frosted_panel"
+        android:background="@drawable/selector_item_background"
+        android:duplicateParentState="true"
         android:minHeight="88dp"
         android:padding="8dp">
 

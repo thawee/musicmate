@@ -154,7 +154,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 }else {
                     return keyword;
                 }
-            } else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
+            } else if(criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE) {
                 return isEmpty(keyword) ? Constants.TITLE_QUALITY : keyword;
             } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
                 return isEmpty(keyword) ? Constants.TITLE_PLAYLIST : keyword;
@@ -193,7 +193,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 return Constants.TITLE_LIBRARY;
            // }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
           //      return Constants.TITLE_QUALITY;
-            }else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
+            }else if(criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE) {
                 return Constants.TITLE_CODEC;
             //}else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
            //     return Constants.TITLE_GROUPING;
