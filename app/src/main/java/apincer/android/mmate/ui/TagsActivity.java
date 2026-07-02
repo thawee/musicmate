@@ -67,6 +67,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -74,6 +75,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.inject.Inject;
 
 import android.view.ViewGroup.MarginLayoutParams;
+import android.widget.Toast;
 import static apincer.android.mmate.utils.UIUtils.dpToPx;
 
 import apincer.android.mmate.R;
@@ -96,6 +98,7 @@ import apincer.android.mmate.ui.view.QualityIndicatorView;
 import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
+import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
@@ -432,6 +435,15 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_open_folder) {
                 ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
                 return true;
+            } else if (itemId == R.id.action_fix_thai_encoding) {
+                doFixThaiEncoding();
+                return true;
+            } else if (itemId == R.id.action_auto_tag) {
+                doAutoTag();
+                return true;
+            } else if (itemId == R.id.action_search_match_tags) {
+                doSearchAndMatchTags();
+                return true;
             }
             return false; // Return false if the item click is not handled
         });
@@ -443,6 +455,334 @@ public class TagsActivity extends AppCompatActivity {
 
         // 4. Show the PopupMenu
         popup.show();
+    }
+    
+    /**
+     * Attempts to automatically fetch tags using MusicBrainz (by text) or AcoustID (by audio fingerprint)
+     */
+    private void doAutoTag() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+        
+        startProgressBar();
+        
+        CompletableFuture.supplyAsync(() -> {
+            apincer.music.core.repository.MusicBrainzClient mbClient = new apincer.music.core.repository.MusicBrainzClient();
+            apincer.music.core.repository.AcoustIdClient acoustIdClient = new apincer.music.core.repository.AcoustIdClient();
+            int fixed = 0;
+            
+            for (Track item : items) {
+                String mbid = null;
+                // If title and artist are completely missing, try AcoustID fingerprinting
+                if (apincer.music.core.utils.StringUtils.isEmpty(item.getTitle()) && 
+                    apincer.music.core.utils.StringUtils.isEmpty(item.getArtist())) {
+                    mbid = acoustIdClient.lookupByFile(item.getPath(), (long) item.getAudioDuration());
+                } else {
+                    // Otherwise rely on text search using MusicBrainz
+                    mbid = mbClient.searchRecording(item.getTitle(), item.getArtist());
+                }
+                
+                if (mbid != null) {
+                    apincer.music.core.repository.MusicBrainzClient.MusicBrainzMetadata meta = mbClient.getRecordingMetadata(mbid);
+                    if (meta != null) {
+                        boolean changed = false;
+                        if (meta.title != null && !meta.title.isEmpty() && apincer.music.core.utils.StringUtils.isEmpty(item.getTitle())) {
+                            item.setTitle(meta.title); changed = true;
+                        }
+                        if (meta.artist != null && !meta.artist.isEmpty() && apincer.music.core.utils.StringUtils.isEmpty(item.getArtist())) {
+                            item.setArtist(meta.artist); changed = true;
+                        }
+                        if (meta.album != null && !meta.album.isEmpty() && apincer.music.core.utils.StringUtils.isEmpty(item.getAlbum())) {
+                            item.setAlbum(meta.album); changed = true;
+                        }
+                        if (meta.year != null && !meta.year.isEmpty() && apincer.music.core.utils.StringUtils.isEmpty(item.getYear())) {
+                            item.setYear(meta.year); changed = true;
+                        }
+                        if (meta.genre != null && !meta.genre.isEmpty() && apincer.music.core.utils.StringUtils.isEmpty(item.getGenre())) {
+                            item.setGenre(meta.genre); changed = true;
+                        }
+                        
+                        // Download cover art if we have a releaseId and no existing cover art
+                        if (meta.releaseId != null && !meta.releaseId.isEmpty() && 
+                            (item.getAlbumArtFilename() == null || item.getAlbumArtFilename().isEmpty() || !new java.io.File(item.getAlbumArtFilename()).exists())) {
+                            java.io.File parentDir = new java.io.File(item.getPath()).getParentFile();
+                            if (parentDir != null && parentDir.exists()) {
+                                java.io.File coverFile = new java.io.File(parentDir, "Cover.jpg");
+                                if (coverFile.exists()) {
+                                    if (item.getAlbumArtFilename() == null || !item.getAlbumArtFilename().equals(coverFile.getAbsolutePath())) {
+                                        item.setAlbumArtFilename(coverFile.getAbsolutePath());
+                                        changed = true;
+                                    }
+                                } else if (mbClient.downloadCoverArt(meta.releaseId, coverFile)) {
+                                    item.setAlbumArtFilename(coverFile.getAbsolutePath());
+                                    changed = true;
+                                }
+                            }
+                        }
+                        
+                        if (changed) fixed++;
+                    }
+                }
+            }
+            return fixed;
+        }).thenAccept(fixed -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                if (fixed > 0) {
+                    Toast.makeText(this, "Auto-tagged " + fixed + " items", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "No new tags found", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).exceptionally(throwable -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                Toast.makeText(this, "Error during auto-tag", Toast.LENGTH_SHORT).show();
+            });
+            return null;
+        });
+    }
+    
+    /**
+     * Interactive search and match for a single track's tags.
+     */
+    private void doSearchAndMatchTags() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+        if (items.size() > 1) {
+            Toast.makeText(this, "Please select only one track for Search & Match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Track item = items.get(0);
+        
+        // Show an input dialog to let the user confirm or refine the title and artist query
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle("Search & Match Tags");
+        
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(50, 30, 50, 30);
+        
+        final android.widget.EditText titleInput = new android.widget.EditText(this);
+        titleInput.setHint("Title");
+        titleInput.setText(item.getTitle());
+        layout.addView(titleInput);
+        
+        final android.widget.EditText artistInput = new android.widget.EditText(this);
+        artistInput.setHint("Artist");
+        artistInput.setText(item.getArtist());
+        layout.addView(artistInput);
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Search", (dialog, which) -> {
+            String qTitle = titleInput.getText().toString().trim();
+            String qArtist = artistInput.getText().toString().trim();
+            performSearchAndMatch(item, qTitle, qArtist);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    private void performSearchAndMatch(Track item, String title, String artist) {
+        startProgressBar();
+        CompletableFuture.supplyAsync(() -> {
+            apincer.music.core.repository.MusicBrainzClient mbClient = new apincer.music.core.repository.MusicBrainzClient();
+            return mbClient.searchRecordingsList(title, artist, 15);
+        }).thenAccept(results -> {
+            runOnUiThread(() -> {
+                stopProgressBar();
+                if (results.isEmpty()) {
+                    Toast.makeText(this, "No matches found on MusicBrainz", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                showSearchResultsDialog(item, results);
+            });
+        }).exceptionally(throwable -> {
+            runOnUiThread(() -> {
+                stopProgressBar();
+                Toast.makeText(this, "Error searching MusicBrainz", Toast.LENGTH_SHORT).show();
+            });
+            return null;
+        });
+    }
+    
+    private class SearchResultAdapter extends android.widget.ArrayAdapter<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> {
+        public SearchResultAdapter(android.content.Context context, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
+            super(context, 0, results);
+        }
+
+        @Override
+        public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
+            if (convertView == null) {
+                convertView = android.view.LayoutInflater.from(getContext()).inflate(R.layout.view_list_item_search_result, parent, false);
+            }
+
+            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult result = getItem(position);
+
+            android.widget.TextView titleView = convertView.findViewById(R.id.search_result_title);
+            android.widget.TextView artistView = convertView.findViewById(R.id.search_result_artist);
+            android.widget.TextView albumView = convertView.findViewById(R.id.search_result_album);
+            android.widget.ImageView coverView = convertView.findViewById(R.id.search_result_cover);
+
+            titleView.setText(result.title);
+            artistView.setText(result.artist);
+
+            StringBuilder albumText = new StringBuilder();
+            if (result.album != null && !result.album.isEmpty()) {
+                albumText.append(result.album);
+            }
+            if (result.year != null && !result.year.isEmpty()) {
+                if (albumText.length() > 0) albumText.append(" ");
+                albumText.append("(").append(result.year).append(")");
+            }
+            albumView.setText(albumText.toString());
+
+            if (result.releaseId != null && !result.releaseId.isEmpty()) {
+                String coverUrl = "https://coverartarchive.org/release/" + result.releaseId + "/front-250";
+                
+                coil3.request.ImageRequest imageRequest = new coil3.request.ImageRequest.Builder(getContext())
+                        .data(coverUrl)
+                        .target(new coil3.target.ImageViewTarget(coverView))
+                        .build();
+                coil3.SingletonImageLoader.get(getContext()).enqueue(imageRequest);
+            } else {
+                coverView.setImageDrawable(null);
+            }
+
+            return convertView;
+        }
+    }
+    
+    private void showSearchResultsDialog(Track item, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle("Select Best Match");
+        
+        SearchResultAdapter adapter = new SearchResultAdapter(this, results);
+        
+        builder.setAdapter(adapter, (dialog, which) -> {
+            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected = results.get(which);
+            applySelectedSearchResult(item, selected);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    private void applySelectedSearchResult(Track item, apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected) {
+        startProgressBar();
+        CompletableFuture.supplyAsync(() -> {
+            apincer.music.core.repository.MusicBrainzClient mbClient = new apincer.music.core.repository.MusicBrainzClient();
+            apincer.music.core.repository.MusicBrainzClient.MusicBrainzMetadata meta = mbClient.getRecordingMetadata(selected.recordingId);
+            boolean changed = false;
+            
+            if (meta != null) {
+                if (meta.title != null && !meta.title.isEmpty()) {
+                    item.setTitle(meta.title); changed = true;
+                }
+                if (meta.artist != null && !meta.artist.isEmpty()) {
+                    item.setArtist(meta.artist); changed = true;
+                }
+                if (meta.album != null && !meta.album.isEmpty()) {
+                    item.setAlbum(meta.album); changed = true;
+                }
+                if (meta.year != null && !meta.year.isEmpty()) {
+                    item.setYear(meta.year); changed = true;
+                }
+                if (meta.genre != null && !meta.genre.isEmpty()) {
+                    item.setGenre(meta.genre); changed = true;
+                }
+                
+                // For manual Search & Match, force download and overwrite the cover art
+                if (meta.releaseId != null && !meta.releaseId.isEmpty()) {
+                    java.io.File parentDir = new java.io.File(item.getPath()).getParentFile();
+                    if (parentDir != null && parentDir.exists()) {
+                        java.io.File coverFile = new java.io.File(parentDir, "Cover.jpg");
+                        if (mbClient.downloadCoverArt(meta.releaseId, coverFile)) {
+                            item.setAlbumArtFilename(coverFile.getAbsolutePath());
+                            changed = true;
+                        } else if (coverFile.exists()) {
+                            if (item.getAlbumArtFilename() == null || !item.getAlbumArtFilename().equals(coverFile.getAbsolutePath())) {
+                                item.setAlbumArtFilename(coverFile.getAbsolutePath());
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return changed;
+        }).thenAccept(changed -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                if (changed) {
+                    Toast.makeText(this, "Match applied successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "No changes applied", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).exceptionally(throwable -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                Toast.makeText(this, "Error applying selected match", Toast.LENGTH_SHORT).show();
+            });
+            return null;
+        });
+    }
+
+    /**
+     * Fix Thai encoding for all selected tracks.
+     */
+    private void doFixThaiEncoding() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+        
+        startProgressBar();
+        
+        CompletableFuture.supplyAsync(() -> {
+            int fixed = 0;
+            for (Track item : items) {
+                if (ThaiEncodingUtils.isGarbledThai(item.getTitle())) {
+                    item.setTitle(ThaiEncodingUtils.fixThaiEncoding(item.getTitle()));
+                    fixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getArtist())) {
+                    item.setArtist(ThaiEncodingUtils.fixThaiEncoding(item.getArtist()));
+                    fixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getAlbum())) {
+                    item.setAlbum(ThaiEncodingUtils.fixThaiEncoding(item.getAlbum()));
+                    fixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getAlbumArtist())) {
+                    item.setAlbumArtist(ThaiEncodingUtils.fixThaiEncoding(item.getAlbumArtist()));
+                    fixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getGenre())) {
+                    item.setGenre(ThaiEncodingUtils.fixThaiEncoding(item.getGenre()));
+                    fixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getComposer())) {
+                    item.setComposer(ThaiEncodingUtils.fixThaiEncoding(item.getComposer()));
+                    fixed++;
+                }
+            }
+            return fixed;
+        }).thenAccept(fixed -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                Toast.makeText(this, "Fixed encoding for " + fixed + " fields", Toast.LENGTH_SHORT).show();
+            });
+        }).exceptionally(throwable -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+            });
+            return null;
+        });
     }
 
     @SuppressLint("SetTextI18n")

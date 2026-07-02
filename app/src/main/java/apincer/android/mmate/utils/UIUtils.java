@@ -79,7 +79,7 @@ import java.util.Map;
 
 import apincer.android.mmate.R;
 import apincer.music.core.utils.StringUtils;
-import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
+// import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 
 /**
  * Created by e1022387 on 6/4/2017.
@@ -504,10 +504,10 @@ public class UIUtils  {
             valueList.add(3L);
             valueList.add(1L);
             valueList.add(1L);
-            actualProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+            // actualProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
             actualProgressBar.setMax(100);
             actualProgressBar.setProgress((int) pcnt);
-           // estimateProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(estimateBarColor, Color.GRAY, valueList, 8f));
+           // // estimateProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(estimateBarColor, Color.GRAY, valueList, 8f));
            // estimateProgressBar.setMax(100);
            // estimateProgressBar.setProgress((int) estimatePcnt);
             vStoragesLayout.addView(inf);
@@ -573,10 +573,10 @@ public class UIUtils  {
             valueList.add(3L);
             valueList.add(1L);
             valueList.add(1L);
-            actualProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+            // actualProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
             actualProgressBar.setMax(100);
             actualProgressBar.setProgress((int) pcnt);
-            estimateProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(estimateBarColor, Color.GRAY, valueList, 8f));
+            // estimateProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(estimateBarColor, Color.GRAY, valueList, 8f));
             estimateProgressBar.setMax(100);
             estimateProgressBar.setProgress((int) estimatePcnt);
             vStoragesLayout.addView(inf);
@@ -895,7 +895,7 @@ public class UIUtils  {
             valueList.add(3L);
             valueList.add(1L);
             valueList.add(1L);
-            progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+            // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
             progressBar.setMax(100);
             progressBar.setProgress((int) pcnt);
             vStoragesLayout.addView(inf);

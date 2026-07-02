@@ -121,7 +121,7 @@ import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.view.MediaServerManagementSheet;
 import apincer.android.mmate.ui.view.SignalPathBottomSheet;
-import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
+// import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -1179,8 +1179,20 @@ public class MainActivity extends AppCompatActivity {
             Settings.setDirectories(getApplicationContext(), dirs);
             Log.i(TAG, "Starting scan music file.");
             boolean isFullScan = checkboxFullScan.isChecked();
-            ScanAudioFileWorker.startScan(getApplicationContext(), isFullScan);
-            alert.dismiss();
+            if (isFullScan) {
+                new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
+                        .setTitle("Full Rescan")
+                        .setMessage(getString(R.string.directories_confirm_full_scan))
+                        .setPositiveButton("Start", (dialog, which) -> {
+                            ScanAudioFileWorker.startScan(getApplicationContext(), true);
+                            alert.dismiss();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+                ScanAudioFileWorker.startScan(getApplicationContext(), false);
+                alert.dismiss();
+            }
         });
 
         btnCancel.setOnClickListener(v -> alert.dismiss());
@@ -1331,7 +1343,7 @@ public class MainActivity extends AppCompatActivity {
 
       //  final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
@@ -1449,7 +1461,7 @@ public class MainActivity extends AppCompatActivity {
 
       //  final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
@@ -1567,7 +1579,7 @@ public class MainActivity extends AppCompatActivity {
 
        // final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
