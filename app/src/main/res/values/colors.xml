@@ -619,4 +619,12 @@
     <color name="new_download_indicator_background">#fff59d</color>
     <color name="now_playing_background">#800D47A1</color>
 
+    <!-- Semantic colors for theme consistency -->
+    <color name="colorError">#FF5252</color>
+    <color name="colorOnError">#FFFFFF</color>
+    <color name="colorMuted">#B0B0B0</color>
+    <color name="colorDivider">#33FFFFFF</color>
+    <color name="colorGold">#FFD700</color>
+    <color name="colorDividerSubtle">#1AFFFFFF</color>
+
 </resources>

@@ -193,6 +193,12 @@ public class ApplicationUtils {
      */
     public static void copyFileToAndroidCacheDir(Context context, String filename) throws IOException {
         File newFile = new File(context.getCacheDir(), filename);
+
+        // Skip if destination already exists
+        if (newFile.exists()) {
+            return;
+        }
+
         FileUtils.createParentDirs(newFile);
 
         // Use try-with-resources to automatically close streams

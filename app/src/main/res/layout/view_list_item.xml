@@ -18,9 +18,9 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:background="@drawable/shape_item_coverart_background"
-        android:paddingLeft="1dp"
+        android:paddingStart="1dp"
         android:paddingTop="1dp"
-        android:paddingRight="3dp"
+        android:paddingEnd="3dp"
         android:paddingBottom="3dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -104,28 +104,6 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="The Road Well Travelled" />
 
-            <!--
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <apincer.android.mmate.ui.view.DynamicRangeView
-                android:id="@+id/dynamic_range_db_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
-               -->
-            <!--
-            <apincer.android.mmate.ui.view.RatingIndicatorView
-                android:id="@+id/rating_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:mode="mini" />
-            -->
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
@@ -153,16 +131,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/dimen_2_dp"
                 android:layout_marginEnd="@dimen/dimen_2_dp"/>
-
-            <!--
-            <ImageView
-                android:id="@+id/item_more_actions"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:padding="@dimen/dimen_2_dp"
-                android:contentDescription="@string/more_options"
-                android:src="@drawable/rounded_more_vert_24" />
-                -->
         </LinearLayout>
     </LinearLayout>
 

@@ -1598,19 +1598,21 @@ public class NioHttpServer implements Runnable {
                 case WebSocket.OPCODE_TEXT: // TEXT
                 case WebSocket.OPCODE_BINARY: // BINARY
                     if (workerPool != null && !workerPool.isShutdown()) {
+                        final WebSocket.Handler currentWsHandler = wsHandler;
+                        if (currentWsHandler == null) break;
                         try {
                             final String msg = (frame.getOpcode() == WebSocket.OPCODE_TEXT) ? frame.getPayloadAsText() : null;
                             final byte[] binMsg = (frame.getOpcode() == WebSocket.OPCODE_BINARY) ? frame.getPayload() : null;
                             workerPool.submit(() -> {
                                 try {
-                                    if (msg != null) wsHandler.onMessage(wsConnection, msg);
-                                    else wsHandler.onMessage(wsConnection, binMsg);
+                                    if (msg != null) currentWsHandler.onMessage(wsConnection, msg);
+                                    else currentWsHandler.onMessage(wsConnection, binMsg);
                                 } catch (Exception e) {
-                                    wsHandler.onError(wsConnection, e);
+                                    currentWsHandler.onError(wsConnection, e);
                                 }
                             });
                         } catch (Exception e) {
-                            wsHandler.onError(wsConnection, e);
+                            currentWsHandler.onError(wsConnection, e);
                         }
                     }
 
@@ -1639,8 +1641,9 @@ public class NioHttpServer implements Runnable {
                     }
                     final int code = closeCode;
                     final String reason = closeReason;
-                    if (workerPool != null && !workerPool.isShutdown()) {
-                        workerPool.submit(() -> wsHandler.onClose(wsConnection, code, reason));
+                    final WebSocket.Handler currentWsHandlerForClose = wsHandler;
+                    if (workerPool != null && !workerPool.isShutdown() && currentWsHandlerForClose != null) {
+                        workerPool.submit(() -> currentWsHandlerForClose.onClose(wsConnection, code, reason));
                     }
                     // Null out wsHandler BEFORE scheduling pendingClose so that
                     // closeConnection() (called by handleWebSocketRead after parse returns)

@@ -18,9 +18,9 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:background="@drawable/shape_item_coverart_background"
-        android:paddingLeft="1dp"
+        android:paddingStart="1dp"
         android:paddingTop="1dp"
-        android:paddingRight="3dp"
+        android:paddingEnd="3dp"
         android:paddingBottom="3dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -140,8 +140,8 @@
                 android:paddingTop="@dimen/dimen_2_dp"
                 android:paddingBottom="@dimen/dimen_2_dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                android:text="FLAC"
-                tools:ignore="HardcodedText,RtlSymmetry"
+                tools:text="FLAC"
+                tools:ignore="RtlSymmetry"
                 />
 
             <TextView
@@ -158,8 +158,7 @@
                 android:paddingTop="@dimen/dimen_2_dp"
                 android:paddingBottom="@dimen/dimen_2_dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                android:text="96 kHz"
-                tools:ignore="HardcodedText"
+                tools:text="96 kHz"
                 />
 
             <View

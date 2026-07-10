@@ -17,7 +17,7 @@
         <View
             android:layout_width="1dp"
             android:layout_height="10dp"
-            android:background="#FFD700" />
+            android:background="@color/colorGold" />
         <View
             android:layout_width="8dp"
             android:layout_height="8dp"
@@ -26,7 +26,7 @@
             android:id="@+id/vertical_line"
             android:layout_width="1dp"
             android:layout_height="40dp"
-            android:background="#FFD700" />
+            android:background="@color/colorGold" />
     </LinearLayout>
 
     <LinearLayout
@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:textColor="#AAAAAA"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="14sp" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:maxLines="2"
             android:ellipsize="start"
-            android:textColor="#E0E0E0"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp" />
     </LinearLayout>
 

@@ -12,14 +12,14 @@
         android:id="@+id/storage_box"
         android:layout_gravity="top|left"
         android:layout_margin="1dp"
-        android:paddingLeft="2dp"
+        android:paddingStart="2dp"
         android:src="@drawable/ic_memory_white_24dp"/>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
-                    android:layout_marginLeft="1dp"
-                    android:layout_marginRight="2dp"
+                    android:layout_marginStart="1dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="4dp"
                     android:layout_alignRight="@+id/storage_box"
@@ -28,8 +28,8 @@
                         android:id="@+id/actualStorageInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginRight="8dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
                         android:gravity="left|top"
                         android:ellipsize="end"
                         android:maxLines="1"
@@ -45,15 +45,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:layout_marginTop="@dimen/dimen_2_dp"
-                        android:layout_marginLeft="4dp"
-                        android:layout_marginRight="4dp"/>
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"/>
 
                     <TextView
                         android:id="@+id/estimateStorageInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginRight="8dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_marginTop="@dimen/dimen_4_dp"
                         android:gravity="left|top"
                         android:ellipsize="end"
@@ -69,8 +69,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:layout_marginTop="@dimen/dimen_2_dp"
-                        android:layout_marginLeft="4dp"
-                        android:layout_marginRight="4dp"/>
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"/>
                     <!--
                     <TextView
                         android:id="@+id/storage_title"

@@ -225,7 +225,23 @@ public class FileRepository {
                 // try to get folder cover art
                 Track song = tagRepos.getByAlbumArtFilename(albumArtFilename);
                 if(song != null) {
-                    return getFolderCoverArt(song.getPath());
+                    File folderCover = getFolderCoverArt(song.getPath());
+                    if (folderCover != null && folderCover.exists()) {
+                        return folderCover;
+                    }
+                    
+                    // Lazy extract since it wasn't found
+                    extractEmbedCoverArt(song);
+                    
+                    // Check again after extraction
+                    if (isManagedInLibrary(song)) {
+                        folderCover = getFolderCoverArt(song.getPath());
+                        if (folderCover != null && folderCover.exists()) {
+                            return folderCover;
+                        }
+                    } else if (cover.exists()) {
+                        return cover;
+                    }
                 }
             }
         return cover;
@@ -441,12 +457,17 @@ public class FileRepository {
                 String ext = FileUtils.getExtension(folderCover);
                 basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }else {
-                // if no folder album art,
-                String albumArtName = extractEmbedCoverArt(basicTag);
-                basicTag.setAlbumArtFilename(albumArtName);
+                // if no folder album art, just set filename for lazy extraction later
+                if (isManagedInLibrary(basicTag)) {
+                    String albumArtName = DigestUtils.md5Hex(new File(basicTag.getPath()).getParentFile().getAbsolutePath());
+                    basicTag.setAlbumArtFilename(albumArtName);
+                } else {
+                    String coverFilename = DigestUtils.md5Hex(basicTag.getPath());
+                    basicTag.setAlbumArtFilename(coverFilename + ".jpg");
+                }
             }
         } catch(Exception e) {
-            Log.e(TAG, "Error extracting cover art", e);
+            Log.e(TAG, "Error generating cover art filename", e);
         }
     }
 
@@ -570,7 +591,7 @@ public class FileRepository {
                 tag.setIsManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
-                tag.setFileLastModified(file.lastModified());
+                tag.setFileLastModified(new File(newPath).lastModified());
                 tagRepos.saveTag(tag);
                 return true;
             }

@@ -1,13 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.TagsActivity">
-    -->
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -100,7 +91,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Song Identity"
+                    android:text="@string/editor_tags_song_identity"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
@@ -185,7 +176,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Discovery &amp; Origin"
+                    android:text="@string/editor_tags_origin"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
@@ -292,7 +283,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Release &amp; Track Info"
+                    android:text="@string/editor_tags_release_info"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"

@@ -80,7 +80,7 @@ public class TrackEntity implements Track {
     @DatabaseField(index = true)
     protected String normalizedArtist = "";
 
-    @DatabaseField
+    @DatabaseField(index = true)
     protected String album = "";
     @DatabaseField
     private String year = "";

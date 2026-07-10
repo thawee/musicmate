@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:paddingTop="6dp"
-        android:paddingRight="6dp"
+        android:paddingEnd="6dp"
         android:text="@string/all"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 

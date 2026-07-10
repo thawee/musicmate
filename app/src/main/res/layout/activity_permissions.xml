@@ -13,9 +13,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:paddingLeft="30dp"
+                android:paddingStart="30dp"
                 android:paddingTop="10dp"
-                android:paddingRight="30dp"
+                android:paddingEnd="30dp"
                 android:paddingBottom="30dp">
 
                 <ImageView
@@ -56,15 +56,6 @@
                     android:background="?attr/selectableItemBackground"
                     android:orientation="vertical">
                 </LinearLayout>
-                <!--
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="160dp"
-                    android:clipToPadding="false"
-                    android:paddingTop="15dp"
-                    tools:listitem="@layout/view_permission_item" />
-                    -->
             </LinearLayout>
 
             <LinearLayout

@@ -201,6 +201,11 @@ public class TagContainerLayout extends ViewGroup {
      */
     private TagView.OnTagClickListener mOnTagClickListener;
 
+    public interface TagContainerChangeListener {
+        void onTagsChanged();
+    }
+    private TagContainerChangeListener mTagContainerChangeListener;
+
     /**
      * Whether to support 'letters show with RTL(eg: Android to diordnA)' style(default false)
      */
@@ -689,6 +694,7 @@ public class TagContainerLayout extends ViewGroup {
 
         removeViewAt(originPos);
         addView(view, newPos);
+        notifyTagContainerChangeListener();
     }
 
     private int ceilTagBorderWidth() {
@@ -780,6 +786,7 @@ public class TagContainerLayout extends ViewGroup {
     public void setTags(List<String> tags) {
         mTags = tags;
         onSetTag();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -792,6 +799,7 @@ public class TagContainerLayout extends ViewGroup {
         mTags = tags;
         mColorArrayList = colorArrayList;
         onSetTag();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -802,6 +810,7 @@ public class TagContainerLayout extends ViewGroup {
     public void setTags(String... tags) {
         mTags = Arrays.asList(tags);
         onSetTag();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -823,6 +832,7 @@ public class TagContainerLayout extends ViewGroup {
     public void addTag(String text, int position) {
         onAddTag(text, position);
         postInvalidate();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -833,6 +843,7 @@ public class TagContainerLayout extends ViewGroup {
     public void removeTag(int position) {
         onRemoveTag(position);
         postInvalidate();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -843,6 +854,7 @@ public class TagContainerLayout extends ViewGroup {
     public void removeConsecutiveTags(List<Integer> positions) {
         onRemoveConsecutiveTags(positions);
         postInvalidate();
+        notifyTagContainerChangeListener();
     }
 
     /**
@@ -862,6 +874,16 @@ public class TagContainerLayout extends ViewGroup {
     public void setOnTagClickListener(TagView.OnTagClickListener listener) {
         mOnTagClickListener = listener;
         invalidateTags();
+    }
+
+    public void setTagContainerChangeListener(TagContainerChangeListener listener) {
+        mTagContainerChangeListener = listener;
+    }
+
+    private void notifyTagContainerChangeListener() {
+        if (mTagContainerChangeListener != null) {
+            mTagContainerChangeListener.onTagsChanged();
+        }
     }
 
     /**

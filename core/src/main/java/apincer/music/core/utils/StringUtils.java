@@ -10,6 +10,8 @@ import org.apache.commons.text.WordUtils;
 
 import java.text.Normalizer;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +60,68 @@ public class StringUtils {
     public static final String UNTITLED_CAP = "<Untitled>";
     public static final String MULTI_VALUES = "<*>";
     public static final String EMPTY = " - "; // must left as empty for dropdown list
+    
+    // Multi-value separators (in priority order)
+    private static final String[] MULTI_VALUE_SEPARATORS = {";", "&", ","};
+    
+    /**
+     * Split a multi-value string into individual values.
+     * Supports separators: ; & ,
+     * 
+     * @param value The multi-value string
+     * @return List of individual values (trimmed, non-empty)
+     */
+    public static List<String> splitMultiValue(String value) {
+        List<String> result = new ArrayList<>();
+        if (isEmpty(value)) return result;
+        
+        String[] parts = value.split("[;&,]", -1);
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * Join multiple values into a single string with ", " separator.
+     * 
+     * @param values List of values
+     * @return Joined string
+     */
+    public static String joinMultiValue(List<String> values) {
+        if (values == null || values.isEmpty()) return "";
+        
+        List<String> trimmed = new ArrayList<>();
+        for (String v : values) {
+            String t = v.trim();
+            if (!t.isEmpty()) {
+                trimmed.add(t);
+            }
+        }
+        return String.join(", ", trimmed);
+    }
+    
+    /**
+     * Check if a string contains multiple values.
+     */
+    public static boolean isMultiValue(String value) {
+        if (isEmpty(value)) return false;
+        return value.contains(";") || value.contains("&") || 
+               (value.contains(",") && value.indexOf(",") != value.lastIndexOf(","));
+    }
+    
+    /**
+     * Normalize multi-value string to use ", " separator.
+     */
+    public static String normalizeMultiValue(String value) {
+        if (isEmpty(value)) return value;
+        
+        List<String> parts = splitMultiValue(value);
+        return joinMultiValue(parts);
+    }
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
 

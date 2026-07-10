@@ -46,21 +46,59 @@
         android:id="@+id/full_filename"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/dimen_8_dp"
+        android:layout_marginStart="@dimen/dimen_8_dp"
         android:layout_marginTop="@dimen/dimen_8_dp"
-        android:layout_marginRight="@dimen/dimen_8_dp"
+        android:layout_marginEnd="@dimen/dimen_8_dp"
         android:background="@drawable/shape_background_filename"
         android:gravity="left"
         android:maxLines="3"
         android:padding="@dimen/dimen_4_dp"
-        android:paddingLeft="@dimen/spacing_medium"
-        android:paddingRight="@dimen/spacing_medium"
+        android:paddingStart="@dimen/spacing_medium"
+        android:paddingEnd="@dimen/spacing_medium"
         android:textColor="@color/grey200"
         android:fontFamily="@font/sfthonburi_regular"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="10sp"
         tools:text="directory/track - title"
         tools:ignore="RtlHardcoded" />
+
+    <!-- Auto-detect and Presets -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_4_dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_auto_detect"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/auto_detect_pattern"
+            android:textSize="12sp"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/round_auto_awesome_24"
+            app:iconSize="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/or"
+            android:textColor="@color/grey500"
+            android:layout_marginHorizontal="8dp"
+            android:textSize="12sp"/>
+
+        <Spinner
+            android:id="@+id/spinner_presets"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/shape_round_format_black"
+            android:padding="8dp"
+            android:textColor="@color/white"
+            android:textSize="12sp"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -183,12 +221,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="24dp"
                     android:layout_gravity="center_horizontal|center_vertical"
-                    android:layout_marginLeft="@dimen/spacing_small"
-                    android:layout_marginRight="@dimen/spacing_small"
+                    android:layout_marginStart="@dimen/spacing_small"
+                    android:layout_marginEnd="@dimen/spacing_small"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="Preview"
                     android:textColor="@color/white" />
             </com.skydoves.elasticviews.ElasticLayout>
@@ -222,8 +260,8 @@
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/shape_border_grey"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="@string/editor_label_title" />
 
                 <EditText
@@ -243,9 +281,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginStart="@dimen/spacing_medium"
                 android:layout_marginTop="@dimen/spacing_medium"
-                android:layout_marginRight="@dimen/spacing_medium"
+                android:layout_marginEnd="@dimen/spacing_medium"
                 android:orientation="horizontal">
 
                 <TextView
@@ -254,8 +292,8 @@
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/shape_border_grey"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="@string/editor_label_artist" />
 
                 <EditText
@@ -275,9 +313,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginStart="@dimen/spacing_medium"
                 android:layout_marginTop="@dimen/spacing_medium"
-                android:layout_marginRight="@dimen/spacing_medium"
+                android:layout_marginEnd="@dimen/spacing_medium"
                 android:orientation="horizontal">
 
                 <TextView
@@ -286,8 +324,8 @@
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/shape_border_grey"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="@string/editor_label_album" />
 
                 <EditText
@@ -307,9 +345,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginStart="@dimen/spacing_medium"
                 android:layout_marginTop="@dimen/spacing_medium"
-                android:layout_marginRight="@dimen/spacing_medium"
+                android:layout_marginEnd="@dimen/spacing_medium"
                 android:layout_marginBottom="@dimen/spacing_large"
                 android:orientation="horizontal">
 
@@ -319,8 +357,8 @@
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/shape_border_grey"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="@string/editor_label_track" />
 
                 <EditText

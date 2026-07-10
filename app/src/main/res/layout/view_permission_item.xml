@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingRight="10dp"
+    android:paddingEnd="10dp"
     android:paddingBottom="10dp">
 
     <ImageView
@@ -13,7 +13,7 @@
         android:layout_width="45dp"
         android:layout_height="45dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp"
         android:padding="5dp"
         tools:src="@mipmap/ic_launcher" />
 
@@ -42,7 +42,7 @@
                 android:id="@+id/item_needs_require"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="6dp"
+                android:layout_marginStart="6dp"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"
                 app:fontFamily="sans-serif"

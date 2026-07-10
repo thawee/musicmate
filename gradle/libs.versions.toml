@@ -3,7 +3,7 @@
 androidfastscrollKt = "v1.0.8"
 zxing-core = "3.5.4"
 espressoCore = "3.7.0"
-hiltWork = "1.3.0"
+hiltWork = "1.4.0"
 jsoup = "1.22.2"
 junit = "4.13.2"
 #junitBom = "6.0.1"
@@ -24,7 +24,7 @@ coroutines = "1.11.0"
 # https://repo.maven.apache.org/maven2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/
 #ksp= "2.3.5"
 ksp= "2.3.9"
-hilt ="2.60"
+hilt ="2.60.1"
 
 [libraries]
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
@@ -70,8 +70,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 #junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 #nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
-jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.0"}
-jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.0"}
+jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.1"}
+jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.1"}
 #airbnb-lottie={module="com.airbnb.android:lottie", version="6.7.1"}
 
 #glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}
@@ -81,7 +81,7 @@ anggrayudi-storage = {module = "com.anggrayudi:storage", version="2.2.0"}
 ffmpegkit-audio = {module = "com.antonkarpenko:ffmpeg-kit-full", version="2.1.0"}
 # greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
 slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.18"}
-log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.26.0"}
+log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.26.1"}
 # https://github.com/jupnp/jupnp/releases
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.4"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
@@ -92,10 +92,10 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
 #cling-support = {module="org.fourthline.cling:cling-support", version="2.1.2"}
 
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.10"}
+jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.11"}
 #jetty-websocket-core = {module = "org.eclipse.jetty.websocket:jetty-websocket-core-common", version="12.1.7"}
-jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.10"}
-jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.10"}
+jetty-websocket-api12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-api", version="12.1.11"}
+jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.1.11"}
 #// Add this to your dependencies block
 #implementation 'org.eclipse.jetty:jetty-websocket-server:12.0.11' // Use the specific Jetty 12 version you are targeting
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}

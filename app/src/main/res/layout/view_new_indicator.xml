@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="match_parent">
 
@@ -19,5 +20,5 @@
         android:fontFamily="@font/oswald_bold"
         android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
         android:textColor="@color/new_indicator_text"
-        android:text="NEW"/>
+        tools:text="NEW"/>
 </merge>

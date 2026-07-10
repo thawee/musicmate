@@ -38,6 +38,7 @@ import org.jaudiotagger.tag.wav.WavTag;
 import java.io.File;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.Track;
 import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.TagUtils;
+import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.StringUtils;
 
 public class JThinkReader extends TagReader{
@@ -200,14 +202,14 @@ public class JThinkReader extends TagReader{
                 metadata.setTitle(!isEmpty(title) ? title : audioFile.getFile().getName());
 
                 // Read common metadata fields in batch
-                metadata.setAlbum(getTagValue(tag, FieldKey.ALBUM));
-                metadata.setArtist(getTagValue(tag, FieldKey.ARTIST));
-                metadata.setAlbumArtist(getTagValue(tag, FieldKey.ALBUM_ARTIST));
-                metadata.setGenre(getTagValue(tag, FieldKey.GENRE));
+                // Handle multi-value fields (Artist, Album Artist, Composer, Genre)
+                metadata.setAlbum(fixEncoding(getMultiValue(tag, FieldKey.ALBUM)));
+                metadata.setArtist(fixEncoding(getMultiValue(tag, FieldKey.ARTIST)));
+                metadata.setAlbumArtist(fixEncoding(getMultiValue(tag, FieldKey.ALBUM_ARTIST)));
+                metadata.setGenre(fixEncoding(getMultiValue(tag, FieldKey.GENRE)));
                 metadata.setYear(getTagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getTagValue(tag, FieldKey.TRACK));
-                //metadata.setBpm(getTagValue(tag, FieldKey.BPM));
-                metadata.setComposer(getTagValue(tag, FieldKey.COMPOSER));
+                metadata.setComposer(fixEncoding(getMultiValue(tag, FieldKey.COMPOSER)));
                 metadata.setCompilation(toBoolean(getTagValue(tag, FieldKey.IS_COMPILATION)));
 
                 // Process format-specific tags
@@ -216,6 +218,40 @@ public class JThinkReader extends TagReader{
                 Log.e(TAG, "Error reading tags: ", e);
             }
         }
+    }
+    
+    /**
+     * Get tag value, handling multi-value fields.
+     * Returns values joined with ", " separator.
+     */
+    private String getMultiValue(Tag tag, FieldKey key) {
+        if (tag == null || !tag.hasField(key)) return "";
+        
+        // Get all values for this field
+        List<String> values = tag.getAll(key);
+        if (values == null || values.isEmpty()) return "";
+        
+        // Filter out MULTI_VALUES placeholder
+        List<String> cleanValues = new ArrayList<>();
+        for (String v : values) {
+            if (v != null && !v.isEmpty() && !v.equals(StringUtils.MULTI_VALUES)) {
+                cleanValues.add(v.trim());
+            }
+        }
+        
+        if (cleanValues.isEmpty()) return "";
+        if (cleanValues.size() == 1) return cleanValues.get(0);
+        
+        // Join multiple values with ", "
+        return String.join(", ", cleanValues);
+    }
+    
+    /**
+     * Fix Thai encoding if the text appears garbled.
+     */
+    private String fixEncoding(String text) {
+        if (text == null || text.isEmpty()) return text;
+        return ThaiEncodingUtils.fixThaiEncoding(text);
     }
 
     private void processFormatSpecificTags(Tag tag, Track metadata) {

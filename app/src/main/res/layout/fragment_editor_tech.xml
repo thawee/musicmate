@@ -14,73 +14,6 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <!-- Action Card -->
-        <!--
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:strokeWidth="1dp"
-            app:strokeColor="#1AFFFFFF">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:background="@drawable/shape_bottom_frosted_panel">
-
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/actionGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    app:singleSelection="true"
-                    app:selectionRequired="false">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_reload_tag"
-                        style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/round_restore_page_24"
-                        app:iconTint="#FFD700" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="24dp"
-                        android:layout_marginHorizontal="8dp"
-                        android:background="#1AFFFFFF" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_extract_coverart"
-                        style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_round_image_24"
-                        app:iconTint="#FFD700" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="24dp"
-                        android:layout_marginHorizontal="8dp"
-                        android:background="#1AFFFFFF" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_remove_coverart"
-                        style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_round_hide_image_24"
-                        app:iconTint="#FFD700" />
-                </com.google.android.material.button.MaterialButtonToggleGroup>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-        -->
-
         <!-- File System Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -102,7 +35,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="File Storage &amp; Location"
+                    android:text="@string/editor_tech_file_storage"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
@@ -142,7 +75,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Embedded Metadata Map"
+                    android:text="@string/editor_tech_embedded_metadata"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"
@@ -186,7 +119,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Audio Stream Diagnostics"
+                    android:text="@string/editor_tech_audio_diagnostics"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"
                     android:textSize="14sp"

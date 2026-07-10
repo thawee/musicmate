@@ -29,13 +29,13 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_musicmate_logo"
             android:layout_marginEnd="12dp"
-            app:tint="#FFD700" />
+            app:tint="@color/colorGold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Signal Path"
-            android:textColor="#FFFFFF"
+            android:text="@string/signal_path_title"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="20sp"
             android:textStyle="bold"
             android:letterSpacing="-0.02"/>
@@ -50,8 +50,8 @@
             android:id="@+id/quality_indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Local Path"
-            android:textColor="#FFD700"
+            android:text="@string/signal_path_local"
+            android:textColor="@color/colorGold"
             android:textStyle="bold"
             android:textSize="14sp" />
 

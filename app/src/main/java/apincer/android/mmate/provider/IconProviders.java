@@ -36,6 +36,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.TextPaint;
 import android.util.Log;
+import android.util.LruCache;
 
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
@@ -57,6 +58,13 @@ import apincer.android.utils.FileUtils;
 
 public class IconProviders {
     private static final String TAG = "IconProviders";
+
+    // Cache for generated bitmap icons to avoid repeated allocation
+    private static final LruCache<String, Bitmap> iconCache = new LruCache<>(50);
+
+    private static String makeIconCacheKey(int width, int height, int drawableId, int borderColor, int backgroundColor) {
+        return drawableId + "_" + width + "_" + height + "_" + borderColor + "_" + backgroundColor;
+    }
 
     public static Drawable getFileFormatBackground(Context context, Track tag) {
         if(isDSD(tag) ||
@@ -278,8 +286,18 @@ public class IconProviders {
 
     /*** private functions **/
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, int drawableId, int borderColor, int backgroundColor) {
+        String cacheKey = makeIconCacheKey(width, height, drawableId, borderColor, backgroundColor);
+        Bitmap cached = iconCache.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
         Bitmap icon = BitmapHelper.getBitmapFromVectorDrawable(context, drawableId);
-        return createBitmapFromDrawable(context,width,height,icon, borderColor, backgroundColor);
+        Bitmap result = createBitmapFromDrawable(context, width, height, icon, borderColor, backgroundColor);
+        if (result != null) {
+            iconCache.put(cacheKey, result);
+        }
+        return result;
     }
 
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, Bitmap icon, int borderColor, int backgroundColor) {

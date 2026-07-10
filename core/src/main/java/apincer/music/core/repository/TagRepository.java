@@ -309,12 +309,7 @@ public class TagRepository {
         if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
             return findPlaylist(criteria); // Playlist pagination can be complex, skip for now
         }else {
-            List<Track> results = findMusicOrEmpty(criteria, firstResult, maxResults);
-            if (results == null || results.isEmpty()) {
-                // try again
-                results = findMusicOrEmpty(criteria, firstResult, maxResults);
-            }
-            return results;
+            return findMusicOrEmpty(criteria, firstResult, maxResults);
         }
     }
 
@@ -477,57 +472,21 @@ public class TagRepository {
     }
 
     private List<Track> findQualityItems() {
+        // Use SQL-based aggregation for better performance on large libraries
+        List<Track> folderList = dbHelper.getSoundGradeWithStats();
+
+        // Add descriptions and map to display names
         Map<String, AudioTag> mapped = new HashMap<>();
-        processAllMusics(song -> {
-            String codec = Constants.TITLE_CD_QUALITY;
-            String codecAlt = null;
-            if(TagUtils.isDSD(song)) {
-                codec = Constants.TITLE_DSD;
-            }else if(TagUtils.isMQA(song)) {
-                codec = Constants.TITLE_MQA_MASTER_QUALITY;
-            }else if(TagUtils.isHiRes48(song)) {
-                codec = Constants.TITLE_CD_EXT_QUALITY;
-            }else if(TagUtils.isHiRes(song)) {
-                codec = Constants.TITLE_HIRES_QUALITY;
-            }else if(TagUtils.isLossy(song)) {
-                codec = Constants.TITLE_HIGH_QUALITY;
-            }
+        for (Track item : folderList) {
+            AudioTag audioTag = (AudioTag) item;
+            String grade = audioTag.getTitle();
+            String displayName = mapSoundGradeDisplayName(grade);
+            audioTag.setTitle(displayName);
+            audioTag.setDescription(TagUtils.getQualityNote(displayName));
+            mapped.put(displayName, audioTag);
+        }
 
-            AudioTag folder = mapped.getOrDefault(codec, new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, codec));
-            if(folder != null) {
-                if (folder.getChildCount() == 0) {
-                    //first time created
-                    folder.setDescription(TagUtils.getQualityNote(codec));
-                }
-                folder.increaseChildCount();
-                folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
-                mapped.put(codec, folder);
-            }
-
-            if(codec.equalsIgnoreCase(Constants.TITLE_MQA_MASTER_QUALITY)) {
-                if (TagUtils.isHiRes48(song)) {
-                    codecAlt = Constants.TITLE_CD_EXT_QUALITY;
-                } else if (TagUtils.isCDQuality(song)) {
-                    codecAlt = Constants.TITLE_CD_QUALITY;
-                }
-
-                if (codecAlt != null) {
-                    folder = mapped.getOrDefault(codecAlt, new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, codecAlt));
-                    if(folder != null) {
-                        if (folder.getChildCount() == 0) {
-                            //first time created
-                            folder.setDescription(TagUtils.getQualityNote(codec));
-                        }
-                        folder.increaseChildCount();
-                        folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
-                        mapped.put(codecAlt, folder);
-                    }
-                }
-            }
-        });
-
-        // This is the line you already have
-        List<Track> folderList = new ArrayList<>(mapped.values());
+        List<Track> result = new ArrayList<>(mapped.values());
         final Map<String, Integer> customOrder = Map.of(
                 Constants.TITLE_HIGH_QUALITY, 5,
                 Constants.TITLE_CD_QUALITY, 4,
@@ -536,89 +495,42 @@ public class TagRepository {
                 Constants.TITLE_MQA_MASTER_QUALITY, 1,
                 Constants.TITLE_DSD, 0
         );
-        // This new line sorts the list in-place alphabetically by title
-        //folderList.sort(Comparator.comparing(MusicTag::getTitle));
-
-
-
 
         final int defaultPriority = Integer.MAX_VALUE;
-
-        // Sort the list using the custom order
-        folderList.sort(Comparator.comparingInt(tag ->
-                // Get the priority from the map, or use the default
+        result.sort(Comparator.comparingInt(tag ->
                 customOrder.getOrDefault(tag.getTitle(), defaultPriority)
         ));
 
-        return folderList;
+        return result;
+    }
+
+    private String mapSoundGradeDisplayName(String dbGrade) {
+        return switch (dbGrade) {
+            case "DSD" -> Constants.TITLE_DSD;
+            case "MQA" -> Constants.TITLE_MQA_MASTER_QUALITY;
+            case "Hi-Res" -> Constants.TITLE_HIRES_QUALITY;
+            case "Studio" -> Constants.TITLE_CD_EXT_QUALITY;
+            case "CD" -> Constants.TITLE_CD_QUALITY;
+            case "Compressed" -> Constants.TITLE_HIGH_QUALITY;
+            default -> dbGrade;
+        };
     }
 
     private List<Track> findGenreItems() {
-       // List<MusicTag> genres = new ArrayList<>();
-        Map<String, AudioTag> mapped = new HashMap<>();
-        processAllMusics(song -> {
-            String genre = song.getGenre();
-            if(isEmpty(genre)) {
-                genre = EMPTY;
-            }
-            AudioTag folder = mapped.getOrDefault(genre, new AudioTag(SearchCriteria.TYPE.GENRE, genre));
-            if(folder != null) {
-                folder.increaseChildCount();
-                folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
-                mapped.put(genre, folder);
-            }
-        });
+        // Use SQL-based aggregation for better performance on large libraries
+        List<Track> folderList = dbHelper.getGenreWithStats();
 
-        // This is the line you already have
-        List<Track> folderList = new ArrayList<>(mapped.values());
-
-        // This new line sorts the list in-place alphabetically by title
+        // Sort alphabetically by title
         folderList.sort(Comparator.comparing(Track::getTitle));
 
         return folderList;
     }
 
     private List<Track> findArtistItems() {
-       // List<MusicTag> artists = new ArrayList<>();
-        Map<String, AudioTag> mapped = new HashMap<>();
-        processAllMusics(song -> {
-            String artistString = song.getArtist();
+        // Use SQL-based aggregation for better performance on large libraries
+        List<Track> folderList = dbHelper.getArtistWithStats();
 
-            if (isEmpty(artistString)) {
-                // Handle songs with no artist tag, group them under EMPTY
-                String artistName = EMPTY;
-                AudioTag folder = mapped.getOrDefault(artistName, new AudioTag(SearchCriteria.TYPE.ARTIST, artistName));
-                if(folder != null) {
-                    folder.increaseChildCount();
-                    folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
-                    mapped.put(artistName, folder);
-                }
-            } else {
-                // Split the artist string by either comma or semicolon
-                String[] individualArtists = artistString.split("[;,]");
-
-                // Loop through each individual artist name
-                for (String artistName : individualArtists) {
-                    String trimmedName = artistName.trim();
-
-                    // Only process non-empty names after trimming
-                    if (!isEmpty(trimmedName)) {
-                        AudioTag folder = mapped.getOrDefault(trimmedName, new AudioTag(SearchCriteria.TYPE.ARTIST, trimmedName));
-                        if(folder != null) {
-                            folder.increaseChildCount();
-                            // Add the song's duration to *each* artist it belongs to
-                            folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
-                            mapped.put(trimmedName, folder);
-                        }
-                    }
-                }
-            }
-        });
-
-        // This is the line you already have
-        List<Track> folderList = new ArrayList<>(mapped.values());
-
-        // This new line sorts the list in-place alphabetically by title
+        // Sort alphabetically by title
         folderList.sort(Comparator.comparing(Track::getTitle));
 
         return folderList;

@@ -13,8 +13,10 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,6 +30,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.utils.FilenamePatternDetector;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
@@ -204,6 +208,8 @@ public class TagsEditorFragment extends Fragment {
         TextView dotLabel = cview.findViewById(R.id.btn_add_dot);
         TextView spaceLabel = cview.findViewById(R.id.btn_add_space);
         TextView freeTextLabel = cview.findViewById(R.id.btn_add_free_text);
+        Button btnAutoDetect = cview.findViewById(R.id.btn_auto_detect);
+        Spinner spinnerPresets = cview.findViewById(R.id.spinner_presets);
 
         title.setText(firstItem.getTitle());
         artist.setText(firstItem.getArtist());
@@ -213,12 +219,49 @@ public class TagsEditorFragment extends Fragment {
         TagContainerLayout mTagListLayout = cview.findViewById(R.id.tagcontainerLayout);
         mTagListLayout.setTheme(ColorFactory.NONE);
         mTagListLayout.setTagBackgroundColor(Color.TRANSPARENT);
-        List<String> tags = new ArrayList<>();
-        tags.add("/");
-        tags.add("track");
-        tags.add("-");
-        tags.add("title");
-        mTagListLayout.setTags(tags);
+        
+        // Auto-detect pattern from all selected files
+        List<String> allFilenames = new ArrayList<>();
+        for (Track item : editItems) {
+            allFilenames.add(item.getSimpleName());
+        }
+        List<String> detectedPattern = FilenamePatternDetector.detectPattern(allFilenames);
+        mTagListLayout.setTags(detectedPattern);
+        
+        mTagListLayout.setTagContainerChangeListener(() -> {
+            updatePreview(mTagListLayout.getTags(), firstItem, title, artist, album, track);
+        });
+        
+        // Setup preset spinner
+        String[] presetNames = FilenamePatternDetector.getPresetNames();
+        List<String[]> presets = FilenamePatternDetector.getPresets();
+        ArrayAdapter<String> presetAdapter = new ArrayAdapter<>(requireContext(), 
+                android.R.layout.simple_spinner_item, presetNames);
+        presetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerPresets.setAdapter(presetAdapter);
+        spinnerPresets.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0 && position < presets.size()) {
+                    mTagListLayout.setTags(Arrays.asList(presets.get(position)));
+                    // Update preview
+                    updatePreview(mTagListLayout.getTags(), firstItem, title, artist, album, track);
+                }
+            }
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
+        
+        // Auto-detect button - re-analyze all files
+        btnAutoDetect.setOnClickListener(v -> {
+            List<String> filenames = new ArrayList<>();
+            for (Track item : editItems) {
+                filenames.add(item.getSimpleName());
+            }
+            List<String> pattern = FilenamePatternDetector.detectPattern(filenames);
+            mTagListLayout.setTags(pattern);
+            updatePreview(pattern, firstItem, title, artist, album, track);
+        });
         mTagListLayout.setOnTagClickListener(new co.lujun.androidtagview.TagView.OnTagClickListener() {
 
             @Override
@@ -302,7 +345,10 @@ public class TagsEditorFragment extends Fragment {
                 Log.e(TAG, "doShowReadTagsPreview",ex);
             }
         });
-
+        
+        // Helper method to update preview
+        // (defined as lambda-friendly method)
+        
         AlertDialog alert = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
@@ -508,6 +554,25 @@ public class TagsEditorFragment extends Fragment {
 
         previewTitle.setText(TagUIUtils.getFormattedTitle(getContext(),tag));
         previewPath.setText(tag.getSimpleName());
+    }
+    
+    /**
+     * Update preview fields based on the current pattern and file.
+     */
+    private void updatePreview(List<String> pattern, Track item, 
+                              EditText title, EditText artist, 
+                              EditText album, EditText track) {
+        try {
+            MusicPathTagParser parser = new MusicPathTagParser();
+            Track mdata = item.copy();
+            parser.parse(mdata, pattern);
+            title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
+            artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
+            album.setText(StringUtils.trimToEmpty(mdata.getAlbum()));
+            track.setText(StringUtils.trimToEmpty(mdata.getTrack()));
+        } catch (Exception ex) {
+            Log.e(TAG, "updatePreview", ex);
+        }
     }
 
 }

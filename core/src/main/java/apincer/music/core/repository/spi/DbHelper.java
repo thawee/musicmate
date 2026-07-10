@@ -123,4 +123,10 @@ public interface DbHelper {
     List<Track> getPlayingQueue();
 
     void emptyPlayingQueue();
+
+    List<Track> getSoundGradeWithStats();
+
+    List<Track> getGenreWithStats();
+
+    List<Track> getArtistWithStats();
 }

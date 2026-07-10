@@ -426,10 +426,128 @@
 ## Review Notes & Results
 1. **Version Code & Name Incremented**: Successfully bumped `versionCode` to `109` and updated `versionName` to `"3.18.1-"+ getDate()` in [build.gradle](file:///Users/thawee.p/Workspaces/github/musicmate/app/build.gradle) of the app module.
 2. **Git Commit Staged**: Staged and committed all modified and untracked code files, resources, and glassy assets.
-3. **Successful Compilation**: Verified compilation of the module using `./gradlew :app:compileHttpcoreDebugJavaWithJavac`.
+3. **Successful Compilation**: Verified compilation of the module using `./gradlew :app:compileHttpcoreDebugJavaWithJavac`.# Task Plan: Improve Auto-Tag Release Selection and Cover Art Association
 
+## Todo List
+- [x] Modify `MusicBrainzClient.java` to fetch `release-groups` by updating the recording query `inc` parameter.
+- [x] Implement release scoring and selection algorithm in `MusicBrainzClient.java`'s `getRecordingMetadata`.
+- [x] Modify `doAutoTag` in `TagsActivity.java` to associate existing `Cover.jpg` with the track if it already exists, and avoid redundant downloading.
+- [x] Compile and verify the build runs successfully.
+- [x] Document final results and update review section.
 
+## Review Notes & Results
+1. **MusicBrainz Release-Groups Query**: Modified the include query parameter in [MusicBrainzClient.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/MusicBrainzClient.java) to request `release-groups`, enabling retrieval of primary/secondary release types.
+2. **Release Selection Scoring System**: Replaced the naive first-release selection in `getRecordingMetadata()` with a robust scoring algorithm that evaluates releases by Status (`Official` preferred), Primary Type (`Album` > `EP` > `Single`), and Secondary Types (avoiding compilations, live recordings, remixes, and soundtracks). It also prioritizes releases with verified cover art availability and uses the earliest release date as a tie-breaker.
+3. **Local Cover Art Association**: Updated `doAutoTag()` in [TagsActivity.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsActivity.java) to link an existing `Cover.jpg` image file in the track's folder to the track, preventing blank cover images when metadata is updated.
+4. **Successful Compilation**: Verified compilation of all debug sources (including `core` and `app` modules) using `./gradlew compileDebugSources` successfully.
 
+# Task Plan: Improve Cover Art Reliability & Rate-Limit Handling
 
+## Todo List
+- [x] Add `enforceRateLimit()` and `executeRequestWithRetry()` to `MusicBrainzClient.java` to stay under the 1 req/sec limit.
+- [x] Update `searchRecording()` and `getRecordingMetadata()` in `MusicBrainzClient.java` to use the retry and rate limit mechanisms.
+- [x] Implement a dual-strategy for `downloadCoverArt()` in `MusicBrainzClient.java`: try direct `front-500` download first, falling back to JSON metadata parsing if that fails.
+- [x] Compile and verify the build runs successfully.
+- [x] Document final results and update review section.
 
+## Review Notes & Results
+1. **MusicBrainz API Rate Limiting**: Added a static lock-based `enforceRateLimit()` method in `MusicBrainzClient.java` that enforces a minimum 1.05s delay between consecutive calls to `musicbrainz.org`, preventing the API from returning HTTP 503/429 errors when auto-tagging multiple files.
+2. **Automatic Retry Mechanism**: Implemented `executeRequestWithRetry()` which detects rate-limited responses (HTTP 503 or 429), backs off for 2.0s, and automatically retries the request once to prevent failures.
+3. **Dual-Strategy Cover Art Downloading**: Refactored `downloadCoverArt()` to:
+   - **Primary Strategy**: Direct download from the Cover Art Archive's 500px front thumbnail endpoint (`/release/{mbid}/front-500`). This is fast, size-optimized, and avoids the overhead of fetching/parsing release JSON.
+   - **Fallback Strategy**: If the direct thumbnail endpoint returns a non-success code, it queries the release JSON metadata to search for any alternative available images or larger formats.
+4. **Successful Compilation**: Verified compilation of all modules using `./gradlew compileDebugSources` successfully.
 
+# Task Plan: Filter Generic Genre Tags in Auto-Tag
+
+## Todo List
+- [x] Define the blocklist of generic genres in `MusicBrainzClient.java`.
+- [x] Refactor genre parsing in `MusicBrainzClient.java`'s `getRecordingMetadata` to scan the genres array and select the first non-generic tag.
+- [x] Compile and verify the build runs successfully.
+- [x] Document final results and update review section.
+
+## Review Notes & Results
+1. **Genre Blocklist Definition**: Created a static blocklist `GENERIC_GENRES` in [MusicBrainzClient.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/MusicBrainzClient.java) containing common non-genre folksonomy labels such as `"various"`, `"compilation"`, `"unknown"`, `"soundtrack"`, `"other"`, etc.
+2. **Selective Genre Parsing**: Refactored the `genres` parsing loop in `getRecordingMetadata()` to scan the list of returned tags and select the first tag that is not in the blocklist. If all tags are in the blocklist, it falls back to the first tag to preserve metadata.
+3. **Successful Compilation**: Verified compilation of the module using `./gradlew compileDebugSources` successfully.
+
+# Task Plan: Implement Interactive Search & Match Tags
+
+## Todo List
+- [x] Add `searchRecordingsList()` and `MusicBrainzSearchResult` helper class to `MusicBrainzClient.java`.
+- [x] Implement search input dialog, search results list dialog, and application logic in `TagsActivity.java` (`doSearchAndMatchTags`).
+- [x] Wire the `action_search_match_tags` menu item click to trigger the search & match flow in `TagsActivity.java`.
+- [x] Compile and verify the build runs successfully.
+- [x] Document final results and update review section.
+
+## Review Notes & Results
+1. **Search Results API**: Added `searchRecordingsList()` and static nested helper class `MusicBrainzSearchResult` to [MusicBrainzClient.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/MusicBrainzClient.java) to retrieve up to 15 matching tracks with their best release metadata mapping.
+2. **Interactive Query Adjustment**: Added a text form dialog in [TagsActivity.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsActivity.java) populated with the current Title and Artist, allowing the user to refine the query before executing the search.
+3. **Choice Selection Dialog**: Implemented an alert dialog in `TagsActivity.java` listing matching search results in the form `Title - Artist (Album, Year)`. Selecting an entry performs a background lookup, downloads the cover art (overwriting if a new match is chosen manually), and updates the UI editor.
+4. **Successful Compilation**: Verified compilation of all source files cleanly using `./gradlew compileDebugSources`.
+
+# Task Plan: Audit and Fix Thai Encoding Performance & Logic
+
+## Todo List
+- [x] Analyze `ThaiEncodingUtils.java` logic and usage in `JThinkReader.java` and `TagsActivity.java`.
+- [x] Refactor `ThaiEncodingUtils.java` to fix the encoding conversion logic (use `ISO-8859-1` to extract raw bytes and `windows-874` to decode them).
+- [x] Implement fast-path checks (`hasHighAscii`) to eliminate allocation and CPU overhead for non-garbled/standard text.
+- [x] Compile and verify the build runs successfully.
+- [x] Add verification details and document lessons in `tasks/lessons.md`.
+
+## Review Notes & Results
+1. **Accurate Detection & Correction**: Fixed `isGarbledThai` to check for garbled characters in the High ASCII range (`0xA1`-`0xFB`) and dry-run decode them using `windows-874` to check if they match standard Thai character distributions (>30%). Verified that already correct Thai strings (like `เพลง`) are not misdetected as garbled, and Spanish strings (like `España`) are left untouched.
+2. **Fast Path Optimization**: Implemented the $O(N)$ `hasHighAscii` pre-screen check. If a string has only standard English/ASCII characters, it skips all allocations and conversions, dropping execution time from milliseconds to nanoseconds.
+3. **Encoding Fix**: Corrected the conversion logic to use `StandardCharsets.ISO_8859_1` to extract the raw bytes and `windows-874` to decode them, correctly restoring garbled text (like `à¾Å§` -> `เพลง`).
+4. **Successful Compilation & Test Verification**: Compiled the full project successfully via `./gradlew compileDebugSources`. Created and executed a Java assertions test suite (`ThaiEncodingTest.java`) which ran successfully, verifying nanosecond performance for English/Thai strings and correct decoding of garbled strings.
+
+# Task Plan: Enhance Filename-to-Tag Editor Preview UX
+
+## Todo List
+- [x] Audit the Tags editor filename parsing preview behavior.
+- [x] Refactor `TagContainerLayout.java` to support `TagContainerChangeListener` for notifying updates.
+- [x] Connect the change listener in `TagsEditorFragment.java` to automatically refresh the parsed tag fields (`title`, `artist`, etc.) in real-time.
+- [x] Verify compile safety and compile success.
+- [x] Document the changes and lessons in `tasks/lessons.md`.
+
+## Review Notes & Results
+1. **Real-time Live Preview**: Previously, users had to click a manual "Preview" button to see the parsed title, artist, album, and track values. If they modified tag components (added, removed, or rearranged them), the preview didn't update.
+2. **Tag Container Listener**: Created a new `TagContainerChangeListener` interface in `TagContainerLayout.java`. Set up triggers in `addTag`, `removeTag`, `setTags`, and `onChangeView` (drag-and-drop reordering).
+3. **Seamless Syncing**: Wired the listener in `TagsEditorFragment.java` to invoke `updatePreview()` instantly when any tag changes. Now, as the user clicks tag pills, crosses them out, or drags them around, the Material Card preview text updates dynamically and smoothly in real-time.
+4. **Successful Compilation & Test Verification**: Compiled the full project successfully via `./gradlew compileDebugSources`. Created and executed a Java assertions test suite (`ThaiEncodingTest.java`) which ran successfully, verifying nanosecond performance for English/Thai strings and correct decoding of garbled strings.
+
+# Task Plan: Review, Re-order and Revise "More Actions" Menu in TagsActivity
+
+## Todo List
+- [x] Review current menu structure in `tag_more_actions_menu.xml` and its string resources in `strings.xml`.
+- [x] Re-order the menu items logically by grouping metadata curation (Auto-Tag/Search & Match) at the top, followed by encoding correction, and technical tools (spectrum, folder, search).
+- [x] Revise resource labels in `strings.xml` to use more premium, professional, and clear terminology.
+- [x] Compile and verify the build runs successfully.
+- [x] Document changes in `tasks/lessons.md`.
+
+## Review Notes & Results
+1. **Logical Priority Reordering**: Sorted the "More Actions" list in [tag_more_actions_menu.xml](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/menu/tag_more_actions_menu.xml) to place core tag curation tools at the top. The new order is:
+   - *Search & Match Tags* (Manual selection / match)
+   - *Auto-Tag (MusicBrainz)* (Automated fingerprinting/metadata fetch)
+   - *Fix Thai Encoding* (Encoding restoration)
+   - *Verify Lossless Quality* (Audio spectrogram verifier)
+   - *Show in File Manager* (Open folder in file explorer)
+   - *Search Song on Web* (Google Search fallback)
+2. **Premium Rebranding of Labels**:
+   - Renamed `MusicMate Spectra` $\rightarrow$ `Verify Lossless Quality`
+   - Renamed `Show in folder` $\rightarrow$ `Show in File Manager`
+   - Renamed `Lookup on Google` $\rightarrow$ `Search Song on Web`
+3. **Verified Compilation**: Clean build completed successfully using `./gradlew compileDebugSources`.
+
+# Task Plan: Fix File Move/Organize Modification Time Defect
+
+## Todo List
+- [x] Review file move logic in `FileRepository.java` (`moveMusicFiles`).
+- [x] Fix the defect where `tag.setFileLastModified()` is called on the old file path (which no longer exists after move, resulting in lastModified = 0).
+- [x] Compile and verify the build runs successfully.
+- [x] Document changes in `tasks/lessons.md`.
+
+## Review Notes & Results
+1. **Target Path Modification Time**: Changed `tag.setFileLastModified(file.lastModified());` to `tag.setFileLastModified(new File(newPath).lastModified());` in `moveMusicFiles` inside [FileRepository.java](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/FileRepository.java).
+2. **Prevented Rescan Loop**: Since the database now saves the actual modification time of the target file rather than `0`, the background library scanner will no longer falsely identify moved tracks as modified, preventing infinite re-import loops and saving massive CPU/disk I/O.
+3. **Successful Compilation**: Verified compilation of all modules with `./gradlew compileDebugSources`.

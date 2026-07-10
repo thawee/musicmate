@@ -28,6 +28,18 @@
 - Block item click and selection states using a touch interceptor flag (`isScrollStoppingTouch`) when the first `ACTION_DOWN` of a touch event starts during a scroll/fling state.
 - Ensure that any UI header subtitle updates check if a filter is active (`adapter.hasFilter()`) and pull counts directly from the adapter instead of database statistics.
 - Safeguard all image-fetching helpers by checking `covertFile.isDirectory()` before passing the file path to image loading libraries.
+- **Thai Encoding Recovery & Performance**: When recovering garbled Thai text (TIS-620/Windows-874 misread as Latin-1), extract raw bytes using `ISO-8859-1` and decode using `windows-874`. Add a fast $O(N)$ check for high ASCII (`0xA1`-`0xFB`) to immediately bypass standard English/non-Thai text with zero allocations, avoiding massive CPU/GC overhead from failed conversion attempts.
+- **Real-Time Interactive Previews**: In complex editors with multiple component builders (e.g. tag-from-filename parser with tag pills), register a change listener on the custom component to automatically refresh preview fields whenever items are added, removed, or dragged. This eliminates the need for manual "Preview" triggers and makes the UI feel smooth, alive, and responsive.
+- **"More Actions" Menu Prioritization & Labeling**: Prioritize core/frequent user workflows (like metadata curation and tag search) at the top of contextual and overflow menus. Use active, descriptive, and premium labels (e.g., "Verify Lossless Quality" rather than technical internal project names like "MusicMate Spectra") to make technical tools feel high-end and accessible.
+
+- **File Move/Rename Metadata Update**: When moving or renaming a file physically on disk (e.g. `Files.move`), all file operations referencing the old path (such as checking `lastModified()`) will fail or return `0` because the file no longer exists at the source. Always read properties like size and lastModified from the **new/target** file path to ensure database records are kept in sync and prevent false modifications from triggering rescans.
+
+## Actionable Rules for Future Changes
+- Always use `ISO_8859_1` to recover raw bytes from Latin-1 strings before decoding with standard target charsets (like `windows-874`).
+- Implement low-overhead pre-screening checks (e.g. `hasHighAscii`) in metadata parsers to prevent wastefully invoking heavy converters/decoders on standard ASCII text.
+- Connect direct event observers or change listeners on custom drag/drop tag components to automatically refresh dependent preview inputs in real-time, matching modern interactive UX patterns.
+- Contextual/overflow menus (like the "More Actions" tag menu) must sort tasks by frequency of use: primary curation/editing tasks first, followed by correction utilities, and technical inspection/lookup tools last. Label menu items using active, user-centric verbs rather than technical or library-internal titles.
+- When performing file movements, renames, or format conversions, always query metadata properties (like `lastModified` or `fileSize`) from the **new target file** instance, never the source file instance.
 
 
 

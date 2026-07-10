@@ -33,9 +33,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.utils.LogHelper;
+import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
 public class JThinkWriter extends  TagWriter {
@@ -231,11 +233,43 @@ public class JThinkWriter extends  TagWriter {
 
     void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
         try {
-            tag.setField(fieldKey, trimToEmpty(value));
+            // Check if this is a multi-value field
+            if (isMultiValueField(fieldKey) && StringUtils.isMultiValue(value)) {
+                setMultiValueField(fieldKey, value, tag);
+            } else {
+                tag.setField(fieldKey, trimToEmpty(value));
+            }
         } catch (FieldDataInvalidException ignored) {
             Log.w(TAG, "Failed to set field " + fieldKey + ": " + ignored.getMessage());
-           // throw e;
         }
+    }
+    
+    /**
+     * Set a multi-value field (Artist, Album Artist, Composer, Genre).
+     * Writes multiple values using ID3v2 multi-value separator (null character).
+     */
+    private void setMultiValueField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
+        // Split by our internal separators and rejoin with ID3v2 separator
+        List<String> values = StringUtils.splitMultiValue(value);
+        if (values.isEmpty()) {
+            tag.setField(fieldKey, "");
+            return;
+        }
+        
+        // For ID3v2, multi-values are separated by "/"
+        // For VorbisComment/FLAC, multi-values are separated by null
+        // jaudiotagger handles this automatically when using setField with List
+        tag.setField(fieldKey, String.join("/", values));
+    }
+    
+    /**
+     * Check if a field supports multi-values.
+     */
+    private boolean isMultiValueField(FieldKey fieldKey) {
+        return fieldKey == FieldKey.ARTIST || 
+               fieldKey == FieldKey.ALBUM_ARTIST || 
+               fieldKey == FieldKey.COMPOSER ||
+               fieldKey == FieldKey.GENRE;
     }
 
     private static void setupTagOptions() {

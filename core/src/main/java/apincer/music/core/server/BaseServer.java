@@ -156,13 +156,30 @@ public class BaseServer {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             playbackService = null;
-            playbackState.dispose();
-            playbackDisposable.dispose();
-            nowPlayingDisposable.dispose();
+            if (playbackState != null && !playbackState.isDisposed()) {
+                playbackState.dispose();
+            }
+            if (playbackDisposable != null && !playbackDisposable.isDisposed()) {
+                playbackDisposable.dispose();
+            }
+            if (nowPlayingDisposable != null && !nowPlayingDisposable.isDisposed()) {
+                nowPlayingDisposable.dispose();
+            }
         }
     };
 
     public void destroy() {
+        // Dispose all subscriptions before unbinding
+        if (nowPlayingDisposable != null && !nowPlayingDisposable.isDisposed()) {
+            nowPlayingDisposable.dispose();
+        }
+        if (playbackDisposable != null && !playbackDisposable.isDisposed()) {
+            playbackDisposable.dispose();
+        }
+        if (playbackStateDisposable != null && !playbackStateDisposable.isDisposed()) {
+            playbackStateDisposable.dispose();
+        }
+
         if(playbackService != null) {
             context.unbindService(serviceConnection);
             playbackService = null;
@@ -449,7 +466,7 @@ public class BaseServer {
         private final MusicInfoRepository musicInfoService = new MusicInfoRepository();
         // Cache for generated waveforms to avoid repeated heavy processing.
         private final LruCache<String, float[]> memoryCache;
-        final int cacheSize = 10240; // Approx 10 MB based on average waveform size
+        final int cacheSize = 256; // Bounded to 256 entries to prevent OOM
         private PlaybackState currentPlaybackState;
 
         protected static final ObjectMapper MAPPER = new ObjectMapper()
@@ -459,14 +476,8 @@ public class BaseServer {
          * Constructs the WebSocket content handler.
          */
         protected WebSocketContent() {
-            // Initialize the waveform cache
-            memoryCache = new LruCache<>(cacheSize) {
-                @Override
-                protected int sizeOf(@NonNull String key, @NonNull float[] waveform) {
-                    // Size calculation based on float size (4 bytes) converted to kilobytes
-                    return (waveform.length * 4) / 1024;
-                }
-            };
+            // Initialize the waveform cache bounded by number of entries
+            memoryCache = new LruCache<>(cacheSize);
 
             registerPlaybackCallback(new PlaybackCallback() {
                 @Override
@@ -620,7 +631,7 @@ public class BaseServer {
         }
 
         private Map<String, Object> handleSearch(String query) {
-            List<Track> results = tagRepos.getDbHelper().findByKeyword(query);
+            List<Track> results = tagRepos.getDbHelper().findByKeyword(query, 0, 100);
             List<Map<String, ?>> items = results.stream().map(this::getMap).collect(Collectors.toList());
             return Map.of("type", "browseResult", "items", items, "path", "Search: " + query);
         }
@@ -757,22 +768,13 @@ public class BaseServer {
          * @return A Map representing the "statsUpdate" response containing total songs, size, and duration.
          */
         public Map<String, Object> getLibraryStats() {
-            // Consider caching these stats if the library is large and doesn't change often
-            List<Track> list = tagRepos.getAllMusics();
-            long songCount = list.size();
-            long totalSize = 0;
-            long totalDuration = 0;
-            for (Track tag : list) {
-                if (tag != null) { // Add null check for safety
-                    totalSize += tag.getFileSize();
-                    totalDuration += (long) tag.getAudioDuration();
-                }
-            }
-
+            // Use database aggregation instead of loading all songs into memory
+            apincer.music.core.model.SearchResultStats statsData = tagRepos.getSearchStats(new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY));
+            
             Map<String, Object> stats = Map.of(
-                    "totalSize", StringUtils.formatStorageSize(totalSize),
-                    "totalDuration", StringUtils.formatDuration(totalDuration, true),
-                    "songs", songCount
+                    "totalSize", StringUtils.formatStorageSize(statsData.getTotalSize()),
+                    "totalDuration", StringUtils.formatDuration((long) statsData.getTotalDuration(), true),
+                    "songs", statsData.getTotalCount()
             );
             return Map.of("type", "statsUpdate", "stats", stats);
         }

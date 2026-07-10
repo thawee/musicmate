@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="@dimen/dimen_8_dp"
-    android:layout_marginRight="@dimen/dimen_8_dp"
+    android:layout_marginStart="@dimen/dimen_8_dp"
+    android:layout_marginEnd="@dimen/dimen_8_dp"
     android:background="@drawable/selector_item"
     android:paddingTop="@dimen/dimen_1_dp"
     android:paddingBottom="@dimen/dimen_2_dp">

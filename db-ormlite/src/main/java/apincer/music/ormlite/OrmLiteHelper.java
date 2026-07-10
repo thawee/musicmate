@@ -72,8 +72,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
     private static final int DATABASE_VERSION = 16;
-    public static final List<Track> EMPTY_LIST = null;
-    private static final List<String> EMPTY_STRING_LIST = null;
+    public static final List<Track> EMPTY_LIST = new ArrayList<>();
+    private static final List<String> EMPTY_STRING_LIST = new ArrayList<>();
     private static final String LIKE_LITERAL = "%";
 
     public OrmLiteHelper(Context context) {
@@ -98,21 +98,16 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
-        try {
-            // Recreates the database when onUpgrade is called by the framework
-            TableUtils.dropTable(connectionSource, TrackEntity.class, true);
-            TableUtils.dropTable(connectionSource, Playlist.class, true);
-            TableUtils.dropTable(connectionSource, PlaylistItem.class, true);
-            TableUtils.dropTable(connectionSource, PlayingQueue.class, true);
-            onCreate(database, connectionSource);
-        } catch (SQLException e) {
-            Log.e(TAG,"onUpgrade", e);
-        }
+        // Incremental migrations to preserve user data
+        // Add future migrations as: if (oldVersion < N) { ... }
+        // Example: if (oldVersion < 17) { addNewColumn(database, connectionSource); }
     }
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        onUpgrade(db, oldVersion, newVersion);
+        // Downgrade: preserve data, only apply changes if needed
+        // For now, do nothing (safe default)
+        Log.w(TAG, "Database downgrade from " + oldVersion + " to " + newVersion + " - no changes applied");
     }
 
     public List<Track> findMySongs(ORDERED_BY[] orderedByList)  {
@@ -195,7 +190,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
 
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-            builder.where().eq("path",escapeString(path));
+            builder.where().eq("path", new SelectArg(path));
             List<TrackEntity> results = builder.query();
             return new ArrayList<>(results);
         } catch (Exception e) {
@@ -208,7 +203,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
 
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-            builder.where().like("path",escapeString(path)+LIKE_LITERAL);
+            builder.where().like("path", new SelectArg(path + LIKE_LITERAL));
             builder.orderBy("path", true);
             List<TrackEntity> results = builder.query();
             return new ArrayList<>(results);
@@ -231,21 +226,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
 
-            // Escape single quotes by replacing ' with ''
-            String escapedPath = escapeString(path);
-
-            // Use a direct query that only fetches lastModified
             QueryBuilder<TrackEntity, ?> qb = dao.queryBuilder();
-            qb.where().eq("path", escapedPath);
+            qb.where().eq("path", new SelectArg(path));
 
             List<TrackEntity> results = qb.query();
             return new ArrayList<>(results);
-
-           // return dao.queryForFirst(qb.prepare());
-
         } catch (SQLException e) {
             Log.e(TAG, "getByPath", e);
-            return EMPTY_LIST; // Assume outdated if we can't check
+            return EMPTY_LIST;
         }
     }
 
@@ -281,10 +269,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         } catch (Exception e) {
             Log.e(TAG, "saveTagsBatch", e);
         }
-    }
-
-    private String escapeString(String text) {
-        return text.replace("'","''");
     }
 
     public List<Track> findRecentlyAdded(long firstResult, long maxResults)  {
@@ -467,11 +451,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
             if (isEmpty(keyword)) {
-                builder.where().raw("mediaQuality is null order by title, artist");
+                builder.where().isNull("mediaQuality");
+                builder.orderBy("title", true).orderBy("artist", true);
                 List<TrackEntity> results = builder.query();
                 return new ArrayList<>(results);
             } else {
-                builder.where().raw("mediaQuality="+escapeString(keyword)+" order by title, artist");
+                builder.where().eq("mediaQuality", new SelectArg(keyword));
+                builder.orderBy("title", true).orderBy("artist", true);
                 List<TrackEntity> results = builder.query();
                 return new ArrayList<>(results);
             }
@@ -485,11 +471,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
             if (isEmpty(keyword) || Constants.UNKNOWN.equals(keyword)) {
-                builder.where().raw("publisher is null order by title, artist");
+                builder.where().isNull("publisher");
+                builder.orderBy("title", true).orderBy("artist", true);
                 List<TrackEntity> results = builder.query();
                 return new ArrayList<>(results);
             } else {
-                builder.where().raw("publisher="+escapeString(keyword)+" order by title, artist");
+                builder.where().eq("publisher", new SelectArg(keyword));
+                builder.orderBy("title", true).orderBy("artist", true);
                 List<TrackEntity> results = builder.query();
                 return new ArrayList<>(results);
             }
@@ -523,9 +511,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
     public List<Track> findByKeyword(String keyword, long firstResult, long maxResults) {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
-            keyword = "'"+LIKE_LITERAL+keyword.replace("'","''")+LIKE_LITERAL+"'";
+            String likePatternNormal = StringUtils.normalize(keyword) + "%";
+            String likePatternRaw = keyword + "%";
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-            builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
+            Where<TrackEntity, ?> where = builder.where();
+            where.like("normalizedTitle", new SelectArg(likePatternNormal))
+                 .or().like("normalizedArtist", new SelectArg(likePatternNormal))
+                 .or().like("album", new SelectArg(likePatternRaw));
             if(firstResult > 0) {
                 builder.offset(firstResult);
             }
@@ -846,10 +838,10 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             if(StringUtils.isEmpty(album)) {
                 where.isNull("album").or().eq("album", "");
             }else {
-                where.eq("album", album.replace("'", "''"));
+                where.eq("album", new SelectArg(album));
             }
             if(!StringUtils.isEmpty(albumArtist)) {
-                where.and().eq("albumArtist", albumArtist.replace("'", "''"));
+                where.and().eq("albumArtist", new SelectArg(albumArtist));
             }
             if(firstResult>0) {
                 builder.offset(firstResult);
@@ -876,6 +868,130 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         return null;
     }
 
+    /**
+     * Returns sound grade categories with counts and durations using SQL aggregation.
+     * Much faster than processAllMusics() for large libraries.
+     */
+    public List<Track> getSoundGradeWithStats() {
+        try {
+            List<Track> list = new ArrayList<>();
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+
+            // DSD tracks
+            String dsdQuery = "SELECT 'DSD' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE audioEncoding IN ('dsd', 'dff')";
+            addSoundGradeResult(dao, dsdQuery, list);
+
+            // MQA tracks
+            String mqaQuery = "SELECT 'MQA' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE qualityInd LIKE 'MQA%'";
+            addSoundGradeResult(dao, mqaQuery, list);
+
+            // Hi-Res (24-bit >= 96kHz, non-MQA)
+            String hiresQuery = "SELECT 'Hi-Res' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'";
+            addSoundGradeResult(dao, hiresQuery, list);
+
+            // Studio 24-bit (24-bit < 96kHz, non-MQA)
+            String studioQuery = "SELECT 'Studio' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'";
+            addSoundGradeResult(dao, studioQuery, list);
+
+            // CD Quality (16-bit lossless, non-MQA)
+            String cdQuery = "SELECT 'CD' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'";
+            addSoundGradeResult(dao, cdQuery, list);
+
+            // Compressed (lossy)
+            String compressedQuery = "SELECT 'Compressed' as grade, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')";
+            addSoundGradeResult(dao, compressedQuery, list);
+
+            return list;
+        } catch (Exception e) {
+            Log.e(TAG, "getSoundGradeWithStats: " + e.getMessage());
+            return EMPTY_LIST;
+        }
+    }
+
+    private void addSoundGradeResult(Dao<TrackEntity, ?> dao, String query, List<Track> list) {
+        try (GenericRawResults<String[]> results = dao.queryRaw(query)) {
+            String[] vals = results.getFirstResult();
+            if (vals != null && vals[0] != null) {
+                long count = StringUtils.toLong(vals[1]);
+                if (count > 0) {
+                    AudioTag item = new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, vals[0]);
+                    item.setChildCount(count);
+                    item.setAudioDuration(StringUtils.toDouble(vals[2]));
+                    list.add(item);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "addSoundGradeResult error", e);
+        }
+    }
+
+    /**
+     * Returns genre categories with counts and durations using SQL aggregation.
+     * Much faster than processAllMusics() for large libraries.
+     */
+    public List<Track> getGenreWithStats() {
+        try {
+            List<Track> list = new ArrayList<>();
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            String query = "SELECT COALESCE(genre, '') as genre, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag GROUP BY genre ORDER BY genre";
+            try (GenericRawResults<String[]> results = dao.queryRaw(query)) {
+                for (String[] vals : results.getResults()) {
+                    AudioTag item = new AudioTag(SearchCriteria.TYPE.GENRE, vals[0]);
+                    item.setChildCount(StringUtils.toLong(vals[1]));
+                    item.setAudioDuration(StringUtils.toDouble(vals[2]));
+                    list.add(item);
+                }
+            }
+            return list;
+        } catch (Exception e) {
+            Log.e(TAG, "getGenreWithStats: " + e.getMessage());
+            return EMPTY_LIST;
+        }
+    }
+
+    private static final java.util.regex.Pattern ARTIST_SPLIT_PATTERN = java.util.regex.Pattern.compile("[;,]");
+
+    /**
+     * Returns artist categories with counts and durations using SQL aggregation.
+     * Splits multi-artist fields in Java but avoids loading full track data.
+     * Much faster than processAllMusics() for large libraries.
+     */
+    public List<Track> getArtistWithStats() {
+        try {
+            Map<String, AudioTag> artistMap = new HashMap<>();
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            String query = "SELECT artist, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag GROUP BY artist";
+            try (GenericRawResults<String[]> results = dao.queryRaw(query)) {
+                for (String[] vals : results.getResults()) {
+                    String artistField = trimToEmpty(vals[0]);
+                    if (isEmpty(artistField)) {
+                        // Empty artist - count under ""
+                        AudioTag item = artistMap.getOrDefault(EMPTY, new AudioTag(SearchCriteria.TYPE.ARTIST, EMPTY));
+                        item.setChildCount(item.getChildCount() + StringUtils.toLong(vals[1]));
+                        item.setAudioDuration(item.getAudioDuration() + StringUtils.toDouble(vals[2]));
+                        artistMap.put(EMPTY, item);
+                    } else {
+                        // Split multi-artist fields
+                        String[] artists = ARTIST_SPLIT_PATTERN.split(artistField);
+                        for (String artist : artists) {
+                            artist = trimToEmpty(artist);
+                            if (!isEmpty(artist)) {
+                                AudioTag item = artistMap.getOrDefault(artist, new AudioTag(SearchCriteria.TYPE.ARTIST, artist));
+                                item.setChildCount(item.getChildCount() + StringUtils.toLong(vals[1]));
+                                item.setAudioDuration(item.getAudioDuration() + StringUtils.toDouble(vals[2]));
+                                artistMap.put(artist, item);
+                            }
+                        }
+                    }
+                }
+            }
+            return new ArrayList<>(artistMap.values());
+        } catch (Exception e) {
+            Log.e(TAG, "getArtistWithStats: " + e.getMessage());
+            return EMPTY_LIST;
+        }
+    }
+
     public List<Track> findByGenre(String name, long firstResult, long maxResults) {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
@@ -883,7 +999,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             if(StringUtils.isEmpty(name)) {
                 builder.where().isNull("genre").or().eq("genre", "");
             }else {
-                builder.where().eq("genre", name.replace("'", "''"));
+                builder.where().eq("genre", new SelectArg(name));
             }
             if(firstResult>0) {
                 builder.offset(firstResult);
@@ -957,7 +1073,17 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
 
     @Override
     public long getTotalDuration() throws SQLException {
-        return getMusicTagDao().countOf();
+        GenericRawResults<String[]> results = getMusicTagDao().queryRaw("SELECT SUM(audioDuration) FROM musictag");
+        try {
+            String[] vals = results.getFirstResult();
+            if (vals != null && vals[0] != null) {
+                return StringUtils.toLong(vals[0]);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            try { results.close(); } catch (Exception ignored) {}
+        }
+        return 0;
     }
 
     @Override
@@ -1051,14 +1177,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
 
     // --- Public DAO Getters ---
 
-    public Dao<TrackEntity, Long> getMusicTagDao() throws SQLException {
+    public synchronized Dao<TrackEntity, Long> getMusicTagDao() throws SQLException {
         if (musicTagDao == null) {
             musicTagDao = getDao(TrackEntity.class);
         }
         return musicTagDao;
     }
 
-    public Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
+    public synchronized Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
         if (queueItemDao == null) {
             queueItemDao = getDao(PlayingQueue.class);
         }
@@ -1079,7 +1205,11 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         }
         try {
             Dao<TrackEntity, Long> dao = getMusicTagDao();
-            String whereClause = buildWhereClause(criteria);
+            String[] clauseAndArgs = buildWhereClauseWithArgs(criteria);
+            String whereClause = clauseAndArgs[0];
+            String[] queryArgs = clauseAndArgs.length > 1
+                    ? java.util.Arrays.copyOfRange(clauseAndArgs, 1, clauseAndArgs.length)
+                    : null;
             boolean useGroupDedup = needsGroupDedup(criteria);
 
             int count = 0;
@@ -1087,12 +1217,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             double totalDuration = 0.0;
 
             if (useGroupDedup) {
-                // Wrap in subquery so COUNT/SUM respects GROUP BY deduplication
                 String inner = "SELECT fileSize, audioDuration FROM musictag"
                         + (whereClause.isEmpty() ? "" : " WHERE " + whereClause)
                         + " GROUP BY title, artist";
                 String rawQuery = "SELECT COUNT(*), SUM(fileSize), SUM(audioDuration) FROM (" + inner + ")";
-                try (GenericRawResults<String[]> results = dao.queryRaw(rawQuery)) {
+                try (GenericRawResults<String[]> results = queryArgs != null
+                        ? dao.queryRaw(rawQuery, queryArgs)
+                        : dao.queryRaw(rawQuery)) {
                     String[] vals = results.getFirstResult();
                     if (vals != null) {
                         count = StringUtils.toInt(vals[0]);
@@ -1103,7 +1234,9 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             } else {
                 String rawQuery = "SELECT COUNT(*), SUM(fileSize), SUM(audioDuration) FROM musictag"
                         + (whereClause.isEmpty() ? "" : " WHERE " + whereClause);
-                try (GenericRawResults<String[]> results = dao.queryRaw(rawQuery)) {
+                try (GenericRawResults<String[]> results = queryArgs != null
+                        ? dao.queryRaw(rawQuery, queryArgs)
+                        : dao.queryRaw(rawQuery)) {
                     String[] vals = results.getFirstResult();
                     if (vals != null) {
                         count = StringUtils.toInt(vals[0]);
@@ -1126,48 +1259,52 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         return false;
     }
 
-    /** Builds a raw SQL WHERE clause (without the "WHERE" keyword) matching a given SearchCriteria. */
-    private String buildWhereClause(SearchCriteria criteria) {
+    /**
+     * Builds a safe WHERE clause with parameterized argument.
+     * Returns String[]: [0] = WHERE clause with '?' placeholder, [1] = parameter value (or empty).
+     * SOUND_GRADE and LIBRARY cases have no user input, so they return static clauses.
+     */
+    private String[] buildWhereClauseWithArgs(SearchCriteria criteria) {
         if (criteria.isSearchMode()) {
-            String kw = criteria.getSearchText().replace("'", "''");
-            return "title like '%" + kw + "%' or artist like '%" + kw + "%' or album like '%" + kw + "%'";
+            String likePattern = "%" + criteria.getSearchText() + "%";
+            return new String[]{"(title like ? or artist like ? or album like ?)", likePattern, likePattern, likePattern};
         }
         switch (criteria.getType()) {
             case LIBRARY: {
                 String keyword = StringUtils.trimToEmpty(criteria.getKeyword());
-                if (keyword.isEmpty() || Constants.TITLE_ALL_SONGS.equals(keyword)) return "";
-                if (Constants.TITLE_INCOMING_SONGS.equals(keyword)) return "isManaged = 0";
-                if (Constants.TITLE_TO_ANALYST_DR.equals(keyword)) return "drScore = 0 or dynamicRange = 0";
-                if (Constants.TITLE_NO_COVERART.equals(keyword)) return "coverartMime is null or coverartMime = ''";
-                return "";
+                if (keyword.isEmpty() || Constants.TITLE_ALL_SONGS.equals(keyword)) return new String[]{""};
+                if (Constants.TITLE_INCOMING_SONGS.equals(keyword)) return new String[]{"isManaged = 0"};
+                if (Constants.TITLE_TO_ANALYST_DR.equals(keyword)) return new String[]{"drScore = 0 or dynamicRange = 0"};
+                if (Constants.TITLE_NO_COVERART.equals(keyword)) return new String[]{"coverartMime is null or coverartMime = ''"};
+                return new String[]{""};
             }
             case PUBLISHER: {
                 String kw = StringUtils.trimToEmpty(criteria.getKeyword());
-                if (kw.isEmpty() || Constants.UNKNOWN.equals(kw)) return "publisher is null";
-                return "publisher = '" + kw.replace("'", "''") + "'";
+                if (kw.isEmpty() || Constants.UNKNOWN.equals(kw)) return new String[]{"publisher is null"};
+                return new String[]{"publisher = ?", kw};
             }
             case ARTIST: {
                 String kw = criteria.getKeyword();
-                if (isEmpty(kw)) return "";
-                return "artist like '%" + kw.replace("'", "''") + "%'";
+                if (isEmpty(kw)) return new String[]{""};
+                return new String[]{"artist like ?", "%" + kw + "%"};
             }
             case SOUND_GRADE: {
                 String kw = criteria.getKeyword();
-                if (isEmpty(kw)) return "";
-                if (Constants.TITLE_DSD.equals(kw)) return "audioEncoding in ('dsd', 'dff')";
-                if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw)) return "qualityInd like 'MQA%'";
-                if (Constants.TITLE_HIGH_QUALITY.equals(kw)) return "audioEncoding in ('aac', 'mpeg')";
-                if (Constants.TITLE_CD_QUALITY.equals(kw)) return "audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and qualityInd not like 'MQA%'";
-                if (Constants.TITLE_HIRES_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and qualityInd not like 'MQA%'";
-                if (Constants.TITLE_CD_EXT_QUALITY.equals(kw)) return "audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'";
-                return "";
+                if (isEmpty(kw)) return new String[]{""};
+                if (Constants.TITLE_DSD.equals(kw)) return new String[]{"audioEncoding in ('dsd', 'dff')"};
+                if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw)) return new String[]{"qualityInd like 'MQA%'"};
+                if (Constants.TITLE_HIGH_QUALITY.equals(kw)) return new String[]{"audioEncoding in ('aac', 'mpeg')"};
+                if (Constants.TITLE_CD_QUALITY.equals(kw)) return new String[]{"audioEncoding in ('flac','alac','aiff','wave','wav') and audioBitsDepth = 16 and qualityInd not like 'MQA%'"};
+                if (Constants.TITLE_HIRES_QUALITY.equals(kw)) return new String[]{"audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and qualityInd not like 'MQA%'"};
+                if (Constants.TITLE_CD_EXT_QUALITY.equals(kw)) return new String[]{"audioEncoding in ('alac','flac','aiff','wave','wav') and audioBitsDepth >= 24 and audioSampleRate < 96000 and qualityInd not like 'MQA%'"};
+                return new String[]{""};
             }
             case GENRE: {
                 String kw = criteria.getKeyword();
-                if (isEmpty(kw)) return "";
-                return "genre = '" + kw.replace("'", "''") + "'";
+                if (isEmpty(kw)) return new String[]{""};
+                return new String[]{"genre = ?", kw};
             }
-            default: return "";
+            default: return new String[]{""};
         }
     }
 

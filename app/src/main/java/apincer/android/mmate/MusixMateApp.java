@@ -17,7 +17,6 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-//import apincer.android.mmate.service.MediaServerManager;
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
 import apincer.music.core.utils.ApplicationUtils;
@@ -37,14 +36,6 @@ public class MusixMateApp extends Application {
     FileRepository fileRepos;
     @Inject
     TagRepository tagRepos;
-
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-
-        WorkManager.getInstance(getApplicationContext()).cancelAllWork();
-        MusicMateExecutors.getInstance().shutdown();
-    }
 
     @Override public void onCreate() {
         super.onCreate();

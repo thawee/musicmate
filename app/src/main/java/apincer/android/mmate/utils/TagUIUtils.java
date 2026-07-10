@@ -169,30 +169,6 @@ public class TagUIUtils {
         }
     }
 
-    /*
-    public static boolean isPCM24Bits(Track tag) {
-        return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
-    }
-
-    public static boolean isDSD(@UnknownNullability Track tag) {
-        return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
-    }
-
-    public static boolean isDSD64(Track tag) {
-        return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
-    }
-
-    public static boolean isDSD256(Track tag) {
-        return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
-    }
-
-    public static boolean isHiRes(@UnknownNullability Track tag) {
-        // > 24/96
-        // JAS,  96kHz/24bit format or above
-        //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
-    } */
-
     public static String getFormattedTitle(Context context, @UnknownNullability Track tag) {
         String title =  trimToEmpty(tag.getTitle());
         if(Settings.isShowTrackNumber(context)) {
@@ -225,15 +201,6 @@ public class TagUIUtils {
         }
         return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
     }
-
-    /*
-    public static boolean isLossless(Track tag) {
-        return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
-    }
-
-    public static boolean isLossy(Track tag) {
-        return isMPegFile(tag) || isAACFile(tag);
-    } */
 
     @Deprecated
     public static String getDynamicRangeScore(Track tag) {
@@ -319,29 +286,6 @@ public class TagUIUtils {
         return -1;
     }
 
-    /*
-    @Deprecated
-    public static int getRating(TrackMeta tag) {
-        String label1 = tag.getQualityRating();
-        if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
-            return 5;
-        }else if(QUALITY_RECOMMENDED.equals(label1)) {
-            return 4;
-        }else if (QUALITY_FAVORITE.equals(label1)) {
-            return 3;
-        }else if(Constants.QUALITY_BAD.equals(label1)) {
-            return 1;
-        }else {
-            return 0;
-        }
-    } */
-
-    /*
-    public static boolean isOnDownloadDir(Track tag) {
-       // return !tag.isMusicManaged();
-        return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
-    } */
-
     public static String getDefaultAlbum(@UnknownNullability Track tag) {
         // if album empty, add single
         String defaultAlbum;
@@ -356,59 +300,9 @@ public class TagUIUtils {
     public static String getFirstArtist(String artist) {
         if(artist.indexOf(";")>0) {
             return artist.substring(0,artist.indexOf(";"));
-       // }else if(artist.indexOf(",")>0) {
-       //     return artist.substring(0,artist.indexOf(","));
-       // }else if(artist.indexOf("-")>0) {  // some artist name contain -
-       //     return artist.substring(0,artist.indexOf("-"));
-       // }else if(artist.indexOf("&")>0) {
-        //    return artist.substring(0,artist.indexOf("&"));
         }
         return artist;
     }
-
-    /*
-    public static boolean isWavFile(Track musicTag) {
-        return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getAudioEncoding()));
-    }
-
-    public static boolean isFLACFile(Track musicTag) {
-        return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getAudioEncoding()));
-    }
-
-    public static boolean isMPegFile(@UnknownNullability Track tag) {
-        // mp3
-        return (Constants.MEDIA_ENC_MPEG.equalsIgnoreCase(tag.getAudioEncoding()));
-    }
-
-    public static boolean isALACFile(Track tag) {
-        // m4a, mov, ,p4
-        return (Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
-    }
-
-
-    public static boolean isAIFFile(Track tag) {
-        // aif, aiff
-        return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()) || Constants.MEDIA_ENC_AIFF_ALT.equalsIgnoreCase(tag.getAudioEncoding()));
-    }
-
-    public static boolean isAACFile(@UnknownNullability Track musicTag) {
-        return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
-    }
-
-    // Helper to determine if a format is lossless (for audiophile renderers)
-    @Deprecated
-    public static boolean isLosslessFormat(Track tag) {
-        String format = tag.getFileType() != null ? tag.getFileType().toLowerCase() : "";
-        String codec = tag.getAudioEncoding() != null ? tag.getAudioEncoding().toLowerCase() : "";
-        String path = tag.getPath().toLowerCase();
-
-        return format.contains("flac") || format.contains("alac") || format.contains("aiff") ||
-                format.contains("wav") || format.contains("dsd") || format.contains("dff") ||
-                codec.contains("flac") || codec.contains("alac") || codec.contains("pcm") ||
-                path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
-                path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
-                path.endsWith(".dsf");
-    } */
 
     public static int getQualityTextColor(Context context, String qualityInd) {
         if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_unknown);

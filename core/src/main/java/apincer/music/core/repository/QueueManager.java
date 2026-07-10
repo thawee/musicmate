@@ -274,8 +274,6 @@ public class QueueManager {
     private synchronized void updateShuffleOrder() {
         shuffleOrder.clear();
         shuffleIndexMap.clear();
-        currentIndex = -1;
-        playbackIndex = -1;
 
         int size = queueList.size();
         if (size == 0) return;
@@ -310,10 +308,42 @@ public class QueueManager {
         }
     }
 
-    /*
-    public Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
-        return dbHelper.getQueueItemDao();
-    } */
+    /**
+     * Enables or disables shuffle mode and rebuilds the shuffle order.
+     *
+     * @param enabled true to enable shuffle, false to disable
+     */
+    public synchronized void setShuffle(boolean enabled) {
+        if (this.isShuffle == enabled) return;
+        this.isShuffle = enabled;
+        updateShuffleOrder();
+        Log.d(TAG, "Shuffle mode set to: " + enabled);
+    }
+
+    /**
+     * Returns whether shuffle mode is currently enabled.
+     */
+    public boolean isShuffle() {
+        return isShuffle;
+    }
+
+    /**
+     * Sets the repeat mode and logs the change.
+     *
+     * @param mode The new repeat mode (OFF, ONE, ALL)
+     */
+    public synchronized void setRepeatMode(RepeatMode mode) {
+        if (this.repeatMode == mode) return;
+        this.repeatMode = mode;
+        Log.d(TAG, "Repeat mode set to: " + mode);
+    }
+
+    /**
+     * Returns the current repeat mode.
+     */
+    public RepeatMode getRepeatMode() {
+        return repeatMode;
+    }
 
     public void addToPlayingQueue(Track song) {
         try {
@@ -322,15 +352,6 @@ public class QueueManager {
             throw new RuntimeException(e);
         }
     }
-
-    /*
-    public List<PlayingQueue> getQueueItems() {
-        try {
-            return dbHelper.getQueueItemDao().queryForAll();
-        } catch (SQLException ignored) { }
-
-        return Collections.EMPTY_LIST;
-    } */
 
     public void emptyPlayingQueue() {
         dbHelper.emptyPlayingQueue();

@@ -43,7 +43,7 @@
         android:gravity="center"
         android:maxLines="2"
         android:ellipsize="middle"
-        android:textColor="#CCFFFFFF"
+        android:textColor="@color/white"
         android:textSize="12sp"
         android:text="" />
 

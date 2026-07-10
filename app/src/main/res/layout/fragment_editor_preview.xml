@@ -22,8 +22,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/dimen_8_dp"
-            android:layout_marginLeft="@dimen/dimen_24_dp"
-            android:layout_marginRight="@dimen/dimen_24_dp"
+            android:layout_marginStart="@dimen/dimen_24_dp"
+            android:layout_marginEnd="@dimen/dimen_24_dp"
             android:layout_marginBottom="@dimen/dimen_4_dp"
             android:layout_gravity="center_horizontal"
             android:orientation="horizontal">
@@ -56,8 +56,8 @@
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:background="@color/material_color_grey_600"
-                android:layout_marginRight="@dimen/dimen_4_dp"
-                android:layout_marginLeft="@dimen/dimen_4_dp"/>
+                android:layout_marginEnd="@dimen/dimen_4_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"/>
 
             <LinearLayout
                 android:layout_width="0dip"
@@ -72,8 +72,8 @@
                     android:maxLines="2"
                     android:lines="2"
                     android:gravity="start"
-                    android:paddingLeft="@dimen/dimen_4_dp"
-                    android:paddingRight="@dimen/dimen_4_dp"
+                    android:paddingStart="@dimen/dimen_4_dp"
+                    android:paddingEnd="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
                     android:fontFamily="@font/noto_sans_thai_regular"
                     android:textColor="@android:color/white"
@@ -97,8 +97,8 @@
                 android:text="Genre"
                 android:maxLines="1"
                 android:gravity="center"
-                android:paddingLeft="@dimen/dimen_4_dp"
-                android:paddingRight="@dimen/dimen_4_dp"
+                android:paddingStart="@dimen/dimen_4_dp"
+                android:paddingEnd="@dimen/dimen_4_dp"
                 android:fontFamily="@font/noto_sans_thai_regular"
                 android:textSize="10sp"
                 android:textStyle="bold"
@@ -122,8 +122,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center|bottom"
                     android:paddingTop="@dimen/dimen_1_dp"
-                    android:paddingRight="@dimen/dimen_4_dp"
-                    android:paddingLeft="@dimen/dimen_4_dp"
+                    android:paddingEnd="@dimen/dimen_4_dp"
+                    android:paddingStart="@dimen/dimen_4_dp"
                     android:paddingBottom="@dimen/dimen_4_dp"
                     android:layout_marginBottom="@dimen/dimen_2_dp"
                     android:fontFamily="@font/noto_sans_thai_regular"
@@ -156,38 +156,6 @@
                     android:layout_marginEnd="@dimen/dimen_4_dp"
                     android:layout_gravity="center"
                     android:orientation="vertical">
-                    <!--
-                <TextView
-                    android:id="@+id/panel_path"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/grey500"
-                    android:drawablePadding="@dimen/dimen_4_dp"
-                    android:layout_marginTop="@dimen/dimen_8_dp"
-                    android:padding="@dimen/dimen_4_dp"
-                    android:paddingStart="@dimen/dimen_8_dp"
-                    android:paddingEnd="@dimen/dimen_8_dp"
-                    android:fontFamily="@font/noto_sans_thai_thin"
-                    android:textSize="10sp"
-                    android:text="file path"
-                    android:ellipsize="start"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    android:singleLine="true"
-                    android:background="@drawable/shape_background_filename"
-                    tools:ignore="HardcodedText,SmallSp" />
-                    -->
-                    <!--
-                    <View
-                        android:id="@+id/panel_path_line"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dimen_1_dp"
-                        android:layout_marginStart="@dimen/dimen_2_dp"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:gravity="center"
-                        android:layout_gravity="center"
-                        android:background="@color/grey100"/>
-                        -->
                 </LinearLayout>
         </LinearLayout>
     </LinearLayout>

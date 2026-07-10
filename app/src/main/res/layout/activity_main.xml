@@ -15,7 +15,7 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:alpha="0.4"
-        tools:ignore="ContentDescription" />
+        android:contentDescription="@string/cd_background_blur" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -157,13 +157,13 @@
                         android:src="@drawable/ic_musicmate_logo"
                         android:alpha="0.9"
                         app:tint="?attr/colorOnSurface"
-                        tools:ignore="ContentDescription" />
+                        android:contentDescription="@string/cd_musicmate_logo" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
-                        android:text="Library awaits sound"
+                        android:text="@string/empty_library_title"
                         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                         android:gravity="center"
                         android:textColor="?attr/colorOnSurface" />
@@ -172,7 +172,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Ready for your first addition."
+                        android:text="@string/empty_library_subtitle"
                         android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                         android:textColor="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
@@ -199,23 +199,6 @@
         android:background="@drawable/glass_fab_background"
         app:elevation="4dp"
         app:tint="?attr/colorOnSurface"/>
-
-    <!--
-    <sakout.mehdi.StateViews.StateView
-        android:id="@+id/status_page"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="@dimen/dimen_48_dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="" />
-
-    </sakout.mehdi.StateViews.StateView>
-    -->
 
     <!-- 🔹 Floating Glass Capsule Navigation -->
     <com.google.android.material.card.MaterialCardView
@@ -249,17 +232,6 @@
                     android:gravity="center_vertical"
                     android:src="@drawable/round_subscriptions_24"
                     android:contentDescription="@string/library" />
-               <!--
-                <TextView
-                    android:id="@+id/navigation_now_playing"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dimen_2_dp"
-                    android:paddingStart="@dimen/dimen_8_dp"
-                    android:text="@string/library"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                    tools:ignore="RtlSymmetry" />
-                -->
 
             <TextView
                 android:id="@+id/navigation_now_playing"
@@ -288,15 +260,6 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical|end"
                 android:layout_alignParentEnd="true">
-                <!--
-                <ImageView
-                    android:id="@+id/navigation_signal_path"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginEnd="@dimen/dimen_32_dp"
-                    android:src="@drawable/rounded_speaker_24"
-                    android:contentDescription="Signal Path" />
-                -->
                 <ImageView
                     android:id="@+id/navigation_media_server"
                     android:layout_width="@dimen/dimen_24_dp"
@@ -315,76 +278,4 @@
             </LinearLayout>
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
-
-    <!--
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottom_app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_64_dp"
-        android:layout_gravity="bottom"
-        app:backgroundTint="@color/back_transparent"
-        app:fabAlignmentMode="center"
-        app:hideOnScroll="true"
-        style="@style/RoundedBottomAppBar"
-        android:layout_margin="16dp">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/shape_bottom_appbar_background">
-
-            <LinearLayout
-                android:id="@+id/navigation_collections"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:layout_marginStart="@dimen/dimen_16_dp">
-                <ImageView
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:src="@drawable/round_subscriptions_24"
-                    android:contentDescription="Library" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="@dimen/dimen_8_dp"
-                    android:text="Library"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="end|center_vertical"
-                android:layout_marginStart="@dimen/dimen_24_dp"
-                android:layout_toEndOf="@id/navigation_collections"
-                android:layout_alignParentEnd="true">
-                <ImageView
-                    android:id="@+id/navigation_signal_path"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginEnd="@dimen/dimen_32_dp"
-                    android:src="@drawable/rounded_speaker_24"
-                    android:contentDescription="Signal Path" />
-
-                <ImageView
-                    android:id="@+id/navigation_media_server"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginEnd="@dimen/dimen_32_dp"
-                    android:src="@drawable/rounded_broadcast_on_personal_24"
-                    android:contentDescription="Media Server" />
-
-                <ImageView
-                    android:id="@+id/navigation_settings"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:layout_marginEnd="@dimen/dimen_16_dp"
-                    android:src="@drawable/ic_widgets_white_24dp"
-                    android:contentDescription="Settings" />
-            </LinearLayout>
-        </RelativeLayout>
-    </com.google.android.material.bottomappbar.BottomAppBar>
-    -->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

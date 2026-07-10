@@ -47,7 +47,8 @@
                 app:corner="rightTop"
                 app:primaryText="New"
                 app:primaryTextColor="#000000"
-                app:primaryTextSize="8sp" />
+                app:primaryTextSize="8sp"
+                android:contentDescription="@string/cd_new_label" />
         </FrameLayout>
 
         <!-- Title + Subtitle -->
@@ -161,8 +162,8 @@
                 android:padding="4dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/ic_notification_default"
-                app:tint="#FFD700"
-                tools:ignore="ContentDescription" />
+                app:tint="@color/colorGold"
+                android:contentDescription="@string/cd_now_playing_indicator" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

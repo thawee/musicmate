@@ -50,8 +50,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingTop="@dimen/dimen_2_dp"
-        android:paddingLeft="@dimen/dimen_8_dp"
-        android:paddingRight="@dimen/dimen_8_dp"
+        android:paddingStart="@dimen/dimen_8_dp"
+        android:paddingEnd="@dimen/dimen_8_dp"
         android:paddingBottom="@dimen/dimen_8_dp">
 
         <TextView
@@ -138,34 +138,6 @@
                     tools:text="-" />
 
             </LinearLayout>
-                <!--
-        <TextView
-            android:id="@+id/format"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:alpha="0.7"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:maxLines="5"
-            android:ellipsize="start"
-            android:layout_marginBottom="8dp"
-            tools:text="14 - ขอบใจที่หาเจอ.flac" />
-            <TextView
-                android:id="@+id/analytics"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:alpha="0.7"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:maxLines="5"
-                android:ellipsize="start"
-                android:layout_marginBottom="8dp"
-                tools:text="14 - ขอบใจที่หาเจอ.flac" />
-                -->
         </LinearLayout>
         <TextView
             android:id="@+id/quality_score"
@@ -194,26 +166,6 @@
                 android:scaleType="fitXY" />
         </androidx.cardview.widget.CardView>
 
-        <!--
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/dimen_2_dp"
-            android:layout_marginBottom="@dimen/dimen_8_dp"
-            android:gravity="center">
-
-                <TextView
-                    android:id="@+id/quality_score"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/grey200"
-                    android:textSize="14sp"
-                    android:maxLines="2"
-                    android:textStyle="italic"
-                    tools:text="Verified Lossless" />
-        </LinearLayout>
-        -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

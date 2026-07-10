@@ -32,8 +32,8 @@
             android:id="@+id/server_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="MusicMate Server"
-            android:textColor="#FFFFFF"
+            android:text="@string/server_title"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="20sp"
             android:textStyle="bold"/>
     </LinearLayout>
@@ -65,9 +65,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Server Status"
+                        android:text="@string/server_status_label"
                         android:textSize="12sp"
-                        android:textColor="#B0B0B0"/>
+                        android:textColor="@color/colorMuted"/>
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -87,8 +87,8 @@
                             android:id="@+id/server_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Stopped"
-                            android:textColor="#FFFFFF"
+                            android:text="@string/server_stopped"
+                            android:textColor="?attr/colorOnSurface"
                             android:textSize="16sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
@@ -98,17 +98,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="192.168.1.105:9000"
-                        android:textColor="#E0E0E0"
+                        android:textColor="@color/grey300"
                         android:textSize="14sp"
                         android:textStyle="italic"/>
-<!--
-                    <TextView
-                        android:id="@+id/server_power_by"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Address"
-                        android:textSize="12sp"
-                        android:textColor="#B0B0B0"/> -->
                 </LinearLayout>
 
                 <ImageView
@@ -118,7 +110,7 @@
                     android:scaleType="fitCenter"
                     android:padding="4dp"
                     android:background="@drawable/bg_rounded_white_small"
-                    android:contentDescription="QR Code" />
+                    android:contentDescription="@string/cd_qr_code" />
             </LinearLayout>
             <TextView
                 android:id="@+id/server_power_by"
@@ -126,14 +118,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dimen_4_dp"
                 android:layout_marginBottom="@dimen/dimen_4_dp"
-                android:text="Address"
+                android:text="@string/server_address_label"
                 android:textSize="12sp"
-                android:textColor="#B0B0B0"/>
+                android:textColor="@color/colorMuted"/>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#33FFFFFF"
+                android:background="@color/colorDivider"
                 android:layout_marginVertical="12dp"/>
 
             <LinearLayout
@@ -147,10 +139,10 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Stop MediaServer"
+                    android:text="@string/button_stop_server"
                     android:layout_marginEnd="8dp"
                     app:strokeColor="#FF5252"
-                    android:textColor="#FF5252"/>
+                    android:textColor="@color/colorError"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_start_server"
@@ -158,9 +150,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Start MediaServer"
+                    android:text="@string/button_start_server"
                     app:backgroundTint="@color/teal_200"
-                    android:textColor="#000000"/>
+                    android:textColor="@color/black"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -193,17 +185,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Active Player"
+                    android:text="@string/active_player_label"
                     android:textSize="12sp"
-                    android:textColor="#B0B0B0"/>
+                    android:textColor="@color/colorMuted"/>
 
                 <TextView
                     android:id="@+id/txt_current_player"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Galaxy S25 (This Device)"
+                    android:text="@string/active_player_default"
                     android:textSize="15sp"
-                    android:textColor="#FFFFFF"
+                    android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end"/>
@@ -213,7 +205,8 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_chevron_right"
-                app:tint="#808080"/>
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:contentDescription="@string/cd_chevron_right"/>
         </LinearLayout>
 
     </LinearLayout>

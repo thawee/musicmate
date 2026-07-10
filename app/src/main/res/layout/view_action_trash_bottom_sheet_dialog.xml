@@ -17,7 +17,7 @@ android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:text="Remove this track from your Library?"
 android:textAppearance="?attr/textAppearanceTitleLarge"
-android:textColor="#FFFFFF"
+android:textColor="?attr/colorOnSurface"
 android:layout_marginBottom="16dp"/>
 
 <LinearLayout
@@ -33,7 +33,7 @@ android:gravity="end">
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp"
     android:text="@string/cancel"
-    android:textColor="#FFFFFF"
+    android:textColor="?attr/colorOnSurface"
     app:strokeColor="#33FFFFFF"/>
 
     <View
@@ -43,7 +43,7 @@ android:gravity="end">
         android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
-    android:background="#33FFFFFF" />
+    android:background="@color/colorDivider" />
 
 <com.google.android.material.button.MaterialButton
     android:id="@+id/button_move_to_trash"
@@ -53,7 +53,7 @@ android:gravity="end">
     android:layout_height="wrap_content"
     android:text="@string/move_to_trash"
     app:backgroundTint="#FF5252"
-    android:textColor="#FFFFFF"/>
+    android:textColor="?attr/colorOnSurface"/>
 </LinearLayout>
     </LinearLayout>
 

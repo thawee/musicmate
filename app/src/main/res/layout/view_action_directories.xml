@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Discover Music Folders"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:letterSpacing="-0.02"/>
@@ -82,7 +82,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Deep Audit (Full Scan)"
+                android:text="@string/directories_deep_audit"
                 android:textColor="?attr/colorOnSurfaceVariant"/>
 
             <LinearLayout
@@ -98,7 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Cancel"
-                    android:textColor="#FF5252"/>
+                    android:textColor="@color/colorError"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_ok"
@@ -106,7 +106,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Execute Scan"
+                    android:text="@string/directories_execute_scan"
                     app:cornerRadius="20dp"/>
             </LinearLayout>
         </LinearLayout>

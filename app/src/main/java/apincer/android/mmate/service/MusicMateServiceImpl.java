@@ -245,46 +245,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     public void startServers() {
-      //  if (mediaServer.isInitialized()) return;
-
         if (!NetworkUtils.isServerNetworkAvailable(this)) {
             statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
             Log.d(TAG, TAG+" - Error, Required WiFi or Hotspot network");
             return;
         }
 
-        // --- ACQUIRE RESOURCES ---
-        // Wake lock keeps the CPU from sleeping. A timeout is used as a safeguard.
-       // wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MusixMate:MediaServerWakeLock");
-       // wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);
-
-        // WifiLock keeps the Wi-Fi radio from turning off, crucial for streaming.
-       // wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "MusixMate:WifiLock");
-      //  wifiLock.setReferenceCounted(false);
-       // wifiLock.acquire();
-
-        // MulticastLock is required for device discovery (DLNA/UPnP).
-       // multicastLock = wifiManager.createMulticastLock("MusixMate:MulticastLock");
-       // multicastLock.setReferenceCounted(false);
-       // multicastLock.acquire();
-       // Log.d(TAG, "CPU, Wi-Fi, and Multicast locks acquired.");
-
-        // --- START SERVICES ---
-        //showNotification(null);
         mediaHub.start();
-        //startNetworkMonitoring();
-
-        // Report that the server is now running.
         statusLiveData.postValue(MediaServerHub.ServerStatus.RUNNING);
     }
 
     public void stopServers() {
-       // if (!mediaServer.isInitialized()) return;
-
-        // --- RELEASE RESOURCES ---
         mediaHub.stop();
-
-        // Report that the server has stopped.
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
     }
 
@@ -420,26 +392,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void setShuffleMode(boolean enabled) {
-       /* if (getActivePlayer().isStreaming()) {
-            // Streaming player shuffle logic (if supported)
-            Log.d(TAG, "Shuffle mode for streaming player: " + enabled);
-        } else if (activeExternalController != null) {
-           // activeExternalController.getTransportControls() .setShuffleMode(
-           //         enabled ? PlaybackState.SHUFFLE_MODE_ALL : PlaybackState.SHUFFLE_MODE_NONE
-           // );
-        } */
+        queueManager.setShuffle(enabled);
     }
 
     @Override
     public void setRepeatMode(String mode) {
-        if (getActivePlayer().isStreaming()) {
-            // Streaming player repeat logic (if supported)
-            Log.d(TAG, "Repeat mode for streaming player: " + mode);
-        } else if (getActivePlayer() != null) {
-           /* int repeatMode = PlaybackState.REPEAT_MODE_NONE;
-            if ("ONE".equalsIgnoreCase(mode)) repeatMode = PlaybackState.REPEAT_MODE_ONE;
-            else if ("ALL".equalsIgnoreCase(mode)) repeatMode = PlaybackState.REPEAT_MODE_ALL;
-            activeExternalController.getTransportControls().setRepeatMode(repeatMode); */
+        try {
+            queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.valueOf(mode));
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Unknown repeat mode: " + mode + ", defaulting to OFF");
+            queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
         }
     }
 
@@ -465,34 +427,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if (nextTrackTask != null && !nextTrackTask.isDone()) {
             nextTrackTask.cancel(false);
         }
-
-        // Let EVENT drive everything, Wait for real UPnP event
-
-        /*
-        // =========================
-        // ✅ GAPLESS: PRELOAD EARLY
-        // =========================
-        preloadNextTrack();
-
-        // =========================
-        // ⚠️ FALLBACK TIMER
-        // =========================
-        long durationMs = (long) song.getAudioDuration();
-
-        // fallback trigger ~95% (safe)
-        long fallbackDelay = (long) (durationMs * 0.95);
-
-        // short track protection
-        fallbackDelay = Math.max(3000, fallbackDelay);
-
-        Log.d(TAG, "Gapless: Fallback timer in " + (fallbackDelay / 1000) + " sec");
-
-        nextTrackTask = scheduler.schedule(() -> {
-            Log.w(TAG, "Gapless fallback triggered → forcing next track");
-            fallbackToNextTrack(player);
-        }, fallbackDelay, TimeUnit.MILLISECONDS);
-
-         */
     }
 
     private void preloadNextTrack() {
@@ -612,15 +546,10 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     public boolean isControllable(PlaybackTarget player) {
-        final boolean[] controlled = {false};
-        if(controlledPlayerTargetId != null) {
-            currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
-                if(playbackTarget.isStreaming()) {
-                    controlled[0] = controlledPlayerTargetId.equals(playbackTarget.getTargetId());
-                }
-            });
+        if (player == null || controlledPlayerTargetId == null) {
+            return false;
         }
-        return controlled[0];
+        return player.isStreaming() && controlledPlayerTargetId.equals(player.getTargetId());
     }
 
     /**

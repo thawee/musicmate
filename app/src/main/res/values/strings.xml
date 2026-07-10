@@ -322,9 +322,9 @@
     <string name="web_server_name">MusicMate</string>
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
     <string name="show_frequency_spectrum">Frequency Spectrum</string>
-    <string name="lossless_verifier">MusicMate Spectra</string>
-    <string name="open_containing_folder">Show in folder</string>
-    <string name="find_online">Lookup on Google</string>
+    <string name="lossless_verifier">Verify Lossless Quality</string>
+    <string name="open_containing_folder">Show in File Manager</string>
+    <string name="find_online">Search Song on Web</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
     <string name="analyze_music">Mastering Analysis</string>
@@ -367,5 +367,112 @@
     <string name="analyzing">Analyzing…</string>
     <string name="scan_full">Full Scan</string>
     <string name="menu_quality">Sound Grade</string>
+    <string name="fix_thai_encoding">Fix Thai Encoding</string>
+    <string name="auto_detect_pattern">Auto Detect</string>
+    <string name="or">or</string>
+
+    <!-- Empty States -->
+    <string name="empty_library_title">Library awaits sound</string>
+    <string name="empty_library_subtitle">Ready for your first addition.</string>
+
+    <!-- Tags Activity -->
+    <string name="sample_song_title">Song Title</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_organize">Organize</string>
+    <string name="button_more">More&#8230;</string>
+    <string name="button_edit_song_info">Edit Song Info</string>
+
+    <!-- Server Management -->
+    <string name="server_title">MusicMate Server</string>
+    <string name="server_status_label">Server Status</string>
+    <string name="server_stopped">Stopped</string>
+    <string name="server_address_label">Address</string>
+    <string name="button_stop_server">Stop MediaServer</string>
+    <string name="button_start_server">Start MediaServer</string>
+    <string name="active_player_label">Active Player</string>
+    <string name="active_player_default">This Device</string>
+
+    <!-- Header -->
+    <string name="music_library_header">Music Library</string>
+
+    <!-- Editor Technical -->
+    <string name="editor_tech_file_storage">File Storage &amp; Location</string>
+    <string name="editor_tech_embedded_metadata">Embedded Metadata Map</string>
+    <string name="editor_tech_audio_diagnostics">Audio Stream Diagnostics</string>
+
+    <!-- Editor Tags -->
+    <string name="editor_tags_song_identity">Song Identity</string>
+    <string name="editor_tags_origin">Discovery &amp; Origin</string>
+    <string name="editor_tags_release_info">Release &amp; Track Info</string>
+
+    <!-- Directories -->
+    <string name="directories_title">Discover Music Folders</string>
+    <string name="directories_add_path">Add Path</string>
+    <string name="directories_deep_audit">Full Rescan</string>
+    <string name="directories_execute_scan">Start Scan</string>
+    <string name="directories_confirm_full_scan">This will rescan your entire music library. Continue?</string>
+
+    <!-- Preview -->
+    <string name="preview_artist_label">Artist</string>
+    <string name="preview_album_label">Album</string>
+    <string name="preview_genre_label">Genre</string>
+
+    <!-- Quality Indicator -->
+    <string name="quality_indicator_default">LC</string>
+
+    <!-- Badge -->
+    <string name="badge_default">Badge</string>
+
+    <!-- Signal Path -->
+    <string name="signal_path_title">Signal Path</string>
+    <string name="signal_path_local">Local Path</string>
+
+    <!-- Filename Tags -->
+    <string name="filename_tags_title">Read TAGs from filename</string>
+    <string name="filename_tags_preview">Preview</string>
+
+    <!-- FFmpeg -->
+    <string name="ffmpeg_reload">Reload</string>
+    <string name="ffmpeg_extract_cover">Extract\nEmbed Cover</string>
+    <string name="ffmpeg_remove_cover">Remove\nEmbed Cover</string>
+    <string name="ffmpeg_music_tags">Music Tags:</string>
+    <string name="ffmpeg_output">FFMPEG Output:</string>
+    <string name="auto_tag">Auto-Tag (MusicBrainz)</string>
+    <string name="search_match_tags">Search &amp; Match Tags</string>
+
+    <!-- New Indicator -->
+    <string name="new_indicator">NEW</string>
+
+    <!-- About -->
+    <string name="about_system_storage">System Storage</string>
+
+    <!-- Storage -->
+    <string name="storage_ph_label">PH</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_background_blur">Background</string>
+    <string name="cd_musicmate_logo">Music Mate Logo</string>
+    <string name="cd_library_icon">Library</string>
+    <string name="cd_media_server_icon">Media Server</string>
+    <string name="cd_settings_icon">Settings</string>
+    <string name="cd_arrow_right">Arrow Right</string>
+    <string name="cd_notification_icon">Notification</string>
+    <string name="cd_now_playing_indicator">Now Playing</string>
+    <string name="cd_qr_code">QR Code</string>
+    <string name="cd_chevron_right">Chevron Right</string>
+    <string name="cd_speaker_icon">Speaker</string>
+    <string name="cd_album_art">Album Art</string>
+    <string name="cd_new_label">New</string>
+    <string name="cd_rating_icon">Rating</string>
+
+    <!-- Placeholder text -->
+    <string name="placeholder_test">TEST</string>
+    <string name="placeholder_sample_rate">Sample Rate</string>
+    <string name="placeholder_track_title">Song Title</string>
+    <string name="placeholder_artist_name">Artist Name</string>
+    <string name="placeholder_flac">FLAC</string>
+    <string name="placeholder_96khz">96 kHz</string>
+    <string name="placeholder_new">NEW</string>
+    <string name="placeholder_badge">Badge</string>
 
 </resources>

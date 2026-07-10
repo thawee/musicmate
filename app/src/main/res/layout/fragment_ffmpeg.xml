@@ -1,38 +1,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingStart="@dimen/activity_horizontal_margin"
+    android:paddingEnd="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
 
     android:clipToPadding="false"
     android:paddingBottom="?attr/actionBarSize">
-<!--
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
-        <Button
-            android:id="@+id/reload_tag_from_file"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/dimen_4_dp"
-            android:text="Reload"/>
-        <Button
-            android:id="@+id/extract_coverart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/dimen_4_dp"
-            android:text="Extract\nEmbed Cover"/>
-        <Button
-            android:id="@+id/remove_coverart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Remove\nEmbed Cover"/>
 
-    </LinearLayout>
--->
     <TextView
         android:id="@+id/filename"
         android:layout_width="wrap_content"
@@ -59,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginStart="@dimen/dimen_4_dp"
         android:textSize="16sp"
         android:text="Music Tags:"
         android:textColor="?android:attr/textColorPrimary"/>
@@ -92,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginStart="@dimen/dimen_4_dp"
         android:textSize="16sp"
         android:text="FFMPEG Output:"
         android:textColor="?android:attr/textColorPrimary"/>
@@ -102,7 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginStart="@dimen/dimen_4_dp"
         android:textSize="14sp"
         android:textColor="?android:attr/textColorPrimary"/>
 
