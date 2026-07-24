@@ -157,8 +157,9 @@ public class ScanAudioFileWorker extends Worker {
                         repos.scanMusicFile(path.toFile(), false);
                     } finally {
                         int current = processedCount.incrementAndGet();
-                        // Throttle progress updates to reduce Binder IPC overhead
-                        if (current % 5 == 0 || current == totalFiles) {
+                        // Throttle progress updates to reduce Binder IPC overhead (every ~1% or 50 files)
+                        int updateStep = Math.max(50, totalFiles / 100);
+                        if (current % updateStep == 0 || current == totalFiles) {
                             androidx.work.Data progressData = new androidx.work.Data.Builder()
                                     .putInt("progress_value", current)
                                     .putInt("total_files", totalFiles)

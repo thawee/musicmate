@@ -592,6 +592,12 @@ public class FileRepository {
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
                 tag.setFileLastModified(new File(newPath).lastModified());
+
+                String coverart = extractEmbedCoverArt(tag);
+                if (!isEmpty(coverart)) {
+                    tag.setAlbumArtFilename(coverart);
+                }
+
                 tagRepos.saveTag(tag);
                 return true;
             }

@@ -103,7 +103,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
     
     public HttpCoreWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("HttpCore55", getVersion());
+        addLibInfo("HttpCore5", getVersion());
         
         // Initialize connection state pool
         this.connectionPool = new ObjectPool<>(
@@ -118,7 +118,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         if(versionInfo!= null) {
             return versionInfo.getRelease();
         }
-        return "5.5.0-beta2";
+        return "5.4.2";
     }
 
     @Override

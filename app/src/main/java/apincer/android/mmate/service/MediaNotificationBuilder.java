@@ -56,7 +56,13 @@ public class MediaNotificationBuilder {
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
-    private static void showPlaybackNotification(Context context, PlaybackTarget player, Bitmap albumArt, String title, String artist) {
+    private static PendingIntent createPendingIntent(Context context, String action, int requestCode) {
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
+        intent.setAction(action);
+        return PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static void showPlaybackNotification(Context context, PlaybackTarget player, Bitmap albumArt, String title, String artist, boolean isPlaying) {
         Bitmap safeAlbumArt = ensureSoftwareBitmap(albumArt);
 
         Palette.from(safeAlbumArt).generate(palette -> {
@@ -73,6 +79,10 @@ public class MediaNotificationBuilder {
 
             String subText = "with " + player.getDisplayName();
 
+            PendingIntent prevIntent = createPendingIntent(context, MusicMateServiceImpl.ACTION_SKIP_PREVIOUS, 1);
+            PendingIntent toggleIntent = createPendingIntent(context, MusicMateServiceImpl.ACTION_TOGGLE_PLAYBACK, 2);
+            PendingIntent nextIntent = createPendingIntent(context, MusicMateServiceImpl.ACTION_SKIP_NEXT, 3);
+
             Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                     .setSmallIcon(R.drawable.ic_notification_default)
@@ -84,7 +94,10 @@ public class MediaNotificationBuilder {
                     .setColor(dominantColor)
                     .setColorized(true)
                     .setContentIntent(createContentIntent(context))
-                    .setStyle(new MediaStyle())
+                    .addAction(R.drawable.ic_previous, "Previous", prevIntent)
+                    .addAction(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play_arrow, isPlaying ? "Pause" : "Play", toggleIntent)
+                    .addAction(R.drawable.ic_next, "Next", nextIntent)
+                    .setStyle(new MediaStyle().setShowActionsInCompactView(0, 1, 2))
                     .build();
 
             notify(context, notification);
@@ -147,6 +160,16 @@ public class MediaNotificationBuilder {
             @Nullable PlaybackTarget player,
             MediaServerHub.ServerStatus status,
             long totalTracks) {
+        updateNotification(context, track, player, status, totalTracks, false);
+    }
+
+    public static void updateNotification(
+            @NonNull Context context,
+            @Nullable Track track,
+            @Nullable PlaybackTarget player,
+            MediaServerHub.ServerStatus status,
+            long totalTracks,
+            boolean isPlaying) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -160,24 +183,24 @@ public class MediaNotificationBuilder {
         } else if (track == null) {
             showPlayerNotification(context, player, status);
         } else {
-            showPlaybackNotification(context, track, player);
+            showPlaybackNotification(context, track, player, isPlaying);
         }
     }
 
-    private static void showPlaybackNotification(Context context, Track track, PlaybackTarget player) {
+    private static void showPlaybackNotification(Context context, Track track, PlaybackTarget player, boolean isPlaying) {
         Target target = new Target() {
             @Override
             public void onSuccess(@NonNull Image result) {
                 if (result instanceof BitmapImage bitmapImage) {
                     Bitmap bitmap = bitmapImage.getBitmap();
-                    showPlaybackNotification(context, player, bitmap, track.getTitle(), track.getArtist());
+                    showPlaybackNotification(context, player, bitmap, track.getTitle(), track.getArtist(), isPlaying);
                 }
             }
 
             @Override
             public void onError(@Nullable Image errorDrawable) {
                 Bitmap defaultArt = loadDefaultAlbumArt(context);
-                showPlaybackNotification(context, player, defaultArt, track.getTitle(), track.getArtist());
+                showPlaybackNotification(context, player, defaultArt, track.getTitle(), track.getArtist(), isPlaying);
             }
         };
 

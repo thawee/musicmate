@@ -197,7 +197,7 @@
                     android:textSize="15sp"
                     android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold"
-                    android:maxLines="1"
+                    android:maxLines="2"
                     android:ellipsize="end"/>
             </LinearLayout>
 

@@ -121,6 +121,13 @@ public class QueueManager {
      * (e.g., "Add to Queue" or "Remove Track").
      */
     public synchronized void loadPlayingQueue() {
+        loadPlayingQueue(false);
+    }
+
+    public synchronized void loadPlayingQueue(boolean force) {
+        if (!force && !queueList.isEmpty()) {
+            return;
+        }
         try {
             List<Track> songs = dbHelper.getPlayingQueue();
             queueList.clear();

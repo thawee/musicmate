@@ -246,6 +246,8 @@ public class ApplicationUtils {
     }
 
     @Deprecated
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    @SuppressWarnings("deprecation")
     public static boolean isPlugged(Context context) {
         boolean isPlugged;
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));

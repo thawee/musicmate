@@ -115,6 +115,8 @@ public class MediaServerHubImpl implements MediaServerHub {
     private org.jupnp.model.gena.GENASubscription activeSubscription;
     private org.jupnp.controlpoint.SubscriptionCallback subscriptionCallback;
     private boolean supportsGapless = true; // Default to true, then 'learn' otherwise
+    private volatile Track preloadedNextTrack;
+    private volatile String preloadedNextUrl;
     private volatile long lastEventTime = 0;
     private static final long EVENT_TIMEOUT_MS = 4000; // 4 s
     private enum SyncMode {
@@ -882,6 +884,9 @@ public class MediaServerHubImpl implements MediaServerHub {
             controlPoint.execute(new org.jupnp.controlpoint.ActionCallback(invocation) {
                 @Override
                 public void success(ActionInvocation invocation) {
+                    preloadedNextTrack = nextSong;
+                    preloadedNextUrl = nextUrl;
+                    supportsGapless = true;
                     Log.i(TAG, "Gapless: Next track queued successfully: " + nextSong.getTitle());
                 }
 
@@ -889,6 +894,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                     Log.w(TAG, "Gapless: Renderer rejected NextURI (might not support gapless): " + defaultMsg);
                     supportsGapless = false;
+                    preloadedNextTrack = null;
+                    preloadedNextUrl = null;
                 }
             });
         });
@@ -1003,6 +1010,19 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 playbackCallback.onPlaybackStateTimeElapsedSeconds(position);
                             }
 
+                            // Gapless transition check
+                            String currentURI = positionInfo.getTrackURI();
+                            if (preloadedNextTrack != null && currentURI != null &&
+                                    (currentURI.equals(preloadedNextUrl) || currentURI.contains("/music/" + preloadedNextTrack.getId() + "/"))) {
+                                Track nextTrack = preloadedNextTrack;
+                                preloadedNextTrack = null;
+                                preloadedNextUrl = null;
+                                Log.i(TAG, "Gapless: Renderer seamlessly transitioned to track → " + nextTrack.getTitle());
+                                if (playbackCallback != null) {
+                                    playbackCallback.onMediaTrackChanged(nextTrack);
+                                }
+                            }
+
                             if (stagnantCount >= 8) {
                                 Log.w(TAG, " Playback stuck detected, serverStatus: "+serverStatus.getValue());
                                 stopPolling();
@@ -1011,7 +1031,6 @@ public class MediaServerHubImpl implements MediaServerHub {
                                     attemptRecovery();
                                 }
                             }
-                           // Log.d(TAG, "Polling position: " + position +", stagnantCount: "+stagnantCount +", serverStatus: "+serverStatus.getValue());
                         }
                     }
             );

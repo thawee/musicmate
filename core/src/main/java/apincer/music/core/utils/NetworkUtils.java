@@ -152,7 +152,7 @@ public class NetworkUtils {
                     if (!address.isLoopbackAddress()) {
                         String hostAddress = address.getHostAddress();
                         if (hostAddress != null && IPV4_PATTERN.matcher(hostAddress).matches()) {
-                            Log.d(TAG, "Found fallback IP on interface '" + ni.getName() + "': " + hostAddress);
+                            // Log.d(TAG, "Found fallback IP on interface '" + ni.getName() + "': " + hostAddress);
                             return hostAddress; // Return the first valid IP on any other suitable interface.
                         }
                     }

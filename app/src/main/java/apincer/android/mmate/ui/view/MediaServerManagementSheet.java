@@ -32,6 +32,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import apincer.android.mmate.R;
 import apincer.android.mmate.ui.viewmodel.MediaServerViewModel;
 import apincer.music.core.Constants;
+import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.spi.MediaServerHub;
@@ -109,6 +110,9 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     private void setupPlayers(LinearLayout btnSelectPlayer, TextView txtCurrentPlayer) {
         if(playbackService != null && playbackService.getPlayer() != null) {
             txtCurrentPlayer.setText(playbackService.getPlayer().getDisplayName());
+            if(playbackService.getPlayer() instanceof DMRPlayer dlna) {
+                txtCurrentPlayer.setText(dlna.getDisplayName() +"\n("+dlna.getDescription()+")");
+            }
         }else {
             txtCurrentPlayer.setText(" - ");
         }

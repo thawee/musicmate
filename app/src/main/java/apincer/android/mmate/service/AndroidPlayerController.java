@@ -193,17 +193,42 @@ public class AndroidPlayerController {
     }
 
     public void play(Track song) {
-        if(NEUTRON_MUSIC_PACK_NAME.equals(playbackTargetId)) {
-            playInNeutron(context, song);
-        }else {
-            if (mediaController != null && song != null) {
-                File songFile = new File(song.getPath());
+        if (song == null || song.getPath() == null) return;
 
-                // Convert the File object to a Uri
-                Uri songUri = Uri.fromFile(songFile);
-                // Pass the Uri to playFromUri. The second parameter (extras) can be null.
+        if (NEUTRON_MUSIC_PACK_NAME.equals(playbackTargetId)) {
+            playInNeutron(context, song);
+        } else if (ExternalAndroidPlayer.POWERAMP_PACK_NAME.equals(playbackTargetId)) {
+            playInPoweramp(context, song);
+        } else {
+            Uri songUri = MusicFileProvider.getUriForFile(song.getPath());
+            if (mediaController != null) {
                 mediaController.getTransportControls().playFromUri(songUri, null);
+            } else if (playbackTargetId != null) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(songUri, "audio/*");
+                intent.setPackage(playbackTargetId);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    context.startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start external player activity", e);
+                }
             }
+        }
+    }
+
+    public void playInPoweramp(Context context, Track song) {
+        if (song == null || song.getPath() == null) return;
+
+        Uri uri = MusicFileProvider.getUriForFile(song.getPath());
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "audio/*");
+        intent.setPackage(ExternalAndroidPlayer.POWERAMP_PACK_NAME);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            context.startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start Poweramp", e);
         }
     }
 

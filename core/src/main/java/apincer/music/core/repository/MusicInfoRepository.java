@@ -134,9 +134,11 @@ public class MusicInfoRepository {
             Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
 
             // Navigate the Wikipedia JSON structure
+            @SuppressWarnings("unchecked")
             Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
             if (query == null) return null;
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> pages = (Map<String, Object>) query.get("pages");
             if (pages == null || pages.isEmpty()) return null;
 
@@ -215,9 +217,11 @@ public class MusicInfoRepository {
             String jsonString = body.string();
             Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
             if (query == null) return null;
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> pages = (Map<String, Object>) query.get("pages");
             if (pages == null || pages.isEmpty()) return null;
 

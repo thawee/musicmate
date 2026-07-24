@@ -106,18 +106,30 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
 
     public static class Factory {
         public static PlaybackTarget create(Context context, String packageName) {
-            if(ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName)) {
+            if (packageName == null) return null;
+
+            if (ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName) || isPackageInstalled(context, packageName)) {
                 String playerName = getAppName(context, packageName);
                 String playerVersion = getAppVersionName(context, packageName);
                 String playerDescription = getAppDescription(context, packageName);
                 if(playerDescription == null) {
                     playerDescription = playerVersion;
-                }else {
+                }else if (playerVersion != null) {
                     playerName = playerName +" "+ playerVersion;
                 }
                 return new ExternalAndroidPlayer(context, packageName, playerName, playerDescription);
             }
             return null;
+        }
+
+        public static boolean isPackageInstalled(Context context, String packageName) {
+            if (context == null || packageName == null) return false;
+            try {
+                context.getPackageManager().getApplicationInfo(packageName, 0);
+                return true;
+            } catch (PackageManager.NameNotFoundException e) {
+                return false;
+            }
         }
 
              /* DANGEROUS: This method performs networking and MUST NOT be

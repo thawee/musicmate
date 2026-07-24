@@ -155,15 +155,30 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         // Remove all existing external Players
         addLocalPlaybackTarget(null, true);
 
+        PlaybackTarget playingPlayer = null;
+
         // Add external media session targets
-        for (MediaController controller : controllers) {
-            String packageName = controller.getPackageName();
-           // String sessionTag = controller.getTag();
-            PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
-            addLocalPlaybackTarget(player, false);
+        if (controllers != null) {
+            for (MediaController controller : controllers) {
+                String packageName = controller.getPackageName();
+                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
+                if (player != null) {
+                    addLocalPlaybackTarget(player, false);
+                    android.media.session.PlaybackState state = controller.getPlaybackState();
+                    if (state != null && state.getState() == android.media.session.PlaybackState.STATE_PLAYING) {
+                        playingPlayer = player;
+                    }
+                }
+            }
         }
 
-        // Streaming players will be added via registerStreamingPlayer()
+        // If an external player is playing or if no player is selected, auto-select!
+        if (playingPlayer != null) {
+            switchPlayer(playingPlayer, false);
+        } else if (!currentPlayerSubject.getValue().isPresent()) {
+            autoSelectBestPlayer().ifPresent(player -> switchPlayer(player, false));
+        }
+
         Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());
     }
 
@@ -228,10 +243,32 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     }
 
+    public static final String ACTION_SKIP_PREVIOUS = "apincer.android.mmate.action.SKIP_PREVIOUS";
+    public static final String ACTION_TOGGLE_PLAYBACK = "apincer.android.mmate.action.TOGGLE_PLAYBACK";
+    public static final String ACTION_SKIP_NEXT = "apincer.android.mmate.action.SKIP_NEXT";
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.getAction() != null) {
             switch (intent.getAction()) {
+                // --- Remote Control Actions ---
+                case ACTION_SKIP_PREVIOUS:
+                    skipToPrevious();
+                    break;
+                case ACTION_TOGGLE_PLAYBACK:
+                    if (isPlaying()) {
+                        pausePlayer();
+                    } else {
+                        Track current = getNowPlayingSong();
+                        if (current != null) {
+                            playSong(current);
+                        }
+                    }
+                    break;
+                case ACTION_SKIP_NEXT:
+                    skipToNextInQueue();
+                    break;
+
                 // --- Server Actions ---
                 case MediaServerManager.ACTION_START_SERVER:
                     startServers();
