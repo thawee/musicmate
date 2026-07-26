@@ -130,14 +130,25 @@ public class TagsEditorFragment extends Fragment {
             }
         });
 
-        // popup list
-        setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
-       // setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
+        // popup list — static lists (safe on main thread)
         setupListValuePopupFullList(txtGenre, TagRepository.getDefaultGenreList(getContext()));
         setupListValuePopupFullList(txtStyle, TagRepository.getDefaultStyleList(getContext()));
         setupListValuePopupFullList(txtOrigin, TagRepository.getDefaultOriginList(getContext()));
         setupListValuePopupFullList(txtMood, TagRepository.getDefaultMoodList(getContext()));
-        setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),1);
+
+        // DB-backed lists — load off main thread
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        Context appContext = getContext().getApplicationContext();
+        MusicMateExecutors.execute(() -> {
+            List<String> artists = tagRepos.getArtistList();
+            List<String> publishers = tagRepos.getDefaultPublisherList(appContext);
+            mainHandler.post(() -> {
+                if (isAdded()) {
+                    setupListValuePopup(txtArtist, artists, 1);
+                    setupListValuePopup(txtPublisher, publishers, 1);
+                }
+            });
+        });
 
         return v;
     }
