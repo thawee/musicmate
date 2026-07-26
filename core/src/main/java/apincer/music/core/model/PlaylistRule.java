@@ -1,10 +1,10 @@
 package apincer.music.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable;
 
 import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 public class PlaylistRule {
     private String title;
     private String artist;
@@ -12,8 +12,11 @@ public class PlaylistRule {
     private List<String> genre;
     private List<String> mood;
     private List<String> style;
-
+    private String notes;
     private ExcludeRule exclude;
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
     public String getTitle() {
         return title;

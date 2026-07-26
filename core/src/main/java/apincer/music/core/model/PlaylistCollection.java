@@ -1,11 +1,11 @@
 package apincer.music.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable;
 
 import java.util.List;
 import java.util.Map;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 public class PlaylistCollection {
     private Map<String, String> metadata;
     private List<PlaylistEntry> playlists;

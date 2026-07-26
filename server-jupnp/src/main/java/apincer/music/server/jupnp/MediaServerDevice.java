@@ -6,7 +6,6 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
-import org.apache.commons.io.IOUtils;
 import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
 import org.jupnp.model.DefaultServiceManager;
 import org.jupnp.model.ValidationException;
@@ -191,7 +190,7 @@ public class MediaServerDevice extends LocalDevice {
         try {
             InputStream in = ApplicationUtils.getAssetsAsStream(context, iconFile);
             if(in != null) {
-                return IOUtils.toByteArray(in);
+                return in.readAllBytes();
             }
         } catch (IOException ex) {
             Log.e("getIconAsByteArray", "cannot get icon file - "+iconFile, ex);

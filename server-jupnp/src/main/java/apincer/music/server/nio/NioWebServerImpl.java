@@ -9,9 +9,7 @@ import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAConte
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -198,7 +196,6 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     private class WebSocketHandlerImpl extends WebSocketContent implements WebSocket.Handler {
         private final CopyOnWriteArraySet<WebSocket.Connection> sessions = new CopyOnWriteArraySet<>();
         private static final int MAX_SESSIONS = 100;
-        private static final ObjectMapper MAPPER = new ObjectMapper().setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
 
         @Override
         protected void broadcastMessage(String jsonResponse) {
@@ -224,20 +221,21 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
         private void sendMessage(WebSocket.Connection connection, Map<String, Object> response) {
             if (response != null) {
-                try { connection.send(MAPPER.writeValueAsString(response)); } catch (JsonProcessingException e) { Log.e(TAG, "Error serializing response", e); }
+                try { connection.send(apincer.music.core.utils.JsonUtils.toJson(response)); } catch (Exception e) { Log.e(TAG, "Error serializing response", e); }
             }
         }
 
         @Override
         public void onMessage(WebSocket.Connection connection, String message) {
             try {
-                Map<String, Object> messageMap = MAPPER.readValue(message, Map.class);
+                Map<String, Object> messageMap = (Map<String, Object>) (Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(message);
                 String command = String.valueOf(messageMap.getOrDefault("command", ""));
-                if (!command.isEmpty()) sendMessage(connection, handleCommand(command, messageMap));
-            } catch (Exception e) { Log.e(TAG, "Error processing WS message", e); }
-        }
-
-        @Override
+                Map<String, Object> response = handleCommand(command, messageMap);
+                sendMessage(connection, response);
+            } catch (Exception e) {
+                Log.e(TAG, "Error handling WebSocket message", e);
+            }
+        } @Override
         public void onMessage(WebSocket.Connection connection, byte[] message) {}
 
         @Override

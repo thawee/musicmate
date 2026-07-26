@@ -42,12 +42,11 @@ dependencies {
     implementation libs.jupnp.android
     implementation libs.jupnp.support
 
-    implementation libs.commons.io
-    implementation libs.jackson.core
-    implementation libs.jackson.databind
+    // commons-io removed - replaced with java.nio.file (migration complete)
+    // rxandroid/rxjava removed - migrated to Kotlin StateFlow/coroutines
+    // jackson removed - migrated to kotlinx.serialization & org.json
     implementation libs.square.okhttp3
-    implementation libs.rxandroid
-    implementation libs.rxjava
+    implementation libs.kotlin.coroutines.core
     implementation libs.dagger.hilt.android
     ksp libs.dagger.hilt.compiler
     ksp libs.androidx.hilt.compiler

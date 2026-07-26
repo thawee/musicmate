@@ -77,9 +77,10 @@ dependencies {
 //    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
 //	implementation deps.apache.httpclient
-    implementation libs.httpcomponents.httpmime
-    implementation libs.commons.codec
-    implementation libs.commons.logging
+     implementation libs.httpcomponents.httpmime
+     implementation libs.commons.codec
+     implementation libs.commons.logging
+     implementation libs.okhttp
 
     // MapsForge
    // implementation 'org.mapsforge:mapsforge-map-android:0.22.0'

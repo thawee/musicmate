@@ -2,9 +2,7 @@ package apincer.music.core.repository;
 
 import android.util.Log;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,10 +36,6 @@ public class MusicInfoRepository {
     ));
     // Create a single, shared OkHttpClient instance. Efficient for multiple requests.
     private final OkHttpClient httpClient = new OkHttpClient();
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    // Define the type for Jackson parsing of Wikipedia response
-    private static final TypeReference<Map<String, Object>> WIKIPEDIA_RESPONSE_TYPE = new TypeReference<Map<String, Object>>() {};
 
 
     /**
@@ -128,38 +122,26 @@ public class MusicInfoRepository {
             }
 
             String jsonString = body.string();
-            // Log the raw JSON response for debugging
-            // Log.v(TAG, "Wikipedia JSON Response: " + jsonString);
 
-            Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
-
-            // Navigate the Wikipedia JSON structure
-            @SuppressWarnings("unchecked")
-            Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
+            org.json.JSONObject responseObj = new org.json.JSONObject(jsonString);
+            org.json.JSONObject query = responseObj.optJSONObject("query");
             if (query == null) return null;
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> pages = (Map<String, Object>) query.get("pages");
-            if (pages == null || pages.isEmpty()) return null;
+            org.json.JSONObject pages = query.optJSONObject("pages");
+            if (pages == null || pages.length() == 0) return null;
 
-            // The page ID is variable, so we get the first (and likely only) page object
-            Map.Entry<String, Object> firstPageEntry = pages.entrySet().iterator().next();
-            if (firstPageEntry == null) return null;
-
-            // Check if the page actually exists (pageid -1 means not found)
-            String pageIdStr = firstPageEntry.getKey();
-            if ("-1".equals(pageIdStr)) {
-                Log.d(TAG, "Wikipedia page not found for title: " + pageTitle);
-                return null; // Page does not exist
+            String firstKey = pages.keys().next();
+            if ("-1".equals(firstKey)) {
+                return null;
             }
 
-            @SuppressWarnings("unchecked") // Safe cast based on MediaWiki API structure
-            Map<String, Object> pageData = (Map<String, Object>) firstPageEntry.getValue();
+            org.json.JSONObject pageData = pages.optJSONObject(firstKey);
             if (pageData == null) return null;
 
-            // Return the extract if present, otherwise null
-            return (String) pageData.get("extract");
+            return pageData.optString("extract", null);
 
+        } catch (org.json.JSONException e) {
+            throw new IOException("Error parsing Wikipedia JSON", e);
         }
     }
 
@@ -215,30 +197,28 @@ public class MusicInfoRepository {
             if (body == null) throw new IOException("Wikipedia Extract API returned empty body.");
 
             String jsonString = body.string();
-            Map<String, Object> responseMap = mapper.readValue(jsonString, WIKIPEDIA_RESPONSE_TYPE);
+            try {
+                org.json.JSONObject responseObj = new org.json.JSONObject(jsonString);
+                org.json.JSONObject query = responseObj.optJSONObject("query");
+                if (query == null) return null;
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> query = (Map<String, Object>) responseMap.get("query");
-            if (query == null) return null;
+                org.json.JSONObject pages = query.optJSONObject("pages");
+                if (pages == null || pages.length() == 0) return null;
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> pages = (Map<String, Object>) query.get("pages");
-            if (pages == null || pages.isEmpty()) return null;
+                String firstKey = pages.keys().next();
+                if ("-1".equals(firstKey)) {
+                    Log.d(TAG, "Wikipedia page ID -1 for title: " + bestPageTitle);
+                    return null;
+                }
 
-            Map.Entry<String, Object> firstPageEntry = pages.entrySet().iterator().next();
-            if (firstPageEntry == null) return null;
+                org.json.JSONObject pageData = pages.optJSONObject(firstKey);
+                if (pageData == null) return null;
 
-            String pageIdStr = firstPageEntry.getKey();
-            if ("-1".equals(pageIdStr)) {
-                Log.d(TAG, "Wikipedia page ID -1 for title (might be redirect issue or page deleted): " + bestPageTitle);
-                return null; // Page does not exist or wasn't resolved correctly
+                return pageData.optString("extract", null);
+            } catch (org.json.JSONException e) {
+                Log.e(TAG, "Error parsing Wikipedia JSON", e);
+                return null;
             }
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> pageData = (Map<String, Object>) firstPageEntry.getValue();
-            if (pageData == null) return null;
-
-            return (String) pageData.get("extract");
         }
     }
 
@@ -300,15 +280,20 @@ public class MusicInfoRepository {
             if (body == null) throw new IOException("Wikipedia OpenSearch API returned empty body.");
 
             String jsonString = body.string();
-            JsonNode rootNode = mapper.readTree(jsonString);
+            try {
+                org.json.JSONArray rootArray = new org.json.JSONArray(jsonString);
 
-            if (rootNode.isArray() && rootNode.size() > 1) {
-                JsonNode titles = rootNode.get(1);
-                if (titles.isArray() && titles.size() > 0) {
-                    String title = titles.get(0).asText();
-                    Log.i(TAG, "OpenSearch SUCCESS for '" + searchQuery + "'. Found: " + title);
-                    return title; // Return the first suggested title
+                if (rootArray.length() > 1) {
+                    org.json.JSONArray titles = rootArray.optJSONArray(1);
+                    if (titles != null && titles.length() > 0) {
+                        String title = titles.optString(0);
+                        Log.i(TAG, "OpenSearch SUCCESS for '" + searchQuery + "'. Found: " + title);
+                        return title; // Return the first suggested title
+                    }
                 }
+            } catch (org.json.JSONException e) {
+                Log.e(TAG, "Error parsing Wikipedia OpenSearch JSON", e);
+                return null;
             }
 
             // THIS IS THE NEW LOGGING

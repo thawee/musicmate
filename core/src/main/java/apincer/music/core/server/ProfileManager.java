@@ -4,8 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.InputStream;
 import java.util.List;
@@ -43,27 +42,43 @@ public class ProfileManager {
 
         // 2. Load from JSON
         try (InputStream is = context.getResources().openRawResource(R.raw.client_profiles)) {
-            ObjectMapper mapper = new ObjectMapper();
-            List<ClientProfile> list = mapper.readValue(is, new TypeReference<List<ClientProfile>>() {});
+            String jsonText = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            org.json.JSONArray profilesArray = new org.json.JSONArray(jsonText);
             
-            for (ClientProfile profile : list) {
-                ClientProfile finalProfile = profile;
-                // Replace placeholder with global buffer size if needed
-                if (profile.chunkSize == -1) {
-                    finalProfile = new ClientProfile(
-                            profile.name,
-                            globalBufferSize,
-                            profile.keepAlive,
-                            profile.maxConnections,
-                            profile.supportsGapless,
-                            profile.supportsHighRes,
-                            profile.supportsDirectStreaming,
-                            profile.supportsLosslessStreaming,
-                            profile.supportsBitPerfectStreaming,
-                            profile.userAgentKeywords
-                    );
+            for (int i = 0; i < profilesArray.length(); i++) {
+                org.json.JSONObject obj = profilesArray.getJSONObject(i);
+                String name = obj.optString("name", "unknown");
+                int chunkSize = obj.optInt("chunkSize", -1);
+                boolean keepAlive = obj.optBoolean("keepAlive", true);
+                int maxConnections = obj.optInt("maxConnections", 100);
+                boolean supportsGapless = obj.optBoolean("supportsGapless", false);
+                boolean supportsHighRes = obj.optBoolean("supportsHighRes", false);
+                boolean supportsDirectStreaming = obj.optBoolean("supportsDirectStreaming", false);
+                boolean supportsLosslessStreaming = obj.optBoolean("supportsLosslessStreaming", false);
+                boolean supportsBitPerfectStreaming = obj.optBoolean("supportsBitPerfectStreaming", false);
+                
+                List<String> keywords = new java.util.ArrayList<>();
+                org.json.JSONArray kwArray = obj.optJSONArray("userAgentKeywords");
+                if (kwArray != null) {
+                    for (int j = 0; j < kwArray.length(); j++) {
+                        keywords.add(kwArray.getString(j));
+                    }
                 }
-                PROFILES.put(profile.name.toLowerCase(), finalProfile);
+                
+                int finalChunkSize = (chunkSize == -1) ? globalBufferSize : chunkSize;
+                ClientProfile profile = new ClientProfile(
+                        name,
+                        finalChunkSize,
+                        keepAlive,
+                        maxConnections,
+                        supportsGapless,
+                        supportsHighRes,
+                        supportsDirectStreaming,
+                        supportsLosslessStreaming,
+                        supportsBitPerfectStreaming,
+                        keywords
+                );
+                PROFILES.put(name.toLowerCase(), profile);
             }
             Log.i(TAG, "Loaded " + PROFILES.size() + " client profiles from JSON");
         } catch (Exception e) {

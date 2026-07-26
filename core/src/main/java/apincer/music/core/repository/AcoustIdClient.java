@@ -5,9 +5,6 @@ import android.util.Log;
 import com.antonkarpenko.ffmpegkit.FFmpegKit;
 import com.antonkarpenko.ffmpegkit.FFmpegSession;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 import okhttp3.HttpUrl;
@@ -22,11 +19,9 @@ public class AcoustIdClient {
     private static final String CLIENT_KEY = "8XaBELgH"; 
 
     private final OkHttpClient httpClient;
-    private final ObjectMapper mapper;
 
     public AcoustIdClient() {
         this.httpClient = new OkHttpClient();
-        this.mapper = new ObjectMapper();
     }
 
     /**
@@ -59,20 +54,20 @@ public class AcoustIdClient {
                     return null;
                 }
 
-                JsonNode root = mapper.readTree(response.body().string());
-                if (!"ok".equals(root.path("status").asText())) {
+                org.json.JSONObject root = new org.json.JSONObject(response.body().string());
+                if (!"ok".equals(root.optString("status"))) {
                     return null;
                 }
 
-                JsonNode results = root.path("results");
-                if (results.isArray() && results.size() > 0) {
-                    JsonNode recordings = results.get(0).path("recordings");
-                    if (recordings.isArray() && recordings.size() > 0) {
-                        return recordings.get(0).path("id").asText(null);
+                org.json.JSONArray results = root.optJSONArray("results");
+                if (results != null && results.length() > 0) {
+                    org.json.JSONArray recordings = results.getJSONObject(0).optJSONArray("recordings");
+                    if (recordings != null && recordings.length() > 0) {
+                        return recordings.getJSONObject(0).optString("id", null);
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error looking up AcoustID", e);
         }
 

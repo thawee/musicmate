@@ -5,9 +5,7 @@ import java.util.Optional;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.PlaybackState;
-import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Consumer;
+import java.util.function.Consumer;
 
 public interface PlaybackService {
     // Define custom action strings for the Intent
@@ -41,14 +39,14 @@ public interface PlaybackService {
 
     void onPlaybackStateElapsedTime(long elapsedTimeMS);
 
-    @NonNull Disposable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
+    AutoCloseable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
 
-    @NonNull Disposable subscribeNowPlayingSong(
+    AutoCloseable subscribeNowPlayingSong(
             Consumer<Optional<Track>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     );
 
-    @NonNull Disposable subscribePlaybackTarget(
+    AutoCloseable subscribePlaybackTarget(
             Consumer<Optional<PlaybackTarget>> consumer,
             Consumer<Throwable> onErrorConsumer);
 

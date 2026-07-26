@@ -75,7 +75,9 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import kotlinx.coroutines.flow.MutableStateFlow;
+import kotlinx.coroutines.flow.StateFlow;
+import kotlinx.coroutines.flow.StateFlowKt;
 
 /**
  * DLNA Media Server consists of
@@ -115,7 +117,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
     private PlaybackCallback callback;
 
     @Override
-    public BehaviorSubject<ServerStatus> getStatus() {
+    public StateFlow<ServerStatus> getStatus() {
         return serverStatus;
     }
     private final Map<String, PlaybackTarget> availableTargets = new ConcurrentHashMap<>();
@@ -125,7 +127,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
     protected LocalDevice mediaServerDevice;
     private boolean initialized;
 
-    private final BehaviorSubject<ServerStatus> serverStatus = BehaviorSubject.createDefault(ServerStatus.STOPPED);
+    private final MutableStateFlow<ServerStatus> serverStatus = StateFlowKt.MutableStateFlow(ServerStatus.STOPPED);
 
     // Scheduler for polling tasks
     private ScheduledExecutorService scheduler;
@@ -507,13 +509,13 @@ public class MediaServerHubImplOld implements MediaServerHub {
                 startPeriodicDiscovery();
 
                 initialized = true;
-                serverStatus.onNext(ServerStatus.RUNNING);
+                serverStatus.setValue(ServerStatus.RUNNING);
 
                 Log.i(TAG, "UPnP started");
 
             } catch (Exception e) {
                 Log.e(TAG, "Start failed", e);
-                serverStatus.onNext(ServerStatus.ERROR);
+                serverStatus.setValue(ServerStatus.ERROR);
             } finally {
                 isStarting.set(false);
             }
@@ -571,7 +573,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
             }
 
             initialized = false;
-            serverStatus.onNext(ServerStatus.STOPPED);
+            serverStatus.setValue(ServerStatus.STOPPED);
 
             Log.i(TAG, "UPnP stopped");
 
@@ -587,7 +589,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if(!isInitialized()) {
                     initialize(); // Your existing initialize method
-                    serverStatus.onNext(ServerStatus.RUNNING);
+                    serverStatus.setValue(ServerStatus.RUNNING);
 
                    // if (isInitialized()) {
                         upnpExecutor.execute(() -> {
@@ -604,7 +606,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
                             startPeriodicDiscovery();
                         });
                  //   } else {
-                //        serverStatus.onNext(ServerStatus.ERROR);
+                //        serverStatus.setValue(ServerStatus.ERROR);
                  //   }
 
                     acquireLocks(); // Keep the CPU and Wi-Fi awake
@@ -694,7 +696,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
                     upnpService.shutdown();
                     upnpService = null;
                 }
-                serverStatus.onNext(ServerStatus.STOPPED);
+                serverStatus.setValue(ServerStatus.STOPPED);
                 stopPeriodicDiscovery();
             });
             stopNetworkMonitoring();

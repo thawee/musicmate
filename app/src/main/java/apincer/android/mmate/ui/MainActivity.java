@@ -88,8 +88,6 @@ import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import org.apache.commons.text.WordUtils;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1151,7 +1149,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (String sid : storageIds) {
             Button btn = new Button(getApplicationContext());
-            btn.setText("+"+ WordUtils.capitalize(sid));
+            btn.setText("+"+ StringUtils.capitalize(sid));
             btn.setAllCaps(false);
             btnAddPanel.addView(btn);
 

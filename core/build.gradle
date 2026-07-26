@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.devtools.ksp)
     alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -45,8 +46,7 @@ dependencies {
     implementation libs.androidx.work
     implementation libs.androidx.preference
 
-    implementation libs.rxandroid
-    implementation libs.rxjava
+    // rxandroid/rxjava removed - migrated to Kotlin StateFlow/coroutines
     implementation libs.dagger.hilt.android
     ksp libs.dagger.hilt.compiler
 
@@ -59,11 +59,13 @@ dependencies {
 
     //others
     implementation libs.commons.codec
-    implementation libs.commons.io
+    implementation libs.commons.lang3
     implementation libs.commons.match3
-    implementation libs.commons.text
-    implementation libs.jackson.core
-    implementation libs.jackson.databind
+    implementation libs.kotlin.coroutines.core
+    // commons-io removed - replaced with Java NIO (migration complete)
+    // commons-text removed - StringUtils.capitalize() in core replaces all usages
+    // jackson removed - migrated to kotlinx.serialization & org.json
+    implementation libs.kotlinx.serialization.json
     implementation libs.square.okhttp3
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio

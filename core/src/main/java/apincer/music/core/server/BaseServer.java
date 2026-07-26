@@ -17,9 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.File;
 import java.net.URLDecoder;
@@ -61,7 +59,6 @@ import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
-import io.reactivex.rxjava3.disposables.Disposable;
 
 public class BaseServer {
     private static final String TAG = "BaseServer";
@@ -85,9 +82,9 @@ public class BaseServer {
     private PlaybackCallback playbackCallback;
     private final QueueManager queueManager;
 
-    Disposable nowPlayingDisposable;
-    Disposable playbackDisposable;
-    Disposable playbackStateDisposable;
+    AutoCloseable nowPlayingSubscription;
+    AutoCloseable playbackSubscription;
+    AutoCloseable playbackStateSubscription;
 
     public BaseServer(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
@@ -106,9 +103,9 @@ public class BaseServer {
     private PlaybackService playbackService;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
-        Disposable nowPlayingDisposable;
-        Disposable playbackDisposable;
-        Disposable playbackState;
+        AutoCloseable nowPlayingSubscription;
+        AutoCloseable playbackSubscription;
+        AutoCloseable playbackStateSubscription;
 
         @SuppressLint("CheckResult")
         @Override
@@ -118,7 +115,7 @@ public class BaseServer {
             playbackService = binder.getPlaybackService();
             if(playbackCallback != null) {
                 //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-                nowPlayingDisposable = playbackService.subscribeNowPlayingSong(
+                nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
                         // onNext
                         mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
 
@@ -129,7 +126,7 @@ public class BaseServer {
                         }
                 );
                // playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
-                playbackDisposable = playbackService.subscribePlaybackTarget(
+                playbackSubscription = playbackService.subscribePlaybackTarget(
                         // onNext
                         playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
 
@@ -140,7 +137,7 @@ public class BaseServer {
                         }
                 );
                 //playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
-                playbackState =playbackService.subscribePlaybackState(
+                playbackStateSubscription = playbackService.subscribePlaybackState(
                         // onNext
                         playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
 
@@ -156,28 +153,28 @@ public class BaseServer {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             playbackService = null;
-            if (playbackState != null && !playbackState.isDisposed()) {
-                playbackState.dispose();
+            if (playbackStateSubscription != null) {
+                try { playbackStateSubscription.close(); } catch (Exception ignored) {}
             }
-            if (playbackDisposable != null && !playbackDisposable.isDisposed()) {
-                playbackDisposable.dispose();
+            if (playbackSubscription != null) {
+                try { playbackSubscription.close(); } catch (Exception ignored) {}
             }
-            if (nowPlayingDisposable != null && !nowPlayingDisposable.isDisposed()) {
-                nowPlayingDisposable.dispose();
+            if (nowPlayingSubscription != null) {
+                try { nowPlayingSubscription.close(); } catch (Exception ignored) {}
             }
         }
     };
 
     public void destroy() {
         // Dispose all subscriptions before unbinding
-        if (nowPlayingDisposable != null && !nowPlayingDisposable.isDisposed()) {
-            nowPlayingDisposable.dispose();
+        if (nowPlayingSubscription != null) {
+            try { nowPlayingSubscription.close(); } catch (Exception ignored) {}
         }
-        if (playbackDisposable != null && !playbackDisposable.isDisposed()) {
-            playbackDisposable.dispose();
+        if (playbackSubscription != null) {
+            try { playbackSubscription.close(); } catch (Exception ignored) {}
         }
-        if (playbackStateDisposable != null && !playbackStateDisposable.isDisposed()) {
-            playbackStateDisposable.dispose();
+        if (playbackStateSubscription != null) {
+            try { playbackStateSubscription.close(); } catch (Exception ignored) {}
         }
 
         if(playbackService != null) {
@@ -433,7 +430,7 @@ public class BaseServer {
         this.playbackCallback = callback;
         if(playbackService != null) {
             //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-            nowPlayingDisposable = playbackService.subscribeNowPlayingSong(
+            nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
                     // onNext
                     mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
 
@@ -442,7 +439,7 @@ public class BaseServer {
                         // Now you log the error instead of crashing!
                         Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
                     });
-            playbackDisposable = playbackService.subscribePlaybackTarget(
+            playbackSubscription = playbackService.subscribePlaybackTarget(
                     playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
 
                     // onError
@@ -450,7 +447,7 @@ public class BaseServer {
                         // Now you log the error instead of crashing!
                         Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
                     });
-            playbackStateDisposable =  playbackService.subscribePlaybackState(
+            playbackStateSubscription =  playbackService.subscribePlaybackState(
                     playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
 
                     // onError
@@ -469,8 +466,7 @@ public class BaseServer {
         final int cacheSize = 256; // Bounded to 256 entries to prevent OOM
         private PlaybackState currentPlaybackState;
 
-        protected static final ObjectMapper MAPPER = new ObjectMapper()
-                .setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
+
 
         /**
          * Constructs the WebSocket content handler.
@@ -485,9 +481,9 @@ public class BaseServer {
                     Map<String, Object> response = getNowPlaying(track);
                     if (response != null) {
                         try {
-                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
                             broadcastMessage(jsonResponse);
-                        } catch (JsonProcessingException e) {
+                        } catch (Exception e) {
                             Log.e(TAG, "Error serializing nowPlaying", e);
                         }
 
@@ -501,9 +497,9 @@ public class BaseServer {
                     Map<String, Object> response = getPlaybackState(state);
                     if (response != null) {
                         try {
-                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
                             broadcastMessage(jsonResponse);
-                        } catch (JsonProcessingException e) {
+                        } catch (Exception e) {
                             Log.e(TAG, "Error serializing playbackState", e);
                         }
                     }
@@ -514,9 +510,9 @@ public class BaseServer {
                     Map<String, Object> response = getPlaybackTarget(playbackTarget);
                     if (response != null) {
                         try {
-                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
                             broadcastMessage(jsonResponse);
-                        } catch (JsonProcessingException e) {
+                        } catch (Exception e) {
                             Log.e(TAG, "Error serializing playbackTarget", e);
                         }
                         //Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
@@ -542,7 +538,7 @@ public class BaseServer {
                 Log.w(TAG, "Received websocket null command");
                 return null;
             }
-           // Log.d(TAG, "Received websocket command: " + command);
+            Log.d(TAG, "Received websocket command: " + command + " message: " + message);
 
             try {
                 switch (command) {
@@ -1286,10 +1282,14 @@ public class BaseServer {
         public List<Map<String, Object>> getWelcomeMessages() {
            // Log.d(TAG, TAG+" - Connected Messages:");
             List<Map<String, Object>> messages = new ArrayList<>();
-            messages.add(getLibraryStats());
-            messages.add(getAvailableRenderers());
-            messages.add(sendNowPlaying());
-            messages.add(sendQueueUpdate());
+            Map<String, Object> stats = getLibraryStats();
+            if (stats != null) messages.add(stats);
+            Map<String, Object> renderers = getAvailableRenderers();
+            if (renderers != null) messages.add(renderers);
+            Map<String, Object> nowPlaying = sendNowPlaying();
+            if (nowPlaying != null) messages.add(nowPlaying);
+            // Send empty or partial queue on welcome to avoid saturating NIO socket buffer with 2000+ track objects
+            messages.add(Map.of("type", "updateQueue", "path", "Playing Queue", "queue", Collections.emptyList()));
 
             return messages;
         }

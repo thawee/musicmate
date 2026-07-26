@@ -42,8 +42,6 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Locale;
@@ -122,7 +120,9 @@ public class IconProviders {
 
                // Bitmap bitmap = BitmapHelper.createHexagonBitmap(400, 400); // createTrackQualityIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
+                try (var out = Files.newOutputStream(pathFile.toPath())) {
+                    out.write(is);
+                }
             } catch (Exception e) {
                 Log.e(TAG,"getTrackQualityIcon",e);
             }
@@ -183,7 +183,9 @@ public class IconProviders {
 
                 Bitmap bitmap = createFileResolutionIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
+                try (var out = Files.newOutputStream(pathFile.toPath())) {
+                    out.write(is);
+                }
             } catch (Exception e) {
                 Log.e(TAG,"getEncResolutionIcon",e);
             }
@@ -222,7 +224,9 @@ public class IconProviders {
 
                 Bitmap bitmap = createEncodingSamplingRateIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
+                try (var out = Files.newOutputStream(pathFile.toPath())) {
+                    out.write(is);
+                }
             } catch (Exception e) {
                 Log.e(TAG,"getEncResolutionIcon",e);
             }
@@ -248,7 +252,9 @@ public class IconProviders {
                 Bitmap bitmap = createSourceQualityIcon(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 //if(is!=null) {
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
+                try (var out = Files.newOutputStream(pathFile.toPath())) {
+                    out.write(is);
+                } //new FileOutputStream(pathFile));
                 //}
             } catch (Exception e) {
                 Log.e(TAG,"getSourceQualityIcon",e);
@@ -275,7 +281,9 @@ public class IconProviders {
                 Bitmap bitmap = createSourceQualityIconMini(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 //if(is!=null) {
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
+                try (var out = Files.newOutputStream(pathFile.toPath())) {
+                    out.write(is);
+                } //new FileOutputStream(pathFile));
                 //}
             } catch (Exception e) {
                 Log.e(TAG,"getSourceQualityIconMini",e);

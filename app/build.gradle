@@ -152,13 +152,13 @@ dependencies {
     implementation libs.androidx.media3.ui
 
     implementation libs.kotlin.stdlib
-    implementation libs.kotlin.stdlib.jdk8
+    //libs.kotlin.stdlib.jdk8 removed - unnecessary with Kotlin 2.x
     implementation libs.kotlin.coroutines.core
     implementation libs.kotlinx.serialization.core
 
     // google
     implementation libs.google.material
-    implementation libs.google.guava
+    //libs.google.guava removed - unused
 
     // hilt
     implementation libs.dagger.hilt.android
@@ -167,15 +167,15 @@ dependencies {
     ksp libs.androidx.hilt.compiler
 
     // UI Libs
-    implementation libs.skydoves.progressview
-    implementation libs.skydoves.androidribbon
-    implementation libs.skydoves.elasticviews
+    //libs.skydoves.progressview removed - unused
+    //libs.skydoves.androidribbon removed - unused
+    //libs.skydoves.elasticviews removed - unused
     implementation libs.iwgang.simplifyspan
     implementation libs.androidfastscroll.kt
     implementation libs.chrisbanes.photoview
     implementation libs.philjay.mpandroidchart
     implementation libs.vanniktech.textbuilder
-    implementation libs.sparrow007.carouselrecyclerview // for reflectioncontainer
+    implementation libs.sparrow007.carouselrecyclerview
     implementation libs.tutorialsandroid.filepicker
     implementation libs.zxing.core
     //implementation libs.commonmark
@@ -184,24 +184,22 @@ dependencies {
     implementation libs.anggrayudi.storage
 
     implementation libs.commons.codec
-    implementation libs.commons.io
-    implementation libs.commons.logging
+    //libs.commons.io removed - replaced with Java standard I/O
+    // commons-logging removed - SLF4J (slf4j-api) is already present and preferred
     implementation libs.commons.lang3
-    implementation libs.commons.text
+    //libs.commons.text removed - replaced with StringUtils.capitalize()
     implementation libs.commons.match3
 
-    implementation libs.jackson.core
-    implementation libs.jackson.databind
+    // jackson removed - migrated to kotlinx.serialization & org.json
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation libs.log4j.api
+    //libs.log4j.api removed - unused
     implementation libs.square.okhttp3
     implementation libs.coilkt.coil3
     implementation libs.coilkt.coil3.network
-    implementation libs.rxandroid
-    implementation libs.rxjava
+    // rxandroid/rxjava removed - migrated to Kotlin StateFlow/coroutines
 
-    implementation libs.iirj
+    //libs.iirj removed - unused
     implementation libs.markwon.core
     implementation libs.markwon.html
 

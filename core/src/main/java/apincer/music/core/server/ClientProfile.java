@@ -1,13 +1,11 @@
 package apincer.music.core.server;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import kotlinx.serialization.Serializable;
 
 import java.util.Collections;
 import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 public class ClientProfile {
     public final String name;
     public final int chunkSize;
@@ -24,17 +22,16 @@ public class ClientProfile {
     // Detection Keywords
     public final List<String> userAgentKeywords;
 
-    @JsonCreator
-    public ClientProfile(@JsonProperty("name") String name,
-                         @JsonProperty("chunkSize") int chunkSize,
-                         @JsonProperty("keepAlive") boolean keepAlive,
-                         @JsonProperty("maxConnections") int maxConnections,
-                         @JsonProperty("supportsGapless") boolean supportsGapless,
-                         @JsonProperty("supportsHighRes") boolean supportsHighRes,
-                         @JsonProperty("supportsDirectStreaming") boolean supportsDirectStreaming,
-                         @JsonProperty("supportsLosslessStreaming") boolean supportsLosslessStreaming,
-                         @JsonProperty("supportsBitPerfectStreaming") boolean supportsBitPerfectStreaming,
-                         @JsonProperty("userAgentKeywords") List<String> userAgentKeywords) {
+    public ClientProfile(String name,
+                         int chunkSize,
+                         boolean keepAlive,
+                         int maxConnections,
+                         boolean supportsGapless,
+                         boolean supportsHighRes,
+                         boolean supportsDirectStreaming,
+                         boolean supportsLosslessStreaming,
+                         boolean supportsBitPerfectStreaming,
+                         List<String> userAgentKeywords) {
         this.name = name;
         this.chunkSize = chunkSize;
         this.keepAlive = keepAlive;

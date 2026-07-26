@@ -60,7 +60,9 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import kotlinx.coroutines.flow.MutableStateFlow;
+import kotlinx.coroutines.flow.StateFlow;
+import kotlinx.coroutines.flow.StateFlowKt;
 
 /**
  * Core implementation of the {@link MediaServerHub} providing UPnP/DLNA integration.
@@ -105,7 +107,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     private Service currentAVTransport; // Add this line
     PlaybackCallback playbackCallback;
 
-    private final BehaviorSubject<ServerStatus> serverStatus = BehaviorSubject.createDefault(ServerStatus.RUNNING);
+    private final MutableStateFlow<ServerStatus> serverStatus = StateFlowKt.MutableStateFlow(ServerStatus.RUNNING);
 
     private final Map<String, PlaybackTarget> localTargets = new ConcurrentHashMap<>();
     private final Set<String> subscribedDevices = new HashSet<>();
@@ -314,7 +316,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
-    public BehaviorSubject<ServerStatus> getStatus() {
+    public StateFlow<ServerStatus> getStatus() {
         return serverStatus;
     }
 
@@ -724,7 +726,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void success(ActionInvocation invocation) {
                         // Force the UI to reflect "Playing" immediately
-                        serverStatus.onNext(ServerStatus.CAST);
+                        serverStatus.setValue(ServerStatus.CAST);
                         startPolling(currentAVTransport);
 
                         // Get the next song from your repository/queue
@@ -1285,7 +1287,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             Matcher m = STATE_PATTERN.matcher(xml);
             String state = m.find() ? m.group(1) : null;
             if ("PLAYING".equalsIgnoreCase(state)) {
-                serverStatus.onNext(ServerStatus.CAST);
+                serverStatus.setValue(ServerStatus.CAST);
 
                 // 1. Music is back! Cancel the "kill" timer
                 cancelPauseTimeout();
@@ -1298,7 +1300,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             else if ("STOPPED".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state)) {
                 //else if (xml.contains("value=\"STOPPED\"") || xml.contains("value=\"PAUSED\"")) {
                 stopPolling();
-                serverStatus.onNext(ServerStatus.RUNNING);
+                serverStatus.setValue(ServerStatus.RUNNING);
 
                 // If the speaker stopped, and it can't handle gapless transitions itself,
                 // we manually trigger the next song.
@@ -1309,7 +1311,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 }
                 //}else if (hasPosition && !xml.contains("value=\"STOPPED\"")) {
             }else if (hasPosition && !"STOPPED".equalsIgnoreCase(state)) {
-                serverStatus.onNext(ServerStatus.CAST);
+                serverStatus.setValue(ServerStatus.CAST);
             }
 
             // Check if the URI changed (Meaning the renderer jumped to the next track)

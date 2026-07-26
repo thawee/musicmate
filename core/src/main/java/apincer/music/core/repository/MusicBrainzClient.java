@@ -2,8 +2,7 @@ package apincer.music.core.repository;
 
 import android.util.Log;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -30,11 +29,9 @@ public class MusicBrainzClient {
     ));
 
     private final OkHttpClient httpClient;
-    private final ObjectMapper mapper;
 
     public MusicBrainzClient() {
         this.httpClient = new OkHttpClient();
-        this.mapper = new ObjectMapper();
     }
 
     private void enforceRateLimit() {
@@ -101,13 +98,13 @@ public class MusicBrainzClient {
                     return null;
                 }
                 
-                JsonNode root = mapper.readTree(response.body().string());
-                JsonNode recordings = root.path("recordings");
-                if (recordings.isArray() && recordings.size() > 0) {
-                    return recordings.get(0).path("id").asText(null);
+                org.json.JSONObject root = new org.json.JSONObject(response.body().string());
+                org.json.JSONArray recordings = root.optJSONArray("recordings");
+                if (recordings != null && recordings.length() > 0) {
+                    return recordings.getJSONObject(0).optString("id", null);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error fetching from MusicBrainz", e);
         }
         return null;
@@ -137,35 +134,36 @@ public class MusicBrainzClient {
                     return null;
                 }
 
-                JsonNode root = mapper.readTree(response.body().string());
+                org.json.JSONObject root = new org.json.JSONObject(response.body().string());
                 MusicBrainzMetadata metadata = new MusicBrainzMetadata();
-                metadata.title = root.path("title").asText(null);
+                metadata.title = root.optString("title", null);
                 
                 // Parse artist
-                JsonNode artistCredit = root.path("artist-credit");
-                if (artistCredit.isArray() && artistCredit.size() > 0) {
-                    metadata.artist = artistCredit.get(0).path("name").asText(null);
+                org.json.JSONArray artistCredit = root.optJSONArray("artist-credit");
+                if (artistCredit != null && artistCredit.length() > 0) {
+                    metadata.artist = artistCredit.getJSONObject(0).optString("name", null);
                 }
 
                 // Parse release/album using a scoring system to select the best release (e.g. official studio album)
-                JsonNode releases = root.path("releases");
-                if (releases.isArray() && releases.size() > 0) {
-                    JsonNode bestRelease = null;
+                org.json.JSONArray releases = root.optJSONArray("releases");
+                if (releases != null && releases.length() > 0) {
+                    org.json.JSONObject bestRelease = null;
                     int maxScore = Integer.MIN_VALUE;
                     String earliestDate = null;
 
-                    for (JsonNode release : releases) {
+                    for (int i = 0; i < releases.length(); i++) {
+                        org.json.JSONObject release = releases.getJSONObject(i);
                         int score = 0;
 
                         // 1. Status: Prefer "Official" releases
-                        String status = release.path("status").asText("");
+                        String status = release.optString("status", "");
                         if ("Official".equalsIgnoreCase(status)) {
                             score += 100;
                         }
 
                         // 2. Primary Type: Prefer Album -> EP -> Single
-                        JsonNode releaseGroup = release.path("release-group");
-                        String primaryType = releaseGroup.path("primary-type").asText("");
+                        org.json.JSONObject releaseGroup = release.optJSONObject("release-group");
+                        String primaryType = releaseGroup != null ? releaseGroup.optString("primary-type", "") : "";
                         if ("Album".equalsIgnoreCase(primaryType)) {
                             score += 50;
                         } else if ("EP".equalsIgnoreCase(primaryType)) {
@@ -175,32 +173,34 @@ public class MusicBrainzClient {
                         }
 
                         // 3. Secondary Types: Deprioritize Compilation, Live, Remix, Soundtrack
-                        JsonNode secondaryTypes = releaseGroup.path("secondary-types");
-                        if (secondaryTypes.isArray()) {
-                            for (JsonNode typeNode : secondaryTypes) {
-                                String secType = typeNode.asText("");
-                                if ("Compilation".equalsIgnoreCase(secType)) {
-                                    score -= 30;
-                                } else if ("Live".equalsIgnoreCase(secType)) {
-                                    score -= 20;
-                                } else if ("Remix".equalsIgnoreCase(secType)) {
-                                    score -= 20;
-                                } else if ("Soundtrack".equalsIgnoreCase(secType)) {
-                                    score -= 10;
+                        if (releaseGroup != null) {
+                            org.json.JSONArray secondaryTypes = releaseGroup.optJSONArray("secondary-types");
+                            if (secondaryTypes != null) {
+                                for (int j = 0; j < secondaryTypes.length(); j++) {
+                                    String secType = secondaryTypes.optString(j, "");
+                                    if ("Compilation".equalsIgnoreCase(secType)) {
+                                        score -= 30;
+                                    } else if ("Live".equalsIgnoreCase(secType)) {
+                                        score -= 20;
+                                    } else if ("Remix".equalsIgnoreCase(secType)) {
+                                        score -= 20;
+                                    } else if ("Soundtrack".equalsIgnoreCase(secType)) {
+                                        score -= 10;
+                                    }
                                 }
                             }
                         }
 
                         // 4. Cover Art availability: Prefer releases with front/artwork cover art
-                        JsonNode caa = release.path("cover-art-archive");
-                        if (caa.path("front").asBoolean(false)) {
+                        org.json.JSONObject caa = release.optJSONObject("cover-art-archive");
+                        if (caa != null && caa.optBoolean("front", false)) {
                             score += 80;
-                        } else if (caa.path("artwork").asBoolean(false)) {
+                        } else if (caa != null && caa.optBoolean("artwork", false)) {
                             score += 40;
                         }
 
                         // 5. Has date/year
-                        String date = release.path("date").asText("");
+                        String date = release.optString("date", "");
                         if (!date.isBlank()) {
                             score += 5;
                         }
@@ -229,9 +229,9 @@ public class MusicBrainzClient {
                     }
 
                     if (bestRelease != null) {
-                        metadata.album = bestRelease.path("title").asText(null);
-                        metadata.releaseId = bestRelease.path("id").asText(null);
-                        metadata.year = bestRelease.path("date").asText(null); // Often YYYY-MM-DD
+                        metadata.album = bestRelease.optString("title", null);
+                        metadata.releaseId = bestRelease.optString("id", null);
+                        metadata.year = bestRelease.optString("date", null); // Often YYYY-MM-DD
                         if (metadata.year != null && metadata.year.length() > 4) {
                             metadata.year = metadata.year.substring(0, 4);
                         }
@@ -239,27 +239,19 @@ public class MusicBrainzClient {
                 }
 
                 // Parse genres, skipping generic folksonomy/non-genre tags if possible
-                JsonNode genres = root.path("genres");
-                if (genres.isArray() && genres.size() > 0) {
+                org.json.JSONArray genres = root.optJSONArray("genres");
+                if (genres != null && genres.length() > 0) {
                     String selectedGenre = null;
-                    for (JsonNode genreNode : genres) {
-                        String genreName = genreNode.path("name").asText(null);
+                    for (int i = 0; i < genres.length(); i++) {
+                        org.json.JSONObject genreNode = genres.getJSONObject(i);
+                        String genreName = genreNode.optString("name", null);
                         if (genreName != null && !genreName.isBlank()) {
                             String lowerGenre = genreName.trim().toLowerCase(java.util.Locale.ROOT);
                             if (!GENERIC_GENRES.contains(lowerGenre)) {
                                 selectedGenre = genreName.trim();
                                 break;
-                            }
-                        }
-                    }
-                    
-                    // Fallback to the first available genre tag if all tags are generic/blocked
-                    if (selectedGenre == null) {
-                        for (JsonNode genreNode : genres) {
-                            String genreName = genreNode.path("name").asText(null);
-                            if (genreName != null && !genreName.isBlank()) {
+                            } else if (selectedGenre == null) {
                                 selectedGenre = genreName.trim();
-                                break;
                             }
                         }
                     }
@@ -272,7 +264,7 @@ public class MusicBrainzClient {
 
                 return metadata;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error fetching recording details from MusicBrainz", e);
         }
         return null;
@@ -308,7 +300,7 @@ public class MusicBrainzClient {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.w(TAG, "Failed to download front-500 thumbnail, trying fallback", e);
         }
 
@@ -326,24 +318,32 @@ public class MusicBrainzClient {
                     return false;
                 }
                 
-                JsonNode root = mapper.readTree(response.body().string());
-                JsonNode images = root.path("images");
-                if (images.isArray() && images.size() > 0) {
+                org.json.JSONObject root = new org.json.JSONObject(response.body().string());
+                org.json.JSONArray images = root.optJSONArray("images");
+                if (images != null && images.length() > 0) {
                     String imageUrl = null;
                     // Try to find any image marked as front, otherwise fallback to the first available image
-                    for (JsonNode image : images) {
-                        if (image.path("front").asBoolean()) {
-                            imageUrl = image.path("thumbnails").path("500").asText(null);
+                    for (int i = 0; i < images.length(); i++) {
+                        org.json.JSONObject image = images.getJSONObject(i);
+                        if (image.optBoolean("front", false)) {
+                            org.json.JSONObject thumbs = image.optJSONObject("thumbnails");
+                            if (thumbs != null) {
+                                imageUrl = thumbs.optString("500", null);
+                            }
                             if (imageUrl == null) {
-                                imageUrl = image.path("image").asText(null);
+                                imageUrl = image.optString("image", null);
                             }
                             break;
                         }
                     }
                     if (imageUrl == null) {
-                        imageUrl = images.get(0).path("thumbnails").path("500").asText(null);
+                        org.json.JSONObject firstImg = images.getJSONObject(0);
+                        org.json.JSONObject thumbs = firstImg.optJSONObject("thumbnails");
+                        if (thumbs != null) {
+                            imageUrl = thumbs.optString("500", null);
+                        }
                         if (imageUrl == null) {
-                            imageUrl = images.get(0).path("image").asText(null);
+                            imageUrl = firstImg.optString("image", null);
                         }
                     }
                     
@@ -368,7 +368,7 @@ public class MusicBrainzClient {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error downloading cover art in fallback mode", e);
         }
         return false;
@@ -402,32 +402,35 @@ public class MusicBrainzClient {
                     return results;
                 }
                 
-                JsonNode root = mapper.readTree(response.body().string());
-                JsonNode recordings = root.path("recordings");
-                if (recordings.isArray()) {
-                    for (JsonNode rec : recordings) {
+                org.json.JSONObject root = new org.json.JSONObject(response.body().string());
+                org.json.JSONArray recordings = root.optJSONArray("recordings");
+                if (recordings != null) {
+                    for (int i = 0; i < recordings.length(); i++) {
+                        org.json.JSONObject rec = recordings.getJSONObject(i);
                         MusicBrainzSearchResult res = new MusicBrainzSearchResult();
-                        res.recordingId = rec.path("id").asText(null);
-                        res.title = rec.path("title").asText(null);
+                        res.recordingId = rec.optString("id", null);
+                        res.title = rec.optString("title", null);
                         
                         // Parse artist
-                        JsonNode artistCredit = rec.path("artist-credit");
-                        if (artistCredit.isArray() && artistCredit.size() > 0) {
-                            res.artist = artistCredit.get(0).path("name").asText(null);
+                        org.json.JSONArray artistCredit = rec.optJSONArray("artist-credit");
+                        if (artistCredit != null && artistCredit.length() > 0) {
+                            res.artist = artistCredit.getJSONObject(0).optString("name", null);
                         }
                         
                         // Parse releases
-                        JsonNode releases = rec.path("releases");
-                        if (releases.isArray() && releases.size() > 0) {
+                        org.json.JSONArray releases = rec.optJSONArray("releases");
+                        if (releases != null && releases.length() > 0) {
                             // Find the best release if possible, or fallback to the first
-                            JsonNode bestRelease = releases.get(0);
+                            org.json.JSONObject bestRelease = releases.getJSONObject(0);
                             int maxScore = Integer.MIN_VALUE;
-                            for (JsonNode rel : releases) {
+                            for (int j = 0; j < releases.length(); j++) {
+                                org.json.JSONObject rel = releases.getJSONObject(j);
                                 int score = 0;
-                                String status = rel.path("status").asText("");
+                                String status = rel.optString("status", "");
                                 if ("Official".equalsIgnoreCase(status)) score += 10;
                                 
-                                String primType = rel.path("release-group").path("primary-type").asText("");
+                                org.json.JSONObject relGrp = rel.optJSONObject("release-group");
+                                String primType = relGrp != null ? relGrp.optString("primary-type", "") : "";
                                 if ("Album".equalsIgnoreCase(primType)) score += 5;
                                 
                                 if (score > maxScore) {
@@ -436,9 +439,9 @@ public class MusicBrainzClient {
                                 }
                             }
                             
-                            res.album = bestRelease.path("title").asText(null);
-                            res.releaseId = bestRelease.path("id").asText(null);
-                            res.year = bestRelease.path("date").asText(null);
+                            res.album = bestRelease.optString("title", null);
+                            res.releaseId = bestRelease.optString("id", null);
+                            res.year = bestRelease.optString("date", null);
                             if (res.year != null && res.year.length() > 4) {
                                 res.year = res.year.substring(0, 4);
                             }
@@ -447,7 +450,7 @@ public class MusicBrainzClient {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error performing search list from MusicBrainz", e);
         }
         return results;

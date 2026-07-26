@@ -6,8 +6,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
 
-import org.apache.commons.text.WordUtils;
-
 import java.text.Normalizer;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -21,6 +19,28 @@ import apincer.android.storage.StorageVolume;
 import apincer.music.core.model.Track;
 
 public class StringUtils {
+
+    /**
+     * Capitalizes the first letter of each word in a string.
+     * Replaces org.apache.commons.text.WordUtils.capitalize().
+     */
+    public static String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        StringBuilder result = new StringBuilder(str.length());
+        boolean capitalizeNext = true;
+        for (char c : str.toCharArray()) {
+            if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+                result.append(c);
+            } else if (capitalizeNext) {
+                result.append(Character.toTitleCase(c));
+                capitalizeNext = false;
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
     // ·  \u00b7
     // ♪   \u266A
     // ♬  \u266C
@@ -396,7 +416,7 @@ public class StringUtils {
         if(str.startsWith("\\\"") && str.endsWith("\\\"")) {
             str = str.substring(2, str.length()-2);
         }
-        return WordUtils.capitalize(str);
+        return StringUtils.capitalize(str);
     }
 
     public static String formatFilePath(CharSequence text) {
@@ -416,7 +436,7 @@ public class StringUtils {
         if(str.startsWith("\\\"") && str.endsWith("\\\"")) {
             str = str.substring(2, str.length()-2);
         }
-        return WordUtils.capitalize(str);
+        return StringUtils.capitalize(str);
     }
 
     /**

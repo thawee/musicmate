@@ -85,11 +85,12 @@ cd /Users/thawee.p/Workspaces/github/musicmate
 
 ## ✅ **Production Ready**
 
-HttpCore is now officially **"Production Grade"** and can be used alongside:
-- ✅ SonicNIO (Balanced/Optimized)
-- ✅ Jetty 12 (Feature-Complete)
-- ✅ Undertow (Audiophile Hi-Res)
-- ✅ Netty (Scalability)
+HttpCore is now officially **"Production Grade"** and ships alongside the other actively maintained engines:
+- ✅ SonicNIO (Default · Balanced/Optimized)
+- ✅ CoreHTTP (Ultra-Low Memory)
+- ✅ Netty (High Throughput / Scalability)
+
+The Jetty 12 and Undertow engines remain buildable but are **archived** (no further updates).
 
 **Best use case for HttpCore**: Ultra-low memory constrained devices where ~64 KB/connection is critical.
 

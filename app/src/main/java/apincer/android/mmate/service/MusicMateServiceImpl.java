@@ -47,10 +47,11 @@ import apincer.music.core.service.spi.MusicMateServiceBinder;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
 import dagger.hilt.android.AndroidEntryPoint;
-import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import java.util.function.Consumer;
+
+import kotlinx.coroutines.flow.MutableStateFlow;
+import kotlinx.coroutines.flow.StateFlow;
+import kotlinx.coroutines.flow.StateFlowKt;
 
 /**
  * Media session monitoring service that:
@@ -91,14 +92,22 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private MediaSessionManager mediaSessionManager;
 
-    private final BehaviorSubject<apincer.music.core.playback.PlaybackState> playbackStateSubject =
-            BehaviorSubject.createDefault(new apincer.music.core.playback.PlaybackState());
-    private final BehaviorSubject<Optional<Track>> currentTrackSubject =
-            BehaviorSubject.createDefault(Optional.empty());
-    private final BehaviorSubject<Optional<PlaybackTarget>> currentPlayerSubject =
-            BehaviorSubject.createDefault(Optional.empty());
-    private final BehaviorSubject<List<Track>> playingQueueSubject =
-            BehaviorSubject.createDefault(new ArrayList<>());
+    // Kotlin coroutines scope for this Android Service (used for cleanup)
+    private final kotlinx.coroutines.Job serviceJob = kotlinx.coroutines.SupervisorKt.SupervisorJob(null);
+
+    private final MutableStateFlow<apincer.music.core.playback.PlaybackState> playbackStateFlow =
+            StateFlowKt.MutableStateFlow(new apincer.music.core.playback.PlaybackState());
+    private final MutableStateFlow<Optional<Track>> currentTrackFlow =
+            StateFlowKt.MutableStateFlow(Optional.empty());
+    private final MutableStateFlow<Optional<PlaybackTarget>> currentPlayerFlow =
+            StateFlowKt.MutableStateFlow(Optional.empty());
+    private final MutableStateFlow<List<Track>> playingQueueFlow =
+            StateFlowKt.MutableStateFlow(new ArrayList<>());
+
+    // Expose as StateFlow for external read-only access
+    public StateFlow<apincer.music.core.playback.PlaybackState> getPlaybackStateFlow() { return playbackStateFlow; }
+    public StateFlow<Optional<Track>> getCurrentTrackFlow() { return currentTrackFlow; }
+    public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
 
     private RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
     private String controlledPlayerTargetId;
@@ -148,7 +157,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private PlaybackTarget getActivePlayer() {
-        return currentPlayerSubject.getValue().orElse(null);
+        return currentPlayerFlow.getValue().orElse(null);
     }
 
     private void updateAvailableExternalPlayers(List<MediaController> controllers) {
@@ -175,7 +184,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         // If an external player is playing or if no player is selected, auto-select!
         if (playingPlayer != null) {
             switchPlayer(playingPlayer, false);
-        } else if (!currentPlayerSubject.getValue().isPresent()) {
+        } else if (!currentPlayerFlow.getValue().isPresent()) {
             autoSelectBestPlayer().ifPresent(player -> switchPlayer(player, false));
         }
 
@@ -227,7 +236,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // Load queue from database
         if(queueManager != null) {
-            playingQueueSubject.onNext(queueManager.getSongs());
+            playingQueueFlow.setValue(queueManager.getSongs());
         }
 
         initWebUIAssets(this);
@@ -310,7 +319,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
 
     private boolean isPlaying() {
-        return playbackStateSubject.getValue().currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+        return playbackStateFlow.getValue().currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
     }
 
     @Override
@@ -347,7 +356,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void playSong(Track song) {
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             runningMode = RUNNING_MODE.CONTROL;
             if (isControllable(playbackTarget)) {
                 internalPlayOnDMRPlayer(playbackTarget, song);
@@ -359,7 +368,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void skipToNextInQueue() {
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalSkipToNextOnDMRPlayer();
             } else {
@@ -382,7 +391,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void skipToPrevious() {
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalPreviousOnDMRPlayer(playbackTarget);
             } else {
@@ -397,7 +406,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void pausePlayer() {
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 InternalPauseDMRPlayer(playbackTarget);
             } else {
@@ -413,7 +422,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void stopPlaying() {
-        currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalStopOnDMRPlayer(playbackTarget);
             } else {
@@ -449,7 +458,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // 1. Start playback
         mediaHub.playerPlaySong(player.getTargetId(), song);
-        currentTrackSubject.onNext(Optional.of(song));
+        currentTrackFlow.setValue(Optional.of(song));
 
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -534,7 +543,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             final PlaybackTarget resolvedTarget = (newTarget.isStreaming()) ? resolveStreamingPlayerTarget(newTarget) : newTarget;
 
             // 2. Deactivate current player IF DIFFERENT
-            currentPlayerSubject.getValue().ifPresent(oldTarget -> {
+            currentPlayerFlow.getValue().ifPresent(oldTarget -> {
                 if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
                     deactivatePlayer(oldTarget);
                 }
@@ -552,7 +561,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 this.controlledPlayerTargetId = resolvedTarget.getTargetId();
             }
 
-            currentPlayerSubject.onNext(Optional.of(resolvedTarget));
+            currentPlayerFlow.setValue(Optional.of(resolvedTarget));
             updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
         }
     }
@@ -667,7 +676,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     //
     @Override
     public Track getNowPlayingSong() {
-        return currentTrackSubject.getValue().orElse(null);
+        return currentTrackFlow.getValue().orElse(null);
     }
 
     public String getLibraryNames() {
@@ -745,7 +754,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         nextTrackTask = scheduler.schedule(() -> {
             Log.w(TAG, "Fallback triggered!");
 
-            currentPlayerSubject.getValue().ifPresent(this::fallbackToNextTrack);
+            currentPlayerFlow.getValue().ifPresent(this::fallbackToNextTrack);
 
         }, delay, TimeUnit.MILLISECONDS);
     }
@@ -761,7 +770,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void onMediaTrackChanged(Track song) {
-        currentTrackSubject.onNext(Optional.ofNullable(song));
+        currentTrackFlow.setValue(Optional.ofNullable(song));
         runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -775,7 +784,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void onAccessMediaTrack(Track song) {
-        currentTrackSubject.onNext(Optional.ofNullable(song));
+        currentTrackFlow.setValue(Optional.ofNullable(song));
         runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -789,36 +798,63 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
-        playbackStateSubject.onNext(state);
-        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerSubject.getValue().orElse(null), mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        playbackStateFlow.setValue(state);
+        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerFlow.getValue().orElse(null), mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
     }
 
     @Override
     public void onPlaybackStateElapsedTime(long elapsedTimeMS) {
-        apincer.music.core.playback.PlaybackState state = playbackStateSubject.getValue();
+        apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
         if (state != null) {
             state.currentPositionSecond = elapsedTimeMS;
-            playbackStateSubject.onNext(state);
+            playbackStateFlow.setValue(state);
         }
     }
 
     @Override
-    public @NonNull Disposable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
-        return playbackStateSubject.subscribe(consumer, onErrorConsumer);
+    public AutoCloseable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
+        return flowSubscribe(playbackStateFlow, consumer, onErrorConsumer);
     }
 
     @Override
-    public @NonNull Disposable subscribeNowPlayingSong(
+    public AutoCloseable subscribeNowPlayingSong(
             Consumer<Optional<Track>> onNextConsumer,
             Consumer<Throwable> onErrorConsumer
     ) {
-        // Use the subscribe overload that takes both
-        return currentTrackSubject.subscribe(onNextConsumer, onErrorConsumer);
+        return flowSubscribe(currentTrackFlow, onNextConsumer, onErrorConsumer);
     }
 
     @Override
-    public @NonNull Disposable subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
-        return currentPlayerSubject.subscribe(consumer, onErrorConsumer);
+    public AutoCloseable subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
+        return flowSubscribe(currentPlayerFlow, consumer, onErrorConsumer);
+    }
+
+    /** Lightweight Java-compatible StateFlow subscriber using a background watcher thread. */
+    private static <T> AutoCloseable flowSubscribe(
+            MutableStateFlow<T> flow,
+            Consumer<T> onNext,
+            Consumer<Throwable> onError) {
+        java.util.concurrent.atomic.AtomicBoolean active = new java.util.concurrent.atomic.AtomicBoolean(true);
+        // Emit current value immediately
+        try { onNext.accept(flow.getValue()); } catch (Throwable t) {
+            try { onError.accept(t); } catch (Exception ignored) {}
+        }
+        Thread watcher = new Thread(() -> {
+            T last = flow.getValue();
+            while (active.get()) {
+                T current = flow.getValue();
+                if (current != last) {
+                    last = current;
+                    try { onNext.accept(current); } catch (Throwable t) {
+                        try { onError.accept(t); } catch (Exception ignored) {}
+                    }
+                }
+                try { Thread.sleep(50); } catch (InterruptedException e) { break; }
+            }
+        }, "FlowWatcher");
+        watcher.setDaemon(true);
+        watcher.start();
+        return () -> active.set(false);
     }
 
     // ==================== Binder ====================

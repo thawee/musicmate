@@ -41,24 +41,25 @@ androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "medi
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 google-material = { module = "com.google.android.material:material", version = "1.14.0" }
-google-guava = { module = "com.google.guava:guava", version = "33.6.0-android"  }
+#google-guava = { module = "com.google.guava:guava", version = "33.6.0-android"  } # removed - unused
 #java-websocket = { module = "org.java-websocket:Java-WebSocket", version.ref = "javaWebsocket" }
 jetbrains-annotations = {module = "org.jetbrains:annotations", version="26.1.0"}
 dagger-hilt-android={ module="com.google.dagger:hilt-android", version.ref="hilt"}
 dagger-hilt-compiler = {module="com.google.dagger:hilt-compiler", version.ref="hilt"}
 
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
-kotlin-stdlib-jdk8 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
+#kotlin-stdlib-jdk8 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" } # removed - unnecessary with Kotlin 2.x
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationCore" }
 
 ##httpcomponents-httpmime = {module = "org.apache.httpcomponents:httpmime", version="4.5.14"}
 commons-codec = {module = "commons-codec:commons-codec", version="1.22.0"}
-commons-io = {module = "commons-io:commons-io", version="2.22.0"}
+#commons-io = {module = "commons-io:commons-io", version="2.22.0"} # removed - replaced with Java standard I/O
 commons-logging = {module = "commons-logging:commons-logging", version="1.4.0"}
 commons-match3 = {module = "org.apache.commons:commons-math3", version="3.6.1"}
 commons-lang3 = {module = "org.apache.commons:commons-lang3", version="3.20.0"}
-commons-text = {module = "org.apache.commons:commons-text", version="1.15.0"}
+#commons-text = {module = "org.apache.commons:commons-text", version="1.15.0"} # removed - replaced with StringUtils.capitalize()
 #https://hc.apache.org/news.html
 #noinspection SimilarGradleDependency
 apache-httpcore = {module="org.apache.httpcomponents.core5:httpcore5", version="5.5-beta2"}
@@ -76,8 +77,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 #junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 #nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
-jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.1"}
-jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.1"}
+#jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.1"} # removed - replaced with kotlinx.serialization & org.json
+#jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.1"}
 #airbnb-lottie={module="com.airbnb.android:lottie", version="6.7.1"}
 
 #glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}
@@ -87,7 +88,7 @@ anggrayudi-storage = {module = "com.anggrayudi:storage", version="2.3.0"}
 ffmpegkit-audio = {module = "com.antonkarpenko:ffmpeg-kit-full", version="2.2.1"}
 # greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
 slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.18"}
-log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.26.1"}
+#log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.26.1"} # removed - unused
 # https://github.com/jupnp/jupnp/releases
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.4"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.4"}
@@ -131,9 +132,9 @@ chrisbanes-photoview = {module = "com.github.chrisbanes:PhotoView", version="2.3
 #zhanghai-fastscroll =  {module = "me.zhanghai.android.fastscroll:library", version="1.3.0"}
 #skydoves-powerspinner = {module = "com.github.skydoves:powerspinner", version="1.2.7"}
 #skydoves-powermenu = {module = "com.github.skydoves:powermenu", version="2.2.4"}
-skydoves-progressview = {module = "com.github.skydoves:progressview", version="1.1.3"}
-skydoves-androidribbon = {module = "com.github.skydoves:androidribbon", version="1.0.4"}
-skydoves-elasticviews = {module = "com.github.skydoves:elasticviews", version="2.1.0"}
+#skydoves-progressview = {module = "com.github.skydoves:progressview", version="1.1.3"} # removed - unused
+#skydoves-androidribbon = {module = "com.github.skydoves:androidribbon", version="1.0.4"} # removed - unused
+#skydoves-elasticviews = {module = "com.github.skydoves:elasticviews", version="2.1.0"} # removed - unused
 iwgang-simplifyspan = {module = "com.github.iwgang:simplifyspan", version="2.2"}
 vanniktech-textbuilder = {module = "com.vanniktech:textbuilder", version="0.5.0"}
 sparrow007-carouselrecyclerview = {module = "com.github.sparrow007:carouselrecyclerview", version="1.2.6"}
@@ -176,7 +177,7 @@ androidx-lifecycle-process = {module = "androidx.lifecycle:lifecycle-process", v
 androidx-work = {module = "androidx.work:work-runtime", version="2.11.2"}
 coilkt-coil3 = {module="io.coil-kt.coil3:coil", version="3.5.0"}
 coilkt-coil3-network = {module="io.coil-kt.coil3:coil-network-okhttp", version="3.5.0"}
-iirj = {module="uk.me.berndporr:iirj", version="1.7"}
+#iirj = {module="uk.me.berndporr:iirj", version="1.7"} # removed - unused
 markwon-core = {module="io.noties.markwon:core", version="4.6.2"}
 markwon-html = {module="io.noties.markwon:html", version="4.6.2"}
 #jcodec = {module="org.jcodec:jcodec", version="0.2.5"}
@@ -197,4 +198,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 #kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = {id="com.google.dagger.hilt.android", version.ref="hilt"}
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 objectbox = { id = "io.objectbox", version = "5.4.2" }

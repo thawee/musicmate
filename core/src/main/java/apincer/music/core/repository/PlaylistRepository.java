@@ -8,8 +8,12 @@ import static apincer.music.core.model.PlaylistEntry.songKey;
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+
+import apincer.music.core.model.ExcludeRule;
+import apincer.music.core.model.PlaylistCollection;
+import apincer.music.core.model.PlaylistEntry;
+import apincer.music.core.model.PlaylistRule;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -45,14 +49,63 @@ public class PlaylistRepository {
         if (!playlists.isEmpty()) return; // Early exit
 
         // Ensure it's loaded only once
-        ObjectMapper mapper = new ObjectMapper();
-        // Assuming playlists.json is directly under assets
         InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlists.json");
 
         if (in != null) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                PlaylistCollection collection = mapper.readValue(reader, PlaylistCollection.class);
-                if (collection != null && collection.getPlaylists() != null) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                org.json.JSONObject root = new org.json.JSONObject(sb.toString());
+                PlaylistCollection collection = new PlaylistCollection();
+                org.json.JSONArray playlistsArray = root.optJSONArray("playlists");
+                if (playlistsArray != null) {
+                    List<PlaylistEntry> entryList = new ArrayList<>();
+                    for (int i = 0; i < playlistsArray.length(); i++) {
+                        org.json.JSONObject entryObj = playlistsArray.getJSONObject(i);
+                        PlaylistEntry entry = new PlaylistEntry();
+                        entry.setName(entryObj.optString("name", null));
+                        entry.setUuid(entryObj.optString("uuid", null));
+                        entry.setType(entryObj.optString("type", PlaylistEntry.TYPE_TITLE));
+                        entry.setNote(entryObj.optString("note", null));
+                        entry.setDescription(entryObj.optString("description", null));
+                        
+                        org.json.JSONArray rulesArray = entryObj.optJSONArray("rules");
+                        if (rulesArray != null) {
+                            List<PlaylistRule> ruleList = new ArrayList<>();
+                            for (int j = 0; j < rulesArray.length(); j++) {
+                                org.json.JSONObject ruleObj = rulesArray.getJSONObject(j);
+                                PlaylistRule rule = new PlaylistRule();
+                                rule.setTitle(ruleObj.optString("title", null));
+                                rule.setArtist(ruleObj.optString("artist", null));
+                                rule.setAlbum(ruleObj.optString("album", null));
+                                rule.setNotes(ruleObj.optString("notes", null));
+                                
+                                rule.setGenre(parseStringOrList(ruleObj, "genre"));
+                                rule.setStyle(parseStringOrList(ruleObj, "style"));
+                                rule.setMood(parseStringOrList(ruleObj, "mood"));
+                                
+                                if (ruleObj.has("exclude")) {
+                                    org.json.JSONObject excObj = ruleObj.optJSONObject("exclude");
+                                    if (excObj != null) {
+                                        ExcludeRule exc = new ExcludeRule();
+                                        exc.setMood(parseStringOrList(excObj, "mood"));
+                                        exc.setStyle(parseStringOrList(excObj, "style"));
+                                        rule.setExclude(exc);
+                                    }
+                                }
+                                ruleList.add(rule);
+                            }
+                            entry.setRules(ruleList);
+                        }
+                        entryList.add(entry);
+                    }
+                    collection.setPlaylists(entryList);
+                }
+
+                if (collection.getPlaylists() != null) {
                     collection.compileRules();
                     playlists = collection.getPlaylists();
                     Log.d(TAG, "Loaded " + playlists.size() + " playlist entries from JSON.");
@@ -61,7 +114,7 @@ public class PlaylistRepository {
                     playlists = Collections.emptyList(); // Ensure it's not null
                 }
                 //populatePlaylistMap(playlists);
-            } catch (IOException e) { // Catch parsing errors too
+            } catch (Exception e) { // Catch parsing errors too
                 Log.e(TAG, "Error reading or parsing playlists.json", e);
                 playlists = Collections.emptyList();
             }
@@ -69,6 +122,23 @@ public class PlaylistRepository {
             Log.e(TAG, "Could not find playlists.json in assets");
             playlists = Collections.emptyList();
         }
+    }
+
+    private static List<String> parseStringOrList(org.json.JSONObject obj, String key) {
+        if (!obj.has(key)) return null;
+        org.json.JSONArray arr = obj.optJSONArray(key);
+        if (arr != null) {
+            List<String> list = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++) {
+                list.add(arr.optString(i));
+            }
+            return list;
+        }
+        String str = obj.optString(key, null);
+        if (str != null) {
+            return Collections.singletonList(str);
+        }
+        return null;
     }
 
     private static Optional<PlaylistEntry> findPlaylistByName(String playlistName) {

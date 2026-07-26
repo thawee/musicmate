@@ -31,17 +31,20 @@ The backend follows a "Core Logic + Plugin Engine" pattern, allowing the applica
 ### Server Engines
 MusicMate supports multiple pluggable server implementations to balance performance, memory footprint, and audiophile integrity.
 
-| Feature | Undertow | SonicNIO | Jetty 12 | HttpCore | Netty |
+> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are actively maintained. Jetty 12 and Undertow are archived (build only, no further updates).
+
+| Feature | SonicNIO | CoreHTTP | Netty | Jetty 12 *(archived)* | Undertow *(archived)* |
 |:---|:---|:---|:---|:---|:---|
-| **Library** | Undertow 2.4.0 | Custom NIO | Jetty 12.1.9 | Apache Core 5.4.2 | Netty 4.2.13 |
-| **Primary Use** | **Audiophile** | **Balanced** | **Standard** | **Minimalist** | **Scalable** |
-| **Zero-Copy** | ✅ Optimized | ✅ Optimized | ✅ Yes | ⚠️ Partial | ✅ Yes |
+| **Library** | Custom NIO | Apache HttpCore 5.4.2 | Netty 4.2.13 | Jetty 12.1.9 | Undertow 2.4.0 |
+| **Primary Use** | **Default · Balanced** | **Ultra-Low Memory** | **High Throughput** | Standard | Audiophile |
+| **Status** | ✅ Production | ✅ Production | ✅ Production | 🗄 Archived | 🗄 Archived |
+| **Zero-Copy** | ✅ Optimised | ✅ Full | ✅ Yes | ✅ Yes | ✅ Optimised |
 | **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
-| **Memory / Conn** | 256–300 MB | **~8 KB** | 128–256 MB | 256–300 MB | 256–512 MB |
-| **GC Pause** | < 50 ms | **< 20 ms** | < 100 ms | < 100 ms | < 150 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket** | ✅ | ✅ v2.2+ | ✅ | ❌ | ⚠️ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Memory / Conn** | **~8 KB** | **~64 KB** | 256–512 MB | 128–256 MB | 256–300 MB |
+| **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms | < 100 ms | < 50 ms |
+| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **WebSocket** | ✅ | ✅ | ⚠️ | ✅ | ✅ |
+| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 
 ### API & Routing
 The server exposes three primary context paths:

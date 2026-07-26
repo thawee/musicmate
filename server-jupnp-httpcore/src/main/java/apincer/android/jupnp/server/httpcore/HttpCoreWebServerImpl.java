@@ -3,10 +3,7 @@ package apincer.android.jupnp.server.httpcore;
 import android.content.Context;
 import android.util.Log;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EndpointDetails;
@@ -317,8 +314,6 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
     }
 
     private class ResourceHandler extends WebSocketContent implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-        private static final ObjectMapper MAPPER = new ObjectMapper()
-                .setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
         CopyOnWriteArraySet<IOSession> wsSessions = new CopyOnWriteArraySet<>();
         private final AtomicInteger activeStreams = new AtomicInteger(0);
         
@@ -350,10 +345,11 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
 
             // Send welcome messages
             for (Map<String, Object> msg : getWelcomeMessages()) {
+                if (msg == null) continue;
                 try {
-                    String jsonResponse = MAPPER.writeValueAsString(msg);
+                    String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(msg);
                     sendText(session, jsonResponse);
-                } catch (JsonProcessingException e) {
+                } catch (Exception e) {
                     Log.e(TAG, "Error serializing welcome message", e);
                 }
             }
@@ -367,13 +363,16 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 try {
                     WebSocket.Frame frame = new WebSocket.Frame(true, WebSocket.OPCODE_TEXT, text.getBytes(StandardCharsets.UTF_8));
                     ByteBuffer buffer = frame.toByteBuffer();
-                    session.write(buffer);
+                    int bytesWritten = session.write(buffer);
+                    Log.d(TAG, "WS sendText wrote " + bytesWritten + " bytes (total buffer: " + buffer.limit() + ") to " + session.getRemoteAddress());
                     if (buffer.hasRemaining()) {
                         session.setEvent(java.nio.channels.SelectionKey.OP_WRITE);
                     }
                 } catch (IOException e) {
-                    // Silently handle write errors
+                    Log.e(TAG, "Error in WS sendText", e);
                 }
+            } else {
+                Log.w(TAG, "WS sendText skipped, session is closed");
             }
         }
 
@@ -402,12 +401,12 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 byte[] body = request.getBody();
                 if (body != null && body.length > 0) {
                     String jsonString = new String(body, StandardCharsets.UTF_8);
-                    Map<String, Object> map = MAPPER.readValue(jsonString, Map.class);
+                    Map<String, Object> map = (Map<String, Object>) (Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(jsonString);
                     String command = String.valueOf(map.get("command"));
                     if (!command.isEmpty()) {
                         Map<String, Object> response = handleCommand(command, map);
                         if (response != null) {
-                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
                             final AsyncResponseBuilder rb = AsyncResponseBuilder.create(HttpStatus.SC_OK);
                             rb.addHeader(HttpHeaders.SERVER, getServerSignature());
                             rb.setEntity(jsonResponse, ContentType.APPLICATION_JSON);
@@ -628,12 +627,13 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
             private void handleCompleteMessage(int opcode, byte[] payload) {
                 if (opcode == WebSocket.OPCODE_TEXT) {
                     String text = new String(payload, StandardCharsets.UTF_8);
+                    Log.d(TAG, "WS Received text: " + text);
                     try {
-                        Map<String, Object> commandMap = MAPPER.readValue(text, new TypeReference<Map<String, Object>>() {});
+                        Map<String, Object> commandMap = (Map<String, Object>) (Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(text);
                         String command = (String) commandMap.get("command");
                         Map<String, Object> response = handleCommand(command, commandMap);
                         if (response != null) {
-                            sendText(session, MAPPER.writeValueAsString(response));
+                            sendText(session, apincer.music.core.utils.JsonUtils.toJson(response));
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error handling WS command", e);

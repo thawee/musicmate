@@ -5,7 +5,7 @@ import java.util.List;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import kotlinx.coroutines.flow.StateFlow;
 
 public interface MediaServerHub {
 
@@ -38,7 +38,7 @@ public interface MediaServerHub {
 
    // boolean isInitialized();
 
-    BehaviorSubject<ServerStatus> getStatus();
+    StateFlow<ServerStatus> getStatus();
 
     void playerStop(String udn);
     //void pause(String rendererUdn);

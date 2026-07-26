@@ -1,6 +1,6 @@
 package apincer.music.core.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import kotlinx.serialization.Serializable;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 public class PlaylistEntry {
     public static final String TYPE_TITLE = "title";
     public static final String TYPE_GENRE = "genre";
