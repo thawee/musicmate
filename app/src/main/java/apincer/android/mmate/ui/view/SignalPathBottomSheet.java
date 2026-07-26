@@ -154,7 +154,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             String playerDetails = playbackTarget.getDisplayName();
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
                 //playerDetails = playerDetails +" ["+ formatPlayerDetail(player.getDescription())+"]";
-                addSignalPathStep(signalPathContainer, "Ultimate Player", playerDetails, true);
+                addSignalPathStep(signalPathContainer, "Media Player", playerDetails, true);
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
                 addSignalPathStep(signalPathContainer, "Refined Output", deviceDetails, false);
