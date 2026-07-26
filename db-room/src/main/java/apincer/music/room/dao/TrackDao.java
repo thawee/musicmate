@@ -1,0 +1,145 @@
+package apincer.music.room.dao;
+
+import androidx.room.Dao;
+import androidx.room.Delete;
+import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
+import androidx.room.Query;
+import androidx.room.Update;
+
+import java.util.List;
+
+import apincer.music.room.entity.TrackEntity;
+
+@Dao
+public interface TrackDao {
+
+    @Query("SELECT * FROM musictag WHERE uniqueKey = :uniqueKey LIMIT 1")
+    TrackEntity findByUniqueKey(String uniqueKey);
+
+    @Query("SELECT * FROM musictag WHERE id = :id LIMIT 1")
+    TrackEntity findById(long id);
+
+    @Query("SELECT * FROM musictag ORDER BY title ASC")
+    List<TrackEntity> findMySongs();
+
+    @Query("SELECT * FROM musictag ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findMySongs(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE title LIKE '%' || :title || '%' ORDER BY title ASC")
+    List<TrackEntity> findByTitle(String title);
+
+    @Query("SELECT * FROM musictag WHERE path = :path LIMIT 1")
+    List<TrackEntity> findByPath(String path);
+
+    @Query("SELECT * FROM musictag WHERE path LIKE :path || '%' ORDER BY title ASC")
+    List<TrackEntity> findInPath(String path);
+
+    @Query("SELECT * FROM musictag WHERE path = :path")
+    List<TrackEntity> getByPath(String path);
+
+    @Query("SELECT * FROM musictag ORDER BY fileLastModified DESC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findRecentlyAdded(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE drScore = 0 OR dynamicRange = 0 ORDER BY title ASC")
+    List<TrackEntity> findMyNoDRMeterSongs();
+
+    @Query("SELECT * FROM musictag WHERE genre = :genre ORDER BY title ASC")
+    List<TrackEntity> findByGenre(String genre);
+
+    @Query("SELECT * FROM musictag WHERE genre = :genre ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findByGenre(String genre, long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE mood = :grouping OR style = :grouping OR origin = :grouping ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findByGrouping(String grouping, long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE audioBitsDepth > 16 OR audioSampleRate > 44100 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findHiRes(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE audioBitsDepth > 16 OR audioSampleRate > 48000 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findHiRes48(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE qualityInd IN ('HQ', 'HIRES') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findHighQuality(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE mqaSampleRate > 0 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findMQASongs(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE audioEncoding LIKE '%DSD%' OR qualityInd = 'DSD' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findDSDSongs(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE publisher LIKE '%' || :keyword || '%' ORDER BY title ASC")
+    List<TrackEntity> findByPublisher(String keyword);
+
+    @Query("SELECT * FROM musictag WHERE (audioBitsDepth = 16 AND audioSampleRate = 44100) OR qualityInd = 'SQ' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findCDQuality(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE title LIKE '%' || :keyword || '%' OR artist LIKE '%' || :keyword || '%' OR album LIKE '%' || :keyword || '%' ORDER BY title ASC")
+    List<TrackEntity> findByKeyword(String keyword);
+
+    @Query("SELECT * FROM musictag WHERE title LIKE '%' || :keyword || '%' OR artist LIKE '%' || :keyword || '%' OR album LIKE '%' || :keyword || '%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findByKeyword(String keyword, long firstResult, long maxResults);
+
+    @Query("SELECT DISTINCT genre FROM musictag WHERE genre IS NOT NULL AND genre != '' ORDER BY genre ASC")
+    List<String> getGenres();
+
+    @Query("SELECT DISTINCT publisher FROM musictag WHERE publisher IS NOT NULL AND publisher != '' ORDER BY publisher ASC")
+    List<String> getPublishers();
+
+    @Query("SELECT DISTINCT artist FROM musictag WHERE artist IS NOT NULL AND artist != '' ORDER BY artist ASC")
+    List<String> getArtists();
+
+    @Query("SELECT * FROM musictag WHERE (mood = :grouping OR style = :grouping OR origin = :grouping) AND artist = :artist ORDER BY title ASC")
+    List<TrackEntity> findByGroupingAndArtist(String grouping, String artist);
+
+    @Query("SELECT * FROM musictag WHERE id BETWEEN :idRange1 AND :idRange2 ORDER BY id ASC")
+    List<TrackEntity> findByIdRanges(long idRange1, long idRange2);
+
+    @Query("SELECT * FROM musictag WHERE albumArtFilename IS NULL OR albumArtFilename = '' ORDER BY title ASC")
+    List<TrackEntity> findNoEmbedCoverArtSong();
+
+    @Query("SELECT * FROM musictag WHERE artist = :name ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findByArtist(String name, long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY track ASC, title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE albumArtFilename = :albumUniqueKey LIMIT 1")
+    TrackEntity findByAlbumArtFilename(String albumUniqueKey);
+
+    @Query("SELECT * FROM musictag ORDER BY title ASC")
+    List<TrackEntity> findForPlaylist();
+
+    @Query("SELECT * FROM musictag ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findForPlaylist(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE id IN (:ids)")
+    List<TrackEntity> findByIds(long[] ids);
+
+    @Query("SELECT COUNT(*) FROM musictag")
+    long getTotalCount();
+
+    @Query("SELECT SUM(fileSize) FROM musictag")
+    long getTotalSize();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag")
+    double getTotalDuration();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insert(TrackEntity track);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<TrackEntity> tracks);
+
+    @Update
+    void update(TrackEntity track);
+
+    @Delete
+    void delete(TrackEntity track);
+
+    @Query("DELETE FROM musictag")
+    void purgeDatabase();
+
+    @Query("SELECT * FROM musictag")
+    List<TrackEntity> getAllTracks();
+}

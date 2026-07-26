@@ -51,6 +51,7 @@ public interface Track {
  
 
     void setBpm(double tagValue);
+    double getBpm();
 
     void setMood(String value);
 

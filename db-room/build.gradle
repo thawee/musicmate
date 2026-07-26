@@ -1,6 +1,5 @@
 plugins {
     alias libs.plugins.android.library
-    alias libs.plugins.devtools.ksp
     alias libs.plugins.dagger.hilt
 }
 
@@ -32,10 +31,10 @@ dependencies {
 
     implementation libs.androidx.appCompat
     implementation libs.androidx.room.runtime
-    ksp libs.androidx.room.compiler
+    annotationProcessor libs.androidx.room.compiler
 
     implementation libs.dagger.hilt.android
-    ksp libs.dagger.hilt.compiler
+    annotationProcessor libs.dagger.hilt.compiler
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
