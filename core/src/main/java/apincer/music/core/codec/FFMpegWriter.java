@@ -68,7 +68,6 @@ import com.antonkarpenko.ffmpegkit.FFmpegKit;
 import com.antonkarpenko.ffmpegkit.FFmpegSession;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.File;
@@ -139,7 +138,7 @@ public class FFMpegWriter extends TagWriter {
         File dir = FileSystem.getCacheDirForFile(context, tag.getStorageId());
 
         String ext = FileUtils.getExtension(srcPath);
-        String targetPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
+        String targetPath = "/tmp/"+ StringUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, targetPath);
         FileUtils.createParentDirs(dir);
         targetPath = dir.getAbsolutePath();

@@ -183,7 +183,7 @@ dependencies {
     //others
     implementation libs.anggrayudi.storage
 
-    implementation libs.commons.codec
+    //libs.commons.codec removed - unused
     //libs.commons.io removed - replaced with Java standard I/O
     // commons-logging removed - SLF4J (slf4j-api) is already present and preferred
     implementation libs.commons.lang3

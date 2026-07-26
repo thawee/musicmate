@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -184,9 +183,9 @@ public class FileRepository {
                     pathFile = new File(pathFile, "Cover.jpg");
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
                     FFMpegHelper.extractCoverArt(path, pathFile, null);
-                    return DigestUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
+                    return StringUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
                 } else {
-                    String coverFilename = DigestUtils.md5Hex(path);
+                    String coverFilename = StringUtils.md5Hex(path);
                     File pathFile = new File(dir, coverFilename + ".jpg");
 
                     FileUtils.createParentDirs(pathFile);
@@ -453,16 +452,16 @@ public class FileRepository {
             if(folderCover != null && folderCover.exists()) {
                 //update filename, use folder for hex
                 File file = new File(basicTag.getPath());
-                String albumArtName = DigestUtils.md5Hex(file.getParentFile().getAbsolutePath());
+                String albumArtName = StringUtils.md5Hex(file.getParentFile().getAbsolutePath());
                 String ext = FileUtils.getExtension(folderCover);
                 basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }else {
                 // if no folder album art, just set filename for lazy extraction later
                 if (isManagedInLibrary(basicTag)) {
-                    String albumArtName = DigestUtils.md5Hex(new File(basicTag.getPath()).getParentFile().getAbsolutePath());
+                    String albumArtName = StringUtils.md5Hex(new File(basicTag.getPath()).getParentFile().getAbsolutePath());
                     basicTag.setAlbumArtFilename(albumArtName);
                 } else {
-                    String coverFilename = DigestUtils.md5Hex(basicTag.getPath());
+                    String coverFilename = StringUtils.md5Hex(basicTag.getPath());
                     basicTag.setAlbumArtFilename(coverFilename + ".jpg");
                 }
             }

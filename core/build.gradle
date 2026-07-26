@@ -58,7 +58,7 @@ dependencies {
     //implementation libs.io.undertow.core
 
     //others
-    implementation libs.commons.codec
+    //libs.commons.codec removed - unused
     implementation libs.commons.lang3
     implementation libs.commons.match3
     implementation libs.kotlin.coroutines.core
