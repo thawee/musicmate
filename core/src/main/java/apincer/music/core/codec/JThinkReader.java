@@ -377,7 +377,9 @@ public class JThinkReader extends TagReader{
             String[] data = fieldStr.split(";");
             if (data.length < 2) continue;
 
-            String key = data[0].substring(13, data[0].length() - 1).toUpperCase();
+            String data0 = data[0];
+            if (data0.length() <= 13) continue;
+            String key = data0.substring(13, Math.max(13, data0.length() - 1)).toUpperCase();
             resultMap.put(key, extractId3Val(data[1]));
         }
     }
