@@ -766,6 +766,9 @@ public class BaseServer {
         public Map<String, Object> getLibraryStats() {
             // Use database aggregation instead of loading all songs into memory
             apincer.music.core.model.SearchResultStats statsData = tagRepos.getSearchStats(new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY));
+            if (statsData == null) {
+                return null;
+            }
             
             Map<String, Object> stats = Map.of(
                     "totalSize", StringUtils.formatStorageSize(statsData.getTotalSize()),
