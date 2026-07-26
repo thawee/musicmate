@@ -98,7 +98,7 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE albumArtFilename IS NULL OR albumArtFilename = '' ORDER BY title ASC")
     List<TrackEntity> findNoEmbedCoverArtSong();
 
-    @Query("SELECT * FROM musictag WHERE artist = :name ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE artist = :name OR artist LIKE :name || ',%' OR artist LIKE '%,' || :name OR artist LIKE '%,' || :name || ',%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByArtist(String name, long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY track ASC, title ASC LIMIT :maxResults OFFSET :firstResult")

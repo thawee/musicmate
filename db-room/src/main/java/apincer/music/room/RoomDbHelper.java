@@ -12,6 +12,7 @@ import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.model.Track;
+import apincer.music.core.Constants;
 import apincer.music.core.repository.spi.DbHelper;
 import apincer.music.core.repository.spi.TrackProcessor;
 import apincer.music.room.dao.AlbumStats;
@@ -22,7 +23,8 @@ import apincer.music.room.entity.TrackEntity;
 
 public class RoomDbHelper implements DbHelper {
 
-    private static final Pattern ARTIST_SPLIT = Pattern.compile("[;,]");
+    // Same separator as OrmLite (Constants.ARTIST_SEP = ",")
+    private static final Pattern ARTIST_SPLIT = Pattern.compile(",");
 
     private final MusicRoomDatabase database;
     private final TrackDao trackDao;
@@ -283,7 +285,7 @@ public class RoomDbHelper implements DbHelper {
             String[] parts = ARTIST_SPLIT.split(artistField);
             for (String part : parts) {
                 part = part.trim();
-                if (part.isEmpty()) part = "[Unknown]";  
+                if (part.isEmpty()) part = Constants.NONE;
                 AudioTag item = artistMap.getOrDefault(part, new AudioTag(SearchCriteria.TYPE.ARTIST, part));
                 item.setChildCount(item.getChildCount() + s.cnt);
                 item.setAudioDuration(item.getAudioDuration() + s.dur);
@@ -297,7 +299,7 @@ public class RoomDbHelper implements DbHelper {
     public List<Track> getAlbumAndArtistWithChildrenCount() {
         List<Track> list = new ArrayList<>();
         for (AlbumStats s : trackDao.getAlbumStats()) {
-            String album = s.album != null ? s.album : "[Unknown]";
+            String album = s.album != null ? s.album : Constants.NONE;
             String albumArtist = s.albumArtist;
             String name;
             if (albumArtist == null || albumArtist.isEmpty() ||
