@@ -3,17 +3,26 @@ package apincer.music.room;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
+import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.model.Track;
 import apincer.music.core.repository.spi.DbHelper;
 import apincer.music.core.repository.spi.TrackProcessor;
+import apincer.music.room.dao.AlbumStats;
+import apincer.music.room.dao.ArtistStats;
+import apincer.music.room.dao.GenreStats;
 import apincer.music.room.dao.TrackDao;
 import apincer.music.room.entity.TrackEntity;
 
 public class RoomDbHelper implements DbHelper {
+
+    private static final Pattern ARTIST_SPLIT = Pattern.compile("[;,]");
 
     private final MusicRoomDatabase database;
     private final TrackDao trackDao;
@@ -205,12 +214,18 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findSimilarSongs(boolean artistAware) {
-        return Collections.emptyList();
+        if (artistAware) {
+            return new ArrayList<>(trackDao.findSimilarByTitleAndArtist());
+        }
+        return new ArrayList<>(trackDao.findSimilarByTitle());
     }
 
     @Override
     public List<Track> findSimilarSongs(boolean artistAware, long firstResult, long maxResults) {
-        return Collections.emptyList();
+        if (artistAware) {
+            return new ArrayList<>(trackDao.findSimilarByTitleAndArtist(firstResult, maxResults));
+        }
+        return new ArrayList<>(trackDao.findSimilarByTitle(firstResult, maxResults));
     }
 
     @Override
@@ -220,7 +235,14 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> getGenresWithChildrenCount() {
-        return Collections.emptyList();
+        List<Track> list = new ArrayList<>();
+        for (GenreStats s : trackDao.getGenreStats()) {
+            AudioTag item = new AudioTag(SearchCriteria.TYPE.GENRE, s.genre != null ? s.genre : "");
+            item.setChildCount(s.cnt);
+            item.setAudioDuration(s.dur);
+            list.add(item);
+        }
+        return list;
     }
 
     @Override
@@ -255,12 +277,42 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> getArtistWithChildrenCount() {
-        return Collections.emptyList();
+        Map<String, AudioTag> artistMap = new HashMap<>();
+        for (ArtistStats s : trackDao.getArtistStats()) {
+            String artistField = s.artist != null ? s.artist.trim() : "";
+            String[] parts = ARTIST_SPLIT.split(artistField);
+            for (String part : parts) {
+                part = part.trim();
+                if (part.isEmpty()) part = "[Unknown]";  
+                AudioTag item = artistMap.getOrDefault(part, new AudioTag(SearchCriteria.TYPE.ARTIST, part));
+                item.setChildCount(item.getChildCount() + s.cnt);
+                item.setAudioDuration(item.getAudioDuration() + s.dur);
+                artistMap.put(part, item);
+            }
+        }
+        return new ArrayList<>(artistMap.values());
     }
 
     @Override
     public List<Track> getAlbumAndArtistWithChildrenCount() {
-        return Collections.emptyList();
+        List<Track> list = new ArrayList<>();
+        for (AlbumStats s : trackDao.getAlbumStats()) {
+            String album = s.album != null ? s.album : "[Unknown]";
+            String albumArtist = s.albumArtist;
+            String name;
+            if (albumArtist == null || albumArtist.isEmpty() ||
+                    "Various Artists".equalsIgnoreCase(albumArtist) ||
+                    "Soundtrack".equalsIgnoreCase(albumArtist)) {
+                name = album;
+            } else {
+                name = album + " (by " + albumArtist + ")";
+            }
+            AudioTag item = new AudioTag(SearchCriteria.TYPE.ARTIST, name);
+            item.setUniqueKey(s.albumArtFilename != null ? s.albumArtFilename : "");
+            item.setChildCount(s.cnt);
+            list.add(item);
+        }
+        return list;
     }
 
     @Override
@@ -322,17 +374,53 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> getSoundGradeWithStats() {
-        return Collections.emptyList();
+        List<Track> list = new ArrayList<>();
+        addSoundGrade(list, "DSD",        trackDao.countDSD(),        trackDao.durDSD());
+        addSoundGrade(list, "MQA",        trackDao.countMQA(),        trackDao.durMQA());
+        addSoundGrade(list, "Hi-Res",     trackDao.countHiRes(),      trackDao.durHiRes());
+        addSoundGrade(list, "Studio",     trackDao.countStudio(),     trackDao.durStudio());
+        addSoundGrade(list, "CD",         trackDao.countCD(),         trackDao.durCD());
+        addSoundGrade(list, "Compressed", trackDao.countCompressed(),  trackDao.durCompressed());
+        return list;
+    }
+
+    private void addSoundGrade(List<Track> list, String grade, long count, double dur) {
+        if (count > 0) {
+            AudioTag item = new AudioTag(SearchCriteria.TYPE.SOUND_GRADE, grade);
+            item.setChildCount(count);
+            item.setAudioDuration(dur);
+            list.add(item);
+        }
     }
 
     @Override
     public List<Track> getGenreWithStats() {
-        return Collections.emptyList();
+        List<Track> list = new ArrayList<>();
+        for (GenreStats s : trackDao.getGenreStats()) {
+            AudioTag item = new AudioTag(SearchCriteria.TYPE.GENRE, s.genre != null ? s.genre : "");
+            item.setChildCount(s.cnt);
+            item.setAudioDuration(s.dur);
+            list.add(item);
+        }
+        return list;
     }
 
     @Override
     public List<Track> getArtistWithStats() {
-        return Collections.emptyList();
+        Map<String, AudioTag> artistMap = new HashMap<>();
+        for (ArtistStats s : trackDao.getArtistStats()) {
+            String artistField = s.artist != null ? s.artist.trim() : "";
+            String[] parts = ARTIST_SPLIT.split(artistField);
+            for (String part : parts) {
+                part = part.trim();
+                if (part.isEmpty()) part = "";
+                AudioTag item = artistMap.getOrDefault(part, new AudioTag(SearchCriteria.TYPE.ARTIST, part));
+                item.setChildCount(item.getChildCount() + s.cnt);
+                item.setAudioDuration(item.getAudioDuration() + s.dur);
+                artistMap.put(part, item);
+            }
+        }
+        return new ArrayList<>(artistMap.values());
     }
 
     private TrackEntity toEntity(Track tag) {

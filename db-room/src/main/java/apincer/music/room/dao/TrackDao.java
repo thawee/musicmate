@@ -125,6 +125,66 @@ public interface TrackDao {
     @Query("SELECT SUM(audioDuration) FROM musictag")
     double getTotalDuration();
 
+    // --- Similar songs ---
+    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC")
+    List<TrackEntity> findSimilarByTitle();
+
+    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findSimilarByTitle(long firstResult, long maxResults);
+
+    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC")
+    List<TrackEntity> findSimilarByTitleAndArtist();
+
+    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC LIMIT :maxResults OFFSET :firstResult")
+    List<TrackEntity> findSimilarByTitleAndArtist(long firstResult, long maxResults);
+
+    // --- Aggregation stats for category lists ---
+    @Query("SELECT genre, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag GROUP BY genre ORDER BY genre ASC")
+    List<GenreStats> getGenreStats();
+
+    @Query("SELECT artist, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag GROUP BY artist ORDER BY artist ASC")
+    List<ArtistStats> getArtistStats();
+
+    @Query("SELECT album, albumArtist, albumArtFilename, COUNT(*) as cnt FROM musictag GROUP BY album, albumArtist ORDER BY album ASC")
+    List<AlbumStats> getAlbumStats();
+
+    // --- Sound grade aggregations ---
+    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('dsd', 'dff')")
+    long countDSD();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('dsd', 'dff')")
+    double durDSD();
+
+    @Query("SELECT COUNT(*) FROM musictag WHERE qualityInd LIKE 'MQA%'")
+    long countMQA();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE qualityInd LIKE 'MQA%'")
+    double durMQA();
+
+    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
+    long countHiRes();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
+    double durHiRes();
+
+    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
+    long countStudio();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
+    double durStudio();
+
+    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
+    long countCD();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
+    double durCD();
+
+    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')")
+    long countCompressed();
+
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')")
+    double durCompressed();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(TrackEntity track);
 
