@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import android.util.Log;
+
+import androidx.sqlite.db.SimpleSQLiteQuery;
 
 import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.SearchCriteria;
@@ -18,6 +21,7 @@ import apincer.music.core.repository.spi.TrackProcessor;
 import apincer.music.room.dao.AlbumStats;
 import apincer.music.room.dao.ArtistStats;
 import apincer.music.room.dao.GenreStats;
+import apincer.music.room.dao.SearchStats;
 import apincer.music.room.dao.TrackDao;
 import apincer.music.room.entity.TrackEntity;
 
@@ -36,15 +40,52 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public SearchResultStats getSearchStats(SearchCriteria criteria) {
-        int count = (int) trackDao.getTotalCount();
-        long size = trackDao.getTotalSize();
-        double duration = trackDao.getTotalDuration();
-        return new SearchResultStats(count, size, duration);
+        if (criteria == null) return new SearchResultStats(0, 0, 0.0);
+        try {
+            String[] whereAndArgs = buildWhereClause(criteria);
+            String where = whereAndArgs[0];
+            Object[] args = java.util.Arrays.copyOfRange(whereAndArgs, 1, whereAndArgs.length);
+
+            String sql;
+            boolean dedup = needsGroupDedup(criteria);
+            if (dedup) {
+                String inner = "SELECT fileSize, audioDuration FROM musictag"
+                        + (where.isEmpty() ? "" : " WHERE " + where)
+                        + " GROUP BY title, artist";
+                sql = "SELECT COUNT(*) as cnt, SUM(fileSize) as totalSize, SUM(audioDuration) as totalDuration FROM (" + inner + ")";
+            } else {
+                sql = "SELECT COUNT(*) as cnt, SUM(fileSize) as totalSize, SUM(audioDuration) as totalDuration FROM musictag"
+                        + (where.isEmpty() ? "" : " WHERE " + where);
+            }
+            SearchStats s = trackDao.getStatsByRawQuery(new SimpleSQLiteQuery(sql, args));
+            if (s == null) return new SearchResultStats(0, 0, 0.0);
+            return new SearchResultStats((int) s.cnt, s.totalSize, s.totalDuration);
+        } catch (Exception e) {
+            Log.e("RoomDbHelper", "getSearchStats error: " + e.getMessage(), e);
+            return new SearchResultStats(0, 0, 0.0);
+        }
     }
 
     @Override
     public SearchResultStats getSimilarSongsStats(boolean artistAware) {
-        return new SearchResultStats(0, 0, 0);
+        try {
+            String sql;
+            if (artistAware) {
+                sql = "SELECT COUNT(*) as cnt, SUM(fileSize) as totalSize, SUM(audioDuration) as totalDuration FROM musictag "
+                    + "WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag "
+                    + "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1)";
+            } else {
+                sql = "SELECT COUNT(*) as cnt, SUM(fileSize) as totalSize, SUM(audioDuration) as totalDuration FROM musictag "
+                    + "WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag "
+                    + "GROUP BY normalizedTitle HAVING COUNT(*) > 1)";
+            }
+            SearchStats s = trackDao.getStatsByRawQuery(new SimpleSQLiteQuery(sql));
+            if (s == null) return new SearchResultStats(0, 0, 0.0);
+            return new SearchResultStats((int) s.cnt, s.totalSize, s.totalDuration);
+        } catch (Exception e) {
+            Log.e("RoomDbHelper", "getSimilarSongsStats error: " + e.getMessage(), e);
+            return new SearchResultStats(0, 0, 0.0);
+        }
     }
 
     @Override
@@ -460,4 +501,74 @@ public class RoomDbHelper implements DbHelper {
         entity.setBpm(tag.getBpm());
         return entity;
     }
+
+    // -------------------------------------------------------------------------
+    // WHERE clause builder — mirrors OrmLite buildWhereClauseWithArgs logic
+    // Returns String[]: [0]=WHERE clause (with ? placeholders), [1..n]=bind args
+    // -------------------------------------------------------------------------
+    private String[] buildWhereClause(SearchCriteria criteria) {
+        if (criteria.isSearchMode()) {
+            String like = "%" + criteria.getSearchText() + "%";
+            return new String[]{"(title LIKE ? OR artist LIKE ? OR album LIKE ?)", like, like, like};
+        }
+        String kw;
+        switch (criteria.getType()) {
+            case LIBRARY:
+                kw = criteria.getKeyword() != null ? criteria.getKeyword().trim() : "";
+                if (kw.isEmpty() || Constants.TITLE_ALL_SONGS.equals(kw)) return new String[]{""};
+                if (Constants.TITLE_INCOMING_SONGS.equals(kw))  return new String[]{"isManaged = 0"};
+                if (Constants.TITLE_TO_ANALYST_DR.equals(kw))   return new String[]{"drScore = 0 OR dynamicRange = 0"};
+                if (Constants.TITLE_NO_COVERART.equals(kw))     return new String[]{"albumArtFilename IS NULL OR albumArtFilename = ''"};
+                return new String[]{""};
+
+            case PUBLISHER:
+                kw = criteria.getKeyword() != null ? criteria.getKeyword().trim() : "";
+                if (kw.isEmpty() || Constants.UNKNOWN.equals(kw)) return new String[]{"publisher IS NULL"};
+                return new String[]{"publisher = ?", kw};
+
+            case ARTIST:
+                kw = criteria.getKeyword();
+                if (kw == null || kw.isEmpty()) return new String[]{""};
+                // Match exact or within comma-separated multi-artist field
+                return new String[]{
+                    "artist = ? OR artist LIKE ? OR artist LIKE ? OR artist LIKE ?",
+                    kw,
+                    kw + ",%",
+                    "%," + kw,
+                    "%," + kw + ",%"
+                };
+
+            case SOUND_GRADE:
+                kw = criteria.getKeyword();
+                if (kw == null || kw.isEmpty()) return new String[]{""};
+                if (Constants.TITLE_DSD.equals(kw))
+                    return new String[]{"audioEncoding IN ('dsd', 'dff')"};
+                if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw))
+                    return new String[]{"qualityInd LIKE 'MQA%'"};
+                if (Constants.TITLE_HIGH_QUALITY.equals(kw))
+                    return new String[]{"audioEncoding IN ('aac', 'mpeg')"};
+                if (Constants.TITLE_CD_QUALITY.equals(kw))
+                    return new String[]{"audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'"};
+                if (Constants.TITLE_HIRES_QUALITY.equals(kw))
+                    return new String[]{"audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'"};
+                if (Constants.TITLE_CD_EXT_QUALITY.equals(kw))
+                    return new String[]{"audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'"};
+                return new String[]{""};
+
+            case GENRE:
+                kw = criteria.getKeyword();
+                if (kw == null || kw.isEmpty()) return new String[]{""};
+                return new String[]{"genre = ?", kw};
+
+            default:
+                return new String[]{""};
+        }
+    }
+
+    private boolean needsGroupDedup(SearchCriteria criteria) {
+        if (criteria.getType() == SearchCriteria.TYPE.ARTIST && criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) return true;
+        if (criteria.getType() == SearchCriteria.TYPE.GENRE  && criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) return true;
+        return false;
+    }
 }
+

@@ -5,7 +5,9 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.RawQuery;
 import androidx.room.Update;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 
@@ -184,6 +186,9 @@ public interface TrackDao {
 
     @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')")
     double durCompressed();
+
+    @RawQuery
+    SearchStats getStatsByRawQuery(SupportSQLiteQuery query);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(TrackEntity track);
