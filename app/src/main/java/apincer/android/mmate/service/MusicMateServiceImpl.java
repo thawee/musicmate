@@ -130,10 +130,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         @Override
         public void onMediaTrackChanged(String title, String artist, String album, long duration) {
-            Track song = tagRepos.findMusic(title, artist, album);
-            if(song != null) {
-                onMediaTrackChanged(song);
-            }
+            scheduler.execute(() -> {
+                Track song = tagRepos.findMusic(title, artist, album);
+                if (song != null) {
+                    onMediaTrackChanged(song);
+                }
+            });
         }
 
         @Override
