@@ -113,7 +113,7 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findMySongs(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findMySongs(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findMySongs(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -182,7 +182,8 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findRecentlyAdded(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findRecentlyAdded(firstResult, maxResults));
+        long limit = maxResults <= 0 ? -1 : maxResults;
+        return new ArrayList<>(trackDao.findRecentlyAdded(firstResult, limit));
     }
 
     @Override
@@ -197,37 +198,37 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findByGenre(String genre, long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findByGenre(genre, firstResult, maxResults));
+        return new ArrayList<>(trackDao.findByGenre(genre, firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findByGrouping(String grouping, long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findByGrouping(grouping, firstResult, maxResults));
+        return new ArrayList<>(trackDao.findByGrouping(grouping, firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findHiRes(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findHiRes(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findHiRes(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findHiRes48(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findHiRes48(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findHiRes48(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findHighQuality(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findHighQuality(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findHighQuality(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findMQASongs(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findMQASongs(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findMQASongs(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findDSDSongs(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findDSDSongs(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findDSDSongs(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -242,7 +243,7 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findCDQuality(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findCDQuality(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findCDQuality(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -252,7 +253,7 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findByKeyword(String keyword, long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findByKeyword(keyword, firstResult, maxResults));
+        return new ArrayList<>(trackDao.findByKeyword(keyword, firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -265,10 +266,11 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findSimilarSongs(boolean artistAware, long firstResult, long maxResults) {
+        long limit = maxResults <= 0 ? -1 : maxResults;
         if (artistAware) {
-            return new ArrayList<>(trackDao.findSimilarByTitleAndArtist(firstResult, maxResults));
+            return new ArrayList<>(trackDao.findSimilarByTitleAndArtist(firstResult, limit));
         }
-        return new ArrayList<>(trackDao.findSimilarByTitle(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findSimilarByTitle(firstResult, limit));
     }
 
     @Override
@@ -360,12 +362,12 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findByArtist(String name, long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findByArtist(name, firstResult, maxResults));
+        return new ArrayList<>(trackDao.findByArtist(name, firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
     public List<Track> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findByAlbumAndAlbumArtist(album, albumArtist, firstResult, maxResults));
+        return new ArrayList<>(trackDao.findByAlbumAndAlbumArtist(album, albumArtist, firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -383,7 +385,7 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findForPlaylist(long firstResult, long maxResults) {
-        return new ArrayList<>(trackDao.findForPlaylist(firstResult, maxResults));
+        return new ArrayList<>(trackDao.findForPlaylist(firstResult, maxResults <= 0 ? -1 : maxResults));
     }
 
     @Override
@@ -499,6 +501,10 @@ public class RoomDbHelper implements DbHelper {
         entity.setDrScore(tag.getDrScore());
         entity.setDynamicRange(tag.getDynamicRange());
         entity.setBpm(tag.getBpm());
+        entity.setIsManaged(tag.isManaged());
+        entity.setStorageId(tag.getStorageId());
+        entity.setSimpleName(tag.getSimpleName());
+        entity.setMqaSampleRate(tag.getMqaSampleRate());
         return entity;
     }
 

@@ -40,7 +40,7 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE path = :path")
     List<TrackEntity> getByPath(String path);
 
-    @Query("SELECT * FROM musictag ORDER BY fileLastModified DESC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE isManaged = 0 ORDER BY fileLastModified DESC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findRecentlyAdded(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE drScore = 0 OR dynamicRange = 0 ORDER BY title ASC")
@@ -55,25 +55,25 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE mood = :grouping OR style = :grouping OR origin = :grouping ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByGrouping(String grouping, long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioBitsDepth > 16 OR audioSampleRate > 44100 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHiRes(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioBitsDepth > 16 OR audioSampleRate > 48000 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHiRes48(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE qualityInd IN ('HQ', 'HIRES') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('aac', 'mpeg') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHighQuality(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE mqaSampleRate > 0 ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE qualityInd LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findMQASongs(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding LIKE '%DSD%' OR qualityInd = 'DSD' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('dsd', 'dff') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findDSDSongs(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE publisher LIKE '%' || :keyword || '%' ORDER BY title ASC")
     List<TrackEntity> findByPublisher(String keyword);
 
-    @Query("SELECT * FROM musictag WHERE (audioBitsDepth = 16 AND audioSampleRate = 44100) OR qualityInd = 'SQ' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findCDQuality(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE title LIKE '%' || :keyword || '%' OR artist LIKE '%' || :keyword || '%' OR album LIKE '%' || :keyword || '%' ORDER BY title ASC")
@@ -100,7 +100,7 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE albumArtFilename IS NULL OR albumArtFilename = '' ORDER BY title ASC")
     List<TrackEntity> findNoEmbedCoverArtSong();
 
-    @Query("SELECT * FROM musictag WHERE artist = :name OR artist LIKE :name || ',%' OR artist LIKE '%,' || :name OR artist LIKE '%,' || :name || ',%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE artist = :name OR artist LIKE :name || ',%' OR artist LIKE '%, ' || :name OR artist LIKE '%,' || :name OR artist LIKE '%,' || :name || ',%' OR artist LIKE '%, ' || :name || ',%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByArtist(String name, long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY track ASC, title ASC LIMIT :maxResults OFFSET :firstResult")
@@ -134,10 +134,10 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findSimilarByTitle(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC")
+    @Query("SELECT * FROM musictag WHERE (normalizedTitle, normalizedArtist) IN (SELECT normalizedTitle, normalizedArtist FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC")
     List<TrackEntity> findSimilarByTitleAndArtist();
 
-    @Query("SELECT * FROM musictag WHERE normalizedTitle IN (SELECT normalizedTitle FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE (normalizedTitle, normalizedArtist) IN (SELECT normalizedTitle, normalizedArtist FROM musictag GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) ORDER BY normalizedTitle ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findSimilarByTitleAndArtist(long firstResult, long maxResults);
 
     // --- Aggregation stats for category lists ---
@@ -147,7 +147,7 @@ public interface TrackDao {
     @Query("SELECT artist, COUNT(*) as cnt, SUM(audioDuration) as dur FROM musictag GROUP BY artist ORDER BY artist ASC")
     List<ArtistStats> getArtistStats();
 
-    @Query("SELECT album, albumArtist, albumArtFilename, COUNT(*) as cnt FROM musictag GROUP BY album, albumArtist ORDER BY album ASC")
+    @Query("SELECT album, albumArtist, MAX(albumArtFilename) as albumArtFilename, COUNT(*) as cnt FROM musictag GROUP BY album, albumArtist ORDER BY album ASC")
     List<AlbumStats> getAlbumStats();
 
     // --- Sound grade aggregations ---

@@ -12,6 +12,7 @@ import org.jaudiotagger.audio.AudioHeader;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.Set;
 
 import apincer.music.core.Constants;
 import apincer.music.core.model.AudioTag;
@@ -37,29 +38,42 @@ public abstract class TagReader {
         }
     }
 
-   protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-
+    protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
     protected static final String KEY_TAG_QUALITY = "QUALITY";
     protected static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
     protected static final String KEY_TAG_ORIGINALSAMPLERATE = "ORIGINALSAMPLERATE";
 
+    /** Set-based format lookup — no exception allocation per unsupported file. */
+    private static final Set<String> SUPPORTED_EXTENSIONS = Set.of(
+            "MP3", "FLAC", "M4A", "WAV", "AIF", "AIFF", "DSF"
+    );
+
+    /**
+     * Cache one JThinkReader per scan thread to avoid creating a new instance per file.
+     * The WeakReference-free ThreadLocal is safe here because WorkManager threads are
+     * pooled and Context is the Application context (long-lived).
+     */
+    private static final ThreadLocal<JThinkReader> readerCache = new ThreadLocal<>();
+
     protected static TagReader getReader(Context context, String path) {
-        return new JThinkReader(context);
+        JThinkReader reader = readerCache.get();
+        if (reader == null) {
+            reader = new JThinkReader(context);
+            readerCache.set(reader);
+        }
+        return reader;
     }
 
     public long generateId(String path, int seq) {
-        String key = path + "|" + seq;
-        return key.hashCode() & 0xffffffffL; // make it positive long
+        // Avoid temporary String allocation: combine hash codes directly
+        long h = (long) path.hashCode() * 31 + seq;
+        return h & 0xffffffffL;
     }
 
     public static boolean isSupportedFileFormat(String path) {
-        try {
-            String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
-            SupportedFileFormat.valueOf(ext.toUpperCase());
-            return true;
-        }catch(Exception ex) {
-            return false;
-        }
+        String ext = FileUtils.getExtension(path);
+        if (ext == null || ext.isEmpty()) return false;
+        return SUPPORTED_EXTENSIONS.contains(ext.toUpperCase(Locale.US));
     }
 
     protected String detectAudioEncoding(AudioFile read, AudioHeader header) {

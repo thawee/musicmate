@@ -449,16 +449,19 @@ public class FileRepository {
     public void saveCoverartToCache(Track basicTag) {
         try {
             File folderCover = getFolderCoverArt(basicTag.getPath());
+            File file = new File(basicTag.getPath());
+            File parentFile = file.getParentFile();
+            String parentPath = parentFile != null ? parentFile.getAbsolutePath() : "";
+
             if(folderCover != null && folderCover.exists()) {
                 //update filename, use folder for hex
-                File file = new File(basicTag.getPath());
-                String albumArtName = StringUtils.md5Hex(file.getParentFile().getAbsolutePath());
+                String albumArtName = StringUtils.md5Hex(parentPath);
                 String ext = FileUtils.getExtension(folderCover);
                 basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }else {
                 // if no folder album art, just set filename for lazy extraction later
                 if (isManagedInLibrary(basicTag)) {
-                    String albumArtName = StringUtils.md5Hex(new File(basicTag.getPath()).getParentFile().getAbsolutePath());
+                    String albumArtName = StringUtils.md5Hex(parentPath);
                     basicTag.setAlbumArtFilename(albumArtName);
                 } else {
                     String coverFilename = StringUtils.md5Hex(basicTag.getPath());
@@ -484,7 +487,6 @@ public class FileRepository {
         // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
         // /format/<album|albumartist|artist>/<track no> <artist>-<title>
         // music/album artist/album (sound quality[HR/SQ/LC/DSD/MQA])/track - title.ext
-        final String ReservedChars = "?|\\*<\":>[]~#%^@.";
         try {
             String musicPath = "Music/";
             //getStorageIdFor(metadata);
@@ -536,10 +538,7 @@ public class FileRepository {
                     filename.append(StringUtils.formatFilePath(FileUtils.getFileName(metadata.getPath())));
                 }
 
-            String newPath =  filename.toString();
-            for(int i=0;i<ReservedChars.length();i++) {
-                newPath = newPath.replace(String.valueOf(ReservedChars.charAt(i)),"");
-            }
+            String newPath = filename.toString().replaceAll("[?\\|\\\\*<\":>\\[\\]~#%^@.]", "");
 
             newPath = newPath+"."+ext;
             if(includeStorageDir) {

@@ -41,6 +41,7 @@ import java.nio.BufferUnderflowException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import apincer.music.core.model.AudioTag;
@@ -223,27 +224,30 @@ public class JThinkReader extends TagReader{
     /**
      * Get tag value, handling multi-value fields.
      * Returns values joined with ", " separator.
+     * Avoids intermediate ArrayList allocation.
      */
     private String getMultiValue(Tag tag, FieldKey key) {
         if (tag == null || !tag.hasField(key)) return "";
-        
-        // Get all values for this field
+
         List<String> values = tag.getAll(key);
         if (values == null || values.isEmpty()) return "";
-        
-        // Filter out MULTI_VALUES placeholder
-        List<String> cleanValues = new ArrayList<>();
+
+        StringBuilder sb = null;
+        String first = null;
         for (String v : values) {
-            if (v != null && !v.isEmpty() && !v.equals(StringUtils.MULTI_VALUES)) {
-                cleanValues.add(v.trim());
+            if (v == null || v.isEmpty() || v.equals(StringUtils.MULTI_VALUES)) continue;
+            String trimmed = v.trim();
+            if (first == null) {
+                first = trimmed;
+            } else {
+                if (sb == null) {
+                    sb = new StringBuilder(first);
+                }
+                sb.append(", ").append(trimmed);
             }
         }
-        
-        if (cleanValues.isEmpty()) return "";
-        if (cleanValues.size() == 1) return cleanValues.get(0);
-        
-        // Join multiple values with ", "
-        return String.join(", ", cleanValues);
+        if (sb != null) return sb.toString();
+        return first != null ? first : "";
     }
     
     /**
@@ -278,12 +282,12 @@ public class JThinkReader extends TagReader{
            // metadata.setQualityRating(getTagValue(tag, FieldKey.QUALITY));
             metadata.setComment(getTagValue(tag, FieldKey.COMMENT));
         }else {
-            // wave file
-            Map<String, String> tags = parseTxx(tag);
-                metadata.setGenre(tags.get("GENRE"));
-                metadata.setStyle(tags.get("STYLE"));
-                metadata.setMood(tags.get("MOOD"));
-                metadata.setOrigin(tags.get("ORIGIN"));
+            // wave file — reuse tempTagsMap (already cleared above) to parse TXX tags
+            parseTxx(tag, tempTagsMap);
+                metadata.setGenre(tempTagsMap.get("GENRE"));
+                metadata.setStyle(tempTagsMap.get("STYLE"));
+                metadata.setMood(tempTagsMap.get("MOOD"));
+                metadata.setOrigin(tempTagsMap.get("ORIGIN"));
         }
 
         if(TagUtils.isFLACFile(metadata)) {
@@ -309,18 +313,14 @@ public class JThinkReader extends TagReader{
         }
     }
 
-    private Map<String, String> parseTxx(Tag tag) {
+    /** Parses TXXX tag fields into the provided map (avoids per-call HashMap allocation). */
+    private void parseTxx(Tag tag, Map<String, String> resultMap) {
         List<TagField> fields = tag.getFields("TXXX");
-        Map<String, String> mapped = new HashMap<>();
         for (TagField field : fields) {
             AbstractID3v2Frame frame = (AbstractID3v2Frame) field;
             FrameBodyTXXX body = (FrameBodyTXXX) frame.getBody();
-
-            String key = body.getDescription();
-            String value = body.getText();
-            mapped.put(key, value);
+            resultMap.put(body.getDescription(), body.getText());
         }
-        return mapped;
     }
   
     private String getTagValue(Tag tag, FieldKey key) {
@@ -374,13 +374,16 @@ public class JThinkReader extends TagReader{
             String fieldStr = field.toString();
             if (isEmpty(fieldStr)) continue;
 
-            String[] data = fieldStr.split(";");
-            if (data.length < 2) continue;
+            // Avoid split(";") String[] allocation — use indexOf instead
+            int semi = fieldStr.indexOf(';');
+            if (semi < 0) continue;
 
-            String data0 = data[0];
+            String data0 = fieldStr.substring(0, semi);
             if (data0.length() <= 13) continue;
-            String key = data0.substring(13, Math.max(13, data0.length() - 1)).toUpperCase();
-            resultMap.put(key, extractId3Val(data[1]));
+            String key = data0.substring(13, data0.length() - 1).toUpperCase(Locale.US);
+
+            String data1 = fieldStr.substring(semi + 1);
+            resultMap.put(key, extractId3Val(data1));
         }
     }
 

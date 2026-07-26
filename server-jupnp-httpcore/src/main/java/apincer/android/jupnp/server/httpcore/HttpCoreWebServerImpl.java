@@ -363,11 +363,21 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 try {
                     WebSocket.Frame frame = new WebSocket.Frame(true, WebSocket.OPCODE_TEXT, text.getBytes(StandardCharsets.UTF_8));
                     ByteBuffer buffer = frame.toByteBuffer();
-                    int bytesWritten = session.write(buffer);
-                    Log.d(TAG, "WS sendText wrote " + bytesWritten + " bytes (total buffer: " + buffer.limit() + ") to " + session.getRemoteAddress());
-                    if (buffer.hasRemaining()) {
-                        session.setEvent(java.nio.channels.SelectionKey.OP_WRITE);
+                    int totalWritten = 0;
+                    int totalLimit = buffer.limit();
+                    while (buffer.hasRemaining() && session.isOpen()) {
+                        int written = session.write(buffer);
+                        if (written <= 0) {
+                            // Non-blocking socket write buffer full: request OP_WRITE interest and yield
+                            session.setEvent(java.nio.channels.SelectionKey.OP_WRITE);
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException ignored) {}
+                        } else {
+                            totalWritten += written;
+                        }
                     }
+                    Log.d(TAG, "WS sendText wrote " + totalWritten + " bytes (total buffer: " + totalLimit + ") to " + session.getRemoteAddress());
                 } catch (IOException e) {
                     Log.e(TAG, "Error in WS sendText", e);
                 }

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -1093,19 +1094,17 @@ public class BaseServer {
         private Map<String, Object> getMap(@Nullable Track song) {
             if (song == null) return new HashMap<>();
 
-            // Use Map.of for immutable core fields, then add optional fields to a HashMap
-            Map<String, Object> track = new HashMap<>(Map.of(
-                    "type", "song",
-                    "trackId", song.getId(),
-                    "title", trimToEmpty(song.getTitle()),
-                    "artist", trimToEmpty(song.getArtist()),
-                    "album", trimToEmpty(song.getAlbum()),
-                    "duration", song.getAudioDuration(),
-                    "format", trimToEmpty(song.getAudioEncoding()).toUpperCase(),
-                    "bitDepth", StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()),
-                    "sampleRate", StringUtils.formatAudioSampleRate(song.getAudioSampleRate(),true),
-                    "artUrl", "/coverart/" + song.getAlbumArtFilename()
-            ));
+            Map<String, Object> track = new HashMap<>();
+            track.put("type", "song");
+            track.put("trackId", song.getId());
+            track.put("title", trimToEmpty(song.getTitle()));
+            track.put("artist", trimToEmpty(song.getArtist()));
+            track.put("album", trimToEmpty(song.getAlbum()));
+            track.put("duration", song.getAudioDuration());
+            track.put("format", trimToEmpty(song.getAudioEncoding()).toUpperCase(Locale.US));
+            track.put("bitDepth", StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()));
+            track.put("sampleRate", StringUtils.formatAudioSampleRate(song.getAudioSampleRate(),true));
+            track.put("artUrl", "/coverart/" + trimToEmpty(song.getAlbumArtFilename()));
 
             if (!isEmpty(song.getYear())) {
                 track.put("year", song.getYear());
@@ -1117,8 +1116,7 @@ public class BaseServer {
 
             String qualityIndicator = song.getQualityInd();
             if (!isEmpty(qualityIndicator)) {
-                // Check specifically for MQA using TagUtils, otherwise use the indicator
-                if (TagUtils.isMQA(song) || TagUtils.isMQAStudio(song)) { // Combine MQA checks
+                if (qualityIndicator.contains("MQA")) {
                     track.put("quality", "MQA");
                 } else {
                     track.put("quality", qualityIndicator);
