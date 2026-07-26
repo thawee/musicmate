@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import apincer.music.core.utils.MusicMateExecutors;
+
 import javax.inject.Inject;
 
 import apincer.music.core.model.Track;
@@ -121,13 +123,16 @@ public class TagsViewModel extends ViewModel {
 
     public void refreshDisplayTag() {
         List<Track> items = _editItems.getValue();
-        List<Track> updatedItems = new ArrayList<>(); // Or refetch
-        //should reload music tags
-        items.forEach(musicTag -> {
-            repos.load(musicTag);
-            updatedItems.add(musicTag);
+        if (items == null || items.isEmpty()) return;
+        // Load from DB off the main thread — Room forbids main-thread access
+        MusicMateExecutors.execute(() -> {
+            List<Track> updatedItems = new ArrayList<>();
+            for (Track musicTag : items) {
+                repos.load(musicTag);
+                updatedItems.add(musicTag);
+            }
+            _editItems.postValue(updatedItems);
+            redisplayTag(updatedItems);
         });
-        _editItems.postValue(updatedItems); // This will trigger observers
-        redisplayTag(updatedItems);     // This will also trigger observers
     }
 }
