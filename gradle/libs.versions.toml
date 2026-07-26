@@ -24,7 +24,8 @@ coroutines = "1.11.0"
 # https://repo.maven.apache.org/maven2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/
 #ksp= "2.3.5"
 ksp= "2.3.9"
-hilt ="2.60.1"
+room = "2.8.4"
+hilt = "2.60.1"
 
 [libraries]
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
@@ -76,6 +77,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 #junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 #nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 #jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.22.1"} # removed - replaced with kotlinx.serialization & org.json
 #jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.22.1"}
 #airbnb-lottie={module="com.airbnb.android:lottie", version="6.7.1"}

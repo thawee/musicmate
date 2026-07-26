@@ -41,27 +41,26 @@ android {
     }
 
     // Define the dimensions for your flavors
-    flavorDimensions "server"
+    flavorDimensions "server", "database"
     productFlavors {
             nio {
                 dimension = "server"
                 // Gradle will look for code in `src/nio/java`
             }
-           // jetty {
-            //    dimension = "server"
-                // Gradle will look for code in `src/jetty/java`
-           // }
             netty {
                 dimension = "server"
                 // Gradle will look for code in `src/netty/java`
             }
-           // undertow {
-            //    dimension = "server"
-                // Gradle will look for code in `src/undertow/java`
-            //}
             httpcore {
                 dimension = "server"
                 // Gradle will look for code in `src/httpcore/java`
+            }
+
+            ormlite {
+                dimension = "database"
+            }
+            room {
+                dimension = "database"
             }
     }
 
@@ -122,7 +121,8 @@ android {
 dependencies {
     // modules
     implementation project(':core')
-    implementation project(':db-ormlite')
+    ormliteImplementation project(':db-ormlite')
+    roomImplementation project(':db-room')
 
     // AndroidX
     implementation libs.androidx.annotation
