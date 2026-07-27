@@ -851,7 +851,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                         try { onError.accept(t); } catch (Exception ignored) {}
                     }
                 }
-                try { Thread.sleep(50); } catch (InterruptedException e) { break; }
+                try { Thread.sleep(500); } catch (InterruptedException e) { break; }
             }
         }, "FlowWatcher");
         watcher.setDaemon(true);

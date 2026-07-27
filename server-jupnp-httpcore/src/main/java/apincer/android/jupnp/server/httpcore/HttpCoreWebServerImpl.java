@@ -365,19 +365,31 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                     ByteBuffer buffer = frame.toByteBuffer();
                     int totalWritten = 0;
                     int totalLimit = buffer.limit();
-                    while (buffer.hasRemaining() && session.isOpen()) {
+                    int retries = 0;
+                    int maxRetries = 500; // ~10 seconds max with backoff
+                    while (buffer.hasRemaining() && session.isOpen() && retries < maxRetries) {
                         int written = session.write(buffer);
                         if (written <= 0) {
-                            // Non-blocking socket write buffer full: request OP_WRITE interest and yield
+                            // Non-blocking socket write buffer full: yield with exponential backoff
                             session.setEvent(java.nio.channels.SelectionKey.OP_WRITE);
+                            retries++;
+                            long sleepMs = Math.min(20L * retries, 200); // 20ms → 200ms cap
                             try {
-                                Thread.sleep(10);
-                            } catch (InterruptedException ignored) {}
+                                Thread.sleep(sleepMs);
+                            } catch (InterruptedException ignored) {
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
                         } else {
                             totalWritten += written;
+                            retries = 0; // reset on successful write
                         }
                     }
-                    Log.d(TAG, "WS sendText wrote " + totalWritten + " bytes (total buffer: " + totalLimit + ") to " + session.getRemoteAddress());
+                    if (buffer.hasRemaining()) {
+                        Log.w(TAG, "WS sendText incomplete: wrote " + totalWritten + "/" + totalLimit + " bytes to " + session.getRemoteAddress());
+                    } else {
+                        Log.d(TAG, "WS sendText wrote " + totalWritten + " bytes (total buffer: " + totalLimit + ") to " + session.getRemoteAddress());
+                    }
                 } catch (IOException e) {
                     Log.e(TAG, "Error in WS sendText", e);
                 }

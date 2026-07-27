@@ -59,28 +59,9 @@ public class MusicMateExecutors {
     private MusicMateExecutors() {
         this(
                // new ThreadPoolExecutor(2, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
-                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
-                 protected void afterExecute(Runnable r, Throwable t) {
-                     try {
-                         Thread.sleep(FAST_THREAD_DELAY_MS); // wait 0.1 second
-                     } catch (InterruptedException e) {
-                         Log.e(TAG, "Thread interrupted during throttling delay", e);
-                         // Restore the interrupted status
-                         Thread.currentThread().interrupt();
-                     }
-                 }},
+                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()),
                 new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,600L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
-                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
-                    protected void afterExecute(Runnable r, Throwable t) {
-                        try {
-                            Thread.sleep(MAIN_THREAD_DELAY_MS); // wait 0.2 second
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, "Thread interrupted during throttling delay", e);
-                            // Restore the interrupted status
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-                });
+                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()));
     }
 
     public static void lowPriority(Runnable command) {

@@ -523,13 +523,14 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         if (pm != null && wakeLock == null) {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MM:Wake");
-            // No timeout — streaming sessions can last hours. releaseLocks() MUST be called
-            // on stop to avoid a leak. This is guaranteed by the finally block in stop().
-            wakeLock.acquire();
+            // 4-hour timeout — prevents indefinite CPU wakelock if releaseLocks() is not called
+            wakeLock.acquire(4 * 60 * 60 * 1000L);
         }
 
         if (wm != null && wifiLock == null) {
-            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "MM:Wifi");
+            // Use WIFI_MODE_FULL_HIGH_PERF instead of WIFI_MODE_FULL_LOW_LATENCY
+            // LOW_LATENCY keeps the radio at maximum power continuously
+            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MM:Wifi");
             wifiLock.acquire();
         }
 

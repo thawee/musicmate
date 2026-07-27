@@ -178,7 +178,7 @@ public class AboutActivity extends AppCompatActivity {
 
             renderMarkdown(content, qualityDetail);
 
-            MusicMateExecutors.executeUI(() -> {
+            MusicMateExecutors.execute(() -> {
                 Map<String, Integer> encList = new HashMap<>();
                 tagRepos.processAllMusics(tag -> {
                     String enc = apincer.music.core.utils.TagUtils.getEncodingTypeShort(tag);
@@ -188,18 +188,15 @@ public class AboutActivity extends AppCompatActivity {
                         encList.put(enc, 1);
                     }
                 });
-                getActivity().runOnUiThread(() -> {
-                    // storage
-                    LinearLayout panel = v.findViewById(R.id.storage_bar);
-                    UIUtils.buildStoragesStatus(requireActivity().getApplication(), panel);
-                   // UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
-
-                    // file type piechart
-                    setupQualityChart(v, encList, "");
-                    //setupGroupingChart(v, grpList, "");
-
-                    // setup digital music details
-                });
+                if (isAdded() && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // storage
+                        LinearLayout panel = v.findViewById(R.id.storage_bar);
+                        UIUtils.buildStoragesStatus(requireActivity().getApplication(), panel);
+                        // file type piechart
+                        setupQualityChart(v, encList, "");
+                    });
+                }
             });
 
             return v;

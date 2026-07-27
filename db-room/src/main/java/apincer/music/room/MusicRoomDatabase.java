@@ -25,6 +25,7 @@ public abstract class MusicRoomDatabase extends RoomDatabase {
                             MusicRoomDatabase.class,
                             "musixmate_room.db"
                     )
+                    .allowMainThreadQueries()
                     .fallbackToDestructiveMigration()
                     .build();
                 }
