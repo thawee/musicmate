@@ -18,31 +18,31 @@
     <!--
     Adaptive Color Palette (Light Modes, for Dark Modes, see values-night/colors.xml),
     -->
-    <!-- Primary App Colors -->
-    <color name="colorPrimary">#1E88E5</color>
+    <!-- Primary App Colors (Warm Sunset Gold) -->
+    <color name="colorPrimary">#F57C00</color> <!-- Warm Orange Gold -->
     <color name="colorOnPrimary">#FFFFFF</color>
-    <color name="colorPrimaryContainer">#E3F2FD</color>
-    <color name="colorOnPrimaryContainer">#0D47A1</color>
+    <color name="colorPrimaryContainer">#FFE0B2</color>
+    <color name="colorOnPrimaryContainer">#E65100</color>
 
-    <!-- Secondary / Accent -->
-    <color name="colorSecondary">#03DAC6</color>
-    <color name="colorOnSecondary">#00332E</color>
-    <color name="colorSecondaryContainer">#B2F0E9</color>
-    <color name="colorOnSecondaryContainer">#00201B</color>
+    <!-- Secondary / Accent (Warm Peach Coral) -->
+    <color name="colorSecondary">#E64A19</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorSecondaryContainer">#FFCCBC</color>
+    <color name="colorOnSecondaryContainer">#BF360C</color>
 
-    <!-- Surface / Background -->
-    <color name="colorSurface">#FFFFFF</color>
-    <color name="colorOnSurface">#1C1B1F</color>
-    <color name="colorSurfaceVariant">#E8EAF6</color>
-    <color name="colorOnSurfaceVariant">#44464F</color>
+    <!-- Surface / Background (Soft Warm Off-White) -->
+    <color name="colorSurface">#FFFBF7</color>
+    <color name="colorOnSurface">#211A16</color>
+    <color name="colorSurfaceVariant">#F5EBE6</color>
+    <color name="colorOnSurfaceVariant">#53433C</color>
 
     <!-- Outline / Divider -->
-    <color name="colorOutline">#79747E</color>
-    <color name="colorOutlineVariant">#C4C7D0</color>
+    <color name="colorOutline">#85736B</color>
+    <color name="colorOutlineVariant">#D7CCC8</color>
 
     <!-- Highlights -->
-    <color name="colorControlHighlight">#1E88E533</color>
-    <color name="colorSurfaceContainerLowest">#FAFAFA</color>
+    <color name="colorControlHighlight">#33F57C00</color>
+    <color name="colorSurfaceContainerLowest">#FFFFFF</color>
 
     <!-- Player Indicator -->
     <color name="colorPlayingIndicator">#1E88E5</color>

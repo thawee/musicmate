@@ -523,24 +523,42 @@ public class FileRepository {
             }
             filename.append(StringUtils.formatFilePath(album)).append(File.separator);
 
-            // track number
-            if(!isEmpty(metadata.getTrack())) {
-                filename.append(StringUtils.getWord(metadata.getTrack(),"/",0)).append(" - ");
+            // track & disc number (multi-disc combined in single album folder)
+            String trackStr = metadata.getTrack();
+            if(!isEmpty(trackStr)) {
+                String trackNo = StringUtils.getWord(trackStr, "/", 0).trim();
+                if(trackNo.length() == 1 && Character.isDigit(trackNo.charAt(0))) {
+                    trackNo = "0" + trackNo;
+                }
+                filename.append(trackNo).append(" - ");
             } else if(!isEmpty(firstArtist)) {
                 filename.append(StringUtils.formatFilePath(firstArtist)).append(" - ");
             }
 
             // title
             String title = StringUtils.trimTitle(metadata.getTitle());
-                if (!StringUtils.isEmpty(title)) {
-                    filename.append(StringUtils.formatFilePath(title));
-                } else {
-                    filename.append(StringUtils.formatFilePath(FileUtils.getFileName(metadata.getPath())));
-                }
+            if (!StringUtils.isEmpty(title)) {
+                filename.append(StringUtils.formatFilePath(title));
+            } else {
+                filename.append(StringUtils.formatFilePath(FileUtils.getFileName(metadata.getPath())));
+            }
 
-            String newPath = filename.toString().replaceAll("[?\\|\\\\*<\":>\\[\\]~#%^@.]", "");
+            // Sanitize illegal path characters per component, leaving directory separators intact
+            String rawPath = filename.toString();
+            String[] parts = rawPath.split("/");
+            StringBuilder sanitizedPath = new StringBuilder();
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) sanitizedPath.append(File.separator);
+                String part = parts[i];
+                // Replace dots inside component names with spaces to prevent word merging, remove reserved chars
+                part = part.replaceAll("\\.", " ")
+                           .replaceAll("[?\\|\\\\*<\":>\\[\\]~#%^@]", "")
+                           .trim()
+                           .replaceAll("\\s+", " ");
+                sanitizedPath.append(part);
+            }
 
-            newPath = newPath+"."+ext;
+            String newPath = sanitizedPath.toString() + "." + ext;
             if(includeStorageDir) {
                 return DocumentFileCompat.buildAbsolutePath(getContext(), PRIMARY, newPath);
             }else {

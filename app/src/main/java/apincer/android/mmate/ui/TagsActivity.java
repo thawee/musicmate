@@ -435,9 +435,6 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_open_folder) {
                 ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
                 return true;
-            } else if (itemId == R.id.action_fix_thai_encoding) {
-                doFixThaiEncoding();
-                return true;
             } else if (itemId == R.id.action_auto_tag) {
                 doAutoTag();
                 return true;
@@ -558,32 +555,33 @@ public class TagsActivity extends AppCompatActivity {
         
         Track item = items.get(0);
         
-        // Show an input dialog to let the user confirm or refine the title and artist query
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setTitle("Search & Match Tags");
-        
-        android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
-        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
-        layout.setPadding(50, 30, 50, 30);
-        
-        final android.widget.EditText titleInput = new android.widget.EditText(this);
-        titleInput.setHint("Title");
+        // Show a custom glassy input dialog to let the user confirm or refine the title and artist query
+        View dialogView = getLayoutInflater().inflate(R.layout.view_action_search_query_dialog, null);
+        com.google.android.material.textfield.TextInputEditText titleInput = dialogView.findViewById(R.id.input_search_title);
+        com.google.android.material.textfield.TextInputEditText artistInput = dialogView.findViewById(R.id.input_search_artist);
+        View btnSearch = dialogView.findViewById(R.id.button_search);
+        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+
         titleInput.setText(item.getTitle());
-        layout.addView(titleInput);
-        
-        final android.widget.EditText artistInput = new android.widget.EditText(this);
-        artistInput.setHint("Artist");
         artistInput.setText(item.getArtist());
-        layout.addView(artistInput);
-        
-        builder.setView(layout);
-        builder.setPositiveButton("Search", (dialog, which) -> {
-            String qTitle = titleInput.getText().toString().trim();
-            String qArtist = artistInput.getText().toString().trim();
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        btnSearch.setOnClickListener(v -> {
+            String qTitle = titleInput.getText() != null ? titleInput.getText().toString().trim() : "";
+            String qArtist = artistInput.getText() != null ? artistInput.getText().toString().trim() : "";
+            dialog.dismiss();
             performSearchAndMatch(item, qTitle, qArtist);
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
     
     private void performSearchAndMatch(Track item, String title, String artist) {
@@ -657,17 +655,29 @@ public class TagsActivity extends AppCompatActivity {
     }
     
     private void showSearchResultsDialog(Track item, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setTitle("Select Best Match");
-        
+        View dialogView = getLayoutInflater().inflate(R.layout.view_action_search_results_dialog, null);
+        android.widget.ListView listView = dialogView.findViewById(R.id.search_results_list);
+        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+
         SearchResultAdapter adapter = new SearchResultAdapter(this, results);
-        
-        builder.setAdapter(adapter, (dialog, which) -> {
-            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected = results.get(which);
+        listView.setAdapter(adapter);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected = results.get(position);
+            dialog.dismiss();
             applySelectedSearchResult(item, selected);
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
     
     private void applySelectedSearchResult(Track item, apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected) {

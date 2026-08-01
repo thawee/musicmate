@@ -83,7 +83,9 @@ public interface DbHelper {
 
     List<String> getPublishers();
 
-    List<String> getArtists() ;
+    List<String> getArtists();
+
+    List<String> getAlbumArtists();
 
     Track findById(long id);
 

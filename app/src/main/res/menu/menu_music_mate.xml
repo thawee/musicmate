@@ -46,7 +46,7 @@
 	<item
         android:id="@+id/menu_settings"
         android:icon="@drawable/rounded_display_settings_24"
-        android:title="Preferences"
+        android:title="Settings"
         app:showAsAction="always" />
 
 	<!--
@@ -101,7 +101,7 @@
 	<item
 		android:id="@+id/menu_about_crash"
 		android:icon="@drawable/rounded_bug_report_24"
-		android:title="Activity Log"
+		android:title="Diagnostics"
 		app:showAsAction="always" />
 
 	<item

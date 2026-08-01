@@ -301,6 +301,11 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
+    public List<String> getAlbumArtists() {
+        return trackDao.getAlbumArtists();
+    }
+
+    @Override
     public Track findById(long id) {
         return trackDao.findById(id);
     }

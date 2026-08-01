@@ -250,6 +250,37 @@ public class TagRepository {
         return sortedList;
     }
 
+    public List<String> getAlbumArtistList(Context context) {
+        Set<String> uniqueArtists = new HashSet<>();
+
+        // Add default entries like "Various Artists" from R.array.default_album_artist
+        if (context != null) {
+            String[] defaults = context.getResources().getStringArray(R.array.default_album_artist);
+            for (String name : defaults) {
+                String trimmed = trimToEmpty(name);
+                if (!trimmed.isEmpty()) {
+                    uniqueArtists.add(trimmed);
+                }
+            }
+        }
+
+        // Add existing distinct album artists from DB
+        List<String> allAlbumArtists = dbHelper.getAlbumArtists();
+        for (String artistField : allAlbumArtists) {
+            String[] artists = artistField.split(ARTIST_SEP, -1);
+            for (String artist : artists) {
+                String trimmedArtist = trimToEmpty(artist);
+                if (!trimmedArtist.isEmpty()) {
+                    uniqueArtists.add(trimmedArtist);
+                }
+            }
+        }
+
+        List<String> sortedList = new ArrayList<>(uniqueArtists);
+        Collections.sort(sortedList);
+        return sortedList;
+    }
+
     @Deprecated
     public static List<String> getDefaultAlbumArtistList(Context context) {
         List<String> list = new ArrayList<>();

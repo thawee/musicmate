@@ -1,37 +1,37 @@
 <resources>
-    <!-- Primary App Colors -->
-    <color name="colorPrimary">#90CAF9</color>
-    <color name="colorOnPrimary">#0D47A1</color>
-    <color name="colorPrimaryContainer">#1565C0</color>
-    <color name="colorOnPrimaryContainer">#E3F2FD</color>
+    <!-- Primary App Colors (Warm Sunset Amber / Gold) -->
+    <color name="colorPrimary">#FFB74D</color> <!-- Warm Sunset Amber -->
+    <color name="colorOnPrimary">#3E2723</color>
+    <color name="colorPrimaryContainer">#E65100</color>
+    <color name="colorOnPrimaryContainer">#FFE0B2</color>
 
-    <!-- Secondary / Accent -->
-    <color name="colorSecondary">#80CBC4</color>
-    <color name="colorOnSecondary">#00332E</color>
-    <color name="colorSecondaryContainer">#004D43</color>
-    <color name="colorOnSecondaryContainer">#A7FFEB</color>
+    <!-- Secondary / Accent (Warm Peach Coral) -->
+    <color name="colorSecondary">#FF8A65</color> <!-- Warm Peach / Coral -->
+    <color name="colorOnSecondary">#4E1500</color>
+    <color name="colorSecondaryContainer">#D84315</color>
+    <color name="colorOnSecondaryContainer">#FFCCBC</color>
 
-    <!-- Surface / Background -->
-    <color name="colorSurface">#121212</color>
-    <color name="colorOnSurface">#E3E3E3</color>
-    <color name="colorSurfaceVariant">#2C2C2C</color>
-    <color name="colorOnSurfaceVariant">#B0B0B0</color>
+    <!-- Surface / Background (Warm Deep Charcoal Base) -->
+    <color name="colorSurface">#171412</color>
+    <color name="colorOnSurface">#F5EBE6</color>
+    <color name="colorSurfaceVariant">#2D2623</color>
+    <color name="colorOnSurfaceVariant">#D7CCC8</color>
 
     <!-- Outline / Divider -->
-    <color name="colorOutline">#666666</color>
-    <color name="colorOutlineVariant">#333333</color>
+    <color name="colorOutline">#7A6D67</color>
+    <color name="colorOutlineVariant">#3E3531</color>
 
-    <!-- Highlights -->
-    <color name="colorControlHighlight">#90CAF933</color>
-    <color name="colorSurfaceContainerLowest">#1E1E1E</color>
+    <!-- Highlights (Warm Honey Ripple) -->
+    <color name="colorControlHighlight">#33FFB74D</color>
+    <color name="colorSurfaceContainerLowest">#201B18</color>
 
     <!-- Player Indicator -->
-    <color name="colorPlayingIndicator">#64B5F6</color>
+    <color name="colorPlayingIndicator">#FFA726</color>
 
     <!-- Album Art Frame -->
-    <color name="colorArtFrame">#2C2C2C</color>
+    <color name="colorArtFrame">#2D2623</color>
 
-    <color name="md_theme_surface">#1C1B1F</color> <!-- dark surface -->
-    <color name="md_theme_surface_variant">#49454F</color>
-    <color name="md_theme_on_surface">#E6E1E5</color>
+    <color name="md_theme_surface">#171412</color>
+    <color name="md_theme_surface_variant">#4A3E39</color>
+    <color name="md_theme_on_surface">#F5EBE6</color>
 </resources>

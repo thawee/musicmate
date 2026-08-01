@@ -91,6 +91,9 @@ public interface TrackDao {
     @Query("SELECT DISTINCT artist FROM musictag WHERE artist IS NOT NULL AND artist != '' ORDER BY artist ASC")
     List<String> getArtists();
 
+    @Query("SELECT DISTINCT albumArtist FROM musictag WHERE albumArtist IS NOT NULL AND albumArtist != '' ORDER BY albumArtist ASC")
+    List<String> getAlbumArtists();
+
     @Query("SELECT * FROM musictag WHERE (mood = :grouping OR style = :grouping OR origin = :grouping) AND artist = :artist ORDER BY title ASC")
     List<TrackEntity> findByGroupingAndArtist(String grouping, String artist);
 

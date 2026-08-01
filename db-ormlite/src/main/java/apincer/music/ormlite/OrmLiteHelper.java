@@ -275,7 +275,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         try {
             Dao<TrackEntity, ?> dao = getMusicTagDao();
             QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
-            builder.where().eq("isManaged",false);
+            builder.where().eq("isManaged", false);
+            builder.orderBy("fileLastModified", false);
             if(firstResult>0) {
                 builder.offset(firstResult);
             }
@@ -283,12 +284,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                 builder.limit(maxResults);
             }
 
-            //List<MusicTag> masterList = builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
             List<TrackEntity> masterList = builder.query();
-            masterList.sort(Comparator
-                    .comparing(TrackEntity::getNormalizedTitle)
-                    .thenComparing(TrackEntity::getNormalizedArtist)
-            );
             return new ArrayList<>(masterList);
         } catch (SQLException e) {
             return EMPTY_LIST;
@@ -673,6 +669,27 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
             return list;
         } catch (Exception e) {
             Log.e(TAG,"getArtists: "+e.getMessage());
+            return EMPTY_STRING_LIST;
+        }
+    }
+
+    public List<String> getAlbumArtists() {
+        try {
+            List<String> list = new ArrayList<>();
+            Dao<TrackEntity, ?> dao = getMusicTagDao();
+            QueryBuilder<TrackEntity, ?> builder = dao.queryBuilder();
+            builder.selectRaw("distinct albumArtist");
+            builder.where().isNotNull("albumArtist").and().ne("albumArtist", "");
+            try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
+                for (String[] vals : results.getResults()) {
+                    if (vals[0] != null && !vals[0].trim().isEmpty()) {
+                        list.add(vals[0]);
+                    }
+                }
+            }
+            return list;
+        } catch (Exception e) {
+            Log.e(TAG,"getAlbumArtists: "+e.getMessage());
             return EMPTY_STRING_LIST;
         }
     }

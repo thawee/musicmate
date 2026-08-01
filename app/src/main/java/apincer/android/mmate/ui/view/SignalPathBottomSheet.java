@@ -3,6 +3,8 @@ package apincer.android.mmate.ui.view;
 import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 import static apincer.music.core.utils.TagUtils.isLossy;
 
+import apincer.music.core.utils.StringUtils;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -127,7 +129,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         TextView qualityIndicator = requireView().findViewById(R.id.quality_indicator);
         qualityIndicator.setText("");
 
-            // Step 1: Song
+        // Step 1: Song
         Track song = playbackService.getNowPlayingSong();
         if (song != null) {
             String quality = TagUIUtils.getQualityIndFullString(song);
@@ -138,34 +140,41 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             resolutionIndicator.setTextSize(14f);
             resolutionIndicator.setPadding(0, 0, 0, 8);
             signalPathContainer.addView(resolutionIndicator);
-            //qualityIndicator.setText(MusicTagUtils.getQualityIndFullString(song)); //song.getQualityInd());
 
-            String sourceText = song.getTitle() + // FileUtils.getFileName(song.getPath())+"."+FileUtils.getExtension(song.getPath())+
-                    "\n"+
-                    song.getAudioEncoding().toUpperCase()+
-                    SYMBOL_ENC_SEP+
+            boolean isLossyFile = TagUtils.isLossy(song);
+            String sourceTitle = isLossyFile ? "Standard Audio Source" : "High-Fidelity Source";
+            String songTitleText = song.getTitle();
+            if (!StringUtils.isEmpty(song.getArtist())) {
+                songTitleText = songTitleText + " — " + song.getArtist();
+            }
+
+            String sourceText = songTitleText +
+                    "\n" +
+                    song.getAudioEncoding().toUpperCase() +
+                    SYMBOL_ENC_SEP +
                     TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());
 
-            addSignalPathStep(signalPathContainer, "High-Fidelity Source", sourceText, true);
+            addSignalPathStep(signalPathContainer, sourceTitle, sourceText, true);
         }
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             String playerDetails = playbackTarget.getDisplayName();
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                //playerDetails = playerDetails +" ["+ formatPlayerDetail(player.getDescription())+"]";
-                addSignalPathStep(signalPathContainer, "Media Player", playerDetails, true);
+                addSignalPathStep(signalPathContainer, "MusicMate Audio Engine", playerDetails, true);
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
-                addSignalPathStep(signalPathContainer, "Refined Output", deviceDetails, false);
-                qualityIndicator.setText("Wired Excellence");
-            }else {
-                String serverDetails = ApplicationUtils.getFriendlyDeviceName()+" " + ApplicationUtils.getVersionNumber(getContext()); //Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
-                playerDetails = playerDetails + " [" + playbackTarget.getDescription() +"]";
-                addSignalPathStep(signalPathContainer, "MusicMate Engine", serverDetails, true);
-                addSignalPathStep(signalPathContainer, "Network Mastery", playerDetails, false);
-                if(!isLossy(song)) {
-                    qualityIndicator.setText("Wireless Purity");
+                addSignalPathStep(signalPathContainer, "Audio Output Device", deviceDetails, false);
+                qualityIndicator.setText("Wired Output");
+            } else {
+                String serverDetails = ApplicationUtils.getFriendlyDeviceName() + " " + ApplicationUtils.getVersionNumber(getContext());
+                playerDetails = playerDetails + " [" + playbackTarget.getDescription() + "]";
+                addSignalPathStep(signalPathContainer, "MusicMate Server Engine", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Network Renderer", playerDetails, false);
+                if (song != null && !TagUtils.isLossy(song)) {
+                    qualityIndicator.setText("Lossless Wireless");
+                } else {
+                    qualityIndicator.setText("Wireless Stream");
                 }
             }
         }

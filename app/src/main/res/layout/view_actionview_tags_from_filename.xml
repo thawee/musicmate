@@ -35,11 +35,7 @@
             android:text="Read TAGs from filename"
             android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:shadowColor="#88000000"
-            android:shadowDx="0"
-            android:shadowDy="2"
-            android:shadowRadius="4" />
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
@@ -50,7 +46,7 @@
         android:layout_marginTop="@dimen/dimen_8_dp"
         android:layout_marginEnd="@dimen/dimen_8_dp"
         android:background="@drawable/shape_background_filename"
-        android:gravity="left"
+        android:gravity="start"
         android:maxLines="3"
         android:padding="@dimen/dimen_4_dp"
         android:paddingStart="@dimen/spacing_medium"
@@ -58,9 +54,8 @@
         android:textColor="@color/grey200"
         android:fontFamily="@font/sfthonburi_regular"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-        android:textSize="10sp"
-        tools:text="directory/track - title"
-        tools:ignore="RtlHardcoded" />
+        android:textSize="11sp"
+        tools:text="directory/track - title" />
 
     <!-- Auto-detect and Presets -->
     <LinearLayout
@@ -116,120 +111,117 @@
             android:padding="4dp"
             android:background="@drawable/shape_round_format_black"
             app:container_background_color="@color/grey400"
-            app:container_border_color="#33666666"
+            app:container_border_color="?attr/colorOutline"
             app:container_border_radius="0dp"
             app:container_enable_drag="true"
             app:container_gravity="left"
             app:horizontal_interval="10dp"
-            app:tag_background_color="#FFFFFFFF"
-            app:tag_border_color="#330000ff"
+            app:tag_background_color="?attr/colorSurface"
+            app:tag_border_color="?attr/colorPrimary"
             app:tag_border_width="1dp"
             app:tag_clickable="true"
             app:tag_corner_radius="6dp"
             app:tag_enable_cross="true"
             app:tag_horizontal_padding="10dp"
             app:tag_max_length="18"
-            app:tag_text_color="#ff666666"
+            app:tag_text_color="?attr/colorOnSurface"
             app:tag_theme="none"
             app:vertical_interval="10dp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dimen_24_dp"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/dimen_36_dp"
             android:layout_marginTop="@dimen/dimen_6_dp"
             android:background="@drawable/shape_round_format_black"
-            android:orientation="horizontal">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
 
             <TextView
                 android:id="@+id/btn_add_sep"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_width="@dimen/dimen_36_dp"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_centerVertical="true"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
                 android:padding="@dimen/dimen_2_dp"
                 android:text="/"
-                android:textColor="@color/grey500" />
+                android:textColor="@color/grey300" />
 
             <TextView
                 android:id="@+id/btn_add_dash"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_width="@dimen/dimen_36_dp"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_sep"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
                 android:padding="@dimen/dimen_2_dp"
                 android:text="-"
-                android:textColor="@color/grey500" />
+                android:textColor="@color/grey300" />
 
             <TextView
                 android:id="@+id/btn_add_dot"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_width="@dimen/dimen_36_dp"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_dash"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
                 android:padding="@dimen/dimen_2_dp"
                 android:text="."
-                android:textColor="@color/grey500" />
+                android:textColor="@color/grey300" />
 
             <TextView
                 android:id="@+id/btn_add_space"
                 android:layout_width="@dimen/dimen_48_dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_dot"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
                 android:padding="@dimen/dimen_2_dp"
                 android:text="sp"
-                android:textColor="@color/grey500" />
+                android:textColor="@color/grey300" />
 
             <TextView
                 android:id="@+id/btn_add_free_text"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
+                android:layout_width="@dimen/dimen_36_dp"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_space"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
                 android:padding="@dimen/dimen_2_dp"
                 android:text=" ? "
-                android:textColor="@color/grey500" />
+                android:textColor="@color/grey300" />
 
-            <com.skydoves.elasticviews.ElasticLayout
+            <FrameLayout
                 android:id="@+id/btn_preview_bar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="center"
+                android:layout_centerVertical="true"
                 android:background="@drawable/shape_border_back">
 
                 <TextView
                     android:id="@+id/btn_preview"
                     android:layout_width="wrap_content"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center_horizontal|center_vertical"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
                     android:layout_marginStart="@dimen/spacing_small"
                     android:layout_marginEnd="@dimen/spacing_small"
-                    android:layout_weight="1"
                     android:gravity="center"
                     android:paddingStart="@dimen/dimen_8_dp"
                     android:paddingEnd="@dimen/dimen_8_dp"
                     android:text="Preview"
                     android:textColor="@color/white" />
-            </com.skydoves.elasticviews.ElasticLayout>
+            </FrameLayout>
         </RelativeLayout>
     </LinearLayout>
 
@@ -251,7 +243,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_medium"
                 android:layout_marginTop="@dimen/spacing_medium"
+                android:layout_marginEnd="@dimen/spacing_medium"
                 android:orientation="horizontal">
 
                 <TextView
@@ -269,12 +263,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:enabled="false"
-                    android:gravity="left"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:gravity="start"
                     android:hint="@string/editor_label_title"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="@color/grey300"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -301,12 +296,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:enabled="false"
-                    android:gravity="left"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:gravity="start"
                     android:hint="@string/editor_label_artist"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="@color/grey300"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -333,12 +329,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:enabled="false"
-                    android:gravity="left"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:gravity="start"
                     android:hint="@string/editor_label_album"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="@color/grey300"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -366,11 +363,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:enabled="false"
-                    android:gravity="left"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:gravity="start"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="@color/grey300"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -381,7 +379,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="@dimen/dimen_24_dp"
+        android:layout_marginTop="@dimen/dimen_16_dp"
+        android:layout_marginBottom="@dimen/dimen_12_dp"
+        android:layout_marginEnd="@dimen/dimen_8_dp"
         android:gravity="end">
 
         <com.google.android.material.button.MaterialButton
@@ -395,8 +395,8 @@
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:background="?attr/colorOutline" />
@@ -409,12 +409,4 @@
             android:layout_height="wrap_content"
             android:text="@string/save"/>
     </LinearLayout>
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_2_dp"
-        android:background="@color/grays_charcoal"
-        android:layout_marginStart="@dimen/dimen_24_dp"
-        android:layout_marginEnd="@dimen/dimen_24_dp"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginBottom="@dimen/dimen_8_dp"/>
 </LinearLayout>

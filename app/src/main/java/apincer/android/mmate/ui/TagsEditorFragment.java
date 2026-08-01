@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.FilenamePatternDetector;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.android.mmate.R;
@@ -452,7 +454,7 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setTrack(buildTag(txtTrack, tagUpdate.getTrack(), tagUpdate.getTrack()));
         tagUpdate.setAlbum(buildTag(txtAlbum, tagUpdate.getAlbum()));
         tagUpdate.setArtist(buildTag(txtArtist, tagUpdate.getArtist()));
-        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getArtist()));
+        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getAlbumArtist()));
         tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre(), tagUpdate.getGenre()));
         tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood(), tagUpdate.getMood()));
         tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle(), tagUpdate.getStyle()));
@@ -463,7 +465,7 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextInputEditText txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(isEmpty(text)) {
+        if(isEmpty(text) || " - ".equals(text)) {
             return "";
         }else if (isMultiValuesMarker(text)) {
             return oldVal;
@@ -473,7 +475,7 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextView txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(isEmpty(text)) {
+        if(isEmpty(text) || " - ".equals(text)) {
             return "";
         }else if (isMultiValuesMarker(text)) {
             return oldVal;
@@ -483,8 +485,8 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextView txt, String oldVal, String defaultVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(isEmpty(text)) {
-            return defaultVal;
+        if(isEmpty(text) || " - ".equals(text)) {
+            return "";
         }else if (isMultiValuesMarker(text)) {
             return oldVal;
         }
@@ -498,27 +500,65 @@ public class TagsEditorFragment extends Fragment {
 
     public void doFormatTags() {
         tagsActivity.startProgressBar();
-        CompletableFuture.runAsync(
+        CompletableFuture.supplyAsync(
                 () -> {
-                    for(Track tag:tagsActivity.getEditItems()) {
+                    int thaiFixedCount = 0;
+                    int totalFormatted = 0;
+                    for (Track tag : tagsActivity.getEditItems()) {
+                        boolean thaiFixed = false;
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getTitle())) {
+                            tag.setTitle(ThaiEncodingUtils.fixThaiEncoding(tag.getTitle()));
+                            thaiFixed = true;
+                        }
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getArtist())) {
+                            tag.setArtist(ThaiEncodingUtils.fixThaiEncoding(tag.getArtist()));
+                            thaiFixed = true;
+                        }
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getAlbum())) {
+                            tag.setAlbum(ThaiEncodingUtils.fixThaiEncoding(tag.getAlbum()));
+                            thaiFixed = true;
+                        }
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getAlbumArtist())) {
+                            tag.setAlbumArtist(ThaiEncodingUtils.fixThaiEncoding(tag.getAlbumArtist()));
+                            thaiFixed = true;
+                        }
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getGenre())) {
+                            tag.setGenre(ThaiEncodingUtils.fixThaiEncoding(tag.getGenre()));
+                            thaiFixed = true;
+                        }
+                        if (ThaiEncodingUtils.isGarbledThai(tag.getComposer())) {
+                            tag.setComposer(ThaiEncodingUtils.fixThaiEncoding(tag.getComposer()));
+                            thaiFixed = true;
+                        }
+                        if (thaiFixed) thaiFixedCount++;
+
                         tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
                         tag.setArtist(StringUtils.formatArtists(tag.getArtist()));
                         tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
                         tag.setAlbumArtist(StringUtils.formatTitle(tag.getAlbumArtist()));
                         tag.setGenre(StringUtils.formatTitle(tag.getGenre()));
-                        if(!StringUtils.isEmpty(tag.getTrack())) {
+                        if (!StringUtils.isEmpty(tag.getTrack())) {
                             tag.setTrack(StringUtils.formatTrack(tag.getTrack()));
                         }
-                        // if album empty, add single
-                        if(StringUtils.isEmpty(tag.getAlbum())) {
+                        if (StringUtils.isEmpty(tag.getAlbum())) {
                             tag.setAlbum(StringUtils.formatTitle(TagUIUtils.getDefaultAlbum(tag)));
                         }
+                        totalFormatted++;
                     }
+                    return new int[]{totalFormatted, thaiFixedCount};
                 }
         ).thenAccept(
-                unused -> {
+                result -> {
+                    int total = result[0];
+                    int thaiFixed = result[1];
                     tagsActivity.redisplayTag();
                     tagsActivity.stopProgressBar();
+
+                    String msg = "Reformatted " + total + " track(s)";
+                    if (thaiFixed > 0) {
+                        msg += " (Fixed Thai encoding on " + thaiFixed + ")";
+                    }
+                    Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
                 }
         ).exceptionally(
                 throwable -> {
@@ -545,6 +585,9 @@ public class TagsEditorFragment extends Fragment {
         txtOrigin.setText(tag.getOrigin());
         txtPublisher.setText(tag.getPublisher());
 
+        // Build a targeted dropdown for txtAlbumArtist: default presets + current track artist / album artist
+        setupTargetedAlbumArtistDropdown(tag);
+
         txtTitle.invalidate();
         txtArtist.invalidate();
         txtAlbum.invalidate();
@@ -552,6 +595,31 @@ public class TagsEditorFragment extends Fragment {
 
         // quality
         //qualityDropdown.setText(tag.getQualityRating());
+    }
+
+    private void setupTargetedAlbumArtistDropdown(Track tag) {
+        if (getContext() == null) return;
+        List<String> list = new ArrayList<>();
+        // 1. Defaults: Various Artists, Soundtrack, etc.
+        String[] defaults = getContext().getResources().getStringArray(R.array.default_album_artist);
+        for (String d : defaults) {
+            String trimmed = StringUtils.trimToEmpty(d);
+            if (!trimmed.isEmpty() && !list.contains(trimmed)) {
+                list.add(trimmed);
+            }
+        }
+        // 2. Current Track Artist
+        if (tag != null) {
+            String artist = StringUtils.trimToEmpty(tag.getArtist());
+            if (!artist.isEmpty() && !list.contains(artist)) {
+                list.add(artist);
+            }
+            String albumArtist = StringUtils.trimToEmpty(tag.getAlbumArtist());
+            if (!albumArtist.isEmpty() && !list.contains(albumArtist)) {
+                list.add(albumArtist);
+            }
+        }
+        setupListValuePopupFullList(txtAlbumArtist, list);
     }
 
     private void doPreviewMusicInfo(Track tag) {

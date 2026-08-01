@@ -218,7 +218,7 @@
         android:contentDescription="@string/currently_playing"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/ic_notification_default"
-        tools:src="@drawable/ic_notification_default" />
+        android:src="@drawable/ic_equalizer_active"
+        tools:src="@drawable/ic_equalizer_active" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
