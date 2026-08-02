@@ -167,7 +167,8 @@
             android:padding="12dp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="24dp"

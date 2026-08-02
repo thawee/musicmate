@@ -7,13 +7,14 @@
             android:summary="Auto start MediaServer on startup, to cast songs to streaming device."
             android:title="Start MediaServer"
             android:defaultValue="false"/>
-        <!--
-        <SwitchPreferenceCompat
-            android:key="preference_netty_media_server"
-            android:summary="Use Netty as server engine, defaults is jetty."
-            android:title="Use Netty for server"
-            android:defaultValue="false"/>
-            -->
+        <ListPreference
+            android:key="preference_media_server_engine"
+            android:title="Server Engine"
+            android:summary="Select high-performance HTTP web server engine for streaming"
+            android:entries="@array/server_engine_entries"
+            android:entryValues="@array/server_engine_values"
+            android:defaultValue="httpcore"
+            app:useSimpleSummaryProvider="true"/>
     </PreferenceCategory>
     <PreferenceCategory
         android:summary="User Interface">

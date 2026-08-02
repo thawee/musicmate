@@ -29,19 +29,39 @@ The main dashboard is optimized for handling extremely large music libraries.
 
 ```
 +------------------------------------------------+
-|  [Search / Filter Criteria]                    |
+|  [Search]                     [Cast / Output]  |
 +------------------------------------------------+
 |  Song List (Endless Scroll - Paged in 500s)     |
 |  - Title                                       |
 |  - Artist / Album                              |
 |  - Quality Badge (Hi-Res / FLAC / MP3)         |
 +------------------------------------------------+
-|  [Bottom App Bar: Refresh / Media Server]      |
+|  [Unified Floating Dock - Card 20dp Teal]      |
+|  (Lib | Art Track & Target | Prev Play Next | Server Menu) |
 +------------------------------------------------+
 ```
 
-### Key Features
-* **Smart Search & Filters:** Filter your songs by Genre, Artist, Album, Year, or custom directories using the search button at the top header.
+### Key Features & Controls
+* **Smart Search & Quick Cast:** Search your library or tap the cast icon (`rounded_music_cast_24`) in the top header for instant 1-tap renderer switching.
+  - **Dynamic Status Tinting:** Tints **Gold** (`#FFC107`) when casting to a remote DLNA renderer, and default theme tint when playing locally.
+  - **Device Type Badging:** Popup list displays clear device type badges (`📱 Local Device` vs `📻 DLNA / UPnP Renderer`) and active checkmark (`✓`).
+* **Smart Library Song List:**
+  - **Single Tap (Song Title / Details):** Instantly enqueues and starts playing the track.
+  - **Single Tap (Album Cover Art Thumbnail):** Opens **`TagsActivity`** (Metadata Editor) for 1-tap tag editing.
+  - **Long Press:** Activates Contextual Selection Mode for bulk editing, queue management, or file deletion.
+* **Unified Floating Navigation & Playback Dock (Card 20dp):**
+  - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and Menu.
+  - **Playing State:** Dynamically embeds mini album art, scrolling track title, and player target subtitle (e.g. `HiBy R3 • DLNA Renderer`).
+  - **Single Tap (Title/Art):** Opens the **Now Playing & Queue Sheet** (`NowPlayingQueueSheet`).
+  - **Long Press (Title/Art):** Opens the **Signal Path Bottom Sheet** (`SignalPathBottomSheet`) for real-time audio pipeline diagnostics.
+* **Now Playing & Queue Sheet (`NowPlayingQueueSheet`):**
+  - Shows expanded album artwork, technical format specs (e.g. `FLAC 352.8 kHz / 24bit`), active player badge, and scrollable playing queue with current track gold highlighting.
+  - **Embedded Transport Controls:** Features full **Previous**, **Play / Pause**, and **Next** transport control buttons directly inside the Now Playing track card.
+  - **Signal Path Quick Access:** Includes a dedicated gold Signal Path icon button (`ic_baseline_audio_path_24`) in the top-right header to quickly jump to audio pipeline diagnostics.
+  - **Tap-to-Scroll Navigation:** Tapping the track info card or any queue track row dismisses the sheet and automatically scrolls the main library list to that song's position.
+  - **Queue Controls:** Includes **Play All**, **Shuffle Toggle (🔀)**, **Repeat Mode Toggle (🔁)**, **Clear Queue**, and **Stop Playback** actions.
+* **Bottom Navigation Dock (Card Shape 16dp):**
+  - **Media Server Icon:** Features live status tinting (Teal tint when DLNA server is active/running, Muted tint when offline). Tapping opens `MediaServerManagementSheet`.
 * **High-Performance Pagination:** To prevent application lag and save memory, songs are loaded in chunks of **500 items**. As you scroll to the bottom, the next page loads automatically.
 * **Scroll Memory & State Context:** When you click on a song to view or edit tags and then return to the main list, the app intelligently remembers your precise scroll position, even if you are scrolled past 500+ items.
 
@@ -76,9 +96,27 @@ This tab provides a deep-dive read-only view of file parameters, including:
 MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to stream music to smart TVs, network speakers, or computers.
 
 1. Click the **Media Server** icon in the bottom menu.
-2. A bottom sheet displays the current server status (Running / Offline) and configuration details (URL, active connections).
-3. Tap **Start / Stop** to toggle the server.
-4. Keep the app open or running in the background while streaming. The event reactor reactor loop features epoll CPU spin protection and automated socket teardowns to ensure stability during long-running sessions.
+2. A bottom sheet displays the current server status (Running / Offline), configuration details (URL, active connections), and currently active playback player.
+3. Tap **Start / Stop** to toggle the server or tap **Select Player** to switch between active targets.
+4. **Standardized Player Target Displays:**
+   - **DLNA Renderers:** Displays device friendly name and IP address (e.g. `HiBy R3 (192.168.1.50 • DLNA Renderer)`).
+   - **Web Streaming:** Displays stream client IP and protocol details (e.g. `Web Streaming (192.168.1.100 • Web Streaming)`).
+   - **Android Player Apps:** Displays local app title, package/version, and app type (e.g. `Poweramp (com.maxmpz.audioplayer • Android App)`).
+5. **Runtime Server Engine Switching (App Settings):**
+   - Switch web server engines dynamically under **App Settings -> Server Engine** without restarting the app:
+     * **SonicNIO (Default · Balanced / Zero-Copy):** Low CPU wake-ups with Java NIO non-blocking I/O.
+     * **CoreHTTP (Ultra-Low Memory):** Apache HttpCore engine optimized for minimal RAM footprint.
+     * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming.
+6. **Server Port & Endpoints Reference:**
+   - **Default Server Port:** `9000` (HTTP)
+   - **Endpoints Table:**
+     | Endpoint | Path Template | Description |
+     | :--- | :--- | :--- |
+     | **Audio Stream** | `http://<ip>:9000/music/<id>/file.<ext>` | Audio file streaming URL for DLNA renderers |
+     | **Cover Art** | `http://<ip>:9000/coverart/<albumKey>` | Album artwork image endpoint |
+     | **WebSocket** | `ws://<ip>:9000/ws` | Real-time playback control & status stream |
+     | **Web UI Root** | `http://<ip>:9000/` | Web player dashboard (`/index.html`) |
+7. Keep the app open or running in the background while streaming. The event reactor loop features epoll CPU spin protection and automated socket teardowns to ensure stability during long-running sessions.
 
 ---
 

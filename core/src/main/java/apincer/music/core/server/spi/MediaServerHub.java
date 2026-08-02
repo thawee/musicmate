@@ -41,11 +41,14 @@ public interface MediaServerHub {
     StateFlow<ServerStatus> getStatus();
 
     void playerStop(String udn);
-    //void pause(String rendererUdn);
-
-    //void play(String renderer);
+    void playerPause(String udn);
+    void playerSeek(String udn, long positionMs);
+    void playerSetVolume(String udn, int volume);
 
     void playerPlaySong(String rendererUdn, Track song);
     void playerPlaySong(Track song);
+
+    /** Trigger an immediate UPnP M-SEARCH to rediscover all renderers on the network. */
+    void refreshDiscovery();
 
 }

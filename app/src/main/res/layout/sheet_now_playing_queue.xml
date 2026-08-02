@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="8dp"
+    android:clipToOutline="true"
+    android:outlineProvider="background"
+    android:layout_margin="12dp">
+
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/shape_dot_indicator"
+        android:backgroundTint="#55FFFFFF"/>
+
+    <!-- Header: "Now Playing" -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_dialog_header_gradient"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/rounded_music_note_24"
+            app:tint="@color/colorGold"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="Now Playing"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.02"/>
+
+        <ImageView
+            android:id="@+id/btn_open_signal_path"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_baseline_audio_path_24"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Signal Path"
+            app:tint="@color/colorGold"/>
+
+        <ImageView
+            android:id="@+id/btn_close_queue_sheet"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/round_close_24"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            app:tint="?attr/colorOnSurface"/>
+    </LinearLayout>
+
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ── Now Playing Card ── -->
+            <LinearLayout
+                android:id="@+id/sheet_now_playing_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_rounded_surface_dark"
+                android:padding="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:layout_marginBottom="14dp">
+
+                <!-- Large album art -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/sheet_album_art"
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_musicmate_logo"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"/>
+
+                <!-- Track info -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/sheet_track_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:maxLines="2"
+                        android:ellipsize="end"/>
+
+                    <TextView
+                        android:id="@+id/sheet_artist"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:maxLines="1"
+                        android:ellipsize="end"/>
+
+                    <!-- Format + player badges -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/sheet_format_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/shape_background_hires"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/sheet_player_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/shape_background_playing"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="10sp"/>
+                    </LinearLayout>
+
+                    <!-- Technical details: sample rate / bit depth / bitrate -->
+                    <TextView
+                        android:id="@+id/sheet_tech_details"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        android:textColor="@color/colorGold"
+                        android:maxLines="1"
+                        android:ellipsize="end"/>
+
+                    <!-- Transport controls row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/sheet_btn_previous"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_baseline_skip_previous_24"
+                            android:contentDescription="Previous"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="?attr/colorOnSurface" />
+
+                        <ImageView
+                            android:id="@+id/sheet_btn_play_pause"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginHorizontal="12dp"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_baseline_play_arrow_24"
+                            android:contentDescription="Play"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="?attr/colorOnSurface" />
+
+                        <ImageView
+                            android:id="@+id/sheet_btn_next"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_baseline_skip_next_24"
+                            android:contentDescription="Next"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="?attr/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ── Queue section header ── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/rounded_order_play_24"
+                    app:tint="?attr/colorOnSurfaceVariant"/>
+
+                <TextView
+                    android:id="@+id/sheet_queue_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Queue"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                    android:textColor="?attr/colorOnSurface"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_play_all_list"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="10dp"
+                    android:layout_marginEnd="6dp"
+                    android:text="Play All"
+                    android:textSize="11sp"
+                    app:icon="@drawable/ic_baseline_play_arrow_24"
+                    app:iconSize="14dp"
+                    app:iconGravity="textStart"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_clear_queue"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="10dp"
+                    android:text="Clear"
+                    android:textSize="11sp"
+                    app:icon="@drawable/rounded_delete_24"
+                    app:iconSize="14dp"
+                    app:iconGravity="textStart"/>
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#22FFFFFF"
+                android:layout_marginBottom="4dp"/>
+
+            <!-- Empty queue message -->
+            <TextView
+                android:id="@+id/sheet_empty_queue_msg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:gravity="center"
+                android:text="Queue is empty"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"/>
+
+            <!-- Queue list (non-scrollable RecyclerView inside NestedScrollView) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/sheet_queue_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ── Bottom actions ── -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22FFFFFF"
+        android:layout_marginHorizontal="16dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp">
+
+        <!-- Shuffle toggle button -->
+        <ImageButton
+            android:id="@+id/btn_toggle_shuffle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_baseline_shuffle_24"
+            android:background="@drawable/bg_rounded_surface_dark"
+            android:contentDescription="Shuffle"
+            app:tint="?attr/colorOnSurfaceVariant"/>
+
+        <!-- Repeat mode toggle button -->
+        <ImageButton
+            android:id="@+id/btn_toggle_repeat"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="12dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_baseline_repeat_24"
+            android:background="@drawable/bg_rounded_surface_dark"
+            android:contentDescription="Repeat Mode"
+            app:tint="?attr/colorOnSurfaceVariant"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_stop_playback"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Stop"
+            app:icon="@drawable/ic_baseline_stop_24"
+            app:iconSize="16dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_dismiss_sheet"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Close"/>
+    </LinearLayout>
+
+</LinearLayout>

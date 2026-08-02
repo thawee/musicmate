@@ -58,7 +58,12 @@ public interface PlaybackService {
 
     PlaybackTarget getPlayer();
 
+    apincer.music.core.repository.QueueManager getQueueManager();
+
     void onMediaTrackChanged(Track tag);
 
     void onAccessMediaTrack(Track tag);
+
+    /** Trigger an immediate UPnP M-SEARCH to rediscover all DLNA/UPnP renderers on the network. */
+    void refreshPlayerDiscovery();
 }

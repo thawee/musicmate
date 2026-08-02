@@ -34,7 +34,12 @@ import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.music.core.playback.DMRPlayer;
+import apincer.music.core.utils.NetworkUtils;
+import apincer.music.core.utils.PlayerNameUtils;
 import apincer.music.core.utils.TagUtils;
+
+import java.util.List;
 
 public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private final View.OnClickListener onClickListener;
@@ -159,16 +164,33 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
 
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
-            String playerDetails = playbackTarget.getDisplayName();
+            // Resolve streaming player to discovered DMR target if available
+            if (playbackTarget.isStreaming() && !(playbackTarget instanceof DMRPlayer) && playbackTarget.getDescription() != null) {
+                String incomingIp = NetworkUtils.extractIpAddress(playbackTarget.getDescription());
+                List<PlaybackTarget> targets = playbackService.getPlaybackTargets();
+                if (targets != null && !incomingIp.isEmpty()) {
+                    for (PlaybackTarget target : targets) {
+                        if (target instanceof DMRPlayer dmr && dmr.getDescription() != null) {
+                            String devIp = NetworkUtils.extractIpAddress(dmr.getDescription());
+                            if (incomingIp.equals(devIp)) {
+                                playbackTarget = dmr;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            String playerDetails = PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget);
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                addSignalPathStep(signalPathContainer, "MusicMate Audio Engine", playerDetails, true);
+                addSignalPathStep(signalPathContainer, "MusicMate Audio Engine", player.getDisplayName(), true);
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 String deviceDetails = device.getFriendyDescription();
                 addSignalPathStep(signalPathContainer, "Audio Output Device", deviceDetails, false);
                 qualityIndicator.setText("Wired Output");
             } else {
                 String serverDetails = ApplicationUtils.getFriendlyDeviceName() + " " + ApplicationUtils.getVersionNumber(getContext());
-                playerDetails = playerDetails + " [" + playbackTarget.getDescription() + "]";
+
                 addSignalPathStep(signalPathContainer, "MusicMate Server Engine", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Network Renderer", playerDetails, false);
                 if (song != null && !TagUtils.isLossy(song)) {

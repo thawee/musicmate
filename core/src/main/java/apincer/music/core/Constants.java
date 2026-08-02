@@ -125,6 +125,7 @@ public final class Constants {
     //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
     public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
+    public static final String PREF_SERVER_ENGINE = "preference_media_server_engine";
     public static final String PREF_ARTIST_AWARE_SIMILAR_SONGS = "preference_similar_songs_match_artist";
 
     // Source

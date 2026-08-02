@@ -110,9 +110,11 @@ public final class PlayerNameUtils {
         String lowerCaseAgent = userAgent.toLowerCase();
 
         // Check for specific, known players first
+        if (lowerCaseAgent.contains("hiby")) {
+            return "HiBy Player";
+        }
         if (lowerCaseAgent.contains("mpd") ||
-                lowerCaseAgent.contains("music player daemon 0.23.17")) {
-            //music player daemon 0.23.17
+                lowerCaseAgent.contains("music player daemon")) {
             return "MPD Player";
         }
         if (lowerCaseAgent.contains("jplay")) {
@@ -126,11 +128,50 @@ public final class PlayerNameUtils {
         // Fallback: If no specific agent is found, try to extract a clean name
         // by taking the part before the first slash or parenthesis.
         String friendlyName = userAgent.split("[/(]")[0].trim();
-        if (!friendlyName.isEmpty()) {
+        if (!friendlyName.isEmpty() && !friendlyName.equalsIgnoreCase("Mozilla")) {
             return friendlyName;
         }
 
         // If all else fails, return a generic name.
         return "Streaming Player";
+    }
+
+    /**
+     * Formats a 2-line player label for dialog cards and sheets.
+     * Line 1: Player Name
+     * Line 2: (IP / App Detail • Player Type)
+     */
+    public static String getTwoLinePlayerLabel(apincer.music.core.playback.spi.PlaybackTarget player) {
+        if (player == null) return " - ";
+        String name = player.getDisplayName();
+        String ip = NetworkUtils.extractIpAddress(player.getDescription());
+
+        if (player instanceof apincer.music.core.playback.DMRPlayer) {
+            return !ip.isEmpty() ? name + "\n(" + ip + " • DLNA Renderer)" : name + "\n(DLNA Renderer)";
+        } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+            String desc = player.getDescription();
+            return (desc != null && !desc.isEmpty()) ? name + "\n(" + desc + " • Android App)" : name + "\n(Android App)";
+        } else if (player.isStreaming()) {
+            return !ip.isEmpty() ? name + "\n(" + ip + " • Web Streaming)" : name + "\n(Web Streaming)";
+        }
+
+        return !ip.isEmpty() ? name + "\n(" + ip + ")" : name;
+    }
+
+    /**
+     * Formats a single-line player label for dropdown menus.
+     * e.g. "HiBy R3 • 192.168.1.50" or "Poweramp • Android App"
+     */
+    public static String getDropdownPlayerLabel(apincer.music.core.playback.spi.PlaybackTarget player) {
+        if (player == null) return " - ";
+        String name = player.getDisplayName();
+        String ip = NetworkUtils.extractIpAddress(player.getDescription());
+
+        if (!ip.isEmpty()) {
+            return name + " • " + ip;
+        } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+            return name + " • Android App";
+        }
+        return name;
     }
 }

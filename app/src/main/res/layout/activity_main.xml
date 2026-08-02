@@ -38,7 +38,7 @@
                 android:id="@+id/header_back_btn"
                 android:layout_width="@dimen/dimen_36_dp"
                 android:layout_height="@dimen/dimen_36_dp"
-                android:src="@drawable/rounded_arrow_shape_up_24"
+                android:src="@drawable/ic_baseline_arrow_back_24"
                 android:contentDescription="@string/back"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/dimen_4_dp"
@@ -51,13 +51,27 @@
                 android:layout_width="0dp"
                 android:layout_height="@dimen/dimen_40_dp"
                 android:layout_marginStart="@dimen/dimen_8_dp"
+                android:layout_marginEnd="@dimen/dimen_8_dp"
                 android:background="@drawable/search_bar_frosted"
                 android:queryHint="@string/search_music_hint"
                 app:iconifiedByDefault="false"
                 android:textColor="?attr/colorOnSurface"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/header_back_btn"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toStartOf="@id/header_cast_btn" />
+
+            <ImageView
+                android:id="@+id/header_cast_btn"
+                android:layout_width="@dimen/dimen_36_dp"
+                android:layout_height="@dimen/dimen_36_dp"
+                android:src="@drawable/rounded_music_cast_24"
+                android:contentDescription="@string/media_server"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="@dimen/dimen_6_dp"
+                app:tint="?attr/colorOnSurface"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/search_view"
+                app:layout_constraintTop_toTopOf="@id/search_view" />
 
             <TextView
                 android:id="@+id/header_stats_text"
@@ -200,82 +214,127 @@
         app:elevation="4dp"
         app:tint="?attr/colorOnSurface"/>
 
-    <!-- 🔹 Floating Glass Capsule Navigation -->
+    <!-- 🔹 Scroll-to-top FAB (Liquid Glass) -->
+
+    <!-- 🔹 Floating Glass Dock (Unified Navigation & Playback) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:layout_gravity="bottom"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:clickable="true"
         android:focusable="true"
-        app:cardCornerRadius="32dp"
-        app:cardElevation="8dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
         app:cardBackgroundColor="@android:color/transparent"
-        app:strokeWidth="1dp"
-        app:strokeColor="#33FFFFFF">
+        app:strokeWidth="1.5dp"
+        app:strokeColor="#4480CBC4">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/shape_bottom_frosted_panel"
-            android:paddingHorizontal="@dimen/dimen_8_dp"
+            android:paddingHorizontal="12dp"
             android:gravity="center_vertical">
 
-            <!-- Left section -->
-                <ImageView
-                    android:id="@+id/navigation_collections"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:layout_centerVertical="true"
-                    android:gravity="center_vertical"
-                    android:src="@drawable/round_subscriptions_24"
-                    android:contentDescription="@string/library" />
-
-            <TextView
-                android:id="@+id/navigation_now_playing"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_42_dp"
-                android:layout_marginEnd="@dimen/dimen_104_dp"
-                android:padding="@dimen/dimen_12_dp"
-                android:text="@string/app_name"
-                android:gravity="center"
-                android:lines="1"
-                android:maxLines="1"
+            <!-- Left: Library Collections Button -->
+            <ImageView
+                android:id="@+id/navigation_collections"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@null"
-                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                android:drawableStart="@drawable/ic_musicmate_logo"
-                android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_right_24"
-                android:drawablePadding="@dimen/dimen_4_dp"
-                app:drawableTint="?attr/colorOnSurface"
-                tools:ignore="RtlSymmetry" />
+                android:src="@drawable/round_subscriptions_24"
+                android:contentDescription="@string/library"
+                app:tint="?attr/colorOnSurface" />
 
-            <!-- Right section -->
+            <!-- Right: Media Server & Menu Group -->
             <LinearLayout
+                android:id="@+id/bottom_right_group"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:gravity="center_vertical|end"
                 android:layout_alignParentEnd="true">
+
                 <ImageView
                     android:id="@+id/navigation_media_server"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginEnd="@dimen/dimen_24_dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="12dp"
                     android:src="@drawable/rounded_broadcast_on_personal_24"
-                    android:contentDescription="@string/media_server" />
+                    android:contentDescription="@string/media_server"
+                    app:tint="@color/colorMuted" />
 
                 <ImageView
                     android:id="@+id/navigation_settings"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:layout_marginEnd="@dimen/dimen_8_dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_widgets_white_24dp"
-                    android:contentDescription="@string/settings" />
+                    android:contentDescription="@string/settings"
+                    app:tint="?attr/colorOnSurface" />
             </LinearLayout>
+
+            <!-- Center: Docked Playback Bar / App Title -->
+            <LinearLayout
+                android:id="@+id/docked_playback_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_toEndOf="@id/navigation_collections"
+                android:layout_toStartOf="@id/bottom_right_group"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Mini Album Art (Hidden when idle) -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/bar_album_art"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_musicmate_logo"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
+
+                <!-- Track Info / Default Title -->
+                <LinearLayout
+                    android:id="@+id/bar_title_container"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:id="@+id/bar_track_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:text="@string/app_name" />
+
+                    <TextView
+                        android:id="@+id/bar_target_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="gone"
+                        tools:visibility="visible"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="HiBy R3 • DLNA Renderer" />
+                </LinearLayout>
+            </LinearLayout>
+
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -213,7 +213,8 @@ public class BaseServer {
 
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
-                PlaybackTarget player = WebStreamingPlayer.Factory.create(clientIp, userAgent, clientIp);
+                String cleanIp = NetworkUtils.extractIpAddress(clientIp);
+                PlaybackTarget player = WebStreamingPlayer.Factory.create(cleanIp, userAgent, cleanIp);
                 playbackService.switchPlayer(player, false);
                 playbackService.onAccessMediaTrack(tag);
             }
@@ -637,6 +638,10 @@ public class BaseServer {
             if (playbackService != null && currentPlaybackState != null) {
                 if (currentPlaybackState.currentState == PlaybackState.State.PLAYING) {
                     playbackService.pausePlayer();
+                } else if (currentPlaybackState.currentState == PlaybackState.State.PAUSED) {
+                    if (currentPlaybackState.currentTrack != null) {
+                        playbackService.playSong(currentPlaybackState.currentTrack);
+                    }
                 } else if (currentPlaybackState.currentTrack != null) {
                     playbackService.playSong(currentPlaybackState.currentTrack);
                 }

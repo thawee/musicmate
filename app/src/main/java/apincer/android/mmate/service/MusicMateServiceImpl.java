@@ -358,6 +358,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public void playSong(Track song) {
+        if (song != null) {
+            queueManager.addPlayingQueue(song.getId());
+        }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             runningMode = RUNNING_MODE.CONTROL;
             if (isControllable(playbackTarget)) {
@@ -372,7 +375,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void skipToNextInQueue() {
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
-                internalSkipToNextOnDMRPlayer();
+                internalSkipToNextOnDMRPlayer(playbackTarget);
             } else {
                 // external player
                 androidPlayer.skipToNext();
@@ -380,14 +383,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         });
     }
 
-    private void internalSkipToNextOnDMRPlayer() {
+    private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget) {
         resetGaplessState();
 
         // get next song from queuemanager
         queueManager.setCurrentTrack(getNowPlayingSong());
         Track song = queueManager.getNextTrack();
         if(song != null) {
-            mediaHub.playerPlaySong(song);
+            mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+            currentTrackFlow.setValue(Optional.of(song));
+            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+            state.currentTrack = song;
+            playbackStateFlow.setValue(state);
         }
     }
 
@@ -404,6 +412,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void internalPreviousOnDMRPlayer(PlaybackTarget playbackTarget) {
+        resetGaplessState();
+        queueManager.setCurrentTrack(getNowPlayingSong());
+        Track song = queueManager.getPreviousTrack();
+        if (song != null) {
+            mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+            currentTrackFlow.setValue(Optional.of(song));
+            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+            state.currentTrack = song;
+            playbackStateFlow.setValue(state);
+        }
     }
 
     @Override
@@ -419,7 +438,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void InternalPauseDMRPlayer(PlaybackTarget playbackTarget) {
-        mediaHub.playerStop(playbackTarget.getTargetId());
+        mediaHub.playerPause(playbackTarget.getTargetId());
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
+        state.currentTrack = getNowPlayingSong();
+        onPlaybackStateChanged(state);
     }
 
     @Override
@@ -435,7 +458,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void internalStopOnDMRPlayer(PlaybackTarget playbackTarget) {
+        mediaHub.playerStop(playbackTarget.getTargetId());
         resetGaplessState();
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
+        state.currentTrack = null;
+        onPlaybackStateChanged(state);
+    }
+
+    @Override
+    public QueueManager getQueueManager() {
+        return queueManager;
     }
 
     @Override
@@ -522,6 +555,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     @Override
+    public void refreshPlayerDiscovery() {
+        if (mediaHub != null) {
+            mediaHub.refreshDiscovery();
+        }
+    }
+
+    @Override
     public PlaybackTarget getPlayer() {
         return getActivePlayer();
     }
@@ -579,15 +619,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private PlaybackTarget resolveStreamingPlayerTarget(PlaybackTarget player) {
-        if(!player.isStreaming()) return player;
-        if(player.getDescription() == null) return player;
+        if (!player.isStreaming()) return player;
 
-        //Log.d(TAG, "resolve streaming player: " + player.getTargetId() +" :: "+getAvailablePlaybackTargets().size());
-        for(PlaybackTarget dev: getPlaybackTargets()) {
-            if(dev!=null && dev.isStreaming()
-                    && player.getDescription().equals(dev.getDescription())) {
-               // Log.d(TAG, "resolve player:"+ dev.getTargetId()+" - "+dev.getDisplayName());
-                return dev;
+        String incomingIp = NetworkUtils.extractIpAddress(player.getDescription());
+        if (incomingIp.isEmpty()) return player;
+
+        for (PlaybackTarget dev : getPlaybackTargets()) {
+            if (dev != null && dev.isStreaming() && dev != player) {
+                String devIp = NetworkUtils.extractIpAddress(dev.getDescription());
+                if (!devIp.isEmpty() && incomingIp.equals(devIp)) {
+                    return dev;
+                }
             }
         }
         return player;

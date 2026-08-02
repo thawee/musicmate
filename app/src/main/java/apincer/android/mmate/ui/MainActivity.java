@@ -30,11 +30,15 @@ import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 
 import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.ui.view.NowPlayingQueueSheet;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.Target;
+import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.utils.PlayerNameUtils;
+import apincer.android.mmate.utils.TagUIUtils;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
@@ -164,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mBackButton;
     private SearchView headerSearchView;
     private TextView headerStatText;
+    private ImageView headerCastBtn;
 
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -185,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isScrollStoppingTouch = false;
     private volatile boolean busy;
     private Track previouslyPlaying;
+    private PlaybackState lastPlaybackState;
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
@@ -198,6 +204,8 @@ public class MainActivity extends AppCompatActivity {
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
 
+    private ImageView mediaServerIcon;
+
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
         @Override
@@ -208,8 +216,9 @@ public class MainActivity extends AppCompatActivity {
             isPlaybackServiceBound = true;
             adapter.setPlaybackService(playbackService);
             playbackService.subscribePlaybackState(
-                    playbackState -> setNowPlaying(playbackService.getNowPlayingSong()),
+                    playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
+            updateServerStatusIcon();
         }
 
         @Override
@@ -219,9 +228,10 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void setNowPlaying(Track song) {
+    private void setNowPlaying(Track song, PlaybackState playbackState) {
         if (song != null) {
             mRecyclerView.post(() -> {
+                lastPlaybackState = playbackState;
                 if(!song.equals(previouslyPlaying)) {
                     if (Settings.isListFollowNowPlaying(getBaseContext())) {
                         // only scrolled on first event for each song
@@ -240,19 +250,95 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyItemChanged(previouslyPlaying);
                     adapter.notifyItemChanged(song);
                 }
-                nowPlayingLabel.setText(StringUtils.truncate(song.getTitle(), 24, StringUtils.TruncateType.SUFFIX));
+                if (nowPlayingLabel != null) {
+                    nowPlayingLabel.setText(R.string.app_name);
+                }
                 previouslyPlaying = song;
                 updateGlassyPanelsColor(song);
+                updateFloatingPlaybackBar(song, playbackState);
             });
         } else {
             mRecyclerView.post(() -> {
-                if (!PermissionUtils.isNotificationListenerEnabled(getApplicationContext())) {
-                    nowPlayingLabel.setText("System is blocking the signal");
-                } else {
-                    nowPlayingLabel.setText("Awaiting sound");
+                if (nowPlayingLabel != null) {
+                    nowPlayingLabel.setText(R.string.app_name);
                 }
+                lastPlaybackState = playbackState;
                 previouslyPlaying = null;
+                updateFloatingPlaybackBar(null, playbackState);
             });
+        }
+    }
+
+    /** Builds a compact signal-quality label for the bottom nav bar, e.g. "FLAC · 352.8kHz / 24bit" */
+    private String buildSignalSummary(Track song) {
+        if (song == null) return "Awaiting sound";
+        StringBuilder sb = new StringBuilder();
+
+        String enc = song.getAudioEncoding();
+        if (enc != null && !enc.isEmpty()) {
+            sb.append(enc.toUpperCase(java.util.Locale.US));
+        }
+
+        long sr = song.getAudioSampleRate();
+        if (sr > 0) {
+            if (sb.length() > 0) sb.append(" · ");
+            if (sr % 1000 == 0) {
+                sb.append(sr / 1000).append(" kHz");
+            } else {
+                sb.append(String.format(java.util.Locale.US, "%.1f kHz", sr / 1000.0));
+            }
+        }
+
+        int bits = song.getAudioBitsDepth();
+        if (bits > 0) {
+            sb.append(" / ").append(bits).append("bit");
+        }
+
+        return sb.length() > 0 ? sb.toString() : song.getAudioEncoding();
+    }
+
+    private void updateFloatingPlaybackBar(Track song, PlaybackState playbackState) {
+        if (song != null && (actionMode == null)) {
+            if (barTrackTitle != null) {
+                barTrackTitle.setText(song.getTitle());
+            }
+            if (barTargetSubtitle != null) {
+                barTargetSubtitle.setVisibility(View.VISIBLE);
+                if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
+                    barTargetSubtitle.setText(PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer()));
+                } else {
+                    barTargetSubtitle.setText(song.getArtist());
+                }
+            }
+            if (barAlbumArt != null) {
+                barAlbumArt.setVisibility(View.VISIBLE);
+                ImageRequest request = CoverartFetcher.builder(this, song)
+                        .data(song)
+                        .size(240, 240)
+                        .target(new coil3.target.ImageViewTarget(barAlbumArt))
+                        .build();
+                SingletonImageLoader.get(this).enqueue(request);
+            }
+        } else {
+            if (barTrackTitle != null) {
+                barTrackTitle.setText(R.string.app_name);
+            }
+            if (barTargetSubtitle != null) {
+                barTargetSubtitle.setVisibility(View.GONE);
+            }
+            if (barAlbumArt != null) {
+                barAlbumArt.setVisibility(View.GONE);
+            }
+        }
+
+        if (headerCastBtn != null && isPlaybackServiceBound && playbackService != null) {
+            apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
+            boolean isRemote = current != null && current.isStreaming();
+            if (isRemote) {
+                headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
+            } else {
+                headerCastBtn.setImageTintList(null); // Default theme tint
+            }
         }
     }
 
@@ -327,6 +413,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the server here, where we are guaranteed to be in the foreground!
         mediaServerManager.startServer();
+        mediaServerManager.getServerStatus().observe(this, status -> updateServerStatusIcon());
 
         // Enable Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -475,6 +562,12 @@ public class MainActivity extends AppCompatActivity {
         // and dynamic tints in applyGlassyColor().
         // setRenderEffect is disabled here to keep text and icons sharp.
 
+        headerCastBtn = findViewById(R.id.header_cast_btn);
+        if (headerCastBtn != null) {
+            // Cast icon = top-anchored popup menu right under the cast icon
+            headerCastBtn.setOnClickListener(v -> showPlayerPickerPopup(headerCastBtn));
+        }
+
         setupSearchView();
         openSearch();
     }
@@ -489,7 +582,7 @@ public class MainActivity extends AppCompatActivity {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (v.getLayoutParams() instanceof MarginLayoutParams mlp) {
-                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 24);
+                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 16);
                     v.setLayoutParams(mlp);
                 }
                 return insets;
@@ -498,21 +591,66 @@ public class MainActivity extends AppCompatActivity {
         }
 
         View leftMenu = findViewById(R.id.navigation_collections);
-        nowPlayingLabel = findViewById(R.id.navigation_now_playing);
-        nowPlayingLabel.setText("Awaiting sound");
-
         ImageView rightMenu = findViewById(R.id.navigation_settings);
-
-        View mediaServer = findViewById(R.id.navigation_media_server);
+        mediaServerIcon = findViewById(R.id.navigation_media_server);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-        nowPlayingLabel.setOnClickListener(v -> doShowSignalPath());
-        mediaServer.setOnClickListener(v -> doManageMediaServer());
+        if (mediaServerIcon != null) {
+            mediaServerIcon.setOnClickListener(v -> doManageMediaServer());
+        }
+        updateServerStatusIcon();
+
+        setupFloatingPlaybackBar();
     }
 
-    private void doShowSignalPath() {
+    private View floatingPlaybackBar;
+    private ImageView barAlbumArt;
+    private TextView barTrackTitle;
+    private TextView barTargetSubtitle;
+    private ImageView barBtnPrevious;
+    private ImageView barBtnPlayPause;
+    private ImageView barBtnNext;
+
+    private void setupFloatingPlaybackBar() {
+        floatingPlaybackBar = findViewById(R.id.docked_playback_bar);
+        if (floatingPlaybackBar == null) return;
+
+        barAlbumArt = findViewById(R.id.bar_album_art);
+        barTrackTitle = findViewById(R.id.bar_track_title);
+        barTargetSubtitle = findViewById(R.id.bar_target_subtitle);
+
+        View titleContainer = findViewById(R.id.bar_title_container);
+        View.OnClickListener openNowPlayingListener = v -> {
+            if (previouslyPlaying != null || (playbackService != null && playbackService.getNowPlayingSong() != null)) {
+                NowPlayingQueueSheet sheet = new NowPlayingQueueSheet();
+                sheet.show(getSupportFragmentManager(), "NowPlayingQueueSheet");
+            }
+        };
+
+        if (titleContainer != null) {
+            titleContainer.setOnClickListener(openNowPlayingListener);
+            titleContainer.setOnLongClickListener(v -> {
+                doShowSignalPath();
+                return true;
+            });
+        }
+
+        if (barAlbumArt != null) {
+            barAlbumArt.setOnClickListener(openNowPlayingListener);
+        }
+    }
+
+    public PlaybackState getLastPlaybackState() {
+        return lastPlaybackState;
+    }
+
+    public MusicTagAdapter getAdapter() {
+        return adapter;
+    }
+
+    public void doShowSignalPath() {
 
         if(playbackService != null && playbackService.getPlayer() != null) {
             if(!playbackService.getPlayer().isStreaming()) {
@@ -604,8 +742,8 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setItemAnimator(null);
 
-        // Add bottom padding
-        RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(62, 12);
+        // Add bottom padding to ensure last items scroll cleanly above bottom navigation dock
+        RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration((int)dpToPx(this, 96), 12);
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
@@ -704,14 +842,23 @@ public class MainActivity extends AppCompatActivity {
             Track tag = adapter.getMusicTag(position);
             if(tag == null) return;
 
-            //if(tag instanceof MusicFolder folder) {
             if(tag.isContainer()) {
                 doStartRefresh(tag.getContainerType(), tag.getTitle());
-            }else {
-                doShowEditActivity(Collections.singletonList(tag));
+            } else {
+                if (isPlaybackServiceBound && playbackService != null) {
+                    playbackService.playSong(tag);
+                } else {
+                    doShowEditActivity(Collections.singletonList(tag));
+                }
             }
         };
         adapter.setClickListener(onListItemClick);
+        adapter.setOnCoverArtClickListener((view, position) -> {
+            Track tag = adapter.getMusicTag(position);
+            if (tag != null && !tag.isContainer()) {
+                doShowEditActivity(Collections.singletonList(tag));
+            }
+        });
 
             // Setup selection tracker
             mTracker = new SelectionTracker.Builder<>(
@@ -933,7 +1080,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void scrollToSong(Track currentlyPlaying) {
+    public void scrollToSong(Track currentlyPlaying) {
         if (currentlyPlaying == null) return;
 
         viewModel.loadUntilFound(currentlyPlaying, () -> {
@@ -1052,12 +1199,75 @@ public class MainActivity extends AppCompatActivity {
         MediaServerManagementSheet sheet = MediaServerManagementSheet.newInstance(playbackService);
         sheet.show(getSupportFragmentManager(), MediaServerManagementSheet.TAG);
 
+        // Update server icon state tint
+        updateServerStatusIcon();
+
         // Use a Handler to dismiss after 12 seconds
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             if (sheet.isAdded()) { // Safety check to ensure it's still there
                 sheet.dismiss();
             }
+            updateServerStatusIcon();
         }, 12000); // 12000ms = 12 seconds
+    }
+
+    private void updateServerStatusIcon() {
+        if (mediaServerIcon == null) return;
+        boolean isRunning = mediaServerManager != null
+                && mediaServerManager.getServerStatus().getValue() == apincer.music.core.server.spi.MediaServerHub.ServerStatus.RUNNING;
+        int colorRes = isRunning ? R.color.teal_200 : R.color.colorMuted;
+        mediaServerIcon.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(this, colorRes));
+    }
+
+    private void showPlayerPickerPopup(View anchorView) {
+        if (!isPlaybackServiceBound || playbackService == null) return;
+
+        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
+        List<apincer.music.core.playback.spi.PlaybackTarget> renderers = playbackService.getPlaybackTargets();
+        apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
+
+        if (renderers != null && !renderers.isEmpty()) {
+            for (int i = 0; i < renderers.size(); i++) {
+                apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
+                boolean isActive = current != null && current.getTargetId().equals(target.getTargetId());
+                boolean isRemote = target.isStreaming();
+                String prefix = (isActive ? "✓ " : "   ") + (isRemote ? "📻 " : "📱 ");
+                String label = prefix + apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
+                popup.getMenu().add(0, i, i, label);
+            }
+        } else {
+            popup.getMenu().add(0, -1, 0, "No players discovered");
+        }
+
+        // Always show rescan option at the bottom
+        final int RESCAN_ID = 9999;
+        popup.getMenu().add(1, RESCAN_ID, RESCAN_ID, "🔄  Rescan for players");
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == RESCAN_ID) {
+                // Trigger immediate UPnP M-SEARCH
+                playbackService.refreshPlayerDiscovery();
+                // Show feedback and reopen picker after discovery window
+                if (anchorView != null) {
+                    anchorView.postDelayed(() -> showPlayerPickerPopup(anchorView), 2500);
+                }
+                return true;
+            }
+            if (renderers != null && item.getItemId() >= 0 && item.getItemId() < renderers.size()) {
+                apincer.music.core.playback.spi.PlaybackTarget selectedPlayer = renderers.get(item.getItemId());
+                playbackService.switchPlayer(selectedPlayer, true);
+                if (headerCastBtn != null) {
+                    if (selectedPlayer.isStreaming()) {
+                        headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
+                    } else {
+                        headerCastBtn.setImageTintList(null);
+                    }
+                }
+            }
+            return true;
+        });
+
+        popup.show();
     }
 
     private void doShowAboutApp() {
@@ -1759,7 +1969,23 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
-            if (id == R.id.action_delete) {
+            if (id == R.id.action_play_now) {
+                List<Track> selectedSongs = getSelections();
+                if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
+                    playbackService.playSong(selectedSongs.get(0));
+                }
+                mode.finish();
+                return true;
+            } else if (id == R.id.action_add_queue) {
+                List<Track> selectedSongs = getSelections();
+                if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
+                    for (Track t : selectedSongs) {
+                        playbackService.getQueueManager().addPlayingQueue(t.getId());
+                    }
+                }
+                mode.finish();
+                return true;
+            } else if (id == R.id.action_delete) {
                 doDeleteMediaItems(getSelections());
                 mode.finish();
                 return true;

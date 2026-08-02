@@ -11,13 +11,11 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -32,18 +30,12 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import apincer.android.mmate.R;
 import apincer.android.mmate.ui.viewmodel.MediaServerViewModel;
 import apincer.music.core.Constants;
-import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.spi.PlaybackService;
-import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
 
-import androidx.appcompat.widget.PopupMenu;
 import androidx.lifecycle.ViewModelProvider;
-
-import java.util.List;
-import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -98,56 +90,9 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
         btnStopServer.setOnClickListener(v -> viewModel.stopServer());
 
         tvServerName.setText(Constants.getPresentationName());
-        LinearLayout btnSelectPlayer = view.findViewById(R.id.btn_select_player);
-        TextView txtCurrentPlayer = view.findViewById(R.id.txt_current_player);
-
-        setupPlayers(btnSelectPlayer, txtCurrentPlayer);
         observeServerStatus();
         detectWebEngine();
         return view;
-    }
-
-    private void setupPlayers(LinearLayout btnSelectPlayer, TextView txtCurrentPlayer) {
-        if(playbackService != null && playbackService.getPlayer() != null) {
-            txtCurrentPlayer.setText(playbackService.getPlayer().getDisplayName());
-            if(playbackService.getPlayer() instanceof DMRPlayer dlna) {
-                txtCurrentPlayer.setText(dlna.getDisplayName() +"\n("+dlna.getDescription()+")");
-            }
-        }else {
-            txtCurrentPlayer.setText(" - ");
-        }
-
-        btnSelectPlayer.setOnClickListener(v -> {
-           // PopupMenu popup = new PopupMenu(getContext(), v);
-            PopupMenu popup = new PopupMenu(getContext(), btnSelectPlayer, Gravity.END);
-
-            // 1. Add Local Player
-            //popup.getMenu().add(0, 0, 0, "Galaxy S25 (This Device)");
-            List<PlaybackTarget> renderers = playbackService.getPlaybackTargets();
-            if (renderers != null && !renderers.isEmpty()) {
-                for (PlaybackTarget player : renderers) {
-                    popup.getMenu().add(0, 0, 0, player.getDisplayName());
-                }
-            }
-
-            popup.setOnMenuItemClickListener(item -> {
-                txtCurrentPlayer.setText(item.getTitle());
-                if(renderers != null) {
-                    for (PlaybackTarget player : renderers) {
-                        if (Objects.equals(item.getTitle(), player.getDisplayName())) {
-                            playbackService.switchPlayer(player, true);
-                            break;
-                            // Toast.makeText(getContext(), "Selected: " + player.getDisplayName(), Toast.LENGTH_SHORT).show();
-                            // Handle logic to switch renderer here...
-                        }
-                    }
-                }
-                dismiss();
-                return true;
-            });
-
-            popup.show();
-        });
     }
 
     private void detectWebEngine() {

@@ -155,8 +155,8 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                     .setTcpNoDelay(true) // Reduce latency
                     .setSoKeepAlive(true)
                     .setSelectInterval(TimeValue.ofMicroseconds(50)) // Faster selection
-                    .setSndBufSize(256 * 1024) // 256KB send buffer for streaming
-                    .setRcvBufSize(256 * 1024) // 256KB receive buffer
+                    .setSndBufSize(512 * 1024) // 512KB send buffer for high-res streaming
+                    .setRcvBufSize(512 * 1024) // 512KB receive buffer
                     .setSoReuseAddress(true)
                     .setTrafficClass(0x18) // 0x18 = Low Delay (0x10) | High Throughput (0x08)
                     .build();
@@ -777,7 +777,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         private final ContentType contentType;
         private java.io.RandomAccessFile raf;
         private long bytesSent = 0;
-        private final byte[] buffer = new byte[65536];
+        private final byte[] buffer = new byte[262144]; // 256KB chunks for smooth 352.8kHz/DXD streaming
 
         FileRangeEntityProducer(File file, long start, long length, ContentType contentType) {
             this.file = file;
@@ -818,7 +818,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
 
         @Override
         public int available() {
-            return (int) Math.min(65536, length - bytesSent);
+            return (int) Math.min(262144, length - bytesSent);
         }
 
         @Override

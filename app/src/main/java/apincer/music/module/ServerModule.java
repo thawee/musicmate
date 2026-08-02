@@ -52,6 +52,6 @@ public class ServerModule {
     @Provides
     @Singleton
     public WebServer provideWebServer(@ApplicationContext Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        return new HttpCoreWebServerImpl(context, fileRepos, tagRepos);
+        return new apincer.music.server.CompositeWebServer(context, fileRepos, tagRepos);
     }
 }

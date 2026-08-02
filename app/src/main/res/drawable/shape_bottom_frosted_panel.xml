@@ -1,37 +1,28 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Base dark surface for depth -->
+    <!-- Deep obsidian dark surface -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#80000000" /> <!-- 50% dark base for contrast -->
-            <corners android:radius="32dp"/>
+            <solid android:color="#F212151C" />
+            <corners android:radius="16dp"/>
         </shape>
     </item>
 
-    <!-- Milky glass fill to stand out from background -->
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#1AFFFFFF" /> <!-- 10% white frosted tint -->
-            <corners android:radius="32dp"/>
-        </shape>
-    </item>
-
-    <!-- Glass sheen gradient -->
+    <!-- Subtle top glass sheen -->
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#33FFFFFF"
+                android:startColor="#25FFFFFF"
                 android:endColor="#00000000"
-                android:angle="90" />
-            <corners android:radius="32dp"/>
+                android:angle="270" />
+            <corners android:radius="16dp"/>
         </shape>
     </item>
 
-    <!-- Sharp glass edge stroke -->
+    <!-- Distinct cyan/teal accent border line -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="32dp"/>
-            <stroke android:width="1.5dp" android:color="#4DFFFFFF" />
-
+            <corners android:radius="16dp"/>
+            <stroke android:width="1.5dp" android:color="#4480CBC4" />
         </shape>
     </item>
 </layer-list>

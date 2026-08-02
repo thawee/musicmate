@@ -162,11 +162,18 @@ public class MediaServerManager {
         return serverStatusLiveData;
     }
 
+    public void restartServer() {
+        if (isBound && service != null) {
+            service.stopServers();
+            service.startServers();
+        }
+    }
+
     public String getLibraryName() {
         if (isBound && service != null) {
             return service.getLibraryNames();
         }
-        return " - "; // Default
+        return Constants.NONE;
     }
 
     public String getServerLocationUrl() {

@@ -255,3 +255,78 @@ hub.release()                    ← only on service destroy
 
 No special permission is required for reading `NetworkInterface` list or receiving
 `WIFI_AP_STATE_CHANGED` (it is a normal broadcast, not a protected one).
+
+---
+
+## 6 — Player Target Resolution & Unified Display Formatting
+
+> Added in 2026.08 (`PlayerNameUtils`, `MusicMateServiceImpl`, `MediaServerManagementSheet`, `SignalPathBottomSheet`).
+
+### IP Address Extraction & Resolution
+When incoming HTTP playback requests arrive at `BaseServer`, the client IP/address (e.g. `"/192.168.1.50:53210"`) is sanitized using `NetworkUtils.extractIpAddress()`, stripping schemes, ports, leading slashes, and paths.
+
+If an incoming HTTP streaming target matches a discovered UPnP `DMRPlayer` target by IPv4 address, `resolveStreamingPlayerTarget()` automatically resolves the stream target to the discovered renderer (e.g., **"HiBy R3"**).
+
+### Standardized Format Across All Player Types
+All player targets (`DMRPlayer`, `WebStreamingPlayer`, `ExternalAndroidPlayer`) use centralized formatters in `PlayerNameUtils`:
+
+* **Two-Line Format (`PlayerNameUtils.getTwoLinePlayerLabel`)**: Used in Management Sheets and Signal Path steps.
+  - **DLNA Renderer:** `HiBy R3` \n `(192.168.1.50 • DLNA Renderer)`
+  - **Web Streaming:** `Web Streaming` \n `(192.168.1.100 • Web Streaming)`
+  - **Android App:** `Poweramp v975` \n `(com.maxmpz.audioplayer • Android App)`
+
+* **Single-Line Format (`PlayerNameUtils.getDropdownPlayerLabel`)**: Used in target selection dropdown popups.
+  - **DLNA Renderer:** `HiBy R3 • 192.168.1.50`
+  - **Web Streaming:** `Web Streaming • 192.168.1.100`
+  - **Android App:** `Poweramp v975 • Android App`
+
+---
+
+## 7 — Runtime Server Engine Switching & Ultra High-Res Streaming Tuning
+
+> Added in 2026.08 (`CompositeWebServer`, `NioHttpServer`, `HttpCoreWebServerImpl`).
+
+### Dynamic Engine Proxy (`CompositeWebServer`)
+The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
+* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"`, `"httpcore"`, or `"netty"`).
+* Instantiates and delegates calls (`initServer`, `stopServer`, `restartServer`) to the selected engine via reflection.
+* Allows hot-swapping server engines at runtime without restarting the Android application process.
+
+### High-Res (352.8 kHz / DXD) Streaming Optimizations
+To support seamless high-bitrate streaming (>10 Mbps) to DAPs (e.g. HiBy R3) over Wi-Fi without buffer underruns:
+* **File Streaming Chunk Size:** Increased from 64 KB to **256 KB** in `SonicNIO` (`NioHttpServer`) and `CoreHTTP` (`FileRangeEntityProducer`).
+* **Socket Transmission Buffers:** Expanded `SO_SNDBUF` / `SO_RCVBUF` to **512 KB** across all active server engines.
+
+### Port & HTTP Endpoint Specification
+All server engines (`SonicNIO`, `CoreHTTP`, `Netty`) standardize on port **`9000`** and expose the following endpoint contract:
+
+| Endpoint Type | Constant | Path Structure | Description |
+| :--- | :--- | :--- | :--- |
+| **HTTP Port** | `BaseServer.WEB_SERVER_PORT` | `9000` | Fixed HTTP listener port |
+| **Audio Stream** | `BaseServer.CONTEXT_PATH_MUSIC` | `/music/<id>/file.<ext>` | Audio file payload endpoint |
+| **Cover Art** | `BaseServer.CONTEXT_PATH_COVERART` | `/coverart/<albumKey>` | Embedded/cached cover artwork endpoint |
+| **WebSocket** | `BaseServer.CONTEXT_PATH_WEBSOCKET` | `/ws` | WebSocket protocol for remote control & status |
+| **Web UI Root** | `BaseServer.CONTEXT_PATH_ROOT` | `/` | Web dashboard root (`/index.html`) |
+
+---
+
+## 8 — DLNA Controller (DMC) Transport Actions & Remote Control
+
+> Added in 2026.08 (`MediaServerHubImpl`, `MusicMateServiceImpl`).
+
+### Production-Ready Action Set
+MusicMate operates as a full **Digital Media Controller (DMC)** using UPnP `AVTransport` and `RenderingControl` services:
+
+| Controller Action | UPnP Service | Method | Function |
+| :--- | :--- | :--- | :--- |
+| **Discovery** | SSDP (`M-SEARCH`) | `RegistryListener` | Auto-detects DMR devices on Wi-Fi/Hotspot |
+| **Cast / Play** | `AVTransport` | `SetAVTransportURI` + `Play` | Pushes DIDL-Lite metadata and initiates streaming |
+| **Pause** | `AVTransport` | `Pause` | Pauses playback on target DMR device (`playerPause`) |
+| **Stop** | `AVTransport` | `Stop` | Stops playback on target DMR device (`playerStop`) |
+| **Seek** | `AVTransport` | `Seek` | Scrubs position using formatted `H:MM:SS.ms` time (`playerSeek`) |
+| **Gapless Queue** | `AVTransport` | `SetNextAVTransportURI` | Pre-queues next track in queue before current finishes |
+| **Volume Control** | `RenderingControl` | `SetVolume` | Controls master volume (0–100) (`playerSetVolume`) |
+| **Position Sync** | `AVTransport` | `GetPositionInfo` | Periodic polling syncs UI seek bar with DMR progress |
+
+
+

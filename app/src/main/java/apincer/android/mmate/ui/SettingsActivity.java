@@ -18,6 +18,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.service.MediaServerManager;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -74,22 +75,27 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String s) {
-           /* if(Constants.PREF_ENABLE_MEDIA_SERVER.equals(s)) {
-                boolean enableMediaServer = sharedPreferences.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER, false);
-                // Notify the application of the change
-                if (getActivity()!=null && getActivity().getApplication() instanceof MusixMateApp) {
-                    ((MusixMateApp) getActivity().getApplication()).onMediaServerSettingChanged(enableMediaServer);
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String key) {
+            if (apincer.music.core.Constants.PREF_SERVER_ENGINE.equals(key)) {
+                if (getActivity() != null) {
+                    // Trigger server restart via MediaServerManager when engine setting changes
+                    MediaServerManager manager = new MediaServerManager(getActivity().getApplicationContext());
+                    manager.doBindService();
+                    manager.restartServer();
                 }
-            }else if(Constants.PREF_CLEAR_CACHED.equals(s)) {
-                MusixMateApp.getInstance().clearCaches();
-            } */
+            }
         }
 
         @Override
         public void onResume() {
             super.onResume();
             PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
         }
     }
 }

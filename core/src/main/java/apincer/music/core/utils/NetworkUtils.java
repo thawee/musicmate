@@ -218,4 +218,46 @@ public class NetworkUtils {
                lowerName.startsWith("lte") || 
                lowerName.startsWith("ppp");
     }
+
+    /**
+     * Extracts a clean IPv4 address from a target location/IP string.
+     * Strips scheme, leading slashes, ports, paths, and capability descriptions.
+     */
+    public static String extractIpAddress(String location) {
+        if (location == null || location.isEmpty()) {
+            return "";
+        }
+        String clean = location.trim();
+        // Remove leading slashes if present e.g. "/192.168.1.50:53210" -> "192.168.1.50:53210"
+        while (clean.startsWith("/")) {
+            clean = clean.substring(1);
+        }
+        // Remove scheme if present
+        int schemeIdx = clean.indexOf("://");
+        if (schemeIdx >= 0) {
+            clean = clean.substring(schemeIdx + 3);
+        }
+        // Remove space-separated descriptions
+        int spaceIdx = clean.indexOf(' ');
+        if (spaceIdx >= 0) {
+            clean = clean.substring(0, spaceIdx);
+        }
+        // Remove path if present
+        int slashIdx = clean.indexOf('/');
+        if (slashIdx >= 0) {
+            clean = clean.substring(0, slashIdx);
+        }
+        // Remove port if present (e.g. "192.168.1.50:8080" -> "192.168.1.50")
+        int colonIdx = clean.indexOf(':');
+        if (colonIdx >= 0) {
+            clean = clean.substring(0, colonIdx);
+        }
+
+        // Validate IPv4 format
+        if (IPV4_PATTERN.matcher(clean).matches()) {
+            return clean;
+        }
+
+        return "";
+    }
 }

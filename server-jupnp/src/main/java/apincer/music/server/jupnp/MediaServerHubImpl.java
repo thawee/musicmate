@@ -30,9 +30,12 @@ import org.jupnp.model.types.UDAServiceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.registry.RegistryListener;
 import org.jupnp.support.avtransport.callback.GetPositionInfo;
+import org.jupnp.support.avtransport.callback.Pause;
 import org.jupnp.support.avtransport.callback.Play;
+import org.jupnp.support.avtransport.callback.Seek;
 import org.jupnp.support.avtransport.callback.SetAVTransportURI;
 import org.jupnp.support.avtransport.callback.Stop;
+import org.jupnp.support.renderingcontrol.callback.SetVolume;
 import org.jupnp.support.model.PositionInfo;
 import org.jupnp.support.model.ProtocolInfos;
 
@@ -87,6 +90,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     private static final String TAG = "MediaServerHub";
 
     private static final UDAServiceType AV_TRANSPORT_TYPE = new UDAServiceType("AVTransport");
+    private static final UDAServiceType RENDERING_CONTROL_TYPE = new UDAServiceType("RenderingControl");
     public static final DeviceType MEDIA_RENDERER_DEVICE_TYPE = new UDADeviceType("MediaRenderer", 1);
     private static final Pattern STATE_PATTERN = Pattern.compile("TransportState\\s*val(?:ue)?\\s*=\\s*[\"']([^\"']*)[\"']", Pattern.CASE_INSENSITIVE);
     private static final Pattern POS_PATTERN = Pattern.compile("RelativeTimePosition\\s*val(?:ue)?\\s*=\\s*[\"']([^\"']*)[\"']", Pattern.CASE_INSENSITIVE);
@@ -370,6 +374,12 @@ public class MediaServerHubImpl implements MediaServerHub {
                 Log.w(TAG, "Discovery failed", e);
             }
         });
+    }
+
+    @Override
+    public void refreshDiscovery() {
+        Log.d(TAG, "Manual refresh discovery triggered");
+        triggerDiscovery();
     }
 
     // =========================================================
@@ -844,14 +854,73 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
-            if (avTransportService == null) return;
-
-            if (controlPoint == null) return;
+            if (avTransportService == null || controlPoint == null) return;
 
             controlPoint.execute(new Stop(avTransportService) {
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                     Log.w(TAG, "Stop failed: " + defaultMsg);
+                }
+            });
+        });
+    }
+
+    @Override
+    public void playerPause(String rendererUdn) {
+        runOnUpnpThread(() -> {
+            if (upnpService == null) return;
+
+            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+            if (device == null) return;
+
+            Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+            if (avTransportService == null || controlPoint == null) return;
+
+            controlPoint.execute(new Pause(avTransportService) {
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    Log.w(TAG, "Pause failed: " + defaultMsg);
+                }
+            });
+        });
+    }
+
+    @Override
+    public void playerSeek(String rendererUdn, long positionMs) {
+        runOnUpnpThread(() -> {
+            if (upnpService == null) return;
+
+            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+            if (device == null) return;
+
+            Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+            if (avTransportService == null || controlPoint == null) return;
+
+            String seekTarget = formatDurationForDidl(positionMs);
+            controlPoint.execute(new Seek(avTransportService, seekTarget) {
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    Log.w(TAG, "Seek failed: " + defaultMsg);
+                }
+            });
+        });
+    }
+
+    @Override
+    public void playerSetVolume(String rendererUdn, int volume) {
+        runOnUpnpThread(() -> {
+            if (upnpService == null) return;
+
+            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+            if (device == null) return;
+
+            Service renderingControlService = findServiceRecursively(device, RENDERING_CONTROL_TYPE);
+            if (renderingControlService == null || controlPoint == null) return;
+
+            controlPoint.execute(new SetVolume(renderingControlService, Math.max(0, Math.min(100, volume))) {
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    Log.w(TAG, "SetVolume failed: " + defaultMsg);
                 }
             });
         });

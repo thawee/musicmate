@@ -782,37 +782,14 @@ public class MediaServerHubImplOld implements MediaServerHub {
         }
     }
 
-    /**
-     * Pauses playback on the specified renderer.
-     * @param rendererUdn The UDN of the target renderer.
-     */
-   /* @Override
-    public void pause(String rendererUdn) {
-        Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-        if (device == null) {
-            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
-            return;
-        }
+    @Override
+    public void playerPause(String udn) {}
 
-        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
-        if (avTransportService == null) {
-            Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
-            return;
-        }
+    @Override
+    public void playerSeek(String udn, long positionMs) {}
 
-        ControlPoint controlPoint = upnpService.getControlPoint();
-        controlPoint.execute(new Pause(avTransportService) {
-            @Override
-            public void success(ActionInvocation invocation) {
-                Log.i(TAG, TAG+" - Pause command successful.");
-            }
-
-            @Override
-            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                Log.i(TAG, TAG+" - Pause command failed: " + defaultMsg);
-            }
-        });
-    } */
+    @Override
+    public void playerSetVolume(String udn, int volume) {}
 
     /**
      * Resumes (or starts) playback on the specified renderer.
@@ -1006,6 +983,11 @@ public class MediaServerHubImplOld implements MediaServerHub {
     @Override
     public void playerPlaySong(Track song) {
 
+    }
+
+    @Override
+    public void refreshDiscovery() {
+        triggerDiscovery();
     }
 
     /**

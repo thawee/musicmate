@@ -4,7 +4,19 @@
 
 	<group android:id="@+id/main_items">
 	<item
-		android:icon="@drawable/rounded_tv_24"
+		android:icon="@drawable/ic_baseline_play_arrow_24"
+		android:id="@+id/action_play_now"
+		android:title="Play Now"
+		app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/ic_baseline_queue_music_24"
+		android:id="@+id/action_add_queue"
+		android:title="Add to Queue"
+		app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/ic_baseline_edit_note_24"
 		android:id="@+id/action_edit_metadata"
 		android:title="Song Info"
 		app:showAsAction="always"/>
@@ -13,7 +25,7 @@
 		android:icon="@drawable/rounded_transform_24"
 		android:id="@+id/action_encoding_file"
 		android:title="Convert Files"
-		app:showAsAction="always"/>
+		app:showAsAction="never"/>
 	</group>
 
 	<!--

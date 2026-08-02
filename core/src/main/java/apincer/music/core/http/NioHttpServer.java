@@ -754,7 +754,7 @@ public class NioHttpServer implements Runnable {
         clientChannel.setOption(StandardSocketOptions.TCP_NODELAY, tcpNoDelay);
 
         // Increase socket send buffer for streaming
-        clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 256 * 1024); // 256KB
+        clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 512 * 1024); // 512KB for high-res streaming
         clientChannel.setOption(StandardSocketOptions.IP_TOS, 0x18); // 0x18 = Low Delay (0x10) | High Throughput (0x08)
 
         ConnectionAttachment attachment = attachmentPool.acquire();
@@ -1770,7 +1770,7 @@ public class NioHttpServer implements Runnable {
         private final long rangeLength;
         private final AtomicBoolean hasClosed = new AtomicBoolean(false);
 
-        private static final long CHUNK_SIZE = 64 * 1024; // 64KB (yield-friendly for multi-client fairness)
+        private static final long CHUNK_SIZE = 256 * 1024; // 256KB chunks for smooth 352.8kHz/DXD streaming
 
         private FileResponse(File file, HttpRequest request) throws IOException {
             super();

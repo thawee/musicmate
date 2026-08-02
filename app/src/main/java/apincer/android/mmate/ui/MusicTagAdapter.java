@@ -114,6 +114,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return criteria;
     }
 
+    public List<Track> getSongs() {
+        return localDataSet;
+    }
+
     public int getTotalItems() {
         return localDataSet.size();
     }
@@ -364,6 +368,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         void onClick(View view, int position);
     }
 
+    public interface OnCoverArtClick {
+        void onCoverClick(View view, int position);
+    }
+
+    private OnCoverArtClick onCoverArtClick;
+
+    public void setOnCoverArtClickListener(OnCoverArtClick listener) {
+        this.onCoverArtClick = listener;
+    }
+
     /**
      * Initialize the dataset of the Adapter
      *
@@ -467,7 +481,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            // holder.moreActions.setEnabled(true);
             holder.rootView.setEnabled(true);
             holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
-           // holder.moreActions.setOnClickListener(view -> showMoreActions(view, tag));
+            if (holder.mCoverArtFrame != null) {
+                holder.mCoverArtFrame.setOnClickListener(view -> {
+                    if (onCoverArtClick != null) {
+                        onCoverArtClick.onCoverClick(view, holder.getLayoutPosition());
+                    }
+                });
+            }
         }
 
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);

@@ -32,8 +32,8 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 115
-        versionName  = "3.18.7-"+ getDate()
+        versionCode = 116
+        versionName  = "3.18.8-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
@@ -41,21 +41,8 @@ android {
     }
 
     // Define the dimensions for your flavors
-    flavorDimensions "server", "database"
+    flavorDimensions "database"
     productFlavors {
-            nio {
-                dimension = "server"
-                // Gradle will look for code in `src/nio/java`
-            }
-            netty {
-                dimension = "server"
-                // Gradle will look for code in `src/netty/java`
-            }
-            httpcore {
-                dimension = "server"
-                // Gradle will look for code in `src/httpcore/java`
-            }
-
             ormlite {
                 dimension = "database"
             }
@@ -205,29 +192,11 @@ dependencies {
 
     // ========= Flavor-specific dependencies ==============
 
-    // java Nio
-    nioImplementation libs.jupnp.android
-    nioImplementation project(':server-jupnp')
-
-    // jetty
-   // jettyImplementation libs.jupnp.android
-   // jettyImplementation project(':server-jupnp')
-   // jettyImplementation project(':server-jupnp-jetty')
-
-    //netty
-    nettyImplementation libs.jupnp.android
-    nettyImplementation project(':server-jupnp')
-    nettyImplementation project(':server-jupnp-netty')
-
-    //undertow
-  //  undertowImplementation libs.jupnp.android
-   // undertowImplementation project(':server-jupnp')
-   // undertowImplementation project(':server-jupnp-undertow')
-
-    //httpcore
-    httpcoreImplementation libs.jupnp.android
-    httpcoreImplementation project(':server-jupnp')
-    httpcoreImplementation project(':server-jupnp-httpcore')
+    // Web Server dependencies (all engines supported in single build)
+    implementation libs.jupnp.android
+    implementation project(':server-jupnp')
+    implementation project(':server-jupnp-netty')
+    implementation project(':server-jupnp-httpcore')
 
     // Local Library
     implementation project(':library:library')
