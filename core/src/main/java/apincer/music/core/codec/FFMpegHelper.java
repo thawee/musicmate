@@ -171,10 +171,18 @@ public class FFMpegHelper {
      * cancellation, or file I/O error).
      */
     public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
+        return convert(context, srcPath, targetPath, cLevel, bitDept, 0);
+    }
+
+    public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept, int sampleRate) {
         String options = "";
 
         if(bitDept ==1) {
             bitDept = 24; // dsd
+        }
+
+        if (sampleRate > 0) {
+            options += " -ar " + sampleRate + " ";
         }
 
         // 1. Handle DSF input filters
@@ -191,9 +199,7 @@ public class FFMpegHelper {
         String sampleFmt = "";
         if (bitDept == 16) {
             sampleFmt = " -sample_fmt s16 ";
-        } else if (bitDept == 24) {
-            sampleFmt = " -sample_fmt s24 ";
-        } else if (bitDept == 32) {
+        } else if (bitDept == 24 || bitDept == 32) {
             sampleFmt = " -sample_fmt s32 ";
         }
         // If bitDept is 0 or another value, we don't pass the flag,

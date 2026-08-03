@@ -973,24 +973,24 @@ public class NioHttpServer implements Runnable {
                 synchronized (attachment) {
                     attachment.upgradeToWebSocket(key);
 
-                    // Clear the old HTTP handler immediately to prevent stale references
                     WebSocket.Handler currentWsHandler = attachment.wsHandler;
-                    attachment.wsHandler = null;
 
                     // Check if WebSocket has queued messages (using volatile flag)
-                    if (attachment.wsConnection.hasOutgoingQueue) {
+                    if (attachment.wsConnection != null && attachment.wsConnection.hasOutgoingQueue) {
                         attachment.wsConnection.hasOutgoingQueue = false;
                         selector.wakeup();
                     }
 
                     // Queue onOpen in the background
-                    workerPool.submit(() -> {
-                        try {
-                            currentWsHandler.onOpen(attachment.wsConnection);
-                        } catch (Exception e) {
-                            currentWsHandler.onError(attachment.wsConnection, e);
-                        }
-                    });
+                    if (currentWsHandler != null) {
+                        workerPool.submit(() -> {
+                            try {
+                                currentWsHandler.onOpen(attachment.wsConnection);
+                            } catch (Exception e) {
+                                currentWsHandler.onError(attachment.wsConnection, e);
+                            }
+                        });
+                    }
 
                     // Only NOW enable reads
                     key.interestOps(SelectionKey.OP_READ);

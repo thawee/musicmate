@@ -49,6 +49,8 @@ public class AndroidPlayerController {
             if (state.getState() == PlaybackState.STATE_PLAYING) {
                 // Song started playing, so start our progress poller
                 scheduleProgressUpdate();
+            } else {
+                stopProgressUpdate();
             }
         }
 
@@ -151,24 +153,19 @@ public class AndroidPlayerController {
     private final Runnable mUpdateProgressRunnable = new Runnable() {
         @Override
         public void run() {
-            // Log.d(TAG, "mUpdateProgressRunnable.run");
             if (mediaController == null) {
                 return;
             }
 
             PlaybackState state = mediaController.getPlaybackState();
-            // Log.d("ExternalPlayer", "mUpdateProgressRunnable.state: "+ state);
             if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
-                if(playbackCallback != null) {
-                    long elapsedMillis = updatePlaybackState(state);
-                    if((System.currentTimeMillis() - lastUpdateSongTime) > elapsedMillis) {
-                        // read current title
-                        updateMetadata(playbackCallback);
-                    }
+                if (playbackCallback != null) {
+                    updatePlaybackState(state);
                 }
-
                 // Schedule the next update
                 scheduleProgressUpdate();
+            } else {
+                stopProgressUpdate();
             }
         }
     };

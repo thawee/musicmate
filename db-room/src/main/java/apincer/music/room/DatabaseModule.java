@@ -23,7 +23,7 @@ public class DatabaseModule {
 
     @Provides
     @Singleton
-    public DbHelper provideDbHelper(MusicRoomDatabase database) {
-        return new RoomDbHelper(database);
+    public DbHelper provideDbHelper(MusicRoomDatabase database, @ApplicationContext Context context) {
+        return new RoomDbHelper(database, context);
     }
 }

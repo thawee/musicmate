@@ -3,12 +3,13 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<group android:id="@+id/main_items">
+		<!--
 	<item
-		android:icon="@drawable/ic_baseline_play_arrow_24"
-		android:id="@+id/action_play_now"
-		android:title="Play Now"
+		android:icon="@drawable/ic_baseline_playlist_play_24"
+		android:id="@+id/action_play_next"
+		android:title="Play Next"
 		app:showAsAction="always"/>
-
+		-->
 	<item
 		android:icon="@drawable/ic_baseline_queue_music_24"
 		android:id="@+id/action_add_queue"
@@ -21,11 +22,12 @@
 		android:title="Song Info"
 		app:showAsAction="always"/>
 
-	<item
-		android:icon="@drawable/rounded_transform_24"
-		android:id="@+id/action_encoding_file"
-		android:title="Convert Files"
-		app:showAsAction="never"/>
+		<item
+			android:icon="@drawable/rounded_drive_file_move_24"
+			android:id="@+id/action_transfer_file"
+			android:title="Move Songs"
+			app:showAsAction="always"/>
+
 	</group>
 
 	<!--
@@ -36,10 +38,11 @@
 		app:showAsAction="always"/>
 	-->
 	<group android:id="@+id/main_files">
+
 		<item
-			android:icon="@drawable/rounded_deployed_code_update_24"
-			android:id="@+id/action_transfer_file"
-			android:title="Move Songs"
+			android:icon="@drawable/rounded_swap_horiz_24"
+			android:id="@+id/action_encoding_file"
+			android:title="Convert Files"
 			app:showAsAction="always"/>
 
 		<item android:id="@+id/action_delete"

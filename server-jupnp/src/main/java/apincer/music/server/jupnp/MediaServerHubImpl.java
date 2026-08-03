@@ -379,7 +379,16 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void refreshDiscovery() {
         Log.d(TAG, "Manual refresh discovery triggered");
-        triggerDiscovery();
+        // Use MX=5 for manual rescan so slow devices have extra time to respond
+        runOnUpnpThread(() -> {
+            lastDiscoveryTime = System.currentTimeMillis();
+            if (controlPoint == null) return;
+            try {
+                controlPoint.search(new org.jupnp.model.message.header.STAllHeader(), 5);
+            } catch (Exception e) {
+                Log.w(TAG, "Manual discovery failed", e);
+            }
+        });
     }
 
     // =========================================================
@@ -727,24 +736,28 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Step 3: Set the song URL on the renderer
         // This is an asynchronous action, so we use a callback.
         ControlPoint controlPoint = upnpService.getControlPoint();
-        controlPoint.execute(new SetAVTransportURI(currentAVTransport, songUrl, metadata) {
+        controlPoint.execute(new Stop(currentAVTransport) {
             @Override
             public void success(ActionInvocation invocation) {
-                // System.out.println("Successfully set URI. Now playing...");
+                executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+            }
 
-                // Step 4: After the URI is set successfully, send the Play command
-                controlPoint.execute(new Play(currentAVTransport) {
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+            }
+        });
+    }
+
+    private void executeSetUriAndPlay(ControlPoint controlPoint, Service avTransport, String songUrl, String metadata) {
+        controlPoint.execute(new SetAVTransportURI(avTransport, songUrl, metadata) {
+            @Override
+            public void success(ActionInvocation invocation) {
+                controlPoint.execute(new Play(avTransport) {
                     @Override
                     public void success(ActionInvocation invocation) {
-                        // Force the UI to reflect "Playing" immediately
                         serverStatus.setValue(ServerStatus.CAST);
-                        startPolling(currentAVTransport);
-
-                        // Get the next song from your repository/queue
-                       /* MediaTrack nextSong = queueManager.getNextTrack();
-                        if (nextSong != null) {
-                            setNextTrack(nextSong);
-                        } */
+                        startPolling(avTransport);
                     }
 
                     @Override
@@ -757,7 +770,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 Log.e(TAG, "SetAVTransportURI failed: " + defaultMsg);
-                stopPolling(); // Kill the loop here!
+                stopPolling();
             }
         });
     }
@@ -1334,73 +1347,46 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void parseLastChange(String xml) {
+        if (xml == null || xml.isEmpty()) return;
         try {
-                boolean hasPosition = false;
-               /* String posStr = extractValue(xml, "RelativeTimePosition");
+            boolean hasPosition = false;
 
-                if (posStr == null) {
-                    posStr = extractValue(xml, "AbsoluteTimePosition");
-                } */
-            // Use the pre-compiled POS_PATTERN instead of extractValue
+            // Extract position using pre-compiled POS_PATTERN
             Matcher posMatcher = POS_PATTERN.matcher(xml);
             String posStr = posMatcher.find() ? posMatcher.group(1) : null;
 
-                if (posStr != null) {
-                    int currentPositionSec = parseTimeToSeconds(posStr);
-                    if(playbackCallback != null) {
-                        playbackCallback.onPlaybackStateTimeElapsedSeconds(currentPositionSec);
-                    }
-                    stopPolling(); // reduce traffic
-                    hasPosition = true;
+            if (posStr != null) {
+                int currentPositionSec = parseTimeToSeconds(posStr);
+                if (playbackCallback != null) {
+                    playbackCallback.onPlaybackStateTimeElapsedSeconds(currentPositionSec);
                 }
+                stopPolling(); // reduce traffic since event provides position
+                hasPosition = true;
+            }
 
             Matcher m = STATE_PATTERN.matcher(xml);
             String state = m.find() ? m.group(1) : null;
             if ("PLAYING".equalsIgnoreCase(state)) {
                 serverStatus.setValue(ServerStatus.CAST);
 
-                // 1. Music is back! Cancel the "kill" timer
+                // Cancel the pause/kill timeout
                 cancelPauseTimeout();
 
-                // 2. Resume tracking position
+                // Resume tracking position
                 if (currentAVTransport != null && pollingTask == null) {
                     startPolling(currentAVTransport);
                 }
-            }
-            else if ("STOPPED".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state)) {
-                //else if (xml.contains("value=\"STOPPED\"") || xml.contains("value=\"PAUSED\"")) {
+            } else if ("STOPPED".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state)) {
                 stopPolling();
                 serverStatus.setValue(ServerStatus.RUNNING);
 
-                // If the speaker stopped, and it can't handle gapless transitions itself,
-                // we manually trigger the next song.
                 if (!supportsGapless) {
                     playNextManual();
                 } else {
                     schedulePauseTimeout();
                 }
-                //}else if (hasPosition && !xml.contains("value=\"STOPPED\"")) {
-            }else if (hasPosition && !"STOPPED".equalsIgnoreCase(state)) {
+            } else if (hasPosition && !"STOPPED".equalsIgnoreCase(state)) {
                 serverStatus.setValue(ServerStatus.CAST);
-            }
-
-            // Check if the URI changed (Meaning the renderer jumped to the next track)
-            if (xml.contains("CurrentTrackMetaData")) {
-                // 1. Extract the URI or Title from the XML
-               // String newMetadata = extractMetadata(xml);
-
-                // 2. Compare with what the QueueManager thinks is playing
-               /* if (!isCurrentTrack(newMetadata)) {
-                    Log.i(TAG, "Smart Queue: Renderer transitioned to next track.");
-                    queueManager.moveToNext();
-
-                    // 3. Prime the NEW 'next' track
-                    MediaTrack nextUp = queueManager.getNextTrack();
-                    if (nextUp != null) setNextTrack(nextUp);
-
-                    // 4. Update the UI
-                    updateNowPlayingUI(queueManager.getCurrentTrack());
-                } */
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to parse LastChange", e);

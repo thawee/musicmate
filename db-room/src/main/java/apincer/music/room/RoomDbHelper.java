@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import android.content.Context;
 import android.util.Log;
 
 import androidx.sqlite.db.SimpleSQLiteQuery;
@@ -30,12 +31,19 @@ public class RoomDbHelper implements DbHelper {
     // Same separator as OrmLite (Constants.ARTIST_SEP = ",")
     private static final Pattern ARTIST_SPLIT = Pattern.compile(",");
 
+    private final Context context;
     private final MusicRoomDatabase database;
     private final TrackDao trackDao;
 
     public RoomDbHelper(MusicRoomDatabase database) {
+        this(database, null);
+    }
+
+    public RoomDbHelper(MusicRoomDatabase database, Context context) {
         this.database = database;
+        this.context = context != null ? context.getApplicationContext() : null;
         this.trackDao = database.trackDao();
+        loadQueueFromDisk();
     }
 
     @Override
@@ -408,19 +416,102 @@ public class RoomDbHelper implements DbHelper {
         return new ArrayList<>(trackDao.findByIds(ids));
     }
 
-    @Override
-    public void addToPlayingQueue(Track song) throws SQLException {}
+    private final List<Long> cachedQueueIds = new ArrayList<>();
+    private static final String PREF_QUEUE_NAME = "mmate_playing_queue";
+    private static final String PREF_KEY_IDS = "queue_track_ids";
 
-    @Override
-    public void savePlayingQueue(List<Track> songsInContext) {}
+    private void loadQueueFromDisk() {
+        if (context == null) return;
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE);
+            String raw = prefs.getString(PREF_KEY_IDS, "");
+            cachedQueueIds.clear();
+            if (raw != null && !raw.isEmpty()) {
+                String[] parts = raw.split(",");
+                for (String part : parts) {
+                    try {
+                        cachedQueueIds.add(Long.parseLong(part.trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        } catch (Exception e) {
+            Log.e("RoomDbHelper", "Failed to load playing queue from disk", e);
+        }
+    }
 
-    @Override
-    public List<Track> getPlayingQueue() {
-        return Collections.emptyList();
+    private void saveQueueToDisk() {
+        if (context == null) return;
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < cachedQueueIds.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(cachedQueueIds.get(i));
+            }
+            context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(PREF_KEY_IDS, sb.toString())
+                    .apply();
+        } catch (Exception e) {
+            Log.e("RoomDbHelper", "Failed to save playing queue to disk", e);
+        }
     }
 
     @Override
-    public void emptyPlayingQueue() {}
+    public synchronized void addToPlayingQueue(Track song) throws SQLException {
+        if (song != null) {
+            cachedQueueIds.add(song.getId());
+            saveQueueToDisk();
+        }
+    }
+
+    @Override
+    public synchronized void savePlayingQueue(List<Track> songsInContext) {
+        cachedQueueIds.clear();
+        if (songsInContext != null) {
+            for (Track track : songsInContext) {
+                if (track != null) {
+                    cachedQueueIds.add(track.getId());
+                }
+            }
+        }
+        saveQueueToDisk();
+    }
+
+    @Override
+    public synchronized List<Track> getPlayingQueue() {
+        if (cachedQueueIds.isEmpty()) {
+            loadQueueFromDisk();
+        }
+        if (cachedQueueIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        long[] ids = new long[cachedQueueIds.size()];
+        for (int i = 0; i < cachedQueueIds.size(); i++) {
+            ids[i] = cachedQueueIds.get(i);
+        }
+        List<TrackEntity> entities = trackDao.findByIds(ids);
+        if (entities == null || entities.isEmpty()) return Collections.emptyList();
+
+        Map<Long, Track> trackMap = new HashMap<>();
+        for (TrackEntity entity : entities) {
+            trackMap.put(entity.getId(), entity);
+        }
+
+        List<Track> result = new ArrayList<>();
+        for (Long id : cachedQueueIds) {
+            Track t = trackMap.get(id);
+            if (t != null) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public synchronized void emptyPlayingQueue() {
+        cachedQueueIds.clear();
+        saveQueueToDisk();
+    }
 
     @Override
     public List<Track> getSoundGradeWithStats() {

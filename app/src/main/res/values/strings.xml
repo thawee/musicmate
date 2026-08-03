@@ -344,6 +344,7 @@
     <string name="fetch_songs_info">Get Infos</string>
     <string name="album_art">album art</string>
     <string name="output_format">Output Format</string>
+    <string name="sample_rate">Sample Rate</string>
     <string name="conversion_progress">Conversion Progress</string>
     <string name="files_to_convert">Files to Convert</string>
     <string name="convert">Convert</string>

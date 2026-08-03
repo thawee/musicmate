@@ -39,6 +39,7 @@ import coil3.target.Target;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.utils.PlayerNameUtils;
 import apincer.android.mmate.utils.TagUIUtils;
+import apincer.android.utils.FileUtils;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
@@ -48,6 +49,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -233,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.post(() -> {
                 lastPlaybackState = playbackState;
                 if(!song.equals(previouslyPlaying)) {
-                    if (Settings.isListFollowNowPlaying(getBaseContext())) {
+                    if (Settings.isListFollowNowPlaying(getBaseContext()) && (actionMode == null)) {
                         // only scrolled on first event for each song
                         if (scrollRunnable != null) {
                             scrollHandler.removeCallbacks(scrollRunnable);
@@ -328,6 +330,16 @@ public class MainActivity extends AppCompatActivity {
             }
             if (barAlbumArt != null) {
                 barAlbumArt.setVisibility(View.GONE);
+            }
+        }
+
+        if (headerCastBtn != null && isPlaybackServiceBound && playbackService != null) {
+            apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
+            boolean isRemote = current != null && current.isStreaming();
+            if (isRemote) {
+                headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
+            } else {
+                headerCastBtn.setImageTintList(null); // Default theme tint
             }
         }
 
@@ -480,6 +492,13 @@ public class MainActivity extends AppCompatActivity {
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
             mRecyclerView.post(() -> {
+                // If user is in selection mode, preserve active selection keys
+                List<Long> selectedPositions = null;
+                if (actionMode != null && mTracker != null && mTracker.hasSelection()) {
+                    selectedPositions = new ArrayList<>();
+                    mTracker.getSelection().forEach(selectedPositions::add);
+                }
+
                 // Save layout manager state to restore scroll position
                 android.os.Parcelable state = null;
                 if (mRecyclerView.getLayoutManager() != null) {
@@ -493,6 +512,12 @@ public class MainActivity extends AppCompatActivity {
 
                 if (state != null && mRecyclerView.getLayoutManager() != null) {
                     mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+                }
+
+                if (selectedPositions != null && !selectedPositions.isEmpty() && mTracker != null) {
+                    for (Long pos : selectedPositions) {
+                        mTracker.select(pos);
+                    }
                 }
             });
             if (musicTags == null || musicTags.isEmpty()) {
@@ -609,9 +634,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView barAlbumArt;
     private TextView barTrackTitle;
     private TextView barTargetSubtitle;
-    private ImageView barBtnPrevious;
-    private ImageView barBtnPlayPause;
-    private ImageView barBtnNext;
 
     private void setupFloatingPlaybackBar() {
         floatingPlaybackBar = findViewById(R.id.docked_playback_bar);
@@ -878,8 +900,12 @@ public class MainActivity extends AppCompatActivity {
                         int count = mTracker.getSelection().size();
                         selections.clear();
                         if (count > 0) {
-                            mTracker.getSelection().forEach(item ->
-                                    selections.add(adapter.getMusicTag(item.intValue())));
+                            mTracker.getSelection().forEach(item -> {
+                                Track tag = adapter.getMusicTag(item.intValue());
+                                if (tag != null) {
+                                    selections.add(tag);
+                                }
+                            });
                             if (actionMode == null) {
                                 actionMode = startSupportActionMode(actionModeCallback);
                             }
@@ -1081,7 +1107,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void scrollToSong(Track currentlyPlaying) {
-        if (currentlyPlaying == null) return;
+        if (currentlyPlaying == null || (actionMode != null)) return;
 
         viewModel.loadUntilFound(currentlyPlaying, () -> {
             mRecyclerView.post(() -> {
@@ -1245,11 +1271,29 @@ public class MainActivity extends AppCompatActivity {
 
         popup.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == RESCAN_ID) {
-                // Trigger immediate UPnP M-SEARCH
+                // Trigger UPnP M-SEARCH (MX=5)
                 playbackService.refreshPlayerDiscovery();
-                // Show feedback and reopen picker after discovery window
+                // Give immediate feedback
+                android.widget.Toast.makeText(this, "🔄 Scanning for players…", android.widget.Toast.LENGTH_SHORT).show();
+                // Poll every 500ms until we find players (or 6s elapses = 12 attempts)
                 if (anchorView != null) {
-                    anchorView.postDelayed(() -> showPlayerPickerPopup(anchorView), 2500);
+                    final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+                    final int[] attempts = {0};
+                    final int MAX_ATTEMPTS = 12;
+                    final Runnable[] poll = {null};
+                    poll[0] = () -> {
+                        attempts[0]++;
+                        List<apincer.music.core.playback.spi.PlaybackTarget> found =
+                                playbackService.getPlaybackTargets();
+                        boolean hasRemote = found != null && found.stream()
+                                .anyMatch(apincer.music.core.playback.spi.PlaybackTarget::isStreaming);
+                        if (hasRemote || attempts[0] >= MAX_ATTEMPTS) {
+                            showPlayerPickerPopup(anchorView);
+                        } else {
+                            handler.postDelayed(poll[0], 500);
+                        }
+                    };
+                    handler.postDelayed(poll[0], 500);
                 }
                 return true;
             }
@@ -1528,8 +1572,7 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                //name.setText(FileUtils.getFileName(tag.getPath()));
-                name.setText(tag.getSimpleName());
+                name.setText(getTrackDisplayName(tag));
 
                 return view;
             }
@@ -1616,7 +1659,7 @@ public class MainActivity extends AppCompatActivity {
         TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
         titleText.setText(R.string.title_import_to_music_directory);
         fileListTitleText.setText(R.string.files_to_move);
-        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_deployed_code_update_24));
+        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_drive_file_move_24));
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1648,7 +1691,7 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(tag.getSimpleName());
+                name.setText(getTrackDisplayName(tag));
 
                 return view;
             }
@@ -1731,15 +1774,24 @@ public class MainActivity extends AppCompatActivity {
         Map<Track, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
+        AutoCompleteTextView sampleRateView = cview.findViewById(R.id.sample_rate);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
         View btnCancel = cview.findViewById(R.id.button_cancel);
+        ImageView titleIcon = cview.findViewById(R.id.title_icon);
+        if (titleIcon != null) {
+            titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_swap_horiz_24));
+        }
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
         btnOK.setText(R.string.convert);
 
         String[] outputFormatList = getResources().getStringArray(R.array.output_formats);
         setupListValuePopupFullList(outputFormat, Arrays.asList(outputFormatList));
-        outputFormat.setText(outputFormatList[2]); // set default, flac standard compress
+        outputFormat.setText(outputFormatList[0]); // default to FLAC (Balanced)
+
+        String[] sampleRateList = getResources().getStringArray(R.array.sample_rates);
+        setupListValuePopupFullList(sampleRateView, Arrays.asList(sampleRateList));
+        sampleRateView.setText(sampleRateList[0]); // default to Original (No Resampling)
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1771,7 +1823,7 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(tag.getSimpleName());
+                name.setText(getTrackDisplayName(tag));
 
                 return view;
             }
@@ -1824,7 +1876,17 @@ public class MainActivity extends AppCompatActivity {
                 targetExt = FILE_FLAC;
             }
 
-            operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel,
+            int targetSampleRate = 0;
+            String selectedSampleRateStr = sampleRateView != null ? sampleRateView.getText().toString() : "";
+            if (selectedSampleRateStr.contains("96")) {
+                targetSampleRate = 96000;
+            } else if (selectedSampleRateStr.contains("48")) {
+                targetSampleRate = 48000;
+            } else if (selectedSampleRateStr.contains("44.1")) {
+                targetSampleRate = 44100;
+            }
+
+            operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel, targetSampleRate,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(Track tag, int progress, String status) {
@@ -1852,6 +1914,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         alert.show();
+    }
+
+    private String getTrackDisplayName(Track tag) {
+        if (tag == null) return "";
+        if (!isEmpty(tag.getSimpleName())) {
+            return tag.getSimpleName();
+        }
+        if (!isEmpty(tag.getTitle())) {
+            return tag.getTitle();
+        }
+        if (!isEmpty(tag.getPath())) {
+            return FileUtils.getFileName(tag.getPath());
+        }
+        return "";
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -1969,14 +2045,18 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
-            if (id == R.id.action_play_now) {
+           /* if (id == R.id.action_play_next) {
                 List<Track> selectedSongs = getSelections();
                 if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
-                    playbackService.playSong(selectedSongs.get(0));
+                    for (int i = selectedSongs.size() - 1; i >= 0; i--) {
+                        playbackService.getQueueManager().addPlayNext(selectedSongs.get(i));
+                    }
+                    Toast.makeText(MainActivity.this, "Playing next: " + selectedSongs.size() + " track(s)", Toast.LENGTH_SHORT).show();
                 }
                 mode.finish();
                 return true;
-            } else if (id == R.id.action_add_queue) {
+            } else*/
+            if (id == R.id.action_add_queue) {
                 List<Track> selectedSongs = getSelections();
                 if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
                     for (Track t : selectedSongs) {

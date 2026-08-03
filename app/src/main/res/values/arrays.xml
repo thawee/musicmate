@@ -199,10 +199,15 @@
         <item>MPEG-1 Layer III, 320kbps, .mp3</item>
          <item>MP3 (320 kbps), .mp3</item>
         -->
-        <item>PCM (Uncompressed), .aiff</item>
-        <item>FLAC (Fast – Larger Size), .flac</item>
         <item>FLAC (Balanced), .flac</item>
+        <item>FLAC (Fast), .flac</item>
         <item>ALAC (Apple Lossless), .m4a</item>
+    </string-array>
+    <string-array name="sample_rates">
+        <item>Original (No Resampling)</item>
+        <item>96 kHz (96,000 Hz)</item>
+        <item>48 kHz (48,000 Hz)</item>
+        <item>44.1 kHz (44,100 Hz)</item>
     </string-array>
     <string-array name="server_engine_entries">
         <item>SonicNIO (Default · Balanced/Zero-Copy)</item>

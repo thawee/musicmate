@@ -8,15 +8,12 @@ public abstract class PlaybackCallback {
     }
 
     public void onMediaTrackChanged(Track metadata) {
-        throw new RuntimeException("Stub!");
     }
 
     public void onPlaybackStateChanged(PlaybackState state) {
-        throw new RuntimeException("Stub!");
     }
 
     public void onPlaybackStateTimeElapsedSeconds(long elapsedSeconds) {
-        throw new RuntimeException("Stub!");
     }
 
     public void onMediaTrackChanged(String title, String artist, String album, long duration) {

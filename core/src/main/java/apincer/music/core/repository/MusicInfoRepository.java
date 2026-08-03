@@ -48,24 +48,31 @@ public class MusicInfoRepository {
      * @return A {@link TrackInfo} object or {@code null}.
      */
     public TrackInfo getFullTrackInfo(String trackArtist, String albumArtist, String album, String year) {
-        if (trackArtist == null || trackArtist.isBlank() ||
-                albumArtist == null || albumArtist.isBlank() ||
-                album == null || album.isBlank()) {
-            Log.w(TAG, "Track artist, album artist, or album name is blank.");
+        if ((trackArtist == null || trackArtist.isBlank()) &&
+                (albumArtist == null || albumArtist.isBlank()) &&
+                (album == null || album.isBlank())) {
+            Log.w(TAG, "Track artist, album artist, and album name are all blank.");
             return null;
         }
 
         try {
+            String targetArtist = (trackArtist != null && !trackArtist.isBlank()) ? trackArtist : albumArtist;
 
-            String albumDescription = getWikipediaAlbumInfo(albumArtist, album, year);
+            String albumDescription = null;
+            if (album != null && !album.isBlank()) {
+                albumDescription = getWikipediaAlbumInfo(albumArtist != null ? albumArtist : targetArtist, album, year);
+            }
             if (albumDescription == null || albumDescription.isEmpty()) {
-                Log.d(TAG, "No album description found on Wikipedia for: " + album + " by " + trackArtist);
-                albumDescription = "No album information found."; // Set a default message
+                Log.d(TAG, "No album description found on Wikipedia for: " + album + " by " + targetArtist);
+                albumDescription = "No album information found.";
             }
 
-            // Placeholders - Wikipedia doesn't easily provide these in the same query
-            String artistBio = ""; // Placeholder - Could make another Wikipedia call for the artist page
-            String highResArtUrl = null; // Placeholder - Wikipedia doesn't host album art directly in API
+            String artistBio = getWikipediaArtistInfo(targetArtist);
+            if (artistBio == null || artistBio.isEmpty()) {
+                artistBio = "No artist biography found.";
+            }
+
+            String highResArtUrl = null; // Placeholder
             List<String> genres = Collections.emptyList(); // Placeholder
 
             return new TrackInfo(artistBio, albumDescription, highResArtUrl, genres);
@@ -74,6 +81,114 @@ public class MusicInfoRepository {
             Log.e(TAG, "Network error fetching Wikipedia info for artist: " + trackArtist + ", album: " + album, e);
             return null;
         }
+    }
+
+    /**
+     * Fetches the Wikipedia intro extract for a given artist.
+     */
+    private String getWikipediaArtistInfo(String artist) {
+        if (artist == null || artist.isBlank() || isVariousArtists(artist)) return null;
+
+        try {
+            String title = findWikipediaArtistPageTitle(artist);
+            if (title == null || title.isEmpty()) {
+                title = artist.replaceAll("[\\[\\](){}]", "").replaceAll("\\s+", " ").trim();
+            }
+
+            Log.d(TAG, "Fetching Wikipedia artist extract for title: " + title);
+
+            HttpUrl url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host(WIKIPEDIA_API_ENDPOINT)
+                    .addPathSegments("w/api.php")
+                    .addQueryParameter("action", "query")
+                    .addQueryParameter("format", "json")
+                    .addQueryParameter("prop", "extracts")
+                    .addQueryParameter("exintro", "true")
+                    .addQueryParameter("explaintext", "true")
+                    .addQueryParameter("redirects", "1")
+                    .addQueryParameter("titles", title)
+                    .addQueryParameter("origin", "*")
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion())
+                    .build();
+
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (!response.isSuccessful()) return null;
+
+                ResponseBody body = response.body();
+                if (body == null) return null;
+
+                String jsonString = body.string();
+                org.json.JSONObject responseObj = new org.json.JSONObject(jsonString);
+                org.json.JSONObject query = responseObj.optJSONObject("query");
+                if (query == null) return null;
+
+                org.json.JSONObject pages = query.optJSONObject("pages");
+                if (pages == null || pages.length() == 0) return null;
+
+                String firstKey = pages.keys().next();
+                if ("-1".equals(firstKey)) return null;
+
+                org.json.JSONObject pageData = pages.optJSONObject(firstKey);
+                if (pageData == null) return null;
+
+                return pageData.optString("extract", null);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to fetch Wikipedia artist bio for: " + artist, e);
+            return null;
+        }
+    }
+
+    /**
+     * Uses Wikipedia OpenSearch to find a likely Wikipedia page title for an artist.
+     */
+    private String findWikipediaArtistPageTitle(String artist) {
+        String cleanArtist = artist.replaceAll("[\\[\\](){}]", "").replaceAll("\\s+", " ").trim();
+        String searchQuery = cleanArtist + " musician";
+
+        Log.d(TAG, "Performing OpenSearch for artist: " + searchQuery);
+
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme("https")
+                .host(WIKIPEDIA_API_ENDPOINT)
+                .addPathSegments("w/api.php")
+                .addQueryParameter("action", "opensearch")
+                .addQueryParameter("format", "json")
+                .addQueryParameter("limit", "1")
+                .addQueryParameter("search", searchQuery)
+                .addQueryParameter("namespace", "0")
+                .addQueryParameter("origin", "*")
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion())
+                .build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) return null;
+
+            ResponseBody body = response.body();
+            if (body == null) return null;
+
+            String jsonString = body.string();
+            org.json.JSONArray rootArray = new org.json.JSONArray(jsonString);
+
+            if (rootArray.length() > 1) {
+                org.json.JSONArray titles = rootArray.optJSONArray(1);
+                if (titles != null && titles.length() > 0) {
+                    return titles.optString(0);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "OpenSearch artist failed for: " + searchQuery, e);
+        }
+        return null;
     }
 
     /**

@@ -30,6 +30,7 @@ public interface PlaybackService {
 
     void playSong(Track song);
     void pausePlayer();
+    void seekTo(long positionMs);
 
    void skipToNextInQueue();
 

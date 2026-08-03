@@ -64,7 +64,7 @@ public class CompositeWebServer implements WebServer {
     }
 
     private synchronized void checkAndUpdateEngine() {
-        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, "nio");
+        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
         if (!engineKey.equalsIgnoreCase(currentEngineKey)) {
             Log.d(TAG, "Engine preference changed from " + currentEngineKey + " to " + engineKey);
             if (activeEngine != null) {

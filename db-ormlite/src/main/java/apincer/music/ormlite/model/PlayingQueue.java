@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "playing_queue")
 public class PlayingQueue {
 
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(generatedId = true)
     private long id;
 
     @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = "track_id")
@@ -20,7 +20,6 @@ public class PlayingQueue {
 
     public PlayingQueue(TrackEntity track, long position) {
         this.track = track;
-        this.id = track.getId();
         this.position = position;
     }
 

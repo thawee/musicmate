@@ -67,18 +67,60 @@ public class QueueManager {
      */
     private final List<Integer> shuffleOrder = new ArrayList<>();
 
-    public void addPlayingQueue(long trackId) {
+    public synchronized void addPlayingQueue(long trackId) {
         Track song = tagRepos.findById(trackId);
-          if (song != null) {
-              addToPlayingQueue(song);
-              queueList.add(song);
-          }
+        if (song != null) {
+            try {
+                addToPlayingQueue(song);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to persist track to playing queue", e);
+            }
+            queueList.add(song);
+            int newIndex = queueList.size() - 1;
+            indexMap.put(song.getId(), newIndex);
+            if (currentIndex == -1) {
+                currentIndex = 0;
+                playbackIndex = 0;
+            }
+            updateShuffleOrder();
+        }
     }
 
-    public void savePlayingQueue(List<Track> songsInContext) {
+    public synchronized void addPlayNext(Track song) {
+        if (song == null) return;
+        try {
+            addToPlayingQueue(song);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist track to playing queue", e);
+        }
+        if (queueList.isEmpty()) {
+            queueList.add(song);
+            currentIndex = 0;
+            playbackIndex = 0;
+        } else {
+            int insertPos = (currentIndex != -1 && currentIndex < queueList.size()) ? currentIndex + 1 : queueList.size();
+            queueList.add(insertPos, song);
+        }
+        rebuildIndexMap();
+        dbHelper.savePlayingQueue(queueList);
+        updateShuffleOrder();
+    }
+
+    public synchronized void savePlayingQueue(List<Track> songsInContext) {
         dbHelper.savePlayingQueue(songsInContext);
         queueList.clear();
-        queueList.addAll(songsInContext);
+        indexMap.clear();
+        if (songsInContext != null) {
+            for (int i = 0; i < songsInContext.size(); i++) {
+                Track track = songsInContext.get(i);
+                if (track == null) continue;
+                queueList.add(track);
+                indexMap.put(track.getId(), i);
+            }
+        }
+        currentIndex = queueList.isEmpty() ? -1 : 0;
+        playbackIndex = currentIndex;
+        updateShuffleOrder();
     }
 
     /**
@@ -139,6 +181,14 @@ public class QueueManager {
                 indexMap.put(track.getId(), i);
             }
 
+            if (!queueList.isEmpty()) {
+                currentIndex = 0;
+                playbackIndex = 0;
+            } else {
+                currentIndex = -1;
+                playbackIndex = -1;
+            }
+
             updateShuffleOrder();
             Log.d(TAG, "Loaded queue from DB. Size: " + queueList.size());
         } catch (Exception e) {
@@ -153,7 +203,7 @@ public class QueueManager {
      *
      * @param track The track to set as the current focal point.
      */
-    public void setCurrentTrack(Track track) {
+    public synchronized void setCurrentTrack(Track track) {
         if (track == null) return;
 
 
@@ -191,10 +241,15 @@ public class QueueManager {
      *
      * @return The next {@link Track}, or {@code null} if the end of the queue is reached.
      */
-    public Track getNextTrack() {
+    public synchronized Track getNextTrack() {
         if (queueList.isEmpty()) return null;
 
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        if (baseIndex == -1) {
+            baseIndex = 0;
+            currentIndex = 0;
+        }
+
         if (repeatMode == RepeatMode.ONE && baseIndex != -1) {
             return queueList.get(baseIndex);
         }
@@ -231,7 +286,7 @@ public class QueueManager {
         }
     }
 
-    public Track getPreviousTrack() {
+    public synchronized Track getPreviousTrack() {
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
         int prevIndex = getPreviousIndex(baseIndex);
         return prevIndex != -1 ? queueList.get(prevIndex) : null;
@@ -360,8 +415,41 @@ public class QueueManager {
         }
     }
 
+    public synchronized void moveTrack(int fromPos, int toPos) {
+        if (fromPos < 0 || fromPos >= queueList.size() || toPos < 0 || toPos >= queueList.size()) return;
+        Track moved = queueList.remove(fromPos);
+        queueList.add(toPos, moved);
+        rebuildIndexMap();
+        dbHelper.savePlayingQueue(queueList);
+        updateShuffleOrder();
+    }
+
+    public synchronized void removeTrack(int position) {
+        if (position < 0 || position >= queueList.size()) return;
+        queueList.remove(position);
+        rebuildIndexMap();
+        if (currentIndex >= queueList.size()) {
+            currentIndex = queueList.size() - 1;
+        }
+        dbHelper.savePlayingQueue(queueList);
+        updateShuffleOrder();
+    }
+
+    private void rebuildIndexMap() {
+        indexMap.clear();
+        for (int i = 0; i < queueList.size(); i++) {
+            Track t = queueList.get(i);
+            if (t != null) {
+                indexMap.put(t.getId(), i);
+            }
+        }
+    }
+
     public void emptyPlayingQueue() {
         dbHelper.emptyPlayingQueue();
         queueList.clear();
+        indexMap.clear();
+        currentIndex = -1;
+        playbackIndex = -1;
     }
 }

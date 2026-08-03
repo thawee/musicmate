@@ -138,13 +138,13 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
 
             // WebSocket upgrade endpoint
             p.addLast(new WebSocketServerProtocolHandler(
-                    CONTEXT_PATH_WEBSOCKET,   // your websocket path
+                    CONTEXT_PATH_WEBSOCKET,   // "/ws"
                     null,
                     true
             ));
 
-            // WebSocket handler (can stay on IO or move to logicExecutorGroup)
-            p.addLast(wsHandler);
+            // WebSocket handler
+            p.addLast(wsHandler.createInboundHandler());
 
             // HTTP content handler (OFF IO thread)
             ChannelHandler httpHandler = new WebContentHandler();
@@ -337,41 +337,71 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
         }
     }
 
-    @ChannelHandler.Sharable
-    private class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
-
+    private class WebSocketFrameHandler extends WebSocketContent {
         private final ChannelGroup channels =
                 new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
         @Override
-        public void handlerAdded(ChannelHandlerContext ctx) {
-            channels.add(ctx.channel());
+        protected void broadcastMessage(String jsonResponse) {
+            if (channels != null && !channels.isEmpty()) {
+                channels.writeAndFlush(new TextWebSocketFrame(jsonResponse));
+            }
         }
 
-        @Override
-        public void handlerRemoved(ChannelHandlerContext ctx) {
-            channels.remove(ctx.channel());
+        public String getNamespace() {
+            return CONTEXT_PATH_WEBSOCKET;
         }
 
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
-            String text = msg.text();
+        public ChannelHandler createInboundHandler() {
+            return new SimpleChannelInboundHandler<TextWebSocketFrame>() {
+                @Override
+                public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+                    if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
+                        channels.add(ctx.channel());
+                        Log.d(TAG, "Netty WS Handshake complete: " + ctx.channel().remoteAddress());
+                        for (java.util.Map<String, Object> message : getWelcomeMessages()) {
+                            if (message != null) {
+                                try {
+                                    String json = apincer.music.core.utils.JsonUtils.toJson(message);
+                                    ctx.writeAndFlush(new TextWebSocketFrame(json));
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error sending welcome message", e);
+                                }
+                            }
+                        }
+                    } else {
+                        super.userEventTriggered(ctx, evt);
+                    }
+                }
 
-            // 🔥 handle message (JSON, commands, etc.)
-            Log.d(TAG, "WS Received: " + text);
+                @Override
+                public void handlerRemoved(ChannelHandlerContext ctx) {
+                    channels.remove(ctx.channel());
+                }
 
-            // Example: echo or process
-            broadcast("Echo: " + text);
-        }
+                @Override
+                protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
+                    try {
+                        String text = msg.text();
+                        Log.d(TAG, "Netty WS Received: " + text);
+                        java.util.Map<String, Object> messageMap = (java.util.Map<String, Object>) (java.util.Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(text);
+                        String command = String.valueOf(messageMap.getOrDefault("command", ""));
+                        java.util.Map<String, Object> response = handleCommand(command, messageMap);
+                        if (response != null) {
+                            String json = apincer.music.core.utils.JsonUtils.toJson(response);
+                            ctx.writeAndFlush(new TextWebSocketFrame(json));
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error handling WebSocket message", e);
+                    }
+                }
 
-        public void broadcast(String message) {
-            channels.writeAndFlush(new TextWebSocketFrame(message));
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            Log.e(TAG, "WebSocket error", cause);
-            ctx.close();
+                @Override
+                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                    Log.e(TAG, "Netty WebSocket error", cause);
+                    ctx.close();
+                }
+            };
         }
     }
 }

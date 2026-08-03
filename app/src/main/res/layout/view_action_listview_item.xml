@@ -1,46 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="10dp"
+    android:paddingHorizontal="12dp">
 
+    <!-- Sequence Number -->
     <TextView
         android:id="@+id/seq"
-        android:layout_width="wrap_content"
+        android:layout_width="28dp"
         android:layout_height="wrap_content"
-        android:minWidth="@dimen/dimen_12_dp"
-        android:layout_gravity="start|center_vertical"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="@dimen/dimen_4_dp"
-        android:padding="@dimen/activity_horizontal_margin"
-        tools:text="1"
-        android:textColor="@color/white" />
+        android:gravity="center"
+        android:textColor="@color/teal_200"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="1" />
 
+    <!-- Track Title / File Name -->
     <TextView
         android:id="@+id/name"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/seq"
-        android:layout_toStartOf="@+id/status"
-        android:gravity="left"
-        android:maxLines="2"
-        android:layout_gravity="left"
-        android:layout_marginStart="@dimen/dimen_16_dp"
-        android:layout_marginEnd="@dimen/dimen_32_dp"
-        android:padding="@dimen/activity_horizontal_margin"
-        android:ellipsize="start"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:textColor="@color/white"
-        tools:text="Test and Test"
-        tools:ignore="RtlHardcoded" />
+        android:textSize="14sp"
+        tools:text="Artist - Song Title.flac" />
+
+    <!-- Status Text -->
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="@dimen/dimen_24_dp"
-        android:layout_gravity="center"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="@dimen/dimen_4_dp"
-        android:padding="@dimen/activity_horizontal_margin"
-        android:textColor="@color/white" />
-</RelativeLayout>
+        android:minWidth="48dp"
+        android:gravity="end"
+        android:textColor="@color/teal_200"
+        android:textSize="12sp"
+        tools:text="Done" />
+
+</LinearLayout>

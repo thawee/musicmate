@@ -109,8 +109,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public StateFlow<Optional<Track>> getCurrentTrackFlow() { return currentTrackFlow; }
     public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
 
-    private RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
-    private String controlledPlayerTargetId;
+    private volatile RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
+    private volatile String controlledPlayerTargetId;
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
@@ -120,6 +120,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     // The Service is now the single source of truth for its status.
     private final MutableLiveData<MediaServerHub.ServerStatus> statusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
+    private androidx.lifecycle.Observer<MediaServerHub.ServerStatus> statusObserver;
 
     private final PlaybackCallback playbackCallback = new PlaybackCallback() {
 
@@ -217,7 +218,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             }
         }
 
-        getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs()));
+        statusObserver = status -> updateNotification(getApplicationContext(), null, null, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        getStatusLiveData().observeForever(statusObserver);
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
@@ -241,7 +243,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             playingQueueFlow.setValue(queueManager.getSongs());
         }
 
-        initWebUIAssets(this);
+        // Init WebUI assets in background to avoid blocking UI thread during service creation
+        Executors.newSingleThreadExecutor().execute(() -> initWebUIAssets(getApplicationContext()));
 
         Optional<PlaybackTarget> bestChoice = autoSelectBestPlayer();
         if (bestChoice.isPresent()) {
@@ -289,7 +292,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                     break;
             }
         }
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     public void startServers() {
@@ -334,6 +337,14 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         // 2. Shut down the scheduler
         scheduler.shutdownNow();
 
+        // 3. Remove LiveData observer
+        if (statusObserver != null) {
+            getStatusLiveData().removeObserver(statusObserver);
+        }
+
+        // 4. Cancel coroutines job
+        serviceJob.cancel(null);
+
         // Ensure everything is cleaned up if the service is destroyed.
         stopServers();
 
@@ -346,10 +357,20 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private void deactivatePlayer(PlaybackTarget player) {
         if(player != null) {
-            if (player.isStreaming()){
-                mediaHub.playerDeactivate(player.getTargetId());
-            }else {
-                androidPlayer.unregisterCallback();
+            // Cancel any pending gapless fallback timer to prevent it firing on the wrong player
+            resetGaplessState();
+
+            try {
+                if (player.isStreaming()){
+                    // Stop playback before deactivating to prevent audio continuing in background
+                    mediaHub.playerStop(player.getTargetId());
+                    mediaHub.playerDeactivate(player.getTargetId());
+                }else {
+                    androidPlayer.stopPlaying();
+                    androidPlayer.unregisterCallback();
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Error deactivating player: " + player.getDisplayName(), e);
             }
         }
     }
@@ -387,10 +408,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         resetGaplessState();
 
         // get next song from queuemanager
-        queueManager.setCurrentTrack(getNowPlayingSong());
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
         Track song = queueManager.getNextTrack();
         if(song != null) {
-            mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+            try {
+                mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+                queueManager.setPlaybackTrack(song);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to skip next on DMR: " + playbackTarget.getDisplayName(), e);
+                return;
+            }
             currentTrackFlow.setValue(Optional.of(song));
             apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
             state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -413,10 +443,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private void internalPreviousOnDMRPlayer(PlaybackTarget playbackTarget) {
         resetGaplessState();
-        queueManager.setCurrentTrack(getNowPlayingSong());
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
         Track song = queueManager.getPreviousTrack();
         if (song != null) {
-            mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+            try {
+                mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
+                queueManager.setPlaybackTrack(song);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to skip previous on DMR: " + playbackTarget.getDisplayName(), e);
+                return;
+            }
             currentTrackFlow.setValue(Optional.of(song));
             apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
             state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -438,7 +477,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void InternalPauseDMRPlayer(PlaybackTarget playbackTarget) {
-        mediaHub.playerPause(playbackTarget.getTargetId());
+        try {
+            mediaHub.playerPause(playbackTarget.getTargetId());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to pause DMR: " + playbackTarget.getDisplayName(), e);
+        }
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
         state.currentTrack = getNowPlayingSong();
@@ -458,7 +501,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     private void internalStopOnDMRPlayer(PlaybackTarget playbackTarget) {
-        mediaHub.playerStop(playbackTarget.getTargetId());
+        try {
+            mediaHub.playerStop(playbackTarget.getTargetId());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to stop DMR: " + playbackTarget.getDisplayName(), e);
+        }
         resetGaplessState();
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
@@ -491,8 +538,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song) {
         if (song == null) return;
 
+        // Cancel any existing gapless task first
+        resetGaplessState();
+
         // 1. Start playback
-        mediaHub.playerPlaySong(player.getTargetId(), song);
+        try {
+            mediaHub.playerPlaySong(player.getTargetId(), song);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to play on DMR: " + player.getDisplayName(), e);
+            return;
+        }
         currentTrackFlow.setValue(Optional.of(song));
 
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
@@ -503,10 +558,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         onPlaybackStateChanged(state);
 
         handleTrackStartEvent(song);
+    }
 
-        // 3. Cancel any existing task
-        if (nextTrackTask != null && !nextTrackTask.isDone()) {
-            nextTrackTask.cancel(false);
+    @Override
+    public void seekTo(long positionMs) {
+        PlaybackTarget currentTarget = getPlayer();
+        if (currentTarget != null) {
+            try {
+                mediaHub.playerSeek(currentTarget.getTargetId(), positionMs);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to seek", e);
+            }
         }
     }
 
@@ -515,7 +577,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         if (next != null) {
             Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
-            mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
+            try {
+                mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
+            } catch (Exception e) {
+                Log.w(TAG, "Gapless: Failed to preload next track", e);
+            }
         } else {
             Log.d(TAG, "Gapless: No next track to preload");
         }
@@ -538,8 +604,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         Log.w(TAG, "Fallback: Forcing next → " + expectedNext.getTitle());
 
-        mediaHub.playerPlaySong(player.getTargetId(), expectedNext);
-        queueManager.setPlaybackTrack(expectedNext);
+        try {
+            mediaHub.playerPlaySong(player.getTargetId(), expectedNext);
+            queueManager.setPlaybackTrack(expectedNext);
+        } catch (Exception e) {
+            Log.w(TAG, "Fallback: Failed to force next track", e);
+        }
 
         lastPreloadedTrackId = -1;
     }
@@ -850,8 +920,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void onPlaybackStateElapsedTime(long elapsedTimeMS) {
         apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
         if (state != null) {
-            state.currentPositionSecond = elapsedTimeMS;
-            playbackStateFlow.setValue(state);
+            // Create a copy — StateFlow uses reference equality and silently drops
+            // setValue() calls with the same object instance, even if fields changed.
+            apincer.music.core.playback.PlaybackState updated = state.copy();
+            updated.currentPositionSecond = elapsedTimeMS;
+            playbackStateFlow.setValue(updated);
         }
     }
 
@@ -873,32 +946,31 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         return flowSubscribe(currentPlayerFlow, consumer, onErrorConsumer);
     }
 
-    /** Lightweight Java-compatible StateFlow subscriber using a background watcher thread. */
-    private static <T> AutoCloseable flowSubscribe(
-            MutableStateFlow<T> flow,
+    /** Lightweight Java-compatible StateFlow subscriber using the single-thread scheduler. */
+    private <T> AutoCloseable flowSubscribe(
+            StateFlow<T> flow,
             Consumer<T> onNext,
             Consumer<Throwable> onError) {
-        java.util.concurrent.atomic.AtomicBoolean active = new java.util.concurrent.atomic.AtomicBoolean(true);
         // Emit current value immediately
         try { onNext.accept(flow.getValue()); } catch (Throwable t) {
             try { onError.accept(t); } catch (Exception ignored) {}
         }
-        Thread watcher = new Thread(() -> {
-            T last = flow.getValue();
-            while (active.get()) {
+        final java.util.concurrent.atomic.AtomicReference<T> lastRef =
+                new java.util.concurrent.atomic.AtomicReference<>(flow.getValue());
+
+        ScheduledFuture<?> task = scheduler.scheduleWithFixedDelay(() -> {
+            try {
                 T current = flow.getValue();
-                if (current != last) {
-                    last = current;
-                    try { onNext.accept(current); } catch (Throwable t) {
-                        try { onError.accept(t); } catch (Exception ignored) {}
-                    }
+                if (current != lastRef.get()) {
+                    lastRef.set(current);
+                    onNext.accept(current);
                 }
-                try { Thread.sleep(500); } catch (InterruptedException e) { break; }
+            } catch (Throwable t) {
+                try { onError.accept(t); } catch (Exception ignored) {}
             }
-        }, "FlowWatcher");
-        watcher.setDaemon(true);
-        watcher.start();
-        return () -> active.set(false);
+        }, 500, 500, TimeUnit.MILLISECONDS);
+
+        return () -> task.cancel(false);
     }
 
     // ==================== Binder ====================

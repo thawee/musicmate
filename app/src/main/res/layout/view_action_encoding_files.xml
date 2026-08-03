@@ -22,9 +22,10 @@
         android:padding="@dimen/dimen_14_dp">
 
         <ImageView
+            android:id="@+id/title_icon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/rounded_transform_24"
+            android:src="@drawable/rounded_swap_horiz_24"
             android:layout_marginEnd="8dp"
             app:tint="@color/white" />
 
@@ -75,6 +76,32 @@
 
                 <AutoCompleteTextView
                     android:id="@+id/output_format"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:popupBackground="@drawable/bg_spinner_popup_dark"
+                    android:dropDownVerticalOffset="8dp"
+                    android:dropDownWidth="match_parent" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:hint="@string/sample_rate"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:boxBackgroundColor="@color/black_transparent_64"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/teal_200"
+                app:hintTextColor="@color/white"
+                app:endIconTint="@color/white">
+
+                <AutoCompleteTextView
+                    android:id="@+id/sample_rate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"

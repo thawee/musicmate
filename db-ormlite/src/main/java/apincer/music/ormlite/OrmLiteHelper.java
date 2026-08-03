@@ -1165,7 +1165,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
         try {
             // --- Get references to our Data Access Objects (DAOs) ---
             Dao<PlayingQueue, Long> queueDao = getQueueItemDao();
-            List<PlayingQueue> queueList = queueDao.queryForAll();
+            List<PlayingQueue> queueList = queueDao.queryBuilder().orderBy("position", true).query();
             List<Track> list = new ArrayList<>();
             for (PlayingQueue que: queueList) {
                 Track track = que.getTrack();

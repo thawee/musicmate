@@ -1,46 +1,10 @@
-# Unified Controller UX Implementation Plan (DLNA & Local Players)
+# Tasks: Copy Track Metadata to Converted Files in FileOperationTask
 
-Enhance MusicMate with a persistent, unified Floating Playback Bar, instant single-tap song playback, a top-header Quick-Cast button, and robust queue management across both DLNA Renderers and Local Android Players.
+- [x] **Step 1**: Update `encodeFiles` in `FileOperationTask.java` to copy track metadata (Title, Artist, Album, AlbumArtist, Genre, Track, Year, etc.) from source track to newly converted target track and save to file/DB.
+- [x] **Step 2**: Compile and verify build with `./gradlew :app:compileRoomDebugSources`.
+- [x] **Step 3**: Document review results in `tasks/todo.md`.
 
----
-
-### Task 1: Single-Tap Playback vs. Metadata Edit Split
-- [x] Modify track item click listener in `MainActivity.java` / `MusicTagAdapter.java`:
-  - **Single Tap on Song Row**: Instantly calls `playbackService.playSong(track)` to play/cast on the active target (DLNA / Local) and populate `QueueManager`.
-  - **Tap Cover Art / Edit Icon**: Opens `TagsActivity` metadata editor.
-
----
-
-### Task 2: Unified Floating Playback Bar (`layout_floating_playback_bar.xml`)
-- [x] Create `layout_floating_playback_bar.xml` featuring:
-  - Album Art thumbnail & 2-line text (**Song Title**, **Artist Name** • **Target Player Badge**).
-  - Transport Controls: Skip Previous (`⏮️`), Play/Pause Toggle (`⏯️`), Skip Next (`⏭️`).
-- [x] Embed the layout into `activity_main.xml` immediately above `bottom_navigation_container`.
-- [x] Implement Display/Hide rules in `MainActivity.java`:
-  - **Show**: When `PlaybackState` is `PLAYING` or `PAUSED` (or track loaded).
-  - **Hide**: When playback is `STOPPED`/Idle or during Multi-Select Action Mode.
-
----
-
-### Task 3: Bottom Navigation Bar Dual-Layer Integration
-- [x] Update `navigation_now_playing` in `activity_main.xml`:
-  - Displays real-time **Signal Path Quality Summary** (e.g. `FLAC 352.8kHz/24bit • Bit-Perfect`).
-  - Tapping opens `SignalPathBottomSheet` for technical DAC and signal path details.
-
----
-
-### Task 4: Top-Header Quick-Cast Icon
-- [x] Add a prominent **Cast Icon (`ic_cast`)** on `header_panel` in `activity_main.xml`.
-- [x] Bind tap listener to open `MediaServerManagementSheet` for 1-tap renderer selection.
-
----
-
-### Task 5: Queue Management UI (Purge & Add to Queue)
-- [x] Add **Clear Queue (`🗑️`)** action in Now Playing / Queue Sheet (`queueManager.emptyPlayingQueue()`).
-- [x] Add **Add to Queue (`➕`)** & **Play Next (`▶️`)** buttons to multi-selection Action Mode in `MainActivity.java`.
-
----
-
-### Task 6: Build Verification & Documentation Updates
-- [x] Run full compilation `./gradlew :app:compileNioRoomDebugJavaWithJavac`.
-- [x] Update `USER_GUIDE.md`, `NETWORK_RESILIENCE.md`, and `CHANGELOG.md`.
+## Review & Verification Results
+- **Root Cause Identified:** When FFmpeg converts/downsamples a file, FFmpeg produces a raw audio file without copying all metadata tags (Artist, Album, Genre, Year). When `scanMusicFile` indexed the new file, `Artist` and `Album` were empty in the database, causing the new track to be filtered out when viewing by Artist/Album or Library criteria.
+- **Fix Applied:** Updated `encodeFiles()` in `FileOperationTask.java` to explicitly copy `Title`, `Artist`, `Album`, `AlbumArtist`, `Genre`, `Track`, `Year`, `Comment`, `Composer`, `Publisher` from the original track, write them into the physical file header (`TagWriter.writeTagToFile`), and save to `tagRepos`.
+- **Verification:** Built and verified via `./gradlew :app:compileRoomDebugSources` (**BUILD SUCCESSFUL**).

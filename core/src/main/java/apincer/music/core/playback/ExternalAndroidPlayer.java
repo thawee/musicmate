@@ -132,61 +132,7 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
             }
         }
 
-             /* DANGEROUS: This method performs networking and MUST NOT be
-             * called on the main (UI) thread. It will crash your app.
-             * Use a background thread (Executor, AsyncTask, etc.).
-             *
-             * @return The Play Store description, or null if not found or an error occurred.
-             */
-            private static String getPlayStoreDescription(Context context, String packageName) {
-                // The Context isn't strictly needed here, but we'll keep your signature
-                try {
-                    final String playStoreUrl = "https://play.google.com/store/apps/details?id="
-                            + packageName
-                            + "&hl=en"; // Force English language
 
-                    Request request = new Request.Builder()
-                            .url(playStoreUrl)
-                            // Add a User-Agent to mimic a browser, increasing reliability
-                            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                            .build();
-
-                    OkHttpClient client = new OkHttpClient();
-                    // This line will CRASH if on the main thread
-                    Response response = client.newCall(request).execute();
-
-                    ResponseBody body = response.body();
-                    if (!response.isSuccessful() || body == null) {
-                        return null; // Page failed to load
-                    }
-
-                    // Parse the HTML
-                    String html = body.string();
-                    Document doc = Jsoup.parse(html);
-
-                    // Find the <meta> tag with itemprop="description"
-                    // This is more reliable than finding a <div> by its class name
-                    Element descriptionMeta = doc.select("meta[itemprop=description]").first();
-
-                    if (descriptionMeta != null) {
-                        // Get the text from its "content" attribute
-                        return descriptionMeta.attr("content");
-                    }
-
-                    // Fallback: Try to find the description text container
-                    // This selector is FRAGILE and will break if Google changes their HTML
-                    Element descDiv = doc.select("div[jsname=sngebd]").first();
-                    if (descDiv != null) {
-                        return descDiv.text();
-                    }
-
-                    return null; // Description not found
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null; // An error occurred
-                }
-            }
 
 
         private static String getAppName(Context context, String packageName) {

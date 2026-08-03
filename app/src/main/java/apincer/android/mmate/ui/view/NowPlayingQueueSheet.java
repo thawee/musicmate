@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.widget.SeekBar;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -72,6 +73,18 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
         if (getContext() != null) {
             getContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
+
+        // Expand bottom sheet dialog so pinned header + controls and scrollable queue list fill screen height nicely
+        if (getDialog() instanceof com.google.android.material.bottomsheet.BottomSheetDialog) {
+            View bottomSheet = ((com.google.android.material.bottomsheet.BottomSheetDialog) getDialog())
+                    .findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
+                        com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        }
     }
 
     @Override
@@ -97,9 +110,11 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Close button
-        view.findViewById(R.id.btn_close_queue_sheet).setOnClickListener(v -> dismiss());
-        view.findViewById(R.id.btn_dismiss_sheet).setOnClickListener(v -> dismiss());
+        // Close button in header
+        View closeBtn = view.findViewById(R.id.btn_close_queue_sheet);
+        if (closeBtn != null) {
+            closeBtn.setOnClickListener(v -> dismiss());
+        }
 
         // Signal Path icon button in header -> Open SignalPathBottomSheet
         View signalPathBtn = view.findViewById(R.id.btn_open_signal_path);
@@ -126,29 +141,7 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
             });
         }
 
-        // Stop button wired after service connected — set placeholder listener
-        view.findViewById(R.id.btn_stop_playback).setOnClickListener(v -> {
-            if (isPlaybackServiceBound && playbackService != null) {
-                playbackService.stopPlaying();
-            }
-            dismiss();
-        });
 
-        // Play All (all displayed songs in main list)
-        view.findViewById(R.id.btn_play_all_list).setOnClickListener(v -> {
-            if (isPlaybackServiceBound && playbackService != null && getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                apincer.android.mmate.ui.MainActivity main = (apincer.android.mmate.ui.MainActivity) getActivity();
-                List<Track> allSongs = main.getAdapter() != null ? main.getAdapter().getSongs() : null;
-                if (allSongs != null && !allSongs.isEmpty()) {
-                    playbackService.getQueueManager().savePlayingQueue(allSongs);
-                    playbackService.playSong(allSongs.get(0));
-                    Toast.makeText(getContext(), "Enqueued " + allSongs.size() + " tracks", Toast.LENGTH_SHORT).show();
-                    populateSheet(view);
-                } else {
-                    Toast.makeText(getContext(), "No tracks in list", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 
         // Clear queue
         view.findViewById(R.id.btn_clear_queue).setOnClickListener(v -> {
@@ -214,6 +207,54 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
             techDetails.setText("");
         }
 
+        // ── Seekbar & Time indicators ──
+        SeekBar seekBar = view.findViewById(R.id.sheet_seekbar);
+        TextView currentTimeView = view.findViewById(R.id.sheet_current_time);
+        TextView totalTimeView = view.findViewById(R.id.sheet_total_time);
+
+        if (track != null && track.getAudioDuration() > 0) {
+            long durationMs = (long) (track.getAudioDuration() * 1000);
+            if (totalTimeView != null) {
+                totalTimeView.setText(formatTime(durationMs));
+            }
+
+            if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
+                PlaybackState state = ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
+                long currentMs = state != null ? state.currentPositionSecond * 1000 : 0;
+                if (currentTimeView != null) {
+                    currentTimeView.setText(formatTime(currentMs));
+                }
+                if (seekBar != null && durationMs > 0) {
+                    seekBar.setProgress((int) ((currentMs * 1000) / durationMs));
+                }
+            }
+
+            if (seekBar != null) {
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                        if (fromUser && durationMs > 0) {
+                            long seekMs = (progress * durationMs) / 1000;
+                            if (currentTimeView != null) {
+                                currentTimeView.setText(formatTime(seekMs));
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar sb) {}
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar sb) {
+                        if (isPlaybackServiceBound && playbackService != null && durationMs > 0) {
+                            long seekMs = (sb.getProgress() * durationMs) / 1000;
+                            playbackService.seekTo(seekMs);
+                        }
+                    }
+                });
+            }
+        }
+
         // Player badge
         if (playbackService != null && playbackService.getPlayer() != null) {
             playerBadge.setText(PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer()));
@@ -272,36 +313,44 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
         QueueManager qm = playbackService != null ? playbackService.getQueueManager() : null;
         if (qm != null) {
             qm.loadPlayingQueue();
+        }
 
-            // Shuffle toggle UI state & listener
-            ImageButton btnShuffle = view.findViewById(R.id.btn_toggle_shuffle);
-            if (btnShuffle != null) {
-                boolean isShuffle = qm.isShuffle();
-                btnShuffle.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(
-                        requireContext(), isShuffle ? R.color.colorGold : R.color.colorMuted));
-                btnShuffle.setOnClickListener(v -> {
+        // Shuffle toggle UI state & listener
+        ImageView btnShuffle = view.findViewById(R.id.btn_toggle_shuffle);
+        if (btnShuffle != null) {
+            boolean isShuffle = qm != null && qm.isShuffle();
+            androidx.core.widget.ImageViewCompat.setImageTintList(btnShuffle,
+                    androidx.core.content.ContextCompat.getColorStateList(
+                            requireContext(), isShuffle ? R.color.colorGold : R.color.colorMuted));
+            btnShuffle.setOnClickListener(v -> {
+                if (qm != null) {
                     qm.setShuffle(!isShuffle);
                     Toast.makeText(getContext(), qm.isShuffle() ? "Shuffle ON" : "Shuffle OFF", Toast.LENGTH_SHORT).show();
                     populateSheet(view);
-                });
+                }
+            });
+        }
+
+        // Repeat toggle UI state & listener (Cycle: OFF -> ALL -> ONE -> OFF)
+        ImageView btnRepeat = view.findViewById(R.id.btn_toggle_repeat);
+        if (btnRepeat != null) {
+            QueueManager.RepeatMode mode = qm != null ? qm.getRepeatMode() : QueueManager.RepeatMode.OFF;
+            if (mode == QueueManager.RepeatMode.ONE) {
+                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_one_24);
+                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
+                        androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
+            } else if (mode == QueueManager.RepeatMode.ALL) {
+                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
+                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
+                        androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
+            } else {
+                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
+                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
+                        androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorMuted));
             }
 
-            // Repeat toggle UI state & listener (Cycle: OFF -> ALL -> ONE -> OFF)
-            ImageButton btnRepeat = view.findViewById(R.id.btn_toggle_repeat);
-            if (btnRepeat != null) {
-                QueueManager.RepeatMode mode = qm.getRepeatMode();
-                if (mode == QueueManager.RepeatMode.ONE) {
-                    btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_one_24);
-                    btnRepeat.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
-                } else if (mode == QueueManager.RepeatMode.ALL) {
-                    btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
-                    btnRepeat.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
-                } else {
-                    btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
-                    btnRepeat.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.colorMuted));
-                }
-
-                btnRepeat.setOnClickListener(v -> {
+            btnRepeat.setOnClickListener(v -> {
+                if (qm != null) {
                     QueueManager.RepeatMode nextMode;
                     if (mode == QueueManager.RepeatMode.OFF) nextMode = QueueManager.RepeatMode.ALL;
                     else if (mode == QueueManager.RepeatMode.ALL) nextMode = QueueManager.RepeatMode.ONE;
@@ -310,10 +359,23 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
                     qm.setRepeatMode(nextMode);
                     Toast.makeText(getContext(), "Repeat: " + nextMode.name(), Toast.LENGTH_SHORT).show();
                     populateSheet(view);
-                });
-            }
+                }
+            });
         }
         List<Track> queue = (qm != null) ? new ArrayList<>(qm.getSongs()) : new ArrayList<>();
+
+
+
+        View btnClearQueue = view.findViewById(R.id.btn_clear_queue);
+        if (btnClearQueue != null) {
+            btnClearQueue.setOnClickListener(v -> {
+                if (qm != null) {
+                    qm.emptyPlayingQueue();
+                    Toast.makeText(getContext(), "Queue cleared", Toast.LENGTH_SHORT).show();
+                    populateSheet(view);
+                }
+            });
+        }
 
         TextView emptyMsg = view.findViewById(R.id.sheet_empty_queue_msg);
         RecyclerView recycler = view.findViewById(R.id.sheet_queue_list);
@@ -331,14 +393,71 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
             // Find current track index for highlighting
             String currentKey = (track != null) ? track.getUniqueKey() : null;
 
-            recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-            recycler.setAdapter(new QueueAdapter(queue, currentKey, selectedTrack -> {
-                dismiss();
-                if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                    ((apincer.android.mmate.ui.MainActivity) getActivity()).scrollToSong(selectedTrack);
+            QueueAdapter adapter = new QueueAdapter(queue, currentKey, selectedTrack -> {
+                if (isPlaybackServiceBound && playbackService != null) {
+                    playbackService.playSong(selectedTrack);
+                    populateSheet(view);
                 }
-            }));
+            });
+            recycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            recycler.setAdapter(adapter);
+
+            // ItemTouchHelper for Drag-and-Drop Reordering and Swipe-to-Remove
+            androidx.recyclerview.widget.ItemTouchHelper touchHelper = new androidx.recyclerview.widget.ItemTouchHelper(
+                new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(
+                    androidx.recyclerview.widget.ItemTouchHelper.UP | androidx.recyclerview.widget.ItemTouchHelper.DOWN,
+                    androidx.recyclerview.widget.ItemTouchHelper.LEFT | androidx.recyclerview.widget.ItemTouchHelper.RIGHT
+                ) {
+                    @Override
+                    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                        int fromPos = viewHolder.getBindingAdapterPosition();
+                        int toPos = target.getBindingAdapterPosition();
+                        if (fromPos != RecyclerView.NO_POSITION && toPos != RecyclerView.NO_POSITION && fromPos != toPos) {
+                            if (qm != null) {
+                                qm.moveTrack(fromPos, toPos);
+                            }
+                            Track movedItem = queue.remove(fromPos);
+                            queue.add(toPos, movedItem);
+                            adapter.notifyItemMoved(fromPos, toPos);
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                        int pos = viewHolder.getBindingAdapterPosition();
+                        if (pos != RecyclerView.NO_POSITION) {
+                            Track removedTrack = queue.get(pos);
+                            if (qm != null) {
+                                qm.removeTrack(pos);
+                            }
+                            queue.remove(pos);
+                            adapter.notifyItemRemoved(pos);
+                            queueLabel.setText("Queue  •  " + queue.size() + " track" + (queue.size() != 1 ? "s" : ""));
+
+                            if (getView() != null) {
+                                com.google.android.material.snackbar.Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                                    .setAction("UNDO", v -> {
+                                        if (qm != null) {
+                                            qm.addPlayingQueue(removedTrack.getId());
+                                        }
+                                        populateSheet(getView());
+                                    }).show();
+                            }
+                        }
+                    }
+                }
+            );
+            touchHelper.attachToRecyclerView(recycler);
         }
+    }
+
+    private String formatTime(long ms) {
+        long sec = ms / 1000;
+        long min = sec / 60;
+        sec = sec % 60;
+        return String.format(Locale.US, "%02d:%02d", min, sec);
     }
 
     // ── Tech line helper ─────────────────────────────────────────────────────

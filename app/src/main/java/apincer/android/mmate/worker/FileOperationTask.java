@@ -156,6 +156,15 @@ public class FileOperationTask {
                                    @NonNull String targetFormat,
                                    int compressionLevel,
                                    @NonNull ProgressCallback callback) {
+        encodeFiles(context, selections, targetFormat, compressionLevel, 0, callback);
+    }
+
+    public void encodeFiles(@NonNull Context context,
+                                   @NonNull List<Track> selections,
+                                   @NonNull String targetFormat,
+                                   int compressionLevel,
+                                   int sampleRate,
+                                   @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
@@ -175,13 +184,41 @@ public class FileOperationTask {
                             srcPath,
                             targetPath,
                             compressionLevel,
-                            bitDepth);
+                            bitDepth,
+                            sampleRate);
 
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (success) {
                         // Re-scan the new file
                         fileRepos.scanMusicFile(new File(targetPath), true);
+
+                        // Copy metadata from source track to newly converted target track
+                        List<Track> targetTags = tagRepos.getByPath(targetPath);
+                        if (targetTags != null && !targetTags.isEmpty()) {
+                            Track newTag = targetTags.get(0);
+                            if (newTag != null) {
+                                newTag.setTitle(tag.getTitle());
+                                newTag.setArtist(tag.getArtist());
+                                newTag.setAlbum(tag.getAlbum());
+                                newTag.setAlbumArtist(tag.getAlbumArtist());
+                                newTag.setGenre(tag.getGenre());
+                                newTag.setTrack(tag.getTrack());
+                                newTag.setYear(tag.getYear());
+                                newTag.setComment(tag.getComment());
+                                newTag.setComposer(tag.getComposer());
+                                newTag.setPublisher(tag.getPublisher());
+
+                                if (TagWriter.isSupportedFileFormat(targetPath)) {
+                                    TagWriter.writeTagToFile(context, newTag);
+                                }
+                                fileRepos.saveCoverartToCache(newTag);
+                                newTag.setQualityInd(TagUtils.getQualityIndicator(newTag));
+                                newTag.setIsManaged(fileRepos.isManagedInLibrary(newTag));
+                                tagRepos.saveTag(newTag);
+                            }
+                        }
+
                         callback.onProgress(tag, progress, "Done");
                     } else {
                         callback.onProgress(tag, progress, "Failed");
