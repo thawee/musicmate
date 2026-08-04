@@ -733,18 +733,26 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Create a simple metadata string for the renderer (optional but recommended)
         String metadata = createDidlLiteMetadata(song, songUrl);
 
-        // Step 3: Set the song URL on the renderer
-        // This is an asynchronous action, so we use a callback.
+        // Step 3: Stop current playback and allow 100ms DAC buffer flush before starting next track
         ControlPoint controlPoint = upnpService.getControlPoint();
         controlPoint.execute(new Stop(currentAVTransport) {
             @Override
             public void success(ActionInvocation invocation) {
-                executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                // 100ms buffer flush grace period to prevent pop/click audio artifacts on external DACs
+                if (scheduler != null && !scheduler.isShutdown()) {
+                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata), 100, TimeUnit.MILLISECONDS);
+                } else {
+                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                }
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                if (scheduler != null && !scheduler.isShutdown()) {
+                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata), 100, TimeUnit.MILLISECONDS);
+                } else {
+                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                }
             }
         });
     }

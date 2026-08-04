@@ -149,8 +149,8 @@ public final class PlayerNameUtils {
         if (player instanceof apincer.music.core.playback.DMRPlayer) {
             return !ip.isEmpty() ? name + "\n(" + ip + " • DLNA Renderer)" : name + "\n(DLNA Renderer)";
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
-            String desc = player.getDescription();
-            return (desc != null && !desc.isEmpty()) ? name + "\n(" + desc + " • Android App)" : name + "\n(Android App)";
+            String vStr = formatAppVersion(player.getDescription());
+            return !vStr.isEmpty() ? name + "\n(" + vStr + " • Android App)" : name + "\n(Android App)";
         } else if (player.isStreaming()) {
             return !ip.isEmpty() ? name + "\n(" + ip + " • Web Streaming)" : name + "\n(Web Streaming)";
         }
@@ -160,7 +160,7 @@ public final class PlayerNameUtils {
 
     /**
      * Formats a single-line player label for dropdown menus.
-     * e.g. "HiBy R3 • 192.168.1.50" or "Poweramp • Android App"
+     * e.g. "HiBy R3 • 192.168.1.50" or "Poweramp • v935"
      */
     public static String getDropdownPlayerLabel(apincer.music.core.playback.spi.PlaybackTarget player) {
         if (player == null) return " - ";
@@ -170,8 +170,44 @@ public final class PlayerNameUtils {
         if (!ip.isEmpty()) {
             return name + " • " + ip;
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
-            return name + " • Android App";
+            String vStr = formatAppVersion(player.getDescription());
+            return !vStr.isEmpty() ? name + " • " + vStr : name + " • Android App";
         }
         return name;
+    }
+
+    /**
+     * Sanitizes and formats raw Android app version strings (e.g. "vbuild-2024-universal-release" or "build-935-arm64-play")
+     * into clean, concise display labels like "v2024" or "v935".
+     */
+    public static String formatAppVersion(String rawVersion) {
+        if (rawVersion == null || rawVersion.trim().isEmpty() || "N/A".equalsIgnoreCase(rawVersion.trim())) {
+            return "";
+        }
+
+        String version = rawVersion.trim();
+
+        // 1. Check for "build-XXX" or "buildXXX" pattern (e.g. build-975, build975, vbuild-2024-universal)
+        java.util.regex.Matcher buildMatcher = Pattern.compile("(?i)v?build[-_\\s]?(\\d+)", Pattern.CASE_INSENSITIVE).matcher(version);
+        if (buildMatcher.find()) {
+            return "v" + buildMatcher.group(1);
+        }
+
+        // 2. Strip common build target/architecture suffixes like -arm64, -universal, -release, -play, -bundle
+        version = version.replaceAll("(?i)[-_\\s]?(arm64|armv7|v8a|v7a|universal|release|play|bundle|beta|alpha|debug)+", "");
+
+        // 3. Extract standard semver or numeric version (e.g. 3.0.975 or 975)
+        java.util.regex.Matcher numMatcher = Pattern.compile("(?i)v?(\\d+(?:\\.\\d+)*)", Pattern.CASE_INSENSITIVE).matcher(version);
+        if (numMatcher.find()) {
+            return "v" + numMatcher.group(1);
+        }
+
+        // 4. Fallback: clean non-numeric string and limit length
+        version = version.replaceAll("(?i)^v+", "");
+        if (version.length() > 10) {
+            version = version.substring(0, 10);
+        }
+
+        return "v" + version;
     }
 }

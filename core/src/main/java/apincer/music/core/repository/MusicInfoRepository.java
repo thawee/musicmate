@@ -424,6 +424,6 @@ public class MusicInfoRepository {
      * @return true if the name is considered generic, false otherwise.
      */
     private boolean isVariousArtists(String artistName) {
-        return artistName != null && VARIOUS_ARTIST_NAMES.contains(artistName.toLowerCase());
+        return apincer.music.core.utils.StringUtils.isVariousArtists(artistName);
     }
 }

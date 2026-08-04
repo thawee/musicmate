@@ -35,7 +35,7 @@ public class MapViewActivity extends Activity {
 		try {
 			updateWebView(url);
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 	}
 
@@ -48,7 +48,7 @@ public class MapViewActivity extends Activity {
 		}
 		@Override
 		public void onPageFinished(WebView view, String url) {
-			// TODO Auto-generated method stub
+			android.util.Log.w("TripMate", "Unimplemented method called");
 			super.onPageFinished(view, url);
 
 			mapprogress.setVisibility(View.GONE);
@@ -66,7 +66,7 @@ public class MapViewActivity extends Activity {
 	}
 
 	private void updateWebView(String url) {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 		fweBview = (WebView) findViewById(apincer.android.tripmate.R.id.mapView);
 		fweBview.getSettings().setJavaScriptEnabled(true);

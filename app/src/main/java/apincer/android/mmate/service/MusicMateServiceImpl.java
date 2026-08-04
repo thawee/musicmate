@@ -279,8 +279,14 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                         }
                     }
                     break;
+                case ACTION_SKIP_TO_NEXT:
                 case ACTION_SKIP_NEXT:
-                    skipToNextInQueue();
+                    long deletedId = intent.getLongExtra(EXTRA_MUSIC_ID, -1);
+                    if (deletedId != -1) {
+                        onTrackDeleted(deletedId);
+                    } else {
+                        skipToNextInQueue();
+                    }
                     break;
 
                 // --- Server Actions ---
@@ -857,16 +863,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
 
         long durationMs = (long) (song.getAudioDuration() * 1000);
+        if (durationMs <= 0) return;
 
-        // trigger at ~97% (very late fallback)
-        long delay = (long) (durationMs * 0.97);
+        // Schedule safety fallback ONLY after 100% track duration + 1.5s grace period
+        // so current track plays completely to the end without getting cut off
+        long delay = durationMs + 1500;
 
-        delay = Math.max(3000, delay);
-
-        Log.d(TAG, "Fallback Preloading scheduled in " + (delay / 1000) + " sec");
+        Log.d(TAG, "Fallback transition scheduled in " + (delay / 1000) + " sec (after full track completion)");
 
         nextTrackTask = scheduler.schedule(() -> {
-            Log.w(TAG, "Fallback triggered!");
+            Log.w(TAG, "Track end fallback triggered after full duration!");
 
             currentPlayerFlow.getValue().ifPresent(this::fallbackToNextTrack);
 
@@ -908,6 +914,25 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         
         // EVENT-DRIVEN PIPELINE ENTRY
         handleTrackStartEvent(song);
+    }
+
+    @Override
+    public void onTrackDeleted(long trackId) {
+        Track current = getNowPlayingSong();
+        if (current != null && current.getId() == trackId) {
+            Log.i(TAG, "Currently playing track deleted (ID " + trackId + "). Advancing to next track in queue.");
+            skipToNextInQueue();
+        }
+        if (queueManager != null) {
+            queueManager.removeTrackById(trackId);
+        }
+    }
+
+    @Override
+    public void onTrackDeleted(Track tag) {
+        if (tag != null) {
+            onTrackDeleted(tag.getId());
+        }
     }
 
     @Override

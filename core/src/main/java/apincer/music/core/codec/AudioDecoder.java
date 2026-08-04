@@ -285,9 +285,7 @@ public class AudioDecoder {
                     bitDepth = ((commData[6] & 0xFF) << 8) | (commData[7] & 0xFF);
 
                     // Parse 80-bit IEEE 754 extended precision float for sample rate
-                    // Simplified version - actual implementation would need full 80-bit parsing
-                    int exponent = ((commData[8] & 0x7F) << 8) | (commData[9] & 0xFF);
-                    sampleRate = (int)Math.pow(2, exponent - 16383);
+                    sampleRate = parseExtended(commData, 8);
                 }
                 else if ("SSND".equals(chunkId)) {
                     // Found sound data
@@ -348,9 +346,20 @@ public class AudioDecoder {
                 case android.media.AudioFormat.ENCODING_PCM_FLOAT -> 32; // Float typically uses 32 bits
                 case android.media.AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24;
                 case android.media.AudioFormat.ENCODING_PCM_32BIT -> 32;
-                default ->
-                        throw new IllegalArgumentException("Unsupported PCM encoding: " + pcmEncoding);
+                default -> 16;
             };
         }
+    }
+
+    private static int parseExtended(byte[] bytes, int offset) {
+        int exponent = ((bytes[offset] & 0x7F) << 8) | (bytes[offset + 1] & 0xFF);
+        long mantissa = 0;
+        for (int i = 0; i < 8; i++) {
+            mantissa = (mantissa << 8) | (bytes[offset + 2 + i] & 0xFF);
+        }
+        if (exponent == 0 && mantissa == 0) return 0;
+        double mantissaDouble = (mantissa < 0) ? (mantissa + 0x1p64) : (double) mantissa;
+        double value = (mantissaDouble / 9223372036854775808.0) * Math.pow(2, exponent - 16383);
+        return (int) Math.round(value);
     }
 }

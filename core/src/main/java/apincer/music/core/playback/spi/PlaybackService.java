@@ -65,6 +65,10 @@ public interface PlaybackService {
 
     void onAccessMediaTrack(Track tag);
 
+    void onTrackDeleted(Track tag);
+
+    void onTrackDeleted(long trackId);
+
     /** Trigger an immediate UPnP M-SEARCH to rediscover all DLNA/UPnP renderers on the network. */
     void refreshPlayerDiscovery();
 }

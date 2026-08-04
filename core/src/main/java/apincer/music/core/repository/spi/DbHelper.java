@@ -131,4 +131,9 @@ public interface DbHelper {
     List<Track> getGenreWithStats();
 
     List<Track> getArtistWithStats();
+
+    void saveShuffleMode(boolean enabled);
+    boolean getShuffleMode();
+    void saveRepeatMode(String mode);
+    String getRepeatMode();
 }

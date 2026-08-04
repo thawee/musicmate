@@ -867,18 +867,29 @@ public class MainActivity extends AppCompatActivity {
             if(tag.isContainer()) {
                 doStartRefresh(tag.getContainerType(), tag.getTitle());
             } else {
+                doShowEditActivity(Collections.singletonList(tag));
+            }
+        };
+        adapter.setClickListener(onListItemClick);
+        adapter.setOnCoverArtClickListener((view, position) -> {
+            if (isSelectionBlocked()) return;
+
+            if (mTracker != null && mTracker.hasSelection()) {
+                if (mTracker.isSelected((long) position)) {
+                    mTracker.deselect((long) position);
+                } else {
+                    mTracker.select((long) position);
+                }
+                return;
+            }
+
+            Track tag = adapter.getMusicTag(position);
+            if (tag != null && !tag.isContainer()) {
                 if (isPlaybackServiceBound && playbackService != null) {
                     playbackService.playSong(tag);
                 } else {
                     doShowEditActivity(Collections.singletonList(tag));
                 }
-            }
-        };
-        adapter.setClickListener(onListItemClick);
-        adapter.setOnCoverArtClickListener((view, position) -> {
-            Track tag = adapter.getMusicTag(position);
-            if (tag != null && !tag.isContainer()) {
-                doShowEditActivity(Collections.singletonList(tag));
             }
         });
 
@@ -1257,9 +1268,22 @@ public class MainActivity extends AppCompatActivity {
                 apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
                 boolean isActive = current != null && current.getTargetId().equals(target.getTargetId());
                 boolean isRemote = target.isStreaming();
-                String prefix = (isActive ? "✓ " : "   ") + (isRemote ? "📻 " : "📱 ");
-                String label = prefix + apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
-                popup.getMenu().add(0, i, i, label);
+                String baseLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
+                String label = isActive ? baseLabel + "  ✓" : baseLabel;
+                android.view.MenuItem item = popup.getMenu().add(0, i, i, label);
+
+                if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+                    android.graphics.drawable.Drawable appIcon = apincer.music.core.playback.ExternalAndroidPlayer.Factory.getAppIcon(this, target.getTargetId());
+                    if (appIcon != null) {
+                        item.setIcon(apincer.android.mmate.utils.UIUtils.scaleDrawable(this, appIcon, 24));
+                    } else {
+                        item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_speaker_24));
+                    }
+                } else if (isRemote || target instanceof apincer.music.core.playback.DMRPlayer) {
+                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_dlna));
+                } else {
+                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_speaker_24));
+                }
             }
         } else {
             popup.getMenu().add(0, -1, 0, "No players discovered");
@@ -1267,7 +1291,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Always show rescan option at the bottom
         final int RESCAN_ID = 9999;
-        popup.getMenu().add(1, RESCAN_ID, RESCAN_ID, "🔄  Rescan for players");
+        android.view.MenuItem rescanItem = popup.getMenu().add(1, RESCAN_ID, RESCAN_ID, "Rescan for players");
+        rescanItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_baseline_refresh_24));
+
+        apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
 
         popup.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == RESCAN_ID) {
@@ -1626,6 +1653,9 @@ public class MainActivity extends AppCompatActivity {
                                 itemsView.invalidateViews();
                                 progressBar.setProgress(progress);
                                 progressBar.invalidate();
+                                if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
+                                    playbackService.onTrackDeleted(tag);
+                                }
                             });
                         }
 

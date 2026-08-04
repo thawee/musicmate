@@ -72,7 +72,7 @@ public class ListDetailsActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 		super.onCreate(savedInstanceState);
 //		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(apincer.android.tripmate.R.layout.newdetailslayout);
@@ -132,7 +132,7 @@ public class ListDetailsActivity extends Activity {
 /*
 
 	private void enableAd() {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 		// adding banner add
 		adView = (AdView) findViewById(apincer.android.tripmate.R.id.adView);
@@ -162,12 +162,12 @@ public class ListDetailsActivity extends Activity {
 			}
 		});
 
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 	}
 	*/
 	private void initUI() {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 		list = (ListView) findViewById(apincer.android.tripmate.R.id.reviewListView);
 		list.setOnTouchListener(new ListView.OnTouchListener() {
 			@Override
@@ -223,7 +223,7 @@ public class ListDetailsActivity extends Activity {
 		final Thread d = new Thread(new Runnable() {
 
 			public void run() {
-				// TODO Auto-generated method stub
+				android.util.Log.w("TripMate", "Unimplemented method called");
 
 				try {
 					if (CityDetailsParser.connect(con, AllURL
@@ -297,7 +297,7 @@ public class ListDetailsActivity extends Activity {
 				runOnUiThread(new Runnable() {
 
 					public void run() {
-						// TODO Auto-generated method stub
+						android.util.Log.w("TripMate", "Unimplemented method called");
 						if (pDialog != null) {
 							pDialog.cancel();
 						}
@@ -316,22 +316,22 @@ public class ListDetailsActivity extends Activity {
 								cName.setText(CD.getName().trim());
 //								cName.setTypeface(title);
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 							try {
 
 								cAdd.setText(CD.getFormatted_address().trim());
 //								cAdd.setTypeface(add);
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 							try {
 
 								cPhone.setText(CD.getFormatted_phone_number().trim());
 //								cPhone.setTypeface(add);
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 							try {
 
@@ -340,8 +340,8 @@ public class ListDetailsActivity extends Activity {
 								AllConstants.lng = CD.getLng().trim();
 								PrintLog.myLog("GEO", AllConstants.lat);
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 
 
@@ -380,8 +380,8 @@ public class ListDetailsActivity extends Activity {
 
 
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 							try {
 
 								textDis.setText(DT.getDistance().trim());
@@ -391,8 +391,8 @@ public class ListDetailsActivity extends Activity {
 
 
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 
 
@@ -409,8 +409,8 @@ public class ListDetailsActivity extends Activity {
 
 
 							} catch (Exception e) {
-								// TODO: handle exception
-							}	try {
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}	try {
 
 								WT = WalkingDetails.getAllWalkingDetails()
 										.elementAt(0);
@@ -422,8 +422,8 @@ public class ListDetailsActivity extends Activity {
 
 
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 							// ---Photo---
 							try {
@@ -450,12 +450,12 @@ public class ListDetailsActivity extends Activity {
 								}
 
 							} catch (Exception e) {
-								// TODO: handle exception
-							}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 						} catch (Exception e) {
-							// TODO: handle exception
-						}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 						if (AllCityReview.getAllCityReview().size() == 0) {
 
 						} else {
@@ -508,8 +508,8 @@ public class ListDetailsActivity extends Activity {
 					address.setText(CM.getAuthor_name().toString().trim());
 //					address.setTypeface(add);
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 				// final RatingBar rRating = (RatingBar)
 				// v.findViewById(R.id.rRatingBar);
@@ -529,8 +529,8 @@ public class ListDetailsActivity extends Activity {
 						PrintLog.myLog("rRating:", reviewRating);
 					}
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 				// ---Image---
 
@@ -539,12 +539,12 @@ public class ListDetailsActivity extends Activity {
 					name.setText(CM.getAuthor_text().toString().trim());
 //					name.setTypeface(add);
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 			}
 
-			// TODO Auto-generated method stub
+			android.util.Log.w("TripMate", "Unimplemented method called");
 			return v;
 		}
 
@@ -571,8 +571,8 @@ public class ListDetailsActivity extends Activity {
 				PrintLog.myLog("Tel::", AllConstants.cCell);
 
 			} catch (Exception e) {
-				// TODO: handle exception
-			}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 		} else {
 

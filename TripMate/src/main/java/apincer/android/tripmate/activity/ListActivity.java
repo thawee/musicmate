@@ -115,7 +115,7 @@ public class ListActivity extends Activity{
 
 	/*
 	private void enableAd() {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 		// adding banner add
 		//adView = (AdView) findViewById(R.id.adView);
@@ -145,12 +145,12 @@ public class ListActivity extends Activity{
 			}
 		});
 
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 	} */
 
 	private void initUI() {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 
 		list = (ListView) findViewById(R.id.menuListView);
 		downloader = new CacheImageDownloader();
@@ -165,7 +165,7 @@ public class ListActivity extends Activity{
 	}
 
 	private void parseQuery() {
-		// TODO Auto-generated method stub
+		android.util.Log.w("TripMate", "Unimplemented method called");
 		if (!SharedPreferencesHelper.isOnline(con)) {
 			AlertMessage.showMessage(con, "Error", "No internet connection");
 			return;
@@ -176,7 +176,7 @@ public class ListActivity extends Activity{
 		final Thread d = new Thread(new Runnable() {
 
 			public void run() {
-				// TODO Auto-generated method stub
+				android.util.Log.w("TripMate", "Unimplemented method called");
 				try {
 					if (CityMenuParser.connect(con, AllURL.nearByURL(
 							AllConstants.UPlat, AllConstants.UPlng,
@@ -196,7 +196,7 @@ public class ListActivity extends Activity{
 				runOnUiThread(new Runnable() {
 
 					public void run() {
-						// TODO Auto-generated method stub
+						android.util.Log.w("TripMate", "Unimplemented method called");
 						if (pDialog != null) {
 							pDialog.cancel();
 						}
@@ -280,8 +280,8 @@ public class ListActivity extends Activity{
 									.trim());
 //					address.setTypeface(add);
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 				try {
 
@@ -290,8 +290,8 @@ public class ListActivity extends Activity{
 					PrintLog
 							.myLog("PPRRRef", AllConstants.photoReferrence + "");
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 				// ---Image---
 
@@ -305,8 +305,8 @@ public class ListActivity extends Activity{
 					PrintLog
 							.myLog("iconURL:", AllConstants.iconUrl + "");
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 				
 				try {
 
@@ -332,8 +332,8 @@ public class ListActivity extends Activity{
 					}
 
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 				// ------Rating ---
 				final RatingBar listRatings = (RatingBar) v
@@ -358,8 +358,8 @@ public class ListActivity extends Activity{
 					name.setText(CM.getName().toString().trim());
 //					name.setTypeface(title);
 				} catch (Exception e) {
-					// TODO: handle exception
-				}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 				v.setOnClickListener(new OnClickListener() {
 
 					public void onClick(View v) {
@@ -369,8 +369,8 @@ public class ListActivity extends Activity{
 							AllConstants.photoReferrence = CM
 									.getPhotoReference().toString().trim();
 						} catch (Exception e) {
-							// TODO: handle exception
-						}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 						try {
 							AllConstants.Dlat = CM
@@ -380,8 +380,8 @@ public class ListActivity extends Activity{
 
 
 						} catch (Exception e) {
-							// TODO: handle exception
-						}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 						PrintLog.myLog("DDDLatLng : ", CM
 								.getdLat().toString().trim()+"  "+CM
 								.getdLan().toString().trim());
@@ -390,8 +390,8 @@ public class ListActivity extends Activity{
 							AllConstants.detailsiconUrl = CM
 									.getIcon().toString().trim();
 						} catch (Exception e) {
-							// TODO: handle exception
-						}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 						final Intent iii = new Intent(con,
 								ListDetailsActivity.class);
 						iii.putExtra("POSITION", position);
@@ -405,7 +405,7 @@ public class ListActivity extends Activity{
 
 			}
 
-			// TODO Auto-generated method stub
+			android.util.Log.w("TripMate", "Unimplemented method called");
 			return v;
 		}
 

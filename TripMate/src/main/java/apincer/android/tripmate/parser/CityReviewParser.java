@@ -56,14 +56,14 @@ public class CityReviewParser {
 						.getString("author_name"));
 
 			} catch (Exception e) {
-				// TODO: handle exception
-			}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 			try {
 				reviewList.setAuthor_text(reviewsObject.getString("text"));
 
 			} catch (Exception e) {
-				// TODO: handle exception
-			}
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 			
 //			JSONArray aspectsArray = reviewsObject.getJSONArray("aspects");

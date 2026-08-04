@@ -64,8 +64,8 @@ public class WalkingDetailsParser {
                             .getString("text"));
 
                 } catch (Exception e) {
-                    // TODO: handle exception
-                }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
                 WalkingDetails.setWalkingTime(wTime);
                 wTime = null;

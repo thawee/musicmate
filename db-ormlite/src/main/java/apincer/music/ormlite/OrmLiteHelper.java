@@ -802,10 +802,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper implements DbHelper {
                     if (StringUtils.isEmpty(album)) {
                         album = Constants.UNKNOWN;
                     }
-                    if (StringUtils.isEmpty(albumArtist)) {
-                        name = album;
-                    } else if ("Various Artists".equalsIgnoreCase(albumArtist) ||
-                            "Soundtrack".equalsIgnoreCase(albumArtist)) {
+                    if (StringUtils.isVariousArtists(albumArtist)) {
                         name = album;
                     } else {
                         name = album + " (by " + albumArtist + ")";

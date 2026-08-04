@@ -63,8 +63,8 @@ public class CityMenuParser {
                 PrintLog.myLog("DDDLatLng : ", dObject.getString("lat")+dObject.getString("lng"));
 
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 
             try {
@@ -84,40 +84,40 @@ public class CityMenuParser {
 
 
                     } catch (Exception e) {
-                        // TODO: handle exception
-                    }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
                 }
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
             try {
                 menuData.setIcon(resultObject.getString("icon"));
                 PrintLog.myLog("icon : ", menuData.getIcon() + "");
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
             try {
                 menuData.setReference(resultObject.getString("reference"));
                 PrintLog.myLog("reference : ", menuData.getReference() + "");
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
             try {
                 menuData.setName(resultObject.getString("name"));
                 PrintLog.myLog("Name of token : ", menuData.getName() + "");
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
             try {
                 menuData.setRating(resultObject.getString("rating"));
                 PrintLog.myLog("Rating: ", menuData.getRating() + "");
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
             try {
                 menuData.setVicinity(resultObject
                         .getString("vicinity"));
@@ -125,8 +125,8 @@ public class CityMenuParser {
                         .getVicinity()
                         + "");
             } catch (Exception e) {
-                // TODO: handle exception
-            }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
             AllCityMenu.setCityMenuList(menuData);
             menuData = null;

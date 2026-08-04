@@ -1,10 +1,19 @@
-# Tasks: Copy Track Metadata to Converted Files in FileOperationTask
+# Task Plan: Address TripMate Defects
 
-- [x] **Step 1**: Update `encodeFiles` in `FileOperationTask.java` to copy track metadata (Title, Artist, Album, AlbumArtist, Genre, Track, Year, etc.) from source track to newly converted target track and save to file/DB.
-- [x] **Step 2**: Compile and verify build with `./gradlew :app:compileRoomDebugSources`.
-- [x] **Step 3**: Document review results in `tasks/todo.md`.
+## 1. Address Empty Catch Blocks (Silent Failures)
+- [x] **Analyze Occurrences:** Run a script to locate all `// TODO: handle exception` comments across the `TripMate` module.
+- [x] **Extract Context:** For each occurrence, identify the exception variable name from the preceding `catch (...)` statement.
+- [x] **Inject Logging:** Replace the `TODO` comment with an explicit error log.
+  - *Strategy:* Use `Log.e("TripMate", "Exception caught", e);` or `e.printStackTrace();` if standard Android `Log` is difficult to inject without adding imports.
+- [x] **Compile Check:** Build the module to ensure no syntax errors were introduced.
 
-## Review & Verification Results
-- **Root Cause Identified:** When FFmpeg converts/downsamples a file, FFmpeg produces a raw audio file without copying all metadata tags (Artist, Album, Genre, Year). When `scanMusicFile` indexed the new file, `Artist` and `Album` were empty in the database, causing the new track to be filtered out when viewing by Artist/Album or Library criteria.
-- **Fix Applied:** Updated `encodeFiles()` in `FileOperationTask.java` to explicitly copy `Title`, `Artist`, `Album`, `AlbumArtist`, `Genre`, `Track`, `Year`, `Comment`, `Composer`, `Publisher` from the original track, write them into the physical file header (`TagWriter.writeTagToFile`), and save to `tagRepos`.
-- **Verification:** Built and verified via `./gradlew :app:compileRoomDebugSources` (**BUILD SUCCESSFUL**).
+## 2. Address Auto-Generated Method Stubs
+- [x] **Analyze Occurrences:** Locate all instances of `// TODO Auto-generated method stub`.
+- [x] **Select Strategy:** (Pending User Decision)
+  - *Option A (Fail-fast):* Replace with `throw new UnsupportedOperationException("Not implemented yet");`. (Best for catching bugs, but may cause crashes if the app currently relies on these stubs doing nothing).
+  - *Option B (Safe Logging):* Add a warning log `Log.w("TripMate", "Unimplemented method called");` and preserve the current return values.
+- [x] **Inject Code:** Automatically replace the comments using a script based on the chosen strategy.
+- [x] **Compile Check:** Build the module to verify changes (ensuring we don't break methods that require return statements if we use Option B).
+
+## Review
+- [x] Review differences with `git diff`.

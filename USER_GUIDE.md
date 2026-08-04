@@ -44,10 +44,10 @@ The main dashboard is optimized for handling extremely large music libraries.
 ### Key Features & Controls
 * **Smart Search & Quick Cast:** Search your library or tap the cast icon (`rounded_music_cast_24`) in the top header for instant 1-tap renderer switching.
   - **Dynamic Status Tinting:** Tints **Gold** (`#FFC107`) when casting to a remote DLNA renderer, and default theme tint when playing locally.
-  - **Device Type Badging:** Popup list displays clear device type badges (`📱 Local Device` vs `📻 DLNA / UPnP Renderer`) and active checkmark (`✓`).
+  - **Device Type & App Icons:** Target selection menu displays official **DLNA logo icons** for network renderers, **actual installed app icons** for Android music apps (Poweramp, UAPP, Foobar2000, etc.), version numbers (e.g. `Poweramp • v935`), and active checkmarks (`✓`).
 * **Smart Library Song List:**
-  - **Single Tap (Song Title / Details):** Instantly enqueues and starts playing the track.
-  - **Single Tap (Album Cover Art Thumbnail):** Opens **`TagsActivity`** (Metadata Editor) for 1-tap tag editing.
+  - **Single Tap (Song Title / Details):** Opens **`TagsActivity`** (Metadata Editor) for 1-tap tag editing.
+  - **Single Tap (Album Cover Art Thumbnail):** Instantly enqueues and starts playing the track to the active player.
   - **Long Press:** Activates Contextual Selection Mode for bulk editing, queue management, or file deletion.
 * **Unified Floating Navigation & Playback Dock (Card 20dp):**
   - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and Menu.

@@ -111,12 +111,7 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
             if (ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName) || isPackageInstalled(context, packageName)) {
                 String playerName = getAppName(context, packageName);
                 String playerVersion = getAppVersionName(context, packageName);
-                String playerDescription = getAppDescription(context, packageName);
-                if(playerDescription == null) {
-                    playerDescription = playerVersion;
-                }else if (playerVersion != null) {
-                    playerName = playerName +" "+ playerVersion;
-                }
+                String playerDescription = (playerVersion != null && !playerVersion.trim().isEmpty() && !"N/A".equalsIgnoreCase(playerVersion)) ? playerVersion : null;
                 return new ExternalAndroidPlayer(context, packageName, playerName, playerDescription);
             }
             return null;

@@ -63,8 +63,8 @@ public class BiCyleDetailsParser {
                             .getString("text"));
 
                 } catch (Exception e) {
-                    // TODO: handle exception
-                }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
                 BiCyleDetails.setBicyleTime(bTime);
                 bTime = null;

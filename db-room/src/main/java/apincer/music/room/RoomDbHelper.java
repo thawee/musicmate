@@ -17,6 +17,7 @@ import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.model.Track;
 import apincer.music.core.Constants;
+import apincer.music.core.utils.StringUtils;
 import apincer.music.core.repository.spi.DbHelper;
 import apincer.music.core.repository.spi.TrackProcessor;
 import apincer.music.room.dao.AlbumStats;
@@ -358,9 +359,7 @@ public class RoomDbHelper implements DbHelper {
             String album = s.album != null ? s.album : Constants.NONE;
             String albumArtist = s.albumArtist;
             String name;
-            if (albumArtist == null || albumArtist.isEmpty() ||
-                    "Various Artists".equalsIgnoreCase(albumArtist) ||
-                    "Soundtrack".equalsIgnoreCase(albumArtist)) {
+            if (StringUtils.isVariousArtists(albumArtist)) {
                 name = album;
             } else {
                 name = album + " (by " + albumArtist + ")";
@@ -419,6 +418,8 @@ public class RoomDbHelper implements DbHelper {
     private final List<Long> cachedQueueIds = new ArrayList<>();
     private static final String PREF_QUEUE_NAME = "mmate_playing_queue";
     private static final String PREF_KEY_IDS = "queue_track_ids";
+    private static final String PREF_KEY_SHUFFLE = "queue_shuffle_mode";
+    private static final String PREF_KEY_REPEAT = "queue_repeat_mode";
 
     private void loadQueueFromDisk() {
         if (context == null) return;
@@ -671,6 +672,38 @@ public class RoomDbHelper implements DbHelper {
         if (criteria.getType() == SearchCriteria.TYPE.ARTIST && criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) return true;
         if (criteria.getType() == SearchCriteria.TYPE.GENRE  && criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) return true;
         return false;
+    }
+
+    @Override
+    public void saveShuffleMode(boolean enabled) {
+        if (context == null) return;
+        context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(PREF_KEY_SHUFFLE, enabled)
+                .apply();
+    }
+
+    @Override
+    public boolean getShuffleMode() {
+        if (context == null) return false;
+        return context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .getBoolean(PREF_KEY_SHUFFLE, false);
+    }
+
+    @Override
+    public void saveRepeatMode(String mode) {
+        if (context == null) return;
+        context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(PREF_KEY_REPEAT, mode)
+                .apply();
+    }
+
+    @Override
+    public String getRepeatMode() {
+        if (context == null) return "OFF";
+        return context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .getString(PREF_KEY_REPEAT, "OFF");
     }
 }
 

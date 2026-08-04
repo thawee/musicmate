@@ -46,6 +46,8 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
+    private AutoCloseable songSubscription;
+    private AutoCloseable stateSubscription;
 
     // ── Service binding ──────────────────────────────────────────────────────
 
@@ -56,15 +58,54 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
                     (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
+            subscribeToServiceUpdates();
             populateSheet(getView());
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            unsubscribeFromServiceUpdates();
             isPlaybackServiceBound = false;
             playbackService = null;
         }
     };
+
+    private void subscribeToServiceUpdates() {
+        unsubscribeFromServiceUpdates();
+
+        if (playbackService == null) return;
+
+        // 1. Subscribe to song changes -> full sheet re-population
+        songSubscription = playbackService.subscribeNowPlayingSong(
+                optTrack -> {
+                    if (isAdded() && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> populateSheet(getView()));
+                    }
+                },
+                err -> android.util.Log.e("NowPlayingQueueSheet", "Error observing song change", err)
+        );
+
+        // 2. Subscribe to playback state/position updates -> seekbar & timer update
+        stateSubscription = playbackService.subscribePlaybackState(
+                state -> {
+                    if (isAdded() && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> updatePlaybackProgress(getView(), state));
+                    }
+                },
+                err -> android.util.Log.e("NowPlayingQueueSheet", "Error observing playback state", err)
+        );
+    }
+
+    private void unsubscribeFromServiceUpdates() {
+        if (songSubscription != null) {
+            try { songSubscription.close(); } catch (Exception ignored) {}
+            songSubscription = null;
+        }
+        if (stateSubscription != null) {
+            try { stateSubscription.close(); } catch (Exception ignored) {}
+            stateSubscription = null;
+        }
+    }
 
     @Override
     public void onStart() {
@@ -74,13 +115,24 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
             getContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
 
-        // Expand bottom sheet dialog so pinned header + controls and scrollable queue list fill screen height nicely
+        // Limit bottom sheet height to 2/3 of device screen height
         if (getDialog() instanceof com.google.android.material.bottomsheet.BottomSheetDialog) {
             View bottomSheet = ((com.google.android.material.bottomsheet.BottomSheetDialog) getDialog())
                     .findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (bottomSheet != null) {
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int maxSheetHeight = (screenHeight * 2) / 3;
+
+                ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
+                if (layoutParams != null) {
+                    layoutParams.height = maxSheetHeight;
+                    bottomSheet.setLayoutParams(layoutParams);
+                }
+
+                behavior.setMaxHeight(maxSheetHeight);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
                 behavior.setSkipCollapsed(true);
             }
@@ -90,9 +142,11 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
     @Override
     public void onStop() {
         super.onStop();
+        unsubscribeFromServiceUpdates();
         if (isPlaybackServiceBound && getContext() != null) {
             getContext().unbindService(serviceConnection);
             isPlaybackServiceBound = false;
+            playbackService = null;
         }
     }
 
@@ -159,6 +213,35 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
         }
     }
 
+    private void updatePlaybackProgress(@Nullable View view, @Nullable PlaybackState state) {
+        if (view == null || !isAdded()) return;
+
+        Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
+
+        // Play / Pause button state
+        ImageView sheetBtnPlayPause = view.findViewById(R.id.sheet_btn_play_pause);
+        if (sheetBtnPlayPause != null && state != null) {
+            boolean isPlaying = state.currentState == PlaybackState.State.PLAYING;
+            sheetBtnPlayPause.setImageResource(isPlaying ? R.drawable.ic_baseline_pause_24 : R.drawable.ic_baseline_play_arrow_24);
+        }
+
+        // Seekbar & position text
+        if (track != null && track.getAudioDuration() > 0) {
+            long durationMs = (long) (track.getAudioDuration() * 1000);
+            long currentMs = state != null ? state.currentPositionSecond * 1000 : 0;
+
+            TextView currentTimeView = view.findViewById(R.id.sheet_current_time);
+            if (currentTimeView != null) {
+                currentTimeView.setText(formatTime(currentMs));
+            }
+
+            SeekBar seekBar = view.findViewById(R.id.sheet_seekbar);
+            if (seekBar != null && durationMs > 0) {
+                seekBar.setProgress((int) ((currentMs * 1000) / durationMs));
+            }
+        }
+    }
+
     // ── Populate ─────────────────────────────────────────────────────────────
 
     private void populateSheet(@Nullable View view) {
@@ -220,13 +303,7 @@ public class NowPlayingQueueSheet extends BottomSheetDialogFragment {
 
             if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
                 PlaybackState state = ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
-                long currentMs = state != null ? state.currentPositionSecond * 1000 : 0;
-                if (currentTimeView != null) {
-                    currentTimeView.setText(formatTime(currentMs));
-                }
-                if (seekBar != null && durationMs > 0) {
-                    seekBar.setProgress((int) ((currentMs * 1000) / durationMs));
-                }
+                updatePlaybackProgress(view, state);
             }
 
             if (seekBar != null) {

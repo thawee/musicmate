@@ -55,26 +55,26 @@ public class CityDetailsParser {
 			detailsData.setName(resultObject.getString("name"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 		try {
 			detailsData.setRating(resultObject.getString("rating"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 		try {
 			detailsData.setIcon(resultObject.getString("icon"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 		try {
 			detailsData.setFormatted_address(resultObject
 					.getString("formatted_address"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 
 		try {
@@ -82,13 +82,13 @@ public class CityDetailsParser {
 					.getString("formatted_phone_number"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 		try {
 			detailsData.setWebsite(resultObject.getString("website"));
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 
 		final JSONObject resultGeo = resultObject.getJSONObject("geometry");
@@ -99,14 +99,14 @@ public class CityDetailsParser {
 			detailsData.setLat(location.getString("lat"));
 			PrintLog.myLog("lat : ", detailsData.getLat() + "");
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 
 		try {
 			detailsData.setLng(location.getString("lng"));
 			PrintLog.myLog("lng : ", detailsData.getLng() + "");
 		} catch (Exception e) {
-			// TODO: handle exception
+			android.util.Log.e("TripMate", "Exception caught", e);
 		}
 
 		

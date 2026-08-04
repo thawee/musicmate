@@ -171,6 +171,13 @@ public class QueueManager {
             return;
         }
         try {
+            this.isShuffle = dbHelper.getShuffleMode();
+            try {
+                this.repeatMode = RepeatMode.valueOf(dbHelper.getRepeatMode());
+            } catch (Exception e) {
+                this.repeatMode = RepeatMode.OFF;
+            }
+
             List<Track> songs = dbHelper.getPlayingQueue();
             queueList.clear();
             indexMap.clear();
@@ -190,7 +197,7 @@ public class QueueManager {
             }
 
             updateShuffleOrder();
-            Log.d(TAG, "Loaded queue from DB. Size: " + queueList.size());
+            Log.d(TAG, "Loaded queue from DB. Size: " + queueList.size() + ", Shuffle: " + isShuffle + ", Repeat: " + repeatMode);
         } catch (Exception e) {
             Log.e(TAG, "Error loading playing queue from database", e);
         }
@@ -378,6 +385,7 @@ public class QueueManager {
     public synchronized void setShuffle(boolean enabled) {
         if (this.isShuffle == enabled) return;
         this.isShuffle = enabled;
+        dbHelper.saveShuffleMode(enabled);
         updateShuffleOrder();
         Log.d(TAG, "Shuffle mode set to: " + enabled);
     }
@@ -397,6 +405,7 @@ public class QueueManager {
     public synchronized void setRepeatMode(RepeatMode mode) {
         if (this.repeatMode == mode) return;
         this.repeatMode = mode;
+        dbHelper.saveRepeatMode(mode != null ? mode.name() : RepeatMode.OFF.name());
         Log.d(TAG, "Repeat mode set to: " + mode);
     }
 
@@ -428,11 +437,32 @@ public class QueueManager {
         if (position < 0 || position >= queueList.size()) return;
         queueList.remove(position);
         rebuildIndexMap();
+
+        if (position < currentIndex) {
+            currentIndex--;
+        }
+        if (position < playbackIndex) {
+            playbackIndex--;
+        }
+
         if (currentIndex >= queueList.size()) {
             currentIndex = queueList.size() - 1;
         }
+        if (playbackIndex >= queueList.size()) {
+            playbackIndex = queueList.size() - 1;
+        }
+
         dbHelper.savePlayingQueue(queueList);
         updateShuffleOrder();
+    }
+
+    public synchronized boolean removeTrackById(long id) {
+        Integer idx = indexMap.get(id);
+        if (idx != null && idx >= 0 && idx < queueList.size()) {
+            removeTrack(idx);
+            return true;
+        }
+        return false;
     }
 
     private void rebuildIndexMap() {

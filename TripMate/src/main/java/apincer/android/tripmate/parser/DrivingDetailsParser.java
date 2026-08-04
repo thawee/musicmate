@@ -63,8 +63,8 @@ public class DrivingDetailsParser {
                             .getString("text"));
 
                 } catch (Exception e) {
-                    // TODO: handle exception
-                }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
                 JSONObject textDD = eleeeObject.getJSONObject("distance");
 
                 try {
@@ -72,8 +72,8 @@ public class DrivingDetailsParser {
                             .getString("text"));
 
                 } catch (Exception e) {
-                    // TODO: handle exception
-                }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
                 DrivingDetails.setDrivingTime(dTime);
                 dTime = null;
 

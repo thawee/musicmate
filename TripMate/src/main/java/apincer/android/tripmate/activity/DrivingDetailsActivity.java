@@ -44,7 +44,7 @@ public class DrivingDetailsActivity extends Activity {
         final Thread d = new Thread(new Runnable() {
 
             public void run() {
-                // TODO Auto-generated method stub
+                android.util.Log.w("TripMate", "Unimplemented method called");
 
                 try {
                     if (DrivingDetailsParser.connect(con, AllURL
@@ -60,7 +60,7 @@ public class DrivingDetailsActivity extends Activity {
                 runOnUiThread(new Runnable() {
 
                     public void run() {
-                        // TODO Auto-generated method stub
+                        android.util.Log.w("TripMate", "Unimplemented method called");
                         if (pDialog != null) {
                             pDialog.cancel();
                         }
@@ -80,8 +80,8 @@ public class DrivingDetailsActivity extends Activity {
 
 
                         } catch (Exception e) {
-                            // TODO: handle exception
-                        }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
 
                     }

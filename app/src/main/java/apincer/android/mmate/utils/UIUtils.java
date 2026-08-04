@@ -150,6 +150,24 @@ public class UIUtils  {
         }
     }
 
+    public static Drawable scaleDrawable(Context context, Drawable drawable, int sizeDp) {
+        if (drawable == null || context == null) return drawable;
+        int px = (int) android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, sizeDp, context.getResources().getDisplayMetrics());
+        android.graphics.Bitmap bitmap;
+        if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+            bitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+        } else {
+            int w = Math.max(1, drawable.getIntrinsicWidth());
+            int h = Math.max(1, drawable.getIntrinsicHeight());
+            bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+            drawable.setBounds(0, 0, w, h);
+            drawable.draw(canvas);
+        }
+        android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, px, px, true);
+        return new android.graphics.drawable.BitmapDrawable(context.getResources(), scaled);
+    }
+
     public static boolean colorizeToolbarOverflowButton(@NonNull Toolbar toolbar, @ColorInt int toolbarIconsColor) {
         final Drawable overflowIcon = toolbar.getOverflowIcon();
         if (overflowIcon == null)

@@ -63,8 +63,8 @@ public class DistanceDetailsParser {
                             .getString("text"));
 
                 } catch (Exception e) {
-                    // TODO: handle exception
-                }
+			android.util.Log.e("TripMate", "Exception caught", e);
+		}
 
                 DistanceDetails.setDistanceText(dText);
                 dText = null;

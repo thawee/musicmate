@@ -131,13 +131,11 @@ public class IconProviders {
     } */
 
     private static int getResampledScore(Track tag) {
-      //  return (int) Math.round(tag.getResampledScore() * 100);
-        return 1;
+        return 0;
     }
 
     private static int getUpscaledScore(Track tag) {
-       // return (int) Math.round(tag.getUpscaledScore() * 100);
-        return 1;
+        return 0;
     }
 
     public static int getDRBackgroundColor(Context context, int drValue) {
@@ -973,8 +971,8 @@ public class IconProviders {
         int resampledColor;
 
         // Get scores from tag (values between 0.0-1.0)
-        double upscaledScore = 1; //tag.getUpscaledScore(); // Assuming this method exists
-        double resampledScore = 1; //tag.getResampledScore(); // Assuming this method exists
+        double upscaledScore = 0; // Default to 0 (not upscaled) until score model is attached
+        double resampledScore = 0; // Default to 0 (not resampled) until score model is attached
 
         // Set upscaled color based on score
         if (upscaledScore <= 0.0) {
@@ -1303,8 +1301,8 @@ public class IconProviders {
         int resampledColor;
 
         // Get scores from tag (values between 0.0-1.0)
-        double upscaledScore = 1; //tag.getUpscaledScore(); // Assuming this method exists
-        double resampledScore = 1; //tag.getResampledScore(); // Assuming this method exists
+        double upscaledScore = 0; // Default to 0 (not upscaled) until score model is attached
+        double resampledScore = 0; // Default to 0 (not resampled) until score model is attached
 
         // Set upscaled color based on score
         if (upscaledScore <= 0.0) {

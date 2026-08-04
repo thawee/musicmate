@@ -250,16 +250,11 @@ public class AudioAuthenticityAnalyzer {
        // boolean isLossy = score >= 3;
 
         // --- Verdict
-        /*if (isLossy) {
-            r.verdict = "MPEG/Lossy Source";
+        if (r.sampleRate > 48000 && (rolloffRatio < 0.75 || r.rolloff <= 24000.0 || gap > 40.0)) {
+            r.verdict = "Upscaled Content";
         }
-        else */
-        if(score >= 3) {
-            if (r.sampleRate > 48000 && (rolloffRatio < 0.85 || gap > 40.0)) {
-                r.verdict = "Upscaled Content";
-            }else {
-                r.verdict = "MPEG/Lossy Source";
-            }
+        else if (score >= 3) {
+            r.verdict = "MPEG/Lossy Source";
         }
         else if (r.sampleRate > 48000) {
             if (snrHigh > 15.0) {

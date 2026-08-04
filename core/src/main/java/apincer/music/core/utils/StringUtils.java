@@ -41,6 +41,29 @@ public class StringUtils {
         }
         return result.toString();
     }
+
+    /**
+     * Checks whether an artist or albumArtist string represents a compilation,
+     * soundtrack, or "Various Artists" (including variations like "Various Artist",
+     * "Vaious Artist", "V/A", "VA", "Soundtrack", "OST", "Compilation", etc.).
+     */
+    public static boolean isVariousArtists(String artistName) {
+        if (artistName == null || artistName.trim().isEmpty()) return true;
+        String clean = artistName.trim().toLowerCase(Locale.US);
+
+        if (clean.startsWith("various") || clean.startsWith("vaious") || clean.startsWith("varios")) {
+            return true;
+        }
+        return "va".equals(clean) ||
+               "v/a".equals(clean) ||
+               "v.a.".equals(clean) ||
+               "v.a".equals(clean) ||
+               "soundtrack".equals(clean) ||
+               "original soundtrack".equals(clean) ||
+               "ost".equals(clean) ||
+               "compilation".equals(clean) ||
+               "various performers".equals(clean);
+    }
     // ·  \u00b7
     // ♪   \u266A
     // ♬  \u266C
