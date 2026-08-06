@@ -27,7 +27,7 @@
         android:gravity="start|center_vertical"
         android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
         android:background="@drawable/backgound_resolution_hd"
-        android:textColor="@color/black"
+        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
         android:fontFamily="@font/oswald_bold"
         tools:text="24/192"

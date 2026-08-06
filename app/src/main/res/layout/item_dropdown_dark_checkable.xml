@@ -6,7 +6,7 @@
     android:paddingVertical="12dp"
     android:paddingHorizontal="16dp"
     android:textAppearance="?android:attr/textAppearanceListItem"
-    android:textColor="@color/white"
+    android:textColor="?attr/colorOnSurface"
     android:checkMark="?android:attr/listChoiceIndicatorSingle"
     android:gravity="center_vertical"
     android:ellipsize="end"

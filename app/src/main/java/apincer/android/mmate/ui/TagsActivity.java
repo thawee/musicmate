@@ -560,7 +560,7 @@ public class TagsActivity extends AppCompatActivity {
         com.google.android.material.textfield.TextInputEditText titleInput = dialogView.findViewById(R.id.input_search_title);
         com.google.android.material.textfield.TextInputEditText artistInput = dialogView.findViewById(R.id.input_search_artist);
         View btnSearch = dialogView.findViewById(R.id.button_search);
-        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+        View btnClose = dialogView.findViewById(R.id.btn_close_search_dialog);
 
         titleInput.setText(item.getTitle());
         artistInput.setText(item.getArtist());
@@ -580,7 +580,9 @@ public class TagsActivity extends AppCompatActivity {
             performSearchAndMatch(item, qTitle, qArtist);
         });
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
         dialog.show();
     }
     
@@ -657,7 +659,7 @@ public class TagsActivity extends AppCompatActivity {
     private void showSearchResultsDialog(Track item, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
         View dialogView = getLayoutInflater().inflate(R.layout.view_action_search_results_dialog, null);
         android.widget.ListView listView = dialogView.findViewById(R.id.search_results_list);
-        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+        View btnClose = dialogView.findViewById(R.id.btn_close_results_dialog);
 
         SearchResultAdapter adapter = new SearchResultAdapter(this, results);
         listView.setAdapter(adapter);
@@ -676,7 +678,9 @@ public class TagsActivity extends AppCompatActivity {
             applySelectedSearchResult(item, selected);
         });
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
         dialog.show();
     }
     
@@ -961,7 +965,7 @@ public class TagsActivity extends AppCompatActivity {
             alert.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         }
 
-        cview.findViewById(R.id.button_ok).setOnClickListener(v -> alert.dismiss());
+       // cview.findViewById(R.id.button_ok).setOnClickListener(v -> alert.dismiss());
         alert.show();
         // After alert.show(), add these lines:
         if (alert.getWindow() != null) {
@@ -1239,12 +1243,14 @@ public class TagsActivity extends AppCompatActivity {
         View sheetView = LayoutInflater.from(this).inflate(R.layout.view_action_trash_bottom_sheet_dialog, null);
         bottomSheetDialog.setContentView(sheetView);
 
-        Button cancelButton = sheetView.findViewById(R.id.button_cancel);
+        View btnClose = sheetView.findViewById(R.id.btn_close_trash_sheet);
         Button moveToTrashButton = sheetView.findViewById(R.id.button_move_to_trash);
         TextView title = sheetView.findViewById(R.id.bottom_sheet_title);
 
         title.setText(text);
-        cancelButton.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        }
 
         moveToTrashButton.setOnClickListener(v -> {
             startProgressBar();

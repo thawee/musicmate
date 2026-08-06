@@ -307,22 +307,33 @@ public class TagsEditorFragment extends Fragment {
         dotLabel.setOnClickListener(v -> mTagListLayout.addTag("."));
         spaceLabel.setOnClickListener(v -> mTagListLayout.addTag("sp"));
         freeTextLabel.setOnClickListener(v -> {
-            // Create an AlertDialog with an EditText for input
-            AlertDialog.Builder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme);
             View inputView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
+            TextView titleView = inputView.findViewById(R.id.dialog_input_title);
+            View btnClose = inputView.findViewById(R.id.btn_close_input_dialog);
             EditText editText = inputView.findViewById(R.id.input_text);
 
-            builder.setTitle(R.string.enter_custom_text)
+            if (titleView != null) {
+                titleView.setText(R.string.enter_custom_text);
+            }
+
+            AlertDialog dialog = new MaterialAlertDialogBuilder(requireActivity())
                     .setView(inputView)
-                    .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    .setPositiveButton(R.string.ok, (d, which) -> {
                         String customText = editText.getText().toString().trim();
                         if (!customText.isEmpty()) {
                             mTagListLayout.addTag(customText);
                         }
                     })
-                    .setNegativeButton(R.string.cancel, null);
+                    .create();
 
-            AlertDialog dialog = builder.create();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+
+            if (btnClose != null) {
+                btnClose.setOnClickListener(d -> dialog.dismiss());
+            }
+
             dialog.show();
 
             // Show keyboard automatically
@@ -336,7 +347,7 @@ public class TagsEditorFragment extends Fragment {
 
         View btnPreview = cview.findViewById(R.id.btn_preview_bar);
         View btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        View btnCancel = cview.findViewById(R.id.btn_close);
         btnPreview.setOnClickListener(v -> {
             title.setText("");
             artist.setText("");

@@ -6,37 +6,69 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:layout_margin="12dp"
     tools:ignore="UseCompoundDrawables">
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/shape_dot_indicator"
+        android:backgroundTint="#55FFFFFF" />
 
     <!-- Header -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_dialog_header_gradient"
-        android:padding="@dimen/dimen_14_dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="6dp">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_file_rename_outline_24"
-            android:layout_marginEnd="8dp"
-            app:tint="@color/white" />
-
-        <TextView
-            android:id="@+id/dialog_title"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Read TAGs from filename"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_file_rename_outline_24"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/dialog_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Read TAGs from filename"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="6dp"
+            android:src="@drawable/round_close_24"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            app:tint="@color/grey400" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/full_filename"
@@ -124,7 +156,7 @@
             app:tag_enable_cross="true"
             app:tag_horizontal_padding="10dp"
             app:tag_max_length="18"
-            app:tag_text_color="?attr/colorOnSurface"
+            app:tag_text_color="@color/white"
             app:tag_theme="none"
             app:vertical_interval="10dp" />
 
@@ -269,7 +301,7 @@
                     android:hint="@string/editor_label_title"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/white"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -302,7 +334,7 @@
                     android:hint="@string/editor_label_artist"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/white"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -335,7 +367,7 @@
                     android:hint="@string/editor_label_album"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/white"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -368,7 +400,7 @@
                     android:gravity="start"
                     android:imeOptions="actionNext"
                     android:singleLine="true"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/white"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -384,6 +416,7 @@
         android:layout_marginEnd="@dimen/dimen_8_dp"
         android:gravity="end">
 
+        <!--
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_cancel"
             style="@style/Widget.Material3.Button.OutlinedButton"
@@ -400,7 +433,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:background="?attr/colorOutline" />
-
+        -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_ok"
             style="@style/Widget.Material3.Button.TonalButton"

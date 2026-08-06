@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created `ic_nav_collections.xml` (stacked music library cards with note emblem) for opening the left Music Collections drawer.
   - Created `ic_nav_musicmate_menu.xml` (matching card container, border, depth shadow, and 3-slider audio tools emblem) for opening the right MusicMate side menu.
 
+### Changed
+- **Premium UI/UX Dialog Standardization**:
+  - Refactored all 16 dialog and bottom sheet layouts to use a unified `RelativeLayout` header.
+  - Standardized dialogs with a top-center translucent drag handle (`shape_dot_indicator`) and a top-right close button.
+  - Enforced strong `24dp` elevation with pure black spot/ambient shadows to give blur-background dialogs true physical depth.
+- **Semantic Theme & Color Modernization**:
+  - Purged hardcoded `@color/white` and `@color/grey...` attributes across non-dialog layouts, migrating them to Material 3 semantic attributes (`?attr/colorOnSurface`, `?attr/colorOnSurfaceVariant`) for flawless DayNight theme switching.
+  - Upgraded Light Mode surface to crisp `#FFFFFF` (from sepia warm white) and Dark Mode surface to true OLED `#000000` (from brownish charcoal) for maximum album art contrast.
+  - Sharpened the glassmorphism edge on `bg_dialog_dark_blur` with a 30% white 1dp stroke and a 15% inner sheen gradient.
+
 ### Fixed
 - **Now Playing Queue List Vertical Scroll Gesture**:
   - Disabled nested scrolling on the `ViewPager2` inner `RecyclerView` in `AudioHubBottomSheet` (`child.setNestedScrollingEnabled(false);`), allowing `BottomSheetBehavior` to correctly pass vertical scroll touch events to the Queue list (`sheet_queue_list`).

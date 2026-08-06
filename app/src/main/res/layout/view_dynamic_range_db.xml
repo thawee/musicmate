@@ -17,5 +17,5 @@
         android:paddingBottom="@dimen/dimen_2_dp"
         android:fontFamily="@font/oswald_bold"
         android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-        android:textColor="@color/white"/>
+        android:textColor="?attr/colorOnSurface"/>
 </merge>

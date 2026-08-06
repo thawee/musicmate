@@ -6,7 +6,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:layout_margin="12dp"
@@ -14,48 +16,65 @@
 
     <!-- Signal Path Title and Lossless Indicator -->
     <!-- Header -->
-    <LinearLayout
+    
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_dialog_header_gradient"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="16dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="6dp">
 
-        <ImageView
-            android:id="@+id/title_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_musicmate_logo"
-            android:layout_marginEnd="12dp"
-            app:tint="@color/colorGold" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/signal_path_title"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:letterSpacing="-0.02"/>
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <!-- Spacer -->
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <ImageView
+                android:id="@+id/title_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_musicmate_logo"
+                app:tint="@color/colorGold" />
+
+            <TextView
+                
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/signal_path_title"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/quality_indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_toStartOf="@id/btn_close"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="12dp"
             android:text="@string/signal_path_local"
             android:textColor="@color/colorGold"
             android:textStyle="bold"
             android:textSize="14sp" />
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="6dp"
+            android:src="@drawable/round_close_24"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            app:tint="@color/grey400" />
+    </RelativeLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

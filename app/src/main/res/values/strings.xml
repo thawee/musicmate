@@ -329,6 +329,7 @@
     <string name="editor_label_pathName">Path</string>
     <string name="analyze_music">Mastering Analysis</string>
     <string name="move_to_trash">Remove Song</string>
+    <string name="move_to_music">Move Song</string>
     <string name="remove_track_confirm_single">Remove this track from your Library?</string>
     <string name="remove_track_confirm_multiple">Remove these tracks from your Library?</string>
     <string name="analyst">Analyst</string>

@@ -6,37 +6,62 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:layout_margin="12dp"
     android:paddingBottom="16dp"
     tools:ignore="UseCompoundDrawables">
 
-    <LinearLayout
+    
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_dialog_header_gradient"
-        android:padding="@dimen/dimen_14_dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="6dp">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/rounded_broadcast_on_personal_24"
-            android:layout_marginEnd="8dp"
-            app:tint="@color/white" />
-
-        <TextView
-            android:id="@+id/server_name"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/server_title"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/rounded_broadcast_on_personal_24"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/server_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/server_title"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="6dp"
+            android:src="@drawable/round_close_24"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            app:tint="@color/grey400" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -86,9 +111,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/server_stopped"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@color/white"
                             android:textSize="16sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold"
+                android:letterSpacing="-0.02"/>
                     </LinearLayout>
 
                     <TextView

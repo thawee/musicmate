@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="Playback Center"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:letterSpacing="-0.02" />
@@ -67,7 +67,7 @@
                 android:src="@drawable/rounded_music_cast_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Select Player"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="@color/white" />
 
             <ImageView
                 android:id="@+id/btn_close_audio_hub"
@@ -77,7 +77,7 @@
                 android:src="@drawable/round_close_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Close"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="@color/white" />
         </LinearLayout>
     </RelativeLayout>
 
@@ -103,7 +103,7 @@
             android:text="Now Playing"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/tab_signal_path"
@@ -116,7 +116,7 @@
             android:text="Signal Path"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/tab_media_server"
@@ -129,7 +129,7 @@
             android:text="Media Server"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/white" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <!-- Top Swappable ViewPager2 (Now Playing Card / Signal Path / Media Server) -->
@@ -162,7 +162,7 @@
                 android:layout_toStartOf="@id/btn_clear_queue"
                 android:layout_centerVertical="true"
                 android:text="Queue"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -186,7 +186,7 @@
             android:padding="16dp"
             android:gravity="center"
             android:text="Playback queue is empty"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="@color/grey400"
             android:textSize="13sp"
             android:visibility="gone" />
 

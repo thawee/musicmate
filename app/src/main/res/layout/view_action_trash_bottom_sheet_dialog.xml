@@ -4,56 +4,83 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp"
     android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
     android:clipToOutline="true"
     android:outlineProvider="background"
-    android:layout_margin="12dp">
+    android:layout_margin="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="16dp"
+    android:paddingHorizontal="20dp">
 
-<TextView
-android:id="@+id/bottom_sheet_title"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="Remove this track from your Library?"
-android:textAppearance="?attr/textAppearanceTitleLarge"
-android:textColor="?attr/colorOnSurface"
-android:layout_marginBottom="16dp"/>
-
-<LinearLayout
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="horizontal"
-android:gravity="end">
-
-<com.google.android.material.button.MaterialButton
-    android:id="@+id/button_cancel"
-    style="@style/Widget.Material3.Button.OutlinedButton"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginEnd="8dp"
-    android:text="@string/cancel"
-    android:textColor="?attr/colorOnSurface"
-    app:strokeColor="?attr/colorOutline"/>
-
+    <!-- Drag handle -->
     <View
-        android:layout_width="1dp"
-        android:layout_height="match_parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="8dp"
-        android:background="?attr/colorOutline" />
+        android:background="@drawable/shape_dot_indicator"
+        android:backgroundTint="#55FFFFFF" />
 
-<com.google.android.material.button.MaterialButton
-    android:id="@+id/button_move_to_trash"
-    style="@style/Widget.Material3.Button.TonalButton"
-    android:layout_marginStart="8dp"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@string/move_to_trash"
-    app:backgroundTint="?attr/colorError"
-    android:textColor="?attr/colorOnError"/>
+    <!-- Top Bar: Header Title + Top-Right Close Button -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/btn_close_trash_sheet"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/rounded_delete_24"
+                app:tint="?attr/colorError" />
+
+            <TextView
+                android:id="@+id/bottom_sheet_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="Remove track from Library?"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close_trash_sheet"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/round_close_24"
+            app:tint="@color/grey400" />
+    </RelativeLayout>
+
+    <!-- Single Prominent Primary Action Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_move_to_trash"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/move_to_trash"
+        app:icon="@drawable/rounded_delete_24"
+        app:iconGravity="textStart"
+        app:backgroundTint="?attr/colorError"
+        android:textColor="?attr/colorOnError"/>
 </LinearLayout>
-    </LinearLayout>
 

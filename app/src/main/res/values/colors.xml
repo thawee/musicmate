@@ -30,11 +30,11 @@
     <color name="colorSecondaryContainer">#FFCCBC</color>
     <color name="colorOnSecondaryContainer">#BF360C</color>
 
-    <!-- Surface / Background (Soft Warm Off-White) -->
-    <color name="colorSurface">#FFFBF7</color>
-    <color name="colorOnSurface">#211A16</color>
-    <color name="colorSurfaceVariant">#F5EBE6</color>
-    <color name="colorOnSurfaceVariant">#53433C</color>
+    <!-- Surface / Background (Crisp Modern White Base) -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#121212</color>
+    <color name="colorSurfaceVariant">#F5F5F5</color>
+    <color name="colorOnSurfaceVariant">#424242</color>
 
     <!-- Outline / Divider -->
     <color name="colorOutline">#85736B</color>

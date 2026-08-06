@@ -15,8 +15,18 @@
         android:layout_marginLeft="@dimen/dimen_8_dp"
         android:layout_marginRight="@dimen/dimen_8_dp"
         android:layout_gravity="center"
-        android:background="@drawable/bg_bubble"
+        android:background="@drawable/bg_dialog_dark_blur"
         android:orientation="vertical">
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/shape_dot_indicator"
+        android:backgroundTint="#55FFFFFF" />
+
             <TextView
                     android:id="@+id/title"
                     android:layout_width="match_parent"
@@ -28,7 +38,7 @@
                     android:layout_marginRight="@dimen/text_margin_border"
                     android:gravity="center"
                     android:text="Dialogue Title"
-                    android:textSize="@dimen/text_title_size"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_default"/>
         <TextView

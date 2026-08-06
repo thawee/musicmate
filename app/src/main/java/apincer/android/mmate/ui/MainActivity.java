@@ -1294,7 +1294,7 @@ public class MainActivity extends AppCompatActivity {
         View btnOK = cview.findViewById(R.id.button_ok);
         CheckBox checkboxFullScan = cview.findViewById(R.id.checkbox_full_scan);
        // View btnOKFull = cview.findViewById(R.id.button_ok_full);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        View btnCancel = cview.findViewById(R.id.btn_close);
 
         List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
@@ -1540,7 +1540,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         MaterialButton btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        View btnCancel = cview.findViewById(R.id.btn_close);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
         btnOK.setText(R.string.move_to_trash);
@@ -1661,10 +1661,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        View btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        TextView btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.btn_close);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
+        btnOK.setText(R.string.move_to_music);
 
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         double sizeInBlock = MAX_PROGRESS / block;
@@ -1740,7 +1741,7 @@ public class MainActivity extends AppCompatActivity {
         AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
         AutoCompleteTextView sampleRateView = cview.findViewById(R.id.sample_rate);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        View btnCancel = cview.findViewById(R.id.btn_close);
         ImageView titleIcon = cview.findViewById(R.id.title_icon);
         if (titleIcon != null) {
             titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_swap_horiz_24));

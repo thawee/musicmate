@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_dark_blur"
-    android:elevation="8dp"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:padding="12dp">
@@ -43,7 +45,7 @@
             android:layout_weight="1"
             android:layout_marginStart="10dp"
             android:text="Now Playing"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:textStyle="bold"
             android:letterSpacing="-0.02"/>
@@ -57,7 +59,7 @@
             android:padding="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Select Player"
-            app:tint="?attr/colorOnSurface"/>
+            app:tint="@color/white"/>
 
         <ImageView
             android:id="@+id/btn_media_server"
@@ -89,7 +91,7 @@
             android:padding="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
-            app:tint="?attr/colorOnSurface"/>
+            app:tint="@color/white"/>
     </LinearLayout>
 
     <!-- ── PINNED NOW PLAYING CARD (Cover Art, Info & Transport Buttons) ── -->
@@ -134,7 +136,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/white"
                     android:maxLines="2"
                     android:ellipsize="end"/>
 
@@ -144,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/grey400"
                     android:maxLines="1"
                     android:ellipsize="end"/>
 
@@ -172,7 +174,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/white"
                         android:textSize="10sp"/>
                 </LinearLayout>
 
@@ -204,7 +206,7 @@
                         android:src="@drawable/round_favorite_border_24"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="Favorite"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey400" />
 
                     <ImageView
                         android:id="@+id/btn_sheet_edit_tags"
@@ -215,7 +217,7 @@
                         android:src="@drawable/ic_round_edit_24"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="Edit Metadata"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey400" />
 
                     <ImageView
                         android:id="@+id/btn_sheet_more_actions"
@@ -226,7 +228,7 @@
                         android:src="@drawable/rounded_more_vert_24"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="More Actions"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey400" />
                 </LinearLayout>
                 -->
             </LinearLayout>
@@ -258,7 +260,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:text="00:00"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/grey400"
                     android:textSize="10sp" />
 
                 <TextView
@@ -267,7 +269,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:text="00:00"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/grey400"
                     android:textSize="10sp" />
             </RelativeLayout>
         </LinearLayout>
@@ -289,7 +291,7 @@
                 android:src="@drawable/ic_baseline_shuffle_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Shuffle"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/grey400" />
 
             <ImageView
                 android:id="@+id/sheet_btn_previous"
@@ -300,7 +302,7 @@
                 android:src="@drawable/ic_baseline_skip_previous_24"
                 android:contentDescription="Previous"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="@color/white" />
 
             <ImageView
                 android:id="@+id/sheet_btn_play_pause"
@@ -311,7 +313,7 @@
                 android:src="@drawable/ic_baseline_play_arrow_24"
                 android:contentDescription="Play"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="@color/white" />
 
             <ImageView
                 android:id="@+id/sheet_btn_next"
@@ -322,7 +324,7 @@
                 android:src="@drawable/ic_baseline_skip_next_24"
                 android:contentDescription="Next"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="?attr/colorOnSurface" />
+                app:tint="@color/white" />
 
             <!-- Repeat mode toggle button -->
             <ImageView
@@ -333,7 +335,7 @@
                 android:src="@drawable/ic_baseline_repeat_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Repeat Mode"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/grey400" />
         </LinearLayout>
 
         <!-- Volume control row -->
@@ -353,7 +355,7 @@
                 android:padding="2dp"
                 android:src="@drawable/ic_baseline_volume_down_24"
                 android:contentDescription="Volume Down"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/grey400" />
 
             <SeekBar
                 android:id="@+id/sheet_volume_seekbar"
@@ -361,8 +363,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="6dp"
-                android:progressTint="?attr/colorOnSurfaceVariant"
-                android:thumbTint="?attr/colorOnSurface" />
+                android:progressTint="@color/grey400"
+                android:thumbTint="@color/white" />
 
             <ImageView
                 android:id="@+id/btn_sheet_volume_up"
@@ -371,7 +373,7 @@
                 android:padding="2dp"
                 android:src="@drawable/ic_baseline_volume_up_24"
                 android:contentDescription="Volume Up"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/grey400" />
         </LinearLayout>
         -->
     </LinearLayout>
@@ -389,7 +391,7 @@
             android:layout_height="18dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/rounded_order_play_24"
-            app:tint="?attr/colorOnSurfaceVariant"/>
+            app:tint="@color/grey400"/>
 
         <TextView
             android:id="@+id/sheet_queue_label"
@@ -398,7 +400,7 @@
             android:layout_weight="1"
             android:text="Queue"
             android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            android:textColor="?attr/colorOnSurface"/>
+            android:textColor="@color/white"/>
 
 
 
@@ -438,7 +440,7 @@
             android:gravity="center"
             android:text="Queue is empty"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="@color/grey400"
             android:visibility="gone"/>
 
         <androidx.recyclerview.widget.RecyclerView

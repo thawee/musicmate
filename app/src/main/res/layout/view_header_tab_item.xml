@@ -13,7 +13,7 @@
         android:textSize="11sp"
         android:gravity="center"
         android:visibility="gone"
-        android:textColor="@color/white" />
+        android:textColor="?attr/colorOnSurface" />
 
     <TextView
         android:id="@+id/tabTitle"
@@ -21,7 +21,7 @@
         android:layout_height="match_parent"
         android:layout_toEndOf="@+id/tabHeader"
         android:gravity="center"
-        android:textColor="@color/grey400"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textStyle="italic|bold"
         android:textSize="12sp"
         android:layout_marginStart="@dimen/dimen_16_dp"

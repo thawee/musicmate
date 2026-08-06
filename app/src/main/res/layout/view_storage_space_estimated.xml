@@ -35,7 +35,7 @@
                         android:maxLines="1"
                         android:paddingTop="0dp"
                         android:text="90%"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textStyle="bold"
                         android:textSize="10sp" />
 
@@ -60,7 +60,7 @@
                         android:maxLines="1"
                         android:paddingTop="0dp"
                         android:text="90%"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textStyle="bold"
                         android:textSize="10sp" />
                     <ProgressBar
@@ -81,7 +81,7 @@
                         android:maxLines="1"
                         android:paddingTop="0dp"
                         android:text="90%"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textStyle="bold"
                         android:textSize="12sp" />
 -->
@@ -90,7 +90,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/storage_percentage"
-                        app:progress_unreached_color="@color/grey400"
+                        app:progress_unreached_color="?attr/colorOnSurfaceVariant"
                         app:progress_reached_color="#3498DB"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="4dp"
@@ -110,7 +110,7 @@
                         android:id="@+id/storage_percentage"
                         android:layout_width="140dp"
                         android:layout_height="24dp"
-                        app:progressView_colorBackground="@color/grey600"
+                        app:progressView_colorBackground="?attr/colorOnSurfaceVariant"
                     app:progressView_colorProgress="@color/grey200"
                     app:progressView_progress="40"
                     app:progressView_min="10"
