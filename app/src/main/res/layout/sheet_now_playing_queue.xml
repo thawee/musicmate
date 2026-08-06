@@ -283,9 +283,9 @@
             <!-- Shuffle toggle button -->
             <ImageView
                 android:id="@+id/btn_toggle_shuffle"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="6dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_baseline_shuffle_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Shuffle"
@@ -293,10 +293,10 @@
 
             <ImageView
                 android:id="@+id/sheet_btn_previous"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="16dp"
-                android:padding="6dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_baseline_skip_previous_24"
                 android:contentDescription="Previous"
                 android:background="?attr/selectableItemBackgroundBorderless"
@@ -304,10 +304,10 @@
 
             <ImageView
                 android:id="@+id/sheet_btn_play_pause"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginHorizontal="16dp"
-                android:padding="6dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginHorizontal="12dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_baseline_play_arrow_24"
                 android:contentDescription="Play"
                 android:background="?attr/selectableItemBackgroundBorderless"
@@ -315,10 +315,10 @@
 
             <ImageView
                 android:id="@+id/sheet_btn_next"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="16dp"
-                android:padding="6dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_baseline_skip_next_24"
                 android:contentDescription="Next"
                 android:background="?attr/selectableItemBackgroundBorderless"
@@ -327,9 +327,9 @@
             <!-- Repeat mode toggle button -->
             <ImageView
                 android:id="@+id/btn_toggle_repeat"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="6dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_baseline_repeat_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Repeat Mode"

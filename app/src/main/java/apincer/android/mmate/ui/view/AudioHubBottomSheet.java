@@ -44,6 +44,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
@@ -100,12 +101,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private boolean isPlaybackServiceBound = false;
     private MediaServerViewModel mediaServerViewModel;
 
-    // ViewPager & Indicator UI
+    // ViewPager & Segmented Tab UI
     private ViewPager2 viewPager;
-    private TextView tvHubTitle;
-    private View dotNowPlaying;
-    private View dotSignalPath;
-    private View dotMediaServer;
+    private MaterialButtonToggleGroup tabToggleGroup;
 
     // Master Header Actions
     private ImageView btnCastHeader;
@@ -214,7 +212,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int targetHeight = (int) (screenHeight * 0.75);
+                int targetHeight = (int) (screenHeight * 0.82);
                 bottomSheet.getLayoutParams().height = targetHeight;
                 behavior.setPeekHeight(targetHeight);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
@@ -242,10 +240,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tvHubTitle = view.findViewById(R.id.audio_hub_title);
-        dotNowPlaying = view.findViewById(R.id.dot_now_playing);
-        dotSignalPath = view.findViewById(R.id.dot_signal_path);
-        dotMediaServer = view.findViewById(R.id.dot_media_server);
+        tabToggleGroup = view.findViewById(R.id.audio_hub_tab_group);
         viewPager = view.findViewById(R.id.audio_hub_view_pager);
 
         btnCastHeader = view.findViewById(R.id.btn_select_target_player);
@@ -258,12 +253,20 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (btnCastHeader != null) {
             btnCastHeader.setOnClickListener(v -> showPlayerPicker(btnCastHeader));
         }
-        //observeMediaServerStatus();
 
-        // Dot indicator click shortcuts
-        if (dotNowPlaying != null) dotNowPlaying.setOnClickListener(v -> viewPager.setCurrentItem(TAB_NOW_PLAYING, true));
-        if (dotSignalPath != null) dotSignalPath.setOnClickListener(v -> viewPager.setCurrentItem(TAB_SIGNAL_PATH, true));
-        if (dotMediaServer != null) dotMediaServer.setOnClickListener(v -> viewPager.setCurrentItem(TAB_MEDIA_SERVER, true));
+        if (tabToggleGroup != null) {
+            tabToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                if (isChecked) {
+                    if (checkedId == R.id.tab_now_playing) {
+                        viewPager.setCurrentItem(TAB_NOW_PLAYING, true);
+                    } else if (checkedId == R.id.tab_signal_path) {
+                        viewPager.setCurrentItem(TAB_SIGNAL_PATH, true);
+                    } else if (checkedId == R.id.tab_media_server) {
+                        viewPager.setCurrentItem(TAB_MEDIA_SERVER, true);
+                    }
+                }
+            });
+        }
 
         // Disable nested scrolling on ViewPager2 so BottomSheetBehavior ignores it
         // and correctly targets the Queue RecyclerView for vertical nested scrolling.
@@ -369,19 +372,16 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     private void updatePageIndicator(int position) {
         if (getContext() == null) return;
-        int activeTint = ContextCompat.getColor(requireContext(), R.color.colorGold);
-        int inactiveTint = Color.parseColor("#55FFFFFF");
 
-        if (dotNowPlaying != null) dotNowPlaying.setBackgroundTintList(android.content.res.ColorStateList.valueOf(position == TAB_NOW_PLAYING ? activeTint : inactiveTint));
-        if (dotSignalPath != null) dotSignalPath.setBackgroundTintList(android.content.res.ColorStateList.valueOf(position == TAB_SIGNAL_PATH ? activeTint : inactiveTint));
-        if (dotMediaServer != null) dotMediaServer.setBackgroundTintList(android.content.res.ColorStateList.valueOf(position == TAB_MEDIA_SERVER ? activeTint : inactiveTint));
-
-        if (tvHubTitle != null) {
-            tvHubTitle.setText(switch (position) {
-                case TAB_SIGNAL_PATH -> "Signal Path";
-                case TAB_MEDIA_SERVER -> "Media Server";
-                default -> "Now Playing";
-            });
+        if (tabToggleGroup != null) {
+            int targetId = switch (position) {
+                case TAB_SIGNAL_PATH -> R.id.tab_signal_path;
+                case TAB_MEDIA_SERVER -> R.id.tab_media_server;
+                default -> R.id.tab_now_playing;
+            };
+            if (tabToggleGroup.getCheckedButtonId() != targetId) {
+                tabToggleGroup.check(targetId);
+            }
         }
 
         if (position == TAB_SIGNAL_PATH && isPlaybackServiceBound) {
@@ -440,48 +440,17 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         setupArtworkGestures(view);
     }
 
-    /*
-    private void setupVolumeControl(View view) {
-        if (view == null || getContext() == null) return;
-        SeekBar volumeSeekBar = view.findViewById(R.id.sheet_volume_seekbar);
-        View btnVolumeDown = view.findViewById(R.id.btn_sheet_volume_down);
-        View btnVolumeUp = view.findViewById(R.id.btn_sheet_volume_up);
-
-        AudioManager audioManager = (AudioManager) requireContext().getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager == null || volumeSeekBar == null) return;
-
-        int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-
-        volumeSeekBar.setMax(maxVol);
-        volumeSeekBar.setProgress(curVol);
-
-        volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
-                }
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        if (btnVolumeDown != null) {
-            btnVolumeDown.setOnClickListener(v -> {
-                audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, 0);
-                volumeSeekBar.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
-            });
-        }
-        if (btnVolumeUp != null) {
-            btnVolumeUp.setOnClickListener(v -> {
-                audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, 0);
-                volumeSeekBar.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
-            });
-        }
-    } */
+    private void animateGestureFeedback(View albumArt, float translationX) {
+        if (albumArt == null) return;
+        albumArt.animate().cancel();
+        albumArt.setTranslationX(translationX);
+        albumArt.setAlpha(0.6f);
+        albumArt.animate()
+                .translationX(0f)
+                .alpha(1.0f)
+                .setDuration(220)
+                .start();
+    }
 
     private void setupArtworkGestures(View view) {
         if (view == null || getContext() == null) return;
@@ -497,11 +466,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 80 && Math.abs(velocityX) > 150) {
                         if (diffX < 0) {
                             if (isPlaybackServiceBound && playbackService != null) {
+                                animateGestureFeedback(albumArt, -35f);
                                 playbackService.skipToNextInQueue();
                                 populateNowPlayingSheet(viewNowPlayingPage);
                             }
                         } else {
                             if (isPlaybackServiceBound && playbackService != null) {
+                                animateGestureFeedback(albumArt, 35f);
                                 playbackService.skipToPrevious();
                                 populateNowPlayingSheet(viewNowPlayingPage);
                             }
@@ -515,6 +486,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             @Override
             public boolean onDoubleTap(@NonNull MotionEvent e) {
                 if (isPlaybackServiceBound && playbackService != null) {
+                    albumArt.animate().scaleX(0.92f).scaleY(0.92f).setDuration(100)
+                            .withEndAction(() -> albumArt.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start())
+                            .start();
                     boolean isPlaying = false;
                     if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
                         PlaybackState state =
