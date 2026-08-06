@@ -7,9 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.18.10] - 2026-08-04
+## [3.18.10] - 2026-08-06
+
+### Added
+- **Unified Audio Hub Bottom Sheet Architecture**:
+  - Consolidated `NowPlayingQueueSheet`, `SignalPathBottomSheet`, and `MediaServerManagementSheet` into a single, high-performance `AudioHubBottomSheet`.
+  - Integrated a top tab bar switcher (`MaterialButtonToggleGroup`) for instant 1-tap switching between **Now Playing & Queue**, **Audio Signal Path**, and **Media Server Management** without sheet dismiss animations.
+- **Unconditional Now Playing Queue Access & Target Player Selector**:
+  - Made the Audio Hub bottom sheet accessible at all times from the floating playback bar, even when no track is currently playing.
+  - Relocated target player picker and signal path buttons into the Audio Hub sheet header for clean, unified playback engine management.
+  - Added custom vinyl disc vector icon with gold accent ring and note (`ic_now_playing_idle.xml`) for idle playback state.
+- **Now Playing File Format Badge Styling**:
+  - Standardized file format badges (e.g., `FLAC`, `MP3`, `DSD`, `MQA`) on Now Playing cards to use `apincer.android.mmate.ui.view.BadgeView`.
+  - Applied identical codec styling and lossy/lossless background and text colors (`TagUtils.getCodecColor`, `TagUtils.getCodecBgColor`) as displayed in the song list (`MusicTagAdapter`).
+- **Custom Audiophile Navigation Icons**:
+  - Created `ic_nav_collections.xml` (stacked music library cards with note emblem) for opening the left Music Collections drawer.
+  - Created `ic_nav_musicmate_menu.xml` (matching card container, border, depth shadow, and 3-slider audio tools emblem) for opening the right MusicMate side menu.
 
 ### Fixed
+- **Now Playing Queue List Vertical Scroll Gesture**:
+  - Disabled nested scrolling on the `ViewPager2` inner `RecyclerView` in `AudioHubBottomSheet` (`child.setNestedScrollingEnabled(false);`), allowing `BottomSheetBehavior` to correctly pass vertical scroll touch events to the Queue list (`sheet_queue_list`).
+- **DLNA / DMR Player Target Auto-Selection Controls**:
+  - Resolved issue where auto-selected DLNA renderer targets failed to accept transport actions (Next, Prev, Play, Pause, Stop) until manually re-selected in target picker popup.
+  - Updated `autoSelectBestPlayer()` and `switchPlayer()` to initialize `controlledPlayerTargetId` with `controlled = true`, and added self-healing `isControllable()` checks.
+- **Now Playing Queue Auto-Scroll & Swipe-to-Remove**:
+  - Added automatic scrolling to the currently playing song in the queue list upon opening the sheet or when track changes occur.
+  - Fixed empty space bug after swiping to remove songs from the queue by calling `adapter.notifyItemRangeChanged()` and handling empty state transitions.
 - **Lossless Quality & Audio Authenticity Engine**:
   - **Quality Badge Color Reset**: Fixed default `upscaledScore` and `resampledScore` in `IconProviders.java` returning `1`, which previously forced quality badges to display red (`quality_scale_not_matched`) for all tracks.
   - **AIFF IEEE 80-Bit Extended Precision Sample Rate Parser**: Fixed IEEE 754 80-bit float parsing in `AudioDecoder.java` to compute mantissa and exponent, correctly resolving AIFF sample rates (e.g., 44.1 kHz).

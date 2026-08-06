@@ -30,7 +30,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 
 import apincer.android.mmate.coil3.CoverartFetcher;
-import apincer.android.mmate.ui.view.NowPlayingQueueSheet;
+import apincer.android.mmate.ui.view.AudioHubBottomSheet;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
@@ -38,7 +38,6 @@ import coil3.request.ImageRequest;
 import coil3.target.Target;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.utils.PlayerNameUtils;
-import apincer.android.mmate.utils.TagUIUtils;
 import apincer.android.utils.FileUtils;
 import android.os.SystemClock;
 import android.util.Log;
@@ -49,7 +48,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AutoCompleteTextView;
-import android.widget.Toast;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -123,8 +121,8 @@ import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
-import apincer.android.mmate.ui.view.MediaServerManagementSheet;
-import apincer.android.mmate.ui.view.SignalPathBottomSheet;
+
+
 // import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
@@ -170,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mBackButton;
     private SearchView headerSearchView;
     private TextView headerStatText;
-    private ImageView headerCastBtn;
 
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -206,8 +203,6 @@ public class MainActivity extends AppCompatActivity {
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
 
-    private ImageView mediaServerIcon;
-
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
         @Override
@@ -220,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
             playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
-            updateServerStatusIcon();
         }
 
         @Override
@@ -326,30 +320,16 @@ public class MainActivity extends AppCompatActivity {
                 barTrackTitle.setText(R.string.app_name);
             }
             if (barTargetSubtitle != null) {
-                barTargetSubtitle.setVisibility(View.GONE);
+                barTargetSubtitle.setVisibility(View.VISIBLE);
+                if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
+                    barTargetSubtitle.setText(PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer()));
+                } else {
+                    barTargetSubtitle.setText("Select target player");
+                }
             }
             if (barAlbumArt != null) {
-                barAlbumArt.setVisibility(View.GONE);
-            }
-        }
-
-        if (headerCastBtn != null && isPlaybackServiceBound && playbackService != null) {
-            apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
-            boolean isRemote = current != null && current.isStreaming();
-            if (isRemote) {
-                headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
-            } else {
-                headerCastBtn.setImageTintList(null); // Default theme tint
-            }
-        }
-
-        if (headerCastBtn != null && isPlaybackServiceBound && playbackService != null) {
-            apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
-            boolean isRemote = current != null && current.isStreaming();
-            if (isRemote) {
-                headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
-            } else {
-                headerCastBtn.setImageTintList(null); // Default theme tint
+                barAlbumArt.setVisibility(View.VISIBLE);
+                barAlbumArt.setImageResource(R.drawable.ic_now_playing_idle);
             }
         }
     }
@@ -425,7 +405,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the server here, where we are guaranteed to be in the foreground!
         mediaServerManager.startServer();
-        mediaServerManager.getServerStatus().observe(this, status -> updateServerStatusIcon());
 
         // Enable Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -587,12 +566,6 @@ public class MainActivity extends AppCompatActivity {
         // and dynamic tints in applyGlassyColor().
         // setRenderEffect is disabled here to keep text and icons sharp.
 
-        headerCastBtn = findViewById(R.id.header_cast_btn);
-        if (headerCastBtn != null) {
-            // Cast icon = top-anchored popup menu right under the cast icon
-            headerCastBtn.setOnClickListener(v -> showPlayerPickerPopup(headerCastBtn));
-        }
-
         setupSearchView();
         openSearch();
     }
@@ -617,15 +590,10 @@ public class MainActivity extends AppCompatActivity {
 
         View leftMenu = findViewById(R.id.navigation_collections);
         ImageView rightMenu = findViewById(R.id.navigation_settings);
-        mediaServerIcon = findViewById(R.id.navigation_media_server);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-        if (mediaServerIcon != null) {
-            mediaServerIcon.setOnClickListener(v -> doManageMediaServer());
-        }
-        updateServerStatusIcon();
 
         setupFloatingPlaybackBar();
     }
@@ -645,10 +613,8 @@ public class MainActivity extends AppCompatActivity {
 
         View titleContainer = findViewById(R.id.bar_title_container);
         View.OnClickListener openNowPlayingListener = v -> {
-            if (previouslyPlaying != null || (playbackService != null && playbackService.getNowPlayingSong() != null)) {
-                NowPlayingQueueSheet sheet = new NowPlayingQueueSheet();
-                sheet.show(getSupportFragmentManager(), "NowPlayingQueueSheet");
-            }
+            AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_NOW_PLAYING);
+            sheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
         };
 
         if (titleContainer != null) {
@@ -680,17 +646,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if(previouslyPlaying != null) {
-            SignalPathBottomSheet bottomSheet = new SignalPathBottomSheet(v -> scrollToSong(previouslyPlaying));
-            bottomSheet.show(getSupportFragmentManager(), "SignalPathBottomSheet");
-
-            // Use a Handler to dismiss after 12 seconds
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                if (bottomSheet.isAdded()) { // Safety check to ensure it's still there
-                    bottomSheet.dismiss();
-                }
-            }, 12000); // 12000ms = 12 seconds
-        }
+        AudioHubBottomSheet bottomSheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_SIGNAL_PATH);
+        bottomSheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
     }
 
     private void setupRecycleView(SearchCriteria searchCriteria) {
@@ -1231,32 +1188,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void doManageMediaServer() {
-        // bottom sheet to display dlna server status, and buttons to start/stop server
-        MediaServerManagementSheet sheet = MediaServerManagementSheet.newInstance(playbackService);
-        sheet.show(getSupportFragmentManager(), MediaServerManagementSheet.TAG);
-
-        // Update server icon state tint
-        updateServerStatusIcon();
-
-        // Use a Handler to dismiss after 12 seconds
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            if (sheet.isAdded()) { // Safety check to ensure it's still there
-                sheet.dismiss();
-            }
-            updateServerStatusIcon();
-        }, 12000); // 12000ms = 12 seconds
+    public void doManageMediaServer() {
+        AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_MEDIA_SERVER);
+        sheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
     }
 
-    private void updateServerStatusIcon() {
-        if (mediaServerIcon == null) return;
-        boolean isRunning = mediaServerManager != null
-                && mediaServerManager.getServerStatus().getValue() == apincer.music.core.server.spi.MediaServerHub.ServerStatus.RUNNING;
-        int colorRes = isRunning ? R.color.teal_200 : R.color.colorMuted;
-        mediaServerIcon.setImageTintList(androidx.core.content.ContextCompat.getColorStateList(this, colorRes));
-    }
-
-    private void showPlayerPickerPopup(View anchorView) {
+    public void showPlayerPickerPopup(View anchorView) {
         if (!isPlaybackServiceBound || playbackService == null) return;
 
         androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
@@ -1327,12 +1264,9 @@ public class MainActivity extends AppCompatActivity {
             if (renderers != null && item.getItemId() >= 0 && item.getItemId() < renderers.size()) {
                 apincer.music.core.playback.spi.PlaybackTarget selectedPlayer = renderers.get(item.getItemId());
                 playbackService.switchPlayer(selectedPlayer, true);
-                if (headerCastBtn != null) {
-                    if (selectedPlayer.isStreaming()) {
-                        headerCastBtn.setImageTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.colorGold)));
-                    } else {
-                        headerCastBtn.setImageTintList(null);
-                    }
+                androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
+                if (sheet instanceof AudioHubBottomSheet audioHub) {
+                    audioHub.refreshUI();
                 }
             }
             return true;
@@ -2235,5 +2169,13 @@ public class MainActivity extends AppCompatActivity {
             dotAnimator.cancel();
             dotAnimator = null;
         }
+    }
+
+    public PlaybackService getPlaybackService() {
+        return playbackService;
+    }
+
+    public boolean isPlaybackServiceBound() {
+        return isPlaybackServiceBound && playbackService != null;
     }
 }

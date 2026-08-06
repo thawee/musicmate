@@ -186,9 +186,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // If an external player is playing or if no player is selected, auto-select!
         if (playingPlayer != null) {
-            switchPlayer(playingPlayer, false);
+            switchPlayer(playingPlayer, true);
         } else if (!currentPlayerFlow.getValue().isPresent()) {
-            autoSelectBestPlayer().ifPresent(player -> switchPlayer(player, false));
+            autoSelectBestPlayer().ifPresent(player -> switchPlayer(player, true));
         }
 
         Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());
@@ -250,7 +250,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if (bestChoice.isPresent()) {
             // We found a player, now switch to it
             PlaybackTarget selectedPlayer = bestChoice.get();
-            switchPlayer(selectedPlayer, false); // or false, depending on your 'controlled' logic
+            switchPlayer(selectedPlayer, true);
         } else {
             // No players are available, maybe switch to local playback or show a message
             Log.w(TAG, "No players available to auto-select.");
@@ -675,7 +675,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
             }
 
-            if (controlled) {
+            if (controlled || resolvedTarget.isStreaming()) {
                 this.controlledPlayerTargetId = resolvedTarget.getTargetId();
             }
 
@@ -712,10 +712,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     public boolean isControllable(PlaybackTarget player) {
-        if (player == null || controlledPlayerTargetId == null) {
+        if (player == null || !player.isStreaming()) {
             return false;
         }
-        return player.isStreaming() && controlledPlayerTargetId.equals(player.getTargetId());
+        if (controlledPlayerTargetId == null) {
+            controlledPlayerTargetId = player.getTargetId();
+        }
+        return controlledPlayerTargetId.equals(player.getTargetId());
     }
 
     /**

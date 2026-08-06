@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Outer Vinyl Disc Background -->
+    <path
+        android:fillColor="#1E2029"
+        android:pathData="M24,2A22,22 0,1,0 24,46A22,22 0,1,0 24,2Z" />
+
+    <!-- Outer Gold Ring Accent -->
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="1.5"
+        android:pathData="M24,5A19,19 0,1,0 24,43A19,19 0,1,0 24,5Z" />
+
+    <!-- Inner Groove Ring -->
+    <path
+        android:strokeColor="#3E4254"
+        android:strokeWidth="1"
+        android:pathData="M24,11A13,13 0,1,0 24,37A13,13 0,1,0 24,11Z" />
+
+    <!-- Center Gold Music Note -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M21,32C18.2,32 16,29.8 16,27C16,24.2 18.2,22 21,22C21.9,22 22.8,22.7 23.5,22.7V14C23.5,13.2 24.1,12.6 24.9,12.6L31.1,12.6C31.9,12.6 32.5,13.2 32.5,14V17C32.5,17.8 31.9,18.4 31.1,18.4L27,18.4V27C27,29.8 24.8,32 21,32Z" />
+</vector>
