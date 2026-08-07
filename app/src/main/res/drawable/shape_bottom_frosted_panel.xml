@@ -2,8 +2,8 @@
     <!-- Deep obsidian dark surface -->
     <item>
         <shape android:shape="rectangle">
-            <!-- Almost pure black for maximum contrast and OLED benefit -->
-            <solid android:color="#F2050505" />
+            <!-- Slightly lighter dark for frosted glass depth effect (approx 85% opacity, dark grey) -->
+            <solid android:color="#D9161616" />
         </shape>
     </item>
 
