@@ -28,3 +28,9 @@
 ## Review & Verification
 - [ ] Compile the app and review all changes side-by-side with the old UI.
 - [ ] Ensure the app no longer feels like a "database" but rather a high-fidelity listening gallery.
+
+## Phase 6: Deprecate & Remove OrmLite
+- [x] **Remove `db-ormlite` Module**: Delete the `db-ormlite` directory and remove its entry from `settings.gradle`.
+- [x] **Update Build Flavors**: Modify `app/build.gradle` to remove the `database` flavor dimension (or remove the `ormlite` product flavor) so the app builds exclusively with Room.
+- [x] **Clean Up Dependency Injection**: Find and remove any Hilt/Dagger modules (e.g., `OrmLiteDatabaseModule`) that specifically provide `OrmLiteHelper`, ensuring only `RoomDbHelper` is provided.
+- [x] **Verify Build - [ ] **Verify Build & Test** Test**: Run a clean build and verify that the app compiles and correctly accesses the database using Room.

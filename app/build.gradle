@@ -32,24 +32,14 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 119
-        versionName  = "3.18.11-"+ getDate()
+        versionCode = 120
+        versionName  = "3.18.12-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
     }
 
-    // Define the dimensions for your flavors
-    flavorDimensions "database"
-    productFlavors {
-            ormlite {
-                dimension = "database"
-            }
-            room {
-                dimension = "database"
-            }
-    }
 
     compileOptions {
         // jetty12 required java 17
@@ -108,9 +98,7 @@ android {
 dependencies {
     // modules
     implementation project(':core')
-    ormliteImplementation project(':db-ormlite')
-    roomImplementation project(':db-room')
-
+    implementation project(':db-room')
     // AndroidX
     implementation libs.androidx.annotation
     implementation libs.androidx.core

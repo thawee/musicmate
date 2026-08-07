@@ -104,7 +104,7 @@ The system supports two types of Digital Media Controllers:
                           │
                ┌──────────▼──────────┐
                │ Metadata Store      │
-               │ (OrmLite/DB)        │
+               │ (Room/DB)           │
                └──────────┬──────────┘
                           │
                 [4] Serve to Ecosystem

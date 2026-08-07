@@ -149,7 +149,7 @@ All engines implement the same `UpnpServer` interface and share consistent behav
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
 *   **Active Engines:** Apache HttpCore 5.4.2 (CoreHTTP), Netty 4.2, **Custom SonicNIO Reactor**
 *   **Archived Engines:** Jetty 12, Undertow 2.4 *(build only — no further updates)*
-*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg, OrmLite
+*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg, Room
 
 ---
 

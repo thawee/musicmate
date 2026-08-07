@@ -305,7 +305,7 @@ Other transport commands follow the same SOAP pattern:
 
 *   **Path:** `core/src/.../repository/QueueManager.java`
 *   **Scope:** `@Singleton` (Hilt)
-*   **Storage:** Thread-safe `CopyOnWriteArrayList<Track>`, persisted via ORMLite `PlayingQueue` model
+*   **Storage:** Thread-safe `CopyOnWriteArrayList<Track>`, persisted via Room `PlayingQueue` model
 
 ### Core Operations
 

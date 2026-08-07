@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.18.12] - 2026-08-07
+
+### Fixed
+- **Playback State Persistence**: Fixed a bug where Shuffle and Repeat modes were not remembered after restarting the app by persisting them using Android `SharedPreferences`.
+
+### Removed
+- **OrmLite Database Engine**: Fully deprecated and removed the legacy `db-ormlite` module.
+- **Build Flavors**: Removed the database flavor dimension. The app is now compiled exclusively with Google's modern `Room` database architecture, significantly reducing maintenance overhead, improving type safety, and reducing the final APK size.
+
 ## [3.18.11] - 2026-08-07
 
 ### Added
