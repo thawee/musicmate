@@ -35,6 +35,7 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         // set status bar color to black
         Window window = getWindow();
        // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -44,6 +45,14 @@ public class PermissionActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_permissions);
+        
+        View root = findViewById(R.id.nestedScrollView);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), systemBars.bottom);
+            return insets;
+        });
+
         panel = findViewById(R.id.perms_panel);
 
         txtTitle = findViewById(R.id.title);

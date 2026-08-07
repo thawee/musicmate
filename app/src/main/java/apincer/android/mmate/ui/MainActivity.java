@@ -725,6 +725,11 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration((int)dpToPx(this, 96), 12);
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
+        ViewCompat.setOnApplyWindowInsetsListener(mRecyclerView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+            return insets;
+        });
 
         // add on item touch listener to detect and block touch selections that stop a fast move/scroll
         mRecyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
@@ -820,6 +825,20 @@ public class MainActivity extends AppCompatActivity {
 
             Track tag = adapter.getMusicTag(position);
             if(tag == null) return;
+            
+            if (view.getId() == R.id.btn_folder_play) {
+                if (isPlaybackServiceBound && playbackService != null) {
+                    viewModel.playCollection(tag, playbackService, false);
+                    android.widget.Toast.makeText(MainActivity.this, "Playing collection", android.widget.Toast.LENGTH_SHORT).show();
+                }
+                return;
+            } else if (view.getId() == R.id.btn_folder_enqueue) {
+                if (isPlaybackServiceBound && playbackService != null) {
+                    viewModel.playCollection(tag, playbackService, true);
+                    android.widget.Toast.makeText(MainActivity.this, "Collection added to queue", android.widget.Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
 
             if(tag.isContainer()) {
                 doStartRefresh(tag.getContainerType(), tag.getTitle());

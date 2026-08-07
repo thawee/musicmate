@@ -55,20 +55,24 @@
             android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
-    <FrameLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/item_imageFrame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/dimen_2_dp"
-        android:background="@drawable/shape_item_coverart_background">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#1AFFFFFF"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant">
 
-        <com.google.android.material.imageview.ShapeableImageView
+        <ImageView
             android:id="@+id/item_image_coverart"
             android:layout_width="@dimen/dimen_72_dp"
             android:layout_height="@dimen/dimen_72_dp"
             android:layout_margin="@dimen/dimen_2_dp"
             android:scaleType="fitXY"
-            android:importantForAccessibility="no" app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
+            android:importantForAccessibility="no"
             tools:src="@tools:sample/avatars" />
-    </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 </RelativeLayout>

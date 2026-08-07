@@ -1,46 +1,30 @@
-# Task Plan: Implement Drag Handle Pill & Top-Right Close Icon on Action Dialogs & Bottom Sheets
+# MusicMate: Audiophile UI/UX Overhaul Plan
 
-> **Note**: Playback Control (`sheet_audio_hub.xml`, `view_action_signal_path_bottom_sheet.xml`, `view_action_server_management_bottom_sheet.xml`) remains 100% untouched.
+## Phase 1: The Dark, Premium Foundation
+- [ ] **OLED Black Themes**: Adjust the global Material 3 theme to enforce true pitch-black backgrounds (`#000000` or `#050505`) for absolute contrast, instead of default dark grays.
+- [ ] **Typography Audit**: Review text styles. Swap heavily bolded, large fonts for sleek, refined text weights. Emphasize tracking (letter spacing) and clean hierarchy.
+- [ ] **Neon Accents (Subtle)**: Ensure primary accent colors (e.g., currently playing track, active states) are sharp, glowing "neon" tones that stand out brilliantly against the dark canvas without overwhelming the cover art.
 
-## 1. Search & Match Query Dialog (`view_action_search_query_dialog.xml`)
-- [x] Add top center drag handle pill (`bg_drag_handle_pill`).
-- [x] Add top-right close icon (`btn_close_search_dialog`) in header with proper RelativeLayout constraints.
-- [x] Bind close button in `TagsActivity.java` (`dismiss()`).
-- [x] Remove redundant bottom `button_cancel` and divider line. Elevate `button_search` as full-width primary button.
+## Phase 2: Restructuring the "File Manager" Flow
+- [ ] **Redesign `view_list_item.xml` (The Track List)**:
+    - Declutter the metadata row. Stop cramming DR, Bitrate, and Duration into tiny adjacent pills.
+    - Implement a clean "right-aligned" metadata approach, or elegant dividers (e.g., `FLAC • 24/192 • DR12`).
+    - Remove heavy card backgrounds from list items; let them breathe on the true black canvas.
+- [ ] **Artist/Genre "Hero" Vibe (Future Architecture)**:
+    - *Note:* While a full architecture change (like building a bespoke Artist Fragment) is large, we can immediately improve the visual hierarchy of the lists by stripping away the "folder" iconography and leaning into edge-to-edge cover arts and refined typography.
 
-## 2. Search Results Picker Dialog (`view_action_search_results_dialog.xml`)
-- [x] Add top center drag handle pill (`bg_drag_handle_pill`).
-- [x] Add top-right close icon (`btn_close_results_dialog`) in header with proper RelativeLayout constraints.
-- [x] Bind close button in `TagsActivity.java` (`dismiss()`).
-- [x] Remove redundant bottom `button_cancel` bar to give `ListView` maximum vertical scroll space.
+## Phase 3: Elevating Audiophile Metadata
+- [x] Strip out chunky backgrounds from `view_quality_indicator.xml`, `view_dynamic_range_db.xml`, and `view_duration.xml`.
+- [x] Strip out chunky backgrounds from `view_badge.xml` (used for codec and sample rate).
+- [x] Consolidate spacing in `view_list_music_tag.xml` (and `view_list_item_compared.xml`) so metadata flows as a single, elegant string separated by subtle space.
+- [x] Remove outer borders and heavy padding from `view_list_music_tag.xml` and `view_list_folder.xml` to remove the "spreadsheet card" vibe and allow edge-to-edge flow.
+- [x] **Signal Path Refinement**: Review `sheet_audio_hub.xml` and `signal_path_step.xml`. Clean up the padding and typography so the diagnostic tools feel like high-end telemetry rather than debugging menus.
+- [x] **Now Playing Bar Polish**: Ensure `layout_floating_playback_bar.xml` (and `bottom_navigation_container` in activities) acts as a seamless glass/dark overlay rather than a chunky bottom tab.
 
-## 3. Trash / Delete Confirmation Bottom Sheet (`view_action_trash_bottom_sheet_dialog.xml`)
-- [x] Add top center drag handle pill (`bg_drag_handle_pill`).
-- [x] Add top-right close icon (`btn_close_trash_sheet`) in header with proper RelativeLayout constraints.
-- [x] Bind close button in `TagsActivity.java` (`dismiss()`).
-- [x] Remove redundant bottom `button_cancel` and divider line. Elevate `button_move_to_trash` as full-width primary button with trash icon.
+## Phase 4 & 5: Dialogs and Quick Actions (Completed)
+- [x] Strip old styles and chunky dialog windows from `view_now_playing.xml`, `sheet_now_playing_queue.xml`, `dialog_text_input.xml`, and `dialog_item_list.xml`.
+- [x] Add "Play" and "Enqueue" quick-action buttons directly to folder cards (`view_list_folder.xml`) replacing the old redundant chevron.
 
-## 4. Custom Text Input Dialog (`dialog_text_input.xml` & `TagsEditorFragment.java`)
-- [x] Add drag handle pill (`bg_drag_handle_pill`) and top-right close icon (`btn_close_input_dialog`) in header.
-- [x] Update `TagsEditorFragment.java` to bind close button and streamline dialog layout.
-
-## 5. Verification & Build
-- [x] Verify build with `./gradlew assembleRoomDebug`.
-- [x] Document results in `tasks/todo.md` and `tasks/lessons.md`.
-
-## Review
-- Rolled back all Playback Control / AudioHub files ([`sheet_audio_hub.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/sheet_audio_hub.xml), [`view_action_signal_path_bottom_sheet.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_action_signal_path_bottom_sheet.xml), [`view_action_server_management_bottom_sheet.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_action_server_management_bottom_sheet.xml), [`styles.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/values/styles.xml)) to maintain 100% of existing Playback Control functionality.
-- Successfully updated all action dialogs ([`view_action_search_query_dialog.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_action_search_query_dialog.xml), [`view_action_search_results_dialog.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_action_search_results_dialog.xml), [`view_action_trash_bottom_sheet_dialog.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/view_action_trash_bottom_sheet_dialog.xml), [`dialog_text_input.xml`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/res/layout/dialog_text_input.xml)) to feature the dedicated drag handle pill (`bg_drag_handle_pill`) and a unconstrained top-right close icon button (`44dp x 44dp`).
-- Bound all close listeners in [`TagsActivity.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsActivity.java) and [`TagsEditorFragment.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsEditorFragment.java).
-- Verified build using `./gradlew assembleRoomDebug` (`BUILD SUCCESSFUL in 7s`).
-
-
-
-
-
-
-
-
-
-
-
+## Review & Verification
+- [ ] Compile the app and review all changes side-by-side with the old UI.
+- [ ] Ensure the app no longer feels like a "database" but rather a high-fidelity listening gallery.

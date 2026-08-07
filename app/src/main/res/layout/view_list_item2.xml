@@ -13,27 +13,26 @@
     android:focusable="true">
 
     <!-- Album Art -->
-    <FrameLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/item_imageFrame"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:background="@drawable/shape_item_coverart_background"
-        android:paddingStart="1dp"
-        android:paddingTop="1dp"
-        android:paddingEnd="3dp"
-        android:paddingBottom="3dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#1AFFFFFF"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <com.google.android.material.imageview.ShapeableImageView
+        <ImageView
             android:id="@+id/item_image_coverart"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             android:importantForAccessibility="no"
-            tools:src="@tools:sample/avatars"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
+            tools:src="@tools:sample/avatars" />
 
         <apincer.android.mmate.ui.view.TriangleLabelView
             android:id="@+id/item_new_label"
@@ -46,7 +45,7 @@
             app:primaryText="New"
             app:primaryTextColor="@color/material_color_yellow_500"
             app:primaryTextSize="8sp" />
-    </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Title + Subtitle + Metadata -->
     <LinearLayout

@@ -863,7 +863,7 @@ public class UIUtils  {
             long used = Math.max(0, total - free);
             double pcnt = (used * 100.0) / total;
 
-            LayoutInflater layoutInflater = LayoutInflater.from(application);
+            LayoutInflater layoutInflater = LayoutInflater.from(vStoragesLayout.getContext());
             View inf = layoutInflater.inflate(R.layout.view_storage_space, null);
             ImageView icon = inf.findViewById(R.id.storage_box);
             TextView info = inf.findViewById(R.id.storage_info);

@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="32dip"
-    android:textAppearance="?android:attr/textAppearanceLarge"
-    android:textColor="@color/material_color_blue_grey_600"
+    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+    android:textColor="?attr/colorOnSurface"
     android:gravity="center_vertical"
-    android:paddingStart="8dip"
-    android:paddingEnd="8dip"
-    android:ellipsize="marquee"
-    />
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingVertical="12dp"
+    android:ellipsize="marquee" />

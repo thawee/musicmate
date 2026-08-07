@@ -276,8 +276,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         DynamicRangeView drDbView;
         QualityIndicatorView qualityIndicatorView;
         RatingIndicatorView ratingIndicatorView;
-       // DurationView mDurationView;
-       BadgeView mDurationView;
+        BadgeView mDurationView;
+        View mBtnPlay;
+        View mBtnEnqueue;
        // View moreActions;
 
         public ViewHolder(View view) {
@@ -304,6 +305,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
             this.qualityIndicatorView = view.findViewById(R.id.icon_quality_indicator);
            this.ratingIndicatorView = view.findViewById(R.id.rating_view);
+           this.mBtnPlay = view.findViewById(R.id.btn_folder_play);
+           this.mBtnEnqueue = view.findViewById(R.id.btn_folder_enqueue);
 
         }
 
@@ -449,15 +452,52 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        // holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setEnabled(true);
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
+        if (holder.mBtnPlay != null) {
+            holder.mBtnPlay.setOnClickListener(view -> {
+                if(onListItemClick != null) onListItemClick.onClick(view, holder.getLayoutPosition());
+            });
+        }
+        if (holder.mBtnEnqueue != null) {
+            holder.mBtnEnqueue.setOnClickListener(view -> {
+                if(onListItemClick != null) onListItemClick.onClick(view, holder.getLayoutPosition());
+            });
+        }
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
         ImageRequest request = CoverartFetcher.builder(holder.mContext, item)
                 .data(item)
                 .size(240, 240)
                 .target(new ImageViewTarget(holder.mCoverArtView))
-               // .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
                 .build();
         imageLoader.enqueue(request);
+
+        int fallbackResId = R.drawable.ic_context_artist_24dp;
+        if (criteria != null) {
+            if (criteria.getType() == SearchCriteria.TYPE.GENRE) {
+                fallbackResId = R.drawable.ic_baseline_audiotrack_24;
+            } else if (criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
+                fallbackResId = R.drawable.ic_baseline_playlist_play_24;
+            } else if (criteria.getType() == SearchCriteria.TYPE.SOUND_GRADE) {
+                fallbackResId = R.drawable.ic_round_audio_file_24;
+            }
+        }
+        
+        // Use a new view for the fallback icon to avoid Coil 3 Image conversion issues
+        android.widget.ImageView fallbackView = holder.rootView.findViewById(R.id.item_fallback_icon);
+        if (fallbackView != null) {
+            fallbackView.setImageResource(fallbackResId);
+        }
+
+        if (holder.mCoverArtFrame instanceof com.google.android.material.card.MaterialCardView) {
+            com.google.android.material.card.MaterialCardView card = (com.google.android.material.card.MaterialCardView) holder.mCoverArtFrame;
+            if (criteria != null && criteria.getType() == SearchCriteria.TYPE.ARTIST) {
+                // Circle
+                card.setRadius(apincer.android.mmate.utils.UIUtils.dpToPx(holder.mContext, 36));
+            } else {
+                // Rounded corner 12dp
+                card.setRadius(apincer.android.mmate.utils.UIUtils.dpToPx(holder.mContext, 12));
+            }
+        }
 
         holder.mTitle.setText(TagUIUtils.getFormattedTitle(holder.mContext, item));
 

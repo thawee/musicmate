@@ -1,77 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/now_playing_panel_inner"
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/now_playing_panel_inner"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="@dimen/dimen_1_dp"
-    android:background="@drawable/shape_border_playing">
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#1AFFFFFF"
+    app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+    <LinearLayout
+        android:id="@+id/now_playing_icon_panel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <ImageView
+            android:id="@+id/now_playing_coverart"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_album_black_24dp"
+            tools:ignore="ContentDescription" />
 
         <LinearLayout
-            android:id="@+id/now_playing_icon_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="left|center_vertical"
-            android:layout_marginStart="@dimen/dimen_2_dp"
-            android:layout_marginTop="@dimen/dimen_2_dp"
-            android:layout_marginEnd="@dimen/dimen_2_dp"
-            android:layout_marginBottom="@dimen/dimen_2_dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingTop="@dimen/dimen_1_dp"
-            android:paddingEnd="@dimen/dimen_1_dp"
-            android:paddingBottom="@dimen/dimen_1_dp"
-            android:background="@drawable/shape_border_playing_black"
-            tools:ignore="RtlHardcoded,RtlSymmetry">
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/now_playing_coverart"
-                android:layout_width="@dimen/dimen_64_dp"
-                android:layout_height="@dimen/dimen_48_dp"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginTop="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp"
-                android:layout_marginBottom="@dimen/dimen_1_dp"
-                android:background="@drawable/shape_device_background"
-                android:padding="@dimen/dimen_2_dp"
-                android:src="@drawable/ic_album_black_24dp"
-                android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
+            android:layout_marginTop="2dp"
+            android:background="#1A000000"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="4dp">
+
+            <ImageView
+                android:id="@+id/now_playing_player"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 tools:ignore="ContentDescription" />
 
-            <RelativeLayout
-                android:layout_width="match_parent"
+            <Space
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/dimen_1_dp"
-                android:layout_marginBottom="@dimen/dimen_2_dp"
-                android:background="@drawable/shape_background_playing"
-                android:gravity="center">
+                android:layout_weight="1" />
 
-                <ImageView
-                    android:id="@+id/now_playing_player"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:paddingTop="@dimen/dimen_1_dp"
-                    android:paddingStart="@dimen/dimen_2_dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:background="@drawable/border_back_label"
-                    tools:ignore="ContentDescription" />
-
-                <ImageView
-                    android:id="@+id/now_playing_device"
-                    android:layout_width="@dimen/dimen_42_dp"
-                    android:background="@drawable/border_back_label"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_margin="@dimen/dimen_1_dp"
-                    android:scaleType="fitXY"
-                    android:paddingTop="@dimen/dimen_1_dp"
-                    android:paddingEnd="@dimen/dimen_2_dp"
-                    android:src="@drawable/ic_baseline_volume_up_24"
-                    tools:ignore="ContentDescription" />
-            </RelativeLayout>
+            <ImageView
+                android:id="@+id/now_playing_device"
+                android:layout_width="32dp"
+                android:layout_height="16dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_baseline_volume_up_24"
+                tools:ignore="ContentDescription" />
         </LinearLayout>
-</LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

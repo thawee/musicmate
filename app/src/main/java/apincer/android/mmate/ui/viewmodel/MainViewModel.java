@@ -227,4 +227,35 @@ public class MainViewModel extends ViewModel {
         adapter.search(query);
         loadMusicItems(adapter.getCriteria());
     }
+
+    public void playCollection(Track collectionTag, apincer.music.core.playback.spi.PlaybackService playbackService, boolean enqueueOnly) {
+        if (collectionTag == null || playbackService == null) return;
+        
+        SearchCriteria criteria = new SearchCriteria(collectionTag.getContainerType());
+        criteria.setKeyword(collectionTag.getTitle());
+        
+        backgroundExecutor.execute(() -> {
+            try {
+                // Fetch all tracks in this collection
+                List<Track> items = repos.findMusic(criteria, 0, Integer.MAX_VALUE);
+                if (items != null && !items.isEmpty()) {
+                    // Update queue on main thread to avoid concurrent modification issues with UI
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                        apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
+                        if (!enqueueOnly) {
+                            queue.emptyPlayingQueue();
+                        }
+                        for (Track t : items) {
+                            queue.addPlayingQueue(t.getId());
+                        }
+                        if (!enqueueOnly) {
+                            playbackService.playSong(items.get(0));
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
 }

@@ -67,11 +67,9 @@ public class BadgeView extends LinearLayout {
             TextBuilder builder = new TextBuilder(getContext());
             builder.addColoredText(label, textColor);
             builder.into(textView);
-            if(bgColor > -1) {
+            if(bgColor > -1 && textView.getBackground() != null) {
                 textView.getBackground().setTint(bgColor);
-               // textView.getBackground().setTintMode(PorterDuff.Mode.ADD);
                 textView.getBackground().setTintMode(PorterDuff.Mode.SCREEN);
-                //textView.setBackground(background);
             }
         }
     }

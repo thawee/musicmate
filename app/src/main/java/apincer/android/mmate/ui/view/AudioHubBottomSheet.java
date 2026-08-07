@@ -212,7 +212,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int targetHeight = (int) (screenHeight * 0.82);
+                int targetHeight = (int) (screenHeight * 0.65);
                 bottomSheet.getLayoutParams().height = targetHeight;
                 behavior.setPeekHeight(targetHeight);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
@@ -716,7 +716,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 isPlaying = state != null && state.currentState == PlaybackState.State.PLAYING;
             }
             final boolean currentlyPlaying = isPlaying;
-            sheetBtnPlayPause.setImageResource(currentlyPlaying ? R.drawable.ic_baseline_pause_24 : R.drawable.ic_baseline_play_arrow_24);
+            sheetBtnPlayPause.setImageResource(currentlyPlaying ? R.drawable.ic_pause_rounded : R.drawable.ic_play_rounded);
             sheetBtnPlayPause.setOnClickListener(v -> {
                 if (isPlaybackServiceBound && playbackService != null) {
                     if (currentlyPlaying) {

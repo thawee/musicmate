@@ -246,6 +246,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="1000"
+                android:progressDrawable="@drawable/custom_seekbar_progress"
+                android:splitTrack="false"
+                android:minHeight="12dp"
+                android:maxHeight="12dp"
                 android:thumbTint="@color/colorGold" />
 
             <RelativeLayout
@@ -299,7 +303,7 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 android:padding="10dp"
-                android:src="@drawable/ic_baseline_skip_previous_24"
+                android:src="@drawable/ic_skip_previous_rounded"
                 android:contentDescription="Previous"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 app:tint="@color/white" />
@@ -310,7 +314,7 @@
                 android:layout_height="52dp"
                 android:layout_marginHorizontal="12dp"
                 android:padding="10dp"
-                android:src="@drawable/ic_baseline_play_arrow_24"
+                android:src="@drawable/ic_play_rounded"
                 android:contentDescription="Play"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 app:tint="@color/white" />
@@ -321,7 +325,7 @@
                 android:layout_height="48dp"
                 android:layout_marginEnd="8dp"
                 android:padding="10dp"
-                android:src="@drawable/ic_baseline_skip_next_24"
+                android:src="@drawable/ic_skip_next_rounded"
                 android:contentDescription="Next"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 app:tint="@color/white" />
@@ -406,7 +410,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_clear_queue"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:minHeight="0dp"

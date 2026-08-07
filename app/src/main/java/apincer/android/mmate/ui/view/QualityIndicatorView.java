@@ -102,10 +102,10 @@ public class QualityIndicatorView extends LinearLayout {
             TextBuilder builder = new TextBuilder(getContext());
             builder.addColoredText(label, textColor);
             builder.into(textView);
-            textView.getBackground().setTint(bgColor);
-            textView.getBackground().setTintMode(PorterDuff.Mode.SCREEN);
-           // Drawable background = MusicTagUtils.getQualityBackground(getContext(), tag.getQualityInd());
-           // textView.setBackground(background);
+            if (textView.getBackground() != null) {
+                textView.getBackground().setTint(bgColor);
+                textView.getBackground().setTintMode(PorterDuff.Mode.SCREEN);
+            }
         }
     }
 }

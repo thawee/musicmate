@@ -13,27 +13,26 @@
     android:focusable="true">
 
     <!-- Album Art -->
-    <FrameLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/item_imageFrame"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:background="@drawable/shape_item_coverart_background"
-        android:paddingStart="1dp"
-        android:paddingTop="1dp"
-        android:paddingEnd="3dp"
-        android:paddingBottom="3dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#1AFFFFFF"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <com.google.android.material.imageview.ShapeableImageView
+        <ImageView
             android:id="@+id/item_image_coverart"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             android:importantForAccessibility="no"
-            tools:src="@tools:sample/avatars"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
+            tools:src="@tools:sample/avatars" />
 
         <apincer.android.mmate.ui.view.TriangleLabelView
             android:id="@+id/item_new_label"
@@ -46,7 +45,7 @@
             app:primaryText="New"
             app:primaryTextColor="@color/material_color_yellow_500"
             app:primaryTextSize="8sp" />
-    </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Title + Subtitle + Metadata -->
     <LinearLayout
@@ -130,16 +129,14 @@
             <TextView
                 android:id="@+id/item_filetype"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:layout_margin="@dimen/dimen_1_dp"
-                android:background="@drawable/shape_background_duration"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                android:paddingEnd="@dimen/dimen_8_dp"
-                android:paddingTop="@dimen/dimen_2_dp"
-                android:paddingBottom="@dimen/dimen_2_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"
+                android:paddingEnd="@dimen/dimen_4_dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textStyle="bold"
                 tools:text="FLAC"
                 tools:ignore="RtlSymmetry"
                 />
@@ -147,17 +144,14 @@
             <TextView
                 android:id="@+id/item_sample_rate"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:layout_margin="@dimen/dimen_1_dp"
-                android:background="@drawable/shape_background_duration"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                android:paddingStart="@dimen/dimen_8_dp"
-                android:paddingEnd="@dimen/dimen_8_dp"
-                android:paddingTop="@dimen/dimen_2_dp"
-                android:paddingBottom="@dimen/dimen_2_dp"
+                android:paddingStart="@dimen/dimen_4_dp"
+                android:paddingEnd="@dimen/dimen_4_dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textStyle="bold"
                 tools:text="96 kHz"
                 />
 

@@ -7,17 +7,14 @@
     <TextView
         android:id="@+id/duration_text_view"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_24_dp"
-        android:layout_margin="@dimen/dimen_1_dp"
-        android:background="@drawable/shape_background_duration"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/dimen_2_dp"
-        android:paddingStart="@dimen/dimen_6_dp"
-        android:paddingEnd="@dimen/dimen_6_dp"
-        android:paddingTop="@dimen/dimen_2_dp"
-        android:paddingBottom="@dimen/dimen_2_dp"
+        android:paddingStart="@dimen/dimen_4_dp"
+        android:paddingEnd="@dimen/dimen_4_dp"
         android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textStyle="bold"
         android:text="00:00"
         tools:ignore="HardcodedText" />
 </merge>

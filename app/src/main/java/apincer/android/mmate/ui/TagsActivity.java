@@ -301,6 +301,11 @@ public class TagsActivity extends AppCompatActivity {
         appBarLayout = findViewById(R.id.appbar);
        // bottomAppBar = findViewById(R.id.bottom_app_bar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
+        ViewCompat.setOnApplyWindowInsetsListener(viewPager, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), (int)dpToPx(this, 160) + systemBars.bottom);
+            return insets;
+        });
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());

@@ -119,6 +119,12 @@ public class FileRepository {
                         image = new File(cacheDir, "/sound_grade/" + codec + ".jpg");
                     }
                     if (!image.exists()) {
+                        image = new File(cacheDir, "/sound_grade/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/sound_grade/folder.png", image);
+                        }
+                    }
+                    if (!image.exists()) {
                         image = new File(cacheDir, music.getPath());
                     }
                     yield image;

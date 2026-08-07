@@ -56,6 +56,9 @@ public class CoverartFetcher implements Fetcher {
         File covertFile = FileRepository.getCoverArt(context, musicTag);
         String cacheKey = musicTag.getAlbumArtFilename();
         if(covertFile == null || !covertFile.exists() || covertFile.isDirectory()) {
+            if (musicTag.isContainer()) {
+                return null; // Return null to trigger Coil's error/fallback drawable for containers
+            }
             covertFile = getDefaultCover();
             cacheKey = null;
         }

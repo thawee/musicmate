@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.18.11] - 2026-08-07
+
+### Added
+- **Quick Action Buttons on Collections**:
+  - Replaced redundant chevron on folder cards (Artist, Genre, Playlist) with dedicated **Play** and **Add to Queue** icons for frictionless listening session management without opening folders.
+
+### Changed
+- **OLED UI Refinement & Borders Elimination**:
+  - Removed chunky `MaterialCardView` borders, excessive padding, and heavy shadows across remaining dialogs (`dialog_text_input.xml`, `dialog_item_list.xml`).
+  - Restyled Now Playing Mini-Player and Queue sheet clear button to seamlessly blend with the "Neon on Dark" true black UI aesthetic.
+- **Audio Hub Visibility**:
+  - Lowered `AudioHubBottomSheet` maximum peek height from 82% to 65% of the screen, allowing users to comfortably see and interact with 2-3 list items lingering dynamically in the background while the sheet is open.
+
+### Fixed
+- **NPE in Quality Indicator**:
+  - Fixed `NullPointerException` thrown in `QualityIndicatorView.java` when attempting to tint a null drawable.
+
+---
+
 ## [3.18.10] - 2026-08-06
 
 ### Added

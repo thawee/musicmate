@@ -207,17 +207,16 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="72dp"
         android:layout_gravity="bottom"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="0dp"
+        android:layout_marginBottom="0dp"
         android:clickable="true"
         android:focusable="true"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="10dp"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp"
         app:cardBackgroundColor="@android:color/transparent"
-        app:strokeWidth="1.5dp"
-        app:strokeColor="#4480CBC4">
+        app:strokeWidth="0dp">
 
         <RelativeLayout
             android:layout_width="match_parent"

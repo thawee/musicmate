@@ -121,6 +121,13 @@ public class AboutActivity extends AppCompatActivity {
             return insets;
         });
         setSupportActionBar(toolbar);
+
+        android.widget.FrameLayout mainContent = findViewById(R.id.main_content);
+        ViewCompat.setOnApplyWindowInsetsListener(mainContent, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
+            return insets;
+        });
         if(getSupportActionBar() != null) {
             getSupportActionBar().setTitle("About MusicMate");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

@@ -94,7 +94,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/tab_now_playing"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -103,11 +103,11 @@
             android:text="Now Playing"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/white" />
+            android:textColor="?attr/colorOnSurface" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/tab_signal_path"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -116,11 +116,11 @@
             android:text="Signal Path"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/white" />
+            android:textColor="?attr/colorOnSurface" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/tab_media_server"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -129,7 +129,7 @@
             android:text="Media Server"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/white" />
+            android:textColor="?attr/colorOnSurface" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <!-- Top Swappable ViewPager2 (Now Playing Card / Signal Path / Media Server) -->
