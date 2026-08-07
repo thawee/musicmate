@@ -2,8 +2,8 @@
     <!-- Deep obsidian dark surface -->
     <item>
         <shape android:shape="rectangle">
-            <!-- Distinct dark gray to strongly stand out against pitch black -->
-            <solid android:color="#E62C2C2C" />
+            <!-- Almost pure black for maximum contrast and OLED benefit -->
+            <solid android:color="#F2050505" />
         </shape>
     </item>
 
