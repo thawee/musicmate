@@ -199,7 +199,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_delete"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/button_delete"
@@ -214,9 +214,10 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_organize"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:backgroundTint="@color/colorPrimary"
                     android:text="@string/button_organize"
                     android:textColor="@color/white"
                     app:strokeColor="@color/colorPrimary"
@@ -230,7 +231,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_more"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/button_more"
@@ -249,9 +250,10 @@
                 app:selectionRequired="false">
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/action_editor"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.Material3.Button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:backgroundTint="@color/colorPrimary"
                     android:text="@string/button_edit_song_info"
                     android:textColor="@color/white"
                     app:strokeColor="@color/colorPrimary"

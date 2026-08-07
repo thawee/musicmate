@@ -2,8 +2,8 @@
     <!-- Deep obsidian dark surface -->
     <item>
         <shape android:shape="rectangle">
-            <!-- Slightly lighter dark for frosted glass depth effect (approx 85% opacity, dark grey) -->
-            <solid android:color="#D9161616" />
+            <!-- Distinct dark gray to strongly stand out against pitch black -->
+            <solid android:color="#E62C2C2C" />
         </shape>
     </item>
 
