@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Constants
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 16;
-    private static final int RECYCLEVIEW_ITEM_OFFSET = 48;
+    private static final int RECYCLEVIEW_ITEM_OFFSET = 16; //48; 1.5 item offset
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
 
@@ -646,7 +646,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        AudioHubBottomSheet bottomSheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_SIGNAL_PATH);
+        AudioHubBottomSheet bottomSheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_NOW_PLAYING);
         bottomSheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
     }
 

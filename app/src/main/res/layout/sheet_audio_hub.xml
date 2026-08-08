@@ -100,20 +100,7 @@
             android:layout_weight="1"
             android:paddingHorizontal="4dp"
             android:paddingVertical="0dp"
-            android:text="Now Playing"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/tab_signal_path"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:paddingHorizontal="4dp"
-            android:paddingVertical="0dp"
-            android:text="Signal Path"
+            android:text="Audio Transport"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="?attr/colorOnSurface" />
@@ -126,7 +113,7 @@
             android:layout_weight="1"
             android:paddingHorizontal="4dp"
             android:paddingVertical="0dp"
-            android:text="Media Server"
+            android:text="Network Streamer"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="?attr/colorOnSurface" />

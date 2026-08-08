@@ -35,7 +35,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -92,8 +91,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private static final String ARG_INITIAL_TAB = "ARG_INITIAL_TAB";
 
     public static final int TAB_NOW_PLAYING = 0;
-    public static final int TAB_SIGNAL_PATH = 1;
-    public static final int TAB_MEDIA_SERVER = 2;
+    public static final int TAB_MEDIA_SERVER = 1;
 
     private int initialTab = TAB_NOW_PLAYING;
 
@@ -112,7 +110,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     // Pre-inflated Pages
     private View viewNowPlayingPage;
-    private View viewSignalPathPage;
     private View viewMediaServerPage;
 
     // Media Server UI
@@ -259,8 +256,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 if (isChecked) {
                     if (checkedId == R.id.tab_now_playing) {
                         viewPager.setCurrentItem(TAB_NOW_PLAYING, true);
-                    } else if (checkedId == R.id.tab_signal_path) {
-                        viewPager.setCurrentItem(TAB_SIGNAL_PATH, true);
                     } else if (checkedId == R.id.tab_media_server) {
                         viewPager.setCurrentItem(TAB_MEDIA_SERVER, true);
                     }
@@ -279,11 +274,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         // Pre-inflate page views for ViewPager2
         viewNowPlayingPage = LayoutInflater.from(getContext()).inflate(R.layout.sheet_now_playing_queue, null);
-        viewSignalPathPage = LayoutInflater.from(getContext()).inflate(R.layout.view_action_signal_path_bottom_sheet, null);
         viewMediaServerPage = LayoutInflater.from(getContext()).inflate(R.layout.view_action_server_management_bottom_sheet, null);
 
         flattenPage(viewNowPlayingPage, true);
-        flattenPage(viewSignalPathPage, false);
         flattenPage(viewMediaServerPage, false);
 
         setupNowPlayingTab(viewNowPlayingPage);
@@ -306,11 +299,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 FrameLayout container = (FrameLayout) holder.itemView;
                 container.removeAllViews();
-                View pageView = switch (position) {
-                    case TAB_SIGNAL_PATH -> viewSignalPathPage;
-                    case TAB_MEDIA_SERVER -> viewMediaServerPage;
-                    default -> viewNowPlayingPage;
-                };
+                View pageView = (position == TAB_MEDIA_SERVER) ? viewMediaServerPage : viewNowPlayingPage;
                 if (pageView.getParent() != null) {
                     ((ViewGroup) pageView.getParent()).removeView(pageView);
                 }
@@ -322,7 +311,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
             @Override
             public int getItemCount() {
-                return 3;
+                return 2;
             }
         });
 
@@ -374,19 +363,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (getContext() == null) return;
 
         if (tabToggleGroup != null) {
-            int targetId = switch (position) {
-                case TAB_SIGNAL_PATH -> R.id.tab_signal_path;
-                case TAB_MEDIA_SERVER -> R.id.tab_media_server;
-                default -> R.id.tab_now_playing;
-            };
+            int targetId = (position == TAB_MEDIA_SERVER) ? R.id.tab_media_server : R.id.tab_now_playing;
             if (tabToggleGroup.getCheckedButtonId() != targetId) {
                 tabToggleGroup.check(targetId);
             }
         }
 
-        if (position == TAB_SIGNAL_PATH && isPlaybackServiceBound) {
-            addSignalPathSteps();
-        } else if (position == TAB_NOW_PLAYING && isPlaybackServiceBound && viewNowPlayingPage != null) {
+        if (position == TAB_NOW_PLAYING && isPlaybackServiceBound && viewNowPlayingPage != null) {
             populateNowPlayingSheet(viewNowPlayingPage);
         }
     }
@@ -416,11 +399,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     // ── Page 0: Now Playing Card ─────────────────────────────────────────────
 
     private void setupNowPlayingTab(View view) {
-        View playerBadge = view.findViewById(R.id.sheet_player_badge);
-        if (playerBadge != null) {
-            playerBadge.setOnClickListener(v -> showPlayerPicker(playerBadge));
-        }
-
         View cardView = view.findViewById(R.id.sheet_now_playing_card);
         if (cardView != null) {
             cardView.setOnClickListener(v -> {
@@ -551,9 +529,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         ShapeableImageView albumArt = view.findViewById(R.id.sheet_album_art);
         TextView titleView = view.findViewById(R.id.sheet_track_title);
         TextView artistView = view.findViewById(R.id.sheet_artist);
-        BadgeView formatBadge = view.findViewById(R.id.sheet_format_badge);
-        TextView playerBadge = view.findViewById(R.id.sheet_player_badge);
-        TextView techDetails = view.findViewById(R.id.sheet_tech_details);
 
         if (track != null) {
             titleView.setText(track.getTitle());
@@ -575,57 +550,11 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }, 150);
             }
 
-            View.OnClickListener openSignalPathListener = v -> viewPager.setCurrentItem(TAB_SIGNAL_PATH, true);
-
-            if (formatBadge != null) {
-                String encoding = TagUtils.formatCodec(track);
-                if (encoding != null && !encoding.isEmpty() && getContext() != null) {
-                    int txtColor = TagUtils.getCodecColor(requireContext(), track);
-                    int bgColor = TagUtils.getCodecBgColor(requireContext(), track);
-                    formatBadge.setBadge(encoding, txtColor, bgColor);
-                    formatBadge.setVisibility(VISIBLE);
-                    formatBadge.setOnClickListener(openSignalPathListener);
-                } else {
-                    formatBadge.setVisibility(GONE);
-                }
-            }
-
-            techDetails.setText(buildTechLine(track));
-            techDetails.setOnClickListener(openSignalPathListener);
-
-            /*
-            View btnFavorite = view.findViewById(R.id.btn_sheet_favorite);
-            View btnEditTags = view.findViewById(R.id.btn_sheet_edit_tags);
-            View btnMoreActions = view.findViewById(R.id.btn_sheet_more_actions);
-
-            if (btnFavorite instanceof ImageView && getContext() != null) {
-                boolean isFav = apincer.music.core.repository.PlaylistRepository.isInPlaylist(track);
-                ((ImageView) btnFavorite).setImageTintList(
-                        ContextCompat.getColorStateList(requireContext(),
-                                isFav ? R.color.colorGold : R.color.colorOnSurfaceVariant));
-
-                btnFavorite.setOnClickListener(v -> Toast.makeText(getContext(), isFav ? "In Favorites" : "Marked Favorite", Toast.LENGTH_SHORT).show());
-            }
-
-            if (btnEditTags != null) {
-                btnEditTags.setOnClickListener(v -> {
-                    if (getContext() != null) {
-                        Intent intent = new Intent(getContext(), apincer.android.mmate.ui.TagsActivity.class);
-                        intent.putExtra("MUSIC_TAG_IDS", new long[]{ track.getId() });
-                        startActivity(intent);
-                    }
-                });
-            } */
-
-           // if (btnMoreActions != null) {
-           //     btnMoreActions.setOnClickListener(v -> showMoreActionsPopup(v, track));
-           // }
-
+            populateSignalPathWidget(view, track);
         } else {
             titleView.setText("No track playing");
             artistView.setText("Select a song or target player to begin");
-            if (formatBadge != null) formatBadge.setVisibility(GONE);
-            techDetails.setText("");
+            populateSignalPathWidget(view, null);
             if (albumArt != null) albumArt.setImageResource(R.drawable.ic_now_playing_idle);
         }
 
@@ -675,24 +604,12 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         PlaybackTarget target = playbackService != null ? playbackService.getPlayer() : null;
-        if (target != null && getContext() != null) {
-            playerBadge.setText(PlayerNameUtils.getDropdownPlayerLabel(target));
-            playerBadge.setVisibility(VISIBLE);
-
-            boolean isRemote = target.isStreaming();
+        if (btnCastHeader != null && getContext() != null) {
+            boolean isRemote = target != null && target.isStreaming();
             int tintColor = isRemote
                     ? ContextCompat.getColor(requireContext(), R.color.colorGold)
                     : ContextCompat.getColor(requireContext(), R.color.colorOnSurface);
-            if (btnCastHeader != null) {
-                btnCastHeader.setImageTintList(android.content.res.ColorStateList.valueOf(tintColor));
-            }
-        } else {
-            playerBadge.setText("Select Player");
-            playerBadge.setVisibility(VISIBLE);
-            if (btnCastHeader != null && getContext() != null) {
-                btnCastHeader.setImageTintList(android.content.res.ColorStateList.valueOf(
-                        ContextCompat.getColor(requireContext(), R.color.colorOnSurface)));
-            }
+            btnCastHeader.setImageTintList(android.content.res.ColorStateList.valueOf(tintColor));
         }
 
         ImageView sheetBtnPrevious = view.findViewById(R.id.sheet_btn_previous);
@@ -804,9 +721,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (getView() != null) {
             populateQueueSection(getView());
         }
-        if (viewPager != null && viewPager.getCurrentItem() == TAB_SIGNAL_PATH) {
-            addSignalPathSteps();
-        }
     }
 
     // ── Permanent Bottom Queue Section ────────────────────────────────────────
@@ -844,24 +758,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 if (emptyMsg != null) emptyMsg.setVisibility(GONE);
                 recycler.setVisibility(VISIBLE);
 
-                double totalDurSec = 0;
-                for (Track t : queue) {
-                    if (t != null) totalDurSec += t.getAudioDuration();
-                }
-                String durStr = "";
-                if (totalDurSec > 0) {
-                    int totalMins = (int) (totalDurSec / 60);
-                    if (totalMins >= 60) {
-                        int hrs = totalMins / 60;
-                        int mins = totalMins % 60;
-                        durStr = String.format(Locale.US, " (%dh %dmin)", hrs, mins);
-                    } else {
-                        durStr = String.format(Locale.US, " (%d min)", totalMins);
-                    }
-                }
-                if (queueLabel != null) {
-                    queueLabel.setText("Queue  •  " + queue.size() + " track" + (queue.size() != 1 ? "s" : "") + durStr);
-                }
+                updateQueueHeader(root, queue);
 
                 String currentKey = (track != null) ? track.getUniqueKey() : null;
                 int playingPosition = -1;
@@ -874,17 +771,85 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     }
                 }
 
-                QueueAdapter adapter = new QueueAdapter(queue, currentKey, selectedTrack -> {
-                    if (isPlaybackServiceBound && playbackService != null) {
-                        playbackService.playSong(selectedTrack);
-                        if (viewNowPlayingPage != null) populateNowPlayingSheet(viewNowPlayingPage);
-                        populateQueueSection(root);
-                    }
-                });
-                LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-                recycler.setLayoutManager(layoutManager);
-                recycler.setNestedScrollingEnabled(true);
-                recycler.setAdapter(adapter);
+                QueueAdapter existingAdapter = null;
+                if (recycler.getAdapter() instanceof QueueAdapter) {
+                    existingAdapter = (QueueAdapter) recycler.getAdapter();
+                }
+
+                if (existingAdapter != null) {
+                    existingAdapter.updateData(queue, currentKey);
+                } else {
+                    QueueAdapter adapter = new QueueAdapter(queue, currentKey, selectedTrack -> {
+                        if (isPlaybackServiceBound && playbackService != null) {
+                            playbackService.playSong(selectedTrack);
+                            if (viewNowPlayingPage != null) populateNowPlayingSheet(viewNowPlayingPage);
+                            populateQueueSection(root);
+                        }
+                    });
+                    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+                    recycler.setLayoutManager(layoutManager);
+                    recycler.setNestedScrollingEnabled(true);
+                    recycler.setAdapter(adapter);
+
+                    ItemTouchHelper touchHelper = new ItemTouchHelper(
+                            new ItemTouchHelper.SimpleCallback(
+                                    ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                                    ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
+                            ) {
+                                @Override
+                                public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                                    int fromPos = viewHolder.getBindingAdapterPosition();
+                                    int toPos = target.getBindingAdapterPosition();
+                                    if (fromPos != RecyclerView.NO_POSITION && toPos != RecyclerView.NO_POSITION && fromPos != toPos) {
+                                        if (qm != null) {
+                                            qm.moveTrack(fromPos, toPos);
+                                        }
+                                        QueueAdapter currentAdapter = (QueueAdapter) recyclerView.getAdapter();
+                                        if (currentAdapter != null) {
+                                            Track movedItem = currentAdapter.queue.remove(fromPos);
+                                            currentAdapter.queue.add(toPos, movedItem);
+                                            currentAdapter.notifyItemMoved(fromPos, toPos);
+                                            int start = Math.min(fromPos, toPos);
+                                            int count = Math.abs(fromPos - toPos) + 1;
+                                            currentAdapter.notifyItemRangeChanged(start, count);
+                                        }
+                                        return true;
+                                    }
+                                    return false;
+                                }
+
+                                @Override
+                                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                                    int pos = viewHolder.getBindingAdapterPosition();
+                                    QueueAdapter currentAdapter = (QueueAdapter) recycler.getAdapter();
+                                    if (currentAdapter != null && pos != RecyclerView.NO_POSITION && pos < currentAdapter.queue.size()) {
+                                        Track removedTrack = currentAdapter.queue.get(pos);
+                                        if (qm != null) {
+                                            qm.removeTrack(pos);
+                                        }
+                                        currentAdapter.queue.remove(pos);
+                                        currentAdapter.notifyItemRemoved(pos);
+                                        
+                                        // Update headers only
+                                        if (qm != null) {
+                                            updateQueueHeader(root, qm.getSongs());
+                                        }
+
+                                        if (getView() != null) {
+                                            Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), Snackbar.LENGTH_LONG)
+                                                    .setAction("UNDO", v -> {
+                                                        if (qm != null) {
+                                                            qm.addPlayingQueue(removedTrack.getId());
+                                                        }
+                                                        populateQueueSection(root);
+                                                    }).show();
+                                        }
+                                    }
+                                }
+                            }
+                    );
+                    touchHelper.attachToRecyclerView(recycler);
+                }
 
                 if (playingPosition >= 0) {
                     final int scrollPos = playingPosition;
@@ -894,57 +859,41 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         }
                     });
                 }
-
-                ItemTouchHelper touchHelper = new ItemTouchHelper(
-                        new ItemTouchHelper.SimpleCallback(
-                                ItemTouchHelper.UP | ItemTouchHelper.DOWN,
-                                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
-                        ) {
-                            @Override
-                            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                                int fromPos = viewHolder.getBindingAdapterPosition();
-                                int toPos = target.getBindingAdapterPosition();
-                                if (fromPos != RecyclerView.NO_POSITION && toPos != RecyclerView.NO_POSITION && fromPos != toPos) {
-                                    if (qm != null) {
-                                        qm.moveTrack(fromPos, toPos);
-                                    }
-                                    Track movedItem = queue.remove(fromPos);
-                                    queue.add(toPos, movedItem);
-                                    adapter.notifyItemMoved(fromPos, toPos);
-                                    int start = Math.min(fromPos, toPos);
-                                    int count = Math.abs(fromPos - toPos) + 1;
-                                    adapter.notifyItemRangeChanged(start, count);
-                                    return true;
-                                }
-                                return false;
-                            }
-
-                            @Override
-                            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                                int pos = viewHolder.getBindingAdapterPosition();
-                                if (pos != RecyclerView.NO_POSITION && pos < queue.size()) {
-                                    Track removedTrack = queue.get(pos);
-                                    if (qm != null) {
-                                        qm.removeTrack(pos);
-                                    }
-                                    populateQueueSection(root);
-
-                                    if (getView() != null) {
-                                        Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), Snackbar.LENGTH_LONG)
-                                                .setAction("UNDO", v -> {
-                                                    if (qm != null) {
-                                                        qm.addPlayingQueue(removedTrack.getId());
-                                                    }
-                                                    populateQueueSection(root);
-                                                }).show();
-                                    }
-                                }
-                            }
-                        }
-                );
-                touchHelper.attachToRecyclerView(recycler);
             }
         }
+    }
+
+    private void updateQueueHeader(@NonNull View root, List<Track> queue) {
+        TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
+        RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
+        TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
+
+        if (queue == null || queue.isEmpty()) {
+            if (queueLabel != null) queueLabel.setText("Queue • empty");
+            if (recycler != null) recycler.setVisibility(View.GONE);
+            if (emptyMsg != null) emptyMsg.setVisibility(View.VISIBLE);
+            return;
+        } else {
+            if (recycler != null) recycler.setVisibility(View.VISIBLE);
+            if (emptyMsg != null) emptyMsg.setVisibility(View.GONE);
+        }
+
+        double totalDurSec = 0;
+        for (Track t : queue) {
+            if (t != null) totalDurSec += t.getAudioDuration();
+        }
+        String durStr = "";
+        if (totalDurSec > 0) {
+            int totalMins = (int) (totalDurSec / 60);
+            if (totalMins >= 60) {
+                int hrs = totalMins / 60;
+                int mins = totalMins % 60;
+                durStr = String.format(Locale.US, " (%dh %dmin)", hrs, mins);
+            } else {
+                durStr = String.format(Locale.US, " (%d min)", totalMins);
+            }
+        }
+        queueLabel.setText("Queue  •  " + queue.size() + " track" + (queue.size() != 1 ? "s" : "") + durStr);
     }
 
     private void updatePlaybackProgress(@Nullable View view, @Nullable PlaybackState state) {
@@ -1022,60 +971,164 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     // ── Page 1: Audio Signal Path ────────────────────────────────────────────
 
-    private void addSignalPathSteps() {
-        if (viewSignalPathPage == null || playbackService == null) return;
+    private String formatShortResolution(Track track) {
+        if (track == null) return "";
+        int bitDepth = track.getAudioBitsDepth();
+        long sampleRate = track.getAudioSampleRate();
+        long bitRate = track.getAudioBitRate();
 
-        View headerIcon = viewSignalPathPage.findViewById(R.id.title_icon);
-        if (headerIcon != null && headerIcon.getParent() instanceof View parentHeader) {
-            parentHeader.setVisibility(GONE);
+        if (sampleRate > 0) {
+            String rateStr = (sampleRate % 1000 == 0)
+                    ? (sampleRate / 1000) + "k"
+                    : String.format(Locale.US, "%.1fk", sampleRate / 1000.0);
+            if (bitDepth > 0) {
+                return bitDepth + "/" + rateStr;
+            }
+            return rateStr;
+        } else if (bitRate > 0) {
+            return (bitRate / 1000) + "k";
         }
+        return "";
+    }
 
-        LinearLayout signalPathContainer = viewSignalPathPage.findViewById(R.id.signal_path_container);
-        TextView qualityIndicator = viewSignalPathPage.findViewById(R.id.quality_indicator);
+    private void populateSignalPathWidget(@NonNull View view, @Nullable Track track) {
+        View widgetView = view.findViewById(R.id.sheet_signal_path_widget);
+        TextView verdictView = view.findViewById(R.id.sheet_signal_verdict);
 
-        if (signalPathContainer == null || qualityIndicator == null) return;
+        TextView sourceTitle = view.findViewById(R.id.sheet_node_source_title);
+        TextView engineSubtitle = view.findViewById(R.id.sheet_node_engine_subtitle);
+
+        View targetBox = view.findViewById(R.id.sheet_node_target_box);
+        TextView targetTitle = view.findViewById(R.id.sheet_node_target_title);
+
+        View expandableContainer = view.findViewById(R.id.sheet_signal_path_expandable);
+        LinearLayout stepsContainer = view.findViewById(R.id.sheet_signal_path_steps_container);
+
+        if (track != null && getContext() != null) {
+            String quality = TagUIUtils.getQualityIndFullString(track);
+            if (verdictView != null) {
+                verdictView.setText(VerdictFormatter.format(getContext(), quality));
+            }
+
+            if (sourceTitle != null) {
+                String codec = TagUtils.formatCodec(track);
+                if (codec == null || codec.isEmpty()) codec = track.getAudioEncoding().toUpperCase();
+                String res = formatShortResolution(track);
+                if (!res.isEmpty()) {
+                    sourceTitle.setText(codec + " " + res);
+                } else {
+                    sourceTitle.setText(codec);
+                }
+            }
+
+            PlaybackTarget target = playbackService != null ? playbackService.getPlayer() : null;
+            boolean isStreaming = target != null && target.isStreaming();
+
+            if (engineSubtitle != null) {
+                engineSubtitle.setText(isStreaming ? "Net Streamer" : "Local Transport");
+            }
+
+            if (targetTitle != null) {
+                String playerLabel = target != null ? target.getDisplayName() : "Local Device";
+                boolean isBitPerfect = false;
+
+                if (target == null || target instanceof ExternalAndroidPlayer) {
+                    AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
+                    String devName = device.getName();
+                    isBitPerfect = device.isBitPerfect();
+                    if (target != null) {
+                        playerLabel = target.getDisplayName();
+                    } else if (devName != null && !devName.isEmpty()) {
+                        playerLabel = devName;
+                    } else {
+                        playerLabel = "Speaker";
+                    }
+                }
+
+                targetTitle.setText(playerLabel + " ▾");
+
+                if (targetBox != null) {
+                    targetBox.setBackgroundResource(isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target);
+                }
+            }
+
+            if (targetBox != null) {
+                targetBox.setOnClickListener(v -> showPlayerPicker(targetBox));
+            }
+
+            if (widgetView != null) {
+                widgetView.setOnClickListener(v -> {
+                    if (expandableContainer != null) {
+                        boolean isCurrentlyVisible = expandableContainer.getVisibility() == VISIBLE;
+                        ViewGroup sceneRoot = (view.getParent() instanceof ViewGroup) ? (ViewGroup) view.getParent() : null;
+                        if (sceneRoot != null) {
+                            android.transition.TransitionManager.beginDelayedTransition(sceneRoot, new android.transition.AutoTransition().setDuration(200));
+                        }
+                        if (!isCurrentlyVisible) {
+                            expandableContainer.setVisibility(VISIBLE);
+                           // if (chevron != null) chevron.animate().rotation(180f).setDuration(200).start();
+                            if (stepsContainer != null) {
+                                stepsContainer.removeAllViews();
+                                addSignalPathSteps(stepsContainer);
+                            }
+                        } else {
+                            expandableContainer.setVisibility(GONE);
+                           // if (chevron != null) chevron.animate().rotation(0f).setDuration(200).start();
+                        }
+                    }
+                });
+            }
+        } else {
+            if (verdictView != null) verdictView.setText("No active track");
+            if (sourceTitle != null) sourceTitle.setText("-");
+            if (engineSubtitle != null) engineSubtitle.setText("-");
+            if (targetTitle != null) targetTitle.setText("Select Player ▾");
+            if (targetBox != null) {
+                targetBox.setOnClickListener(v -> showPlayerPicker(targetBox));
+            }
+        }
+    }
+
+    private void addSignalPathSteps(LinearLayout signalPathContainer) {
+        if (signalPathContainer == null || playbackService == null || getContext() == null) return;
         signalPathContainer.removeAllViews();
-        qualityIndicator.setText("");
-
-        if (signalPathContainer.getParent() instanceof View parentView && getContext() != null) {
-            parentView.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.bg_rounded_surface_dark));
-            parentView.setPadding(16, 16, 16, 16);
-        }
 
         Track song = playbackService.getNowPlayingSong();
         if (song == null) {
             TextView emptyText = new TextView(getContext());
-            emptyText.setText("No active signal path");
+            emptyText.setText("No active signal path telemetry available.");
             emptyText.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorMuted));
-            emptyText.setTextSize(14f);
+            emptyText.setTextSize(12f);
             signalPathContainer.addView(emptyText);
             return;
         }
-        
-        String quality = TagUIUtils.getQualityIndFullString(song);
-
-        TextView resolutionIndicator = new TextView(getContext());
-        resolutionIndicator.setText(VerdictFormatter.format(getContext(), quality));
-        resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), R.color.material_color_amber_400, requireContext().getTheme()));
-        resolutionIndicator.setTextSize(14f);
-        resolutionIndicator.setPadding(0, 0, 0, 8);
-        signalPathContainer.addView(resolutionIndicator);
 
         boolean isLossyFile = TagUtils.isLossy(song);
-        String sourceTitle = isLossyFile ? "Standard Audio Source" : "High-Fidelity Source";
+        boolean isHiRes = TagUtils.isHiRes(song);
+
+        // --- Step 1: Source ---
+        int sourceShape = R.drawable.shape_node_source;
+        int sourceIcon = R.drawable.ic_baseline_audio_file_24;
+        String sourceTitle = isLossyFile ? "Source: Lossy Compressed Audio" : (isHiRes ? "Source: Hi-Res Lossless Audio" : "Source: Lossless CD Quality");
         String songTitleText = song.getTitle();
         if (!StringUtils.isEmpty(song.getArtist())) {
             songTitleText = songTitleText + " — " + song.getArtist();
         }
 
-        String sourceText = songTitleText +
-                "\n" +
-                song.getAudioEncoding().toUpperCase() +
-                SYMBOL_ENC_SEP +
-                TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());
+        String codec = TagUtils.formatCodec(song);
+        if (codec == null || codec.isEmpty()) {
+            codec = song.getAudioEncoding().toUpperCase();
+        }
 
-        addSignalPathStep(signalPathContainer, sourceTitle, sourceText, true);
+        String sourceBadge = isHiRes ? "HI-RES" : (isLossyFile ? "LOSSY" : "LOSSLESS");
+        String sourceText = songTitleText + "\n" +
+                "Format: " + codec + SYMBOL_ENC_SEP + TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate()) +
+                " (" + (song.getAudioBitRate() > 0 ? (song.getAudioBitRate() / 1000) + " kbps" : "VBR") + ")\n" +
+                "Container: " + (song.getFileType() != null ? song.getFileType().toUpperCase() : "AUDIO");
 
+        addSignalPathStep(signalPathContainer, sourceShape, sourceIcon, sourceTitle, sourceBadge, sourceText, true);
+
+        // --- Step 2: Transport Engine ---
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             if (playbackTarget.isStreaming() && !(playbackTarget instanceof DMRPlayer) && playbackTarget.getDescription() != null) {
@@ -1094,41 +1147,85 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }
             }
 
-            String playerDetails = PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget);
-            if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                //addSignalPathStep(signalPathContainer, "MusicMate Audio Engine", player.getDisplayName(), true);
-                AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
-                String deviceDetails = device.getFriendyDescription();
-                addSignalPathStep(signalPathContainer, "Audio Output Device", deviceDetails, false);
-                qualityIndicator.setText("Wired Output");
-            } else {
-                String serverDetails = ApplicationUtils.getFriendlyDeviceName() + " • " + ApplicationUtils.getVersionNumber(getContext());
+            boolean isStreaming = playbackTarget.isStreaming();
+            int transportShape = R.drawable.shape_node_transport;
+            int transportIcon = R.drawable.ic_baseline_audio_path_24;
+            String transportTitle = "MusicMate Transport Engine";
+            String transportBadge = isStreaming ? "NETWORK STREAMER" : "LOCAL TRANSPORT";
+            String serverDetails = ApplicationUtils.getFriendlyDeviceName() + " • v" + ApplicationUtils.getVersionNumber(getContext()) + "\n" +
+                    (isStreaming ? "Streaming via HTTP Media Server Pipeline" : "Direct Local Storage IO Read");
 
-                addSignalPathStep(signalPathContainer, "MusicMate Server Engine", serverDetails, true);
-                addSignalPathStep(signalPathContainer, "Network Renderer", playerDetails, false);
-                if (!TagUtils.isLossy(song)) {
-                    qualityIndicator.setText("Lossless Wireless");
-                } else {
-                    qualityIndicator.setText("Wireless Stream");
+            addSignalPathStep(signalPathContainer, transportShape, transportIcon, transportTitle, transportBadge, serverDetails, true);
+
+            // --- Step 3: Target Audio Output ---
+            int targetShape;
+            int targetIcon;
+            String targetTitle;
+            String targetBadge;
+            String targetDetails;
+
+            if (playbackTarget instanceof ExternalAndroidPlayer player) {
+                AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
+                boolean isBitPerfect = device.isBitPerfect();
+                targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
+                targetIcon = isBitPerfect ? R.drawable.ic_baseline_usb_24 : R.drawable.ic_baseline_volume_up_24;
+                targetTitle = "Output Device: " + device.getName();
+                targetBadge = isBitPerfect ? "BIT-PERFECT" : "DIRECT SYSTEM OUTPUT";
+
+                StringBuilder devBuf = new StringBuilder();
+                devBuf.append("Type: ").append(device.getDescription());
+                if (!StringUtils.isEmpty(device.getCodec())) {
+                    devBuf.append(" • ").append(device.getCodec());
                 }
+                devBuf.append("\nSpecs: ").append(TagUtils.formatResolution(device.getBitPerSampling(), device.getSamplingRate(), -1));
+                if (isBitPerfect) {
+                    devBuf.append("\nStatus: Bit-Perfect Direct USB Hardware Passthrough (1:1)");
+                } else {
+                    devBuf.append("\nStatus: ").append(device.getFriendyDescription());
+                }
+                targetDetails = devBuf.toString();
+            } else {
+                targetShape = R.drawable.shape_node_target;
+                targetIcon = R.drawable.rounded_broadcast_on_personal_24;
+                targetTitle = "Network Target: " + playbackTarget.getDisplayName();
+                targetBadge = "DLNA RENDERER";
+                String playerLabel = PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget);
+                targetDetails = playerLabel + "\nProtocol: UPnP AVTransport / DLNA Render";
             }
+
+            addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
         }
     }
 
-    private void addSignalPathStep(LinearLayout container, String title, String description, boolean hasNext) {
+    private void addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, String title, String badgeText, String description, boolean hasNext) {
         if (getContext() == null) return;
         View stepView = LayoutInflater.from(getContext()).inflate(R.layout.signal_path_step, container, false);
+        View cardContainer = stepView.findViewById(R.id.step_card_container);
+        ImageView iconView = stepView.findViewById(R.id.step_icon);
         MaterialTextView titleTextView = stepView.findViewById(R.id.step_title);
+        TextView badgeTextView = stepView.findViewById(R.id.step_badge);
         MaterialTextView descriptionTextView = stepView.findViewById(R.id.step_description);
         View lineView = stepView.findViewById(R.id.vertical_line);
 
-        titleTextView.setText(title);
-        descriptionTextView.setText(description);
+        if (cardContainer != null) {
+            cardContainer.setBackgroundResource(shapeResId);
+        }
+        if (iconView != null) iconView.setImageResource(iconResId);
+        if (titleTextView != null) titleTextView.setText(title);
 
-        if (hasNext) {
-            lineView.setVisibility(VISIBLE);
-        } else {
-            lineView.setVisibility(View.INVISIBLE);
+        if (badgeTextView != null) {
+            if (StringUtils.isEmpty(badgeText)) {
+                badgeTextView.setVisibility(GONE);
+            } else {
+                badgeTextView.setVisibility(VISIBLE);
+                badgeTextView.setText(badgeText);
+            }
+        }
+
+        if (descriptionTextView != null) descriptionTextView.setText(description);
+
+        if (lineView != null) {
+            lineView.setVisibility(hasNext ? VISIBLE : View.INVISIBLE);
         }
 
         container.addView(stepView);
@@ -1310,13 +1407,20 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private static class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.VH> {
 
         private final List<Track> queue;
-        private final String currentKey;
+        private String currentKey;
         private final OnTrackClickListener listener;
 
         QueueAdapter(List<Track> queue, @Nullable String currentKey, OnTrackClickListener listener) {
-            this.queue = queue;
+            this.queue = new ArrayList<>(queue);
             this.currentKey = currentKey;
             this.listener = listener;
+        }
+
+        public void updateData(List<Track> newQueue, @Nullable String newKey) {
+            this.queue.clear();
+            this.queue.addAll(newQueue);
+            this.currentKey = newKey;
+            notifyDataSetChanged();
         }
 
         @NonNull

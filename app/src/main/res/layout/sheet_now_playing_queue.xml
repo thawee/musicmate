@@ -108,6 +108,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="10dp">
 
+        <!-- Top Row: Cover Art + Track Info + Verdict Badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -117,8 +118,8 @@
             <!-- Large album art -->
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/sheet_album_art"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_musicmate_logo"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"/>
@@ -128,7 +129,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="12dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -137,57 +138,143 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                     android:textColor="@color/white"
-                    android:maxLines="2"
+                    android:maxLines="1"
                     android:ellipsize="end"/>
 
                 <TextView
                     android:id="@+id/sheet_artist"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="2dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/grey400"
                     android:maxLines="1"
                     android:ellipsize="end"/>
 
-                <!-- Format + player badges -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/sheet_signal_verdict"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginTop="3dp"
+                    android:textColor="@color/colorGold"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+        </LinearLayout>
 
-                    <apincer.android.mmate.ui.view.BadgeView
-                        android:id="@+id/sheet_format_badge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+        <!-- FULL-WIDTH Consolidated Audiophile Signal Path Widget (1 Line per Node) -->
+        <LinearLayout
+            android:id="@+id/sheet_signal_path_widget"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true">
+
+            <!-- Live Signal Path Chain: 1-Line Full Width Flow -->
+            <LinearLayout
+                android:id="@+id/sheet_signal_path_chain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Node 1: Source (Single 1-Line Chip) -->
+                <LinearLayout
+                    android:id="@+id/sheet_node_source_box"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/shape_node_source"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="5dp"
+                    android:gravity="center">
 
                     <TextView
-                        android:id="@+id/sheet_player_badge"
+                        android:id="@+id/sheet_node_source_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:background="@drawable/shape_background_playing"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
                         android:textColor="@color/white"
-                        android:textSize="10sp"/>
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
 
-                <!-- Technical details: sample rate / bit depth / bitrate -->
                 <TextView
-                    android:id="@+id/sheet_tech_details"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@drawable/shape_node_connector"
+                    android:paddingHorizontal="3dp"
+                    android:paddingVertical="2dp"
+                    android:text="➔"
                     android:textColor="@color/colorGold"
-                    android:maxLines="1"
-                    android:ellipsize="end"/>
+                    android:textSize="8.5sp" />
+
+                <!-- Node 2: Transport (Single 1-Line Chip) -->
+                <LinearLayout
+                    android:id="@+id/sheet_node_engine_box"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.1"
+                    android:background="@drawable/shape_node_transport"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="5dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/sheet_node_engine_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@drawable/shape_node_connector"
+                    android:paddingHorizontal="3dp"
+                    android:paddingVertical="2dp"
+                    android:text="➔"
+                    android:textColor="@color/colorGold"
+                    android:textSize="8.5sp" />
+
+                <!-- Node 3: Target Output (Single 1-Line Chip) -->
+                <LinearLayout
+                    android:id="@+id/sheet_node_target_box"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.1"
+                    android:background="@drawable/shape_node_target"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="5dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <TextView
+                        android:id="@+id/sheet_node_target_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorGold"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
 
                 <!-- Quick Actions row: [Favorite] [Edit Tags] [More Actions] -->
                 <!--
@@ -228,11 +315,8 @@
                         android:src="@drawable/rounded_more_vert_24"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="More Actions"
-                        app:tint="@color/grey400" />
                 </LinearLayout>
                 -->
-            </LinearLayout>
-        </LinearLayout>
 
         <!-- Interactive Seekbar & Time labels -->
         <LinearLayout
@@ -380,6 +464,34 @@
                 app:tint="@color/grey400" />
         </LinearLayout>
         -->
+
+        <!-- Expandable Signal Path Telemetry Container -->
+        <LinearLayout
+            android:id="@+id/sheet_signal_path_expandable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:background="@drawable/bg_rounded_surface_dark"
+            android:padding="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Audio Signal Telemetry"
+                android:textColor="@color/colorGold"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/sheet_signal_path_steps_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- ── PINNED QUEUE HEADER ── -->

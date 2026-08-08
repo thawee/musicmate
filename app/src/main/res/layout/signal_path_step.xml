@@ -1,61 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="top"
-    android:paddingStart="12dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
     android:paddingTop="4dp"
     android:paddingBottom="6dp">
 
-    <!-- Vertical Line and Dot -->
+    <!-- Timeline Indicator (Dot & Connector Line) -->
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="20dp"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center_horizontal">
+
         <View
-            android:layout_width="1dp"
-            android:layout_height="10dp"
+            android:layout_width="2dp"
+            android:layout_height="12dp"
             android:background="@color/colorGold" />
+
         <View
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:id="@+id/step_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/path_dot" />
+
         <View
             android:id="@+id/vertical_line"
-            android:layout_width="1dp"
-            android:layout_height="40dp"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
             android:background="@color/colorGold" />
     </LinearLayout>
 
+    <!-- Micro-Card Step Details Container -->
     <LinearLayout
+        android:id="@+id/step_card_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/shape_node_source"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="8dp"
         android:orientation="vertical">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/step_title"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.05"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="14sp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/step_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/rounded_music_note_24"
+                app:tint="@color/colorGold" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/step_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/step_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_rounded_surface_dark"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:textColor="@color/colorGold"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/step_description"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="2"
-            android:ellipsize="start"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.02"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="12sp" />
+            android:layout_marginTop="4dp"
+            android:textColor="@color/grey400"
+            android:textSize="11sp"
+            android:lineSpacingExtra="2dp" />
     </LinearLayout>
 
 </LinearLayout>

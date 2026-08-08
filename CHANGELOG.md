@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.18.13] - 2026-08-08
+
+### Added
+- **Custom Audiophile Signal Path Geometries**:
+  - Added 5 custom XML shape drawables (`shape_node_source.xml`, `shape_node_transport.xml`, `shape_node_target.xml`, `shape_node_target_bitperfect.xml`, `shape_node_connector.xml`) with asymmetric curves, chamfers, and HSL glowing strokes to visually distinguish pipeline stages.
+
+### Changed
+- **Playback Center Naming Symmetry**:
+  - Renamed master bottom sheet tabs to **`Audio Transport`** and **`Network Streamer`** for precise audiophile terminology.
+- **Full-Width 1-Line Signal Path Flow**:
+  - Redesigned the Now Playing card (`sheet_now_playing_queue.xml`) to move album art and track metadata to the top row, placing the 3-stage Signal Path widget across the full width (`100% width`) below.
+  - Streamlined signal path nodes to single 1-line chips (`FLAC 24/96` ➔ `Net Streamer` / `Local Transport` ➔ `USB Bit-Perfect ▾`) with compact padding and zero text truncation.
+
+### Removed
+- **Diagnostic Copy Button**:
+  - Removed the legacy "Copy Diagnostic Report" clipboard button from the Signal Path telemetry view for a cleaner UI.
+
+---
+
 ## [3.18.12] - 2026-08-07
 
 ### Fixed
