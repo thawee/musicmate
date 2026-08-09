@@ -214,7 +214,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
 
                 float density = getResources().getDisplayMetrics().density;
-                int bottomNavMargin = (int) (72 * density);
+                int bottomNavMargin = (int) (80 * density);
 
                 if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
                     View navBar = ma.findViewById(R.id.bottom_navigation_container);
@@ -223,7 +223,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         if (navBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
                             mb = lp.bottomMargin;
                         }
-                        bottomNavMargin = navBar.getHeight() + mb + (int) (4 * density);
+                        bottomNavMargin = navBar.getHeight() + mb + (int) (12 * density);
                     }
                 }
 
