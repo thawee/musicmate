@@ -204,41 +204,50 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         if (getDialog() != null) {
+            View container = getDialog().findViewById(com.google.android.material.R.id.container);
+            View coordinator = getDialog().findViewById(com.google.android.material.R.id.coordinator);
+            View touchOutside = getDialog().findViewById(com.google.android.material.R.id.touch_outside);
             View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+
             if (bottomSheet != null) {
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
 
-                int bottomNavMargin = 0;
+                float density = getResources().getDisplayMetrics().density;
+                int bottomNavMargin = (int) (80 * density);
+
                 if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
                     View navBar = ma.findViewById(R.id.bottom_navigation_container);
-                    if (navBar != null && navBar.getVisibility() == View.VISIBLE) {
-                        int navHeight = navBar.getHeight();
+                    if (navBar != null && navBar.getHeight() > 0) {
                         int mb = 0;
                         if (navBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
                             mb = lp.bottomMargin;
                         }
-                        if (navHeight > 0) {
-                            bottomNavMargin = navHeight + mb + (int) (8 * getResources().getDisplayMetrics().density);
-                        }
+                        bottomNavMargin = navBar.getHeight() + mb + (int) (8 * density);
                     }
                 }
-                if (bottomNavMargin == 0) {
-                    float density = getResources().getDisplayMetrics().density;
-                    bottomNavMargin = (int) (76 * density);
-                }
 
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomSheet.getLayoutParams();
-                params.bottomMargin = bottomNavMargin;
+                if (coordinator != null) {
+                    coordinator.setPadding(0, 0, 0, bottomNavMargin);
+                }
+                if (touchOutside != null) {
+                    touchOutside.setPadding(0, 0, 0, bottomNavMargin);
+                }
+                if (container != null) {
+                    container.setPadding(0, 0, 0, bottomNavMargin);
+                }
 
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
                 int targetHeight = (int) (screenHeight * 0.65) - bottomNavMargin;
-                int minHeight = (int) (360 * getResources().getDisplayMetrics().density);
+                int minHeight = (int) (360 * density);
                 if (targetHeight < minHeight) {
                     targetHeight = minHeight;
                 }
-                params.height = targetHeight;
-                bottomSheet.setLayoutParams(params);
+
+                ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
+                lp.height = targetHeight;
+                bottomSheet.setLayoutParams(lp);
+
                 behavior.setPeekHeight(targetHeight);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
             }
