@@ -990,11 +990,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 String playerLabel = target != null ? target.getDisplayName() : "Local Device";
                 boolean isBitPerfect = false;
 
-                if (target == null || target instanceof ExternalAndroidPlayer) {
+                if (target == null || target instanceof ExternalAndroidPlayer || (target != null && !target.isStreaming())) {
                     AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
                     String devName = device.getName();
                     isBitPerfect = device.isBitPerfect();
-                    if (target != null) {
+                    if (devName != null && !devName.isEmpty() && !devName.equals("Phone Speaker")) {
+                        playerLabel = devName;
+                    } else if (target != null) {
                         playerLabel = target.getDisplayName();
                     } else if (devName != null && !devName.isEmpty()) {
                         playerLabel = devName;
@@ -1126,9 +1128,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
                 boolean isBitPerfect = device.isBitPerfect();
                 targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
-                targetIcon = isBitPerfect ? R.drawable.ic_baseline_usb_24 : R.drawable.ic_baseline_volume_up_24;
+                targetIcon = (device.getResId() != 0) ? device.getResId() : (isBitPerfect ? R.drawable.ic_baseline_usb_24 : R.drawable.ic_baseline_volume_up_24);
                 targetTitle = "Output Device: " + device.getName();
-                targetBadge = isBitPerfect ? "BIT-PERFECT" : "DIRECT SYSTEM OUTPUT";
+                targetBadge = isBitPerfect ? "BIT-PERFECT" : (device.getDescription() != null && device.getDescription().startsWith("BT") ? "BLUETOOTH A2DP" : "DIRECT SYSTEM OUTPUT");
 
                 StringBuilder devBuf = new StringBuilder();
                 devBuf.append("Type: ").append(device.getDescription());

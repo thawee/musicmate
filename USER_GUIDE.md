@@ -62,6 +62,10 @@ The main dashboard is optimized for handling extremely large music libraries.
   - **Queue Controls:** Includes **Play All**, **Shuffle Toggle (🔀)**, **Repeat Mode Toggle (🔁)**, **Clear Queue**, and **Stop Playback** actions.
 * **Bottom Navigation Dock (Card Shape 16dp):**
   - **Media Server Icon:** Features live status tinting (Teal tint when DLNA server is active/running, Muted tint when offline). Tapping opens `MediaServerManagementSheet`.
+* **Bluetooth Audio Playback Suite:**
+  - **Live Bluetooth Codec Telemetry:** Displays live Bluetooth A2DP audio codec specs (`BT • LDAC`, `BT • aptX`, `BT • AAC`, `BT • SBC`) with a dedicated Bluetooth icon in the **Audio Route Path** telemetry.
+  - **1-Tap System Audio Output Switcher:** Accessible directly from the target player picker popup (`Bluetooth / System Output...`), launching the native Android Media Output panel to quickly pair or switch Bluetooth devices.
+  - **Auto-Pause on Disconnect:** Automatically pauses local audio playback when headphones, Bluetooth DACs, or car receivers disconnect (`ACTION_AUDIO_BECOMING_NOISY`), preventing accidental loudspeaker blaring.
 * **High-Performance Pagination:** To prevent application lag and save memory, songs are loaded in chunks of **500 items**. As you scroll to the bottom, the next page loads automatically.
 * **Scroll Memory & State Context:** When you click on a song to view or edit tags and then return to the main list, the app intelligently remembers your precise scroll position, even if you are scrolled past 500+ items.
 

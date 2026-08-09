@@ -1,26 +1,22 @@
-# Plan: Version Bump to 3.18.14, Changelog Update, and Git Commit
+# Plan: Update README.md and CHANGELOG.md for Bluetooth Audio Suite
 
 ## Overview
-Bumped application version to `3.18.14` (versionCode `122`), added detailed release entry in `CHANGELOG.md`, verified clean build, and committed all changes to Git.
+Update `README.md` and `CHANGELOG.md` to document the newly added Bluetooth Audio Playback Suite features:
+1. Bluetooth device product name resolution & live A2DP codec detection (`LDAC`, `AAC`, `SBC`) in Audio Route Path telemetry.
+2. 1-Tap System Audio Output Switcher (`Bluetooth / System Output...`) in player target picker.
+3. Auto-pause on Bluetooth/Headphone disconnect (`becomingNoisyReceiver`).
 
 ---
 
 ## Tasks Checklist
 
-- [x] **Phase 1: App Version Bump (`app/build.gradle`)**
-  - [x] Increment `versionCode` to `122`.
-  - [x] Update `versionName` to `"3.18.14-"+ getDate()`.
+- [ ] **Phase 1: Update `README.md`**
+  - [ ] Add **📶 Bluetooth Audio Playback Suite** subsection under Key Features.
+  - [ ] Highlight live Bluetooth codec telemetry (`BT • LDAC`), product name resolution, 1-tap System Output Switcher, and auto-pause on disconnect.
 
-- [x] **Phase 2: Update `CHANGELOG.md`**
-  - [x] Add `[3.18.14] - 2026-08-09` release entry detailing:
-    - Audio Route Path naming alignment.
-    - Music Center UI title & tab refinements (`Playback`, `Server`).
-    - DLNA target activation & auto-transfer stream fixes.
-    - Complete documentation updates in `README.md`, `USER_GUIDE.md`, `NETWORK_RESILIENCE.md`.
+- [ ] **Phase 2: Update `CHANGELOG.md`**
+  - [ ] Update `[3.18.14] - 2026-08-09` release entry to document Bluetooth Audio Suite features.
 
-- [x] **Phase 3: Build Verification**
-  - [x] Run `./gradlew assembleDebug` to verify compilation (`BUILD SUCCESSFUL in 4s`).
-
-- [x] **Phase 4: Git Commit**
-  - [x] Stage all modified and untracked files (`git add .`).
-  - [x] Commit with structured commit message (`ccf8eaf8`).
+- [ ] **Phase 3: Verification & Commit**
+  - [ ] Verify build with `./gradlew assembleDebug`.
+  - [ ] Commit documentation changes to Git.

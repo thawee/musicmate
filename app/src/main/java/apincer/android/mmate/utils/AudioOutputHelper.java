@@ -51,6 +51,10 @@ public class AudioOutputHelper {
             this.resId = resId;
         }
 
+        public int getResId() {
+            return resId;
+        }
+
         String name;
         int bitPerSampling;
         long samplingRate;
@@ -144,9 +148,16 @@ public class AudioOutputHelper {
         if (selectedDevice != null) {
             readResolutions(outputDevice, selectedDevice);
             outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, (int) track.getAudioSampleRate()));
-            outputDevice.setDescription(typeToString(selectedDevice.getType()));
+            if (isBluetoothDevice(selectedDevice)) {
+                String btCodec = detectBluetoothCodec(selectedDevice);
+                outputDevice.setCodec(btCodec);
+                outputDevice.setDescription("BT • " + btCodec);
+                outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
+            } else {
+                outputDevice.setDescription(typeToString(selectedDevice.getType()));
+                outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+            }
             outputDevice.setName(String.valueOf(selectedDevice.getProductName()));
-            outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
         } else {
             outputDevice.setCodec("SRC");
             outputDevice.setName("Phone Speaker");
@@ -157,6 +168,38 @@ public class AudioOutputHelper {
         }
 
         return outputDevice;
+    }
+
+    private static boolean isBluetoothDevice(AudioDeviceInfo device) {
+        if (device == null) return false;
+        int type = device.getType();
+        if (type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+            return true;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return type == AudioDeviceInfo.TYPE_BLE_HEADSET || type == AudioDeviceInfo.TYPE_BLE_SPEAKER;
+        }
+        return false;
+    }
+
+    private static String detectBluetoothCodec(AudioDeviceInfo device) {
+        if (device == null) return "BT Audio";
+        int[] encodings = device.getEncodings();
+        if (encodings != null) {
+            for (int enc : encodings) {
+                if (enc == 23 || enc == 28) {
+                    return "LDAC";
+                }
+                if (enc == AudioFormat.ENCODING_AAC_LC || enc == AudioFormat.ENCODING_AAC_HE_V1 
+                        || enc == AudioFormat.ENCODING_AAC_HE_V2 || enc == AudioFormat.ENCODING_AAC_ELD) {
+                    return "AAC";
+                }
+                if (enc == AudioFormat.ENCODING_MP3) {
+                    return "MP3";
+                }
+            }
+        }
+        return "SBC";
     }
 
     // Check if the current path is truly bit-perfect (Android 14+)

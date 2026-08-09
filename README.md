@@ -25,6 +25,11 @@
 *   **Target Player Selector:** Fast top-anchored output target picker for seamless 1-tap renderer switching between local Android apps, DLNA/UPnP streamers, and web browser clients.
 *   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation.
 
+### 📶 Bluetooth Audio Playback Suite
+*   **Live Bluetooth Codec & Device Telemetry:** Detects active Bluetooth A2DP & BLE codecs (**LDAC**, **aptX**, **AAC**, **SBC**) and displays the exact Bluetooth device product name (e.g. `Sony WH-1000XM5`, `Bose QC45`) in the Audio Route Path.
+*   **1-Tap System Output Switcher:** Instant access to native Android Media Output panel (`Bluetooth / System Output...`) directly inside the target player selector.
+*   **Auto-Pause on Disconnect:** Automatically pauses playback when wireless headphones, Bluetooth DACs, or car receivers disconnect (`ACTION_AUDIO_BECOMING_NOISY`), preventing accidental loudspeaker playback.
+
 ### 🎧 High-Res Audio & Authenticity Analysis
 *   **MQA & Format Detection:** Automatically identifies Master Quality Authenticated (MQA) tracks and native DXD/DSD streams.
 *   **Audio Authenticity Analyzer:** Spectral rolloff analysis detects up-sampled CD content and fake Hi-Res files.

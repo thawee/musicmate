@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.18.14] - 2026-08-09
 
 ### Added
+- **Bluetooth Audio Playback Suite**:
+  - **Live Codec & Device Telemetry:** Detects active Bluetooth A2DP & BLE codecs (**LDAC**, **aptX**, **AAC**, **SBC**) and displays the Bluetooth device product name (e.g. `Sony WH-1000XM5`, `Bose QC45`) in the Audio Route Path.
+  - **1-Tap System Audio Output Switcher:** Added `Bluetooth / System Output...` action to target player selector, launching native Android Media Output panel.
+  - **Auto-Pause on Disconnect:** Registered `becomingNoisyReceiver` (`ACTION_AUDIO_BECOMING_NOISY` / `ACTION_ACL_DISCONNECTED`) to automatically pause local audio playback when wireless headphones or Bluetooth receivers disconnect.
 - **Audio Route Path Naming Standard**:
   - Renamed legacy "Signal Path" to **Audio Route Path** across UI strings, resource files, menus, bottom sheets, and documentation for precise end-to-end audiophile route telemetry.
 

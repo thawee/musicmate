@@ -5,9 +5,12 @@ import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotif
 import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.Notification;
 import android.app.Service;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -150,6 +153,20 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     };
 
+    private final BroadcastReceiver becomingNoisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent != null ? intent.getAction() : null;
+            if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)
+                    || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                Log.d(TAG, "Audio output disconnected / becoming noisy. Auto-pausing playback.");
+                if (isPlaying()) {
+                    pausePlayer();
+                }
+            }
+        }
+    };
+
     private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
             controllers -> {
                // Log.d(TAG, "Active sessions changed: " + controllers.size());
@@ -245,6 +262,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // Init WebUI assets in background to avoid blocking UI thread during service creation
         Executors.newSingleThreadExecutor().execute(() -> initWebUIAssets(getApplicationContext()));
+
+        // Register receiver for headphone / Bluetooth disconnect auto-pause
+        IntentFilter audioNoisyFilter = new IntentFilter();
+        audioNoisyFilter.addAction(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(becomingNoisyReceiver, audioNoisyFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(becomingNoisyReceiver, audioNoisyFilter);
+        }
 
         Optional<PlaybackTarget> bestChoice = autoSelectBestPlayer();
         if (bestChoice.isPresent()) {
@@ -353,6 +380,10 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // Ensure everything is cleaned up if the service is destroyed.
         stopServers();
+
+        try {
+            unregisterReceiver(becomingNoisyReceiver);
+        } catch (Exception ignored) {}
 
         if (mediaSessionManager != null) {
             mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);

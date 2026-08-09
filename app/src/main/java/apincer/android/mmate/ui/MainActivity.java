@@ -1208,6 +1208,11 @@ public class MainActivity extends AppCompatActivity {
             popup.getMenu().add(0, -1, 0, "No players discovered");
         }
 
+        // Bluetooth / Audio Output option
+        final int BLUETOOTH_ID = 9998;
+        android.view.MenuItem btItem = popup.getMenu().add(1, BLUETOOTH_ID, BLUETOOTH_ID, "Bluetooth / System Output...");
+        btItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_bluetooth_audio_24));
+
         // Always show rescan option at the bottom
         final int RESCAN_ID = 9999;
         android.view.MenuItem rescanItem = popup.getMenu().add(1, RESCAN_ID, RESCAN_ID, "Rescan for players");
@@ -1216,6 +1221,10 @@ public class MainActivity extends AppCompatActivity {
         apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
 
         popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == BLUETOOTH_ID) {
+                openSystemAudioOutputPanel();
+                return true;
+            }
             if (item.getItemId() == RESCAN_ID) {
                 // Trigger UPnP M-SEARCH (MX=5)
                 playbackService.refreshPlayerDiscovery();
@@ -1255,6 +1264,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         popup.show();
+    }
+
+    public void openSystemAudioOutputPanel() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Intent intent = new Intent("com.android.settings.panel.action.MEDIA_OUTPUT");
+                intent.putExtra("com.android.settings.panel.extra.PACKAGE_NAME", getPackageName());
+                startActivity(intent);
+                return;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to launch MEDIA_OUTPUT panel, falling back to Bluetooth settings", e);
+        }
+
+        try {
+            Intent intent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+            startActivity(intent);
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Unable to open Bluetooth settings", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void doShowAboutApp() {
