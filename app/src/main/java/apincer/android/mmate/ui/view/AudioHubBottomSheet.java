@@ -795,8 +795,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         // Also update queue list when now playing updates
-        if (getView() != null) {
-            populateQueueSection(getView());
+        if (viewQueuePage != null) {
+            populateQueueSection(viewQueuePage);
         }
     }
 
@@ -836,14 +836,27 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         View btnJumpToNowPlaying = root.findViewById(R.id.btn_jump_to_now_playing);
         RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
-        final int targetPos = playingPosition;
         if (btnJumpToNowPlaying != null) {
             btnJumpToNowPlaying.setOnClickListener(v -> {
-                if (targetPos >= 0 && targetPos < queue.size() && recycler != null) {
+                // Re-compute playing position at click time to avoid stale captures
+                QueueManager liveQm = playbackService != null ? playbackService.getQueueManager() : null;
+                Track liveTrack = playbackService != null ? playbackService.getNowPlayingSong() : null;
+                String liveKey = liveTrack != null ? liveTrack.getUniqueKey() : null;
+                List<Track> liveQueue = liveQm != null ? liveQm.getSongs() : null;
+                int livePos = -1;
+                if (liveKey != null && liveQueue != null) {
+                    for (int i = 0; i < liveQueue.size(); i++) {
+                        if (liveKey.equals(liveQueue.get(i).getUniqueKey())) {
+                            livePos = i;
+                            break;
+                        }
+                    }
+                }
+                if (livePos >= 0 && recycler != null) {
                     if (recycler.getLayoutManager() instanceof LinearLayoutManager lm) {
-                        lm.scrollToPositionWithOffset(targetPos, 0);
+                        lm.scrollToPositionWithOffset(livePos, 0);
                     } else {
-                        recycler.smoothScrollToPosition(targetPos);
+                        recycler.smoothScrollToPosition(livePos);
                     }
                     Toast.makeText(getContext(), "Jumped to playing track", Toast.LENGTH_SHORT).show();
                 } else {
@@ -1016,7 +1029,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         ImageView sheetBtnPlayPause = view.findViewById(R.id.sheet_btn_play_pause);
         if (sheetBtnPlayPause != null) {
             boolean isPlaying = state.currentState == PlaybackState.State.PLAYING;
-            sheetBtnPlayPause.setImageResource(isPlaying ? R.drawable.ic_baseline_pause_24 : R.drawable.ic_baseline_play_arrow_24);
+            sheetBtnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause_rounded : R.drawable.ic_play_rounded);
         }
 
         if (track != null && track.getAudioDuration() > 0) {
