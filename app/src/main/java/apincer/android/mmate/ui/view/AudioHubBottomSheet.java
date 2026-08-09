@@ -391,8 +391,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         child.setVisibility(GONE);
                     }
                 }
-            } else {
-                // For Signal Path & Server pages: hide duplicate inner header row
+            } else if (pageView == viewMediaServerPage) {
+                // For Server page: hide duplicate inner header row
                 if (vg.getChildCount() > 0) {
                     View firstChild = vg.getChildAt(0);
                     if (firstChild != null) firstChild.setVisibility(GONE);
@@ -808,15 +808,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
 
         if (recycler != null) {
+            updateQueueHeader(root, queue);
             if (queue.isEmpty()) {
                 if (emptyMsg != null) emptyMsg.setVisibility(VISIBLE);
                 recycler.setVisibility(GONE);
-                if (queueLabel != null) queueLabel.setText("Queue • empty");
             } else {
                 if (emptyMsg != null) emptyMsg.setVisibility(GONE);
                 recycler.setVisibility(VISIBLE);
-
-                updateQueueHeader(root, queue);
 
                 String currentKey = (track != null) ? track.getUniqueKey() : null;
                 int playingPosition = -1;
@@ -923,11 +921,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     private void updateQueueHeader(@NonNull View root, List<Track> queue) {
         TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
+        TextView queueSubtitle = root.findViewById(R.id.sheet_queue_subtitle);
         RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
         TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
 
         if (queue == null || queue.isEmpty()) {
-            if (queueLabel != null) queueLabel.setText("Queue • empty");
+            if (queueLabel != null) queueLabel.setText("Upcoming Queue");
+            if (queueSubtitle != null) queueSubtitle.setText("0 tracks");
             if (recycler != null) recycler.setVisibility(View.GONE);
             if (emptyMsg != null) emptyMsg.setVisibility(View.VISIBLE);
             return;
@@ -946,12 +946,19 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             if (totalMins >= 60) {
                 int hrs = totalMins / 60;
                 int mins = totalMins % 60;
-                durStr = String.format(Locale.US, " (%dh %dmin)", hrs, mins);
+                durStr = String.format(Locale.US, "%dh %dmin total", hrs, mins);
             } else {
-                durStr = String.format(Locale.US, " (%d min)", totalMins);
+                durStr = String.format(Locale.US, "%d min total", totalMins);
             }
         }
-        queueLabel.setText("Queue  •  " + queue.size() + " track" + (queue.size() != 1 ? "s" : "") + durStr);
+
+        String countStr = queue.size() + " track" + (queue.size() != 1 ? "s" : "");
+        if (queueLabel != null) queueLabel.setText("Upcoming Queue");
+        if (queueSubtitle != null) {
+            queueSubtitle.setText(!durStr.isEmpty() ? countStr + " • " + durStr : countStr);
+        } else if (queueLabel != null) {
+            queueLabel.setText("Queue  •  " + countStr + (!durStr.isEmpty() ? " (" + durStr + ")" : ""));
+        }
     }
 
     private void updatePlaybackProgress(@Nullable View view, @Nullable PlaybackState state) {
