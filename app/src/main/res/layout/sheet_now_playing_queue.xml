@@ -98,11 +98,11 @@
     <LinearLayout
         android:id="@+id/sheet_now_playing_card"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:padding="16dp"
         android:orientation="vertical"
-        android:gravity="center_vertical"
+        android:gravity="top"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground">
