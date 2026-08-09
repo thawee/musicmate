@@ -81,5 +81,8 @@
 - **Bluetooth Audio Suite Integration**:
   - **Live Codec Telemetry**: Read `AudioDeviceInfo.getEncodings()` to detect Bluetooth A2DP audio codecs (`LDAC`, `AAC`, `SBC`) and display live `BT • Codec` specs with `@drawable/ic_round_bluetooth_audio_24` in Node 3 of the Audio Route Path.
   - **1-Tap System Output Switcher**: Provide direct access to Android's native `com.android.settings.panel.action.MEDIA_OUTPUT` panel (fallback to Bluetooth Settings) directly inside target player selection popups.
-  - **Auto-Pause on Disconnect**: Register `becomingNoisyReceiver` listening for `AudioManager.ACTION_AUDIO_BECOMING_NOISY` and `BluetoothDevice.ACTION_ACL_DISCONNECTED` to automatically pause local playback when headphones or Bluetooth receivers disconnect.
+- **Dedicated 3-Tab Music Center Architecture (`[ Playback | Queue | Server ]`)**:
+  - **Full-Height Tab Viewports**: Separate Now Playing artwork/telemetry, Queue management, and Media Server status into dedicated full-height ViewPager2 pages rather than pinning a cramped queue at the bottom.
+  - **Dedicated Queue Viewport**: Gives the Queue list maximum vertical viewport space (displaying 8–12 upcoming tracks at once), complete with total remaining playback duration (`X tracks • Y min total`), drag-to-reorder, swipe-to-remove, and 1-tap clear actions.
+  - **Spacious Playback Viewport**: Gives artwork and Audio Route Path telemetry room to expand without visual clutter or vertical scrolling truncation.
 

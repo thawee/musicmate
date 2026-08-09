@@ -91,7 +91,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private static final String ARG_INITIAL_TAB = "ARG_INITIAL_TAB";
 
     public static final int TAB_NOW_PLAYING = 0;
-    public static final int TAB_MEDIA_SERVER = 1;
+    public static final int TAB_QUEUE = 1;
+    public static final int TAB_MEDIA_SERVER = 2;
 
     private int initialTab = TAB_NOW_PLAYING;
 
@@ -108,6 +109,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     // Pre-inflated Pages
     private View viewNowPlayingPage;
+    private View viewQueuePage;
     private View viewMediaServerPage;
 
     // Media Server UI
@@ -254,6 +256,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 if (isChecked) {
                     if (checkedId == R.id.tab_now_playing) {
                         viewPager.setCurrentItem(TAB_NOW_PLAYING, true);
+                    } else if (checkedId == R.id.tab_queue) {
+                        viewPager.setCurrentItem(TAB_QUEUE, true);
                     } else if (checkedId == R.id.tab_media_server) {
                         viewPager.setCurrentItem(TAB_MEDIA_SERVER, true);
                     }
@@ -272,9 +276,11 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         // Pre-inflate page views for ViewPager2
         viewNowPlayingPage = LayoutInflater.from(getContext()).inflate(R.layout.sheet_now_playing_queue, null);
+        viewQueuePage = LayoutInflater.from(getContext()).inflate(R.layout.view_audio_hub_queue_page, null);
         viewMediaServerPage = LayoutInflater.from(getContext()).inflate(R.layout.view_action_server_management_bottom_sheet, null);
 
         flattenPage(viewNowPlayingPage, true);
+        flattenPage(viewQueuePage, false);
         flattenPage(viewMediaServerPage, false);
 
         setupNowPlayingTab(viewNowPlayingPage);
@@ -297,7 +303,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 FrameLayout container = (FrameLayout) holder.itemView;
                 container.removeAllViews();
-                View pageView = (position == TAB_MEDIA_SERVER) ? viewMediaServerPage : viewNowPlayingPage;
+                View pageView;
+                if (position == TAB_MEDIA_SERVER) {
+                    pageView = viewMediaServerPage;
+                } else if (position == TAB_QUEUE) {
+                    pageView = viewQueuePage;
+                } else {
+                    pageView = viewNowPlayingPage;
+                }
                 if (pageView.getParent() != null) {
                     ((ViewGroup) pageView.getParent()).removeView(pageView);
                 }
@@ -309,7 +322,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
             @Override
             public int getItemCount() {
-                return 2;
+                return 3;
             }
         });
 
@@ -361,7 +374,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (getContext() == null) return;
 
         if (tabToggleGroup != null) {
-            int targetId = (position == TAB_MEDIA_SERVER) ? R.id.tab_media_server : R.id.tab_now_playing;
+            int targetId;
+            if (position == TAB_MEDIA_SERVER) {
+                targetId = R.id.tab_media_server;
+            } else if (position == TAB_QUEUE) {
+                targetId = R.id.tab_queue;
+            } else {
+                targetId = R.id.tab_now_playing;
+            }
             if (tabToggleGroup.getCheckedButtonId() != targetId) {
                 tabToggleGroup.check(targetId);
             }
@@ -369,6 +389,12 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         if (position == TAB_NOW_PLAYING && isPlaybackServiceBound && viewNowPlayingPage != null) {
             populateNowPlayingSheet(viewNowPlayingPage);
+        } else if (position == TAB_QUEUE && isPlaybackServiceBound && viewQueuePage != null) {
+            populateQueueSection(viewQueuePage);
+        } else if (position == TAB_MEDIA_SERVER && viewMediaServerPage != null) {
+            if (mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null) {
+                updateServerUI(mediaServerViewModel.getServerStatus().getValue());
+            }
         }
     }
 
@@ -716,8 +742,11 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (viewNowPlayingPage != null) {
             populateNowPlayingSheet(viewNowPlayingPage);
         }
-        if (getView() != null) {
-            populateQueueSection(getView());
+        if (viewQueuePage != null) {
+            populateQueueSection(viewQueuePage);
+        }
+        if (viewMediaServerPage != null && mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null) {
+            updateServerUI(mediaServerViewModel.getServerStatus().getValue());
         }
     }
 

@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Renamed legacy "Signal Path" to **Audio Route Path** across UI strings, resource files, menus, bottom sheets, and documentation for precise end-to-end audiophile route telemetry.
 
 ### Changed
-- **Music Center UI & Tab Streamlining**:
-  - Refined master bottom sheet title to **`Music Center`** and simplified segmented tabs to **`Playback`** and **`Server`**.
+- **Dedicated 3-Tab Architecture (`AudioHubBottomSheet`)**:
+  - Transitioned Music Center to a full-height **3-Tab Architecture** (**`[ Playback | Queue | Server ]`**).
+  - Dedicated **`Queue`** page provides full-height viewport displaying 8–12 upcoming tracks at once, complete with total remaining playback duration (`X tracks • Y min total`), drag-to-reorder, and swipe-to-remove.
+  - Dedicated **`Playback`** page gives maximum vertical space to artwork, transport controls, and Audio Route Path telemetry.
 - **Comprehensive Project Documentation Update**:
   - Updated `README.md`, `USER_GUIDE.md`, and `NETWORK_RESILIENCE.md` with complete documentation for recent Music Center features, Audio Route Path telemetry, and system architecture.
 

@@ -20,7 +20,7 @@
 ## 🚀 Key Features
 
 ### 🎛️ Music Center & Playback Hub
-*   **Unified Music Center (`AudioHubBottomSheet`):** Consolidated master bottom sheet with top segmented tabs (**Playback** and **Server**) for instant 1-tap switching without UI dismiss lag.
+*   **Dedicated 3-Tab Architecture (`AudioHubBottomSheet`):** Consolidated master bottom sheet with 3 full-height segmented tabs (**`Playback`**, **`Queue`**, and **`Server`**) for instant 1-tap switching between Now Playing artwork, full-height Queue management, and Media Server status.
 *   **Audio Route Path Telemetry:** Live 3-stage audiophile flow visualization (`Source File` ➔ `Transport Route` ➔ `Target Output`), displaying real-time sample rates, bit depth, transport mode (`MusicMate Server` vs `Local`), and bit-perfect flags.
 *   **Target Player Selector:** Fast top-anchored output target picker for seamless 1-tap renderer switching between local Android apps, DLNA/UPnP streamers, and web browser clients.
 *   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation.
