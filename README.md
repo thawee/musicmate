@@ -1,6 +1,6 @@
 # Music Mate
 
-**Music Mate** is a comprehensive High-Resolution Audio management and streaming application for Android. It transforms your mobile device into a powerful **DLNA/UPnP Media Server**, allowing you to stream your local high-fidelity music collection to any compatible renderer (Hi-Fi streamers, Smart TVs, AV Receivers) or play it locally with audiophile-grade quality.
+**Music Mate** is a comprehensive High-Resolution Audio management, playback, and streaming application for Android. Built around **Music Center** — a unified audiophile control hub for real-time **Audio Route Path** telemetry, queue management, and target output control — it transforms your mobile device into a high-performance **DLNA/UPnP Media Server** to stream your local high-fidelity music collection to any compatible renderer (Hi-Fi streamers, Smart TVs, AV Receivers) or play it locally with bit-perfect quality.
 
 ---
 
