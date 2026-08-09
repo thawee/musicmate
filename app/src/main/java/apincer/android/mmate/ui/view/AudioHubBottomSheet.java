@@ -210,6 +210,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
 
             if (bottomSheet != null) {
+                bottomSheet.setBackground(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
 
