@@ -298,13 +298,16 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (tabToggleGroup != null) {
             tabToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
                 if (isChecked) {
+                    int selectedTab = TAB_NOW_PLAYING;
                     if (checkedId == R.id.tab_now_playing) {
-                        viewPager.setCurrentItem(TAB_NOW_PLAYING, true);
+                        selectedTab = TAB_NOW_PLAYING;
                     } else if (checkedId == R.id.tab_queue) {
-                        viewPager.setCurrentItem(TAB_QUEUE, true);
+                        selectedTab = TAB_QUEUE;
                     } else if (checkedId == R.id.tab_media_server) {
-                        viewPager.setCurrentItem(TAB_MEDIA_SERVER, true);
+                        selectedTab = TAB_MEDIA_SERVER;
                     }
+                    viewPager.setCurrentItem(selectedTab, true);
+                    updateTabColors(selectedTab);
                 }
             });
         }
@@ -431,6 +434,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             }
         }
 
+        updateTabColors(position);
+
         if (position == TAB_NOW_PLAYING && isPlaybackServiceBound && viewNowPlayingPage != null) {
             populateNowPlayingSheet(viewNowPlayingPage);
         } else if (position == TAB_QUEUE && isPlaybackServiceBound && viewQueuePage != null) {
@@ -440,6 +445,20 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 updateServerUI(mediaServerViewModel.getServerStatus().getValue());
             }
         }
+    }
+
+    private void updateTabColors(int selectedIndex) {
+        if (tabToggleGroup == null || getContext() == null) return;
+        int gold = ContextCompat.getColor(requireContext(), R.color.colorGold);
+        int muted = ContextCompat.getColor(requireContext(), R.color.colorMuted);
+
+        com.google.android.material.button.MaterialButton tabPlayback = tabToggleGroup.findViewById(R.id.tab_now_playing);
+        com.google.android.material.button.MaterialButton tabQueue = tabToggleGroup.findViewById(R.id.tab_queue);
+        com.google.android.material.button.MaterialButton tabServer = tabToggleGroup.findViewById(R.id.tab_media_server);
+
+        if (tabPlayback != null) tabPlayback.setTextColor(selectedIndex == TAB_NOW_PLAYING ? gold : muted);
+        if (tabQueue != null) tabQueue.setTextColor(selectedIndex == TAB_QUEUE ? gold : muted);
+        if (tabServer != null) tabServer.setTextColor(selectedIndex == TAB_MEDIA_SERVER ? gold : muted);
     }
 
     // ── Service Connection ───────────────────────────────────────────────────
@@ -620,8 +639,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
             populateSignalPathWidget(view, track);
         } else {
-            titleView.setText("No track playing");
-            artistView.setText("Select a song or target player to begin");
+            titleView.setText("Music Mate Ready");
+            artistView.setText("Select a song or player target");
             populateSignalPathWidget(view, null);
             if (albumArt != null) albumArt.setImageResource(R.drawable.ic_now_playing_idle);
         }
@@ -1119,9 +1138,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 });
             }
         } else {
-            if (verdictView != null) verdictView.setText("No active track");
-            if (sourceTitle != null) sourceTitle.setText("-");
-            if (engineSubtitle != null) engineSubtitle.setText("-");
+            if (verdictView != null) verdictView.setText("Ready");
+            if (sourceTitle != null) sourceTitle.setText("Source");
+            if (engineSubtitle != null) engineSubtitle.setText("Transport");
             if (targetTitle != null) targetTitle.setText("Select Player ▾");
             if (targetBox != null) {
                 targetBox.setOnClickListener(v -> showPlayerPicker(targetBox));
