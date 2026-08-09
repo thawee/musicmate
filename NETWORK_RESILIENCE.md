@@ -270,7 +270,7 @@ If an incoming HTTP streaming target matches a discovered UPnP `DMRPlayer` targe
 ### Standardized Format Across All Player Types
 All player targets (`DMRPlayer`, `WebStreamingPlayer`, `ExternalAndroidPlayer`) use centralized formatters in `PlayerNameUtils`:
 
-* **Two-Line Format (`PlayerNameUtils.getTwoLinePlayerLabel`)**: Used in Management Sheets and Signal Path steps.
+* **Two-Line Format (`PlayerNameUtils.getTwoLinePlayerLabel`)**: Used in Management Sheets and Audio Route Path steps.
   - **DLNA Renderer:** `HiBy R3` \n `(192.168.1.50 • DLNA Renderer)`
   - **Web Streaming:** `Web Streaming` \n `(192.168.1.100 • Web Streaming)`
   - **Android App:** `Poweramp v975` \n `(com.maxmpz.audioplayer • Android App)`

@@ -19,23 +19,29 @@
 
 ## 🚀 Key Features
 
-### 🎧 High-Res Audio Support
-*   **MQA Identification:** Automatically detects Master Quality Authenticated (MQA) tracks and displays sample rates.
-*   **Audiophile Analysis:** Measures Dynamic Range (DR) and bit-depth to help identify "bad" or up-sampled music files.
-*   **Visual Verification:** Integrated **Spectrum View** for verifying audio quality and true frequency response.
-*   **Format Support:** FLAC, WAV, AIFF, ALAC, AAC, MP3, and DSD (DoP).
+### 🎛️ Music Center & Playback Hub
+*   **Unified Music Center (`AudioHubBottomSheet`):** Consolidated master bottom sheet with top segmented tabs (**Playback** and **Server**) for instant 1-tap switching without UI dismiss lag.
+*   **Audio Route Path Telemetry:** Live 3-stage audiophile flow visualization (`Source File` ➔ `Transport Route` ➔ `Target Output`), displaying real-time sample rates, bit depth, transport mode (`MusicMate Server` vs `Local`), and bit-perfect flags.
+*   **Target Player Selector:** Fast top-anchored output target picker for seamless 1-tap renderer switching between local Android apps, DLNA/UPnP streamers, and web browser clients.
+*   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation.
+
+### 🎧 High-Res Audio & Authenticity Analysis
+*   **MQA & Format Detection:** Automatically identifies Master Quality Authenticated (MQA) tracks and native DXD/DSD streams.
+*   **Audio Authenticity Analyzer:** Spectral rolloff analysis detects up-sampled CD content and fake Hi-Res files.
+*   **Dynamic Range (DR) & Quality Grading:** Evaluates loudness compression and bit-depth authenticity.
+*   **Broad Format Support:** Native decoding for FLAC, WAV, AIFF, ALAC, AAC, MP3, and DSD (DoP).
 
 ### 📡 Advanced Media Server
-*   **DLNA/UPnP 1.0 Compliance:** Full Digital Media Server (DMS) implementation compatible with UPnP control points (mConnect, BubbleUPnP, RoPieeeXL).
+*   **DLNA/UPnP 1.0 Compliance:** Full Digital Media Server (DMS) implementation compatible with UPnP control points (mConnect, BubbleUPnP, RoPieeeXL, JPlay).
 *   **Bit-Perfect Streaming:** Delivers unmodified, bit-perfect audio streams without transcoding or resampling.
 *   **HTTP/1.1 Optimization:** Range request support for efficient seeking; ETag caching for reduced bandwidth (99%+ savings on cache hits).
 *   **WebSocket Real-Time Control:** RFC 6455 compliant WebSocket server for live UI updates and player status synchronization.
-*   **Rich Metadata:** Serves extensive metadata including Album Art, Artist, Genre, and technical details (Bitrate, Sample Rate, MQA flags).
+*   **Rich Metadata:** Serves extensive metadata including Album Art, Artist, Genre, and technical details.
 
-### 📂 Library Management
-*   **High-Performance Scanning:** Optimized metadata extraction using `jaudiotagger` with parallel processing.
-*   **Flexible Organization:** Multi-view library browsing by Album, Artist, Genre, Folder, or custom playlists.
-*   **Playlist Support:** Full creation, editing, and export of custom playlists with persistence.
+### 📂 Library Management & Fast Touch Workflows
+*   **Split-Tap List Navigation:** Tapping track details initiates instant playback, while tapping album artwork opens the 1-tap metadata tag editor (`TagsActivity`).
+*   **Collection Quick Actions:** Direct **Play** and **Add to Queue** action icons on artist, genre, and folder cards.
+*   **High-Performance Indexing:** Parallel metadata parsing powered by `jaudiotagger` and Google's `Room` database.
 
 ---
 
@@ -67,7 +73,7 @@ Music Mate follows a modular Clean Architecture, implementing a full DLNA stack 
 
 ## 📐 Technical Architecture & Implementation
 
-Music Mate employs a sophisticated **pluggable architecture** that decouples business logic from the network transport, allowing compile-time selection of the optimal HTTP engine via Gradle flavors.
+Music Mate employs a sophisticated **pluggable architecture** that decouples business logic from the network transport, allowing runtime or compile-time selection of the optimal HTTP engine.
 
 ### The Pluggable Server Engine
 
@@ -147,9 +153,10 @@ All engines implement the same `UpnpServer` interface and share consistent behav
 *   **Language:** Java 17 / Kotlin
 *   **Async/Reactive:** RxJava 3
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
+*   **Database:** Room (Google Jetpack)
 *   **Active Engines:** Apache HttpCore 5.4.2 (CoreHTTP), Netty 4.2, **Custom SonicNIO Reactor**
 *   **Archived Engines:** Jetty 12, Undertow 2.4 *(build only — no further updates)*
-*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg, Room
+*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg
 
 ---
 
@@ -194,5 +201,4 @@ Running enterprise-grade Java servers on Android requires specific workarounds d
 
 ## 📄 License
 
-Copyright 2014–2025 Thawee Prakaipetch. Licensed under the Apache License, Version 2.0.
-.
+Copyright 2014–2026 Thawee Prakaipetch. Licensed under the Apache License, Version 2.0.

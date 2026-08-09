@@ -27,7 +27,7 @@
     <item
         android:id="@+id/menu_signal_path"
         android:icon="@drawable/ic_baseline_audio_path_24"
-        android:title="Signal Path"
+        android:title="Audio Route Path"
         app:showAsAction="always" />
         rounded_music_cast_24
         ic_baseline_devices_128

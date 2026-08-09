@@ -660,6 +660,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             // 1. Resolve the real target (e.g. proxy to actual DMR)
             final PlaybackTarget resolvedTarget = (newTarget.isStreaming()) ? resolveStreamingPlayerTarget(newTarget) : newTarget;
 
+            boolean wasPlaying = isPlaying();
+            Track activeTrack = getNowPlayingSong();
+
             // 2. Deactivate current player IF DIFFERENT
             currentPlayerFlow.getValue().ifPresent(oldTarget -> {
                 if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
@@ -672,6 +675,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 // Register callback to ensure we are listening to this session
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
             } else if (resolvedTarget.isStreaming()) {
+                startServers();
                 mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
             }
 
@@ -681,6 +685,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
             updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+
+            // 4. Auto-transfer active track playback to new target
+            if (controlled && activeTrack != null) {
+                if (wasPlaying || resolvedTarget.isStreaming()) {
+                    playSong(activeTrack);
+                }
+            }
         }
     }
 

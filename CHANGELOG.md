@@ -5,6 +5,22 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.14] - 2026-08-09
+
+### Added
+- **Audio Route Path Naming Standard**:
+  - Renamed legacy "Signal Path" to **Audio Route Path** across UI strings, resource files, menus, bottom sheets, and documentation for precise end-to-end audiophile route telemetry.
+
+### Changed
+- **Music Center UI & Tab Streamlining**:
+  - Refined master bottom sheet title to **`Music Center`** and simplified segmented tabs to **`Playback`** and **`Server`**.
+- **Comprehensive Project Documentation Update**:
+  - Updated `README.md`, `USER_GUIDE.md`, and `NETWORK_RESILIENCE.md` with complete documentation for recent Music Center features, Audio Route Path telemetry, and system architecture.
+
+### Fixed
+- **DLNA Target Activation & Auto-Transfer Stream**:
+  - Fixed output target switching in `switchPlayer()` when selecting a remote DLNA renderer: ensures `startServers()` is invoked to guarantee HTTP media server readiness, and automatically initiates stream transfer (`playSong(activeTrack)`) when selecting a target renderer.
+
 ---
 
 ## [3.18.13] - 2026-08-08

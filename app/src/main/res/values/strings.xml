@@ -362,7 +362,7 @@
     <string name="media_server">Media Server</string>
     <string name="settings">Settings</string>
     <string name="powered_by">"Powered by %1$s"</string>
-    <string name="audio_path">Signal Path</string>
+    <string name="audio_path">Audio Route Path</string>
     <string name="menu_resolutions">Resolutions</string>
     <string name="wave_form">Waveform</string>
     <string name="analysis_failed">Analysis Failed</string>
@@ -425,9 +425,9 @@
     <!-- Badge -->
     <string name="badge_default">Badge</string>
 
-    <!-- Signal Path -->
-    <string name="signal_path_title">Signal Path</string>
-    <string name="signal_path_local">Local Path</string>
+    <!-- Audio Route Path -->
+    <string name="signal_path_title">Audio Route Path</string>
+    <string name="signal_path_local">Local Route</string>
 
     <!-- Filename Tags -->
     <string name="filename_tags_title">Read TAGs from filename</string>

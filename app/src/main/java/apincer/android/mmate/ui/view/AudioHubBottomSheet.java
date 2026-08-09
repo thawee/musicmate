@@ -105,8 +105,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     // Master Header Actions
     private ImageView btnCastHeader;
-   // private ImageView btnMediaServerHeader;
-   // private ImageView btnSignalPathHeader;
 
     // Pre-inflated Pages
     private View viewNowPlayingPage;
@@ -929,46 +927,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    /*
-    private void showMoreActionsPopup(View anchor, Track track) {
-        if (getContext() == null || track == null) return;
-        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(requireContext(), anchor);
-        popup.getMenu().add(0, 1, 0, "Edit Tags & Metadata");
-        popup.getMenu().add(0, 2, 1, "View Audio Signal Path");
-        if (track.getArtist() != null && !track.getArtist().isEmpty()) {
-            popup.getMenu().add(0, 3, 2, "Artist: " + track.getArtist());
-        }
-
-        popup.setOnMenuItemClickListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == 1) {
-                Intent intent = new Intent(getContext(), apincer.android.mmate.ui.TagsActivity.class);
-                intent.putExtra("MUSIC_TAG_IDS", new long[]{ track.getId() });
-                startActivity(intent);
-                return true;
-            } else if (itemId == 2) {
-                if (viewPager != null) viewPager.setCurrentItem(TAB_SIGNAL_PATH, true);
-                return true;
-            }
-            return false;
-        });
-        popup.show();
-    } */
-
-    /*
-    private void observeMediaServerStatus() {
-        if (mediaServerViewModel == null || btnMediaServerHeader == null) return;
-        mediaServerViewModel.getServerStatus().observe(getViewLifecycleOwner(), status -> {
-            boolean isRunning = (status == MediaServerHub.ServerStatus.RUNNING);
-            int colorRes = isRunning ? R.color.teal_200 : R.color.colorMuted;
-            if (getContext() != null) {
-                btnMediaServerHeader.setImageTintList(
-                        ContextCompat.getColorStateList(requireContext(), colorRes)
-                );
-            }
-        });
-    } */
-
     // ── Page 1: Audio Signal Path ────────────────────────────────────────────
 
     private String formatShortResolution(Track track) {
@@ -1025,7 +983,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             boolean isStreaming = target != null && target.isStreaming();
 
             if (engineSubtitle != null) {
-                engineSubtitle.setText(isStreaming ? "Net Streamer" : "Local Transport");
+                engineSubtitle.setText(isStreaming ? "MusicMate Server" : "Local");
             }
 
             if (targetTitle != null) {
@@ -1096,7 +1054,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         Track song = playbackService.getNowPlayingSong();
         if (song == null) {
             TextView emptyText = new TextView(getContext());
-            emptyText.setText("No active signal path telemetry available.");
+            emptyText.setText("No active audio route telemetry available.");
             emptyText.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorMuted));
             emptyText.setTextSize(12f);
             signalPathContainer.addView(emptyText);
@@ -1362,34 +1320,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────
-
-    private String buildTechLine(Track track) {
-        if (track == null) return "";
-        StringBuilder sb = new StringBuilder();
-
-        long sampleRate = track.getAudioSampleRate();
-        if (sampleRate > 0) {
-            if (sampleRate % 1000 == 0) {
-                sb.append(sampleRate / 1000).append(" kHz");
-            } else {
-                sb.append(String.format(Locale.US, "%.1f kHz", sampleRate / 1000.0));
-            }
-        }
-
-        int bitDepth = track.getAudioBitsDepth();
-        if (bitDepth > 0) {
-            if (sb.length() > 0) sb.append(" · ");
-            sb.append(bitDepth).append("bit");
-        }
-
-        long bitRate = track.getAudioBitRate();
-        if (bitRate > 0 && bitDepth == 0) {
-            if (sb.length() > 0) sb.append(" · ");
-            sb.append(bitRate).append(" kbps");
-        }
-
-        return sb.toString();
-    }
 
     private String formatTime(long ms) {
         long sec = ms / 1000;

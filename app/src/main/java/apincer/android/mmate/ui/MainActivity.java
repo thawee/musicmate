@@ -142,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     // Constants
-    private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 16;
-    private static final int RECYCLEVIEW_ITEM_OFFSET = 16; //48; 1.5 item offset
+    private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 8; //16
+    private static final int RECYCLEVIEW_ITEM_OFFSET = 8; //48; 1.5 item offset
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
 
@@ -263,34 +263,6 @@ public class MainActivity extends AppCompatActivity {
                 updateFloatingPlaybackBar(null, playbackState);
             });
         }
-    }
-
-    /** Builds a compact signal-quality label for the bottom nav bar, e.g. "FLAC · 352.8kHz / 24bit" */
-    private String buildSignalSummary(Track song) {
-        if (song == null) return "Awaiting sound";
-        StringBuilder sb = new StringBuilder();
-
-        String enc = song.getAudioEncoding();
-        if (enc != null && !enc.isEmpty()) {
-            sb.append(enc.toUpperCase(java.util.Locale.US));
-        }
-
-        long sr = song.getAudioSampleRate();
-        if (sr > 0) {
-            if (sb.length() > 0) sb.append(" · ");
-            if (sr % 1000 == 0) {
-                sb.append(sr / 1000).append(" kHz");
-            } else {
-                sb.append(String.format(java.util.Locale.US, "%.1f kHz", sr / 1000.0));
-            }
-        }
-
-        int bits = song.getAudioBitsDepth();
-        if (bits > 0) {
-            sb.append(" / ").append(bits).append("bit");
-        }
-
-        return sb.length() > 0 ? sb.toString() : song.getAudioEncoding();
     }
 
     private void updateFloatingPlaybackBar(Track song, PlaybackState playbackState) {
@@ -632,10 +604,6 @@ public class MainActivity extends AppCompatActivity {
 
     public PlaybackState getLastPlaybackState() {
         return lastPlaybackState;
-    }
-
-    public MusicTagAdapter getAdapter() {
-        return adapter;
     }
 
     public void doShowSignalPath() {
@@ -1205,11 +1173,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public void doManageMediaServer() {
-        AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_MEDIA_SERVER);
-        sheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
     }
 
     public void showPlayerPickerPopup(View anchorView) {

@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Playback Center"
+                android:text="Music Center"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -100,7 +100,7 @@
             android:layout_weight="1"
             android:paddingHorizontal="4dp"
             android:paddingVertical="0dp"
-            android:text="Audio Transport"
+            android:text="Playback"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="?attr/colorOnSurface" />
@@ -113,7 +113,7 @@
             android:layout_weight="1"
             android:paddingHorizontal="4dp"
             android:paddingVertical="0dp"
-            android:text="Network Streamer"
+            android:text="Server"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="?attr/colorOnSurface" />

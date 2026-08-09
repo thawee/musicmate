@@ -1,26 +1,26 @@
-# Plan: Version Bump, Documentation Update, and Git Commit
+# Plan: Version Bump to 3.18.14, Changelog Update, and Git Commit
 
 ## Overview
-Bump application version to `3.18.13` (versionCode `121`), record detailed release notes in `CHANGELOG.md`, update project documentation, verify build, and commit all changes to git.
+Bump application version to `3.18.14` (versionCode `122`), add detailed release entry in `CHANGELOG.md`, verify clean build, and commit all changes to Git.
 
 ---
 
-## Tasks
+## Tasks Checklist
 
-- [ ] **Phase 1: Application Version Bump (`app/build.gradle`)**
-  - [ ] Increment `versionCode` from `120` to `121`.
-  - [ ] Update `versionName` prefix to `"3.18.13-"`.
+- [ ] **Phase 1: App Version Bump (`app/build.gradle`)**
+  - [ ] Increment `versionCode` to `122`.
+  - [ ] Update `versionName` to `"3.18.14-"+ getDate()`.
 
-- [ ] **Phase 2: Changelog & Documentation Update (`CHANGELOG.md`)**
-  - [ ] Add `[3.18.13] - 2026-08-08` section detailing:
-    - Custom Audiophile Node Shapes (`shape_node_source`, `shape_node_transport`, `shape_node_target`, `shape_node_target_bitperfect`, `shape_node_connector`).
-    - Playback Center Naming Symmetry (**`Audio Transport`** & **`Network Streamer`**).
-    - Full-Width 1-Line Signal Path Flow redesign with compact node telemetry (`Net Streamer` / `Local Transport`).
-    - Removal of legacy "Copy Report" button.
+- [ ] **Phase 2: Update `CHANGELOG.md`**
+  - [ ] Add `[3.18.14] - 2026-08-09` release entry detailing:
+    - Audio Route Path naming alignment.
+    - Music Center UI title & tab refinements (`Playback`, `Server`).
+    - DLNA target activation & auto-transfer stream fixes.
+    - Complete documentation updates in `README.md`, `USER_GUIDE.md`, `NETWORK_RESILIENCE.md`.
 
 - [ ] **Phase 3: Build Verification**
   - [ ] Run `./gradlew assembleDebug` to verify compilation (`BUILD SUCCESSFUL`).
 
 - [ ] **Phase 4: Git Commit**
-  - [ ] Stage all modified & untracked files (`git add .`).
-  - [ ] Commit with structured commit message (`git commit`).
+  - [ ] Stage all modified and untracked files (`git add .`).
+  - [ ] Commit with structured commit message.

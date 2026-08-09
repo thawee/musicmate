@@ -53,11 +53,11 @@ The main dashboard is optimized for handling extremely large music libraries.
   - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and Menu.
   - **Playing State:** Dynamically embeds mini album art, scrolling track title, and player target subtitle (e.g. `HiBy R3 • DLNA Renderer`).
   - **Single Tap (Title/Art):** Opens the **Now Playing & Queue Sheet** (`NowPlayingQueueSheet`).
-  - **Long Press (Title/Art):** Opens the **Signal Path Bottom Sheet** (`SignalPathBottomSheet`) for real-time audio pipeline diagnostics.
+  - **Long Press (Title/Art):** Opens the **Audio Route Path Bottom Sheet** (`AudioHubBottomSheet`) for real-time audio pipeline diagnostics.
 * **Now Playing & Queue Sheet (`NowPlayingQueueSheet`):**
   - Shows expanded album artwork, technical format specs (e.g. `FLAC 352.8 kHz / 24bit`), active player badge, and scrollable playing queue with current track gold highlighting.
   - **Embedded Transport Controls:** Features full **Previous**, **Play / Pause**, and **Next** transport control buttons directly inside the Now Playing track card.
-  - **Signal Path Quick Access:** Includes a dedicated gold Signal Path icon button (`ic_baseline_audio_path_24`) in the top-right header to quickly jump to audio pipeline diagnostics.
+  - **Audio Route Path Quick Access:** Includes a dedicated gold Audio Route Path icon button (`ic_baseline_audio_path_24`) in the top-right header to quickly jump to audio pipeline diagnostics.
   - **Tap-to-Scroll Navigation:** Tapping the track info card or any queue track row dismisses the sheet and automatically scrolls the main library list to that song's position.
   - **Queue Controls:** Includes **Play All**, **Shuffle Toggle (🔀)**, **Repeat Mode Toggle (🔁)**, **Clear Queue**, and **Stop Playback** actions.
 * **Bottom Navigation Dock (Card Shape 16dp):**
