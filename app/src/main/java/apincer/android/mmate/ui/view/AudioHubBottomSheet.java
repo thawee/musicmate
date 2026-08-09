@@ -235,8 +235,12 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     coordinator.setPadding(0, 0, 0, bottomNavMargin);
                 }
 
-                int targetHeight = (int) (screenHeight * 0.65) - bottomNavMargin;
-                int minHeight = (int) (360 * density);
+                int targetHeight = (int) (screenHeight * 0.76);
+                int maxHeight = screenHeight - bottomNavMargin - (int) (64 * density);
+                if (targetHeight > maxHeight) {
+                    targetHeight = maxHeight;
+                }
+                int minHeight = (int) (420 * density);
                 if (targetHeight < minHeight) {
                     targetHeight = minHeight;
                 }
