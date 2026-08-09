@@ -905,7 +905,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                                         }
 
                                         if (getView() != null) {
-                                            Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), Snackbar.LENGTH_LONG)
+                                            Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), Snackbar.LENGTH_SHORT)
                                                     .setAction("UNDO", v -> {
                                                         if (qm != null) {
                                                             qm.addPlayingQueue(removedTrack.getId());
