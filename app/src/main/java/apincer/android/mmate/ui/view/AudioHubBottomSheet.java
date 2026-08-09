@@ -822,6 +822,35 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         List<Track> queue = (qm != null) ? new ArrayList<>(qm.getSongs()) : new ArrayList<>();
+        Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
+        String currentKey = (track != null) ? track.getUniqueKey() : null;
+        int playingPosition = -1;
+        if (currentKey != null) {
+            for (int i = 0; i < queue.size(); i++) {
+                if (currentKey.equals(queue.get(i).getUniqueKey())) {
+                    playingPosition = i;
+                    break;
+                }
+            }
+        }
+
+        View btnJumpToNowPlaying = root.findViewById(R.id.btn_jump_to_now_playing);
+        RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
+        final int targetPos = playingPosition;
+        if (btnJumpToNowPlaying != null) {
+            btnJumpToNowPlaying.setOnClickListener(v -> {
+                if (targetPos >= 0 && targetPos < queue.size() && recycler != null) {
+                    if (recycler.getLayoutManager() instanceof LinearLayoutManager lm) {
+                        lm.scrollToPositionWithOffset(targetPos, 0);
+                    } else {
+                        recycler.smoothScrollToPosition(targetPos);
+                    }
+                    Toast.makeText(getContext(), "Jumped to playing track", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No active playing track", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
         View btnClearQueue = root.findViewById(R.id.btn_clear_queue);
         if (btnClearQueue != null) {
@@ -835,10 +864,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
-        RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
         TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
-        Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
-
         if (recycler != null) {
             updateQueueHeader(root, queue);
             if (queue.isEmpty()) {
@@ -847,17 +873,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             } else {
                 if (emptyMsg != null) emptyMsg.setVisibility(GONE);
                 recycler.setVisibility(VISIBLE);
-
-                String currentKey = (track != null) ? track.getUniqueKey() : null;
-                int playingPosition = -1;
-                if (currentKey != null) {
-                    for (int i = 0; i < queue.size(); i++) {
-                        if (currentKey.equals(queue.get(i).getUniqueKey())) {
-                            playingPosition = i;
-                            break;
-                        }
-                    }
-                }
 
                 QueueAdapter existingAdapter = null;
                 if (recycler.getAdapter() instanceof QueueAdapter) {
@@ -1308,6 +1323,23 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         btnStartServer = view.findViewById(R.id.btn_start_server);
         btnStopServer = view.findViewById(R.id.btn_stop_server);
+
+        View btnCopyUrl = view.findViewById(R.id.btn_copy_server_url);
+        if (btnCopyUrl != null) {
+            btnCopyUrl.setOnClickListener(v -> {
+                if (tvServerAddress != null && getContext() != null) {
+                    CharSequence url = tvServerAddress.getText();
+                    if (url != null && !url.toString().isEmpty()) {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("Server URL", url.toString());
+                        if (clipboard != null) {
+                            clipboard.setPrimaryClip(clip);
+                            Toast.makeText(getContext(), "Server URL copied to clipboard", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+        }
 
         if (btnStartServer != null) {
             btnStartServer.setOnClickListener(v -> mediaServerViewModel.startServer());

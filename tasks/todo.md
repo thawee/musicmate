@@ -1,29 +1,26 @@
-# Plan: 4 UI/UX Enhancements for Music Center Hub
+# Plan: 3 Pro-Refinements for Music Center Hub
 
 ## Overview
-Implement 4 Lead UI/UX design refinements in `AudioHubBottomSheet`:
-1. Remove nested "box-inside-box" background for a seamless frosted glass surface.
-2. Apply 12dp floating elevation clearance above bottom dock.
-3. Refine idle state typography & Audio Route Path placeholder chips.
-4. Apply premium audiophile gold active tab styling.
+Implement 3 high-value UI/UX refinements in `AudioHubBottomSheet`:
+1. "Jump to Now Playing" quick-scroll button in Queue tab header.
+2. Vertical centering & 1-Tap "Copy Server URL" button in Server tab.
+3. Interactive Audio Route Path telemetry hint on Playback tab.
 
 ---
 
 ## Tasks Checklist
 
-- [x] **Phase 1: Seamless Surface Layout (`sheet_now_playing_queue.xml`)**
-  - [x] Remove `android:background="@drawable/bg_rounded_surface_dark"` from `sheet_now_playing_card`.
-  - [x] Set background to `@android:color/transparent` and remove inner card margins.
+- [x] **Phase 1: Queue Tab "Jump to Now Playing" (`view_audio_hub_queue_page.xml` & `AudioHubBottomSheet.java`)**
+  - [x] Add `btn_jump_now_playing` icon button to `view_audio_hub_queue_page.xml` toolbar header.
+  - [x] Wire `btn_jump_now_playing` in `AudioHubBottomSheet.java` to find playing track index and scroll smoothly.
 
-- [x] **Phase 2: Floating Clearance & Ambient Glow (`AudioHubBottomSheet.java`)**
-  - [x] Update `bottomNavMargin` clearance: `+ (int)(12 * density)`.
-  - [x] Apply `applyAmbientGlow` to root `sheet_audio_hub` view so artwork glow blends into the outer frosted glass surface.
+- [x] **Phase 2: Server Tab Centering & Copy URL (`view_action_server_management_bottom_sheet.xml` & `AudioHubBottomSheet.java`)**
+  - [x] Apply `gravity="center_vertical"` / `match_parent` height to Server card container.
+  - [x] Add Copy URL icon next to server address and wire `ClipboardManager` toast.
 
-- [x] **Phase 3: Refine Idle State Telemetry & Typography**
-  - [x] Clean up duplicate idle subtext: Title `"Music Mate Ready"`, Subtitle `"Select a song to start playback"`.
-  - [x] Set idle Audio Route Path placeholder chips: `[ Source ]` ➔ `[ Transport ]` ➔ `[ Select Player ▾ ]`.
+- [x] **Phase 3: Interactive Signal Path Telemetry Hint (`sheet_now_playing_queue.xml` & `AudioHubBottomSheet.java`)**
+  - [x] Add info chevron / telemetry icon to Audio Route Path widget.
 
-- [x] **Phase 4: Tab Bar Styling & Build Verification**
-  - [x] Apply active gold text tint to active tab pill.
+- [x] **Phase 4: Verification & Git Commit**
   - [x] Verify build with `./gradlew assembleDebug`.
   - [x] Commit changes to Git.

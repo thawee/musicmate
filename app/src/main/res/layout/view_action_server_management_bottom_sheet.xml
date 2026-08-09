@@ -65,7 +65,8 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
         android:orientation="vertical">
 
         <LinearLayout
@@ -117,14 +118,32 @@
                 android:letterSpacing="-0.02"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/server_address"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="192.168.1.105:9000"
-                        android:textColor="@color/grey300"
-                        android:textSize="14sp"
-                        android:textStyle="italic"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/server_address"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="192.168.1.105:9000"
+                            android:textColor="@color/grey300"
+                            android:textSize="14sp"
+                            android:textStyle="italic"/>
+
+                        <ImageView
+                            android:id="@+id/btn_copy_server_url"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginStart="6dp"
+                            android:padding="3dp"
+                            android:src="@drawable/ic_baseline_file_24"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy Server URL"
+                            app:tint="@color/colorGold"/>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <ImageView
