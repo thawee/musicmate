@@ -208,9 +208,37 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             if (bottomSheet != null) {
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior =
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+
+                int bottomNavMargin = 0;
+                if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
+                    View navBar = ma.findViewById(R.id.bottom_navigation_container);
+                    if (navBar != null && navBar.getVisibility() == View.VISIBLE) {
+                        int navHeight = navBar.getHeight();
+                        int mb = 0;
+                        if (navBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
+                            mb = lp.bottomMargin;
+                        }
+                        if (navHeight > 0) {
+                            bottomNavMargin = navHeight + mb + (int) (8 * getResources().getDisplayMetrics().density);
+                        }
+                    }
+                }
+                if (bottomNavMargin == 0) {
+                    float density = getResources().getDisplayMetrics().density;
+                    bottomNavMargin = (int) (76 * density);
+                }
+
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) bottomSheet.getLayoutParams();
+                params.bottomMargin = bottomNavMargin;
+
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int targetHeight = (int) (screenHeight * 0.65);
-                bottomSheet.getLayoutParams().height = targetHeight;
+                int targetHeight = (int) (screenHeight * 0.65) - bottomNavMargin;
+                int minHeight = (int) (360 * getResources().getDisplayMetrics().density);
+                if (targetHeight < minHeight) {
+                    targetHeight = minHeight;
+                }
+                params.height = targetHeight;
+                bottomSheet.setLayoutParams(params);
                 behavior.setPeekHeight(targetHeight);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
             }
