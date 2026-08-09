@@ -214,16 +214,20 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
 
                 float density = getResources().getDisplayMetrics().density;
-                int bottomNavMargin = (int) (80 * density);
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int bottomNavMargin = (int) (120 * density);
 
                 if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
                     View navBar = ma.findViewById(R.id.bottom_navigation_container);
-                    if (navBar != null && navBar.getHeight() > 0) {
-                        int mb = 0;
-                        if (navBar.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
-                            mb = lp.bottomMargin;
+                    if (navBar != null) {
+                        int[] loc = new int[2];
+                        navBar.getLocationOnScreen(loc);
+                        int navBarTopOnScreen = loc[1];
+                        if (navBarTopOnScreen > 0 && navBarTopOnScreen < screenHeight) {
+                            bottomNavMargin = (screenHeight - navBarTopOnScreen) + (int) (8 * density);
+                        } else if (navBar.getHeight() > 0) {
+                            bottomNavMargin = navBar.getHeight() + (int) (48 * density);
                         }
-                        bottomNavMargin = navBar.getHeight() + mb + (int) (12 * density);
                     }
                 }
 
@@ -231,7 +235,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     coordinator.setPadding(0, 0, 0, bottomNavMargin);
                 }
 
-                int screenHeight = getResources().getDisplayMetrics().heightPixels;
                 int targetHeight = (int) (screenHeight * 0.65) - bottomNavMargin;
                 int minHeight = (int) (360 * density);
                 if (targetHeight < minHeight) {
