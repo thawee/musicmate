@@ -184,6 +184,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         // Remove all existing external Players
         addLocalPlaybackTarget(null, true);
 
+        // Always register default Local Audio Output target
+        PlaybackTarget localTarget = ExternalAndroidPlayer.Factory.createLocalTarget(getApplicationContext());
+        if (localTarget != null) {
+            addLocalPlaybackTarget(localTarget, false);
+        }
+
         PlaybackTarget playingPlayer = null;
 
         // Add external media session targets
@@ -205,7 +211,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if (playingPlayer != null) {
             switchPlayer(playingPlayer, true);
         } else if (!currentPlayerFlow.getValue().isPresent()) {
-            autoSelectBestPlayer().ifPresent(player -> switchPlayer(player, true));
+            switchPlayer(localTarget, true);
         }
 
         Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());

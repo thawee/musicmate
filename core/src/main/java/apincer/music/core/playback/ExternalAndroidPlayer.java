@@ -104,7 +104,13 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
         return true;
     }
 
+    public static final String LOCAL_TARGET_ID = "local";
+
     public static class Factory {
+        public static PlaybackTarget createLocalTarget(Context context) {
+            return new ExternalAndroidPlayer(context, LOCAL_TARGET_ID, "Local Device", "System Audio Output");
+        }
+
         public static PlaybackTarget create(Context context, String packageName) {
             if (packageName == null) return null;
 
