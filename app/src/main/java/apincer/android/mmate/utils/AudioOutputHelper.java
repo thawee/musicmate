@@ -147,7 +147,8 @@ public class AudioOutputHelper {
         // 4. Default setup if we have a device, or absolute fallback
         if (selectedDevice != null) {
             readResolutions(outputDevice, selectedDevice);
-            outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, (int) track.getAudioSampleRate()));
+            int sampleRate = (track != null) ? (int) track.getAudioSampleRate() : 44100;
+            outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, sampleRate));
             if (isBluetoothDevice(selectedDevice)) {
                 String btCodec = detectBluetoothCodec(selectedDevice);
                 outputDevice.setCodec(btCodec);
