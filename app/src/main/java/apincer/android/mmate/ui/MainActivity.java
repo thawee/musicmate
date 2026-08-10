@@ -1182,16 +1182,39 @@ public class MainActivity extends AppCompatActivity {
         List<apincer.music.core.playback.spi.PlaybackTarget> renderers = playbackService.getPlaybackTargets();
         apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
 
+        apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice = null;
+        apincer.music.core.model.Track currentTrack = playbackService.getNowPlayingSong();
+        if (currentTrack != null) {
+            audioOutputDevice = apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, currentTrack);
+        } else {
+            audioOutputDevice = apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, new apincer.music.core.model.Track());
+        }
+
         if (renderers != null && !renderers.isEmpty()) {
             for (int i = 0; i < renderers.size(); i++) {
                 apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
                 boolean isActive = current != null && current.getTargetId().equals(target.getTargetId());
                 boolean isRemote = target.isStreaming();
                 String baseLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
+
+                if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
+                    if (audioOutputDevice != null && audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(audioOutputDevice.getName())) {
+                        String devDesc = audioOutputDevice.getDescription();
+                        if (devDesc != null && !devDesc.isEmpty()) {
+                            baseLabel = audioOutputDevice.getName() + " (" + devDesc + ")";
+                        } else {
+                            baseLabel = audioOutputDevice.getName();
+                        }
+                    }
+                }
+
                 String label = isActive ? baseLabel + "  ✓" : baseLabel;
                 android.view.MenuItem item = popup.getMenu().add(0, i, i, label);
 
-                if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+                if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())
+                        && audioOutputDevice != null && audioOutputDevice.getResId() != 0) {
+                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, audioOutputDevice.getResId()));
+                } else if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
                     android.graphics.drawable.Drawable appIcon = apincer.music.core.playback.ExternalAndroidPlayer.Factory.getAppIcon(this, target.getTargetId());
                     if (appIcon != null) {
                         item.setIcon(apincer.android.mmate.utils.UIUtils.scaleDrawable(this, appIcon, 24));
@@ -2021,18 +2044,21 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
-           /* if (id == R.id.action_play_next) {
+            if (id == R.id.action_play_next) {
                 List<Track> selectedSongs = getSelections();
                 if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
                     for (int i = selectedSongs.size() - 1; i >= 0; i--) {
                         playbackService.getQueueManager().addPlayNext(selectedSongs.get(i));
                     }
                     Toast.makeText(MainActivity.this, "Playing next: " + selectedSongs.size() + " track(s)", Toast.LENGTH_SHORT).show();
+                    androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
+                    if (sheet instanceof AudioHubBottomSheet audioHub) {
+                        audioHub.refreshUI();
+                    }
                 }
                 mode.finish();
                 return true;
-            } else*/
-            if (id == R.id.action_add_queue) {
+            } else if (id == R.id.action_add_queue) {
                 List<Track> selectedSongs = getSelections();
                 if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
                     for (Track t : selectedSongs) {

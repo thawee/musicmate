@@ -93,6 +93,22 @@ public class QueueManager {
         } catch (Exception e) {
             Log.e(TAG, "Failed to persist track to playing queue", e);
         }
+
+        // If track is already in queue, remove it from existing position first
+        int existingIndex = -1;
+        for (int i = 0; i < queueList.size(); i++) {
+            if (queueList.get(i).getId() == song.getId()) {
+                existingIndex = i;
+                break;
+            }
+        }
+        if (existingIndex != -1) {
+            queueList.remove(existingIndex);
+            if (existingIndex < currentIndex) {
+                currentIndex--;
+            }
+        }
+
         if (queueList.isEmpty()) {
             queueList.add(song);
             currentIndex = 0;

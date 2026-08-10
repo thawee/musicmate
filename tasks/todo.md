@@ -10,17 +10,17 @@ Implement 3 high-value UI/UX refinements in `AudioHubBottomSheet`:
 
 ## Tasks Checklist
 
-- [x] **Phase 1: Queue Tab "Jump to Now Playing" (`view_audio_hub_queue_page.xml` & `AudioHubBottomSheet.java`)**
-  - [x] Add `btn_jump_now_playing` icon button to `view_audio_hub_queue_page.xml` toolbar header.
-  - [x] Wire `btn_jump_now_playing` in `AudioHubBottomSheet.java` to find playing track index and scroll smoothly.
+- [x] **Phase 1: Bluetooth Device in Player Selection Picker**
+  - [x] Update `MainActivity.showPlayerPickerPopup()` to detect connected Bluetooth audio output via `AudioOutputHelper`.
+  - [x] Enhance `Local Player` menu item label/icon in picker to show connected Bluetooth device (e.g., `🎧 Sony WH-1000XM4 (BT • LDAC)`).
+  - [x] Ensure selecting the Bluetooth / Local target routes audio via `playbackService.switchPlayer(localTarget)` and updates UI.
 
-- [x] **Phase 2: Server Tab Centering & Copy URL (`view_action_server_management_bottom_sheet.xml` & `AudioHubBottomSheet.java`)**
-  - [x] Apply `gravity="center_vertical"` / `match_parent` height to Server card container.
-  - [x] Add Copy URL icon next to server address and wire `ClipboardManager` toast.
+- [x] **Phase 2: "Play Next" Functionality Fix**
+  - [x] Enhance `QueueManager.addPlayNext(Track song)` to prevent duplicates by removing existing track instances before inserting at `currentIndex + 1`.
+  - [x] Uncomment `R.id.action_play_next` menu item in `menu_main_actionmode.xml`.
+  - [x] Uncomment and wire `R.id.action_play_next` action handling in `MainActivity.java` `onActionItemClicked`.
+  - [x] Refresh `AudioHubBottomSheet` queue list after calling `addPlayNext`.
 
-- [x] **Phase 3: Interactive Signal Path Telemetry Hint (`sheet_now_playing_queue.xml` & `AudioHubBottomSheet.java`)**
-  - [x] Add info chevron / telemetry icon to Audio Route Path widget.
-
-- [x] **Phase 4: Verification & Git Commit**
+- [x] **Phase 3: Verification & Git Commit**
   - [x] Verify build with `./gradlew assembleDebug`.
   - [x] Commit changes to Git.
