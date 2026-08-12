@@ -1,24 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/new_indicator_text_view"
+    <LinearLayout
+        android:id="@+id/new_indicator_chip"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_margin="@dimen/dimen_1_dp"
-        android:background="@drawable/backgound_new_indicator"
-        android:gravity="center"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/dimen_6_dp"
-        android:paddingStart="@dimen/dimen_8_dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="@drawable/backgound_new_indicator"
+        android:paddingStart="@dimen/dimen_6_dp"
         android:paddingEnd="@dimen/dimen_8_dp"
         android:paddingTop="@dimen/dimen_2_dp"
-        android:paddingBottom="@dimen/dimen_2_dp"
-        android:fontFamily="@font/oswald_bold"
-        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-        android:textColor="@color/new_indicator_text"
-        tools:text="NEW"/>
+        android:paddingBottom="@dimen/dimen_2_dp">
+
+        <ImageView
+            android:id="@+id/new_indicator_icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/round_auto_awesome_24"
+            app:tint="@color/new_indicator_text"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/new_indicator_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:fontFamily="@font/oswald_bold"
+            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+            android:textColor="@color/new_indicator_text"
+            tools:text="NEW"/>
+    </LinearLayout>
 </merge>

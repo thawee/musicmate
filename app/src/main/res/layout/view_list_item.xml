@@ -34,17 +34,16 @@
             android:importantForAccessibility="no"
             tools:src="@tools:sample/avatars" />
 
-        <apincer.android.mmate.ui.view.TriangleLabelView
+        <ImageView
             android:id="@+id/item_new_label"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
             android:layout_gravity="top|end"
-            android:padding="@dimen/dimen_4_dp"
-            app:backgroundColor="@color/material_color_yellow_900"
-            app:corner="rightTop"
-            app:primaryText="New"
-            app:primaryTextColor="@color/material_color_yellow_500"
-            app:primaryTextSize="8sp" />
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_new_sparkle_badge"
+            android:visibility="gone"
+            android:contentDescription="@string/cd_new_label" />
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Title + Subtitle + Metadata -->

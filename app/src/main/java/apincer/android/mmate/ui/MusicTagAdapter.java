@@ -280,7 +280,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
-        View mNewLabelView;
+        ImageView mNewLabelView;
        BadgeView codec;
         BadgeView resolution;
         DynamicRangeView drDbView;
@@ -640,9 +640,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             //  builder.addText("🤍");
        //}
 
-        // download/new track indicator dot
+        // download/new track indicator badge
         if (holder.mNewLabelView != null) {
-            holder.mNewLabelView.setVisibility(tag.isManaged() ? GONE : VISIBLE);
+            if (tag.isManaged()) {
+                holder.mNewLabelView.setVisibility(GONE);
+            } else {
+                holder.mNewLabelView.setImageResource(
+                        isOnDownloadDir(tag) ? R.drawable.ic_new_download_sparkle_badge : R.drawable.ic_new_sparkle_badge
+                );
+                holder.mNewLabelView.setVisibility(VISIBLE);
+            }
         }
 
         String songTag = tag.getPath();

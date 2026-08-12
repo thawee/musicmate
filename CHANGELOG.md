@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Single Indicator Surface:** Removed the duplicate `item_player` equalizer icon from the top-right status indicator bar to prevent UI clutter.
 - **Artwork Gesture Overlay Feedback & Micro-Pill Telemetry (`AudioHubBottomSheet`)**:
   - **Gesture Overlay Animation:** Added central `ImageView` overlay (`sheet_gesture_feedback_icon`) on album art to flash 48dp action icons (`play`, `pause`, `skip_next`, `skip_previous`) during double-tap and horizontal fling gestures with a smooth scale-up (`0.7f` $\rightarrow$ `1.2f`) and fade-out animation.
-- **Minimal Corner Accent Dot Indicator (`view_list_music_tag`, `MusicTagAdapter`)**:
-  - Replaced bulky diagonal corner banners (`TriangleLabelView`) over cover art thumbnails with a sleek 8dp circular Gold dot indicator (`shape_new_dot_indicator.xml`) anchored to the top-right corner of the cover art frame. Keeps album artwork 100% visible while signaling newly added/unmanaged tracks.
+- **Unified Sparkle (✦) Symbol Badge System for NEW Tracks (`view_list_music_tag`, `NewIndicatorView`)**:
+  - Replaced yellow dot and yellow rectangular block indicators with a cohesive Sparkle/Starburst symbol badge system (`auto_awesome`).
+  - **Cover Art Thumbnail:** 14dp vector badge (`ic_new_sparkle_badge.xml` in Gold for unmanaged tracks, `ic_new_download_sparkle_badge.xml` in Cyan for downloads) anchored to the top-right corner of album art.
+  - **Tag Activity Header:** `NewIndicatorView` renders a `12dp` rounded pill chip containing a Sparkle icon + bold "NEW" text in dark amber (`#2E2712`) / dark cyan (`#0D2E3D`) chip backgrounds.
 
 ### Fixed
 - **Player Picker Popup Menu Interleaving (`MainActivity.java`)**:
