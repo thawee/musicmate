@@ -1,14 +1,15 @@
-# Fix Player Picker Menu Item Order Interleaving
+# Option 1: Replace Telemetry Arrows with Distinct Vector Icons
 
 ## Objectives
-Fix menu order interleaving in `showPlayerPickerPopup` so that all playback devices/renderers (Group 0) are listed FIRST, and utility actions (Rescan & Bluetooth Setup) in Group 1 appear LAST at the bottom of the popup.
+Replace text arrow (`➔`) indicators in the Now Playing telemetry badges (`sheet_now_playing_queue.xml`) with dedicated vector icons (`ic_round_audio_file_24` for Source, `ic_round_speaker_24` for Target).
 
 ## Tasks
-- [x] 1. Update `MainActivity.java`: Offset Group 1 utility item `order` values (`baseOrder = renderers.size() + 10`) so Android `MenuBuilder` sorts Group 1 items strictly after all Group 0 renderers.
+- [x] 1. Update `sheet_now_playing_queue.xml`:
+  - [x] Replace Source badge `TextView` arrow with `ImageView` (`ic_round_audio_file_24`, `@color/colorGold`).
+  - [x] Replace Target badge `TextView` arrow with `ImageView` (`ic_round_speaker_24`, `#00E5FF`).
 - [x] 2. Verify compilation (`./gradlew compileDebugSources`).
 - [x] 3. Document results in `tasks/todo.md`, update `DESIGN.md`, `CHANGELOG.md`, and `tasks/lessons.md`.
 
 ## Review & Results
-- **Root Cause Identified**: Android `PopupMenu` / `MenuBuilder` sorts menu items globally by the `order` parameter across all groups. Because Group 0 renderers were assigned `order = 0, 1, 2...` and Group 1 utility items were assigned `order = 0, 1`, Android interleave-sorted Group 1 items between Group 0 items.
-- **Fix Summary**: Offset Group 1 item order values to `baseOrder = (renderers.size() + 10)`. All playback target items now appear **FIRST**, followed by the divider line and utility actions at the very bottom.
+- **Vector Icon Badges Applied**: Replaced raw text arrows (`➔`) in telemetry badges with 14dp vector icons: `ic_round_audio_file_24` tinted in Gold for Source input format, and `ic_round_speaker_24` tinted in Cyan for Target output renderer.
 - **Verification**: Verified compilation cleanly with `./gradlew compileDebugSources` (`BUILD SUCCESSFUL`).

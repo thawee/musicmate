@@ -297,26 +297,6 @@ public class AndroidPlayerController {
     public void playInNeutron(Context context, Track song) {
         if (song == null || song.getPath() == null) return;
 
-        /*
-        // Use Neutron's specific broadcast action
-        Intent intent = new Intent("com.neutroncode.mp.PLAY");
-
-        // Target both the paid and evaluation versions
-        intent.setPackage("com.neutroncode.mp");
-
-        Uri uri = MusicFileProvider.getUriForFile(song.getPath());
-       // File file = new File(song.getPath());
-       // Uri uri = Uri.fromFile(file);
-
-        // Set the data and the type
-        intent.setDataAndType(uri, "audio/*");
-
-        // Essential flags for Android 7+ and background execution
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
-        context.sendBroadcast(intent); */
-
         Uri uri = MusicFileProvider.getUriForFile(song.getPath());
 
         Intent intent = new Intent(Intent.ACTION_VIEW);

@@ -193,12 +193,12 @@
                     android:paddingVertical="3dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="➔"
-                        android:textColor="@color/colorGold"
-                        android:textSize="10sp" />
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_round_audio_file_24"
+                        app:tint="@color/colorGold"
+                        android:contentDescription="Audio Source" />
                     <TextView
                         android:id="@+id/sheet_node_source_title"
                         android:layout_width="wrap_content"
@@ -221,12 +221,12 @@
                     android:paddingVertical="3dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="➔"
-                        android:textColor="#00E5FF"
-                        android:textSize="10sp" />
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_round_speaker_24"
+                        app:tint="#00E5FF"
+                        android:contentDescription="Output Player Target" />
                     <TextView
                         android:id="@+id/sheet_node_target_title"
                         android:layout_width="wrap_content"

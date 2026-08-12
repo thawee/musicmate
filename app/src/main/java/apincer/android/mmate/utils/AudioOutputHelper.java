@@ -77,9 +77,6 @@ public class AudioOutputHelper {
             if(getSamplingRate()>0) {
                 String res = TagUtils.formatResolution(getBitPerSampling(), getSamplingRate(), -1);
                 builder.append(res);
-                //builder.append(StringUtils.formatAudioSampleRate(getSamplingRate(), true));
-                //builder.append("/");
-                //builder.append(StringUtils.formatAudioBitsDepth(getBitPerSampling()));
             }
             return builder.toString();
         }
@@ -136,10 +133,6 @@ public class AudioOutputHelper {
         MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
        // MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-
-       // int routeType = ri.getDeviceType();
-       // String routeName = String.valueOf(ri.getName());
-       // String routeDesc = ri.getDescription() == null ? routeName : String.valueOf(ri.getDescription());
 
         AudioDeviceInfo[] outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
         AudioDeviceInfo selectedDevice = getAudioDevice(outputs);
@@ -221,9 +214,6 @@ public class AudioOutputHelper {
             }
 
             // Log details for debugging (helpful for your audiophile troubleshooting)
-           // System.out.println("Checking Device: " + device.getProductName() +
-           //         " | Type: " + type +
-           //         " | Priority: " + priority);
         }
         return bestDevice;
     }
@@ -318,13 +308,6 @@ public class AudioOutputHelper {
         List<AudioProfile> profiles = device.getAudioProfiles();
 
         // 1. Get Codec / Format (Requires API 31+)
-       /* String codec = "PCM"; // Default for most wired/USB audiophile paths
-
-        if (!profiles.isEmpty()) {
-            int format = profiles.get(0).getFormat();
-            codec = getFormatName(format);
-        }
-        outputDevice.setCodec(codec); */
 
         // 2. Get Bit Depth (Bit Per Sample)
         int[] encodings = device.getEncodings();

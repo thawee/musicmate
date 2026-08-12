@@ -38,15 +38,6 @@ import apincer.music.core.utils.TagUtils;
 public class TagUIUtils {
     private static final String TAG = "MusicTagUtils";
 
-    /*
-    public static boolean isMQAStudio(Track tag) {
-        return trimToEmpty(tag.getQualityInd()).contains("MQA Studio");
-    }
-
-    public static boolean isMQA(Track tag) {
-        return trimToEmpty(tag.getQualityInd()).contains("MQA");
-    } */
-
     public static int getResolutionColor(Context context, Track tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
@@ -246,11 +237,6 @@ public class TagUIUtils {
         else return ContextCompat.getColor(context, R.color.dr_high);
 
         // else return ContextCompat.getColor(context, R.color.grey200);
-       /* if (drValue == 0) return ContextCompat.getColor(context, R.color.dr_no_trans);
-        else if (drValue < 7) return ContextCompat.getColor(context, R.color.red_light);
-        else if (drValue < 10) return ContextCompat.getColor(context, R.color.oranges_salmon);
-        else if (drValue < 13) return ContextCompat.getColor(context, R.color.greens_lime);
-        else return ContextCompat.getColor(context, R.color.purples_magenta); */
     }
 
     @Deprecated

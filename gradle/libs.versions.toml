@@ -110,7 +110,7 @@ jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocke
 #implementation 'org.eclipse.jetty:jetty-websocket-server:12.0.11' // Use the specific Jetty 12 version you are targeting
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}
 
-netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.15.Final"}
+netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.17.Final"}
 
 # 2.4.0.Beta1s
 # 2.3.18.Final

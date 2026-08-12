@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Single Indicator Surface:** Removed the duplicate `item_player` equalizer icon from the top-right status indicator bar to prevent UI clutter.
 - **Artwork Gesture Overlay Feedback & Micro-Pill Telemetry (`AudioHubBottomSheet`)**:
   - **Gesture Overlay Animation:** Added central `ImageView` overlay (`sheet_gesture_feedback_icon`) on album art to flash 48dp action icons (`play`, `pause`, `skip_next`, `skip_previous`) during double-tap and horizontal fling gestures with a smooth scale-up (`0.7f` $\rightarrow$ `1.2f`) and fade-out animation.
-  - **Micro-Pill Telemetry Badges:** Formatted audio route source specs (`FLAC 24/96`) and target renderers into micro-pill badges (`shape_telemetry_chip_source.xml`, `shape_telemetry_chip_target.xml`) with `12dp` rounded corners and colored borders. Target renderer labels now include rich device metadata (e.g. `Sony WH-1000XM5 (Bluetooth A2DP)`, `HiBy R3 • 192.168.1.50`), matching the player selection popup.
+  - **Micro-Pill Telemetry Badges:** Formatted audio route source specs (`FLAC 24/96`) and target renderers into micro-pill badges (`shape_telemetry_chip_source.xml`, `shape_telemetry_chip_target.xml`) with `12dp` rounded corners and colored borders. Replaced raw text arrows (`➔`) with dedicated vector icons (`ic_round_audio_file_24` for Source, `ic_round_speaker_24` for Target). Target renderer labels now include rich device metadata (e.g. `Sony WH-1000XM5 (Bluetooth A2DP)`, `HiBy R3 • 192.168.1.50`), matching the player selection popup.
 
 ### Fixed
 - **Player Picker Popup Menu Interleaving (`MainActivity.java`)**:
