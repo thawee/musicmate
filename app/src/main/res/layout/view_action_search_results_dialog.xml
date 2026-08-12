@@ -65,13 +65,14 @@
 
             <ImageView
                 android:id="@+id/btn_close_results_dialog"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:padding="10dp"
+                android:padding="12dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:contentDescription="Close"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/round_close_24"
                 app:tint="@color/grey400" />
@@ -88,10 +89,19 @@
             <ListView
                 android:id="@+id/search_results_list"
                 android:layout_width="match_parent"
-                android:layout_height="340dp"
+                android:layout_height="300dp"
                 android:divider="?attr/colorOutlineVariant"
                 android:dividerHeight="0.5dp"
                 android:clipToPadding="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_cancel"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/cancel"
+                android:textColor="@color/white" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

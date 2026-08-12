@@ -1,29 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TagsActivity "More Actions" Popup Menu.
+     Organized by functional groups: Tag Automation -> Audio Quality Analysis -> File & Web Utilities. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item
-        android:id="@+id/action_auto_tag"
-        android:title="@string/auto_tag"
-        app:showAsAction="ifRoom"/>
+    <!-- Group 1: Metadata Automation & Lookup -->
+    <group android:id="@+id/group_tag_automation">
+        <item
+            android:id="@+id/action_auto_tag"
+            android:icon="@drawable/round_auto_awesome_24"
+            android:title="@string/auto_tag"
+            app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_search_match_tags"
-        android:title="@string/search_match_tags"
-        app:showAsAction="ifRoom"/>
+        <item
+            android:id="@+id/action_search_match_tags"
+            android:icon="@drawable/ic_search_24dp"
+            android:title="@string/search_match_tags"
+            app:showAsAction="never" />
+    </group>
 
-    <item
-        android:id="@+id/action_spectrum"
-        android:title="@string/lossless_verifier"
-        app:showAsAction="ifRoom"/>
+    <!-- Group 2: Audio Analysis & Verification -->
+    <group android:id="@+id/group_audio_analysis">
+        <item
+            android:id="@+id/action_spectrum"
+            android:icon="@drawable/rounded_equalizer_24"
+            android:title="@string/lossless_verifier"
+            app:showAsAction="never" />
+    </group>
 
-    <item
-        android:id="@+id/action_open_folder"
-        android:title="@string/open_containing_folder"
-        app:showAsAction="ifRoom"/>
+    <!-- Group 3: File System & External Operations -->
+    <group android:id="@+id/group_file_utils">
+        <item
+            android:id="@+id/action_open_folder"
+            android:icon="@drawable/rounded_folder_24"
+            android:title="@string/open_containing_folder"
+            app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_web_search"
-        android:title="@string/find_online"
-        app:showAsAction="ifRoom"/>
+        <item
+            android:id="@+id/action_web_search"
+            android:icon="@drawable/ic_search_24dp"
+            android:title="@string/find_online"
+            app:showAsAction="never" />
+    </group>
+
 </menu>

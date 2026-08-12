@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-track ⋮ popup menu. Keep this focused: quick actions + file ops only.
+     Tag editing is the primary action (single click). Batch ops belong in action mode. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Playback group — only relevant when a player device is active -->
+    <group android:id="@+id/group_playback">
+        <item
+            android:id="@+id/action_play_now"
+            android:icon="@drawable/ic_baseline_play_arrow_24"
+            android:title="Play Now"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_play_next"
+            android:icon="@drawable/ic_baseline_playlist_play_24"
+            android:title="Play Next"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_add_queue"
+            android:icon="@drawable/ic_baseline_queue_music_24"
+            android:title="Add to Queue"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- File operations group -->
+    <group android:id="@+id/group_file_ops">
+        <!--
+        <item
+            android:id="@+id/action_encoding_file"
+            android:icon="@drawable/rounded_swap_horiz_24"
+            android:title="Convert Format"
+            app:showAsAction="never" />
+            -->
+        <item
+            android:id="@+id/action_open_with"
+            android:title="Open in External App"
+            app:showAsAction="never" />
+    </group>
+
+</menu>

@@ -47,5 +47,13 @@
         android:textSize="12sp"
         android:text="" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel_progress"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Cancel" />
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

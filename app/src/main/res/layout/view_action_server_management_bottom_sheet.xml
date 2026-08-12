@@ -52,11 +52,11 @@
 
         <ImageView
             android:id="@+id/btn_close"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="6dp"
+            android:padding="12dp"
             android:src="@drawable/round_close_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
@@ -128,7 +128,7 @@
                             android:id="@+id/server_address"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="192.168.1.105:9000"
+                            android:text="http://localhost:9000/index.html"
                             android:textColor="@color/grey300"
                             android:textSize="14sp"
                             android:textStyle="italic"/>
@@ -137,11 +137,11 @@
                             android:id="@+id/btn_copy_server_url"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:layout_marginStart="6dp"
-                            android:padding="3dp"
+                            android:layout_marginStart="2dp"
+                            android:padding="4dp"
                             android:src="@drawable/ic_baseline_file_24"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="Copy Server URL"
+                            android:contentDescription="Copy server URL"
                             app:tint="@color/colorGold"/>
                     </LinearLayout>
                 </LinearLayout>
@@ -155,6 +155,7 @@
                     android:background="@drawable/bg_rounded_white_small"
                     android:contentDescription="@string/cd_qr_code" />
             </LinearLayout>
+            <!--
             <TextView
                 android:id="@+id/server_power_by"
                 android:layout_width="wrap_content"
@@ -164,6 +165,58 @@
                 android:text="@string/server_address_label"
                 android:textSize="12sp"
                 android:textColor="@color/colorMuted"/>
+            -->
+            <!-- Runtime web engine switcher (SonicNIO / CoreHTTP / Netty) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Streaming Engine"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorMuted"/>
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/server_engine_group"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/engine_nio"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="0dp"
+                    android:text="SonicNIO"
+                    android:textSize="12sp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/engine_httpcore"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="0dp"
+                    android:text="CoreHTTP"
+                    android:textSize="12sp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/engine_netty"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="0dp"
+                    android:text="Netty"
+                    android:textSize="12sp"/>
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <View
                 android:layout_width="match_parent"
@@ -174,7 +227,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_16_dp"
+                android:layout_marginTop="@dimen/dimen_2_dp"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton

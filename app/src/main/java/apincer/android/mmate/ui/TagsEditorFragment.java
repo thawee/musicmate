@@ -62,6 +62,7 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
+    private java.util.Set<String> modifiedFields = new java.util.HashSet<>();
     private TextView previewTitle;
     private TextView previewPath;
     private ImageView previewCoverart;
@@ -310,6 +311,8 @@ public class TagsEditorFragment extends Fragment {
             View inputView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
             TextView titleView = inputView.findViewById(R.id.dialog_input_title);
             View btnClose = inputView.findViewById(R.id.btn_close_input_dialog);
+            View btnOK = inputView.findViewById(R.id.button_ok);
+            View btnCancel = inputView.findViewById(R.id.button_cancel);
             EditText editText = inputView.findViewById(R.id.input_text);
 
             if (titleView != null) {
@@ -318,21 +321,37 @@ public class TagsEditorFragment extends Fragment {
 
             AlertDialog dialog = new MaterialAlertDialogBuilder(requireActivity())
                     .setView(inputView)
-                    .setPositiveButton(R.string.ok, (d, which) -> {
-                        String customText = editText.getText().toString().trim();
-                        if (!customText.isEmpty()) {
-                            mTagListLayout.addTag(customText);
-                        }
-                    })
                     .create();
 
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             }
 
+            Runnable onConfirm = () -> {
+                String customText = editText.getText().toString().trim();
+                if (!customText.isEmpty()) {
+                    mTagListLayout.addTag(customText);
+                }
+                dialog.dismiss();
+            };
+
+            if (btnOK != null) {
+                btnOK.setOnClickListener(d -> onConfirm.run());
+            }
+            if (btnCancel != null) {
+                btnCancel.setOnClickListener(d -> dialog.dismiss());
+            }
             if (btnClose != null) {
                 btnClose.setOnClickListener(d -> dialog.dismiss());
             }
+
+            editText.setOnEditorActionListener((textView, actionId, keyEvent) -> {
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                    onConfirm.run();
+                    return true;
+                }
+                return false;
+            });
 
             dialog.show();
 
@@ -347,7 +366,8 @@ public class TagsEditorFragment extends Fragment {
 
         View btnPreview = cview.findViewById(R.id.btn_preview_bar);
         View btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.btn_close);
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         btnPreview.setOnClickListener(v -> {
             title.setText("");
             artist.setText("");
@@ -397,7 +417,12 @@ public class TagsEditorFragment extends Fragment {
             tagsActivity.rebuildDisplayTag(items);
             alert.dismiss();
         });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> alert.dismiss());
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> alert.dismiss());
+        }
         alert.show();
     }
 
@@ -451,6 +476,11 @@ public class TagsEditorFragment extends Fragment {
         processingFuture.whenComplete((result, exception) -> {
             if (exception == null) {
                 tagsActivity.setSaved(true);
+                if (tagsActivity != null) {
+                    tagsActivity.runOnUiThread(() -> 
+                        Toast.makeText(requireContext(), "Tags saved successfully", Toast.LENGTH_SHORT).show()
+                    );
+                }
             } else {
                 Log.e(TAG, "Error saving tags", exception);
             }
@@ -461,17 +491,19 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void buildPendingTags(Track tagUpdate) {
-        tagUpdate.setTitle(buildTag(txtTitle, tagUpdate.getTitle()));
-        tagUpdate.setTrack(buildTag(txtTrack, tagUpdate.getTrack(), tagUpdate.getTrack()));
-        tagUpdate.setAlbum(buildTag(txtAlbum, tagUpdate.getAlbum()));
-        tagUpdate.setArtist(buildTag(txtArtist, tagUpdate.getArtist()));
-        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getAlbumArtist()));
-        tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre(), tagUpdate.getGenre()));
-        tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood(), tagUpdate.getMood()));
-        tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle(), tagUpdate.getStyle()));
-        tagUpdate.setOrigin(buildTag(txtOrigin, tagUpdate.getOrigin(),tagUpdate.getOrigin()));
-        tagUpdate.setPublisher(buildTag(txtPublisher, tagUpdate.getPublisher()));
-        tagUpdate.setYear(buildTag(txtYear, tagUpdate.getYear()));
+        boolean multi = tagsActivity.getEditItems().size() > 1;
+
+        if (!multi || modifiedFields.contains("title")) tagUpdate.setTitle(buildTag(txtTitle, tagUpdate.getTitle()));
+        if (!multi || modifiedFields.contains("track")) tagUpdate.setTrack(buildTag(txtTrack, tagUpdate.getTrack(), tagUpdate.getTrack()));
+        if (!multi || modifiedFields.contains("album")) tagUpdate.setAlbum(buildTag(txtAlbum, tagUpdate.getAlbum()));
+        if (!multi || modifiedFields.contains("artist")) tagUpdate.setArtist(buildTag(txtArtist, tagUpdate.getArtist()));
+        if (!multi || modifiedFields.contains("albumArtist")) tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, tagUpdate.getAlbumArtist()));
+        if (!multi || modifiedFields.contains("genre")) tagUpdate.setGenre(buildTag(txtGenre, tagUpdate.getGenre(), tagUpdate.getGenre()));
+        if (!multi || modifiedFields.contains("mood")) tagUpdate.setMood(buildTag(txtMood, tagUpdate.getMood(), tagUpdate.getMood()));
+        if (!multi || modifiedFields.contains("style")) tagUpdate.setStyle(buildTag(txtStyle, tagUpdate.getStyle(), tagUpdate.getStyle()));
+        if (!multi || modifiedFields.contains("origin")) tagUpdate.setOrigin(buildTag(txtOrigin, tagUpdate.getOrigin(), tagUpdate.getOrigin()));
+        if (!multi || modifiedFields.contains("publisher")) tagUpdate.setPublisher(buildTag(txtPublisher, tagUpdate.getPublisher()));
+        if (!multi || modifiedFields.contains("year")) tagUpdate.setYear(buildTag(txtYear, tagUpdate.getYear()));
     }
 
     private String buildTag(TextInputEditText txt, String oldVal) {
@@ -596,6 +628,33 @@ public class TagsEditorFragment extends Fragment {
         txtOrigin.setText(tag.getOrigin());
         txtPublisher.setText(tag.getPublisher());
 
+        List<Track> editItems = tagsActivity.getEditItems();
+        if (editItems != null && editItems.size() > 1) {
+            checkMultiValues(txtTitle, tag.getTitle(), item -> item.getTitle());
+            checkMultiValues(txtArtist, tag.getArtist(), item -> item.getArtist());
+            checkMultiValues(txtAlbum, tag.getAlbum(), item -> item.getAlbum());
+            checkMultiValues(txtAlbumArtist, tag.getAlbumArtist(), item -> item.getAlbumArtist());
+            checkMultiValues(txtTrack, tag.getTrack(), item -> item.getTrack());
+            checkMultiValues(txtYear, tag.getYear(), item -> item.getYear());
+            checkMultiValues(txtGenre, tag.getGenre(), item -> item.getGenre());
+            checkMultiValues(txtMood, tag.getMood(), item -> item.getMood());
+            checkMultiValues(txtStyle, tag.getStyle(), item -> item.getStyle());
+            checkMultiValues(txtOrigin, tag.getOrigin(), item -> item.getOrigin());
+            checkMultiValues(txtPublisher, tag.getPublisher(), item -> item.getPublisher());
+        }
+
+        addTextWatcher(txtTitle, "title");
+        addTextWatcher(txtArtist, "artist");
+        addTextWatcher(txtAlbum, "album");
+        addTextWatcher(txtAlbumArtist, "albumArtist");
+        addTextWatcher(txtTrack, "track");
+        addTextWatcher(txtYear, "year");
+        addTextWatcher(txtGenre, "genre");
+        addTextWatcher(txtMood, "mood");
+        addTextWatcher(txtStyle, "style");
+        addTextWatcher(txtOrigin, "origin");
+        addTextWatcher(txtPublisher, "publisher");
+
         // Build a targeted dropdown for txtAlbumArtist: default presets + current track artist / album artist
         setupTargetedAlbumArtistDropdown(tag);
 
@@ -663,6 +722,32 @@ public class TagsEditorFragment extends Fragment {
         } catch (Exception ex) {
             Log.e(TAG, "updatePreview", ex);
         }
+    }
+
+    private void checkMultiValues(TextView view, String baseValue, java.util.function.Function<Track, String> getter) {
+        List<Track> editItems = tagsActivity.getEditItems();
+        for (Track item : editItems) {
+            String val = getter.apply(item);
+            if (!java.util.Objects.equals(baseValue, val)) {
+                view.setHint("Multiple values");
+                view.setText("");
+                return;
+            }
+        }
+    }
+
+    private void addTextWatcher(TextView view, String fieldName) {
+        view.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                modifiedFields.add(fieldName);
+                if (tagsActivity != null) tagsActivity.setDirty(true);
+            }
+        });
     }
 
 }

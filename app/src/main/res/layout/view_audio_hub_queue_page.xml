@@ -49,10 +49,10 @@
 
             <ImageView
                 android:id="@+id/btn_jump_to_now_playing"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginEnd="4dp"
-                android:padding="6dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_center_focus_strong_black_24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Jump to Now Playing"
@@ -60,9 +60,9 @@
 
             <ImageView
                 android:id="@+id/btn_clear_queue"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="6dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/rounded_delete_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Clear Queue"

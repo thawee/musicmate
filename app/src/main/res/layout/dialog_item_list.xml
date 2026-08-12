@@ -3,7 +3,7 @@
     android:id="@android:id/text1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="32dip"
+    android:minHeight="48dp"
     android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
     android:textColor="?attr/colorOnSurface"
     android:gravity="center_vertical"

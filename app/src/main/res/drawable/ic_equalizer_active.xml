@@ -15,31 +15,43 @@
                 android:pivotX="12"
                 android:pivotY="12">
 
-                <!-- Left Bar -->
-                <path
+                <!-- Left Bar Group -->
+                <group
                     android:name="bar1"
-                    android:fillColor="?attr/colorPrimary"
-                    android:pathData="M5,10 h3 v4 h-3 z"
-                    android:strokeWidth="0" />
+                    android:pivotX="6.5"
+                    android:pivotY="12">
+                    <path
+                        android:fillColor="?attr/colorPrimary"
+                        android:pathData="M5,6 h3 v12 h-3 z"
+                        android:strokeWidth="0" />
+                </group>
 
-                <!-- Middle Bar -->
-                <path
+                <!-- Middle Bar Group -->
+                <group
                     android:name="bar2"
-                    android:fillColor="?attr/colorPrimaryContainer"
-                    android:pathData="M10,8 h3 v8 h-3 z"
-                    android:strokeWidth="0" />
+                    android:pivotX="11.5"
+                    android:pivotY="12">
+                    <path
+                        android:fillColor="?attr/colorPrimaryContainer"
+                        android:pathData="M10,4 h3 v16 h-3 z"
+                        android:strokeWidth="0" />
+                </group>
 
-                <!-- Right Bar -->
-                <path
+                <!-- Right Bar Group -->
+                <group
                     android:name="bar3"
-                    android:fillColor="?attr/colorPrimary"
-                    android:pathData="M15,6 h3 v12 h-3 z"
-                    android:strokeWidth="0" />
+                    android:pivotX="16.5"
+                    android:pivotY="12">
+                    <path
+                        android:fillColor="?attr/colorPrimary"
+                        android:pathData="M15,8 h3 v8 h-3 z"
+                        android:strokeWidth="0" />
+                </group>
             </group>
         </vector>
     </aapt:attr>
 
-    <!-- Animate vertical scale on each bar -->
+    <!-- Animate vertical scale on each group -->
     <target android:name="bar1" android:animation="@animator/equalizer_bar1" />
     <target android:name="bar2" android:animation="@animator/equalizer_bar2" />
     <target android:name="bar3" android:animation="@animator/equalizer_bar3" />

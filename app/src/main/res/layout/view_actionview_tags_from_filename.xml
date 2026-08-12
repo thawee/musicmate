@@ -59,11 +59,11 @@
 
         <ImageView
             android:id="@+id/btn_close"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="6dp"
+            android:padding="12dp"
             android:src="@drawable/round_close_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
@@ -86,7 +86,7 @@
         android:textColor="@color/grey200"
         android:fontFamily="@font/sfthonburi_regular"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-        android:textSize="11sp"
+        android:textSize="13sp"
         tools:text="directory/track - title" />
 
     <!-- Auto-detect and Presets -->
@@ -173,7 +173,7 @@
             <TextView
                 android:id="@+id/btn_add_sep"
                 android:layout_width="@dimen/dimen_36_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
                 android:background="@drawable/shape_border_grey"
                 android:gravity="center"
@@ -184,7 +184,7 @@
             <TextView
                 android:id="@+id/btn_add_dash"
                 android:layout_width="@dimen/dimen_36_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_sep"
@@ -197,7 +197,7 @@
             <TextView
                 android:id="@+id/btn_add_dot"
                 android:layout_width="@dimen/dimen_36_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_dash"
@@ -210,7 +210,7 @@
             <TextView
                 android:id="@+id/btn_add_space"
                 android:layout_width="@dimen/dimen_48_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_dot"
@@ -223,7 +223,7 @@
             <TextView
                 android:id="@+id/btn_add_free_text"
                 android:layout_width="@dimen/dimen_36_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 android:layout_toEndOf="@+id/btn_add_space"
@@ -244,7 +244,7 @@
                 <TextView
                     android:id="@+id/btn_preview"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
+                    android:layout_height="48dp"
                     android:layout_gravity="center"
                     android:layout_marginStart="@dimen/spacing_small"
                     android:layout_marginEnd="@dimen/spacing_small"
@@ -416,24 +416,14 @@
         android:layout_marginEnd="@dimen/dimen_8_dp"
         android:gravity="end">
 
-        <!--
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_cancel"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="@string/cancel"/>
+            android:text="@string/cancel"
+            android:textColor="@color/white" />
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/colorOutline" />
-        -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_ok"
             style="@style/Widget.Material3.Button.TonalButton"

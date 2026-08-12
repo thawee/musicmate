@@ -121,23 +121,23 @@
 
             <ImageView
                 android:id="@+id/btn_folder_enqueue"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:padding="8dp"
                 android:src="@drawable/ic_baseline_queue_music_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Add to Queue"
+                android:contentDescription="Add to queue"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
             <ImageView
                 android:id="@+id/btn_folder_play"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="2dp"
                 android:padding="8dp"
                 android:src="@drawable/ic_play_rounded"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Play Collection"
+                android:contentDescription="@string/play"
                 app:tint="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 

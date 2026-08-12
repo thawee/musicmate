@@ -23,6 +23,10 @@ import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
 
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
+
 public class AndroidPlayerController {
     private static final String TAG = "AndroidPlayerController";
 
@@ -32,6 +36,7 @@ public class AndroidPlayerController {
     private String playbackTargetId;
     private MediaController mediaController;
     private PlaybackCallback playbackCallback;
+    private ExoPlayer internalExoPlayer;
 
     private long lastUpdateSongTime;
 
@@ -74,6 +79,42 @@ public class AndroidPlayerController {
     public AndroidPlayerController(Context context, MediaSessionManager mediaSessionManager) {
         this.context = context;
         this.mediaSessionManager = mediaSessionManager;
+        
+        try {
+            androidx.media3.common.AudioAttributes audioAttributes = new androidx.media3.common.AudioAttributes.Builder()
+                    .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                    .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+                    .build();
+            this.internalExoPlayer = new ExoPlayer.Builder(context).build();
+            this.internalExoPlayer.setAudioAttributes(audioAttributes, true);
+            this.internalExoPlayer.addListener(new Player.Listener() {
+                @Override
+                public void onPlaybackStateChanged(int playbackState) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        if (playbackCallback != null) {
+                            playbackCallback.onPlaybackCompleted();
+                        }
+                    }
+                }
+                @Override
+                public void onIsPlayingChanged(boolean isPlaying) {
+                    if (isPlaying) {
+                        scheduleProgressUpdate();
+                    } else {
+                        stopProgressUpdate();
+                    }
+                    if (playbackCallback != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+                        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                        state.currentState = isPlaying ? 
+                                apincer.music.core.playback.PlaybackState.State.PLAYING : 
+                                apincer.music.core.playback.PlaybackState.State.PAUSED;
+                        playbackCallback.onPlaybackStateChanged(state);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize ExoPlayer", e);
+        }
     }
 
     public void registerCallback(ExternalAndroidPlayer player, PlaybackCallback playbackCallback) {
@@ -153,16 +194,25 @@ public class AndroidPlayerController {
     private final Runnable mUpdateProgressRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mediaController == null) {
+            if (mediaController == null && internalExoPlayer == null) {
                 return;
             }
 
-            PlaybackState state = mediaController.getPlaybackState();
-            if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
-                if (playbackCallback != null) {
-                    updatePlaybackState(state);
+            if (mediaController != null) {
+                PlaybackState state = mediaController.getPlaybackState();
+                if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
+                    if (playbackCallback != null) {
+                        updatePlaybackState(state);
+                    }
+                    // Schedule the next update
+                    scheduleProgressUpdate();
+                } else {
+                    stopProgressUpdate();
                 }
-                // Schedule the next update
+            } else if (internalExoPlayer != null && internalExoPlayer.isPlaying()) {
+                if (playbackCallback != null) {
+                    playbackCallback.onPlaybackStateTimeElapsedSeconds(internalExoPlayer.getCurrentPosition() / 1000);
+                }
                 scheduleProgressUpdate();
             } else {
                 stopProgressUpdate();
@@ -183,10 +233,12 @@ public class AndroidPlayerController {
         mProgressHandler.removeCallbacks(mUpdateProgressRunnable);
     }
 
-    public void skipToNext() {
+    public boolean skipToNext() {
         if(mediaController != null) {
             mediaController.getTransportControls().skipToNext();
+            return true;
         }
+        return false;
     }
 
     public void play(Track song) {
@@ -201,14 +253,25 @@ public class AndroidPlayerController {
             if (mediaController != null) {
                 mediaController.getTransportControls().playFromUri(songUri, null);
             } else if (playbackTargetId != null) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(songUri, "audio/*");
-                intent.setPackage(playbackTargetId);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    context.startActivity(intent);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to start external player activity", e);
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId) && internalExoPlayer != null) {
+                    // Use internal ExoPlayer for local/bluetooth playback
+                    try {
+                        internalExoPlayer.setMediaItem(MediaItem.fromUri(Uri.fromFile(new File(song.getPath()))));
+                        internalExoPlayer.prepare();
+                        internalExoPlayer.play();
+                    } catch (Exception e) {
+                        Log.e(TAG, "ExoPlayer playback failed", e);
+                    }
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(songUri, "audio/*");
+                    intent.setPackage(playbackTargetId);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    try {
+                        context.startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to start external player activity", e);
+                    }
                 }
             }
         }
@@ -264,20 +327,26 @@ public class AndroidPlayerController {
     }
 
     public void pause() {
-        if(mediaController != null) {
+        if (mediaController != null) {
             mediaController.getTransportControls().pause();
+        } else if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            internalExoPlayer.pause();
         }
     }
 
-    public void skipToPrevious() {
+    public boolean skipToPrevious() {
         if(mediaController != null) {
             mediaController.getTransportControls().skipToPrevious();
+            return true;
         }
+        return false;
     }
 
     public void stopPlaying() {
-        if(mediaController != null) {
+        if (mediaController != null) {
             mediaController.getTransportControls().stop();
+        } else if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            internalExoPlayer.stop();
         }
     }
 }

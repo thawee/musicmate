@@ -152,6 +152,14 @@ public class TagsActivity extends AppCompatActivity {
     private boolean isSaved = false;
     private boolean resultAlreadySet = false;
 
+    private boolean isDirty = false;
+    private int currentEditMode = 0;
+
+    public void setDirty(boolean dirty) {
+        this.isDirty = dirty;
+    }
+
+
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
 
@@ -355,20 +363,16 @@ public class TagsActivity extends AppCompatActivity {
         newIndicatorView = findViewById(R.id.new_view);
     }
     private void setupActionButtons(int mode) {
-        MaterialButtonToggleGroup previewToggleGroup = findViewById(R.id.preview_action_group);
-        MaterialButtonToggleGroup editorToggleGroup = findViewById(R.id.editor_action_group);
-        MaterialButtonToggleGroup techToggleGroup = findViewById(R.id.tech_action_group);
-
-        // Clear listeners to avoid memory leaks and duplicate triggers
-        previewToggleGroup.clearOnButtonCheckedListeners();
-        editorToggleGroup.clearOnButtonCheckedListeners();
-        techToggleGroup.clearOnButtonCheckedListeners();
+        currentEditMode = mode;
+        android.widget.LinearLayout previewToggleGroup = findViewById(R.id.preview_action_group);
+        android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
+        android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
 
         findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems());
         findViewById(R.id.button_organize).setOnClickListener(v -> doMoveMediaItems());
         findViewById(R.id.button_more).setOnClickListener(this::doShowMoreActions);
 
-        if(mode ==0) {
+        if(mode == 0) {
             previewToggleGroup.setVisibility(VISIBLE);
             editorToggleGroup.setVisibility(GONE);
             techToggleGroup.setVisibility(GONE);
@@ -376,58 +380,38 @@ public class TagsActivity extends AppCompatActivity {
                 appBarLayout.setExpanded(false, true);
                 setupActionButtons(1);
             });
-        }else if (mode ==1) {
+        } else if (mode == 1) {
             if (activeFragment instanceof TagsEditorFragment fragment) {
                 // editor
                 previewToggleGroup.setVisibility(GONE);
                 editorToggleGroup.setVisibility(VISIBLE);
                 techToggleGroup.setVisibility(GONE);
 
-                editorToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-                    if (!isChecked) return; // avoid double-trigger on uncheck
-                        if (checkedId == R.id.action_reformat) {
-                            fragment.doFormatTags();
-                        } else if (checkedId == R.id.action_read_tag) {
-                            fragment.doShowReadTagsPreview();
-                        } else if (checkedId == R.id.action_save) {
-                            fragment.doSaveMediaItem();
-                        }
+                findViewById(R.id.action_reformat).setOnClickListener(v -> fragment.doFormatTags());
+                findViewById(R.id.action_read_tag).setOnClickListener(v -> fragment.doShowReadTagsPreview());
+                findViewById(R.id.action_save).setOnClickListener(v -> fragment.doSaveMediaItem());
 
-                    // Deselect after action (to act like toolbar buttons)
-                    group.clearChecked();
-                });
             } else if (activeFragment instanceof TagsTechnicalFragment fragment) {
                 previewToggleGroup.setVisibility(GONE);
                 editorToggleGroup.setVisibility(GONE);
                 techToggleGroup.setVisibility(VISIBLE);
 
-                techToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-                    if (!isChecked) return; // avoid double-trigger on uncheck
-                    if (checkedId == R.id.btn_reload_tag) {
-                        fragment.doResetTagFromFile();
-                    } else if (checkedId == R.id.btn_extract_coverart) {
-                        fragment.doExtractEmbedCoverart();
-                    } else if (checkedId == R.id.btn_remove_coverart) {
-                        fragment.doRemoveEmbedCoverart();
-                    }
-
-                    // Deselect after action (to act like toolbar buttons)
-                    group.clearChecked();
-                });
+                findViewById(R.id.btn_reload_tag).setOnClickListener(v -> fragment.doResetTagFromFile());
+                findViewById(R.id.btn_extract_coverart).setOnClickListener(v -> fragment.doExtractEmbedCoverart());
+                findViewById(R.id.btn_remove_coverart).setOnClickListener(v -> fragment.doRemoveEmbedCoverart());
             }
         }
     }
 
     private void doShowMoreActions(View anchorView) {
-        // 1. Create a PopupMenu
-        PopupMenu popup = new PopupMenu(this, anchorView); // 'this' is the Context
-
-        // 2. Inflate your menu resource
+        PopupMenu popup = new PopupMenu(this, anchorView);
         popup.getMenuInflater().inflate(R.menu.tag_more_actions_menu, popup.getMenu());
-        // Or, if you don't want to use an XML menu, you can add items programmatically:
-        // popup.getMenu().add(Menu.NONE, R.id.my_action_id, Menu.NONE, "My Action Title");
 
-        // 3. Set an OnMenuItemClickListener to handle menu item clicks
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            popup.getMenu().setGroupDividerEnabled(true);
+        }
+        apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
+
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.action_web_search) {
@@ -585,8 +569,13 @@ public class TagsActivity extends AppCompatActivity {
             performSearchAndMatch(item, qTitle, qArtist);
         });
 
+        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
         }
         dialog.show();
     }
@@ -683,8 +672,13 @@ public class TagsActivity extends AppCompatActivity {
             applySelectedSearchResult(item, selected);
         });
 
+        View btnCancel = dialogView.findViewById(R.id.button_cancel);
+
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
         }
         dialog.show();
     }
@@ -970,7 +964,14 @@ public class TagsActivity extends AppCompatActivity {
             alert.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         }
 
-       // cview.findViewById(R.id.button_ok).setOnClickListener(v -> alert.dismiss());
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnOK = cview.findViewById(R.id.button_ok);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> alert.dismiss());
+        }
+        if (btnOK != null) {
+            btnOK.setOnClickListener(v -> alert.dismiss());
+        }
         alert.show();
         // After alert.show(), add these lines:
         if (alert.getWindow() != null) {
@@ -1353,7 +1354,16 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
-            finish();
+            if (isDirty) {
+                new MaterialAlertDialogBuilder(TagsActivity.this)
+                        .setTitle("Discard changes?")
+                        .setMessage("You have unsaved edits. Discard them?")
+                        .setPositiveButton("Discard", (dialog, which) -> finish())
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+                finish();
+            }
         }
     }
 
@@ -1384,7 +1394,9 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyExpanded = true;
                 wasFullyCollapsed = false;
                 previewState = true;
-                setupActionButtons(0);
+                if (currentEditMode == 0) {
+                    setupActionButtons(0);
+                }
                 //setupMenuToolbar();
 
                 // No need to rebuild the display tag if it's not dirty

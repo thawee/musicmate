@@ -52,43 +52,43 @@
 
         <ImageView
             android:id="@+id/btn_select_target_player"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/rounded_music_cast_24"
-            android:padding="4dp"
+            android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Select Player"
             app:tint="@color/white"/>
 
         <ImageView
             android:id="@+id/btn_media_server"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/rounded_broadcast_on_personal_24"
-            android:padding="4dp"
+            android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/media_server"
             app:tint="@color/colorMuted"/>
 
         <ImageView
             android:id="@+id/btn_open_signal_path"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_baseline_audio_path_24"
-            android:padding="4dp"
+            android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Audio Route Path"
             app:tint="@color/colorGold"/>
 
         <ImageView
             android:id="@+id/btn_close_queue_sheet"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/round_close_24"
-            android:padding="4dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_round_keyboard_arrow_down_24"
+            android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
             app:tint="@color/white"/>
@@ -100,7 +100,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:padding="16dp"
+        android:padding="8dp"
         android:orientation="vertical"
         android:gravity="top"
         android:clickable="true"
@@ -114,14 +114,35 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Large album art -->
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/sheet_album_art"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_musicmate_logo"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"/>
+            <!-- Large album art with gesture feedback overlay -->
+            <FrameLayout
+                android:id="@+id/sheet_album_art_frame"
+                android:layout_width="140dp"
+                android:layout_height="140dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/sheet_album_art"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_musicmate_logo"
+                    android:contentDescription="Album artwork"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"/>
+
+                <!-- Gesture Play/Pause/Skip Feedback Overlay Icon -->
+                <ImageView
+                    android:id="@+id/sheet_gesture_feedback_icon"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_baseline_play_arrow_48"
+                    android:background="@drawable/shape_now_playing_cover_overlay"
+                    android:padding="8dp"
+                    android:visibility="gone"
+                    android:alpha="0"
+                    app:tint="@color/colorGold"
+                    android:contentDescription="Playback gesture action" />
+            </FrameLayout>
 
             <!-- Track info -->
             <LinearLayout
@@ -154,13 +175,69 @@
                     android:id="@+id/sheet_signal_verdict"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
+                    android:layout_marginTop="4dp"
                     android:textColor="@color/colorGold"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.02"
                     android:maxLines="1"
                     android:ellipsize="end" />
+
+                <!-- Telemetry Source Badge -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shape_telemetry_chip_source"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="3dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="➔"
+                        android:textColor="@color/colorGold"
+                        android:textSize="10sp" />
+                    <TextView
+                        android:id="@+id/sheet_node_source_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textColor="@color/colorGold"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <!-- Telemetry Target Badge -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shape_telemetry_chip_target"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="3dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="➔"
+                        android:textColor="#00E5FF"
+                        android:textSize="10sp" />
+                    <TextView
+                        android:id="@+id/sheet_node_target_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textColor="#00E5FF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
@@ -172,7 +249,8 @@
             android:layout_marginTop="10dp"
             android:orientation="vertical"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:visibility="gone">
 
             <!-- Live Signal Path Chain: 1-Line Full Width Flow -->
             <LinearLayout
@@ -183,6 +261,7 @@
                 android:gravity="center_vertical">
 
                 <!-- Node 1: Source (Single 1-Line Chip) -->
+                <!--
                 <LinearLayout
                     android:id="@+id/sheet_node_source_box"
                     android:layout_width="0dp"
@@ -198,11 +277,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/white"
-                        android:textSize="9.5sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:maxLines="1"
+                        android:maxLines="2"
+                        android:gravity="center"
                         android:ellipsize="end" />
                 </LinearLayout>
+                -->
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -213,7 +294,7 @@
                     android:paddingVertical="2dp"
                     android:text="➔"
                     android:textColor="@color/colorGold"
-                    android:textSize="8.5sp" />
+                    android:textSize="11sp" />
 
                 <!-- Node 2: Transport (Single 1-Line Chip) -->
                 <LinearLayout
@@ -231,9 +312,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/white"
-                        android:textSize="9.5sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:maxLines="1"
+                        android:maxLines="2"
+                        android:gravity="center"
                         android:ellipsize="end" />
                 </LinearLayout>
 
@@ -246,9 +328,10 @@
                     android:paddingVertical="2dp"
                     android:text="➔"
                     android:textColor="@color/colorGold"
-                    android:textSize="8.5sp" />
+                    android:textSize="11sp" />
 
                 <!-- Node 3: Target Output (Single 1-Line Chip) -->
+                <!--
                 <LinearLayout
                     android:id="@+id/sheet_node_target_box"
                     android:layout_width="0dp"
@@ -267,11 +350,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/colorGold"
-                        android:textSize="9.5sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:maxLines="1"
+                        android:maxLines="2"
+                        android:gravity="center"
                         android:ellipsize="end" />
                 </LinearLayout>
+                -->
             </LinearLayout>
         </LinearLayout>
 
@@ -348,7 +433,7 @@
                     android:layout_alignParentStart="true"
                     android:text="00:00"
                     android:textColor="@color/grey400"
-                    android:textSize="10sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/sheet_total_time"
@@ -357,7 +442,7 @@
                     android:layout_alignParentEnd="true"
                     android:text="00:00"
                     android:textColor="@color/grey400"
-                    android:textSize="10sp" />
+                    android:textSize="12sp" />
             </RelativeLayout>
         </LinearLayout>
 
@@ -365,7 +450,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal"
             android:gravity="center">
 
@@ -426,8 +511,8 @@
         </LinearLayout>
 
         <!-- Volume control row -->
-        <!--
         <LinearLayout
+            android:id="@+id/sheet_volume_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -437,9 +522,9 @@
 
             <ImageView
                 android:id="@+id/btn_sheet_volume_down"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:padding="2dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_baseline_volume_down_24"
                 android:contentDescription="Volume Down"
                 app:tint="@color/grey400" />
@@ -455,14 +540,13 @@
 
             <ImageView
                 android:id="@+id/btn_sheet_volume_up"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:padding="2dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_baseline_volume_up_24"
                 android:contentDescription="Volume Up"
                 app:tint="@color/grey400" />
         </LinearLayout>
-        -->
 
         <!-- Expandable Signal Path Telemetry Container -->
         <LinearLayout
@@ -523,11 +607,11 @@
             android:id="@+id/btn_clear_queue"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="48dp"
             android:minHeight="0dp"
-            android:paddingHorizontal="10dp"
+            android:padding="8dp"
             android:text="Clear"
-            android:textSize="11sp"
+            android:textSize="14sp"
             app:icon="@drawable/rounded_delete_24"
             app:iconSize="14dp"
             app:iconGravity="textStart"/>

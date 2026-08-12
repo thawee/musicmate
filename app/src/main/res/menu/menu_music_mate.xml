@@ -1,119 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Copyright (C) 2014 The Android Open Source Project
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-  -->
+<!-- Right Slide Menu (ResideMenu.DIRECTION_RIGHT): App System, Library Folders & Settings -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto" >
-	<!--
-	<item
-		android:icon="@drawable/ic_file_find_black_24dp"
-		android:id="@+id/navigation_search"
-		android:title="Search"
-		app:showAsAction="always"/>
-		-->
-<!--
-    <item
-        android:id="@+id/menu_signal_path"
-        android:icon="@drawable/ic_baseline_audio_path_24"
-        android:title="Audio Route Path"
-        app:showAsAction="always" />
-        rounded_music_cast_24
-        ic_baseline_devices_128
-	<item
-		android:id="@+id/menu_media_server"
-		android:icon="@drawable/ic_baseline_devices_128"
-		android:title="Media Server"
-		app:showAsAction="always" />
--->
-	<item
-		android:id="@+id/menu_directories"
-		android:icon="@drawable/rounded_label_24"
-		android:title="Manage Library"
-		app:showAsAction="always" />
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<item
-        android:id="@+id/menu_settings"
-        android:icon="@drawable/rounded_display_settings_24"
-        android:title="Settings"
-        app:showAsAction="always" />
-
-	<!--
-	<item
-		android:id="@+id/menu_dlna_server"
-		android:icon="@drawable/rounded_music_cast_24"
-		android:title="Stream Server"
-		app:showAsAction="always" />
-	-->
-	<!--
-	<item
-		android:id="@+id/menu_output"
-		android:icon="@drawable/ic_action_cast"
-		android:title="Output"
-		app:showAsAction="always" />
--->
-
-	<!--
-	<item
-		android:id="@+id/menu_export_playlists"
-		android:icon="@drawable/ic_baseline_playlist_play_24"
-		android:title="Export Playlists"
-		app:showAsAction="always" />
--->
-	<item
-		android:id="@+id/menu_files_permission"
-		android:icon="@drawable/rounded_folder_managed_24"
-		android:title="Storage Access"
-		app:showAsAction="always" />
-
-	<item
-		android:id="@+id/menu_notification_access"
-		android:icon="@drawable/rounded_admin_panel_settings_24"
-		android:title="Notifications"
-		app:showAsAction="always" />
-
-	<!--
+    <!-- Library Management & Settings -->
+    <group android:id="@+id/group_system_management">
         <item
-            android:id="@+id/menu_full_scan"
-            android:icon="@drawable/ic_full_scan_black_24dp"
-            android:title="Full Scan Songs"
+            android:id="@+id/menu_directories"
+            android:icon="@drawable/rounded_label_24"
+            android:title="Manage Library"
             app:showAsAction="always" />
-    -->
-	<!--
-	<item
-		android:id="@+id/menu_about_libraries"
-		android:icon="@drawable/ic_outline_code_24"
-		android:title="Third-Party Libraries"
-		app:showAsAction="always" />
--->
 
-	<item
-		android:id="@+id/menu_about_crash"
-		android:icon="@drawable/rounded_bug_report_24"
-		android:title="Diagnostics"
-		app:showAsAction="always" />
+        <item
+            android:id="@+id/menu_settings"
+            android:icon="@drawable/rounded_display_settings_24"
+            android:title="Settings"
+            app:showAsAction="always" />
+    </group>
 
-	<item
-		android:id="@+id/menu_about_music_mate"
-		android:icon="@drawable/rounded_help_24"
-		android:title="About"
-		app:showAsAction="always" />
-<!--
-	<item
-		android:id="@+id/menu_about_log"
-		android:icon="@drawable/ic_round_copyright_24"
-		android:title="Log Messages"
-		app:showAsAction="always" />
--->
+    <!-- System Permissions & Access -->
+    <group android:id="@+id/group_system_permissions">
+        <item
+            android:id="@+id/menu_files_permission"
+            android:icon="@drawable/rounded_folder_managed_24"
+            android:title="Storage Access"
+            app:showAsAction="always" />
+
+        <item
+            android:id="@+id/menu_notification_access"
+            android:icon="@drawable/rounded_admin_panel_settings_24"
+            android:title="Notifications"
+            app:showAsAction="always" />
+    </group>
+
+    <!-- System Info & Diagnostics -->
+    <group android:id="@+id/group_system_about">
+        <item
+            android:id="@+id/menu_about_crash"
+            android:icon="@drawable/rounded_bug_report_24"
+            android:title="Diagnostics"
+            app:showAsAction="always" />
+
+        <item
+            android:id="@+id/menu_about_music_mate"
+            android:icon="@drawable/rounded_help_24"
+            android:title="About"
+            app:showAsAction="always" />
+    </group>
+
 </menu>

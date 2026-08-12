@@ -38,6 +38,27 @@
                 android:scaleType="centerCrop"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
 
+            <!-- Play overlay: only visible when track is currently playing -->
+            <FrameLayout
+                android:id="@+id/item_play_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/shape_now_playing_cover_overlay"
+                android:visibility="gone"
+                android:clickable="false"
+                android:focusable="false">
+
+                <ImageView
+                    android:id="@+id/item_play_overlay_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_equalizer_active"
+                    android:scaleType="centerInside"
+                    app:tint="@color/colorGold"
+                    android:contentDescription="@string/cd_now_playing_indicator" />
+            </FrameLayout>
+
             <apincer.android.mmate.ui.view.TriangleLabelView
                 android:id="@+id/item_new_label"
                 android:layout_width="match_parent"
@@ -50,6 +71,7 @@
                 app:primaryTextSize="8sp"
                 android:contentDescription="@string/cd_new_label" />
         </FrameLayout>
+
 
         <!-- Title + Subtitle -->
         <LinearLayout
@@ -144,27 +166,41 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintEnd_toStartOf="@id/item_more_menu"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="4dp">
 
+            <!--
             <apincer.android.mmate.ui.view.RatingIndicatorView
                 android:id="@+id/rating_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:mode="icon" />
-
-            <ImageView
-                android:id="@+id/item_player"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginStart="4dp"
-                android:background="@drawable/shape_round_background_playing"
-                android:padding="4dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_equalizer_active"
-                app:tint="@color/colorGold"
-                android:contentDescription="@string/cd_now_playing_indicator" />
+                -->
         </LinearLayout>
+
+        <apincer.android.mmate.ui.view.RatingIndicatorView
+            android:id="@+id/rating_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="@dimen/dimen_8_dp"
+            android:contentDescription="Favalite"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:mode="icon" />
+
+        <ImageView
+            android:id="@+id/item_more_menu"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:contentDescription="More options"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/rounded_more_vert_24" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -1,26 +1,14 @@
-# Plan: 3 Pro-Refinements for Music Center Hub
+# Fix Player Picker Menu Item Order Interleaving
 
-## Overview
-Implement 3 high-value UI/UX refinements in `AudioHubBottomSheet`:
-1. "Jump to Now Playing" quick-scroll button in Queue tab header.
-2. Vertical centering & 1-Tap "Copy Server URL" button in Server tab.
-3. Interactive Audio Route Path telemetry hint on Playback tab.
+## Objectives
+Fix menu order interleaving in `showPlayerPickerPopup` so that all playback devices/renderers (Group 0) are listed FIRST, and utility actions (Rescan & Bluetooth Setup) in Group 1 appear LAST at the bottom of the popup.
 
----
+## Tasks
+- [x] 1. Update `MainActivity.java`: Offset Group 1 utility item `order` values (`baseOrder = renderers.size() + 10`) so Android `MenuBuilder` sorts Group 1 items strictly after all Group 0 renderers.
+- [x] 2. Verify compilation (`./gradlew compileDebugSources`).
+- [x] 3. Document results in `tasks/todo.md`, update `DESIGN.md`, `CHANGELOG.md`, and `tasks/lessons.md`.
 
-## Tasks Checklist
-
-- [x] **Phase 1: Bluetooth Device in Player Selection Picker**
-  - [x] Update `MainActivity.showPlayerPickerPopup()` to detect connected Bluetooth audio output via `AudioOutputHelper`.
-  - [x] Enhance `Local Player` menu item label/icon in picker to show connected Bluetooth device (e.g., `🎧 Sony WH-1000XM4 (BT • LDAC)`).
-  - [x] Ensure selecting the Bluetooth / Local target routes audio via `playbackService.switchPlayer(localTarget)` and updates UI.
-
-- [x] **Phase 2: "Play Next" Functionality Fix**
-  - [x] Enhance `QueueManager.addPlayNext(Track song)` to prevent duplicates by removing existing track instances before inserting at `currentIndex + 1`.
-  - [x] Uncomment `R.id.action_play_next` menu item in `menu_main_actionmode.xml`.
-  - [x] Uncomment and wire `R.id.action_play_next` action handling in `MainActivity.java` `onActionItemClicked`.
-  - [x] Refresh `AudioHubBottomSheet` queue list after calling `addPlayNext`.
-
-- [x] **Phase 3: Verification & Git Commit**
-  - [x] Verify build with `./gradlew assembleDebug`.
-  - [x] Commit changes to Git.
+## Review & Results
+- **Root Cause Identified**: Android `PopupMenu` / `MenuBuilder` sorts menu items globally by the `order` parameter across all groups. Because Group 0 renderers were assigned `order = 0, 1, 2...` and Group 1 utility items were assigned `order = 0, 1`, Android interleave-sorted Group 1 items between Group 0 items.
+- **Fix Summary**: Offset Group 1 item order values to `baseOrder = (renderers.size() + 10)`. All playback target items now appear **FIRST**, followed by the divider line and utility actions at the very bottom.
+- **Verification**: Verified compilation cleanly with `./gradlew compileDebugSources` (`BUILD SUCCESSFUL`).

@@ -1,83 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press multi-select action mode menu.
+     Focused on batch tag management and file operations — no playback clutter. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<group android:id="@+id/main_items">
-	<item
-		android:icon="@drawable/ic_baseline_playlist_play_24"
-		android:id="@+id/action_play_next"
-		android:title="Play Next"
-		app:showAsAction="always"/>
-	<item
-		android:icon="@drawable/ic_baseline_queue_music_24"
-		android:id="@+id/action_add_queue"
-		android:title="Add to Queue"
-		app:showAsAction="always"/>
+    <!-- Primary: tag management — the app's core job -->
+    <item
+        android:id="@+id/action_edit_metadata"
+        android:icon="@drawable/ic_baseline_edit_note_24"
+        android:title="Edit Tags"
+        app:showAsAction="always" />
 
-	<item
-		android:icon="@drawable/ic_baseline_edit_note_24"
-		android:id="@+id/action_edit_metadata"
-		android:title="Song Info"
-		app:showAsAction="always"/>
+    <!-- File operations -->
+    <item
+        android:id="@+id/action_transfer_file"
+        android:icon="@drawable/rounded_drive_file_move_24"
+        android:title="Move Files"
+        app:showAsAction="always" />
 
-		<item
-			android:icon="@drawable/rounded_drive_file_move_24"
-			android:id="@+id/action_transfer_file"
-			android:title="Move Songs"
-			app:showAsAction="always"/>
+    <item
+        android:id="@+id/action_encoding_file"
+        android:icon="@drawable/rounded_swap_horiz_24"
+        android:title="Convert Files"
+        app:showAsAction="always" />
 
-	</group>
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@drawable/rounded_delete_24"
+        android:title="@string/action_delete"
+        app:showAsAction="always" />
 
-	<!--
-	<item
-		android:icon="@drawable/rounded_query_stats_24"
-		android:id="@+id/action_measure_dr"
-		android:title="Analyze Dynamic Range"
-		app:showAsAction="always"/>
-	-->
-	<group android:id="@+id/main_files">
+    <!-- Selection utility -->
+    <item
+        android:id="@+id/action_select_all"
+        android:icon="@drawable/rounded_select_all_24"
+        android:title="@string/action_select_all"
+        app:showAsAction="always" />
 
-		<item
-			android:icon="@drawable/rounded_swap_horiz_24"
-			android:id="@+id/action_encoding_file"
-			android:title="Convert Files"
-			app:showAsAction="always"/>
-
-		<item android:id="@+id/action_delete"
-		android:title="@string/action_delete"
-		android:icon="@drawable/rounded_delete_24"
-		app:showAsAction="always"/>
-	</group>
-
-	<item android:id="@+id/action_select_all"
-		android:title="@string/action_select_all"
-		android:icon="@drawable/rounded_select_all_24"
-		app:showAsAction="always"/>
-<!--
-	<item
-		android:icon="@drawable/round_playlist_play_24"
-		android:id="@+id/action_export_playlist"
-		android:title="Export to Playlist"
-		app:showAsAction="ifRoom"/>
-		-->
-<!--
-	<item
-		android:icon="@drawable/round_upload_file_24"
-		android:id="@+id/action_send_to_media_server"
-		android:title="Send to NAS Server"
-		app:showAsAction="collapseActionView"/>
-
-	<item
-		android:icon="@drawable/round_upload_file_24"
-		android:id="@+id/action_send_playlist_to_streaming"
-		android:title="Send as playlist to Streamer"
-		app:showAsAction="collapseActionView"/>
-		-->
-<!--
-	<item
-		android:icon="@drawable/round_upload_file_24"
-		android:id="@+id/action_send_to_hibyos"
-		android:title="Send to Hiby DAP"
-		app:showAsAction="collapseActionView"/>
-		-->
 </menu>

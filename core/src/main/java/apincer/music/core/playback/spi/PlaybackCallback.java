@@ -23,4 +23,7 @@ public abstract class PlaybackCallback {
     public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
 
     }
+
+    public void onPlaybackCompleted() {
+    }
 }

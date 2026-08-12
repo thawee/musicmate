@@ -1,73 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Copyright (C) 2014 The Android Open Source Project
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-  -->
+<!-- Left Slide Menu (ResideMenu.DIRECTION_LEFT): Library Navigation & Collection Filter -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto" >
-<!--
-    <item
-        android:icon="@drawable/ic_round_library_music_24"
-        android:id="@+id/menu_all_music"
-        android:title="@string/label_library"
-        app:showAsAction="always" />
--->
-    <!-- Browse -->
-    <item
-        android:icon="@drawable/rounded_library_music_24"
-        android:id="@+id/menu_library_all_songs"
-        android:title="@string/label_library_all_songs"
-        app:showAsAction="ifRoom" />
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item
-        android:icon="@drawable/rounded_for_you_24"
-        android:id="@+id/menu_tag_artist"
-        android:title="@string/artists"
-        app:showAsAction="ifRoom" />
+    <!-- Primary Library Views -->
+    <group android:id="@+id/group_library_primary">
+        <item
+            android:id="@+id/menu_library_all_songs"
+            android:icon="@drawable/rounded_library_music_24"
+            android:title="@string/label_library_all_songs"
+            app:showAsAction="ifRoom" />
 
-    <item
-        android:icon="@drawable/rounded_style_24"
-        android:id="@+id/menu_tag_genre"
-        android:title="@string/label_genres"
-        app:showAsAction="ifRoom" />
+        <item
+            android:id="@+id/menu_tag_artist"
+            android:icon="@drawable/rounded_for_you_24"
+            android:title="@string/artists"
+            app:showAsAction="ifRoom" />
 
-    <!-- Curate -->
-    <item
-        android:icon="@drawable/rounded_order_play_24"
-        android:id="@+id/menu_collection"
-        android:title="@string/label_collections"
-        app:showAsAction="ifRoom" />
+        <item
+            android:id="@+id/menu_tag_genre"
+            android:icon="@drawable/rounded_style_24"
+            android:title="@string/label_genres"
+            app:showAsAction="ifRoom" />
+    </group>
 
-    <!-- Discover -->
-    <item
-        android:icon="@drawable/rounded_add_diamond_24"
-        android:id="@+id/menu_library_recently_added"
-        android:title="@string/label_library_recently_added"
-        app:showAsAction="ifRoom" />
+    <!-- Curate & Collections -->
+    <group android:id="@+id/group_library_curate">
+        <item
+            android:id="@+id/menu_collection"
+            android:icon="@drawable/rounded_order_play_24"
+            android:title="@string/label_collections"
+            app:showAsAction="ifRoom" />
+    </group>
 
-    <item
-        android:icon="@drawable/rounded_auto_awesome_motion_24"
-        android:id="@+id/menu_library_similar_songs"
-        android:title="@string/label_library_similar_songs"
-        app:showAsAction="ifRoom" />
+    <!-- Discovery & Smart Views -->
+    <group android:id="@+id/group_library_discover">
+        <item
+            android:id="@+id/menu_library_recently_added"
+            android:icon="@drawable/rounded_add_diamond_24"
+            android:title="@string/label_library_recently_added"
+            app:showAsAction="ifRoom" />
 
-    <!-- Technical -->
-    <item
-        android:icon="@drawable/rounded_equalizer_24"
-        android:id="@+id/menu_sound_grade"
-        android:title="@string/menu_quality"
-        app:showAsAction="ifRoom" />
+        <item
+            android:id="@+id/menu_library_similar_songs"
+            android:icon="@drawable/rounded_auto_awesome_motion_24"
+            android:title="@string/label_library_similar_songs"
+            app:showAsAction="ifRoom" />
+    </group>
+
+    <!-- Audiophile & Quality Classification -->
+    <group android:id="@+id/group_library_technical">
+        <item
+            android:id="@+id/menu_sound_grade"
+            android:icon="@drawable/rounded_equalizer_24"
+            android:title="@string/menu_quality"
+            app:showAsAction="ifRoom" />
+    </group>
 
 </menu>
-

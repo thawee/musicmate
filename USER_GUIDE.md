@@ -7,6 +7,9 @@ Welcome to the **MusicMate** user guide! MusicMate is a high-performance Android
 ## Table of Contents
 1. [Getting Started & Permissions](#1-getting-started--permissions)
 2. [Exploring Your Music (MainActivity)](#2-exploring-your-music-mainactivity)
+   - [Gestures & Interactions](#gestures--interactions)
+   - [⋮ Single-Track Popup Menu](#-single-track-popup-menu)
+   - [Long-Press Action Mode](#long-press-action-mode-multi-select)
 3. [Editing Tags & Technical Details (TagsActivity)](#3-editing-tags--technical-details-tagsactivity)
 4. [DLNA Media Server Management](#4-dlna-media-server-management)
 5. [Best Practices & Tips](#5-best-practices--tips)
@@ -45,10 +48,44 @@ The main dashboard is optimized for handling extremely large music libraries.
 * **Smart Search & Quick Cast:** Search your library or tap the cast icon (`rounded_music_cast_24`) in the top header for instant 1-tap renderer switching.
   - **Dynamic Status Tinting:** Tints **Gold** (`#FFC107`) when casting to a remote DLNA renderer, and default theme tint when playing locally.
   - **Device Type & App Icons:** Target selection menu displays official **DLNA logo icons** for network renderers, **actual installed app icons** for Android music apps (Poweramp, UAPP, Foobar2000, etc.), version numbers (e.g. `Poweramp • v935`), and active checkmarks (`✓`).
-* **Smart Library Song List:**
-  - **Single Tap (Song Title / Details):** Opens **`TagsActivity`** (Metadata Editor) for 1-tap tag editing.
-  - **Single Tap (Album Cover Art Thumbnail):** Instantly enqueues and starts playing the track to the active player.
-  - **Long Press:** Activates Contextual Selection Mode for bulk editing, queue management, or file deletion.
+### Gestures & Interactions
+
+MusicMate uses a deliberate, purpose-built interaction model — every gesture has exactly one job:
+
+| Gesture | Target | Action |
+|---|---|---|
+| **Single tap** | Song row (title / info area) | Opens **TagsActivity** — always, unconditionally |
+| **Single tap** | Album cover art thumbnail | **Quick play** — starts playback in the active player |
+| **Long press** | Song row | Enters **multi-select mode** for batch operations |
+| **Tap `⋮`** | Per-item more button | Opens single-track **context popup** |
+
+> [!NOTE]
+> The cover art play indicator (▶ overlay) is only visible when a playback device is connected and active. When no player is available, tapping cover art shows a guidance toast.
+
+### `⋮` Single-Track Popup Menu
+
+Focused on **quick actions for one track**. The playback group is automatically hidden when no player device is active.
+
+| Action | Shown when |
+|---|---|
+| ▶ **Play Now** | Player active |
+| ⏭ **Play Next** | Player active |
+| ➕ **Add to Queue** | Player active |
+| 🔁 **Convert Format** | Always |
+| 🔗 **Open in External App** | Always |
+
+### Long-Press Action Mode (Multi-select)
+
+Focused exclusively on **batch tag management and file operations**. Playback actions are intentionally excluded to keep bulk operations clean.
+
+| Action | Description |
+|---|---|
+| 🏷 **Edit Tags** | Open TagsActivity with all selected tracks |
+| 📁 **Move Files** | Relocate selected files to another folder |
+| 🔁 **Convert Files** | Re-encode selected files to a target format |
+| 🗑 **Delete** | Permanently delete selected files |
+| ☑ **Select All** | Toggle select/deselect all visible items |
+
 * **Unified Floating Navigation & Playback Dock (Card 20dp):**
   - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and Menu.
   - **Playing State:** Dynamically embeds mini album art, scrolling track title, and player target subtitle (e.g. `HiBy R3 • DLNA Renderer`).

@@ -114,6 +114,7 @@ import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.MusicFileProvider;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.PlaylistRepository;
@@ -122,8 +123,6 @@ import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 
-
-// import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -224,11 +223,23 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private PlaybackState.State lastStateEnum = null;
+
     private void setNowPlaying(Track song, PlaybackState playbackState) {
         if (song != null) {
             mRecyclerView.post(() -> {
+                PlaybackState.State newStateEnum = playbackState != null ? playbackState.currentState : null;
+                boolean songChanged = !song.equals(previouslyPlaying);
+                boolean stateChanged = (lastStateEnum != newStateEnum);
+
                 lastPlaybackState = playbackState;
-                if(!song.equals(previouslyPlaying)) {
+                lastStateEnum = newStateEnum;
+
+                if (adapter != null) {
+                    adapter.setPlaybackState(playbackState);
+                }
+
+                if (songChanged) {
                     if (Settings.isListFollowNowPlaying(getBaseContext()) && (actionMode == null)) {
                         // only scrolled on first event for each song
                         if (scrollRunnable != null) {
@@ -242,15 +253,21 @@ public class MainActivity extends AppCompatActivity {
                         scrollHandler.postDelayed(scrollRunnable, 500); // 0.5 seconds
                     }
 
-                    // refresh music list
-                    adapter.notifyItemChanged(previouslyPlaying);
+                    // refresh previous playing music item
+                    if (previouslyPlaying != null) {
+                        adapter.notifyItemChanged(previouslyPlaying);
+                    }
+                    adapter.notifyItemChanged(song);
+                    updateGlassyPanelsColor(song);
+                } else if (stateChanged) {
+                    // refresh current playing music item only when play/pause state changes
                     adapter.notifyItemChanged(song);
                 }
+
                 if (nowPlayingLabel != null) {
                     nowPlayingLabel.setText(R.string.app_name);
                 }
                 previouslyPlaying = song;
-                updateGlassyPanelsColor(song);
                 updateFloatingPlaybackBar(song, playbackState);
             });
         } else {
@@ -259,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
                     nowPlayingLabel.setText(R.string.app_name);
                 }
                 lastPlaybackState = playbackState;
+                lastStateEnum = playbackState != null ? playbackState.currentState : null;
                 previouslyPlaying = null;
                 updateFloatingPlaybackBar(null, playbackState);
             });
@@ -280,12 +298,25 @@ public class MainActivity extends AppCompatActivity {
             }
             if (barAlbumArt != null) {
                 barAlbumArt.setVisibility(View.VISIBLE);
-                ImageRequest request = CoverartFetcher.builder(this, song)
-                        .data(song)
-                        .size(240, 240)
-                        .target(new coil3.target.ImageViewTarget(barAlbumArt))
-                        .build();
-                SingletonImageLoader.get(this).enqueue(request);
+                String songTag = song.getPath();
+                if (!songTag.equals(barAlbumArt.getTag())) {
+                    barAlbumArt.setTag(songTag);
+                    ImageRequest request = CoverartFetcher.builder(this, song)
+                            .data(song)
+                            .size(240, 240)
+                            .target(new coil3.target.ImageViewTarget(barAlbumArt))
+                            .build();
+                    SingletonImageLoader.get(this).enqueue(request);
+                }
+            }
+            if (barPlayPauseBtn != null && playbackState != null) {
+                if (playbackState.currentState == PlaybackState.State.PLAYING) {
+                    barPlayPauseBtn.setImageResource(R.drawable.ic_baseline_pause_24);
+                    barPlayPauseBtn.setContentDescription(getString(R.string.pause));
+                } else {
+                    barPlayPauseBtn.setImageResource(R.drawable.ic_baseline_play_arrow_24);
+                    barPlayPauseBtn.setContentDescription(getString(R.string.play));
+                }
             }
         } else {
             if (barTrackTitle != null) {
@@ -301,6 +332,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (barAlbumArt != null) {
                 barAlbumArt.setVisibility(View.VISIBLE);
+                barAlbumArt.setTag(null);
                 barAlbumArt.setImageResource(R.drawable.ic_now_playing_idle);
             }
         }
@@ -574,6 +606,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView barAlbumArt;
     private TextView barTrackTitle;
     private TextView barTargetSubtitle;
+    private ImageView barPlayPauseBtn;
+    private ImageView barNextBtn;
 
     private void setupFloatingPlaybackBar() {
         floatingPlaybackBar = findViewById(R.id.docked_playback_bar);
@@ -582,40 +616,48 @@ public class MainActivity extends AppCompatActivity {
         barAlbumArt = findViewById(R.id.bar_album_art);
         barTrackTitle = findViewById(R.id.bar_track_title);
         barTargetSubtitle = findViewById(R.id.bar_target_subtitle);
+        barPlayPauseBtn = findViewById(R.id.btn_dock_play_pause);
+        barNextBtn = findViewById(R.id.btn_dock_next);
 
         View titleContainer = findViewById(R.id.bar_title_container);
         View.OnClickListener openNowPlayingListener = v -> {
-            AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_NOW_PLAYING);
+            // Sticky tab: reopen at the last tab the user viewed this session
+            AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance();
             sheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
         };
 
         if (titleContainer != null) {
             titleContainer.setOnClickListener(openNowPlayingListener);
-            titleContainer.setOnLongClickListener(v -> {
-                doShowSignalPath();
-                return true;
-            });
         }
 
         if (barAlbumArt != null) {
             barAlbumArt.setOnClickListener(openNowPlayingListener);
         }
+        
+        if (barPlayPauseBtn != null) {
+            barPlayPauseBtn.setOnClickListener(v -> {
+                if (playbackService != null) {
+                    if (lastPlaybackState != null && lastPlaybackState.currentState == PlaybackState.State.PLAYING) {
+                        playbackService.pausePlayer();
+                    } else {
+                        Track nowPlaying = playbackService.getNowPlayingSong();
+                        if (nowPlaying != null) playbackService.playSong(nowPlaying);
+                    }
+                }
+            });
+        }
+        
+        if (barNextBtn != null) {
+            barNextBtn.setOnClickListener(v -> {
+                if (playbackService != null) {
+                    playbackService.skipToNextInQueue();
+                }
+            });
+        }
     }
 
     public PlaybackState getLastPlaybackState() {
         return lastPlaybackState;
-    }
-
-    public void doShowSignalPath() {
-
-        if(playbackService != null && playbackService.getPlayer() != null) {
-            if(!playbackService.getPlayer().isStreaming()) {
-                playbackService.switchPlayer(playbackService.getPlayer(), true);
-            }
-        }
-
-        AudioHubBottomSheet bottomSheet = AudioHubBottomSheet.newInstance(AudioHubBottomSheet.TAB_NOW_PLAYING);
-        bottomSheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
     }
 
     private void setupRecycleView(SearchCriteria searchCriteria) {
@@ -808,9 +850,15 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if (view.getId() == R.id.item_more_menu) {
+                showTrackPopupMenu(view, tag);
+                return;
+            }
+
             if(tag.isContainer()) {
                 doStartRefresh(tag.getContainerType(), tag.getTitle());
             } else {
+                // Single click always opens TagsActivity — the app's primary purpose
                 doShowEditActivity(Collections.singletonList(tag));
             }
         };
@@ -829,10 +877,11 @@ public class MainActivity extends AppCompatActivity {
 
             Track tag = adapter.getMusicTag(position);
             if (tag != null && !tag.isContainer()) {
+                // Cover art always triggers quick play
                 if (isPlaybackServiceBound && playbackService != null) {
-                    playbackService.playSong(tag);
+                    viewModel.playTrackList(adapter.getSongs(), tag, playbackService);
                 } else {
-                    doShowEditActivity(Collections.singletonList(tag));
+                    android.widget.Toast.makeText(MainActivity.this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -1175,8 +1224,58 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void showTrackPopupMenu(View anchorView, Track track) {
+        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
+        popup.getMenuInflater().inflate(R.menu.menu_track_popup, popup.getMenu());
+
+        // Show/hide playback group based on whether a player device is active
+        boolean playerActive = isPlaybackServiceBound && playbackService != null;
+        popup.getMenu().setGroupVisible(R.id.group_playback, playerActive);
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            List<Track> singleTrackList = Collections.singletonList(track);
+            if (id == R.id.action_play_now) {
+                viewModel.playTrackList(adapter.getSongs(), track, playbackService);
+                return true;
+            } else if (id == R.id.action_play_next) {
+                playbackService.getQueueManager().addPlayNext(track);
+                android.widget.Toast.makeText(MainActivity.this, "Playing next", android.widget.Toast.LENGTH_SHORT).show();
+                androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
+                if (sheet instanceof AudioHubBottomSheet audioHub) {
+                    audioHub.refreshUI();
+                }
+                return true;
+            } else if (id == R.id.action_add_queue) {
+                playbackService.getQueueManager().addPlayingQueue(track.getId());
+                android.widget.Toast.makeText(MainActivity.this, "Added to queue", android.widget.Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (id == R.id.action_encoding_file) {
+                doEncodeAudioFiles(singleTrackList);
+                return true;
+            } else if (id == R.id.action_open_with) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                android.net.Uri uri = MusicFileProvider.getUriForFile(track.getPath());
+                intent.setDataAndType(uri, "audio/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    startActivity(Intent.createChooser(intent, "Open with"));
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start external player activity", e);
+                }
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
     public void showPlayerPickerPopup(View anchorView) {
         if (!isPlaybackServiceBound || playbackService == null) return;
+
+        // Auto-trigger M-SEARCH the moment the popup opens — list will be fresh by the time
+        // the user finishes reading it, without requiring a manual rescan tap.
+        playbackService.refreshPlayerDiscovery();
 
         androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
         List<apincer.music.core.playback.spi.PlaybackTarget> renderers = playbackService.getPlaybackTargets();
@@ -1185,6 +1284,7 @@ public class MainActivity extends AppCompatActivity {
         apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice =
                 apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, playbackService.getNowPlayingSong());
 
+        // Group 0 = player targets (primary selection items)
         if (renderers != null && !renderers.isEmpty()) {
             for (int i = 0; i < renderers.size(); i++) {
                 apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
@@ -1223,32 +1323,34 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else {
-            popup.getMenu().add(0, -1, 0, "No players discovered");
+            android.view.MenuItem noPlayersItem = popup.getMenu().add(0, -1, 0, "Scanning for players…");
+            noPlayersItem.setEnabled(false);
         }
 
-        // Bluetooth / Audio Output option
+        // Group 1 = utility/discovery actions — visually separated from player targets.
+        // Order offset: Must use baseOrder > any Group 0 item index so Android MenuBuilder
+        // places Group 1 items strictly AFTER all Group 0 target renderers.
+        int baseOrder = (renderers != null ? renderers.size() : 0) + 10;
+        final int RESCAN_ID = 9999;
+        android.view.MenuItem rescanItem = popup.getMenu().add(1, RESCAN_ID, baseOrder, "Rescan for DLNA players");
+        rescanItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_baseline_refresh_24));
+
         final int BLUETOOTH_ID = 9998;
-        android.view.MenuItem btItem = popup.getMenu().add(1, BLUETOOTH_ID, BLUETOOTH_ID, "Bluetooth / System Output...");
+        android.view.MenuItem btItem = popup.getMenu().add(1, BLUETOOTH_ID, baseOrder + 1, "Bluetooth / System Output…");
         btItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_bluetooth_audio_24));
 
-        // Always show rescan option at the bottom
-        final int RESCAN_ID = 9999;
-        android.view.MenuItem rescanItem = popup.getMenu().add(1, RESCAN_ID, RESCAN_ID, "Rescan for players");
-        rescanItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_baseline_refresh_24));
+        // Draw a visual divider between player targets and utility actions (API 28+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            popup.getMenu().setGroupDividerEnabled(true);
+        }
 
         apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
 
         popup.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == BLUETOOTH_ID) {
-                openSystemAudioOutputPanel();
-                return true;
-            }
             if (item.getItemId() == RESCAN_ID) {
-                // Trigger UPnP M-SEARCH (MX=5)
+                // Manual rescan — auto-rescan already fired on open, this is a "try again" fallback
                 playbackService.refreshPlayerDiscovery();
-                // Give immediate feedback
-                android.widget.Toast.makeText(this, "🔄 Scanning for players…", android.widget.Toast.LENGTH_SHORT).show();
-                // Poll every 500ms until we find players (or 6s elapses = 12 attempts)
+                android.widget.Toast.makeText(this, "Scanning for players…", android.widget.Toast.LENGTH_SHORT).show();
                 if (anchorView != null) {
                     final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
                     final int[] attempts = {0};
@@ -1270,6 +1372,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true;
             }
+            if (item.getItemId() == BLUETOOTH_ID) {
+                openSystemAudioOutputPanel();
+                return true;
+            }
             if (renderers != null && item.getItemId() >= 0 && item.getItemId() < renderers.size()) {
                 apincer.music.core.playback.spi.PlaybackTarget selectedPlayer = renderers.get(item.getItemId());
                 playbackService.switchPlayer(selectedPlayer, true);
@@ -1283,6 +1389,7 @@ public class MainActivity extends AppCompatActivity {
 
         popup.show();
     }
+
 
     public void openSystemAudioOutputPanel() {
         try {
@@ -1322,8 +1429,6 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
         View btnOK = cview.findViewById(R.id.button_ok);
         CheckBox checkboxFullScan = cview.findViewById(R.id.checkbox_full_scan);
-       // View btnOKFull = cview.findViewById(R.id.button_ok_full);
-        View btnCancel = cview.findViewById(R.id.btn_close);
 
         List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
@@ -1437,7 +1542,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> alert.dismiss());
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> alert.dismiss());
+        }
         alert.show();
     }
 
@@ -1569,7 +1682,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         MaterialButton btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.btn_close);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
         btnOK.setText(R.string.move_to_trash);
@@ -1627,15 +1739,26 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(() -> {
                                 viewModel.loadMusicItems();
                                 busy = false;
+                                alert.dismiss();
                             });
                         }
                     });
         });
 
-        btnCancel.setOnClickListener(v -> {
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
+
+        View.OnClickListener cancelListener = v -> {
             alert.dismiss();
             busy = false;
-        });
+        };
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(cancelListener);
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(cancelListener);
+        }
 
         alert.show();
     }
@@ -1690,8 +1813,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        TextView btnOK = cview.findViewById(R.id.button_ok);
-        View btnCancel = cview.findViewById(R.id.btn_close);
+        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
         btnOK.setText(R.string.move_to_music);
@@ -1747,15 +1869,26 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(() -> {
                                 viewModel.loadMusicItems();
                                 busy = false;
+                                alert.dismiss();
                             });
                         }
                     });
         });
 
-        btnCancel.setOnClickListener(v -> {
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
+
+        View.OnClickListener cancelListener = v -> {
             alert.dismiss();
             busy = false;
-        });
+        };
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(cancelListener);
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(cancelListener);
+        }
 
         alert.show();
     }
@@ -1770,7 +1903,6 @@ public class MainActivity extends AppCompatActivity {
         AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
         AutoCompleteTextView sampleRateView = cview.findViewById(R.id.sample_rate);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
-        View btnCancel = cview.findViewById(R.id.btn_close);
         ImageView titleIcon = cview.findViewById(R.id.title_icon);
         if (titleIcon != null) {
             titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_swap_horiz_24));
@@ -1897,15 +2029,26 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(() -> {
                                 viewModel.loadMusicItems();
                                 busy = false;
+                                alert.dismiss();
                             });
                         }
                     });
         });
 
-        btnCancel.setOnClickListener(v -> {
+        View btnClose = cview.findViewById(R.id.btn_close);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
+
+        View.OnClickListener cancelListener = v -> {
             alert.dismiss();
             busy = false;
-        });
+        };
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(cancelListener);
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(cancelListener);
+        }
 
         alert.show();
     }
@@ -2039,55 +2182,26 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
-            if (id == R.id.action_play_next) {
-                List<Track> selectedSongs = getSelections();
-                if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
-                    for (int i = selectedSongs.size() - 1; i >= 0; i--) {
-                        playbackService.getQueueManager().addPlayNext(selectedSongs.get(i));
-                    }
-                    android.widget.Toast.makeText(MainActivity.this, "Playing next: " + selectedSongs.size() + " track(s)", android.widget.Toast.LENGTH_SHORT).show();
-                    androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
-                    if (sheet instanceof AudioHubBottomSheet audioHub) {
-                        audioHub.refreshUI();
-                    }
-                }
-                mode.finish();
-                return true;
-            } else if (id == R.id.action_add_queue) {
-                List<Track> selectedSongs = getSelections();
-                if (!selectedSongs.isEmpty() && isPlaybackServiceBound && playbackService != null) {
-                    for (Track t : selectedSongs) {
-                        playbackService.getQueueManager().addPlayingQueue(t.getId());
-                    }
-                }
-                mode.finish();
-                return true;
-            } else if (id == R.id.action_delete) {
-                doDeleteMediaItems(getSelections());
+            if (id == R.id.action_edit_metadata) {
+                doShowEditActivity(getSelections());
                 mode.finish();
                 return true;
             } else if (id == R.id.action_transfer_file) {
                 doMoveMediaItems(getSelections());
                 mode.finish();
                 return true;
-            } else if (id == R.id.action_edit_metadata) {
-                doShowEditActivity(getSelections());
-                mode.finish();
-                return true;
             } else if (id == R.id.action_encoding_file) {
                 doEncodeAudioFiles(getSelections());
                 mode.finish();
                 return true;
-            /*} else if (id == R.id.action_measure_dr) {
-                doMeasureDR(getSelections());
+            } else if (id == R.id.action_delete) {
+                doDeleteMediaItems(getSelections());
                 mode.finish();
-                return true; */
+                return true;
             } else if (id == R.id.action_select_all) {
                 if (mTracker.getSelection().size() == adapter.getItemCount()) {
-                    // Selected all, reset selection
                     mTracker.clearSelection();
                 } else {
-                    // Select all items
                     for (int i = 0; i < adapter.getItemCount(); i++) {
                         mTracker.select((long) i);
                     }

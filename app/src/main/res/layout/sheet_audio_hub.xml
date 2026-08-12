@@ -60,10 +60,10 @@
 
             <ImageView
                 android:id="@+id/btn_select_target_player"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginEnd="8dp"
-                android:padding="6dp"
+                android:padding="12dp"
                 android:src="@drawable/rounded_music_cast_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Select Player"
@@ -71,10 +71,10 @@
 
             <ImageView
                 android:id="@+id/btn_close_audio_hub"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="6dp"
-                android:src="@drawable/round_close_24"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:src="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Close"
                 app:tint="@color/white" />
@@ -85,7 +85,7 @@
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/audio_hub_tab_group"
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="48dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="10dp"

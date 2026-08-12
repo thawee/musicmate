@@ -35,6 +35,10 @@ public class MediaServerViewModel extends ViewModel {
         serverManager.stopServer();
     }
 
+    public void restartServer() {
+        serverManager.restartServer();
+    }
+
     // The ViewModel handles unbinding when it is cleared (i.e., when the UI is permanently gone).
     @Override
     protected void onCleared() {

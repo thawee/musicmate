@@ -13,6 +13,7 @@
 *   🎼 **[Music Quality Guide](MUSIC_QUALITY_GUIDE.md)** - A reference for understanding Bit Depth and Dynamic Range.
 *   🛠️ **[Contributing Guide](CONTRIBUTING.md)** - Developer setup, build instructions, and architecture overview.
 *   📡 **[Network Resilience](NETWORK_RESILIENCE.md)** - WiFi loss recovery and hotspot mode support.
+*   🎨 **[UI/UX Design Principles & ADRs](DESIGN.md)** - Interaction model, gesture rules, menu architecture, and UX decision records.
 *   📜 **[Changelog](CHANGELOG.md)** - Detailed history of changes and release updates.
 
 ---

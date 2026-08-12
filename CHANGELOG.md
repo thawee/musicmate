@@ -5,7 +5,67 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.16] - 2026-08-12
+
+### Changed
+- **Now Playing Cover Art Overlay & Playing Indicators (`MusicTagAdapter`)**:
+  - **Scoped Overlay Visibility:** Replaced global dark overlay on all list items with dynamic, single-track cover art overlay (`shape_now_playing_cover_overlay.xml`) rendered exclusively on the currently playing song (`isNowPlaying`). Non-playing tracks retain clean, full-brightness artwork.
+  - **Animated Vector Equalizer:** Integrated real-time `AnimatedVectorDrawable` equalizer (`ic_equalizer_active`) on the cover art overlay when playing (`PLAYING`), and a Gold pause icon (`ic_baseline_pause_24`) when paused (`PAUSED`).
+  - **Active Track Title Highlight:** Highlighted active song titles in `@color/colorGold` and updated `MainActivity.java` to notify the adapter on play/pause state changes.
+  - **Single Indicator Surface:** Removed the duplicate `item_player` equalizer icon from the top-right status indicator bar to prevent UI clutter.
+- **Artwork Gesture Overlay Feedback & Micro-Pill Telemetry (`AudioHubBottomSheet`)**:
+  - **Gesture Overlay Animation:** Added central `ImageView` overlay (`sheet_gesture_feedback_icon`) on album art to flash 48dp action icons (`play`, `pause`, `skip_next`, `skip_previous`) during double-tap and horizontal fling gestures with a smooth scale-up (`0.7f` $\rightarrow$ `1.2f`) and fade-out animation.
+  - **Micro-Pill Telemetry Badges:** Formatted audio route source specs (`FLAC 24/96`) and target renderers into micro-pill badges (`shape_telemetry_chip_source.xml`, `shape_telemetry_chip_target.xml`) with `12dp` rounded corners and colored borders. Target renderer labels now include rich device metadata (e.g. `Sony WH-1000XM5 (Bluetooth A2DP)`, `HiBy R3 • 192.168.1.50`), matching the player selection popup.
+
+### Fixed
+- **Player Picker Popup Menu Interleaving (`MainActivity.java`)**:
+  - Fixed menu item interleaving where Group 1 utility actions (*Rescan* and *Bluetooth Setup*) appeared between Group 0 playback targets. Offset Group 1 menu order values (`baseOrder = renderers.size() + 10`) so utility actions always remain strictly at the bottom below the group divider line.
+- **Cover Art Flickering During Playback Progress Updates (`MainActivity`, `MusicTagAdapter`)**:
+  - Suppressed full `RecyclerView` item rebinds (`adapter.notifyItemChanged`) and redundant Coil image loading requests on 1-second progress ticks during active playback.
+  - Added `imageView.setTag(song.getPath())` guards on `barAlbumArt` (bottom navbar) and `mCoverArtView` (music list) to prevent Coil from re-fetching bitmaps when the same track is already loaded.
+- **VectorDrawable Property Animation Crash (`ic_equalizer_active.xml`)**:
+  - Fixed runtime `java.lang.IllegalArgumentException: Property: scaleY is not supported for FullPath` by wrapping animated bar paths in individual `<group>` tags with pivot points (`pivotX`, `pivotY="12"`).
+
+## [3.18.15] - 2026-08-11
+
+### Added
+- **UI/UX Design Principles & ADRs (`DESIGN.md`)** — Added dedicated design documentation outlining product philosophy, gesture mapping, surface menu decoupling rules, player picker UX, and Architecture Decision Records (ADRs).
+
+### Changed
+- **Music List Interaction Model** — Redesigned item interactions to align with the app's core purpose (tag management):
+  - **Single tap (row)** now always opens `TagsActivity` unconditionally, regardless of playback state. Previously the behaviour was inconsistent — opening the tag editor only when no player was connected.
+  - **Cover art tap** is now the dedicated quick-play trigger. When a playback device is active, tapping the cover art immediately plays the track in context. When no device is available, a toast guides the user.
+  - **Cover art play indicator** — A subtle play icon overlay is shown on the album art only when a playback device is connected and active, acting as a dual signal: "tap to play" and "a player is ready".
+- **Menu Rationalization** — Split the shared action menu into two purpose-built menus:
+  - **`⋮` Popup (single track)** — Focuses on quick playback actions (`Play Now`, `Play Next`, `Add to Queue`) and file-level operations (`Convert Format`, `Open in External App`). The playback group is hidden entirely when no player device is active. `Song Info`, `Move`, and `Delete` removed — no longer needed since single-click opens tags directly.
+  - **Long-press Action Mode (multi-select)** — Focused exclusively on batch tag and file management: `Edit Tags`, `Move Files`, `Convert Files`, `Delete`, `Select All`. Playback actions removed to reduce clutter for bulk operations.
+  - Introduced `menu_track_popup.xml` as a dedicated single-item popup menu, decoupled from `menu_main_actionmode.xml`.
+- **Cast / Output Device Picker UX** — Resolved mixed affordances in the player selection popup:
+  - **Auto-scan on open** — M-SEARCH is triggered the moment the popup opens, so DLNA devices are already being discovered as the user reads the list. No manual tap required in the common case.
+  - **Visual group divider** — A horizontal divider (API 28+) now separates selectable player targets from utility actions, making it visually clear which items switch the output and which trigger system actions.
+  - **Logical item order** — "Rescan for DLNA players" moved above "Bluetooth / System Output…". Rescan adds items to the list above it; Bluetooth exits the app — these are fundamentally different and now ordered by proximity to their effect.
+  - **Empty state label** — When no players are discovered yet, shows a disabled "Scanning for players…" placeholder instead of a tappable "No players discovered" item.
+- **Tag Activity "More Actions" Menu UX** — Organized `tag_more_actions_menu.xml` into three functional groups with icons and visual group dividers (API 28+):
+  - **Tag Automation Group:** `Auto-Tag (MusicBrainz)` and `Search & Match Tags`.
+  - **Audio Analysis Group:** `Verify Lossless Quality`.
+  - **File & External Tools Group:** `Show in File Manager` and `Search Song on Web`.
+  - Enabled icon rendering (`UIUtils.makePopForceShowIcon`) and group dividers for instant scannability.
+- **Left & Right Slide Menu Architecture (`ResideMenu`)** — Refactored XML menu files into clean functional groups and removed deprecated legacy code:
+  - **Left Slide Menu (`menu_music_collection.xml`):** Dedicated to **Music Content & Library Filtering** (Browse: All/Artists/Genres, Curate: Collections, Discover: Recently Added/Similar, Quality Grade).
+  - **Right Slide Menu (`menu_music_mate.xml`):** Dedicated to **App System & Controls** (Manage Library, Settings, Storage & Notification Access Permissions, Diagnostics, About).
+
+
+### Fixed
+- **Pre-existing `PlaybackService` API mismatches** — Corrected three stale method calls that prevented compilation:
+  - `PlaybackState.isPlaying()` → `playbackState.currentState == PlaybackState.State.PLAYING`
+  - `PlaybackService.pause()` → `pausePlayer()`
+  - `PlaybackService.play()` → `playSong(getNowPlayingSong())`
+  - `PlaybackService.skipToNext()` → `skipToNextInQueue()`
+
+---
+
 ## [3.18.14] - 2026-08-09
+
 
 ### Added
 - **Bluetooth Audio Playback Suite**:

@@ -85,4 +85,20 @@
   - **Full-Height Tab Viewports**: Separate Now Playing artwork/telemetry, Queue management, and Media Server status into dedicated full-height ViewPager2 pages rather than pinning a cramped queue at the bottom.
   - **Dedicated Queue Viewport**: Gives the Queue list maximum vertical viewport space (displaying 8–12 upcoming tracks at once), complete with total remaining playback duration (`X tracks • Y min total`), drag-to-reorder, swipe-to-remove, and 1-tap clear actions.
   - **Spacious Playback Viewport**: Gives artwork and Audio Route Path telemetry room to expand without visual clutter or vertical scrolling truncation.
+- **Now Playing Cover Art Overlay Scoping & Animated Vector Equalizer**:
+  - Never display playback action or dark overlays (`mPlayOverlay`) indiscriminately across all items in a list based on service connectivity (`playbackService != null`). Scope overlays strictly to the active track (`tag.equals(playbackService.getNowPlayingSong())`) so non-playing items retain clean, un-obscured artwork.
+  - Dynamically animate vector equalizer drawables (`ic_equalizer_active` via `AnimatedVectorDrawable.start()`) when `playbackState.currentState == State.PLAYING`, and show a sleek pause icon (`ic_baseline_pause_24`) when paused.
+  - Match overlay shape geometries (`shape_now_playing_cover_overlay.xml` with `corners android:radius="16dp"`) to the underlying cover art (`ShapeAppearance.RoundedImageView`), and highlight active track titles in Gold (`@color/colorGold`) for clear visual hierarchy.
+- **AnimatedVectorDrawable Group Target Requirement**:
+  - `AnimatedVectorDrawable` property animators like `scaleY`, `scaleX`, `rotation`, `translateX`, and `translateY` are supported ONLY on `<group>` elements inside VectorDrawables. Targeting `<path>` elements directly causes runtime `java.lang.IllegalArgumentException: Property: scaleY is not supported for FullPath` when `AnimatedVectorDrawable.start()` is called. Always wrap target `<path>` elements in individual `<group>` tags with pivot coordinates set (`pivotX`, `pivotY`).
+  - Always wrap `AnimatedVectorDrawable.start()` and `stop()` calls in defensive `try { ... } catch (Throwable ignored) {}` blocks to prevent platform rendering edge-case crashes on main UI threads.
+- **PopupMenu Global Order Sorting Across Groups**:
+  - Android `PopupMenu` / `MenuBuilder` sorts menu items across ALL groups using the `order` parameter passed to `menu.add(groupId, itemId, order, title)`.
+  - If Group 0 items use `order = 0, 1, 2...` and Group 1 items also start at `order = 0, 1`, Android will interleave Group 1 items between Group 0 items.
+  - To guarantee that Group 1 items appear strictly at the bottom below a group divider, offset Group 1 `order` values to a higher index (`baseOrder = group0List.size() + 10`).
+
+
+
+
+
 

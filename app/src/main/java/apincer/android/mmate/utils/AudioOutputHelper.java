@@ -150,9 +150,8 @@ public class AudioOutputHelper {
             int sampleRate = (track != null) ? (int) track.getAudioSampleRate() : 44100;
             outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, sampleRate));
             if (isBluetoothDevice(selectedDevice)) {
-                String btCodec = detectBluetoothCodec(selectedDevice);
-                outputDevice.setCodec(btCodec);
-                outputDevice.setDescription("BT • " + btCodec);
+                outputDevice.setCodec("");
+                outputDevice.setDescription("Bluetooth Audio");
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
             } else {
                 outputDevice.setDescription(typeToString(selectedDevice.getType()));
@@ -183,25 +182,7 @@ public class AudioOutputHelper {
         return false;
     }
 
-    private static String detectBluetoothCodec(AudioDeviceInfo device) {
-        if (device == null) return "BT Audio";
-        int[] encodings = device.getEncodings();
-        if (encodings != null) {
-            for (int enc : encodings) {
-                if (enc == 23 || enc == 28) {
-                    return "LDAC";
-                }
-                if (enc == AudioFormat.ENCODING_AAC_LC || enc == AudioFormat.ENCODING_AAC_HE_V1 
-                        || enc == AudioFormat.ENCODING_AAC_HE_V2 || enc == AudioFormat.ENCODING_AAC_ELD) {
-                    return "AAC";
-                }
-                if (enc == AudioFormat.ENCODING_MP3) {
-                    return "MP3";
-                }
-            }
-        }
-        return "SBC";
-    }
+
 
     // Check if the current path is truly bit-perfect (Android 14+)
     public static boolean isBitPerfect(Context context, AudioDeviceInfo device, int trackSampleRate) {
@@ -248,11 +229,15 @@ public class AudioOutputHelper {
     }
 
     private static int getDevicePriority(int type) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (type == AudioDeviceInfo.TYPE_BLE_HEADSET || type == AudioDeviceInfo.TYPE_BLE_SPEAKER) {
+                return 3;
+            }
+        }
         return switch (type) {
             case AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET,
                  AudioDeviceInfo.TYPE_USB_ACCESSORY -> 4; // Top priority: USB DACs/High-Res Output
-            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> 3; // Mid priority: Wireless (Convenience)
-            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> 2; // Mid priority: Wireless (Convenience)
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> 3; // Mid priority: Wireless (Convenience)
             case AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET ->
                     1; // Standard Analog Output
             case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> 0; // Fallback: Internal Speakers

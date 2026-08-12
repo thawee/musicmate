@@ -144,7 +144,16 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         @Override
         public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
+            apincer.music.core.playback.PlaybackState current = getPlaybackStateFlow().getValue();
+            if (state != null && state.currentTrack == null && current != null) {
+                state.currentTrack = current.currentTrack; // Preserve track if missing from callback state
+            }
             MusicMateServiceImpl.this.onPlaybackStateChanged(state);
+        }
+
+        @Override
+        public void onPlaybackCompleted() {
+            skipToNextInQueue();
         }
 
         @Override
@@ -185,7 +194,21 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         addLocalPlaybackTarget(null, true);
 
         // Always register default Local Audio Output target
-        PlaybackTarget localTarget = ExternalAndroidPlayer.Factory.createLocalTarget(getApplicationContext());
+        apincer.android.mmate.utils.AudioOutputHelper.Device outDev = 
+                apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(getApplicationContext(), null);
+        String localName = "Local Device";
+        String localDesc = "System Audio Output";
+        if (outDev != null) {
+            if (outDev.getName() != null && !outDev.getName().isEmpty()) {
+                localName = outDev.getName();
+            }
+            if (outDev.getDescription() != null && !outDev.getDescription().isEmpty()) {
+                localDesc = outDev.getDescription();
+            }
+        }
+        
+        PlaybackTarget localTarget = ExternalAndroidPlayer.Factory.createLocalTarget(
+                getApplicationContext(), localName, localDesc);
         if (localTarget != null) {
             addLocalPlaybackTarget(localTarget, false);
         }
@@ -431,6 +454,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
                 androidPlayer.play(song);
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                    currentTrackFlow.setValue(Optional.of(song));
+                    apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                    state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+                    state.currentTrack = song;
+                    playbackStateFlow.setValue(state);
+                }
             }
         });
     }
@@ -442,7 +472,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 internalSkipToNextOnDMRPlayer(playbackTarget);
             } else {
                 // external player
-                androidPlayer.skipToNext();
+                if (!androidPlayer.skipToNext()) {
+                    // Fallback to manual play next for LOCAL_TARGET_ID
+                    Track current = getNowPlayingSong();
+                    if (current != null) {
+                        queueManager.setCurrentTrack(current);
+                    }
+                    Track nextSong = queueManager.getNextTrack();
+                    if (nextSong != null) {
+                        queueManager.setPlaybackTrack(nextSong);
+                        playSong(nextSong);
+                    }
+                }
             }
         });
     }
@@ -479,7 +520,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 internalPreviousOnDMRPlayer(playbackTarget);
             } else {
                 // external player
-                androidPlayer.skipToPrevious();
+                if (!androidPlayer.skipToPrevious()) {
+                    // Fallback to manual play previous for LOCAL_TARGET_ID
+                    Track current = getNowPlayingSong();
+                    if (current != null) {
+                        queueManager.setCurrentTrack(current);
+                    }
+                    Track prevSong = queueManager.getPreviousTrack();
+                    if (prevSong != null) {
+                        queueManager.setPlaybackTrack(prevSong);
+                        playSong(prevSong);
+                    }
+                }
             }
         });
     }

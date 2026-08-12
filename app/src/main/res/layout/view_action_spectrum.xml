@@ -20,8 +20,6 @@
         android:background="@drawable/shape_dot_indicator"
         android:backgroundTint="#55FFFFFF" />
 
-
-    
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -69,11 +67,11 @@
 
         <ImageView
             android:id="@+id/btn_close"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="6dp"
+            android:padding="12dp"
             android:src="@drawable/round_close_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
@@ -200,12 +198,13 @@
                 android:layout_height="0dp"
                 android:scaleType="fitXY" />
         </androidx.cardview.widget.CardView>
-       <!--
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="end"
+            android:layout_marginTop="8dp">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_ok"
                 style="@style/Widget.Material3.Button.TonalButton"
@@ -215,7 +214,6 @@
                 android:backgroundTint="@color/teal_200"
                 android:textColor="@color/black" />
         </LinearLayout>
-        -->
     </LinearLayout>
     <!--
     <View

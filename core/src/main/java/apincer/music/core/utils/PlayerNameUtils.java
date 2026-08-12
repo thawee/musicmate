@@ -149,6 +149,10 @@ public final class PlayerNameUtils {
         if (player instanceof apincer.music.core.playback.DMRPlayer) {
             return !ip.isEmpty() ? name + "\n(" + ip + " • DLNA Renderer)" : name + "\n(DLNA Renderer)";
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+            if (apincer.music.core.playback.ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
+                String desc = player.getDescription();
+                return desc != null && !desc.isEmpty() ? name + "\n(" + desc + ")" : name;
+            }
             String vStr = formatAppVersion(player.getDescription());
             return !vStr.isEmpty() ? name + "\n(" + vStr + " • Android App)" : name + "\n(Android App)";
         } else if (player.isStreaming()) {
@@ -170,6 +174,10 @@ public final class PlayerNameUtils {
         if (!ip.isEmpty()) {
             return name + " • " + ip;
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
+            if (apincer.music.core.playback.ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
+                String desc = player.getDescription();
+                return desc != null && !desc.isEmpty() ? name + " • " + desc : name;
+            }
             String vStr = formatAppVersion(player.getDescription());
             return !vStr.isEmpty() ? name + " • " + vStr : name + " • Android App";
         }

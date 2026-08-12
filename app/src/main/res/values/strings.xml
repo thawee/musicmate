@@ -460,6 +460,7 @@
     <string name="cd_arrow_right">Arrow Right</string>
     <string name="cd_notification_icon">Notification</string>
     <string name="cd_now_playing_indicator">Now Playing</string>
+    <string name="cd_quick_play">Quick play</string>
     <string name="cd_qr_code">QR Code</string>
     <string name="cd_chevron_right">Chevron Right</string>
     <string name="cd_speaker_icon">Speaker</string>

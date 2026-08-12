@@ -235,15 +235,14 @@
                     android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
+            <LinearLayout
                 android:id="@+id/preview_action_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/main_menu_panel"
                 android:layout_marginTop="12dp"
-                android:gravity="center"
-                app:singleSelection="true"
-                app:selectionRequired="false">
+                android:orientation="horizontal"
+                android:gravity="center">
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/action_editor"
                     style="@style/Widget.Material3.Button.TonalButton"
@@ -251,24 +250,25 @@
                     android:layout_height="wrap_content"
                     android:text="@string/button_edit_song_info"
                     android:textColor="@color/colorPrimary"
+                    android:contentDescription="Open editor"
                     app:cornerRadius="20dp"/>
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+            </LinearLayout>
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
+            <LinearLayout
                 android:id="@+id/editor_action_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/main_menu_panel"
                 android:layout_marginTop="12dp"
-                android:gravity="center"
-                app:singleSelection="true"
-                app:selectionRequired="false">
+                android:orientation="horizontal"
+                android:gravity="center">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/action_reformat"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Format tags"
                     app:icon="@drawable/round_auto_awesome_24" />
 
                 <View
@@ -282,6 +282,7 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Read tags from file"
                     app:icon="@drawable/ic_file_rename_outline_24" />
 
                 <View
@@ -295,23 +296,24 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Save changes"
                     app:icon="@drawable/ic_round_save_24" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
-            <com.google.android.material.button.MaterialButtonToggleGroup
+            </LinearLayout>
+            <LinearLayout
                 android:id="@+id/tech_action_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/main_menu_panel"
                 android:layout_marginTop="12dp"
-                android:gravity="center"
-                app:singleSelection="true"
-                app:selectionRequired="false">
+                android:orientation="horizontal"
+                android:gravity="center">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_reload_tag"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Reload from file"
                     app:icon="@drawable/round_restore_page_24" />
 
                 <View
@@ -325,6 +327,7 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Extract cover art"
                     app:icon="@drawable/ic_round_image_24" />
 
                 <View
@@ -338,8 +341,9 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="Remove cover art"
                     app:icon="@drawable/ic_round_hide_image_24" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+            </LinearLayout>
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 

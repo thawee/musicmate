@@ -81,9 +81,10 @@ import coil3.request.ImageRequest;
 import dagger.hilt.android.AndroidEntryPoint;
 
 /**
- * Master Unified Audio Hub Bottom Sheet combining:
- * 1. Top ViewPager2 swappable playback area (Now Playing Card | Signal Path | Media Server)
- * 2. Permanent bottom Queue section visible across all pages.
+ * Master Unified Audio Hub Bottom Sheet ("Music Center"):
+ * a full-height 3-tab viewport (Playback | Queue | Server) driven by a
+ * segmented tab switcher backed by a ViewPager2. The selected tab is sticky
+ * for the current app session — reopening the sheet restores the last tab.
  */
 @AndroidEntryPoint
 public class AudioHubBottomSheet extends BottomSheetDialogFragment {
@@ -93,6 +94,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     public static final int TAB_NOW_PLAYING = 0;
     public static final int TAB_QUEUE = 1;
     public static final int TAB_MEDIA_SERVER = 2;
+
+    // Sticky session state: last tab viewed, restored on next open (per DESIGN.md §8C)
+    private static int sLastSelectedTab = TAB_NOW_PLAYING;
 
     private int initialTab = TAB_NOW_PLAYING;
 
@@ -117,7 +121,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private TextView tvServerStatus;
     private View tvServerStatusIcon;
     private TextView tvServerAddress;
-    private TextView tvServerPowerBy;
+   // private TextView tvServerPowerBy;
     private ImageView qrCodeImage;
     private Button btnStartServer;
     private Button btnStopServer;
@@ -127,7 +131,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     public static AudioHubBottomSheet newInstance() {
-        return newInstance(TAB_NOW_PLAYING);
+        // Sticky tab: reopen at the last tab viewed this session
+        return newInstance(sLastSelectedTab);
     }
 
     public static AudioHubBottomSheet newInstance(int initialTab) {
@@ -148,7 +153,31 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     private AutoCloseable songSubscription;
+    private AutoCloseable playerSubscription;
     private AutoCloseable stateSubscription;
+
+    private final android.media.AudioDeviceCallback audioDeviceCallback = new android.media.AudioDeviceCallback() {
+        @Override
+        public void onAudioDevicesAdded(android.media.AudioDeviceInfo[] addedDevices) {
+            super.onAudioDevicesAdded(addedDevices);
+            if (isAdded() && getActivity() != null) {
+                getActivity().runOnUiThread(this::refreshUIFromDeviceChange);
+            }
+        }
+
+        @Override
+        public void onAudioDevicesRemoved(android.media.AudioDeviceInfo[] removedDevices) {
+            super.onAudioDevicesRemoved(removedDevices);
+            if (isAdded() && getActivity() != null) {
+                getActivity().runOnUiThread(this::refreshUIFromDeviceChange);
+            }
+        }
+        
+        private void refreshUIFromDeviceChange() {
+            if (viewNowPlayingPage != null) populateNowPlayingSheet(viewNowPlayingPage);
+            if (viewQueuePage != null) populateQueueSection(viewQueuePage);
+        }
+    };
 
     private void subscribeToServiceUpdates() {
         unsubscribeFromServiceUpdates();
@@ -161,6 +190,18 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     }
                 },
                 err -> Log.e(TAG, "Error observing song change", err)
+        );
+        
+        playerSubscription = playbackService.subscribePlaybackTarget(
+                optPlayer -> {
+                    if (isAdded() && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (viewNowPlayingPage != null) populateSignalPathWidget(viewNowPlayingPage, playbackService.getNowPlayingSong());
+                            if (viewQueuePage != null) populateSignalPathWidget(viewQueuePage, playbackService.getNowPlayingSong());
+                        });
+                    }
+                },
+                err -> Log.e(TAG, "Error observing player change", err)
         );
 
         stateSubscription = playbackService.subscribePlaybackState(
@@ -181,6 +222,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (songSubscription != null) {
             try { songSubscription.close(); } catch (Exception ignored) {}
             songSubscription = null;
+        }
+        if (playerSubscription != null) {
+            try { playerSubscription.close(); } catch (Exception ignored) {}
+            playerSubscription = null;
         }
         if (stateSubscription != null) {
             try { stateSubscription.close(); } catch (Exception ignored) {}
@@ -259,6 +304,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
             }
         }
+
+        if (getContext() != null) {
+            android.media.AudioManager audioManager = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.registerAudioDeviceCallback(audioDeviceCallback, null);
+            }
+        }
     }
 
     @Override
@@ -268,6 +320,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (isPlaybackServiceBound && getContext() != null) {
             getContext().unbindService(serviceConnection);
             isPlaybackServiceBound = false;
+        }
+
+        if (getContext() != null) {
+            android.media.AudioManager audioManager = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.unregisterAudioDeviceCallback(audioDeviceCallback);
+            }
         }
     }
 
@@ -376,6 +435,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
+                sLastSelectedTab = position;
                 updatePageIndicator(position);
             }
         });
@@ -461,6 +521,17 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (tabServer != null) tabServer.setTextColor(selectedIndex == TAB_MEDIA_SERVER ? gold : muted);
     }
 
+    /** Live queue count on the Queue tab label, e.g. "Queue (12)" (per DESIGN.md §8C). */
+    private void updateQueueTabLabel(int queueSize) {
+        if (tabToggleGroup == null) return;
+        com.google.android.material.button.MaterialButton tabQueue = tabToggleGroup.findViewById(R.id.tab_queue);
+        if (tabQueue != null) {
+            tabQueue.setText(queueSize > 0
+                    ? String.format(Locale.US, "Queue (%d)", queueSize)
+                    : "Queue");
+        }
+    }
+
     // ── Service Connection ───────────────────────────────────────────────────
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -505,6 +576,33 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         setupArtworkGestures(view);
     }
 
+    private void showGestureOverlayIcon(View parentView, int iconResId) {
+        if (parentView == null) return;
+        ImageView feedbackIcon = parentView.findViewById(R.id.sheet_gesture_feedback_icon);
+        if (feedbackIcon == null) return;
+
+        feedbackIcon.animate().cancel();
+        feedbackIcon.setImageResource(iconResId);
+        feedbackIcon.setVisibility(VISIBLE);
+        feedbackIcon.setAlpha(0.0f);
+        feedbackIcon.setScaleX(0.7f);
+        feedbackIcon.setScaleY(0.7f);
+
+        feedbackIcon.animate()
+                .alpha(1.0f)
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(160)
+                .withEndAction(() -> feedbackIcon.animate()
+                        .alpha(0.0f)
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(200)
+                        .withEndAction(() -> feedbackIcon.setVisibility(GONE))
+                        .start())
+                .start();
+    }
+
     private void animateGestureFeedback(View albumArt, float translationX) {
         if (albumArt == null) return;
         albumArt.animate().cancel();
@@ -532,12 +630,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         if (diffX < 0) {
                             if (isPlaybackServiceBound && playbackService != null) {
                                 animateGestureFeedback(albumArt, -35f);
+                                showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_skip_next_48);
                                 playbackService.skipToNextInQueue();
                                 populateNowPlayingSheet(viewNowPlayingPage);
                             }
                         } else {
                             if (isPlaybackServiceBound && playbackService != null) {
                                 animateGestureFeedback(albumArt, 35f);
+                                showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_skip_previous_48);
                                 playbackService.skipToPrevious();
                                 populateNowPlayingSheet(viewNowPlayingPage);
                             }
@@ -561,8 +661,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         isPlaying = state != null && state.currentState == PlaybackState.State.PLAYING;
                     }
                     if (isPlaying) {
+                        showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_pause_48);
                         playbackService.pausePlayer();
                     } else {
+                        showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_play_arrow_48);
                         Track current = playbackService.getNowPlayingSong();
                         if (current != null) {
                             playbackService.playSong(current);
@@ -822,6 +924,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         List<Track> queue = (qm != null) ? new ArrayList<>(qm.getSongs()) : new ArrayList<>();
+        updateQueueTabLabel(queue.size());
         Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
         String currentKey = (track != null) ? track.getUniqueKey() : null;
         int playingPosition = -1;
@@ -877,7 +980,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
-        TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
+        //TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
         if (recycler != null) {
             updateQueueHeader(root, queue);
             if (queue.isEmpty()) {
@@ -1083,7 +1186,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         TextView sourceTitle = view.findViewById(R.id.sheet_node_source_title);
         TextView engineSubtitle = view.findViewById(R.id.sheet_node_engine_subtitle);
 
-        View targetBox = view.findViewById(R.id.sheet_node_target_box);
+       // View targetBox = view.findViewById(R.id.sheet_node_target_box);
         TextView targetTitle = view.findViewById(R.id.sheet_node_target_title);
 
         View expandableContainer = view.findViewById(R.id.sheet_signal_path_expandable);
@@ -1097,7 +1200,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
             if (sourceTitle != null) {
                 String codec = TagUtils.formatCodec(track);
-                if (codec == null || codec.isEmpty()) codec = track.getAudioEncoding().toUpperCase();
+                if (codec.isEmpty()) codec = track.getAudioEncoding().toUpperCase();
                 String res = formatShortResolution(track);
                 if (!res.isEmpty()) {
                     sourceTitle.setText(codec + " " + res);
@@ -1105,7 +1208,12 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     sourceTitle.setText(codec);
                 }
             }
+        } else {
+            if (verdictView != null) verdictView.setText("IDLE");
+            if (sourceTitle != null) sourceTitle.setText("No Source");
+        }
 
+        if (getContext() != null) {
             PlaybackTarget target = playbackService != null ? playbackService.getPlayer() : null;
             boolean isStreaming = target != null && target.isStreaming();
 
@@ -1114,33 +1222,27 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             }
 
             if (targetTitle != null) {
-                String playerLabel = target != null ? target.getDisplayName() : "Local Device";
-                boolean isBitPerfect = false;
+                String playerLabel = target != null ? apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target) : "Local Device";
 
                 if (target == null || target instanceof ExternalAndroidPlayer || (target != null && !target.isStreaming())) {
                     AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
-                    String devName = device.getName();
-                    isBitPerfect = device.isBitPerfect();
-                    if (devName != null && !devName.isEmpty() && !devName.equals("Phone Speaker")) {
-                        playerLabel = devName;
+                    if (device != null && device.getName() != null && !device.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(device.getName())) {
+                        String devDesc = device.getDescription();
+                        if (devDesc != null && !devDesc.isEmpty()) {
+                            playerLabel = device.getName() + " (" + devDesc + ")";
+                        } else {
+                            playerLabel = device.getName();
+                        }
                     } else if (target != null) {
-                        playerLabel = target.getDisplayName();
-                    } else if (devName != null && !devName.isEmpty()) {
-                        playerLabel = devName;
+                        playerLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
+                    } else if (device != null && device.getName() != null && !device.getName().isEmpty()) {
+                        playerLabel = device.getName();
                     } else {
                         playerLabel = "Speaker";
                     }
                 }
 
-                targetTitle.setText(playerLabel + " ▾");
-
-                if (targetBox != null) {
-                    targetBox.setBackgroundResource(isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target);
-                }
-            }
-
-            if (targetBox != null) {
-                targetBox.setOnClickListener(v -> showPlayerPicker(targetBox));
+                targetTitle.setText(playerLabel);
             }
 
             if (widgetView != null) {
@@ -1153,25 +1255,15 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         }
                         if (!isCurrentlyVisible) {
                             expandableContainer.setVisibility(VISIBLE);
-                           // if (chevron != null) chevron.animate().rotation(180f).setDuration(200).start();
                             if (stepsContainer != null) {
                                 stepsContainer.removeAllViews();
                                 addSignalPathSteps(stepsContainer);
                             }
                         } else {
                             expandableContainer.setVisibility(GONE);
-                           // if (chevron != null) chevron.animate().rotation(0f).setDuration(200).start();
                         }
                     }
                 });
-            }
-        } else {
-            if (verdictView != null) verdictView.setText("Ready");
-            if (sourceTitle != null) sourceTitle.setText("Source");
-            if (engineSubtitle != null) engineSubtitle.setText("Transport");
-            if (targetTitle != null) targetTitle.setText("Select Player ▾");
-            if (targetBox != null) {
-                targetBox.setOnClickListener(v -> showPlayerPicker(targetBox));
             }
         }
     }
@@ -1203,7 +1295,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         String codec = TagUtils.formatCodec(song);
-        if (codec == null || codec.isEmpty()) {
+        if (codec.isEmpty()) {
             codec = song.getAudioEncoding().toUpperCase();
         }
 
@@ -1331,7 +1423,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         tvServerStatusIcon = view.findViewById(R.id.status_indicator);
 
         tvServerAddress = view.findViewById(R.id.server_address);
-        tvServerPowerBy = view.findViewById(R.id.server_power_by);
+       // tvServerPowerBy = view.findViewById(R.id.server_power_by);
         qrCodeImage = view.findViewById(R.id.qr_code_image);
 
         btnStartServer = view.findViewById(R.id.btn_start_server);
@@ -1365,15 +1457,46 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             tvServerName.setText(Constants.getPresentationName());
         }
 
+        setupEngineSwitcher(view);
+
         observeServerStatus();
-        detectWebEngine();
+       // detectWebEngine();
     }
 
-    private void detectWebEngine() {
-        String webEngine = mediaServerViewModel.getLibraryName();
-        if (tvServerPowerBy != null) {
-            tvServerPowerBy.setText(webEngine);
-        }
+    /** Runtime web engine switcher (SonicNIO / CoreHTTP / Netty) — persists the
+     *  preference and restarts the media server when a new engine is selected. */
+    private void setupEngineSwitcher(View view) {
+        MaterialButtonToggleGroup engineGroup = view.findViewById(R.id.server_engine_group);
+        if (engineGroup == null || getContext() == null) return;
+
+        android.content.SharedPreferences prefs =
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext());
+        String currentEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+
+        int checkedId = switch (currentEngine) {
+            case "nio" -> R.id.engine_nio;
+            case "netty" -> R.id.engine_netty;
+            default -> R.id.engine_httpcore;
+        };
+        engineGroup.check(checkedId);
+
+        engineGroup.addOnButtonCheckedListener((group, buttonId, isChecked) -> {
+            if (!isChecked) return;
+            String newEngine;
+            if (buttonId == R.id.engine_nio) {
+                newEngine = "nio";
+            } else if (buttonId == R.id.engine_netty) {
+                newEngine = "netty";
+            } else {
+                newEngine = "httpcore";
+            }
+            String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+            if (!newEngine.equals(prevEngine)) {
+                prefs.edit().putString(Constants.PREF_SERVER_ENGINE, newEngine).apply();
+                mediaServerViewModel.restartServer();
+                Toast.makeText(getContext(), "Switching engine — restarting server…", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void observeServerStatus() {
@@ -1408,7 +1531,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
                 String serverLocation = mediaServerViewModel.getServerLocationUrl();
                 if (tvServerAddress != null) tvServerAddress.setText(serverLocation);
-                detectWebEngine();
+                //detectWebEngine();
                 generateAndSetQRCode(serverLocation);
                 break;
 

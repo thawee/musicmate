@@ -62,11 +62,11 @@
 
         <ImageView
             android:id="@+id/btn_close"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="6dp"
+            android:padding="12dp"
             android:src="@drawable/round_close_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
@@ -200,21 +200,18 @@
             android:gravity="end"
             android:layout_marginTop="@dimen/dimen_24_dp">
 
-            <!--
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_cancel"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/close"
+                android:text="@string/cancel"
                 android:textAllCaps="false"
-                android:textColor="@color/white"
-                app:strokeColor="@color/teal_200" />
+                android:textColor="@color/white" />
 
             <Space
                 android:layout_width="12dp"
                 android:layout_height="match_parent" />
-            -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_encode_file"
                 style="@style/Widget.Material3.Button.TonalButton"

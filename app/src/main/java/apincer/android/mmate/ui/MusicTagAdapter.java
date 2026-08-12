@@ -10,6 +10,10 @@ import static apincer.music.core.utils.TagUtils.isOnDownloadDir;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,6 +39,7 @@ import apincer.android.mmate.ui.view.BadgeView;
 import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.music.core.Constants;
 import apincer.music.core.model.Track;
+import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
@@ -58,10 +63,15 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     private long totalSize;
     private double totalDuration;
     private PlaybackService playbackService;
+    private PlaybackState playbackState;
     private final TagRepository tagRepos;
 
     public void setPlaybackService(PlaybackService playbackService) {
         this.playbackService = playbackService;
+    }
+
+    public void setPlaybackState(PlaybackState playbackState) {
+        this.playbackState = playbackState;
     }
 
     public boolean isMatchFilter(Track tag) {
@@ -279,7 +289,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         BadgeView mDurationView;
         View mBtnPlay;
         View mBtnEnqueue;
-       // View moreActions;
+        View moreActions;
+        View mPlayOverlay;
+        ImageView mPlayOverlayIcon;
 
         public ViewHolder(View view) {
             super(view);
@@ -298,6 +310,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mPlayerView = view.findViewById(R.id.item_player);
 
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
+            this.moreActions = view.findViewById(R.id.item_more_menu);
 
             this.codec = view.findViewById(R.id.icon_codec);
             this.resolution = view.findViewById(R.id.icon_resolution);
@@ -307,6 +320,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            this.ratingIndicatorView = view.findViewById(R.id.rating_view);
            this.mBtnPlay = view.findViewById(R.id.btn_folder_play);
            this.mBtnEnqueue = view.findViewById(R.id.btn_folder_enqueue);
+           this.mPlayOverlay = view.findViewById(R.id.item_play_overlay);
+           this.mPlayOverlayIcon = view.findViewById(R.id.item_play_overlay_icon);
 
         }
 
@@ -515,10 +530,15 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.rootView.setSelected(mTracker.isSelected((long) position));
         if(PATH_MISSING_TRACK.equals(tag.getPath())) {
             // not actual file, could be missing tract from playlist
-           // holder.moreActions.setEnabled(false);
+            if (holder.moreActions != null) holder.moreActions.setEnabled(false);
             holder.rootView.setEnabled(false);
         }else {
-           // holder.moreActions.setEnabled(true);
+            if (holder.moreActions != null) {
+                holder.moreActions.setEnabled(true);
+                holder.moreActions.setOnClickListener(view -> {
+                    if (onListItemClick != null) onListItemClick.onClick(view, holder.getLayoutPosition());
+                });
+            }
             holder.rootView.setEnabled(true);
             holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
             if (holder.mCoverArtFrame != null) {
@@ -533,16 +553,75 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
         // reset player icon
-        holder.mPlayerView.setVisibility(GONE);
+        if (holder.mPlayerView != null) {
+            holder.mPlayerView.setVisibility(GONE);
+        }
         if (holder.mTitleLayout != null) {
             holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
         }
-       // boolean isPlaying = false;
-        holder.mPlayerView.setVisibility(GONE);
-        if(playbackService != null) {
-            if (tag.equals(playbackService.getNowPlayingSong())) {
+        // Show play overlay and equalizer icon exclusively for the currently playing track
+        boolean isNowPlaying = (playbackService != null && tag.equals(playbackService.getNowPlayingSong()));
+        boolean isPlaying = isNowPlaying && (playbackState == null || playbackState.currentState == PlaybackState.State.PLAYING);
+
+        if (isNowPlaying) {
+            if (holder.mPlayOverlay != null) {
+                holder.mPlayOverlay.setVisibility(VISIBLE);
+            }
+            if (holder.mPlayOverlayIcon != null) {
+                if (isPlaying) {
+                    holder.mPlayOverlayIcon.setImageResource(R.drawable.ic_equalizer_active);
+                    holder.mPlayOverlayIcon.setImageTintList(ColorStateList.valueOf(holder.mContext.getColor(R.color.colorGold)));
+                    Drawable d = holder.mPlayOverlayIcon.getDrawable();
+                    if (d instanceof AnimatedVectorDrawable) {
+                        try {
+                            ((AnimatedVectorDrawable) d).start();
+                        } catch (Throwable ignored) {}
+                    }
+                } else {
+                    holder.mPlayOverlayIcon.setImageResource(R.drawable.ic_baseline_pause_24);
+                    holder.mPlayOverlayIcon.setImageTintList(ColorStateList.valueOf(holder.mContext.getColor(R.color.colorGold)));
+                    Drawable d = holder.mPlayOverlayIcon.getDrawable();
+                    if (d instanceof AnimatedVectorDrawable) {
+                        try {
+                            ((AnimatedVectorDrawable) d).stop();
+                        } catch (Throwable ignored) {}
+                    }
+                }
+            }
+            if (holder.mPlayerView != null) {
                 holder.mPlayerView.setVisibility(VISIBLE);
-               // holder.mPlaylistView.setVisibility(GONE);
+                if (isPlaying) {
+                    holder.mPlayerView.setImageResource(R.drawable.ic_equalizer_active);
+                    Drawable d = holder.mPlayerView.getDrawable();
+                    if (d instanceof AnimatedVectorDrawable) {
+                        try {
+                            ((AnimatedVectorDrawable) d).start();
+                        } catch (Throwable ignored) {}
+                    }
+                } else {
+                    holder.mPlayerView.setImageResource(R.drawable.ic_baseline_pause_24);
+                }
+            }
+            if (holder.mTitle != null) {
+                holder.mTitle.setTextColor(holder.mContext.getColor(R.color.colorGold));
+            }
+        } else {
+            if (holder.mPlayOverlayIcon != null) {
+                holder.mPlayOverlayIcon.setImageDrawable(null);
+            }
+            if (holder.mPlayOverlay != null) {
+                holder.mPlayOverlay.setVisibility(GONE);
+            }
+            if (holder.mPlayerView != null) {
+                holder.mPlayerView.setVisibility(GONE);
+            }
+            if (holder.mTitle != null) {
+                TypedValue typedValue = new TypedValue();
+                if (holder.mContext.getTheme().resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)) {
+                    holder.mTitle.setTextColor(typedValue.data);
+                } else {
+                    holder.mTitle.setTextColor(holder.mContext.getColor(android.R.color.white));
+                }
             }
         }
         //if(!isPlaying) {
@@ -576,13 +655,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mNewLabelView.setVisibility(VISIBLE);
         }
 
-        ImageRequest request = CoverartFetcher.builder(holder.mContext, tag)
-                .data(tag)
-                .size(240, 240)
-                .target(new ImageViewTarget(holder.mCoverArtView))
-               // .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
-                .build();
-        imageLoader.enqueue(request);
+        String songTag = tag.getPath();
+        if (holder.mCoverArtView != null && !songTag.equals(holder.mCoverArtView.getTag())) {
+            holder.mCoverArtView.setTag(songTag);
+            ImageRequest request = CoverartFetcher.builder(holder.mContext, tag)
+                    .data(tag)
+                    .size(240, 240)
+                    .target(new ImageViewTarget(holder.mCoverArtView))
+                    .build();
+            imageLoader.enqueue(request);
+        }
 
         holder.mTitle.setText(TagUIUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(TagUIUtils.getFormattedSubtitle(tag));

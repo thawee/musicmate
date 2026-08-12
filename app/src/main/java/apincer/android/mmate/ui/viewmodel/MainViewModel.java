@@ -258,4 +258,18 @@ public class MainViewModel extends ViewModel {
             }
         });
     }
+
+    public void playTrackList(List<Track> items, Track startTrack, apincer.music.core.playback.spi.PlaybackService playbackService) {
+        if (items == null || items.isEmpty() || playbackService == null) return;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
+            queue.emptyPlayingQueue();
+            for (Track t : items) {
+                if (t != null && !t.isContainer()) {
+                    queue.addPlayingQueue(t.getId());
+                }
+            }
+            playbackService.playSong(startTrack != null ? startTrack : items.get(0));
+        });
+    }
 }
