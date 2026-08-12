@@ -280,7 +280,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
-        TriangleLabelView mNewLabelView;
+        View mNewLabelView;
        BadgeView codec;
         BadgeView resolution;
         DynamicRangeView drDbView;
@@ -640,19 +640,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             //  builder.addText("🤍");
        //}
 
-        // download label
-        if (tag.isManaged()) {
-            holder.mNewLabelView.setVisibility(GONE);
-        } else if (isOnDownloadDir(tag)) {
-            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.new_indicator_background);
-            holder.mNewLabelView.setPrimaryTextColorResource(R.color.new_download_indicator_text);
-            holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            holder.mNewLabelView.setVisibility(VISIBLE);
-        } else {
-            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.new_indicator_background);
-            holder.mNewLabelView.setPrimaryTextColorResource(R.color.new_indicator_text);
-            holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            holder.mNewLabelView.setVisibility(VISIBLE);
+        // download/new track indicator dot
+        if (holder.mNewLabelView != null) {
+            holder.mNewLabelView.setVisibility(tag.isManaged() ? GONE : VISIBLE);
         }
 
         String songTag = tag.getPath();

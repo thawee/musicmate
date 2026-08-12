@@ -59,16 +59,15 @@
                     android:contentDescription="@string/cd_now_playing_indicator" />
             </FrameLayout>
 
-            <apincer.android.mmate.ui.view.TriangleLabelView
+            <View
                 android:id="@+id/item_new_label"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
                 android:layout_gravity="top|end"
-                app:backgroundColor="#FFD700"
-                app:corner="rightTop"
-                app:primaryText="New"
-                app:primaryTextColor="#000000"
-                app:primaryTextSize="8sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/shape_new_dot_indicator"
+                android:visibility="gone"
                 android:contentDescription="@string/cd_new_label" />
         </FrameLayout>
 
