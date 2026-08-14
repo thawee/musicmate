@@ -975,7 +975,7 @@
                 </div>`;
                 return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${item.trackId}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
-                        <img src="${item.artUrl}" class="w-full h-full object-cover" alt="${item.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
+                        <img src="${item.artUrl}" loading="lazy" class="w-full h-full object-cover" alt="${item.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
                     <div class="mt-2 w-full px-1"><div class="flex items-baseline justify-center space-x-2">
                         <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${item.title}</h5>
@@ -1012,7 +1012,7 @@
                 </div>`;
                 return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${song.trackId}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
-                        <img src="${song.artUrl}" class="w-full h-full object-cover" alt="${song.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
+                        <img src="${song.artUrl}" loading="lazy" class="w-full h-full object-cover" alt="${song.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
                     <div class="mt-2 w-full px-1"><div class="flex items-baseline justify-center space-x-2">
                         <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${song.title}</h5>
