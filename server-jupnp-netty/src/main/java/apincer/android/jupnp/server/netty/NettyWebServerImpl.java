@@ -143,8 +143,8 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                     true
             ));
 
-            // WebSocket handler
-            p.addLast(wsHandler.createInboundHandler());
+            // WebSocket handler (OFF IO thread to prevent DLNA stutter)
+            p.addLast(logicExecutorGroup, wsHandler.createInboundHandler());
 
             // HTTP content handler (OFF IO thread)
             ChannelHandler httpHandler = new WebContentHandler();

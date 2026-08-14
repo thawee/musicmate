@@ -675,16 +675,18 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 if (opcode == WebSocket.OPCODE_TEXT) {
                     String text = new String(payload, StandardCharsets.UTF_8);
                     Log.d(TAG, "WS Received text: " + text);
-                    try {
-                        Map<String, Object> commandMap = (Map<String, Object>) (Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(text);
-                        String command = (String) commandMap.get("command");
-                        Map<String, Object> response = handleCommand(command, commandMap);
-                        if (response != null) {
-                            sendText(session, apincer.music.core.utils.JsonUtils.toJson(response));
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error handling WS command", e);
-                    }
+                        apincer.music.core.utils.MusicMateExecutors.getExecutorService().execute(() -> {
+                            try {
+                                Map<String, Object> commandMap = (Map<String, Object>) (Map<?, ?>) apincer.music.core.utils.JsonUtils.toMap(text);
+                                String command = (String) commandMap.get("command");
+                                Map<String, Object> response = handleCommand(command, commandMap);
+                                if (response != null) {
+                                    sendText(session, apincer.music.core.utils.JsonUtils.toJson(response));
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error handling WS command async", e);
+                            }
+                        });
                 } else if (opcode == WebSocket.OPCODE_CLOSE) {
                     session.close();
                 } else if (opcode == WebSocket.OPCODE_PING) {

@@ -388,23 +388,25 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
         @OnWebSocketMessage
         public void onMessage(Session session, String message) {
-            try {
-                if (message == null || message.trim().isEmpty()) return;
+            apincer.music.core.utils.MusicMateExecutors.getExecutorService().execute(() -> {
+                try {
+                    if (message == null || message.trim().isEmpty()) return;
 
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = MAPPER.readValue(message, Map.class);
-                String command = String.valueOf(map.get("command"));
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> map = MAPPER.readValue(message, Map.class);
+                    String command = String.valueOf(map.get("command"));
 
-                if (!StringUtils.isEmpty(command)) {
-                    Map<String, Object> response = handleCommand(command, map);
-                    if (response != null) {
-                        String jsonResponse = MAPPER.writeValueAsString(response);
-                        session.sendText(jsonResponse, org.eclipse.jetty.websocket.api.Callback.NOOP);
+                    if (!StringUtils.isEmpty(command)) {
+                        Map<String, Object> response = handleCommand(command, map);
+                        if (response != null) {
+                            String jsonResponse = MAPPER.writeValueAsString(response);
+                            session.sendText(jsonResponse, org.eclipse.jetty.websocket.api.Callback.NOOP);
+                        }
                     }
+                } catch (Exception e) {
+                    Log.e(TAG, "WS Message Error async", e);
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "WS Message Error", e);
-            }
+            });
         }
 
         @OnWebSocketClose
