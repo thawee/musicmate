@@ -1556,7 +1556,7 @@
                         </div>
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Resolution</span>
-                            <span class="text-white font-semibold text-sm">${currentTrack.bitDepth ? currentTrack.bitDepth.replace(/[- ]?(bits?|Bits?)$/i, '') + '-Bit' : ''} ${currentTrack.sampleRate ? '/ ' + currentTrack.sampleRate : ''}</span>
+                            <span class="text-white font-semibold text-sm">${currentTrack.bitDepth ? currentTrack.bitDepth.replace(/[- ]?(bits?|Bits?)$/i, '') : ''}${currentTrack.bitDepth && currentTrack.sampleRate ? '/' : ''}${currentTrack.sampleRate || ''}</span>
                         </div>
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Dynamic Range</span>

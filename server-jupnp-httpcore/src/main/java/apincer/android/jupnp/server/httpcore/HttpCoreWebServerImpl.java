@@ -410,11 +410,11 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                             retries = 0; // reset on successful write
                         }
                     }
-                    if (buffer.hasRemaining()) {
+                   /* if (buffer.hasRemaining()) {
                         Log.w(TAG, "WS sendText incomplete: wrote " + totalWritten + "/" + totalLimit + " bytes to " + session.getRemoteAddress());
                     } else {
                         Log.d(TAG, "WS sendText wrote " + totalWritten + " bytes (total buffer: " + totalLimit + ") to " + session.getRemoteAddress());
-                    }
+                    } */
                 } catch (IOException e) {
                     Log.e(TAG, "Error in WS sendText", e);
                 }
