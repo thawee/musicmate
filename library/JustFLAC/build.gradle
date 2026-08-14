@@ -1,4 +1,7 @@
-apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+}
+
 android {
     compileSdk = libs.versions.compileSdkVersion.get() as Integer
     buildToolsVersion = libs.versions.buildTools.get()
@@ -13,12 +16,11 @@ android {
     }
     buildTypes {
         release {
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     sourceSets {
         main {
-            java.srcDir  'src/java'
+            java.srcDir 'src/java'
         }
     }
     lint {
@@ -26,12 +28,11 @@ android {
     }
     namespace = 'org.jflac'
 }
-tasks.withType(JavaCompile) {
+
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
 dependencies {
-    // Support libraries
     implementation libs.jetbrains.annotations
 }
-

@@ -9,6 +9,7 @@ import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
@@ -248,6 +249,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             refreshUI();
         }
 
+        if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
+            ma.setFloatingDockVisible(false);
+        }
+
         if (getDialog() != null) {
             View container = getDialog().findViewById(com.google.android.material.R.id.container);
             View coordinator = getDialog().findViewById(com.google.android.material.R.id.coordinator);
@@ -261,28 +266,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
                 float density = getResources().getDisplayMetrics().density;
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int bottomNavMargin = (int) (130 * density);
-
-                if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
-                    View navBar = ma.findViewById(R.id.bottom_navigation_container);
-                    if (navBar != null) {
-                        int[] loc = new int[2];
-                        navBar.getLocationOnScreen(loc);
-                        int navBarTopOnScreen = loc[1];
-                        if (navBarTopOnScreen > 0 && navBarTopOnScreen < screenHeight) {
-                            bottomNavMargin = (screenHeight - navBarTopOnScreen) + (int) (14 * density);
-                        } else if (navBar.getHeight() > 0) {
-                            bottomNavMargin = navBar.getHeight() + (int) (52 * density);
-                        }
-                    }
-                }
+                int bottomNavMargin = (int) (12 * density);
 
                 if (coordinator != null) {
                     coordinator.setPadding(0, 0, 0, bottomNavMargin);
                 }
 
                 int targetHeight = (int) (screenHeight * 0.65);
-                int maxHeight = screenHeight - bottomNavMargin - (int) (64 * density);
+                int maxHeight = screenHeight - bottomNavMargin - (int) (48 * density);
                 if (targetHeight > maxHeight) {
                     targetHeight = maxHeight;
                 }
@@ -310,6 +301,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             if (audioManager != null) {
                 audioManager.registerAudioDeviceCallback(audioDeviceCallback, null);
             }
+        }
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (getActivity() instanceof apincer.android.mmate.ui.MainActivity ma) {
+            ma.setFloatingDockVisible(true);
         }
     }
 
@@ -554,8 +553,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
     };
 
-    // ── Page 0: Now Playing Card ─────────────────────────────────────────────
-
     private void setupNowPlayingTab(View view) {
         View cardView = view.findViewById(R.id.sheet_now_playing_card);
         if (cardView != null) {
@@ -572,8 +569,43 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             });
         }
 
-       // setupVolumeControl(view);
+        View btnFlipSpecs = view.findViewById(R.id.sheet_btn_flip_specs);
+        if (btnFlipSpecs != null) {
+            btnFlipSpecs.setOnClickListener(v -> toggleTechSpecsFlip(view));
+        }
+
+        View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
+        if (techSpecsOverlay != null) {
+            techSpecsOverlay.setOnClickListener(v -> toggleTechSpecsFlip(view));
+        }
+
         setupArtworkGestures(view);
+    }
+
+    private void toggleTechSpecsFlip(@Nullable View view) {
+        if (view == null) return;
+        View albumArt = view.findViewById(R.id.sheet_album_art);
+        View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
+        if (albumArt == null || techSpecsOverlay == null) return;
+
+        boolean showSpecs = techSpecsOverlay.getVisibility() != VISIBLE;
+        View outgoing = showSpecs ? albumArt : techSpecsOverlay;
+        View incoming = showSpecs ? techSpecsOverlay : albumArt;
+
+        outgoing.animate()
+                .rotationY(90f)
+                .setDuration(140)
+                .withEndAction(() -> {
+                    outgoing.setVisibility(GONE);
+                    outgoing.setRotationY(0f);
+                    incoming.setVisibility(VISIBLE);
+                    incoming.setRotationY(-90f);
+                    incoming.animate()
+                            .rotationY(0f)
+                            .setDuration(140)
+                            .start();
+                })
+                .start();
     }
 
     private void showGestureOverlayIcon(View parentView, int iconResId) {
@@ -740,6 +772,45 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             }
 
             populateSignalPathWidget(view, track);
+
+            View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
+            if (techSpecsOverlay != null) {
+                TextView specsFormat = techSpecsOverlay.findViewById(R.id.sheet_specs_format);
+                TextView specsBitrate = techSpecsOverlay.findViewById(R.id.sheet_specs_bitrate);
+                TextView specsDr = techSpecsOverlay.findViewById(R.id.sheet_specs_dr);
+                TextView specsFileSize = techSpecsOverlay.findViewById(R.id.sheet_specs_file_size);
+
+                String codec = TagUtils.formatCodec(track);
+                String res = formatShortResolution(track);
+                if (specsFormat != null) specsFormat.setText(!res.isEmpty() ? codec + " • " + res : codec);
+
+                if (specsBitrate != null) {
+                    long bitrate = track.getAudioBitRate();
+                    if (bitrate > 0) {
+                        specsBitrate.setText(String.format(Locale.US, "%d kbps", bitrate));
+                    } else {
+                        specsBitrate.setText(track.getAudioChannels() != null ? track.getAudioChannels() + " Ch Stereo" : "Lossless Audio");
+                    }
+                }
+
+                if (specsDr != null) {
+                    double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
+                    if (dr > 0) {
+                        specsDr.setText(String.format(Locale.US, "Dynamic Range: DR %.0f", dr));
+                    } else {
+                        specsDr.setText("Studio Master Dynamic");
+                    }
+                }
+
+                if (specsFileSize != null) {
+                    long size = track.getFileSize();
+                    if (size > 0 && getContext() != null) {
+                        specsFileSize.setText(android.text.format.Formatter.formatFileSize(getContext(), size));
+                    } else {
+                        specsFileSize.setText("Hi-Res Audio");
+                    }
+                }
+            }
         } else {
             titleView.setText("Music Mate Ready");
             artistView.setText("Select a song or player target");
@@ -1227,12 +1298,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 if (target == null || target instanceof ExternalAndroidPlayer || (target != null && !target.isStreaming())) {
                     AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
                     if (device != null && device.getName() != null && !device.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(device.getName())) {
-                        String devDesc = device.getDescription();
-                        if (devDesc != null && !devDesc.isEmpty()) {
-                            playerLabel = device.getName() + " (" + devDesc + ")";
-                        } else {
-                            playerLabel = device.getName();
-                        }
+                        playerLabel = device.getCompactLabel();
                     } else if (target != null) {
                         playerLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
                     } else if (device != null && device.getName() != null && !device.getName().isEmpty()) {
@@ -1243,6 +1309,44 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }
 
                 targetTitle.setText(playerLabel);
+            }
+
+            ImageView targetIconView = view.findViewById(R.id.sheet_node_target_icon);
+            if (targetIconView != null) {
+                Drawable targetDrawable = AudioOutputHelper.getTargetDrawable(getContext(), target, track);
+                if (targetDrawable != null) {
+                    targetIconView.setImageDrawable(targetDrawable);
+                    if (AudioOutputHelper.isExternalAppTarget(target)) {
+                        targetIconView.setImageTintList(null);
+                    } else {
+                        targetIconView.setImageTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF")));
+                    }
+                }
+            }
+
+            // Dynamic Range (DR) Badge
+            View drBadge = view.findViewById(R.id.sheet_node_dr_badge);
+            TextView drTitle = view.findViewById(R.id.sheet_node_dr_title);
+            if (drBadge != null && drTitle != null) {
+                double dr = (track != null) ? (track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange()) : 0;
+                if (dr > 0) {
+                    drTitle.setText(String.format(Locale.US, "DR %.0f", dr));
+                    drBadge.setVisibility(VISIBLE);
+                } else {
+                    drBadge.setVisibility(GONE);
+                }
+            }
+
+            // Bit-Perfect Direct Badge
+            View bitperfectBadge = view.findViewById(R.id.sheet_node_bitperfect_badge);
+            if (bitperfectBadge != null) {
+                boolean isBitPerfect = false;
+                if (track != null) {
+                    String enc = track.getAudioEncoding();
+                    boolean isLossless = "FLAC".equalsIgnoreCase(enc) || "ALAC".equalsIgnoreCase(enc) || "DSD".equalsIgnoreCase(enc) || "WAV".equalsIgnoreCase(enc) || "AIFF".equalsIgnoreCase(enc);
+                    isBitPerfect = isLossless && (isStreaming || (target != null && !AudioOutputHelper.isExternalAppTarget(target)));
+                }
+                bitperfectBadge.setVisibility(isBitPerfect ? VISIBLE : GONE);
             }
 
             if (widgetView != null) {
@@ -1338,46 +1442,77 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
             // --- Step 3: Target Audio Output ---
             int targetShape;
-            int targetIcon;
             String targetTitle;
             String targetBadge;
             String targetDetails;
 
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
-                AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
-                boolean isBitPerfect = device.isBitPerfect();
-                targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
-                targetIcon = (device.getResId() != 0) ? device.getResId() : (isBitPerfect ? R.drawable.ic_baseline_usb_24 : R.drawable.ic_baseline_volume_up_24);
-                targetTitle = "Output Device: " + device.getName();
-                targetBadge = isBitPerfect ? "BIT-PERFECT" : (device.getDescription() != null && device.getDescription().startsWith("BT") ? "BLUETOOTH A2DP" : "DIRECT SYSTEM OUTPUT");
+                if ("local".equalsIgnoreCase(player.getTargetId())) {
+                    AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
+                    boolean isBitPerfect = device.isBitPerfect();
+                    boolean isBluetooth = device.isBluetooth();
+                    targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
+                    int targetIcon = (device.getResId() != 0) ? device.getResId() : (isBitPerfect ? R.drawable.ic_baseline_usb_24 : (isBluetooth ? R.drawable.ic_round_bluetooth_audio_24 : R.drawable.ic_baseline_volume_up_24));
+                    targetTitle = "Output Device: " + device.getName();
+                    targetBadge = isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH A2DP" : "DIRECT SYSTEM OUTPUT");
 
-                StringBuilder devBuf = new StringBuilder();
-                devBuf.append("Type: ").append(device.getDescription());
-                if (!StringUtils.isEmpty(device.getCodec())) {
-                    devBuf.append(" • ").append(device.getCodec());
-                }
-                devBuf.append("\nSpecs: ").append(TagUtils.formatResolution(device.getBitPerSampling(), device.getSamplingRate(), -1));
-                if (isBitPerfect) {
-                    devBuf.append("\nStatus: Bit-Perfect Direct USB Hardware Passthrough (1:1)");
+                    StringBuilder devBuf = new StringBuilder();
+                    devBuf.append("Type: ").append(device.getDescription());
+                    if (!StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
+                        devBuf.append(" • ").append(device.getCodec());
+                    }
+                    devBuf.append("\nSpecs: ").append(TagUtils.formatResolution(device.getBitPerSampling(), device.getSamplingRate(), -1));
+                    if (isBitPerfect) {
+                        devBuf.append("\nStatus: Bit-Perfect Direct USB Hardware Passthrough (1:1)");
+                    } else if (isBluetooth) {
+                        devBuf.append("\nStatus: Active Bluetooth A2DP Wireless Stream");
+                    } else {
+                        devBuf.append("\nStatus: ").append(device.getFriendyDescription());
+                    }
+                    targetDetails = devBuf.toString();
+
+                    View stepView = addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
+                    if (isBluetooth && stepView != null) {
+                        View card = stepView.findViewById(R.id.step_card_container);
+                        if (card != null) {
+                            card.setOnClickListener(v -> AudioOutputHelper.openSystemAudioOrBluetooth(getContext()));
+                        }
+                    }
                 } else {
-                    devBuf.append("\nStatus: ").append(device.getFriendyDescription());
+                    targetShape = R.drawable.shape_node_target;
+                    targetTitle = "External Player: " + player.getDisplayName();
+                    targetBadge = "EXTERNAL APP";
+                    Drawable targetDrawable = ExternalAndroidPlayer.Factory.getAppIcon(getContext(), player.getTargetId());
+                    String pkgDesc = ExternalAndroidPlayer.Factory.getAppDescription(getContext(), player.getTargetId());
+                    targetDetails = "Package: " + player.getTargetId() + (pkgDesc != null ? "\n" + pkgDesc : "");
+                    if (targetDrawable != null) {
+                        addSignalPathStep(signalPathContainer, targetShape, targetDrawable, targetTitle, targetBadge, targetDetails, false, true);
+                    } else {
+                        addSignalPathStep(signalPathContainer, targetShape, R.drawable.ic_round_speaker_24, targetTitle, targetBadge, targetDetails, false);
+                    }
                 }
-                targetDetails = devBuf.toString();
             } else {
                 targetShape = R.drawable.shape_node_target;
-                targetIcon = R.drawable.rounded_broadcast_on_personal_24;
+                int targetIcon = R.drawable.ic_dlna;
                 targetTitle = "Network Target: " + playbackTarget.getDisplayName();
                 targetBadge = "DLNA RENDERER";
                 String playerLabel = PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget);
                 targetDetails = playerLabel + "\nProtocol: UPnP AVTransport / DLNA Render";
+                addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
             }
-
-            addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
         }
     }
 
-    private void addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, String title, String badgeText, String description, boolean hasNext) {
-        if (getContext() == null) return;
+    private View addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, String title, String badgeText, String description, boolean hasNext) {
+        return addSignalPathStep(container, shapeResId, iconResId, null, title, badgeText, description, hasNext, false);
+    }
+
+    private View addSignalPathStep(LinearLayout container, int shapeResId, Drawable iconDrawable, String title, String badgeText, String description, boolean hasNext, boolean isExternalApp) {
+        return addSignalPathStep(container, shapeResId, 0, iconDrawable, title, badgeText, description, hasNext, isExternalApp);
+    }
+
+    private View addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, Drawable iconDrawable, String title, String badgeText, String description, boolean hasNext, boolean isExternalApp) {
+        if (getContext() == null) return null;
         View stepView = LayoutInflater.from(getContext()).inflate(R.layout.signal_path_step, container, false);
         View cardContainer = stepView.findViewById(R.id.step_card_container);
         ImageView iconView = stepView.findViewById(R.id.step_icon);
@@ -1389,7 +1524,16 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (cardContainer != null) {
             cardContainer.setBackgroundResource(shapeResId);
         }
-        if (iconView != null) iconView.setImageResource(iconResId);
+        if (iconView != null) {
+            if (iconDrawable != null) {
+                iconView.setImageDrawable(iconDrawable);
+            } else if (iconResId != 0) {
+                iconView.setImageResource(iconResId);
+            }
+            if (isExternalApp) {
+                iconView.setImageTintList(null);
+            }
+        }
         if (titleTextView != null) titleTextView.setText(title);
 
         if (badgeTextView != null) {
@@ -1408,6 +1552,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         container.addView(stepView);
+        return stepView;
     }
 
     // ── Page 2: Media Server Management ──────────────────────────────────────

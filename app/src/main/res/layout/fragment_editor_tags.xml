@@ -184,10 +184,39 @@
                     android:layout_marginBottom="12dp"
                     android:textAllCaps="true"/>
 
+                <!-- Genre (Full Width) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Genre"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_genre"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?attr/colorOnSurface" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Style (Full Width) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:hint="Style"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+                    <AutoCompleteTextView
+                        android:id="@+id/input_style"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?attr/colorOnSurface" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Origin & Mood (2-Column Side-by-Side) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:layout_marginTop="12dp"
                     android:weightSum="2">
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -208,27 +237,6 @@
                         android:layout_height="wrap_content" />
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:hint="Genre"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_weight="1"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content">
-                        <AutoCompleteTextView
-                            android:id="@+id/input_genre"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="?attr/colorOnSurface" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp"
-                    android:weightSum="2">
-
-                    <com.google.android.material.textfield.TextInputLayout
                         android:hint="Mood"
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_weight="1"
@@ -236,23 +244,6 @@
                         android:layout_height="wrap_content">
                         <AutoCompleteTextView
                             android:id="@+id/input_mood"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="?attr/colorOnSurface" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <Space
-                        android:layout_width="12dp"
-                        android:layout_height="wrap_content" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:hint="Style"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_weight="1"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content">
-                        <AutoCompleteTextView
-                            android:id="@+id/input_style"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="?attr/colorOnSurface" />

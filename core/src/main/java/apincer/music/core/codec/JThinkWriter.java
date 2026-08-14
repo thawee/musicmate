@@ -10,6 +10,7 @@ import android.util.Log;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldDataInvalidException;
@@ -23,10 +24,13 @@ import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.ID3v24Frame;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
+import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.images.ArtworkFactory;
 import org.jaudiotagger.tag.mp4.field.Mp4TagReverseDnsField;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
+import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
 
 import java.io.File;
@@ -40,7 +44,7 @@ import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
-public class JThinkWriter extends  TagWriter {
+public class JThinkWriter extends TagWriter {
     private static final String TAG = "JThinkWriter";
     private final Context context;
     private static boolean tagOptionsInitialized = false;
@@ -58,22 +62,21 @@ public class JThinkWriter extends  TagWriter {
     }
 
     @Override
-    protected void writeTag(Track tag) {
-        if (tag==null) {
-            return;
+    protected boolean writeTag(Track tag) {
+        if (tag == null || tag.getPath() == null) {
+            return false;
         }
-        Log.i(TAG, "writeTag: "+tag.getPath());
-        // write new tag
+        Log.i(TAG, "writeTag: " + tag.getPath());
         try {
             AudioFile audioFile = getAudioFile(tag.getPath());
-
             if (audioFile == null) {
-                return;
+                Log.e(TAG, "writeTag: audio file is null or unreadable for " + tag.getPath());
+                return false;
             }
 
             Tag newTag = audioFile.getTagOrCreateDefault();
-            if(!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
-                // wave not support encoding
+            if (!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
+                // wave does not support encoding parameter
                 newTag.setEncoding(StandardCharsets.UTF_8);
             }
 
@@ -82,8 +85,13 @@ public class JThinkWriter extends  TagWriter {
 
             // Commit changes to file
             audioFile.commit();
-        }catch (Exception ex) {
-            ex.printStackTrace();
+            return true;
+        } catch (CannotWriteException e) {
+            Log.e(TAG, "writeTag cannot write: " + tag.getPath(), e);
+            return false;
+        } catch (Exception ex) {
+            Log.e(TAG, "writeTag unexpected error for " + tag.getPath() + ": " + ex.getMessage(), ex);
+            return false;
         }
     }
 
@@ -99,35 +107,51 @@ public class JThinkWriter extends  TagWriter {
         setTagField(FieldKey.TRACK, trimToEmpty(musicTag.getTrack()), tag);
         setTagField(FieldKey.COMPOSER, trimToEmpty(musicTag.getComposer()), tag);
 
-        if(!isWav) {
+        if (!isWav) {
             setTagField(FieldKey.GENRE, trimToEmpty(musicTag.getGenre()), tag);
             setTagField(FieldKey.COMMENT, cleanupComment(musicTag.getComment()), tag);
             setTagField(FieldKey.YEAR, trimToEmpty(musicTag.getYear()), tag);
             //setTagField(FieldKey.DISC_NO, trimToEmpty(musicTag.getDisc()), tag);
             setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
-        }else {
-            // wave file
-           // String genreTags = formatWaveGenre(musicTag.getGenre(), musicTag.getStyle(), musicTag.getMood());
-            if (tag instanceof WavTag) {
-                WavTag wavTag = (WavTag) tag;
-                AbstractID3v2Tag id3 = wavTag.getID3Tag();
+        } else {
+            // Dual-chunk WAV support: write to both WavInfoTag (RIFF INFO chunk) and ID3Tag chunk
+            if (tag instanceof WavTag wavTag) {
+                // 1. Write to standard RIFF INFO chunk for legacy car stereos & players
+                WavInfoTag infoTag = wavTag.getInfoTag();
+                if (infoTag == null) {
+                    infoTag = new WavInfoTag();
+                    wavTag.setInfoTag(infoTag);
+                }
+                setTagField(FieldKey.TITLE, trimToEmpty(musicTag.getTitle()), infoTag);
+                setTagField(FieldKey.ARTIST, trimToEmpty(musicTag.getArtist()), infoTag);
+                setTagField(FieldKey.ALBUM, trimToEmpty(musicTag.getAlbum()), infoTag);
+                setTagField(FieldKey.GENRE, trimToEmpty(musicTag.getGenre()), infoTag);
+                setTagField(FieldKey.YEAR, trimToEmpty(musicTag.getYear()), infoTag);
+                setTagField(FieldKey.TRACK, trimToEmpty(musicTag.getTrack()), infoTag);
 
+                // 2. Write to ID3 chunk for modern audiophile players
+                AbstractID3v2Tag id3 = wavTag.getID3Tag();
                 if (id3 == null) {
                     id3 = new ID3v24Tag();
                     wavTag.setID3Tag(id3);
                 }
-                // Keep standard field clean
-                id3.setField(FieldKey.GENRE, safe(musicTag.getGenre()));
+                setTagField(FieldKey.TITLE, trimToEmpty(musicTag.getTitle()), id3);
+                setTagField(FieldKey.ARTIST, trimToEmpty(musicTag.getArtist()), id3);
+                setTagField(FieldKey.ALBUM_ARTIST, trimToEmpty(musicTag.getAlbumArtist()), id3);
+                setTagField(FieldKey.ALBUM, trimToEmpty(musicTag.getAlbum()), id3);
+                setTagField(FieldKey.GENRE, trimToEmpty(musicTag.getGenre()), id3);
+                setTagField(FieldKey.YEAR, trimToEmpty(musicTag.getYear()), id3);
+                setTagField(FieldKey.TRACK, trimToEmpty(musicTag.getTrack()), id3);
+                setTagField(FieldKey.COMPOSER, trimToEmpty(musicTag.getComposer()), id3);
+                setTagField(FieldKey.COMMENT, cleanupComment(musicTag.getComment()), id3);
 
-                // Store full structured data safely
-               // id3.setField(FieldKey.COMMENT, genreTags);
                 addTxxx(id3, "STYLE", safe(musicTag.getStyle()));
                 addTxxx(id3, "MOOD", safe(musicTag.getMood()));
                 addTxxx(id3, "ORIGIN", safe(musicTag.getOrigin()));
             }
         }
 
-        if(TagUtils.isFLACFile(musicTag)) {
+        if (TagUtils.isFLACFile(musicTag)) {
             FlacTag flacTag = (FlacTag) tag;
             VorbisCommentTag vorbis = flacTag.getVorbisCommentTag();
             if (vorbis != null) {
@@ -135,10 +159,25 @@ public class JThinkWriter extends  TagWriter {
                 addVorbisField(vorbis, "STYLE", safe(musicTag.getStyle()));
                 addVorbisField(vorbis, "ORIGIN", safe(musicTag.getOrigin()));
             }
-        }else if(TagUtils.isAIFFile(musicTag) || TagUtils.isAACFile(musicTag) || TagUtils.isALACFile(musicTag)) {
+        } else if (TagUtils.isAIFFile(musicTag) || TagUtils.isAACFile(musicTag) || TagUtils.isALACFile(musicTag)) {
             addIfNotNull(tag, createItunesField("MOOD", safe(musicTag.getMood())));
             addIfNotNull(tag, createItunesField("STYLE", safe(musicTag.getStyle())));
             addIfNotNull(tag, createItunesField("ORIGIN", safe(musicTag.getOrigin())));
+        }
+
+        // Embedded Cover Art Writing
+        if (!isEmpty(musicTag.getAlbumArtFilename())) {
+            File artFile = new File(musicTag.getAlbumArtFilename());
+            if (artFile.exists() && artFile.length() > 0) {
+                try {
+                    Artwork artwork = ArtworkFactory.createArtworkFromFile(artFile);
+                    if (artwork != null) {
+                        tag.setField(artwork);
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to set embedded artwork: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -190,17 +229,6 @@ public class JThinkWriter extends  TagWriter {
                 key,
                 value
         );
-    }
-
-    private String formatWaveGenre(String genre, String style, String mood) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(safe(genre));
-        sb.append(";").append(safe(style));
-        sb.append(";").append(safe(mood));
-        //sb.append(";").append(safe(region));
-
-        return sb.toString();
     }
 
     private String safe(String value) {

@@ -5,6 +5,79 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.19] - 2026-08-14
+
+### Added
+- **Build System & Dependency Catalog Modernization (`libs.versions.toml`, `settings.gradle`, `build.gradle`)**:
+  - Completely audited and pruned ~60+ lines of legacy commented-out artifacts (old Jackson, RxJava, Guava, Skydoves, old Cling/UPnP forks, unreferenced Jetty/HttpCore54 entries).
+  - Cleaned `settings.gradle` by removing ~30+ lines of obsolete commented module includes.
+  - Removed duplicate subproject dependency declarations in `core/build.gradle` and cleaned obsolete migration comments across all module build scripts.
+  - Pruned unused transitive dependencies in `androidtagview` and `crashreporter`, modernizing `JustFLAC` and `justdsd` build scripts for faster, cleaner Gradle builds.
+
+### Changed
+- **Song Detail & Tag Editor UI/UX Hierarchy (`TagsActivity`, `activity_tags.xml`, `fragment_editor_preview.xml`)**:
+  - **Dynamic Tab Visibility:** In Preview mode with the header fully expanded, `TabLayout` is cleanly hidden to prevent visual collisions with the bottom action capsule (`Delete` | `Organize` | `More...`). When tapping `Edit Song Info` or scrolling, the tabs smoothly appear at the top under the action bar.
+  - **Metadata Deduplication:** Suppressed duplicate artist display when `Album Artist` equals `Artist`, cleanly rendering `Artist | Album` followed by `❖ Genre ❖` without redundant repetition.
+  - **Title Scrim & Contrast:** Enhanced `shape_background_main_header.xml` with a smooth dark top-down vignette gradient for high text contrast across all album covers.
+
+### Fixed
+- **Bluetooth Codec Propagation to UI Target Badges (`AudioOutputHelper`)**:
+  - Fixed `AudioOutputHelper.getOutputDevice()` to explicitly attach the cached Bluetooth codec string (`sCachedBtCodec`) to the output `Device` model, ensuring target labels accurately render `{Name} • {Codec}` (e.g. `Shanling UP4 • LDAC`).
+- **Telemetry Chip Space & Layout Balancing (`sheet_now_playing_queue.xml`)**:
+  - Rebalanced padding, margins, and text sizes across telemetry chips to prevent truncation of the `DIRECT` bit-perfect indicator badge on smaller screens.
+
+## [3.18.18] - 2026-08-14
+
+### Added
+- **Audiophile Dynamic Range (DR) Metrics Chip & Direct Bit-Perfect Badge (`AudioHubBottomSheet`, `sheet_now_playing_queue.xml`)**:
+  - Displays a dedicated amber Dynamic Range score chip (e.g. `[DR 14]`) on the Now Playing screen when DR mastering health data is available.
+  - Displays a glowing emerald `[DIRECT]` verification badge when lossless audio streams directly to DLNA renderers or bit-perfect local outputs.
+- **1-Tap 3D Flip Technical Specs Card (`AudioHubBottomSheet`, `sheet_now_playing_queue.xml`)**:
+  - Tapping the album artwork or the top-right `(i)` badge triggers a 3D Y-axis card flip animation (`rotationY 90° ➔ -90° ➔ 0°`), revealing a dark glassmorphic Audio Anatomy drawer with Format, Bitrate, Dynamic Range, and physical File Size.
+- **Dual-Engine True Gapless Playback (`AndroidPlayerController`, `MediaServerHubImpl`, `MusicMateServiceImpl`)**:
+  - Implemented double-buffered `setNextTrack()` with `onMediaItemTransition(MEDIA_ITEM_TRANSITION_REASON_AUTO)` in ExoPlayer for 100% gapless transitions on on-device playback.
+  - Unified with DLNA `SetNextAVTransportURI` preloading for Wi-Fi streamers (WiiM, Eversolo, HiBy).
+- **Audiophile DSD & Integer Resampling Pipeline (`FFMpegHelper`)**:
+  - Transcodes DSD (DSF/DFF) files using exact 32x integer multiples (88.2 kHz / 176.4 kHz) with an 8th-order 30 kHz lowpass filter (`-af "lowpass=30000, volume=6dB"`) to eliminate quantization noise without non-integer jitter.
+- **Universal Queue Deduplication (`QueueManager`)**:
+  - Enforces strict single-instance track uniqueness across `addPlayingQueue`, `addPlayNext`, `savePlayingQueue`, and `loadPlayingQueue` with index pointer synchronization.
+
+### Fixed
+- **Bluetooth A2DP Output Audio Quality (`AndroidPlayerController`, `AudioOutputHelper`)**:
+  - Reverted forced float PCM in favor of auto-negotiated 16-bit / 24-bit integer PCM, eliminating distortion and crackling over Bluetooth A2DP.
+  - Removed aggressive reflection-based codec overrides to allow natural, stable Bluetooth HAL profile negotiation.
+
+## [3.18.17] - 2026-08-14
+
+### Added
+- **Automatic Bluetooth Audio Optimization & Real-Time Reflection Engine (`AudioOutputHelper`, `MusicMateServiceImpl`, `AudioHubBottomSheet`, `MainActivity`)**:
+  - **Automatic Background Codec Optimization:** MusicMate automatically requests the highest possible codec (`LDAC 24-bit / 96 kHz` or `aptX HD`) silently in the background whenever Bluetooth headphones connect via reflection on `BluetoothA2dp.setCodecConfigPreference()`, eliminating manual configuration buttons.
+  - **Real-Time Codec Telemetry:** Hooked `BluetoothProfile.A2DP` proxy service listener and `CODEC_CONFIG_CHANGED` / `ACTION_ACL_CONNECTED` broadcast receivers to immediately reflect active codec and sample rate telemetry across the app.
+  - **Direct System Audio / Bluetooth Routing:** Tapping the Step 3 output card in the Music Center directly opens Android's native Media Output panel or Bluetooth settings with zero modal dialog friction.
+  - **Compact Naming Format:** Added `AudioOutputHelper.getCompactLabel()` to unify Bluetooth device naming across the player selection dropdown, Floating Dock, and Music Center bottom sheet using `{Name} • BT ({Codec})` (e.g. `Sony WH-1000XM5 • BT (LDAC)`).
+  - **Title Cased Audio Output Descriptors:** Standardized output types into clean Title Case (`"Bluetooth Audio"`, `"USB DAC"`, `"Wired Headphones"`, `"Phone Speaker"`).
+- **Dual-Chunk WAV Audio Tagging (`JThinkWriter`)**:
+  - Writes standard RIFF `WavInfoTag` chunks for legacy hardware / car stereos alongside standard ID3v2.4 chunks for modern audiophile software.
+- **Embedded Cover Art Tag Writing (`JThinkWriter`)**:
+  - Integrated `ArtworkFactory` to write embedded album art binary frames directly into audio files during tag saving.
+
+### Changed
+- **Standardized Playback Renderer Naming Pattern**:
+  - Replaced legacy parenthesis notation `(Bluetooth Audio)` with unified bullet delimiter `•` across the entire app (`{Name} • BT ({Codec})`, `{Name} • USB DAC`, `{Name} • {IP}`, `{Name} • {Version}`).
+- **Tag Editor Sequential Disk I/O Throttling (`TagsEditorFragment`)**:
+  - Replaced unbounded parallel futures with sequential execution on background worker threads during batch tag updates to prevent micro-SD card lockups.
+
+### Fixed
+- **Audio Route Path Bluetooth Badge (`AudioHubBottomSheet`)**:
+  - Fixed Step 3 (Target Audio Output) route badge to properly display `BLUETOOTH A2DP` and `Active Bluetooth A2DP Wireless Stream` with detected codec info instead of falling back to `DIRECT SYSTEM OUTPUT`.
+- **Persistent "Discard changes?" Popup Bug (`TagsEditorFragment`, `TagsActivity`)**:
+  - Added `isBindingInputs` guard flag to suppress `TextWatcher.afterTextChanged()` callbacks during programmatic `setText()` population on initial load and post-save refreshes.
+  - Fixed duplicate `TextWatcher` attachments and ensured `tagsActivity.setDirty(false)` and `modifiedFields.clear()` are executed after saving.
+- **Silent Tag Write Failures & Error Propagation (`TagWriter`, `FileRepository`)**:
+  - Updated `TagWriter.writeTag()` and `FileRepository.setMusicTag()` to return `boolean`, guaranteeing that the Room database is updated only when physical disk writes succeed.
+- **Multi-Value Tag Delimiter Normalization (`JThinkReader`, `StringUtils`)**:
+  - Normalized mixed delimiters (`/`, `;`, `&`, `,`) to clean comma-separated strings (`", "`) on read, while preserving band names like `AC/DC`.
+
 ## [3.18.16] - 2026-08-12
 
 ### Changed

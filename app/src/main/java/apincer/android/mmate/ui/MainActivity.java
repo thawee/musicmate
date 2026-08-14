@@ -31,6 +31,7 @@ import androidx.palette.graphics.Palette;
 
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.ui.view.AudioHubBottomSheet;
+import apincer.android.mmate.utils.AudioOutputHelper;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
@@ -584,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (v.getLayoutParams() instanceof MarginLayoutParams mlp) {
-                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 16);
+                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 8);
                     v.setLayoutParams(mlp);
                 }
                 return insets;
@@ -653,6 +654,29 @@ public class MainActivity extends AppCompatActivity {
                     playbackService.skipToNextInQueue();
                 }
             });
+        }
+    }
+
+    public void setFloatingDockVisible(boolean visible) {
+        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        if (bottomNav != null) {
+            if (visible) {
+                bottomNav.setVisibility(View.VISIBLE);
+                bottomNav.animate()
+                        .alpha(1f)
+                        .translationY(0f)
+                        .setDuration(220)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .start();
+            } else {
+                bottomNav.animate()
+                        .alpha(0f)
+                        .translationY(bottomNav.getHeight() > 0 ? bottomNav.getHeight() + dpToPx(this, 16) : dpToPx(this, 88))
+                        .setDuration(180)
+                        .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                        .withEndAction(() -> bottomNav.setVisibility(View.INVISIBLE))
+                        .start();
+            }
         }
     }
 
@@ -1294,32 +1318,16 @@ public class MainActivity extends AppCompatActivity {
 
                 if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
                     if (audioOutputDevice != null && audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(audioOutputDevice.getName())) {
-                        String devDesc = audioOutputDevice.getDescription();
-                        if (devDesc != null && !devDesc.isEmpty()) {
-                            baseLabel = audioOutputDevice.getName() + " (" + devDesc + ")";
-                        } else {
-                            baseLabel = audioOutputDevice.getName();
-                        }
+                        baseLabel = audioOutputDevice.getCompactLabel();
                     }
                 }
 
                 String label = isActive ? baseLabel + "  ✓" : baseLabel;
                 android.view.MenuItem item = popup.getMenu().add(0, i, i, label);
 
-                if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())
-                        && audioOutputDevice != null && audioOutputDevice.getResId() != 0) {
-                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, audioOutputDevice.getResId()));
-                } else if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
-                    android.graphics.drawable.Drawable appIcon = apincer.music.core.playback.ExternalAndroidPlayer.Factory.getAppIcon(this, target.getTargetId());
-                    if (appIcon != null) {
-                        item.setIcon(apincer.android.mmate.utils.UIUtils.scaleDrawable(this, appIcon, 24));
-                    } else {
-                        item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_speaker_24));
-                    }
-                } else if (isRemote || target instanceof apincer.music.core.playback.DMRPlayer) {
-                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_dlna));
-                } else {
-                    item.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_speaker_24));
+                android.graphics.drawable.Drawable targetDrawable = AudioOutputHelper.getTargetDrawable(this, target, audioOutputDevice);
+                if (targetDrawable != null) {
+                    item.setIcon(targetDrawable);
                 }
             }
         } else {
@@ -2084,6 +2092,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Always open dropdown when clicked
         input.setOnClickListener(v -> input.showDropDown());
+
+        // Allow dropdown popup to expand naturally to fit single-line text without wrapping
+        input.setDropDownWidth(android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
 
         // Optional: dark popup background
         input.setDropDownBackgroundResource(R.color.black_transparent_64);

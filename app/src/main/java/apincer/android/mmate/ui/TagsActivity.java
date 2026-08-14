@@ -258,13 +258,22 @@ public class TagsActivity extends AppCompatActivity {
 
         // Handle Navigation Bar Insets for Bottom Capsule
         View bottomNav = findViewById(R.id.bottom_navigation_container);
+        View bottomPanel = findViewById(R.id.bottom_navigation_panel);
         if (bottomNav != null) {
             ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (v.getLayoutParams() instanceof MarginLayoutParams) {
                     MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
-                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 12);
+                    mlp.bottomMargin = 0;
                     v.setLayoutParams(mlp);
+                }
+                if (bottomPanel != null) {
+                    bottomPanel.setPadding(
+                        bottomPanel.getPaddingLeft(),
+                        bottomPanel.getPaddingTop(),
+                        bottomPanel.getPaddingRight(),
+                        systemBars.bottom + (int) dpToPx(this, 8)
+                    );
                 }
                 return insets;
             });
@@ -376,11 +385,20 @@ public class TagsActivity extends AppCompatActivity {
             previewToggleGroup.setVisibility(VISIBLE);
             editorToggleGroup.setVisibility(GONE);
             techToggleGroup.setVisibility(GONE);
+            if (tabLayout != null) {
+                tabLayout.setVisibility(GONE);
+            }
             findViewById(R.id.action_editor).setOnClickListener(v -> {
+                if (tabLayout != null) {
+                    tabLayout.setVisibility(VISIBLE);
+                }
                 appBarLayout.setExpanded(false, true);
                 setupActionButtons(1);
             });
         } else if (mode == 1) {
+            if (tabLayout != null) {
+                tabLayout.setVisibility(VISIBLE);
+            }
             if (activeFragment instanceof TagsEditorFragment fragment) {
                 // editor
                 previewToggleGroup.setVisibility(GONE);
@@ -1049,55 +1067,55 @@ public class TagsActivity extends AppCompatActivity {
                 doBackToMainActivity(Constants.FILTER_TYPE_ALBUM, currentDisplayTag.getAlbum());
             });
         }
-        String mediaTypeAndPublisher;
-        if((!isEmpty(currentDisplayTag.getAlbumArtist()))) {
-            mediaTypeAndPublisher = " " +currentDisplayTag.getAlbumArtist()+" ";
-        }else {
-            mediaTypeAndPublisher = " " + StringUtils.SYMBOL_SEP+" ";
+        String albumArtist = currentDisplayTag.getAlbumArtist();
+        String artist = currentDisplayTag.getArtist();
+        if (!isEmpty(albumArtist) && (isEmpty(artist) || !albumArtist.trim().equalsIgnoreCase(artist.trim()))) {
+            genreView.setText(albumArtist.trim());
+            genreView.setVisibility(VISIBLE);
+        } else {
+            genreView.setText("");
+            genreView.setVisibility(GONE);
         }
-
-        genreView.setText(mediaTypeAndPublisher);
 
         // Tag
+        boolean hasPrv = false;
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
-        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
+        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP + " ").setTextSize(12).useTextBold());
 
-        if((!isEmpty(currentDisplayTag.getGenre()) ||
-                !isEmpty(currentDisplayTag.getOrigin()) ||
-                !isEmpty(currentDisplayTag.getStyle()) ||
-                !isEmpty(currentDisplayTag.getMood()))) {
-            boolean hasPrv = false;
-            if(!isEmpty(currentDisplayTag.getOrigin())) {
-                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getOrigin()).setTextSize(14).useTextBold());
-                hasPrv = true;
+        if(!isEmpty(currentDisplayTag.getOrigin())) {
+            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getOrigin()).setTextSize(12).useTextBold());
+            hasPrv = true;
+        }
+        if(!isEmpty(currentDisplayTag.getGenre())) {
+            if(hasPrv) {
+                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
             }
-            if(!isEmpty(currentDisplayTag.getGenre())) {
-                if(hasPrv) {
-                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
-                }
-                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getGenre()).setTextSize(14).useTextBold());
-                hasPrv = true;
+            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getGenre()).setTextSize(12).useTextBold());
+            hasPrv = true;
+        }
+        if(!isEmpty(currentDisplayTag.getMood())) {
+            if(hasPrv) {
+                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
             }
-            if(!isEmpty(currentDisplayTag.getMood())) {
-                if(hasPrv) {
-                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
-                }
-                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getMood()).setTextSize(14).useTextBold());
-                hasPrv = true;
+            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getMood()).setTextSize(12).useTextBold());
+            hasPrv = true;
+        }
+        if(!isEmpty(currentDisplayTag.getStyle())) {
+            if(hasPrv) {
+                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
             }
-            if(!isEmpty(currentDisplayTag.getStyle())) {
-                if(hasPrv) {
-                    tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(14).useTextBold());
-                }
-                tagSpan.append(new SpecialTextUnit(currentDisplayTag.getStyle()).setTextSize(14).useTextBold());
-              //  hasPrv = true;
-            }
-        }else {
-            tagSpan.append(new SpecialTextUnit(Constants.UNKNOWN).setTextSize(14).useTextBold());
+            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getStyle()).setTextSize(12).useTextBold());
+            hasPrv = true;
         }
 
-        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
-        tagInfo.setText(tagSpan.build());
+        if (hasPrv) {
+            tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_SEP).setTextSize(12).useTextBold());
+            tagInfo.setText(tagSpan.build());
+            tagInfo.setVisibility(VISIBLE);
+        } else {
+            tagInfo.setText("");
+            tagInfo.setVisibility(GONE);
+        }
 
         // ENC info
         try {
@@ -1397,11 +1415,10 @@ public class TagsActivity extends AppCompatActivity {
                 if (currentEditMode == 0) {
                     setupActionButtons(0);
                 }
-                //setupMenuToolbar();
-
-                // No need to rebuild the display tag if it's not dirty
+                if (tabLayout != null && currentEditMode == 0) {
+                    tabLayout.setVisibility(View.GONE);
+                }
                 viewModel.refreshDisplayTag();
-               // setupActionButtons(0);
             }
             // Fully collapsed state
             else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange() && !wasFullyCollapsed) {
@@ -1409,14 +1426,21 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyCollapsed = true;
                 wasFullyExpanded = false;
                 previewState = false;
-               // setupMenuToolbar();
+                if (tabLayout != null) {
+                    tabLayout.setVisibility(View.VISIBLE);
+                }
                 setupActionButtons(1);
+            } else if (!isFullyExpanded && tabLayout != null && tabLayout.getVisibility() != View.VISIBLE) {
+                tabLayout.setVisibility(View.VISIBLE);
             }
         }
     }
 
     public void setSaved(boolean saved) {
         this.isSaved = saved;
+        if (saved) {
+            this.isDirty = false;
+        }
     }
 
     @Override
@@ -1430,8 +1454,8 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            // Handle the back button click
-            finish();
+            // Handle the back button click with proper confirmation if dirty
+            getOnBackPressedDispatcher().onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);

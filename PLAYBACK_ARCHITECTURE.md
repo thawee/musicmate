@@ -1,393 +1,217 @@
-# Playback Module Architecture
+# Playback Module Architecture & Audio Engine Specification
 
-This document describes how playback control, queue management, Android app control, and DLNA renderer control are integrated into MusicMate.
-
----
-
-## High-Level Overview
-
-The playback module uses a **Strategy pattern** with a single service entry-point (`MusicMateServiceImpl`) that routes all commands to the correct player backend based on the current target type.
-
-```
-                        ┌──────────────────────┐
-                        │      UI Layer        │
-                        │  ┌────────────────┐  │
-                        │  │  MainActivity  │  │
-                        │  │  Player Picker │  │
-                        │  │  WebUI Remote  │  │
-                        │  └───────┬────────┘  │
-                        └──────────┼───────────┘
-                                   │ bindService()
-                        ┌──────────▼───────────┐
-                        │  MusicMateServiceImpl │
-                        │  (PlaybackService)    │
-                        │                       │
-                        │  ┌─────────────────┐  │
-                        │  │  QueueManager   │  │
-                        │  │  shuffle/repeat │  │
-                        │  └─────────────────┘  │
-                        └──────────┬───────────┘
-                           ┌───────┴───────┐
-                           │               │
-               ┌───────────▼───┐    ┌──────▼──────────────┐
-               │ AndroidPlayer │    │ MediaServerHubImpl  │
-               │  Controller   │    │ (UPnP Engine)       │
-               │               │    │                     │
-               │ ┌───────────┐ │    │ ┌─────────────────┐ │
-               │ │ ExoPlayer │ │    │ │ ControlPoint    │ │
-               │ │ (local)   │ │    │ │ (SSDP + SOAP)   │ │
-               │ └───────────┘ │    │ └─────────────────┘ │
-               │ ┌───────────┐ │    │ ┌─────────────────┐ │
-               │ │ MediaSess.│ │    │ │ BaseServer      │ │
-               │ │ (external)│ │    │ │ (HTTP :9000)    │ │
-               │ └───────────┘ │    │ └─────────────────┘ │
-               └───────────────┘    └─────────────────────┘
-                      │                        │
-              ┌───────┴───────┐        ┌───────┴───────┐
-              │               │        │               │
-         ┌────▼────┐   ┌──────▼──────┐ │  DLNA         │
-         │ On-     │   │ USB Audio  │ │  Renderers    │
-         │ Device  │   │ Player PRO │ │  (network)    │
-         └─────────┘   └────────────┘ └───────────────┘
-```
+This document provides a comprehensive architectural reference for MusicMate's audio playback engine, queue management, hardware audio pipeline, Android app controller bridge, and DLNA/UPnP network streaming renderer integration.
 
 ---
 
-## Layer 1 — SPI Contracts
+## 1. High-Level Architecture
 
-The SPI layer (`core/.../playback/spi/`) defines interfaces that decouple the UI from playback implementations.
+MusicMate implements a multi-backend **Strategy Pattern** with a central foreground service orchestrator (`MusicMateServiceImpl`) routing transport, metadata, and queue commands to either the **Direct Local Audio Engine** or the **Asynchronous DLNA/UPnP Streamer**.
 
-### PlaybackTarget (Interface)
+```
+                        ┌──────────────────────────────────────────────────┐
+                        │                     UI Layer                     │
+                        │  ┌─────────────────┐   ┌──────────────────────┐  │
+                        │  │  MainActivity   │   │ AudioHubBottomSheet  │  │
+                        │  │  Floating Dock  │   │ 3-Tab Music Center   │  │
+                        │  │  WebUI Remote   │   │ (Playing/Queue/Serv) │  │
+                        │  └────────┬────────┘   └──────────┬───────────┘  │
+                        └───────────┼───────────────────────┼──────────────┘
+                                    │ bindService()         │ StateFlow / LiveData
+                        ┌───────────▼───────────────────────▼──────────────┐
+                        │             MusicMateServiceImpl                 │
+                        │              (PlaybackService)                   │
+                        │                                                  │
+                        │  ┌────────────────────────────────────────────┐  │
+                        │  │                QueueManager                │  │
+                        │  │  Deduplication • Shuffle • Repeat • Room   │  │
+                        │  └────────────────────────────────────────────┘  │
+                        └───────────┬───────────────────────┬──────────────┘
+                                    │                       │
+                    ┌───────────────▼───┐       ┌───────────▼──────────────────┐
+                    │  AndroidPlayer    │       │     MediaServerHubImpl       │
+                    │   Controller      │       │     (DLNA / UPnP Engine)     │
+                    │                   │       │                              │
+                    │ ┌───────────────┐ │       │ ┌──────────────────────────┐ │
+                    │ │ Local Exo     │ │       │ │ ControlPoint             │ │
+                    │ │ AudioTrack    │ │       │ │ (SSDP M-SEARCH + SOAP)   │ │
+                    │ └───────────────┘ │       │ └──────────────────────────┘ │
+                    │ ┌───────────────┐ │       │ ┌──────────────────────────┐ │
+                    │ │ MediaSession  │ │       │ │ BaseServer               │ │
+                    │ │ App Bridge    │ │       │ │ (HTTP Streamer :9000)    │ │
+                    │ └───────────────┘ │       │ └──────────────────────────┘ │
+                    └─────────┬─────────┘       └──────────────┬───────────────┘
+                              │                                │
+                 ┌────────────┴────────────┐             ┌─────┴───────────────┐
+                 │                         │             │                     │
+            ┌────▼─────┐             ┌─────▼─────┐       │  Network Streamers  │
+            │ On-Device│             │ Third-    │       │  (WiiM, Eversolo,   │
+            │ BT / DAC │             │ Party App │       │   HiBy, Rose, DLNA) │
+            └──────────┘             └───────────┘       └─────────────────────┘
+```
 
-Abstraction for *any* playback destination:
+---
+
+## 2. SPI Core Contracts
+
+The SPI contract layer (`core/src/main/java/apincer/music/core/playback/spi/`) decouples UI presentation, queue orchestration, and hardware renderers.
+
+### `PlaybackTarget` (Interface)
+Defines any physical or network playback destination:
 
 | Method | Purpose |
-|:---|:---|
-| `getTargetId()` | Unique ID (UDN for DLNA, package name for apps) |
-| `getDisplayName()` | Friendly name for UI |
-| `getTargetType()` | `LOCAL` / `EXTERNAL_APP` / `STREAMING` |
-| `isStreaming()` | `true` for DLNA renderers |
-| `canReadSate()` | Whether state monitoring is supported |
+| :--- | :--- |
+| `getTargetId()` | Unique identifier (UDN string for DLNA renderers, package name for external apps, `local` for on-device). |
+| `getDisplayName()` | Clean label for UI headers and dialogs. |
+| `getTargetType()` | Target category: `LOCAL`, `EXTERNAL_APP`, `STREAMING`. |
+| `isStreaming()` | `true` when routing audio packets over Wi-Fi / Ethernet to UPnP renderers. |
+| `canReadSate()` | Whether real-time playback position monitoring is supported. |
 
-Three concrete implementations:
+#### Concrete Implementations:
+1. **`LocalAndroidPlayer` (`LOCAL`):** Direct on-device playback via ExoPlayer and Android `AudioTrack`.
+2. **`ExternalAndroidPlayer` (`EXTERNAL_APP`):** Third-party audiophile player integration (USB Audio Player PRO, Neutron, Poweramp, HiBy Music, Foobar2000, NePLAYER Lite).
+3. **`DMRPlayer` (`STREAMING`):** DLNA / UPnP Digital Media Renderers on the local network.
+4. **`WebStreamingPlayer` (`STREAMING`):** Browser-based WebUI HTTP audio streaming clients.
 
-| Class | Type | Use Case |
-|:---|:---|:---|
-| `LocalAndroidPlayer` | `LOCAL` | On-device playback via ExoPlayer |
-| `ExternalAndroidPlayer` | `EXTERNAL_APP` | Third-party audiophile apps (UAPP, Neutron, Poweramp, etc.) |
-| `DMRPlayer` | `STREAMING` | DLNA/UPnP Media Renderers on the network |
-| `WebStreamingPlayer` | `STREAMING` | HTTP web clients streaming via browser |
+### `PlaybackService` (Interface)
+The master service API contract implemented by `MusicMateServiceImpl`:
+- **Transport Controls:** `playSong(Track)`, `pausePlayer()`, `stopPlaying()`, `skipToNextInQueue()`, `skipToPrevious()`, `seekTo(long)`.
+- **Queue Controls:** `setNextSongInQueue()`, `setShuffleMode(boolean)`, `setRepeatMode(RepeatMode)`.
+- **Target Management:** `switchPlayer(PlaybackTarget, boolean)`, `getPlayer()`, `getPlaybackTargets()`, `refreshPlayerDiscovery()`.
+- **Reactive State Subscriptions:** `subscribePlaybackState()`, `subscribeNowPlayingSong()`, `subscribePlaybackTarget()`.
 
-### PlaybackService (Interface)
-
-The master contract — every playback operation goes through this:
-
-| Category | Methods |
-|:---|:---|
-| **Transport** | `playSong()`, `pausePlayer()`, `stopPlaying()`, `skipToNextInQueue()`, `skipToPrevious()` |
-| **Queue** | `setNextSongInQueue()`, `setShuffleMode()`, `setRepeatMode()` |
-| **Player Mgmt** | `switchPlayer()`, `getPlayer()`, `getPlaybackTargets()`, `refreshPlayerDiscovery()` |
-| **State** | `subscribePlaybackState()`, `subscribeNowPlayingSong()`, `subscribePlaybackTarget()` |
-
-### PlaybackCallback (Abstract Class)
-
-Unified callback — both Android and DLNA backends fire these:
-
-| Method | When |
-|:---|:---|
-| `onMediaTrackChanged(Track)` | New track started |
-| `onMediaTrackChanged(title, artist, album, duration)` | Metadata from external app MediaSession |
-| `onPlaybackStateChanged(PlaybackState)` | State transition (PLAYING / PAUSED / STOPPED) |
-| `onPlaybackStateTimeElapsedSeconds(long)` | Position update for progress bar |
-| `onPlaybackTargetChanged(PlaybackTarget)` | Active player changed |
+### `PlaybackCallback` (Abstract Class)
+Unified event bus bridging native ExoPlayer, third-party MediaSessions, and remote UPnP GENA events:
+- `onMediaTrackChanged(Track track)`: Fired on track changes.
+- `onPlaybackStateChanged(PlaybackState state)`: Fired on state transitions (`PLAYING`, `PAUSED`, `STOPPED`).
+- `onPlaybackCompleted()`: Fired upon track end to trigger seamless queue advancement.
+- `onPlaybackStateTimeElapsedSeconds(long sec)`: Real-time progress updates for seek bars.
 
 ---
 
-## Layer 2 — Service Orchestrator (`MusicMateServiceImpl`)
+## 3. Direct Audio Engine & Hardware Pipeline
 
-*   **Path:** `app/src/.../service/MusicMateServiceImpl.java`
-*   **Extends:** `android.app.Service`
-*   **Implements:** `PlaybackService`
-*   **Injected via:** Hilt (`@AndroidEntryPoint`)
+*Path:* `app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java`
 
-### Initialization Flow
+### High-Resolution AudioTrack & ExoPlayer Setup
+MusicMate's internal player leverages Media3 ExoPlayer configured for hardware audio reproduction:
 
-```
-onCreate()
- ├── Inject QueueManager (Hilt @Singleton)
- ├── new AndroidPlayerController(context, MediaSessionManager)
- ├── Inject MediaServerHubImpl (Hilt → boots UPnP + HTTP server)
- ├── Register shared PlaybackCallback
- ├── discoverExternalPlayers() via MediaSessionManager
- ├── Load persistent queue from DB
- └── autoSelectBestPlayer()
-         Priority: DMR > WebStream > ExternalApp > Local
-```
+1. **Auto-Negotiated Integer PCM:** Configured with standard `ExoPlayer.Builder(context)` to automatically negotiate bit-perfect 16-bit and 24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) with Android's Bluetooth A2DP audio HAL (`a2dp.default.so`) and connected USB DACs, completely avoiding float quantization distortion.
+2. **CPU Wakelock Protection:** Configured with `setWakeMode(C.WAKE_MODE_LOCAL)` to acquire `PowerManager.PARTIAL_WAKE_LOCK` automatically during active playback, preventing Android Doze sleep pauses and buffer underruns during screen-off listening.
+3. **Hardware Disconnect Protection:** Configured with `setHandleAudioBecomingNoisy(true)` to automatically pause playback when headphones, USB DACs, or Bluetooth devices are disconnected.
+4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing across 24-bit/96kHz+ FLAC and DSD files.
+5. **Lifecycle Cleanup:** Complete `release()` method tied directly into `MusicMateServiceImpl.onDestroy()`.
 
-### Command Routing (Strategy Pattern)
-
-All playback commands follow the same type-check dispatch:
+### True Dual-Engine Gapless Playback Pipeline
 
 ```
-                           ┌──────────────────────┐
-                           │  playSong(track)      │
-                           └──────────┬───────────┘
-                                      │
-                              ┌───────▼───────┐
-                              │ isControllable │
-                              │ (streaming +   │
-                              │  controlled)?  │
-                              └───────┬───────┘
-                              yes     │     no
-                         ┌────────────┴────────────┐
-                         ▼                         ▼
-              mediaHub.playerPlaySong()   androidPlayer.play()
-              (UPnP SOAP to renderer)    (ExoPlayer or MediaController)
+Local Engine (ExoPlayer)                     DLNA / UPnP Network Engine
+────────────────────────                     ──────────────────────────
+play(currentTrack)                           playerPlaySong(currentTrack)
+   │                                            │
+preloadNextTrack()                           preloadNextTrack()
+   │                                            │
+internalExoPlayer.addMediaItem(nextTrack)    mediaHub.setNextTrack(nextTrack)
+   │                                            │
+(ExoPlayer double-buffers audio samples)     (Sends UPnP SetNextAVTransportURI)
+   │                                            │
+[Track Finishes]                             [Track Finishes]
+   │                                            │
+onMediaItemTransition(REASON_AUTO)           Renderer auto-transitions
+   ▼                                            ▼
+onPlaybackCompleted()                        GENA LastChange Event
+   ▼                                            ▼
+Queue advances & primes upcoming track       Queue advances & primes upcoming track
 ```
 
-This pattern applies identically to `pause`, `stop`, `skipToNext`, and `skipToPrevious`.
-
-### Player Switching (`switchPlayer()`)
-
-1. **Resolve** streaming proxy targets (match IP to DMR)
-2. **Deactivate** old player if different (`mediaHub.playerDeactivate()` or `androidPlayer.unregisterCallback()`)
-3. **Activate** new player:
-    *   `ExternalAndroidPlayer` → `androidPlayer.registerCallback(ext, callback)`
-    *   DLNA Streaming → `mediaHub.playerActivate(udn, callback)`
-4. **Update** `currentPlayerFlow` StateFlow → triggers UI update
-5. **Update** foreground notification
-
-### Observable State Flows
-
-| StateFlow | Type | Consumers |
-|:---|:---|:---|
-| `currentPlayerFlow` | `MutableStateFlow<Optional<PlaybackTarget>>` | Cast icon tint, active player display |
-| `playbackStateFlow` | `MutableStateFlow<PlaybackState>` | Notification, WebUI, progress bar |
-| `currentTrackFlow` | `MutableStateFlow<Optional<Track>>` | Now-playing display |
-| `playingQueueFlow` | `MutableStateFlow<List<Track>>` | Queue sheet UI |
+- **Local Gapless:** `setNextTrack(nextSong)` double-buffers the next track into ExoPlayer's playlist. When the track finishes, `Player.Listener.onMediaItemTransition(MEDIA_ITEM_TRANSITION_REASON_AUTO)` notifies `PlaybackCallback.onPlaybackCompleted()` with **zero gap**.
+- **Network Gapless:** `MediaServerHubImpl.setNextTrack()` dispatches UPnP `SetNextAVTransportURI` with complete DIDL-Lite metadata. A safety fallback timer scheduled at `100% duration + 1.5s` ensures queue progression if the renderer firmware drops the transition.
 
 ---
 
-## Layer 3A — Android Player Controller
+## 4. Audiophile DSD & Resampling Pipeline
 
-*   **Path:** `app/src/.../service/AndroidPlayerController.java`
+*Path:* `core/src/main/java/apincer/music/core/codec/FFMpegHelper.java`
 
-Handles **on-device** playback in two modes:
-
-### Local Playback (ExoPlayer)
-
-*   `playLocal(Track)` → Plays audio file using ExoPlayer
-*   `pauseLocal()` / `resumeLocal()` / `stopLocal()` / `seekLocal()`
-*   ExoPlayer's `Player.Listener` fires `PlaybackCallback` events
-
-### External App Bridge (MediaSession)
-
-*   **Discovery:** Uses `MediaSessionManager.getActiveSessions()` to find running audiophile apps
-*   **Supported Apps:** HiBy Music, NePLAYER Lite, Neutron, USB Audio Player PRO, Foobar2000, Poweramp
-*   **Control:** `registerCallback()` attaches a `MediaController.Callback` that translates external app state changes → `PlaybackCallback`
-*   **Playback routing:**
-    *   Neutron → Custom intent via `MusicFileProvider.getUriForFile()`
-    *   Poweramp → Custom intent via `MusicFileProvider.getUriForFile()`
-    *   Others → `MediaController.getTransportControls().playFromUri()` or `ACTION_VIEW` intent
-*   **Progress polling:** Schedules 1s `Handler` polling for position updates via `MediaController.getPlaybackState()`
-
-```
-    MediaSessionManager
-           │
-           │ getActiveSessions()
-           ▼
-    ┌──────────────┐     ┌──────────────────┐
-    │ MediaController│────▶│ ExternalAndroidPlayer │
-    │   .Callback    │     │ (PlaybackTarget)      │
-    └──────┬─────────┘     └───────────────────────┘
-           │ onMetadataChanged()
-           │ onPlaybackStateChanged()
-           ▼
-    PlaybackCallback → MusicMateServiceImpl
-```
+For high-resolution DSD (DSF/DFF) processing and conversions:
+- **Exact Integer Downsampling:** DSD64 (2.8224 MHz) is transcoded using native 32x integer multiples (**88.2 kHz** or **176.4 kHz**) rather than asynchronous non-integer 48 kHz resampling, eliminating inter-modulation distortion and timing jitter.
+- **Ultrasonic Noise Attenuation:** Applies an 8th-order 30 kHz lowpass filter (`-af "lowpass=30000, volume=6dB"`) to eliminate DSD high-frequency quantization noise while maintaining a +6dB standard DSD-to-PCM level match.
 
 ---
 
-## Layer 3B — DLNA Engine (`MediaServerHubImpl`)
+## 5. Universal Queue Deduplication
 
-*   **Path:** `server-jupnp/src/.../MediaServerHubImpl.java`
-*   **Framework:** jUPnP (fork of Cling)
+*Path:* `core/src/main/java/apincer/music/core/repository/QueueManager.java`
 
-This is a **dual-mode UPnP engine**:
-
-### Mode 1: Digital Media Server (DMS)
-
-*   Advertises the local music library to the network
-*   Other DLNA control points can browse and play music from this device
-*   Powered by `BaseServer` HTTP server on port 9000
-*   Generates DIDL-Lite XML metadata for UPnP compliance
-
-### Mode 2: Control Point (CP)
-
-*   Discovers DLNA Media Renderers via SSDP M-SEARCH
-*   Controls renderers via AVTransport SOAP actions
-*   Monitors renderer state via GENA subscriptions + polling
-
-### Discovery Flow
-
-```
-    MusicMate                         Network                     DLNA Renderer
-       │                                │                              │
-       │──── M-SEARCH (multicast) ─────▶│                              │
-       │                                │──── M-SEARCH ──────────────▶│
-       │                                │◀─── SSDP Response ─────────│
-       │◀─── remoteDeviceAdded() ──────│                              │
-       │                                │                              │
-       │   (Registry stores device)     │                              │
-       │                                │                              │
-       │  [Repeats every 30 seconds]    │                              │
-```
-
-*   **Periodic:** `scheduleWithFixedDelay` every 30 seconds with default `MX=3`
-*   **Manual rescan:** `refreshDiscovery()` uses `MX=5` (longer window for slow devices)
-
-### AVTransport Control (SOAP)
-
-```
-    MusicMateServiceImpl          MediaServerHubImpl              DLNA Renderer
-           │                            │                              │
-           │── playerPlaySong(track) ──▶│                              │
-           │                            │── Build stream URL ─────────│
-           │                            │   + DIDL-Lite XML            │
-           │                            │                              │
-           │                            │── SetAVTransportURI ───────▶│
-           │                            │◀── OK ─────────────────────│
-           │                            │── Play() ──────────────────▶│
-           │                            │◀── OK ─────────────────────│
-           │                            │                              │
-           │                            │       ┌──────────────────┐   │
-           │                            │       │ Renderer fetches │   │
-           │                            │       │ audio via HTTP   │   │
-           │                            │       │ GET :9000/music/ │   │
-           │                            │       └──────────────────┘   │
-```
-
-Other transport commands follow the same SOAP pattern:
-*   `playerPause()` → `Pause` action
-*   `playerResume()` → `Play` action
-*   `playerStop()` → `Stop` action
-*   `playerSeek()` → `Seek(REL_TIME, ...)` action
-*   `playerSetVolume()` → `SetVolume` on RenderingControl service
-
-### State Monitoring (GENA + Polling Hybrid)
-
-| Mechanism | What | Frequency | Purpose |
-|:---|:---|:---|:---|
-| **GENA Subscription** | `LastChange` XML events from AVTransport | Event-driven | Detect PLAYING→PAUSED→STOPPED transitions |
-| **Position Polling** | `GetPositionInfo` action | 1–3 seconds (adaptive) | Accurate playback position for progress bar |
-| **Fallback Monitor** | Checks `lastEventTime` staleness | Periodic | Switches to polling if GENA stalls (>4s no events) |
-
-*   **GENA subscription** on `AVTransport` with 600s lease — parses `LastChange` XML for `TransportState` and `RelativeTimePosition`
-*   **Adaptive polling interval:** 1s when GENA events are recent, up to 3s when events are stale
-*   **Stagnant recovery:** If position hasn't changed for 8+ polls, triggers recovery (`Stop` + `Play`)
-
-### Gapless Playback
-
-1. When a track starts, `handleTrackStartEvent()` calls `preloadNextTrackSafe()`
-2. `preloadNextTrackSafe()` gets next from `QueueManager` and calls `mediaHub.setNextTrack()`
-3. `setNextTrack()` sends UPnP `SetNextAVTransportURI` action to the renderer
-4. A fallback timer at ~97% of track duration ensures auto-advance if the renderer fails to transition
-
-### Network Resilience
-
-*   **WiFi lock** + **Multicast lock** + **PowerManager WakeLock** for background stability
-*   `ConnectivityManager.NetworkCallback` monitors WiFi/Ethernet changes
-*   On network change → restarts UPnP service + re-triggers discovery
+MusicMate enforces strict single-instance uniqueness across the playing queue:
+- **`addPlayingQueue(Track)` & `addPlayNext(Track)`:** Automatically remove any prior instance of the song before adding or moving it, maintaining index pointer alignment.
+- **Index Synchronization:** Left-shifts `currentIndex` and `playbackIndex` when removing preceding items to prevent skipping tracks.
+- **Persistent State:** Saves and restores `isShuffle` and `repeatMode` to database/preferences on app restarts.
 
 ---
 
-## Queue Management (`QueueManager`)
+## 6. Now Playing UI & Audiophile Telemetry
 
-*   **Path:** `core/src/.../repository/QueueManager.java`
-*   **Scope:** `@Singleton` (Hilt)
-*   **Storage:** Thread-safe `CopyOnWriteArrayList<Track>`, persisted via Room `PlayingQueue` model
+*Path:* `app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java`
 
-### Core Operations
+### 1-Line Audio Signal Path Telemetry
+Displays live, full-width audio route information directly on the Now Playing screen:
+- **Node 1 (Source):** Format, Bit Depth, Sample Rate (e.g. `[FLAC 24/44.1k]` in Gold).
+- **Node 2 (Transport):** `Local Transport` vs. `Net Streamer` (Cyan).
+- **Node 3 (Target):** Connected Bluetooth device with active codec (e.g. `Shanling UP4 • LDAC`) or DLNA renderer.
 
-| Method | Purpose |
-|:---|:---|
-| `loadPlayingQueue()` | Load persistent queue from DB |
-| `savePlayingQueue(List<Track>)` | Persist queue to DB |
-| `setPlaybackTrack(Track)` | Set current playing index |
-| `getNextTrack()` | Get next track (respects shuffle/repeat) |
-| `getPreviousTrack()` | Get previous track |
-| `addPlayingQueue(trackId)` | Add track to queue |
-| `emptyPlayingQueue()` | Clear queue |
-| `setRepeatMode(mode)` | `OFF`, `ONE`, `ALL` |
-| `setShuffleMode(enabled)` | Toggle shuffle + rebuild shuffle order |
+### Dynamic Range (DR) Metrics Chip
+- Displays a dedicated amber chip (e.g. `[DR 14]`) indicating mastering dynamic health and uncompressed dynamic range.
 
-### Shuffle Implementation
+### `DIRECT` / Bit-Perfect Verification Badge
+- Displays a glowing emerald `[DIRECT]` badge when streaming uncompressed lossless audio (FLAC, DSD, ALAC, WAV) to network renderers or bit-perfect local outputs.
 
-*   `shuffleOrder` list maps physical indices to randomized positions
-*   Current track is always placed at index 0 in shuffle sequence
-*   `updateShuffleOrder()` rebuilds on toggle or track change using `Collections.shuffle()`
-
-### Queue ↔ Playback Integration
-
-```
-    PlaybackCallback                MusicMateServiceImpl             QueueManager
-         │                                  │                            │
-         │── onPlaybackComplete() ─────────▶│                            │
-         │                                  │── setPlaybackTrack(cur) ──▶│
-         │                                  │── getNextTrack() ─────────▶│
-         │                                  │◀── nextTrack ─────────────│
-         │                                  │                            │
-         │                                  │── play(nextTrack) on       │
-         │                                  │   active player            │
-```
+### 1-Tap 3D Flip Technical Specs Card
+- Tapping the album artwork or info badge triggers a smooth 3D Y-axis card flip (`rotationY 90° ➔ -90° ➔ 0°`) revealing a glassmorphic **Audio Anatomy** card:
+  - **Audio Format & Resolution:** `FLAC • 24-bit / 44.1 kHz`
+  - **Bitrate:** `846 kbps (VBR)`
+  - **Dynamic Range:** `Dynamic Range: DR 14`
+  - **Physical File Size:** Formatted accurately via `android.text.format.Formatter.formatFileSize`.
 
 ---
 
-## UI Binding (`MainActivity`)
+## 7. Third-Party App Bridge (MediaSession)
 
-### Service Connection
+MusicMate monitors and controls external audiophile players via `AndroidPlayerController`:
 
-```java
-// In onCreate():
-bindService(intent, serviceConnection, BIND_AUTO_CREATE);
-
-// ServiceConnection.onServiceConnected():
-playbackService = binder.getPlaybackService();
-isPlaybackServiceBound = true;
-adapter.setPlaybackService(playbackService);
-
-// Subscribe to state updates:
-playbackService.subscribePlaybackState(
-    state -> setNowPlaying(playbackService.getNowPlayingSong(), state),
-    throwable -> Log.e(TAG, "Error", throwable));
+```
+                       MediaSessionManager
+                               │
+                               │ getActiveSessions()
+                               ▼
+                        ┌──────────────┐
+                        │MediaController│
+                        │  .Callback   │
+                        └──────┬───────┘
+                               │ onMetadataChanged()
+                               │ onPlaybackStateChanged()
+                               ▼
+                        PlaybackCallback
+                               │
+                               ▼
+                       MusicMateServiceImpl
 ```
 
-### Player Picker
-
-The cast button (`headerCastBtn`) triggers `showPlayerPickerPopup()`:
-
-1. Reads `playbackService.getPlaybackTargets()` (local + DLNA combined)
-2. Shows popup with `📱` prefix for local players, `📻` for remote
-3. `✓` marks the currently active player
-4. **Rescan** option triggers `refreshPlayerDiscovery()` with smart polling (reopens when players appear, up to 6s)
-5. On selection → `playbackService.switchPlayer(target, true)`
+- **Supported Apps:** USB Audio Player PRO, Neutron Music Player, Poweramp, HiBy Music, Foobar2000, NePLAYER Lite.
+- **Progress Tracking:** 1-second adaptive polling handler reading `MediaController.getPlaybackState().getPosition()`.
+- **Targeted Launching:** Custom URIs via `MusicFileProvider.getUriForFile()` granting temporary read permissions to external media packages.
 
 ---
 
-## Module Map
+## 8. Summary of Audio Module Map
 
-| Module | Key Files | Role |
-|:---|:---|:---|
-| `:core` | `playback/spi/PlaybackTarget.java` | Target interface |
-| `:core` | `playback/spi/PlaybackService.java` | Service interface |
-| `:core` | `playback/spi/PlaybackCallback.java` | Callback contract |
-| `:core` | `playback/DMRPlayer.java` | DLNA renderer target |
-| `:core` | `playback/ExternalAndroidPlayer.java` | External app target |
-| `:core` | `playback/WebStreamingPlayer.java` | Web client target |
-| `:core` | `server/spi/MediaServerHub.java` | UPnP engine interface |
-| `:core` | `server/BaseServer.java` | HTTP streaming server |
-| `:core` | `repository/QueueManager.java` | Queue management |
-| `:server-jupnp` | `MediaServerHubImpl.java` | UPnP engine (jUPnP) |
-| `:app` | `service/MusicMateServiceImpl.java` | Central orchestrator |
-| `:app` | `service/AndroidPlayerController.java` | Local + external player bridge |
-| `:app` | `ui/MainActivity.java` | UI binding, player picker |
+| Module | File | Key Responsibility |
+| :--- | :--- | :--- |
+| `:core` | [`PlaybackTarget.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackTarget.java) | Target abstraction for Local, External Apps, and DLNA. |
+| `:core` | [`PlaybackService.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackService.java) | Master playback service contract. |
+| `:core` | [`QueueManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/QueueManager.java) | Deduplicated queue, shuffle order, and Room persistence. |
+| `:core` | [`FFMpegHelper.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/codec/FFMpegHelper.java) | DSD 30kHz LPF filtering and 88.2kHz integer downsampling. |
+| `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
+| `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, CPU wakelocks, and MediaSession bridge. |
+| `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
+| `:app` | [`AudioHubBottomSheet.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java) | Now Playing UI, 3D specs card flip, DR badge, and signal path telemetry. |

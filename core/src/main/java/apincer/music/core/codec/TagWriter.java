@@ -18,11 +18,11 @@ public abstract class TagWriter {
         }
     }
 
-    public static void writeTagToFile(Context context, Track tag) {
-        getTagWriter(context, tag).writeTag(tag);
+    public static boolean writeTagToFile(Context context, Track tag) {
+        return getTagWriter(context, tag).writeTag(tag);
     }
 
-    protected abstract void writeTag(Track tag);
+    protected abstract boolean writeTag(Track tag);
 
     private static TagWriter getTagWriter(Context context, Track tag) {
        // return new FFMpegWriter(context);

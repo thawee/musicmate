@@ -1,13 +1,5 @@
 pluginManagement {
     repositories {
-       /* google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-                includeGroupByRegex("io\\.objectbox.*")
-            }
-        } */
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -21,55 +13,27 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url='https://jitpack.io' }
-        //maven { url='https://dl.bintray.com/tsubasap91/maven' }
-        //maven { url='https://mvnrepository.com/artifact/'}
-       // maven { url='https://repo1.maven.org/maven2/'}
-       // maven { url="https://objectbox.net/beta-repo/"}
-        }
+        maven { url = 'https://jitpack.io' }
+    }
 }
 
 rootProject.name = 'musicmate'
+
+// Application & Core Modules
 include ':app'
 include ':core'
-//include ':db-api'
-//include ':server-api'
-include ':server-jupnp'
-//include ':server-jupnp-jetty'
+include ':db-room'
 
-//include ':TripMate'
+// Media Server & UPnP Engines
+include ':server-jupnp'
+include ':server-jupnp-httpcore'
+include ':server-jupnp-netty'
+
+// Local Libraries & Audio Subsystems
 include ':library:library'
 include ':library:justdsd'
 include ':library:JustFLAC'
-//include ':library:MaterialEditText'
 include ':library:CircleProgressView'
 include ':library:androidtagview'
-//include ':library:TableFixHeaders'
-//include ':library:AnimatedExpandableListView'
-//include ':library:paralloid'
-//include ':library:slideDateTimePicker'
 include ':library:crashreporter'
-//include ':library:coroutines'
-//include ':library:objectrelations'
-//include ':library:esoco-common'
-//include ':library:esoco-monads'
-//include ':library:placesAPI'
-//include ':library:curvebottombar'
-//include ':library:spacetablayout'
-//,':DreamPlan', ':library:TableFixHeaders:library'
-// ':library:circleimageview',
-//':library:jaudiotagger20181016',':library:jaudiotagger226',':library:SearchFilter',,'TripMate',':library:slideDateTimePicker',':library:placesAPI',
-
-//include ':library:mqaidentifier'
-//include ':library:musicmeterlib'
-//include ':library:jaudiotagger'
 include ':library:jaudiotagger-android'
-//include ':library:cling:core'
-//include ':library:cling:support'
-//include ':cardashboard'
-//include ':server-jupnp-undertow'
-include ':server-jupnp-httpcore'
-//include ':server-jupnp-httpcore54'
-include ':server-jupnp-netty'
-include ':db-room'
-//include ':db-objectbox'

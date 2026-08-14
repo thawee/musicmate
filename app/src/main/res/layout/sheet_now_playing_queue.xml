@@ -116,9 +116,11 @@
 
             <!-- Large album art with gesture feedback overlay -->
             <FrameLayout
-                android:id="@+id/sheet_album_art_frame"
+                android:id="@+id/sheet_album_art_container"
                 android:layout_width="140dp"
-                android:layout_height="140dp">
+                android:layout_height="140dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/sheet_album_art"
@@ -128,6 +130,78 @@
                     android:src="@drawable/ic_musicmate_logo"
                     android:contentDescription="Album artwork"
                     app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"/>
+
+                <!-- Dark Glassmorphic Technical Specs Overlay (Flips in on Tap) -->
+                <LinearLayout
+                    android:id="@+id/sheet_tech_specs_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/shape_specs_card"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AUDIO ANATOMY"
+                        android:textColor="@color/colorGold"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/sheet_specs_format"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/white"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/sheet_specs_bitrate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/grey300"
+                        android:textSize="9.5sp"
+                        android:gravity="center"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/sheet_specs_dr"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="#FFA000"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/sheet_specs_file_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/grey400"
+                        android:textSize="9sp"
+                        android:gravity="center"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Tap to flip"
+                        android:textColor="@color/colorMuted"
+                        android:textSize="8sp" />
+                </LinearLayout>
 
                 <!-- Gesture Play/Pause/Skip Feedback Overlay Icon -->
                 <ImageView
@@ -142,6 +216,19 @@
                     android:alpha="0"
                     app:tint="@color/colorGold"
                     android:contentDescription="Playback gesture action" />
+
+                <!-- Flip / Info Hint Button Badge in top-right corner -->
+                <ImageView
+                    android:id="@+id/sheet_btn_flip_specs"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/shape_telemetry_chip_source"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_round_info_24"
+                    app:tint="@color/colorGold"
+                    android:contentDescription="Flip Audio Specs" />
             </FrameLayout>
 
             <!-- Track info -->
@@ -183,47 +270,102 @@
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <!-- Telemetry Source Badge -->
+                <!-- Telemetry Chips Row: Source | DR | Bit-Perfect | Target -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:background="@drawable/shape_telemetry_chip_source"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="3dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_round_audio_file_24"
-                        app:tint="@color/colorGold"
-                        android:contentDescription="Audio Source" />
-                    <TextView
-                        android:id="@+id/sheet_node_source_title"
+
+                    <!-- Telemetry Source Badge -->
+                    <LinearLayout
+                        android:id="@+id/sheet_node_source_badge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:textColor="@color/colorGold"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
+                        android:background="@drawable/shape_telemetry_chip_source"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:src="@drawable/ic_round_audio_file_24"
+                            app:tint="@color/colorGold"
+                            android:contentDescription="Audio Source" />
+                        <TextView
+                            android:id="@+id/sheet_node_source_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="3dp"
+                            android:textColor="@color/colorGold"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <!-- Dynamic Range (DR) Badge (Visible when DR score > 0) -->
+                    <LinearLayout
+                        android:id="@+id/sheet_node_dr_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/shape_telemetry_chip_dr"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+                        <TextView
+                            android:id="@+id/sheet_node_dr_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#FFA000"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:maxLines="1" />
+                    </LinearLayout>
+
+                    <!-- Bit-Perfect / Direct Badge (Visible when bit-perfect) -->
+                    <LinearLayout
+                        android:id="@+id/sheet_node_bitperfect_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/shape_telemetry_chip_bitperfect"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DIRECT"
+                            android:textColor="#00E676"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:maxLines="1" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- Telemetry Target Badge -->
                 <LinearLayout
+                    android:id="@+id/sheet_node_target_badge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:background="@drawable/shape_telemetry_chip_target"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="3dp"
+                    android:paddingHorizontal="5dp"
+                    android:paddingVertical="2dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
                     <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
+                        android:id="@+id/sheet_node_target_icon"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
                         android:src="@drawable/ic_round_speaker_24"
                         app:tint="#00E5FF"
                         android:contentDescription="Output Player Target" />
@@ -231,9 +373,9 @@
                         android:id="@+id/sheet_node_target_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
+                        android:layout_marginStart="3dp"
                         android:textColor="#00E5FF"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:textStyle="bold"
                         android:maxLines="1"
                         android:ellipsize="end" />
@@ -431,6 +573,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
+                    android:fontFeatureSettings="tnum"
                     android:text="00:00"
                     android:textColor="@color/grey400"
                     android:textSize="12sp" />
@@ -440,6 +583,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
+                    android:fontFeatureSettings="tnum"
                     android:text="00:00"
                     android:textColor="@color/grey400"
                     android:textSize="12sp" />

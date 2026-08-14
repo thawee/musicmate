@@ -109,7 +109,7 @@ public class StringUtils {
     
     /**
      * Split a multi-value string into individual values.
-     * Supports separators: ; & ,
+     * Supports separators: ; , & and / (preserving known bands like AC/DC).
      * 
      * @param value The multi-value string
      * @return List of individual values (trimmed, non-empty)
@@ -118,7 +118,17 @@ public class StringUtils {
         List<String> result = new ArrayList<>();
         if (isEmpty(value)) return result;
         
-        String[] parts = value.split("[;&,]", -1);
+        String[] parts;
+        if (value.contains(" / ")) {
+            parts = value.split("\\s*/\\s*|\\s*[;,]\\s*", -1);
+        } else if (value.contains(";") || value.contains(",")) {
+            parts = value.split("[;,]", -1);
+        } else if (value.contains("/") && !value.equalsIgnoreCase("AC/DC")) {
+            parts = value.split("/", -1);
+        } else {
+            parts = new String[]{value};
+        }
+
         for (String part : parts) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {

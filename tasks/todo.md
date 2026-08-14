@@ -1,25 +1,27 @@
-# Sparkle Symbol/Icon Design for "NEW" (Unmanaged Track) Indicator
+# TagsActivity & Song Info Screen UI/UX Fix Plan
 
 ## Objectives
-Replace the plain yellow dot overlay on cover art in music lists and the plain yellow text block in Tag Activity with a unified, premium Sparkle/Starburst (✦) symbol badge icon design system.
+Fix layout collisions, tab overlap, duplicated artist metadata, and text readability on the Song Detail / Tag Editor screen (`TagsActivity`).
 
 ## Tasks
-- [x] 1. Create vector drawables:
-  - `ic_new_sparkle_badge.xml`: Gold/Amber circular badge containing a sharp 4-point sparkle starburst cutout (`auto_awesome`) for unmanaged tracks.
-  - `ic_new_download_sparkle_badge.xml`: Cyan/Emerald circular badge for newly downloaded tracks.
-- [x] 2. Update cover art overlay in music list item layouts:
-  - Update `view_list_music_tag.xml`, `view_list_item.xml`, `view_list_item2.xml`, `view_list_item_compared.xml` to use 14dp x 14dp `ImageView` (`item_new_label`) displaying `@drawable/ic_new_sparkle_badge` anchored to `top|end`.
-- [x] 3. Redesign Tag Activity `NewIndicatorView`:
-  - Update `view_new_indicator.xml` layout to a pill chip featuring the sparkle vector icon + "NEW" typography.
-  - Update `backgound_new_indicator.xml` to a sleek pill background with rounded corners (`12dp`).
-  - Update `NewIndicatorView.java` to dynamically display sparkle icon & text for regular new vs downloaded tracks.
-- [x] 4. Update Java adapters (`MusicTagAdapter.java`):
-  - Ensure `holder.mNewLabelView` displays the appropriate sparkle badge (`ic_new_sparkle_badge` vs `ic_new_download_sparkle_badge`) and toggles visibility cleanly.
-- [x] 5. Compile and verify clean build (`./gradlew compileDebugSources`).
-- [x] 6. Document updates in `DESIGN.md` and `CHANGELOG.md`.
+
+- [x] **1. Fix Bottom Action Capsule & TabLayout Collision**
+  - [x] Updated `TagsActivity.java` (`OffSetChangeListener` / `setupActionButtons`) so that when the header is fully expanded in Preview mode (`mode == 0`), `tabLayout` is hidden to prevent visual collision behind the bottom action buttons (`Delete` / `Organize` / `More...`).
+  - [x] When collapsed or entering Editor mode (`mode == 1`), `tabLayout` cleanly displays at the top under the action bar.
+  - [x] Styled `tabLayout` and `bottom_navigation_container` with frosted surfaces and elevation.
+
+- [x] **2. Deduplicate Artist & Streamline Metadata Display**
+  - [x] In `TagsActivity.java` (`updateTitlePanel`), only display `Album Artist` if it exists AND differs from `Artist` (e.g. Various Artists or featured compilations).
+  - [x] If `Album Artist` is identical to `Artist`, suppressed the duplicate text and cleanly display `❖ Genre ❖` without redundant names.
+  - [x] Streamlined tag/origin/mood layout and hide empty tag views.
+
+- [x] **3. Top Artwork Title Readability & Scrim**
+  - [x] Enhanced `shape_background_main_header.xml` with a smooth dark top-down gradient for clean title contrast across all album covers.
+
+- [x] **4. Verification & Testing**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (`BUILD SUCCESSFUL in 4s`, 0 errors).
 
 ## Review & Results
-- **Sparkle Badge System Implemented**:
-  - Cover art on music lists uses 14dp vector badge icon overlays (`ic_new_sparkle_badge.xml` in Gold, `ic_new_download_sparkle_badge.xml` in Cyan) anchored at `top|end`.
-  - Tag Activity replaces the plain yellow text block with a `12dp` rounded pill chip (`NewIndicatorView`) containing the Sparkle icon + "NEW" typography on dark amber (`#2E2712`) / dark cyan (`#0D2E3D`) chip backgrounds.
-- **Verification**: Cleanly compiled with `./gradlew compileDebugSources` (`BUILD SUCCESSFUL`).
+- **No More Tab Overlap:** The `Song Info` / `Tech Info` tabs are no longer shoved behind the `Delete` / `Organize` / `More...` action capsule in preview mode.
+- **Clean Metadata:** Removed redundant artist repetition (`ต่าย อรทัย` above `ต่าย อรทัย`), now cleanly showing `Artist | Album` followed by `❖ Luk Thung ❖`.
+- **Top Scrim:** Song title text is now crisp and readable with smooth contrast on any cover art.

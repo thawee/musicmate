@@ -394,22 +394,15 @@ public class FileRepository {
 
         item.setIsManaged(isManagedInLibrary(item));
 
-        if(TagWriter.isSupportedFileFormat(item.getPath())) {
-            TagWriter.writeTagToFile(getContext(), item);
-           // item.setOriginTag(null); // reset pending tag
-            tagRepos.saveTag(item);
-            return true;
-       /* }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
-            // write to somewhere else
-            Gson gson = new GsonBuilder()
-                    .setPrettyPrinting()
-                    .create();
-            String json = gson.toJson(item);
-            File f = new File(item.getPath());
-            String fileName = f.getParentFile().getAbsolutePath()+"/"+item.getTrack()+".json";
-            org.apache.commons.io.FileUtils.write(new File(fileName), json, StandardCharsets.UTF_8);
-            TagRepository.saveTag(item);
-            return true; */
+        if (TagWriter.isSupportedFileFormat(item.getPath())) {
+            boolean written = TagWriter.writeTagToFile(getContext(), item);
+            if (written) {
+                tagRepos.saveTag(item);
+                return true;
+            } else {
+                Log.e("FileRepository", "Failed to write tags to file: " + item.getPath());
+                return false;
+            }
         }
 
         return false;

@@ -185,13 +185,12 @@ public class FFMpegHelper {
             options += " -ar " + sampleRate + " ";
         }
 
-        // 1. Handle DSF input filters
-        // We only apply the filter and resampler here.
-        // The bit depth (-sample_fmt) will be set later based on the `bitDept` parameter.
-        if (srcPath.toLowerCase().endsWith(".dsf")) {
-            // convert from dsf
-            // use lowpass filter to eliminate distortion and resample.
-            options += " -af \"lowpass=24000, volume=6dB\" -ar 48000 ";
+        // 1. Handle DSD (DSF/DFF) input filters with audiophile integer-multiple resampling
+        String srcLower = srcPath.toLowerCase(Locale.US);
+        if (srcLower.endsWith(".dsf") || srcLower.endsWith(".dff")) {
+            // High-precision DSD to PCM conversion: 30kHz lowpass to eliminate ultrasonic quantization noise + 6dB gain
+            int targetDsdRate = (sampleRate > 0) ? sampleRate : 88200; // 88.2kHz is native 32x integer divisor of DSD64 (2.8224MHz)
+            options += " -af \"lowpass=30000, volume=6dB\" -ar " + targetDsdRate + " ";
         }
 
         // 2. Determine the output sample format string based on bitDept

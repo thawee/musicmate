@@ -128,7 +128,7 @@ public class FFMpegWriter extends TagWriter {
     } */
 
 
-    protected void writeTag(Track tag) {
+    protected boolean writeTag(Track tag) {
         // check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
@@ -144,7 +144,7 @@ public class FFMpegWriter extends TagWriter {
         targetPath = dir.getAbsolutePath();
         targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackKeys(tag);
-        if(isEmpty(metadataKeys)) return; // co change to write to change
+        if(isEmpty(metadataKeys)) return false; // no change to write
         String options = " -hide_banner -nostats ";
         String copyOption = " -map 0 -y -codec copy ";
         if(isMPegFile(tag)) {
@@ -154,33 +154,26 @@ public class FFMpegWriter extends TagWriter {
 
        // String cmd = options +" -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";
         String cmd = options +" -i \"" + srcPath + "\""+copyOption+metadataKeys+ "\""+targetPath+"\"";
-        //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
-        // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
 
         Log.d(TAG, "write tags: "+cmd);
         FFmpegSession session = FFmpegKit.execute(cmd);
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
-           // if(isFLACFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
-                if(FileSystem.safeMove(context, targetPath, srcPath)) {
-                   // FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
-                }else {
-                    FileSystem.delete(targetPath); // delete source file to clear space
-                }
-          /*  }else {
-                // NOTE: for test
-                FileSystem.move(context, targetPath, srcPath + "_TAGS." + tag.getFileFormat());
-                FileRepository.newInstance(context).scanMusicFile(new File(srcPath + "_TAGS." + tag.getFileFormat()),false);
+            if(FileSystem.safeMove(context, targetPath, srcPath)) {
                 return true;
-            }*/
-        }else {
+            } else {
+                FileSystem.delete(targetPath); // delete source file to clear space
+                return false;
+            }
+        } else {
             Log.d(TAG, session.getOutput());
             // fail, delete tmp file;
             File tmp = new File(targetPath);
             if(tmp.exists()) {
                 FileSystem.delete(tmp);
             }
+            return false;
         }
     }
 

@@ -10,8 +10,6 @@ android {
     defaultConfig {
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-
-       // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -34,6 +32,7 @@ dependencies {
     implementation libs.kotlin.stdlib
     implementation libs.kotlin.coroutines.core
     implementation libs.androidx.concurrent
+
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
 }

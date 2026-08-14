@@ -12,7 +12,6 @@ android {
     buildTypes {
         release {
             minifyEnabled = false
-            //proguardFiles = [getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro']
         }
     }
     compileOptions {
@@ -22,25 +21,8 @@ android {
     namespace = 'co.lujun.androidtagview'
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
-    // You could also combine them:
-    // options.compilerArgs += ["-Xlint:deprecation,-Xlint:unchecked"]
-}
-
 dependencies {
     implementation libs.androidx.core
-    implementation libs.androidx.activity
     implementation libs.androidx.appCompat
-    implementation libs.google.material
-    implementation libs.androidx.constraintlayout
     implementation libs.androidx.annotation
-    implementation libs.jetbrains.annotations
-    implementation libs.androidx.lifecycle.runtime
-    implementation libs.androidx.lifecycle.process
-    implementation libs.kotlin.stdlib
-    implementation libs.kotlin.coroutines.core
-   // testImplementation libs.junit
-   // androidTestImplementation libs.androidx.junit
-   // androidTestImplementation libs.androidx.espresso.core
 }

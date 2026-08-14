@@ -32,8 +32,8 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 124
-        versionName  = "3.18.16-"+ getDate()
+        versionCode = 126
+        versionName  = "3.18.19-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
@@ -96,10 +96,11 @@ android {
 }
 
 dependencies {
-    // modules
+    // Project Modules
     implementation project(':core')
     implementation project(':db-room')
-    // AndroidX
+
+    // AndroidX Core & UI
     implementation libs.androidx.annotation
     implementation libs.androidx.core
     implementation libs.androidx.activity
@@ -120,31 +121,28 @@ dependencies {
     implementation libs.androidx.viewpager2
     implementation libs.androidx.swiperefreshlayout
 
-    // media session
+    // Media & Playback Engine
     implementation libs.androidx.media
     implementation libs.androidx.media3.session
     implementation libs.androidx.media3.exoplayer
     implementation libs.androidx.media3.ui
 
+    // Kotlin & Serialization
     implementation libs.kotlin.stdlib
-    //libs.kotlin.stdlib.jdk8 removed - unnecessary with Kotlin 2.x
     implementation libs.kotlin.coroutines.core
     implementation libs.kotlinx.serialization.core
 
-    // google
+    // Google Material & Annotations
     implementation libs.google.material
-    //libs.google.guava removed - unused
+    implementation libs.jetbrains.annotations
 
-    // hilt
+    // Dependency Injection (Hilt)
     implementation libs.dagger.hilt.android
     ksp libs.dagger.hilt.compiler
     implementation libs.androidx.hilt.lifecycle.viewmodel
     ksp libs.androidx.hilt.compiler
 
-    // UI Libs
-    //libs.skydoves.progressview removed - unused
-    //libs.skydoves.androidribbon removed - unused
-    //libs.skydoves.elasticviews removed - unused
+    // UI Enhancements & Audiophile Visualizers
     implementation libs.iwgang.simplifyspan
     implementation libs.androidfastscroll.kt
     implementation libs.chrisbanes.photoview
@@ -153,40 +151,27 @@ dependencies {
     implementation libs.sparrow007.carouselrecyclerview
     implementation libs.tutorialsandroid.filepicker
     implementation libs.zxing.core
-    //implementation libs.commonmark
-
-    //others
-    implementation libs.anggrayudi.storage
-
-    //libs.commons.codec removed - unused
-    //libs.commons.io removed - replaced with Java standard I/O
-    // commons-logging removed - SLF4J (slf4j-api) is already present and preferred
-    implementation libs.commons.lang3
-    //libs.commons.text removed - replaced with StringUtils.capitalize()
-    implementation libs.commons.match3
-
-    // jackson removed - migrated to kotlinx.serialization & org.json
-    implementation libs.jetbrains.annotations
-    implementation libs.slf4j.api
-    //libs.log4j.api removed - unused
-    implementation libs.square.okhttp3
-    implementation libs.coilkt.coil3
-    implementation libs.coilkt.coil3.network
-    // rxandroid/rxjava removed - migrated to Kotlin StateFlow/coroutines
-
-    //libs.iirj removed - unused
     implementation libs.markwon.core
     implementation libs.markwon.html
 
-    // ========= Flavor-specific dependencies ==============
+    // Image Loading
+    implementation libs.coilkt.coil3
+    implementation libs.coilkt.coil3.network
 
-    // Web Server dependencies (all engines supported in single build)
+    // Storage & Utilities
+    implementation libs.anggrayudi.storage
+    implementation libs.commons.lang3
+    implementation libs.commons.match3
+    implementation libs.slf4j.api
+    implementation libs.square.okhttp3
+
+    // UPnP & Web Server Engines
     implementation libs.jupnp.android
     implementation project(':server-jupnp')
     implementation project(':server-jupnp-netty')
     implementation project(':server-jupnp-httpcore')
 
-    // Local Library
+    // Local Submodules
     implementation project(':library:library')
     implementation project(':library:androidtagview')
     implementation project(':library:crashreporter')

@@ -62,7 +62,9 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
-    private java.util.Set<String> modifiedFields = new java.util.HashSet<>();
+    private final java.util.Set<String> modifiedFields = new java.util.HashSet<>();
+    private boolean isBindingInputs = false;
+    private boolean textWatchersInitialized = false;
     private TextView previewTitle;
     private TextView previewPath;
     private ImageView previewCoverart;
@@ -160,6 +162,7 @@ public class TagsEditorFragment extends Fragment {
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), R.layout.item_dropdown_dark, dropdownList);
         input.setAdapter(arrayAdapter);
         input.setThreshold(minChar);
+        input.setDropDownWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     private void setupListValuePopupFullList(AutoCompleteTextView input, List<String> dropdownList) {
@@ -174,6 +177,9 @@ public class TagsEditorFragment extends Fragment {
 
         // Always open dropdown when clicked
         input.setOnClickListener(v -> input.showDropDown());
+
+        // Allow dropdown popup to expand naturally to fit single-line text without wrapping
+        input.setDropDownWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
 
         // Optional: dark popup background
         input.setDropDownBackgroundResource(R.color.black_transparent_64);
@@ -432,54 +438,63 @@ public class TagsEditorFragment extends Fragment {
         // Get a snapshot of items to avoid concurrent modification
         final List<Track> itemsToSave = new ArrayList<>(tagsActivity.getEditItems());
         final int totalItems = itemsToSave.size();
+        final AtomicInteger successCount = new AtomicInteger(0);
+        final AtomicInteger failureCount = new AtomicInteger(0);
         final AtomicInteger completedCount = new AtomicInteger(0);
 
         // lose focus all dropdown
         View currentFocus = requireActivity().getCurrentFocus();
         if (currentFocus != null) {
-            // Clear focus from the EditText
             currentFocus.clearFocus();
-
-            // Hide the keyboard
-            //hideKeyboard(currentFocus);
         }
 
-        // Process tags in a thread pool more efficiently
+        // Process tags with controlled disk I/O
         CompletableFuture<Void> processingFuture = CompletableFuture.runAsync(() -> {
             // Build pending tags in bulk first
             for (Track item : itemsToSave) {
                 buildPendingTags(item);
             }
         }).thenCompose(unused -> {
-
-            // Process all items in parallel but with controlled concurrency
-            List<CompletableFuture<Void>> futures = new ArrayList<>();
-            for (Track tag : itemsToSave) {
-                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            // Execute disk write operations safely
+            return CompletableFuture.runAsync(() -> {
+                for (Track tag : itemsToSave) {
                     try {
                         boolean status = fileRepos.setMusicTag(tag);
-                        int current = completedCount.incrementAndGet();
-                        tagsActivity.updateProgressBar(current + "/" + totalItems);
-                        // Post events one at a time
+                        if (status) {
+                            successCount.incrementAndGet();
+                        } else {
+                            failureCount.incrementAndGet();
+                        }
                     } catch (Exception e) {
-                        Log.e(TAG, "doSaveMediaItem", e);
+                        failureCount.incrementAndGet();
+                        Log.e(TAG, "doSaveMediaItem error for " + tag.getPath(), e);
                     }
-                }, MusicMateExecutors.getExecutorService());
-                futures.add(future);
-            }
-
-            // Wait for all futures to complete
-            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                    int current = completedCount.incrementAndGet();
+                    tagsActivity.updateProgressBar(current + "/" + totalItems);
+                }
+            }, MusicMateExecutors.getExecutorService());
         }).thenAccept(unused -> tagsActivity.refreshDisplayTag());
 
         // Handle completion
         processingFuture.whenComplete((result, exception) -> {
+            tagsActivity.stopProgressBar();
             if (exception == null) {
-                tagsActivity.setSaved(true);
+                int successes = successCount.get();
+                int failures = failureCount.get();
                 if (tagsActivity != null) {
-                    tagsActivity.runOnUiThread(() -> 
-                        Toast.makeText(requireContext(), "Tags saved successfully", Toast.LENGTH_SHORT).show()
-                    );
+                    tagsActivity.runOnUiThread(() -> {
+                        if (failures == 0) {
+                            tagsActivity.setSaved(true);
+                            Toast.makeText(requireContext(), 
+                                totalItems > 1 ? "Saved " + successes + " tracks" : "Tags saved successfully", 
+                                Toast.LENGTH_SHORT).show();
+                        } else if (successes == 0) {
+                            Toast.makeText(requireContext(), "Failed to write tags to disk. Check storage permissions.", Toast.LENGTH_LONG).show();
+                        } else {
+                            tagsActivity.setSaved(true);
+                            Toast.makeText(requireContext(), "Saved " + successes + " tracks (" + failures + " failed)", Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
             } else {
                 Log.e(TAG, "Error saving tags", exception);
@@ -614,57 +629,68 @@ public class TagsEditorFragment extends Fragment {
 
     void initEditorInputs(Track tag) {
         if (tag == null) return;
-        doPreviewMusicInfo(tag);
+        isBindingInputs = true;
+        try {
+            doPreviewMusicInfo(tag);
 
-        txtTitle.setText(tag.getTitle());
-        txtArtist.setText(tag.getArtist());
-        txtAlbum.setText(tag.getAlbum());
-        txtAlbumArtist.setText(tag.getAlbumArtist());
-        txtTrack.setText(tag.getTrack());
-        txtYear.setText(tag.getYear());
-        txtGenre.setText(tag.getGenre());
-        txtMood.setText(tag.getMood());
-        txtStyle.setText(tag.getStyle());
-        txtOrigin.setText(tag.getOrigin());
-        txtPublisher.setText(tag.getPublisher());
+            txtTitle.setText(tag.getTitle());
+            txtArtist.setText(tag.getArtist());
+            txtAlbum.setText(tag.getAlbum());
+            txtAlbumArtist.setText(tag.getAlbumArtist());
+            txtTrack.setText(tag.getTrack());
+            txtYear.setText(tag.getYear());
+            txtGenre.setText(tag.getGenre());
+            txtMood.setText(tag.getMood());
+            txtStyle.setText(tag.getStyle());
+            txtOrigin.setText(tag.getOrigin());
+            txtPublisher.setText(tag.getPublisher());
 
-        List<Track> editItems = tagsActivity.getEditItems();
-        if (editItems != null && editItems.size() > 1) {
-            checkMultiValues(txtTitle, tag.getTitle(), item -> item.getTitle());
-            checkMultiValues(txtArtist, tag.getArtist(), item -> item.getArtist());
-            checkMultiValues(txtAlbum, tag.getAlbum(), item -> item.getAlbum());
-            checkMultiValues(txtAlbumArtist, tag.getAlbumArtist(), item -> item.getAlbumArtist());
-            checkMultiValues(txtTrack, tag.getTrack(), item -> item.getTrack());
-            checkMultiValues(txtYear, tag.getYear(), item -> item.getYear());
-            checkMultiValues(txtGenre, tag.getGenre(), item -> item.getGenre());
-            checkMultiValues(txtMood, tag.getMood(), item -> item.getMood());
-            checkMultiValues(txtStyle, tag.getStyle(), item -> item.getStyle());
-            checkMultiValues(txtOrigin, tag.getOrigin(), item -> item.getOrigin());
-            checkMultiValues(txtPublisher, tag.getPublisher(), item -> item.getPublisher());
+            List<Track> editItems = tagsActivity.getEditItems();
+            if (editItems != null && editItems.size() > 1) {
+                checkMultiValues(txtTitle, tag.getTitle(), item -> item.getTitle());
+                checkMultiValues(txtArtist, tag.getArtist(), item -> item.getArtist());
+                checkMultiValues(txtAlbum, tag.getAlbum(), item -> item.getAlbum());
+                checkMultiValues(txtAlbumArtist, tag.getAlbumArtist(), item -> item.getAlbumArtist());
+                checkMultiValues(txtTrack, tag.getTrack(), item -> item.getTrack());
+                checkMultiValues(txtYear, tag.getYear(), item -> item.getYear());
+                checkMultiValues(txtGenre, tag.getGenre(), item -> item.getGenre());
+                checkMultiValues(txtMood, tag.getMood(), item -> item.getMood());
+                checkMultiValues(txtStyle, tag.getStyle(), item -> item.getStyle());
+                checkMultiValues(txtOrigin, tag.getOrigin(), item -> item.getOrigin());
+                checkMultiValues(txtPublisher, tag.getPublisher(), item -> item.getPublisher());
+            }
+
+            if (!textWatchersInitialized) {
+                addTextWatcher(txtTitle, "title");
+                addTextWatcher(txtArtist, "artist");
+                addTextWatcher(txtAlbum, "album");
+                addTextWatcher(txtAlbumArtist, "albumArtist");
+                addTextWatcher(txtTrack, "track");
+                addTextWatcher(txtYear, "year");
+                addTextWatcher(txtGenre, "genre");
+                addTextWatcher(txtMood, "mood");
+                addTextWatcher(txtStyle, "style");
+                addTextWatcher(txtOrigin, "origin");
+                addTextWatcher(txtPublisher, "publisher");
+                textWatchersInitialized = true;
+            }
+
+            // Build a targeted dropdown for txtAlbumArtist: default presets + current track artist / album artist
+            setupTargetedAlbumArtistDropdown(tag);
+
+            txtTitle.invalidate();
+            txtArtist.invalidate();
+            txtAlbum.invalidate();
+            txtAlbumArtist.invalidate();
+
+            // Clear modified fields and reset dirty state when binding fresh tag data
+            modifiedFields.clear();
+            if (tagsActivity != null) {
+                tagsActivity.setDirty(false);
+            }
+        } finally {
+            isBindingInputs = false;
         }
-
-        addTextWatcher(txtTitle, "title");
-        addTextWatcher(txtArtist, "artist");
-        addTextWatcher(txtAlbum, "album");
-        addTextWatcher(txtAlbumArtist, "albumArtist");
-        addTextWatcher(txtTrack, "track");
-        addTextWatcher(txtYear, "year");
-        addTextWatcher(txtGenre, "genre");
-        addTextWatcher(txtMood, "mood");
-        addTextWatcher(txtStyle, "style");
-        addTextWatcher(txtOrigin, "origin");
-        addTextWatcher(txtPublisher, "publisher");
-
-        // Build a targeted dropdown for txtAlbumArtist: default presets + current track artist / album artist
-        setupTargetedAlbumArtistDropdown(tag);
-
-        txtTitle.invalidate();
-        txtArtist.invalidate();
-        txtAlbum.invalidate();
-        txtAlbumArtist.invalidate();
-
-        // quality
-        //qualityDropdown.setText(tag.getQualityRating());
     }
 
     private void setupTargetedAlbumArtistDropdown(Track tag) {
@@ -744,6 +770,7 @@ public class TagsEditorFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override
             public void afterTextChanged(android.text.Editable s) {
+                if (isBindingInputs) return;
                 modifiedFields.add(fieldName);
                 if (tagsActivity != null) tagsActivity.setDirty(true);
             }

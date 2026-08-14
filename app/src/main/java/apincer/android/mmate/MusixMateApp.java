@@ -61,6 +61,8 @@ public class MusixMateApp extends Application {
 
         PlaylistRepository.loadPlaylists(this);
 
+        // Initialize Bluetooth A2DP proxy early for codec telemetry
+        apincer.android.mmate.utils.AudioOutputHelper.initializeBluetooth(getApplicationContext());
     }
 
     private void createNotificationChannel(NotificationManager notificationManager) {

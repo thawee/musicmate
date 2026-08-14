@@ -70,23 +70,11 @@ public class QueueManager {
     public synchronized void addPlayingQueue(long trackId) {
         Track song = tagRepos.findById(trackId);
         if (song != null) {
-            try {
-                addToPlayingQueue(song);
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to persist track to playing queue", e);
-            }
-            queueList.add(song);
-            int newIndex = queueList.size() - 1;
-            indexMap.put(song.getId(), newIndex);
-            if (currentIndex == -1) {
-                currentIndex = 0;
-                playbackIndex = 0;
-            }
-            updateShuffleOrder();
+            addPlayingQueue(song);
         }
     }
 
-    public synchronized void addPlayNext(Track song) {
+    public synchronized void addPlayingQueue(Track song) {
         if (song == null) return;
         try {
             addToPlayingQueue(song);
@@ -94,7 +82,7 @@ public class QueueManager {
             Log.e(TAG, "Failed to persist track to playing queue", e);
         }
 
-        // If track is already in queue, remove it from existing position first
+        // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
         for (int i = 0; i < queueList.size(); i++) {
             if (queueList.get(i).getId() == song.getId()) {
@@ -106,6 +94,45 @@ public class QueueManager {
             queueList.remove(existingIndex);
             if (existingIndex < currentIndex) {
                 currentIndex--;
+            }
+            if (existingIndex < playbackIndex) {
+                playbackIndex--;
+            }
+        }
+
+        queueList.add(song);
+        if (currentIndex == -1) {
+            currentIndex = 0;
+            playbackIndex = 0;
+        }
+        rebuildIndexMap();
+        dbHelper.savePlayingQueue(queueList);
+        updateShuffleOrder();
+    }
+
+    public synchronized void addPlayNext(Track song) {
+        if (song == null) return;
+        try {
+            addToPlayingQueue(song);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist track to playing queue", e);
+        }
+
+        // If track is already in queue, remove it from existing position first to prevent duplicates
+        int existingIndex = -1;
+        for (int i = 0; i < queueList.size(); i++) {
+            if (queueList.get(i).getId() == song.getId()) {
+                existingIndex = i;
+                break;
+            }
+        }
+        if (existingIndex != -1) {
+            queueList.remove(existingIndex);
+            if (existingIndex < currentIndex) {
+                currentIndex--;
+            }
+            if (existingIndex < playbackIndex) {
+                playbackIndex--;
             }
         }
 
@@ -123,17 +150,19 @@ public class QueueManager {
     }
 
     public synchronized void savePlayingQueue(List<Track> songsInContext) {
-        dbHelper.savePlayingQueue(songsInContext);
         queueList.clear();
         indexMap.clear();
         if (songsInContext != null) {
             for (int i = 0; i < songsInContext.size(); i++) {
                 Track track = songsInContext.get(i);
                 if (track == null) continue;
-                queueList.add(track);
-                indexMap.put(track.getId(), i);
+                if (!indexMap.containsKey(track.getId())) {
+                    queueList.add(track);
+                    indexMap.put(track.getId(), queueList.size() - 1);
+                }
             }
         }
+        dbHelper.savePlayingQueue(queueList);
         currentIndex = queueList.isEmpty() ? -1 : 0;
         playbackIndex = currentIndex;
         updateShuffleOrder();
@@ -199,9 +228,11 @@ public class QueueManager {
             indexMap.clear();
             for (int i = 0; i < songs.size(); i++) {
                 Track track = songs.get(i);
-                if(track==null) continue;
-                queueList.add(track);
-                indexMap.put(track.getId(), i);
+                if(track == null) continue;
+                if (!indexMap.containsKey(track.getId())) {
+                    queueList.add(track);
+                    indexMap.put(track.getId(), queueList.size() - 1);
+                }
             }
 
             if (!queueList.isEmpty()) {

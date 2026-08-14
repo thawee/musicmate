@@ -223,8 +223,7 @@ public class JThinkReader extends TagReader{
     
     /**
      * Get tag value, handling multi-value fields.
-     * Returns values joined with ", " separator.
-     * Avoids intermediate ArrayList allocation.
+     * Returns values normalized and joined with ", " separator.
      */
     private String getMultiValue(Tag tag, FieldKey key) {
         if (tag == null || !tag.hasField(key)) return "";
@@ -232,22 +231,19 @@ public class JThinkReader extends TagReader{
         List<String> values = tag.getAll(key);
         if (values == null || values.isEmpty()) return "";
 
-        StringBuilder sb = null;
-        String first = null;
+        List<String> normalizedList = new ArrayList<>();
         for (String v : values) {
             if (v == null || v.isEmpty() || v.equals(StringUtils.MULTI_VALUES)) continue;
-            String trimmed = v.trim();
-            if (first == null) {
-                first = trimmed;
-            } else {
-                if (sb == null) {
-                    sb = new StringBuilder(first);
+            // Split any internal multi-value delimiters (/, ;, &, etc.)
+            List<String> split = StringUtils.splitMultiValue(v);
+            for (String item : split) {
+                String trimmed = item.trim();
+                if (!trimmed.isEmpty() && !normalizedList.contains(trimmed)) {
+                    normalizedList.add(trimmed);
                 }
-                sb.append(", ").append(trimmed);
             }
         }
-        if (sb != null) return sb.toString();
-        return first != null ? first : "";
+        return String.join(", ", normalizedList);
     }
     
     /**

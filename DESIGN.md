@@ -43,7 +43,7 @@ MusicMate is fundamentally a **music library organization and tag management app
 - **Active Track Highlight:** The title text (`item_title`) of the currently active track is highlighted in Gold (`@color/colorGold`) with bold typography to maintain clear visual hierarchy while scrolling.
 - **Single-Source Indicator Rule:** Duplicate equalizer icons in secondary locations (such as the top-right status indicator bar) are removed to prevent visual clutter, establishing the cover art overlay as the single authoritative playing indicator on list items.
 - **Gesture Visual Feedback Overlay:** Double-tapping or horizontal flinging album art in Music Center flashes a central action icon (`ic_baseline_play_arrow_48`, `ic_baseline_pause_48`, `ic_baseline_skip_next_48`, `ic_baseline_skip_previous_48`) with a smooth 2-stage scale-up (`0.7f` $\rightarrow$ `1.2f`) and fade-out animation.
-- **Micro-Pill Telemetry Badges:** Audio route source specs (`FLAC 24/96`) and target renderers are styled as micro-pill badges (`shape_telemetry_chip_source.xml`, `shape_telemetry_chip_target.xml`) with `12dp` rounded corners and colored borders. Each badge uses a dedicated vector icon (`ic_round_audio_file_24` tinted in Gold for Source input format, and `ic_round_speaker_24` tinted in Cyan for Target output player) instead of raw text arrows. Target renderer labels are dynamically formatted using `PlayerNameUtils.getDropdownPlayerLabel(...)` to include rich device metadata (e.g. `Sony WH-1000XM5 (Bluetooth A2DP)`, `HiBy R3 • 192.168.1.50`), matching the player selection popup.
+- **Micro-Pill Telemetry Badges:** Audio route source specs (`FLAC 24/96`) and target renderers are styled as micro-pill badges (`shape_telemetry_chip_source.xml`, `shape_telemetry_chip_target.xml`) with `12dp` rounded corners and colored borders. Each badge uses a dedicated vector icon (`ic_round_audio_file_24` tinted in Gold for Source input format, and `ic_round_speaker_24` tinted in Cyan for Target output player) instead of raw text arrows. Target renderer labels are dynamically formatted using `PlayerNameUtils.getDropdownPlayerLabel(...)` or `AudioOutputHelper.getCompactLabel()` to include rich device metadata (e.g. `Sony WH-1000XM5 • BT (LDAC)`, `HiBy R3 • 192.168.1.50`), matching the player selection popup.
 - **Unified Sparkle (✦) Symbol Badge System for NEW Tracks:** Replaced yellow dot/banner overlays and yellow rectangular blocks with a cohesive Sparkle/Starburst symbol system across the application:
   - **Cover Art Thumbnail Overlay:** Uses a precision 14dp vector badge (`ic_new_sparkle_badge.xml` in Gold for unmanaged tracks, and `ic_new_download_sparkle_badge.xml` in Cyan for newly downloaded tracks) anchored to the top-right corner of the cover art thumbnail.
   - **Tag Activity Header Chip:** `NewIndicatorView` renders a rounded pill chip (`12dp` radius) featuring a Sparkle vector icon (`auto_awesome`) alongside bold Oswald typography ("NEW"), styled in dark gold (`#2E2712`) / dark cyan (`#0D2E3D`) chip backgrounds to replace yellow text blocks.
@@ -281,13 +281,18 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 - **Scroll Memory:** Before the adapter is repopulated (refresh, filter change), the `LayoutManager` state is saved via `onSaveInstanceState()` and restored afterward, so list updates never jump the user's scroll position. Active multi-select selections are likewise preserved across data reloads.
 
 ### A. Unified Floating Dock (`CardView 20dp` Corner Radius)
-- **Geometry:** `MaterialCardView` with `20dp` corner radius, `12dp` horizontal / `8dp` bottom margins so the dock floats above the list edge.
+- **Geometry:** `MaterialCardView` with `20dp` corner radius, `12dp` horizontal / `8dp` bottom margins so the dock floats cleanly above the list edge with insets margin (`systemBars.bottom + 8dp`).
 - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and menu.
 - **Playing State:** Dynamically embeds mini album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
 - **Interactions:**
   - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §8C). The Audio Route Path widget lives on the `Playback` tab — no separate long-press shortcut exists.
 
-### B. Dedicated 3-Tab Architecture (`AudioHubBottomSheet`)
+### B. Tag Activity True Bottom Action Capsule (`shape_bottom_frosted_panel`)
+- **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins).
+- **Edge-to-Edge Padding Rule:** The container is pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge.
+- **Safe Area Inset Handling:** System navigation bar insets (`systemBars.bottom + 8dp`) are applied dynamically as bottom padding to the inner panel (`bottom_navigation_panel`), ensuring action buttons ([Delete], [Organize], [More], [Edit/Save]) sit cleanly above the gesture bar with zero detached space.
+
+### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet`)
 Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport**:
 
 1. **`[ Playback ]` Tab:** Maximum vertical viewport for expanded artwork, transport controls (Prev / Play-Pause / Next), and the 1-line 3-node Audio Route Path widget.
@@ -315,6 +320,13 @@ Interactive stateful views update their accessibility labels in real time:
 ### C. System Event Feedback & Audio Safeguards
 - **Auto-Pause on Disconnect:** Registered `ACTION_AUDIO_BECOMING_NOISY` / `ACTION_ACL_DISCONNECTED` receiver automatically pauses playback when headphones or Bluetooth receivers disconnect, preventing unexpected speaker blaring.
 - **Guidance Toasts:** When performing actions without prerequisite services (e.g., tapping quick play without an active player), non-blocking Toast alerts provide instant feedback (`"No active player — connect a device first"`).
+
+### D. Dropdown & Selection Popups (`item_dropdown_dark.xml`)
+- **Single-Line Formatting:** Dropdown text views enforce `android:maxLines="1"`, `android:singleLine="true"`, and `android:ellipsize="end"` with `TextAppearance.Material3.BodyMedium` (14sp) and compact padding (`10dp` vertical / `14dp` horizontal).
+- **Dynamic Popup Sizing (`WRAP_CONTENT`):** Dropdowns configure `input.setDropDownWidth(ViewGroup.LayoutParams.WRAP_CONTENT)` so popups expand to fit long labels on a single line rather than being artificially clamped to narrow half-screen input fields.
+- **Classification Card Form Hierarchy:** To eliminate text truncation on variable-length music taxonomy:
+  - **Genre & Style:** Positioned as full-width (`match_parent`) single-column fields to accommodate compound genre/style names (*Contemporary R&B*, *Electronic / Dance*, *Synth-based Pop*).
+  - **Origin & Mood:** Positioned as a 2-column side-by-side pair (`layout_weight="1"` each), cleanly grouping compact contextual attributes without vertical space waste.
 
 ---
 
@@ -416,7 +428,51 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 - **Date:** 2026-08
 - **Context:** Action dialogs across the app had inconsistent control affordances — some lacked top-right close buttons, others missed bottom cancel buttons, and file operations left dialogs open after completion.
 - **Decision:** Standardize all modal action dialogs to provide dual dismiss affordances (top-right `✕` icon + bottom `button_cancel` text button) and primary confirmation (`button_ok`), with auto-dismiss on operation completion. The `AudioHubBottomSheet` (Music Center) retains its unique 3-tab layout design.
-- **Consequences:** Predictable modal interactions across all dialog surfaces; zero ambiguous or trapped dialog states.
+### ADR-007: Robust Audio Tag Read/Write & Dual-Chunk WAV Support
+- **Status:** Accepted
+- **Date:** 2026-08
+- **Context:** Previously, tag write exceptions in `JThinkWriter` were swallowed and returned `void`, causing the Room database to update and report success even when storage writes failed. In addition, multi-value delimiters were inconsistent between reader/writer, WAV files lacked standard RIFF INFO chunks for legacy stereos, and batch I/O wasn't throttled.
+- **Decision:** 
+  1. `TagWriter.writeTag()` and `FileRepository.setMusicTag()` return `boolean`, updating the Room DB and displaying success only when physical disk commit succeeds.
+  2. Normalize multi-value delimiters (`/`, `;`, `&`, `,`) to clean comma-separated strings (`", "`) on read, preserving band names like `AC/DC`.
+  3. Support dual-chunk WAV writing: write standard `WavInfoTag` (RIFF INFO chunk) for legacy car stereos alongside `ID3Tag` (ID3v2 chunk) for modern audiophile software.
+  4. Enable embedded artwork writing via `ArtworkFactory` in `JThinkWriter`.
+  5. Throttle bulk save operations sequentially on `MusicMateExecutors.getExecutorService()` to avoid I/O lockup on slow micro-SD cards.
+- **Consequences:** Safe and predictable file persistence, zero silent data loss, universal WAV compatibility, and resilient bulk editing.
+
+### ADR-008: Automatic Bluetooth Audio Optimization & Real-Time Codec Telemetry
+- **Status:** Accepted
+- **Date:** 2026-08-14
+- **Context:** Output device labels were inconsistent across surfaces: Bluetooth devices used verbose parenthesis formatting (`Sony WH-1000XM5 (Bluetooth Audio)`), while DLNA renderers used bullet formatting (`HiBy R3 • 192.168.1.50`) and Android apps used versions (`Poweramp • v935`). Bluetooth devices lacked dynamic codec detection, and the signal path target badge incorrectly fell back to `DIRECT SYSTEM OUTPUT`. Furthermore, users playing 24/96 Hi-Res files over Bluetooth had no automatic way to request LDAC / aptX HD.
+- **Decision:**
+  1. Adopt the compact **`{Name} • BT ({Codec})`** / **`{Name} • BT`** format for Bluetooth devices (e.g. `Sony WH-1000XM5 • BT (LDAC)`), saving horizontal space and keeping brand names visible on mobile displays.
+  2. Implement `AudioOutputHelper.getCompactLabel()` as the single source of truth for both `MainActivity` (player dropdown) and `AudioHubBottomSheet` (Playback tab header & route widget).
+  3. Implement real-time Bluetooth A2DP codec detection (`LDAC`, `aptX HD`, `aptX`, `AAC`, `LC3`, `SBC`, `Opus`, `SSC`) via reflection on `BluetoothCodecStatus`, promoting resolution to 24-bit / 96 kHz for hi-res codecs.
+  4. Implement **Automatic Background Codec Optimization** (`AudioOutputHelper.autoOptimizeBluetoothCodec`): MusicMate silently requests highest codec priority (`LDAC 24/96` or `aptX HD`) upon Bluetooth connection without requiring manual dialog button presses.
+  5. Tapping the Step 3 output card in the Music Center directly opens Android's native Media Output panel or Bluetooth settings with zero modal dialog friction.
+  6. Standardize output type names to Title Case (`"Bluetooth Audio"`, `"USB DAC"`, `"Wired Headphones"`, `"Phone Speaker"`).
+  7. Fix Audio Route Path Step 3 target badge to correctly display `BLUETOOTH A2DP` and `Active Bluetooth A2DP Wireless Stream`.
+- **Consequences:** Harmonized naming across all playback renderers, optimal single-line fit on high-DPI smartphone displays (e.g. Samsung Galaxy S25), rich audiophile telemetry, and a zero-friction, automatic path to the highest Bluetooth audio quality.
+
+### ADR-009: Song Detail / Tag Editor (`TagsActivity`) Viewport Hierarchy & Metadata Deduplication
+- **Status:** Accepted
+- **Date:** 2026-08-14
+- **Context:** In `TagsActivity`, when the `AppBarLayout` header was fully expanded in Preview mode (`mode == 0`), the `TabLayout` (`Song Info` / `Tech Info`) was pushed to the bottom of the screen, colliding directly with the floating bottom action capsule (`Delete` | `Organize` | `More...` / `Edit Song Info`). Additionally, when a track's `Album Artist` matched its `Artist`, the artist string was printed twice in succession (`Artist` and `Album Artist` above `Genre`), and song title overlays on album art lacked sufficient contrast on light covers.
+- **Decision:**
+  1. **Dynamic Tab Lifecycle:** In Preview mode with the header expanded, `tabLayout` is hidden (`GONE`). When the user taps `Edit Song Info` or scrolls to collapse the header, `tabLayout` smoothly transitions to the top of the viewport under the action bar.
+  2. **Metadata Deduplication:** `Album Artist` is displayed in `genreView` only if it exists and differs from the primary `Artist` (e.g. `Various Artists` compilations). If identical, it is suppressed to display `Artist | Album` followed cleanly by `❖ Genre ❖`.
+  3. **High-Contrast Top Scrim:** Enhanced `shape_background_main_header.xml` with a dark top-down vignette gradient (`#CC0A0A0A` $\rightarrow$ `#00000000`) for high text legibility across all album artwork brightness levels.
+- **Consequences:** Eliminates visual clipping and tab bleed-through in preview mode, removes redundant text repetition, and elevates the visual presentation of song details.
+
+### ADR-010: Build System Hygiene & Dependency Modularization
+- **Status:** Accepted
+- **Date:** 2026-08-14
+- **Context:** Over successive releases, `gradle/libs.versions.toml` accumulated over 60 lines of dead/commented-out dependencies (Jackson, RxJava, Guava, Skydoves, old Cling/UPnP forks, unreferenced Jetty/HttpCore54 entries), `settings.gradle` contained dozens of commented module includes, and `core/build.gradle` contained duplicate dependency declarations. Local library modules (`androidtagview`, `crashreporter`) also carried unused transitive dependencies.
+- **Decision:**
+  1. Restructure `libs.versions.toml` into clean domain groups (*SDK & Toolchain*, *Core Architecture*, *Media & Playback*, *UI & Utilities*, *Networking & UPnP*, *Testing*) with 100% active dependencies and zero commented bloat.
+  2. Clean `settings.gradle` to only include active project modules.
+  3. Prune unused transitive dependencies from local submodules (`androidtagview`, `crashreporter`) and remove duplicate dependencies in `core/build.gradle`.
+- **Consequences:** Cleaner dependency tree, faster compilation times, lower memory footprint during builds, and straightforward dependency auditing.
 
 ---
 

@@ -96,6 +96,10 @@
   - Android `PopupMenu` / `MenuBuilder` sorts menu items across ALL groups using the `order` parameter passed to `menu.add(groupId, itemId, order, title)`.
   - If Group 0 items use `order = 0, 1, 2...` and Group 1 items also start at `order = 0, 1`, Android will interleave Group 1 items between Group 0 items.
   - To guarantee that Group 1 items appear strictly at the bottom below a group divider, offset Group 1 `order` values to a higher index (`baseOrder = group0List.size() + 10`).
+- **Bluetooth A2DP Float PCM Incompatibility**:
+  - Never force 32-bit Float PCM (`setEnableFloatOutput(true)`) on standard Android `AudioTrack` or Bluetooth A2DP pipelines. Android's Bluetooth A2DP stack (`a2dp.default.so`) and standard device mixers expect 16-bit/24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`). Feeding float PCM to Bluetooth sinks causes severe sound distortion, harsh static, or crackling. Use standard `ExoPlayer.Builder(context)` to allow ExoPlayer to auto-negotiate clean, hardware-compatible PCM formats.
+- **Passive Bluetooth Codec Telemetry vs. Forced Overrides**:
+  - Never use hidden Android reflection to forcefully inject `BluetoothCodecConfig` (e.g. `setCodecPreference` requesting `LDAC` on connect). Forcibly overwriting codec parameters can desynchronize the Bluetooth HAL profile state and degrade playback quality. MusicMate should **passively inspect and display** the active codec and sample rate (`refreshBluetoothCodecStatus`), letting the OS and DAC handle profile negotiation smoothly.
 
 
 

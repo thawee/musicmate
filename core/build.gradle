@@ -1,4 +1,3 @@
-//apply plugin: 'com.android.library'
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.devtools.ksp)
@@ -20,7 +19,6 @@ android {
     }
     buildTypes {
         release {
-        //    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     lint {
@@ -28,51 +26,38 @@ android {
     }
     namespace = 'musicmate.core'
 }
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
 dependencies {
-    //implementation project(':db-api')
-    //implementation project(':server-api')
-
+    // Local Submodules
     implementation project(':library:JustFLAC')
     implementation project(':library:library')
     implementation project(':library:jaudiotagger-android')
-    //implementation project(':library:justdsd')
 
+    // AndroidX & Architecture
     implementation libs.androidx.annotation
     implementation libs.androidx.core
     implementation libs.androidx.work
     implementation libs.androidx.preference
 
-    // rxandroid/rxjava removed - migrated to Kotlin StateFlow/coroutines
+    // Dagger Hilt
     implementation libs.dagger.hilt.android
     ksp libs.dagger.hilt.compiler
 
-    // OrmLite
-   // implementation libs.ormlite.android
-
-    // network
-   // implementation libs.netty.codec.http
-    //implementation libs.io.undertow.core
-
-    //others
-    //libs.commons.codec removed - unused
-    implementation libs.commons.lang3
-    implementation libs.commons.match3
+    // Kotlin & Serialization
     implementation libs.kotlin.coroutines.core
-    // commons-io removed - replaced with Java NIO (migration complete)
-    // commons-text removed - StringUtils.capitalize() in core replaces all usages
-    // jackson removed - migrated to kotlinx.serialization & org.json
     implementation libs.kotlinx.serialization.json
+
+    // Networking, Audio & Storage
     implementation libs.square.okhttp3
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio
     implementation libs.jsoup
 
-    //implementation project(':library:justdsd')
-    implementation project(':library:JustFLAC')
-    implementation project(':library:library')
-    implementation project(':library:jaudiotagger-android')
+    // Math & String Utilities
+    implementation libs.commons.lang3
+    implementation libs.commons.match3
 }

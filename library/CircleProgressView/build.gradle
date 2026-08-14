@@ -1,8 +1,7 @@
-//apply plugin: 'com.android.library'
 plugins {
     alias(libs.plugins.android.library)
 }
- 
+
 android {
     compileSdk = libs.versions.compileSdkVersion.get() as Integer
     buildToolsVersion = libs.versions.buildTools.get()
@@ -12,10 +11,6 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled = true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
             minifyEnabled = false
         }
     }
@@ -23,15 +18,9 @@ android {
         sourceCompatibility = JavaLanguageVersion.of(17)
         targetCompatibility = JavaLanguageVersion.of(17)
     }
-    productFlavors {
-    }
     namespace = 'at.grabner.circleprogress'
-
-
 }
 
 dependencies {
     implementation libs.androidx.annotation
-    implementation libs.jetbrains.annotations
-    implementation libs.kotlin.stdlib
 }

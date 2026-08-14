@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
@@ -172,6 +173,51 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 if (isPlaying()) {
                     pausePlayer();
                 }
+                if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    if (mediaSessionManager != null) {
+                        updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
+                    }
+                }
+            } else if ("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED".equals(action)) {
+                Log.d(TAG, "Bluetooth codec configuration changed.");
+                try {
+                    Object codecStatus = null;
+                    if (Build.VERSION.SDK_INT >= 33) { // Build.VERSION_CODES.TIRAMISU
+                        try {
+                            Class<?> clazz = Class.forName("android.bluetooth.BluetoothCodecStatus");
+                            java.lang.reflect.Method getParcelableExtraMethod = Intent.class.getMethod("getParcelableExtra", String.class, Class.class);
+                            codecStatus = getParcelableExtraMethod.invoke(intent, "android.bluetooth.extra.CODEC_STATUS", clazz);
+                        } catch (Exception ignored) {}
+                    }
+                    if (codecStatus == null) {
+                        codecStatus = intent.getParcelableExtra("android.bluetooth.extra.CODEC_STATUS");
+                    }
+
+                    if (codecStatus != null) {
+                        AudioOutputHelper.parseCodecStatus(codecStatus);
+                    } else {
+                        AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    }
+                } catch (Exception ignored) {
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                }
+                if (mediaSessionManager != null) {
+                    updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
+                }
+            } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                Log.d(TAG, "Bluetooth device connected.");
+                AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                if (mediaSessionManager != null) {
+                    updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
+                }
+                android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                mainHandler.postDelayed(() -> {
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    if (mediaSessionManager != null) {
+                        updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
+                    }
+                }, 1000);
             }
         }
     };
@@ -292,10 +338,15 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         // Init WebUI assets in background to avoid blocking UI thread during service creation
         Executors.newSingleThreadExecutor().execute(() -> initWebUIAssets(getApplicationContext()));
 
-        // Register receiver for headphone / Bluetooth disconnect auto-pause
+        // Initialize Bluetooth A2DP proxy for real-time codec telemetry
+        AudioOutputHelper.initializeBluetooth(getApplicationContext());
+
+        // Register receiver for headphone / Bluetooth disconnect auto-pause & codec configuration changes
         IntentFilter audioNoisyFilter = new IntentFilter();
         audioNoisyFilter.addAction(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        audioNoisyFilter.addAction("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(becomingNoisyReceiver, audioNoisyFilter, Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -414,8 +465,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             unregisterReceiver(becomingNoisyReceiver);
         } catch (Exception ignored) {}
 
+        AudioOutputHelper.cleanupBluetooth(getApplicationContext());
+
         if (mediaSessionManager != null) {
             mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
+        }
+        if (androidPlayer != null) {
+            androidPlayer.release();
         }
         deactivatePlayer(getActivePlayer());
         super.onDestroy();
@@ -673,7 +729,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if (next != null) {
             Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
             try {
-                mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
+                PlaybackTarget player = getActivePlayer();
+                if (player != null && isControllable(player)) {
+                    mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
+                } else if (player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
+                    androidPlayer.setNextTrack(next); // ExoPlayer gapless media item
+                }
             } catch (Exception e) {
                 Log.w(TAG, "Gapless: Failed to preload next track", e);
             }
@@ -790,7 +851,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         queueManager.setPlaybackTrack(getNowPlayingSong());
         Track track = queueManager.getNextTrack();
         if(track != null) {
-            mediaHub.setNextTrack(track);
+            PlaybackTarget player = getActivePlayer();
+            if (player != null && isControllable(player)) {
+                mediaHub.setNextTrack(track);
+            } else if (player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
+                androidPlayer.setNextTrack(track);
+            }
         }
     }
 

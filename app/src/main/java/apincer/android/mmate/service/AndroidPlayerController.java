@@ -23,9 +23,13 @@ import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
 
+import androidx.annotation.Nullable;
+import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.SeekParameters;
 
 public class AndroidPlayerController {
     private static final String TAG = "AndroidPlayerController";
@@ -81,16 +85,31 @@ public class AndroidPlayerController {
         this.mediaSessionManager = mediaSessionManager;
         
         try {
-            androidx.media3.common.AudioAttributes audioAttributes = new androidx.media3.common.AudioAttributes.Builder()
-                    .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                    .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build();
-            this.internalExoPlayer = new ExoPlayer.Builder(context).build();
-            this.internalExoPlayer.setAudioAttributes(audioAttributes, true);
+
+            this.internalExoPlayer = new ExoPlayer.Builder(context)
+                    .setAudioAttributes(audioAttributes, true)
+                    .setHandleAudioBecomingNoisy(true)
+                    .setWakeMode(C.WAKE_MODE_LOCAL)
+                    .setSeekParameters(SeekParameters.EXACT)
+                    .build();
+
             this.internalExoPlayer.addListener(new Player.Listener() {
                 @Override
                 public void onPlaybackStateChanged(int playbackState) {
                     if (playbackState == Player.STATE_ENDED) {
+                        if (playbackCallback != null) {
+                            playbackCallback.onPlaybackCompleted();
+                        }
+                    }
+                }
+                @Override
+                public void onMediaItemTransition(@Nullable MediaItem mediaItem, int reason) {
+                    if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
+                        Log.d(TAG, "ExoPlayer: Gapless automatic track transition occurred");
                         if (playbackCallback != null) {
                             playbackCallback.onPlaybackCompleted();
                         }
@@ -241,6 +260,21 @@ public class AndroidPlayerController {
         return false;
     }
 
+    public void setNextTrack(Track nextSong) {
+        if (nextSong == null || nextSong.getPath() == null) return;
+        if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            try {
+                if (internalExoPlayer.getMediaItemCount() > 1) {
+                    internalExoPlayer.removeMediaItem(1);
+                }
+                internalExoPlayer.addMediaItem(MediaItem.fromUri(Uri.fromFile(new File(nextSong.getPath()))));
+                Log.d(TAG, "Gapless ExoPlayer: Preloaded next media item: " + nextSong.getTitle());
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to preload next media item in ExoPlayer", e);
+            }
+        }
+    }
+
     public void play(Track song) {
         if (song == null || song.getPath() == null) return;
 
@@ -256,6 +290,7 @@ public class AndroidPlayerController {
                 if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId) && internalExoPlayer != null) {
                     // Use internal ExoPlayer for local/bluetooth playback
                     try {
+                        internalExoPlayer.clearMediaItems();
                         internalExoPlayer.setMediaItem(MediaItem.fromUri(Uri.fromFile(new File(song.getPath()))));
                         internalExoPlayer.prepare();
                         internalExoPlayer.play();
@@ -327,6 +362,14 @@ public class AndroidPlayerController {
             mediaController.getTransportControls().stop();
         } else if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
             internalExoPlayer.stop();
+        }
+    }
+
+    public void release() {
+        unregisterCallback();
+        if (internalExoPlayer != null) {
+            internalExoPlayer.release();
+            internalExoPlayer = null;
         }
     }
 }
