@@ -115,7 +115,6 @@ public final class Constants {
     public static final String MEDIA_ENC_SACD = "SACD";
     //public static final String MEDIA_ENC_MQA = "MQA";
 
-    public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
    // public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
@@ -123,7 +122,7 @@ public final class Constants {
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
     public static final String PREF_MUSICMATE_DIRECTORIES = "preference_musicmate_directories";
     //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
-    public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
+
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
     public static final String PREF_SERVER_ENGINE = "preference_media_server_engine";
     public static final String PREF_ARTIST_AWARE_SIMILAR_SONGS = "preference_similar_songs_match_artist";

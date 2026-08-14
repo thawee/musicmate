@@ -2,11 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory
         android:summary="DLNA Media Server">
-        <SwitchPreferenceCompat
-            android:key="preference_dlna_media_server"
-            android:summary="Auto start MediaServer on startup, to cast songs to streaming device."
-            android:title="Start MediaServer"
-            android:defaultValue="false"/>
+
         <ListPreference
             android:key="preference_media_server_engine"
             android:title="Server Engine"
@@ -58,26 +54,7 @@
             android:defaultValue="false"/>
 
     </PreferenceCategory>
-    <PreferenceCategory
-        android:summary="Control &amp; Notification">
-        <SwitchPreferenceCompat
-            android:key="preference_default_next_by_media_buttons"
-            android:summary="Simulate media buttons to play next song on Music Player."
-            android:title="Media Buttons"
-            android:defaultValue="true"/>
-        <!--
-        <SwitchPreferenceCompat
-            android:key="preference_vibrate_on_next_song"
-            android:summary="Vibrate when trigger next song for Music Player."
-            android:title="Vibrate"
-            android:defaultValue="false"/> -->
-        <!--
-<SwitchPreferenceCompat
-    android:key="preference_notification"
-    android:summary="Show listening song details on notification."
-    android:title="Enable Notification"
-    android:defaultValue="true"/> -->
-    </PreferenceCategory>
+
 
     <!--
     <PreferenceCategory

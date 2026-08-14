@@ -30,16 +30,6 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_PREFIX_TRACK_NUMBER_ON_TITLE,false);
     }
 
-    public static boolean isUseMediaButtons(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_NEXT_SONG_BY_MEDIA_BUTTONS,true);
-    }
-
-    public static boolean isAutoStartMediaServer(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER,false);
-    }
 
     public static boolean isArtistAwareSimilarSongs(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
