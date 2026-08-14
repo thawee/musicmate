@@ -722,11 +722,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private void triggerPlaybackStateUpdate() {
         apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
         if (state != null) {
-            apincer.music.core.playback.PlaybackState updated = new apincer.music.core.playback.PlaybackState();
-            updated.currentState = state.currentState;
-            updated.currentTrack = state.currentTrack;
-            updated.currentPositionSecond = state.currentPositionSecond;
-            updated.duration = state.duration;
+            apincer.music.core.playback.PlaybackState updated = state.copy();
             onPlaybackStateChanged(updated);
         }
     }
