@@ -705,6 +705,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void setShuffleMode(boolean enabled) {
         queueManager.setShuffle(enabled);
+        triggerPlaybackStateUpdate();
     }
 
     @Override
@@ -714,6 +715,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         } catch (IllegalArgumentException e) {
             Log.w(TAG, "Unknown repeat mode: " + mode + ", defaulting to OFF");
             queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
+        }
+        triggerPlaybackStateUpdate();
+    }
+
+    private void triggerPlaybackStateUpdate() {
+        apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
+        if (state != null) {
+            apincer.music.core.playback.PlaybackState updated = new apincer.music.core.playback.PlaybackState();
+            updated.currentState = state.currentState;
+            updated.currentTrack = state.currentTrack;
+            updated.currentPositionSecond = state.currentPositionSecond;
+            updated.duration = state.duration;
+            onPlaybackStateChanged(updated);
         }
     }
 

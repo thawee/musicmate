@@ -1143,13 +1143,25 @@ public class BaseServer {
 
             // Ensure state name is lowercase as expected by the client
             String stateName = state.currentState.name().toLowerCase();
+            
+            String repeatMode = "none";
+            String shuffleMode = "none";
+            if (playbackService != null && playbackService.getQueueManager() != null) {
+                apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
+                shuffleMode = qm.isShuffle() ? "all" : "none";
+                String rMode = qm.getRepeatMode().name();
+                if ("ONE".equalsIgnoreCase(rMode)) repeatMode = "one";
+                else if ("ALL".equalsIgnoreCase(rMode)) repeatMode = "all";
+            }
 
             return Map.of(
                     "type", "playbackState",
                     "trackId", state.currentTrack.getId(),
                     "elapsed", state.currentPositionSecond,
                     "state", stateName,
-                    "duration", state.currentTrack.getAudioDuration() // Assuming duration is already in seconds
+                    "duration", state.currentTrack.getAudioDuration(),
+                    "shuffleMode", shuffleMode,
+                    "repeatMode", repeatMode
             );
         }
 

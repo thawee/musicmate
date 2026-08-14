@@ -947,9 +947,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             androidx.core.widget.ImageViewCompat.setImageTintList(btnShuffle,
                     ContextCompat.getColorStateList(requireContext(), isShuffle ? R.color.colorGold : R.color.colorMuted));
             btnShuffle.setOnClickListener(v -> {
-                if (qm != null) {
-                    qm.setShuffle(!isShuffle);
-                    Toast.makeText(getContext(), qm.isShuffle() ? "Shuffle ON" : "Shuffle OFF", Toast.LENGTH_SHORT).show();
+                if (qm != null && playbackService != null) {
+                    playbackService.setShuffleMode(!isShuffle);
+                    Toast.makeText(getContext(), !isShuffle ? "Shuffle ON" : "Shuffle OFF", Toast.LENGTH_SHORT).show();
                     populateNowPlayingSheet(view);
                 }
             });
@@ -975,13 +975,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             }
 
             btnRepeat.setOnClickListener(v -> {
-                if (qm != null) {
+                if (qm != null && playbackService != null) {
                     QueueManager.RepeatMode nextMode;
                     if (mode == QueueManager.RepeatMode.OFF) nextMode = QueueManager.RepeatMode.ALL;
                     else if (mode == QueueManager.RepeatMode.ALL) nextMode = QueueManager.RepeatMode.ONE;
                     else nextMode = QueueManager.RepeatMode.OFF;
 
-                    qm.setRepeatMode(nextMode);
+                    playbackService.setRepeatMode(nextMode.name());
                     Toast.makeText(getContext(), "Repeat: " + nextMode.name(), Toast.LENGTH_SHORT).show();
                     populateNowPlayingSheet(view);
                 }

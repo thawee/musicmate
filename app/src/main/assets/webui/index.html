@@ -858,6 +858,12 @@
                         }
                     }
                     currentPlaybackState = data;
+                    if (data.shuffleMode !== undefined) {
+                        shuffleMode = data.shuffleMode === 'all';
+                    }
+                    if (data.repeatMode !== undefined) {
+                        repeatMode = data.repeatMode;
+                    }
                     updatePlayerUI();
                     break;
                 case 'trackMetadata':
@@ -1070,6 +1076,16 @@
 
             updatePlayerElements(ui.desktopPlayer, track, isPlaying, elapsed, duration, progress);
             updatePlayerElements(ui.mobilePlayer, track, isPlaying, elapsed, duration, progress);
+            
+            // Sync desktop player control toggles
+            if (ui.desktopPlayer.shuffleBtn) {
+                ui.desktopPlayer.shuffleBtn.classList.toggle('text-amber-400', shuffleMode);
+            }
+            if (ui.desktopPlayer.repeatBtn) {
+                ui.desktopPlayer.repeatBtn.classList.toggle('text-amber-400', repeatMode !== 'none');
+                ui.desktopPlayer.repeatBtn.classList.remove('bi-repeat-1', 'bi-repeat');
+                ui.desktopPlayer.repeatBtn.classList.add(repeatMode === 'one' ? 'bi-repeat-1' : 'bi-repeat');
+            }
 
             const footerEl = document.getElementById('player-footer');
             if (track && track.artUrl) {
@@ -1161,7 +1177,7 @@
 
         function handleShuffleToggle() {
             shuffleMode = !shuffleMode;
-            ui.desktopPlayer.shuffleBtn.classList.toggle('text-blue-500', shuffleMode);
+            ui.desktopPlayer.shuffleBtn.classList.toggle('text-amber-400', shuffleMode);
             sendMessage({ command: 'setShuffle', enabled: shuffleMode });
             showToast(shuffleMode ? 'Shuffle On' : 'Shuffle Off');
         }
@@ -1170,21 +1186,21 @@
             const repeatBtn = ui.desktopPlayer.repeatBtn;
             if (repeatMode === 'none') {
                 repeatMode = 'all';
-                repeatBtn.classList.add('text-blue-500');
+                repeatBtn.classList.add('text-amber-400');
                 repeatBtn.classList.remove('bi-repeat-1');
                 repeatBtn.classList.add('bi-repeat');
                 repeatBtn.title = "Repeat All";
                 showToast('Repeat All');
             } else if (repeatMode === 'all') {
                 repeatMode = 'one';
-                repeatBtn.classList.add('text-blue-500');
+                repeatBtn.classList.add('text-amber-400');
                 repeatBtn.classList.remove('bi-repeat');
                 repeatBtn.classList.add('bi-repeat-1');
                 repeatBtn.title = "Repeat One";
                 showToast('Repeat One');
             } else {
                 repeatMode = 'none';
-                repeatBtn.classList.remove('text-blue-500');
+                repeatBtn.classList.remove('text-amber-400');
                 repeatBtn.classList.remove('bi-repeat-1');
                 repeatBtn.classList.add('bi-repeat');
                 repeatBtn.title = "Repeat Off";
