@@ -40,7 +40,7 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE path = :path")
     List<TrackEntity> getByPath(String path);
 
-    @Query("SELECT * FROM musictag WHERE isManaged = 0 ORDER BY fileLastModified DESC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE isManaged = 0 ORDER BY artist ASC, album ASC, CAST(track AS INTEGER) ASC, title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findRecentlyAdded(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE drScore = 0 OR dynamicRange = 0 ORDER BY title ASC")

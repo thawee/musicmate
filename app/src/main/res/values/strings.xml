@@ -338,7 +338,7 @@
     <string name="server_url_not_available">Server URL: Not Available (Server Stopped)</string>
     <string name="update_library">Music Library</string>
     <string name="label_library_all_songs">All Songs</string>
-    <string name="label_library_recently_added">Recently Added</string>
+    <string name="label_library_recently_added">Incoming Tracks</string>
     <string name="label_library_similar_songs">Discover Similar</string>
     <string name="currently_playing">Current Player</string>
     <string name="more_options">More Options</string>

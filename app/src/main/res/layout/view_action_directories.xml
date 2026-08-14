@@ -82,61 +82,84 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <LinearLayout
-                android:id="@+id/btn_add_panel"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="end">
+                android:gravity="center_vertical">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_add"
-                    style="@style/Widget.Material3.Button.TonalButton"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Add Path"
-                    app:icon="@drawable/rounded_add_diamond_24"
-                    app:cornerRadius="20dp"/>
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Monitored Folders"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorMuted"/>
+
+                <LinearLayout
+                    android:id="@+id/btn_add_panel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_rounded_surface_dark"
+                android:padding="8dp"
+                android:layout_marginTop="8dp">
+
+                <ListView
+                    android:id="@+id/itemListView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="#1AFFFFFF"
+                    android:dividerHeight="1dp"
+                    android:background="@android:color/transparent"
+                    android:scrollbars="none"/>
             </LinearLayout>
 
-            <ListView
-                android:id="@+id/itemListView"
-                android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:layout_marginTop="16dp"
-                android:divider="#1AFFFFFF"
-                android:dividerHeight="1dp"
-                android:background="@drawable/shape_border_playing_black"
-                android:scrollbars="none"/>
-
-            <CheckBox
+            <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/checkbox_full_scan"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:text="@string/directories_deep_audit"
-                android:textColor="@color/grey400"/>
+                android:textColor="@color/grey300"
+                android:textSize="13sp"
+                app:buttonTint="@color/colorGold"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:gravity="end">
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_cancel"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Cancel"
-                    android:textColor="@color/colorError"/>
+                    android:textColor="@color/grey400"/>
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_ok"
-                    style="@style/Widget.Material3.Button"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="8dp"
                     android:text="@string/directories_execute_scan"
+                    app:backgroundTint="@color/colorGold"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
                     app:cornerRadius="20dp"/>
             </LinearLayout>
         </LinearLayout>

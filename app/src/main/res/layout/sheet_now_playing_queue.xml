@@ -307,6 +307,7 @@
                     </LinearLayout>
 
                     <!-- Dynamic Range (DR) Badge (Visible when DR score > 0) -->
+                    <!--
                     <LinearLayout
                         android:id="@+id/sheet_node_dr_badge"
                         android:layout_width="wrap_content"
@@ -327,6 +328,7 @@
                             android:textStyle="bold"
                             android:maxLines="1" />
                     </LinearLayout>
+                    -->
 
                     <!-- Bit-Perfect / Direct Badge (Visible when bit-perfect) -->
                     <LinearLayout

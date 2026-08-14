@@ -15,6 +15,7 @@ import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
@@ -38,6 +39,7 @@ import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.Target;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.repository.QueueManager;
 import apincer.music.core.utils.PlayerNameUtils;
 import apincer.android.utils.FileUtils;
 import android.os.SystemClock;
@@ -111,6 +113,7 @@ import android.view.ViewGroup.MarginLayoutParams;
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MediaServerManager;
 import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
@@ -362,19 +365,15 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-                            // Palette needs direct pixel access, so we cannot use hardware bitmaps.
-                            // If the bitmap is hardware-accelerated, we must copy it to a software-compatible config.
-                            Bitmap paletteBitmap = bitmap;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && bitmap.getConfig() == Bitmap.Config.HARDWARE) {
-                                paletteBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                            Bitmap paletteBitmap = BitmapHelper.ensureSoftwareBitmap(bitmap);
+                            if (paletteBitmap != null && !paletteBitmap.isRecycled()) {
+                                Palette.from(paletteBitmap).generate(palette -> {
+                                    if (palette != null) {
+                                        int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
+                                        applyGlassyColor(color);
+                                    }
+                                });
                             }
-
-                            Palette.from(paletteBitmap).generate(palette -> {
-                                if (palette != null) {
-                                    int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
-                                    applyGlassyColor(color);
-                                }
-                            });
                         }
                     }
 
@@ -642,7 +641,17 @@ public class MainActivity extends AppCompatActivity {
                         playbackService.pausePlayer();
                     } else {
                         Track nowPlaying = playbackService.getNowPlayingSong();
-                        if (nowPlaying != null) playbackService.playSong(nowPlaying);
+                        if (nowPlaying != null) {
+                            playbackService.playSong(nowPlaying);
+                        } else {
+                            QueueManager qm = playbackService.getQueueManager();
+                            if (qm != null) {
+                                Track randomTrack = qm.getRandomTrack();
+                                if (randomTrack != null) {
+                                    playbackService.playSong(randomTrack);
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -1442,7 +1451,7 @@ public class MainActivity extends AppCompatActivity {
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
         List<String> dirs = TagRepository.getDirectories(this);
 
-        itemsView.setAdapter(new BaseAdapter() {
+        BaseAdapter adapter = new BaseAdapter() {
             @Override
             public int getCount() {
                 return dirs.size();
@@ -1450,12 +1459,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public Object getItem(int i) {
-                return null;
+                return dirs.get(i);
             }
 
             @Override
             public long getItemId(int i) {
-                return 0;
+                return i;
             }
 
             @SuppressLint("InflateParams")
@@ -1468,24 +1477,30 @@ public class MainActivity extends AppCompatActivity {
                 String dir = dirs.get(i);
                 TextView seq = view.findViewById(R.id.seq);
                 TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
+                View btnDelete = view.findViewById(R.id.btn_delete);
 
-                seq.setText(String.valueOf(i + 1));
+                seq.setText((i + 1) + ".");
                 name.setText(dir);
 
                 if (defaultPathsSet.contains(dir)) {
-                    status.setText("");
+                    if (btnDelete != null) btnDelete.setVisibility(GONE);
                 } else {
-                    status.setText("X");
-                    status.setOnClickListener(view1 -> {
-                        dirs.remove(dir);
-                        notifyDataSetChanged();
-                    });
+                    if (btnDelete != null) {
+                        btnDelete.setVisibility(VISIBLE);
+                        btnDelete.setOnClickListener(view1 -> {
+                            dirs.remove(dir);
+                            notifyDataSetChanged();
+                            setListViewHeightBasedOnChildren(itemsView);
+                        });
+                    }
                 }
 
                 return view;
             }
-        });
+        };
+
+        itemsView.setAdapter(adapter);
+        itemsView.post(() -> setListViewHeightBasedOnChildren(itemsView));
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
@@ -1505,9 +1520,26 @@ public class MainActivity extends AppCompatActivity {
         btnAddPanel.removeAllViews();
 
         for (String sid : storageIds) {
-            Button btn = new Button(getApplicationContext());
-            btn.setText("+"+ StringUtils.capitalize(sid));
+            com.google.android.material.button.MaterialButton btn = new com.google.android.material.button.MaterialButton(
+                    MainActivity.this, null, com.google.android.material.R.attr.materialButtonTonalStyle
+            );
+            btn.setText("+ " + StringUtils.capitalize(sid));
             btn.setAllCaps(false);
+            btn.setTextSize(11f);
+            btn.setCornerRadius((int) dpToPx(MainActivity.this, 16));
+            btn.setIconResource(R.drawable.rounded_folder_24);
+            btn.setIconSize((int) dpToPx(MainActivity.this, 16));
+            btn.setIconTint(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.colorGold)));
+            btn.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.white));
+            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
+            btn.setPadding((int) dpToPx(MainActivity.this, 10), 0, (int) dpToPx(MainActivity.this, 12), 0);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    (int) dpToPx(MainActivity.this, 34)
+            );
+            lp.setMarginStart((int) dpToPx(MainActivity.this, 6));
+            btn.setLayoutParams(lp);
             btnAddPanel.addView(btn);
 
             btn.setOnClickListener(view -> {
@@ -1519,12 +1551,13 @@ public class MainActivity extends AppCompatActivity {
                 properties.show_hidden_files = false;
 
                 FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
-                dialog.setTitle("Select music Directory");
+                dialog.setTitle("Select Music Directory");
                 dialog.setPositiveBtnName("Add");
                 dialog.setNegativeBtnName("Cancel");
                 dialog.setDialogSelectionListener(files -> {
                     dirs.add(files[0]);
-                    ((BaseAdapter) itemsView.getAdapter()).notifyDataSetChanged();
+                    adapter.notifyDataSetChanged();
+                    setListViewHeightBasedOnChildren(itemsView);
                 });
                 dialog.show();
             });
@@ -1560,6 +1593,24 @@ public class MainActivity extends AppCompatActivity {
             btnCancel.setOnClickListener(v -> alert.dismiss());
         }
         alert.show();
+    }
+
+    private static void setListViewHeightBasedOnChildren(ListView listView) {
+        android.widget.ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) return;
+
+        int totalHeight = 0;
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth() > 0 ? listView.getWidth() : 800, View.MeasureSpec.AT_MOST);
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + (listView.getDividerHeight() * Math.max(0, listAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
+        listView.requestLayout();
     }
 
     private void doShowEditActivity(List<Track> selections) {

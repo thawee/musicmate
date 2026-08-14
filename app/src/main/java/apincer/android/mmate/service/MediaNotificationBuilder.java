@@ -33,6 +33,7 @@ import java.io.InputStream;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.music.core.Constants;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackTarget;
@@ -236,9 +237,7 @@ public class MediaNotificationBuilder {
     }
 
     private static Bitmap ensureSoftwareBitmap(Bitmap input) {
-        if (input == null) return null;
-        if (input.getConfig() != Bitmap.Config.HARDWARE) return input;
-        return input.copy(Bitmap.Config.ARGB_8888, false);
+        return BitmapHelper.ensureSoftwareBitmap(input);
     }
 
     private static int withAlpha(int color, float alphaFraction) {

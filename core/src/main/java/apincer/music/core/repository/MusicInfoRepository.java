@@ -64,12 +64,12 @@ public class MusicInfoRepository {
             }
             if (albumDescription == null || albumDescription.isEmpty()) {
                 Log.d(TAG, "No album description found on Wikipedia for: " + album + " by " + targetArtist);
-                albumDescription = "No album information found.";
+                albumDescription = null;
             }
 
             String artistBio = getWikipediaArtistInfo(targetArtist);
-            if (artistBio == null || artistBio.isEmpty()) {
-                artistBio = "No artist biography found.";
+            if (artistBio != null && artistBio.isEmpty()) {
+                artistBio = null;
             }
 
             String highResArtUrl = null; // Placeholder

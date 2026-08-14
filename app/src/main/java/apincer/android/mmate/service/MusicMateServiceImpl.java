@@ -6,6 +6,7 @@ import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -174,24 +175,49 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                     pausePlayer();
                 }
                 if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                    AudioOutputHelper.clearCachedBluetoothCodec();
                     AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                    if (mediaSessionManager != null) {
-                        updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
-                    }
+                    refreshExternalPlayersSafe();
                 }
             } else if ("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED".equals(action)) {
                 Log.d(TAG, "Bluetooth codec configuration changed.");
                 try {
-                    Object codecStatus = null;
-                    if (Build.VERSION.SDK_INT >= 33) { // Build.VERSION_CODES.TIRAMISU
+                    if (intent != null) {
                         try {
-                            Class<?> clazz = Class.forName("android.bluetooth.BluetoothCodecStatus");
-                            java.lang.reflect.Method getParcelableExtraMethod = Intent.class.getMethod("getParcelableExtra", String.class, Class.class);
-                            codecStatus = getParcelableExtraMethod.invoke(intent, "android.bluetooth.extra.CODEC_STATUS", clazz);
+                            intent.setExtrasClassLoader(BluetoothProfile.class.getClassLoader());
                         } catch (Exception ignored) {}
                     }
-                    if (codecStatus == null) {
-                        codecStatus = intent.getParcelableExtra("android.bluetooth.extra.CODEC_STATUS");
+                    Object codecStatus = null;
+                    if (intent != null) {
+                        if (Build.VERSION.SDK_INT >= 33) { // Build.VERSION_CODES.TIRAMISU
+                            try {
+                                Class<?> clazz = Class.forName("android.bluetooth.BluetoothCodecStatus");
+                                java.lang.reflect.Method getParcelableExtraMethod = Intent.class.getMethod("getParcelableExtra", String.class, Class.class);
+                                codecStatus = getParcelableExtraMethod.invoke(intent, "android.bluetooth.extra.CODEC_STATUS", clazz);
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null) {
+                            try {
+                                codecStatus = intent.getParcelableExtra("android.bluetooth.extra.CODEC_STATUS");
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null) {
+                            try {
+                                codecStatus = intent.getParcelableExtra("android.bluetooth.a2dp.extra.CODEC_STATUS");
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null && intent.getExtras() != null) {
+                            try {
+                                android.os.Bundle bundle = intent.getExtras();
+                                for (String key : bundle.keySet()) {
+                                    Object val = bundle.get(key);
+                                    if (val != null && (val.getClass().getName().contains("CodecStatus") || String.valueOf(val).contains("mCodecConfig") || String.valueOf(val).contains("codecConfig"))) {
+                                        codecStatus = val;
+                                        break;
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
                     }
 
                     if (codecStatus != null) {
@@ -202,21 +228,15 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 } catch (Exception ignored) {
                     AudioOutputHelper.refreshBluetoothCodecStatus(context);
                 }
-                if (mediaSessionManager != null) {
-                    updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
-                }
+                refreshExternalPlayersSafe();
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 Log.d(TAG, "Bluetooth device connected.");
                 AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                if (mediaSessionManager != null) {
-                    updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
-                }
+                refreshExternalPlayersSafe();
                 android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
                 mainHandler.postDelayed(() -> {
                     AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                    if (mediaSessionManager != null) {
-                        updateAvailableExternalPlayers(mediaSessionManager.getActiveSessions(null));
-                    }
+                    refreshExternalPlayersSafe();
                 }, 1000);
             }
         }
@@ -229,6 +249,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             };
 
     public MusicMateServiceImpl( ) {
+    }
+
+    private void refreshExternalPlayersSafe() {
+        List<MediaController> controllers = null;
+        if (mediaSessionManager != null && PermissionUtils.isNotificationListenerEnabled(this)) {
+            try {
+                ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
+                controllers = mediaSessionManager.getActiveSessions(notificationListener);
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to get active media sessions: " + t.getMessage());
+            }
+        }
+        updateAvailableExternalPlayers(controllers);
     }
 
     private PlaybackTarget getActivePlayer() {
@@ -348,7 +381,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         audioNoisyFilter.addAction("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(becomingNoisyReceiver, audioNoisyFilter, Context.RECEIVER_NOT_EXPORTED);
+            registerReceiver(becomingNoisyReceiver, audioNoisyFilter, Context.RECEIVER_EXPORTED);
         } else {
             registerReceiver(becomingNoisyReceiver, audioNoisyFilter);
         }

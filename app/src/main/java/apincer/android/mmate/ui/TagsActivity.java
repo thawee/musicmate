@@ -83,6 +83,7 @@ import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.view.BadgeView;
 import apincer.android.mmate.ui.view.VerdictFormatter;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
@@ -1219,19 +1220,15 @@ public class TagsActivity extends AppCompatActivity {
                                 }
                             }
 
-                            // Palette needs direct pixel access, so we cannot use hardware bitmaps.
-                            // If the bitmap is hardware-accelerated, we must copy it to a software-compatible config.
-                            Bitmap paletteBitmap = bitmap;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && bitmap.getConfig() == Bitmap.Config.HARDWARE) {
-                                paletteBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                            Bitmap paletteBitmap = BitmapHelper.ensureSoftwareBitmap(bitmap);
+                            if (paletteBitmap != null && !paletteBitmap.isRecycled()) {
+                                Palette.from(paletteBitmap).generate(palette -> {
+                                    if (palette != null) {
+                                        int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
+                                        applyGlassyColor(color);
+                                    }
+                                });
                             }
-
-                            Palette.from(paletteBitmap).generate(palette -> {
-                                if (palette != null) {
-                                    int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
-                                    applyGlassyColor(color);
-                                }
-                            });
                         }
                     }
 

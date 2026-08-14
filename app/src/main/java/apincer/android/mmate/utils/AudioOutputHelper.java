@@ -48,6 +48,8 @@ public class AudioOutputHelper {
     private static volatile String sCachedBtCodec = "";
     private static volatile int sCachedBtSampleRate = 0;
     private static volatile int sCachedBtBitsPerSample = 0;
+    private static volatile long sLastBtRefreshTime = 0;
+    private static final long BT_REFRESH_THROTTLE_MS = 2000;
     private static volatile BluetoothA2dp sBluetoothA2dp = null;
 
     public static class Device {
@@ -295,17 +297,28 @@ public class AudioOutputHelper {
         }
     }
 
+    public static synchronized void clearCachedBluetoothCodec() {
+        sCachedBtCodec = "";
+        sCachedBtSampleRate = 0;
+        sCachedBtBitsPerSample = 0;
+    }
+
     public static synchronized void refreshBluetoothCodecStatus(Context context) {
+        refreshBluetoothCodecStatus(context, false);
+    }
+
+    public static synchronized void refreshBluetoothCodecStatus(Context context, boolean force) {
+        if (!force && (System.currentTimeMillis() - sLastBtRefreshTime < BT_REFRESH_THROTTLE_MS)) {
+            return;
+        }
+        sLastBtRefreshTime = System.currentTimeMillis();
+
         if (sBluetoothA2dp == null) {
             if (context != null) {
                 initializeBluetooth(context);
             }
             return;
         }
-        
-        sCachedBtCodec = "";
-        sCachedBtSampleRate = 0;
-        sCachedBtBitsPerSample = 0;
         
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && context != null) {
@@ -321,16 +334,7 @@ public class AudioOutputHelper {
                 getActiveDeviceMethod.setAccessible(true);
                 BluetoothDevice dev = (BluetoothDevice) getActiveDeviceMethod.invoke(sBluetoothA2dp);
                 if (dev != null) candidates.add(dev);
-            } catch (Exception ignored) {}
-
-            if (candidates.isEmpty()) {
-                try {
-                    Method getActiveDeviceMethod = BluetoothA2dp.class.getDeclaredMethod("getActiveDevice");
-                    getActiveDeviceMethod.setAccessible(true);
-                    BluetoothDevice dev = (BluetoothDevice) getActiveDeviceMethod.invoke(sBluetoothA2dp);
-                    if (dev != null) candidates.add(dev);
-                } catch (Exception ignored) {}
-            }
+            } catch (Throwable ignored) {}
 
             try {
                 List<BluetoothDevice> connected = sBluetoothA2dp.getConnectedDevices();
@@ -339,7 +343,7 @@ public class AudioOutputHelper {
                         if (!candidates.contains(d)) candidates.add(d);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
 
             try {
                 BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -353,30 +357,30 @@ public class AudioOutputHelper {
                         }
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
 
-            for (BluetoothDevice dev : candidates) {
-                Object codecStatus = null;
-                try {
-                    Method getCodecStatusMethod = sBluetoothA2dp.getClass().getMethod("getCodecStatus", BluetoothDevice.class);
-                    getCodecStatusMethod.setAccessible(true);
-                    codecStatus = getCodecStatusMethod.invoke(sBluetoothA2dp, dev);
-                } catch (Exception e1) {
+            if (candidates.isEmpty()) {
+                clearCachedBluetoothCodec();
+            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                for (BluetoothDevice dev : candidates) {
+                    Object codecStatus = null;
                     try {
-                        Method getCodecStatusMethod = BluetoothA2dp.class.getDeclaredMethod("getCodecStatus", BluetoothDevice.class);
+                        Method getCodecStatusMethod = sBluetoothA2dp.getClass().getMethod("getCodecStatus", BluetoothDevice.class);
                         getCodecStatusMethod.setAccessible(true);
                         codecStatus = getCodecStatusMethod.invoke(sBluetoothA2dp, dev);
-                    } catch (Exception ignored) {}
-                }
+                    } catch (Throwable e) {
+                        Log.d(TAG, "Bluetooth codec extraction notice: " + e.getMessage());
+                    }
 
-                if (codecStatus != null) {
-                    parseCodecStatus(codecStatus);
-                    if (!sCachedBtCodec.isEmpty()) {
-                        break;
+                    if (codecStatus != null) {
+                        parseCodecStatus(codecStatus);
+                        if (!sCachedBtCodec.isEmpty()) {
+                            break;
+                        }
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.d(TAG, "Bluetooth codec extraction notice: " + e.getMessage());
         }
     }
@@ -569,6 +573,10 @@ public class AudioOutputHelper {
             initializeBluetooth(context);
         }
         if (sBluetoothA2dp == null) return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // setCodecConfigPreference requires BLUETOOTH_PRIVILEGED on Android 13+
+            return false;
+        }
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && context != null) {
@@ -678,23 +686,14 @@ public class AudioOutputHelper {
     }
 
     public static String getBluetoothCodec(Context context) {
-        if (sCachedBtCodec.isEmpty() && context != null) {
-            refreshBluetoothCodecStatus(context);
-        }
-        return sCachedBtCodec;
+        return sCachedBtCodec != null ? sCachedBtCodec : "";
     }
 
     public static int getBluetoothSampleRate(Context context) {
-        if (sCachedBtSampleRate == 0 && context != null) {
-            refreshBluetoothCodecStatus(context);
-        }
         return sCachedBtSampleRate;
     }
 
     public static int getBluetoothBitsPerSample(Context context) {
-        if (sCachedBtBitsPerSample == 0 && context != null) {
-            refreshBluetoothCodecStatus(context);
-        }
         return sCachedBtBitsPerSample;
     }
 
@@ -712,16 +711,30 @@ public class AudioOutputHelper {
 
     // Check if the current path is truly bit-perfect (Android 14+)
     public static boolean isBitPerfect(Context context, AudioDeviceInfo device, int trackSampleRate) {
-        AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        List<AudioMixerAttributes> mixerAttrs = am.getSupportedMixerAttributes(device);
+        if (context == null || device == null) return false;
+        int type = device.getType();
+        // Bit-perfect mixer attributes are only supported on USB audio sinks
+        if (type != AudioDeviceInfo.TYPE_USB_DEVICE &&
+            type != AudioDeviceInfo.TYPE_USB_HEADSET &&
+            type != AudioDeviceInfo.TYPE_USB_ACCESSORY) {
+            return false;
+        }
 
-        for (AudioMixerAttributes attr : mixerAttrs) {
-            if (attr.getMixerBehavior() == AudioMixerAttributes.MIXER_BEHAVIOR_BIT_PERFECT) {
-                if (attr.getFormat().getSampleRate() == trackSampleRate) {
-                    return true;
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                List<AudioMixerAttributes> mixerAttrs = am.getSupportedMixerAttributes(device);
+                if (mixerAttrs != null) {
+                    for (AudioMixerAttributes attr : mixerAttrs) {
+                        if (attr.getMixerBehavior() == AudioMixerAttributes.MIXER_BEHAVIOR_BIT_PERFECT) {
+                            if (attr.getFormat().getSampleRate() == trackSampleRate) {
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
-        }
+        } catch (Exception ignored) {}
         return false;
     }
 
@@ -887,6 +900,8 @@ public class AudioOutputHelper {
                 if (format == 27) yield "aptX";
                 if (format == 28) yield "aptX HD";
                 if (format == 29) yield "LC3";
+                if (format == 30) yield "aptX Adaptive";
+                if (format == 31) yield "aptX TWSP";
                 yield "";
             }
         };

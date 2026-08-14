@@ -13,6 +13,9 @@
 
 - **Filtered List Subtitle Counts**: When displaying total item counts, storage size, and duration in header/subtitle views while a local filter (like search or category filter) is active, prioritize the adapter's filtered dataset properties (`getTotalItems()`, `getTotalSize()`, `getTotalDuration()`) over database-wide category statistics, preventing inconsistent subtitles (e.g. showing category totals in a filtered list).
 - **Directory Image Loader Safeguard**: When resolving cover art resource paths, verify if the resolved path is a directory (using `file.isDirectory()`). Passing directory paths to image loading frameworks (like Coil) causes silent decode failures or broken images; instead, filter directories out and fallback to the default/missing cover image.
+- **WebUI Nested Click Event Bubbling & Playback State Null-Safety**:
+  - In WebUI mini-player bars, nested interactive elements (e.g. cover art `<img>` inside a container `<div id="footer-track-info">`) will trigger handlers twice in quick succession unless `e.stopPropagation()` is applied or event handling is consolidated onto the parent container.
+  - When accessing playback state objects (`currentPlaybackState`, `currentTrack`) on user-initiated click actions (e.g., clicking cover art or expand buttons before the first status push from WebSocket), always use defensive null-checks (`state = currentPlaybackState || {}`, `(state && state.elapsed) || 0`) to prevent unhandled `TypeError: Cannot read properties of null` exceptions.
 
 ## Actionable Rules for Future Changes
 - Always ask/confirm if the app is designed to run headlessly or casting-only before suggesting standard local playback components (like `MediaSession`).
@@ -98,11 +101,28 @@
   - To guarantee that Group 1 items appear strictly at the bottom below a group divider, offset Group 1 `order` values to a higher index (`baseOrder = group0List.size() + 10`).
 - **Bluetooth A2DP Float PCM Incompatibility**:
   - Never force 32-bit Float PCM (`setEnableFloatOutput(true)`) on standard Android `AudioTrack` or Bluetooth A2DP pipelines. Android's Bluetooth A2DP stack (`a2dp.default.so`) and standard device mixers expect 16-bit/24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`). Feeding float PCM to Bluetooth sinks causes severe sound distortion, harsh static, or crackling. Use standard `ExoPlayer.Builder(context)` to allow ExoPlayer to auto-negotiate clean, hardware-compatible PCM formats.
-- **Passive Bluetooth Codec Telemetry vs. Forced Overrides**:
-  - Never use hidden Android reflection to forcefully inject `BluetoothCodecConfig` (e.g. `setCodecPreference` requesting `LDAC` on connect). Forcibly overwriting codec parameters can desynchronize the Bluetooth HAL profile state and degrade playback quality. MusicMate should **passively inspect and display** the active codec and sample rate (`refreshBluetoothCodecStatus`), letting the OS and DAC handle profile negotiation smoothly.
-
-
-
+- **Hardware Bitmap (Config#HARDWARE) Palette Guard**:
+  - `androidx.palette.graphics.Palette` and `bitmap.getPixels()` require direct, software-accessible pixel data and will crash with `java.lang.IllegalStateException: unable to getPixels(), pixel access is not supported on Config#HARDWARE bitmaps` when passed hardware-accelerated bitmaps (e.g. decoded by Coil 3 or GPU pipelines).
+  - Always pass bitmaps through `BitmapHelper.ensureSoftwareBitmap(bitmap)` (which safely copies `Bitmap.Config.HARDWARE` to `Bitmap.Config.ARGB_8888` on API 26+) prior to invoking `Palette.from(...)` across all UI and background surfaces.
+- **Bluetooth Codec Telemetry Throttling & USB-Only Mixer Attributes**:
+  - `AudioManager.getSupportedMixerAttributes(device)` is an Android 14+ API supported strictly for USB audio sinks (`TYPE_USB_DEVICE`, `TYPE_USB_HEADSET`, `TYPE_USB_ACCESSORY`). Calling it on Bluetooth (A2DP) or internal speaker sinks triggers native HAL errors (`AudioSystem: Function: getSupportedMixerAttributes Line: 3499 Failed`). Always verify device type is USB before calling `getSupportedMixerAttributes`.
+  - Bluetooth codec status inspections via reflection (`BluetoothA2dp.getActiveDevice()` / `getCodecStatus()`) must be throttled (e.g. 2000ms cache window) to avoid flooding IPC and the Android Bluetooth service on every UI render or playback progress tick.
+- **Android 13+ Bluetooth Reflection & CDM Security Restriction**:
+  - Hidden API calls like `BluetoothA2dp.getCodecStatus(device)` throw `SecurityException` (`does not have a CDM association with the Bluetooth Device` / `BLUETOOTH_PRIVILEGED`) on Android 13+ (API 33+) for standard 3rd-party apps.
+  - Always guard hidden Bluetooth reflection in `try { ... } catch (Throwable ignored) {}` blocks without redundant nested retries, and rely on `android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED` broadcast extras or public `AudioDeviceInfo.getAudioProfiles()` / `getEncodings()` for codec detection.
+- **MediaSessionManager Permission Requirements**:
+  - `MediaSessionManager.getActiveSessions(null)` requires the system-only signature permission `android.permission.MEDIA_CONTENT_CONTROL` and will crash 3rd-party apps with `SecurityException: Missing permission to control media`.
+  - Always check `PermissionUtils.isNotificationListenerEnabled(context)` and pass the explicit `ComponentName(context, MediaNotificationListener.class)`, wrapped safely in a `try...catch (Throwable t)` block.
+- **DLNA UPnP Auto-Rebind on Wi-Fi Roaming & Doze Wakeup**:
+  - When Android devices roam Wi-Fi APs, wake from Doze, or renew DHCP leases, `ConnectivityManager.NetworkCallback.onLinkPropertiesChanged()` must be monitored alongside `onAvailable()`.
+  - If the active local IP changes (`lastBoundIp != currentIp`) while UPnP is running, UPnP stacks (jUPnP) and HTTP web servers remain bound to dead sockets unless explicitly restarted (`stop()` ➔ `start()`), preventing SSDP discovery and audio streaming until app restart.
+  - `WifiManager.MulticastLock` and `WifiLock` must check `isHeld()` and re-acquire on network transitions to avoid Android dropping SSDP multicast packets (`239.255.255.250:1900`) after sleep.
+- **Netty DefaultFileRegion Lifecycle & File Descriptor Leaks**:
+  - In Netty, `DefaultFileRegion` transfers data directly via zero-copy OS DMA (`sendfile(2)`) but does NOT automatically close the underlying `FileChannel` or `RandomAccessFile` upon stream completion.
+  - Always attach a `ChannelFutureListener` to the `LastHttpContent.EMPTY_LAST_CONTENT` future that unconditionally executes `raf.close()` when the write completes, fails, or when the connection terminates prematurely, preventing file descriptor exhaustion during continuous seeking.
+- **Dynamic Dialog ListView Sizing & Programmatic MaterialButton Theming**:
+  - Never hardcode fixed pixel heights (e.g. `220dp`) on `ListView` in modal dialogs as it leaves large empty black voids when lists have few items. Use a dynamic height calculator (`setListViewHeightBasedOnChildren()`) on the adapter or `post()` cycle.
+  - When creating buttons programmatically (e.g. storage partition selectors), avoid `new Button(context)`. Use `new MaterialButton(context, null, materialButtonTonalStyle)` with explicit corner radii, icon resources, and tinted backgrounds so buttons blend seamlessly into the dark theme.
 
 
 

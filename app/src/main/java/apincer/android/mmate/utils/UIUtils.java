@@ -673,7 +673,9 @@ public class UIUtils  {
 
     public static Bitmap buildGradientBitmap( Context context, Bitmap source, int width, int height, int border, int corner) {
         try {
-            Palette palette = Palette.from(source).generate();
+            Bitmap safeSource = BitmapHelper.ensureSoftwareBitmap(source);
+            if (safeSource == null || safeSource.isRecycled()) return null;
+            Palette palette = Palette.from(safeSource).generate();
             int bgColor = context.getColor(R.color.grey200);
            // bgColor = palette.getDominantColor(bgColor);
             bgColor = palette.getMutedColor(bgColor);

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -344,6 +345,17 @@ public class QueueManager {
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
         int prevIndex = getPreviousIndex(baseIndex);
         return prevIndex != -1 ? queueList.get(prevIndex) : null;
+    }
+
+    /**
+     * Picks a random track from the current playback queue.
+     *
+     * @return A randomly selected {@link Track}, or {@code null} if the queue is empty.
+     */
+    public synchronized Track getRandomTrack() {
+        if (queueList.isEmpty()) return null;
+        int randomIndex = ThreadLocalRandom.current().nextInt(queueList.size());
+        return queueList.get(randomIndex);
     }
 
     /**

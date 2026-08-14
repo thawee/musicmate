@@ -48,7 +48,7 @@ public final class Constants {
 
     public static final String TITLE_DUPLICATE = "Similar Songs";
     public static final String TITLE_TO_ANALYST_DR = "Pending Analysis";
-    public static final String TITLE_INCOMING_SONGS = "Recently Added";
+    public static final String TITLE_INCOMING_SONGS = "Incoming Tracks";
     public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
     public static final String TITLE_HIRES_QUALITY = "Hi-Res Lossless"; //"Hi-Res Quality";

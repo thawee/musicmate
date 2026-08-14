@@ -17,6 +17,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -62,6 +63,7 @@ import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.viewmodel.MediaServerViewModel;
 import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.model.Track;
@@ -122,6 +124,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private TextView tvServerStatus;
     private View tvServerStatusIcon;
     private TextView tvServerAddress;
+    private TextView tvServerBroadcastInfo;
+    private TextView tvEngineDescription;
    // private TextView tvServerPowerBy;
     private ImageView qrCodeImage;
     private Button btnStartServer;
@@ -700,6 +704,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         Track current = playbackService.getNowPlayingSong();
                         if (current != null) {
                             playbackService.playSong(current);
+                        } else {
+                            QueueManager qm = playbackService.getQueueManager();
+                            if (qm != null) {
+                                Track randomTrack = qm.getRandomTrack();
+                                if (randomTrack != null) {
+                                    playbackService.playSong(randomTrack);
+                                }
+                            }
                         }
                     }
                     populateNowPlayingSheet(viewNowPlayingPage);
@@ -719,9 +731,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private void applyAmbientGlow(@Nullable View cardView, @Nullable Drawable drawable) {
         if (cardView == null || !(drawable instanceof BitmapDrawable) || !isAdded()) return;
         Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-        if (bitmap == null || bitmap.isRecycled()) return;
+        Bitmap paletteBitmap = BitmapHelper.ensureSoftwareBitmap(bitmap);
+        if (paletteBitmap == null || paletteBitmap.isRecycled()) return;
 
-        Palette.from(bitmap).generate(palette -> {
+        Palette.from(paletteBitmap).generate(palette -> {
             if (palette == null || !isAdded() || getContext() == null) return;
             int defaultColor = 0xFF1E1E2C;
             int dominantColor = palette.getVibrantColor(palette.getDominantColor(defaultColor));
@@ -902,6 +915,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                         Track current = playbackService.getNowPlayingSong();
                         if (current != null) {
                             playbackService.playSong(current);
+                        } else {
+                            QueueManager qm = playbackService.getQueueManager();
+                            if (qm != null) {
+                                Track randomTrack = qm.getRandomTrack();
+                                if (randomTrack != null) {
+                                    playbackService.playSong(randomTrack);
+                                }
+                            }
                         }
                     }
                     view.postDelayed(() -> populateNowPlayingSheet(view), 200);
@@ -1325,7 +1346,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             }
 
             // Dynamic Range (DR) Badge
-            View drBadge = view.findViewById(R.id.sheet_node_dr_badge);
+            /*View drBadge = view.findViewById(R.id.sheet_node_dr_badge);
             TextView drTitle = view.findViewById(R.id.sheet_node_dr_title);
             if (drBadge != null && drTitle != null) {
                 double dr = (track != null) ? (track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange()) : 0;
@@ -1335,7 +1356,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 } else {
                     drBadge.setVisibility(GONE);
                 }
-            }
+            } */
 
             // Bit-Perfect Direct Badge
             View bitperfectBadge = view.findViewById(R.id.sheet_node_bitperfect_badge);
@@ -1344,7 +1365,14 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 if (track != null) {
                     String enc = track.getAudioEncoding();
                     boolean isLossless = "FLAC".equalsIgnoreCase(enc) || "ALAC".equalsIgnoreCase(enc) || "DSD".equalsIgnoreCase(enc) || "WAV".equalsIgnoreCase(enc) || "AIFF".equalsIgnoreCase(enc);
-                    isBitPerfect = isLossless && (isStreaming || (target != null && !AudioOutputHelper.isExternalAppTarget(target)));
+                    if (isLossless) {
+                        if (isStreaming) {
+                            isBitPerfect = true;
+                        } else if (target != null && !AudioOutputHelper.isExternalAppTarget(target)) {
+                            AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
+                            isBitPerfect = device != null && device.isBitPerfect();
+                        }
+                    }
                 }
                 bitperfectBadge.setVisibility(isBitPerfect ? VISIBLE : GONE);
             }
@@ -1454,7 +1482,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
                     int targetIcon = (device.getResId() != 0) ? device.getResId() : (isBitPerfect ? R.drawable.ic_baseline_usb_24 : (isBluetooth ? R.drawable.ic_round_bluetooth_audio_24 : R.drawable.ic_baseline_volume_up_24));
                     targetTitle = "Output Device: " + device.getName();
-                    targetBadge = isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH A2DP" : "DIRECT SYSTEM OUTPUT");
+                    targetBadge = isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH A2DP" : "SYSTEM OUTPUT");
 
                     StringBuilder devBuf = new StringBuilder();
                     devBuf.append("Type: ").append(device.getDescription());
@@ -1568,6 +1596,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         tvServerStatusIcon = view.findViewById(R.id.status_indicator);
 
         tvServerAddress = view.findViewById(R.id.server_address);
+        tvServerBroadcastInfo = view.findViewById(R.id.server_broadcast_info);
+        tvEngineDescription = view.findViewById(R.id.tv_engine_description);
        // tvServerPowerBy = view.findViewById(R.id.server_power_by);
         qrCodeImage = view.findViewById(R.id.qr_code_image);
 
@@ -1587,6 +1617,31 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                             Toast.makeText(getContext(), "Server URL copied to clipboard", Toast.LENGTH_SHORT).show();
                         }
                     }
+                }
+            });
+        }
+
+        View btnOpenUrl = view.findViewById(R.id.btn_open_server_url);
+        if (btnOpenUrl != null) {
+            btnOpenUrl.setOnClickListener(v -> {
+                if (tvServerAddress != null && getContext() != null) {
+                    CharSequence url = tvServerAddress.getText();
+                    if (url != null && !url.toString().isEmpty() && url.toString().startsWith("http")) {
+                        try {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.toString()));
+                            startActivity(browserIntent);
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Could not open browser: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+        }
+
+        if (qrCodeImage != null) {
+            qrCodeImage.setOnClickListener(v -> {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Scan with phone or tablet to open WebUI", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -1624,6 +1679,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             default -> R.id.engine_httpcore;
         };
         engineGroup.check(checkedId);
+        updateEngineDescription(currentEngine);
 
         engineGroup.addOnButtonCheckedListener((group, buttonId, isChecked) -> {
             if (!isChecked) return;
@@ -1635,6 +1691,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             } else {
                 newEngine = "httpcore";
             }
+            updateEngineDescription(newEngine);
+
             String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
             if (!newEngine.equals(prevEngine)) {
                 prefs.edit().putString(Constants.PREF_SERVER_ENGINE, newEngine).apply();
@@ -1642,6 +1700,21 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 Toast.makeText(getContext(), "Switching engine — restarting server…", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateEngineDescription(String engine) {
+        if (tvEngineDescription == null) return;
+        switch (engine) {
+            case "nio":
+                tvEngineDescription.setText("⚡ Ultra-low latency • Minimal battery & RAM footprint");
+                break;
+            case "netty":
+                tvEngineDescription.setText("🚀 High-concurrency streaming • Zero-copy DMA throughput");
+                break;
+            default:
+                tvEngineDescription.setText("🛡️ Apache Async Reactor • Maximum network resilience");
+                break;
+        }
     }
 
     private void observeServerStatus() {
@@ -1661,6 +1734,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }
                 if (tvServerAddress != null) tvServerAddress.setVisibility(VISIBLE);
                 if (qrCodeImage != null) qrCodeImage.setVisibility(VISIBLE);
+                if (tvServerBroadcastInfo != null) {
+                    tvServerBroadcastInfo.setVisibility(VISIBLE);
+                    tvServerBroadcastInfo.setText("DLNA 1.5 / UPnP AV • Active on Port 9000");
+                }
 
                 String ssid = ApplicationUtils.getWifiSSID(getContext());
                 if (!StringUtils.isEmpty(ssid)) {
@@ -1688,6 +1765,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }
                 if (btnStopServer != null) btnStopServer.setVisibility(GONE);
                 if (qrCodeImage != null) qrCodeImage.setVisibility(GONE);
+                if (tvServerBroadcastInfo != null) tvServerBroadcastInfo.setVisibility(GONE);
 
                 if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_OFFLINE);
                 if (tvServerStatusIcon != null) tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_red);
@@ -1701,6 +1779,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             case STARTING:
                 if (qrCodeImage != null) qrCodeImage.setVisibility(GONE);
                 if (tvServerAddress != null) tvServerAddress.setVisibility(GONE);
+                if (tvServerBroadcastInfo != null) tvServerBroadcastInfo.setVisibility(GONE);
                 if (btnStartServer != null) btnStartServer.setEnabled(false);
                 if (btnStopServer != null) btnStopServer.setEnabled(false);
                 if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_OFFLINE);

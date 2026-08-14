@@ -628,4 +628,16 @@ public class BitmapHelper {
         }
         return null;
     }
+
+    /**
+     * Converts a Hardware Bitmap (Bitmap.Config.HARDWARE) to a Software Bitmap (Bitmap.Config.ARGB_8888).
+     * Palette and getPixels() require software-accessible pixel data and will crash on Hardware Bitmaps.
+     */
+    public static Bitmap ensureSoftwareBitmap(Bitmap input) {
+        if (input == null || input.isRecycled()) return null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && input.getConfig() == Bitmap.Config.HARDWARE) {
+            return input.copy(Bitmap.Config.ARGB_8888, false);
+        }
+        return input;
+    }
 }

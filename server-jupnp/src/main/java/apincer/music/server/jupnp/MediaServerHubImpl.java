@@ -173,6 +173,8 @@ public class MediaServerHubImpl implements MediaServerHub {
     private WifiManager.WifiLock wifiLock;
     private WifiManager.MulticastLock multicastLock;
 
+    private volatile String lastBoundIp = null;
+
     private long lastDiscoveryTime = 0;
 
     /**
@@ -265,6 +267,9 @@ public class MediaServerHubImpl implements MediaServerHub {
         mediaServerDevice = MediaServerDeviceFactory.create(context, tagRepos);
         upnpService.getRegistry().addDevice(mediaServerDevice);
 
+        lastBoundIp = apincer.music.core.utils.NetworkUtils.getIpAddress();
+        Log.i(TAG, "UPnP initialized and bound to IP: " + lastBoundIp);
+
         sendAlive();
         triggerDiscovery();
     }
@@ -313,6 +318,53 @@ public class MediaServerHubImpl implements MediaServerHub {
             } finally {
                 releaseLocks();
 
+                synchronized (stateLock) {
+                    state = State.IDLE;
+                }
+            }
+        });
+    }
+
+    /**
+     * Seamlessly restarts the UPnP stack and Web Server when the network IP or interface changes.
+     */
+    public void restart() {
+        synchronized (stateLock) {
+            if (state == State.STARTING || state == State.STOPPING) {
+                Log.d(TAG, "Restart ignored/deferred, state=" + state);
+                return;
+            }
+            state = State.STARTING;
+        }
+
+        runOnUpnpThread(() -> {
+            Log.i(TAG, "Restarting UPnP Server stack for updated network interface...");
+            try {
+                stopPeriodicDiscovery();
+                if (upnpService != null) {
+                    try { sendByebye(); } catch (Exception ignored) {}
+                    try { upnpService.shutdown(); } catch (Exception ignored) {}
+                    upnpService = null;
+                }
+                currentRenderer = null;
+                currentRendererId = null;
+                currentAVTransport = null;
+                releaseLocks();
+
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException ignored) {}
+
+                acquireLocks();
+                initUpnp();
+                startPeriodicDiscovery();
+
+                synchronized (stateLock) {
+                    state = State.RUNNING;
+                }
+                Log.i(TAG, "UPnP restart completed successfully on IP: " + lastBoundIp);
+            } catch (Exception e) {
+                Log.e(TAG, "UPnP restart failed", e);
                 synchronized (stateLock) {
                     state = State.IDLE;
                 }
@@ -432,12 +484,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "Network available");
-                if (network.equals(currentNetwork)) {
-                    Log.d(TAG, "Same network → ignore");
-                    return;
-                }
-
+                Log.d(TAG, "Network available: " + network);
                 currentNetwork = network;
                 wifiAvailable = true;
 
@@ -446,13 +493,20 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
 
             @Override
+            public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
+                Log.d(TAG, "Network link properties changed: " + network);
+                scheduler.schedule(() -> evaluateNetworkState(), 1, TimeUnit.SECONDS);
+            }
+
+            @Override
             public void onLost(@NonNull Network network) {
-                Log.d(TAG, "Network lost");
+                Log.d(TAG, "Network lost: " + network);
 
                 if (!network.equals(currentNetwork)) return;
 
                 wifiAvailable = false;
                 currentNetwork = null;
+                lastBoundIp = null;
 
                 evaluateNetworkState();
             }
@@ -464,17 +518,28 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     private void evaluateNetworkState() {
         synchronized (stateLock) {
-            boolean networkUp = wifiAvailable || hotspotAvailable;
-            Log.d(TAG, "Evaluate → state=" + state + ", wifi=" + wifiAvailable + ", hotspot=" + hotspotAvailable);
+            boolean networkUp = wifiAvailable || hotspotAvailable || apincer.music.core.utils.NetworkUtils.isServerNetworkAvailable(context);
+            String currentIp = apincer.music.core.utils.NetworkUtils.getIpAddress();
+            Log.d(TAG, "Evaluate → state=" + state + ", wifi=" + wifiAvailable + ", hotspot=" + hotspotAvailable
+                    + ", networkUp=" + networkUp + ", lastBoundIp=" + lastBoundIp + ", currentIp=" + currentIp);
 
-            if (networkUp) {
+            if (networkUp && currentIp != null && !currentIp.isEmpty() && !"127.0.0.1".equals(currentIp)) {
                 if (state == State.IDLE) {
-                    Log.d(TAG, "Network OK → starting");
+                    Log.d(TAG, "Network OK (IP " + currentIp + ") → starting UPnP");
                     start();
+                } else if (state == State.RUNNING) {
+                    if (lastBoundIp == null || !lastBoundIp.equals(currentIp)) {
+                        Log.i(TAG, "Network IP changed (" + lastBoundIp + " -> " + currentIp + ") while running → auto-restarting UPnP");
+                        restart();
+                    } else {
+                        // Same IP, ensure locks and SSDP discovery are active
+                        acquireLocks();
+                        refreshDiscovery();
+                    }
                 }
             } else {
                 if (state == State.RUNNING) {
-                    Log.d(TAG, "Network lost → stopping");
+                    Log.d(TAG, "Network lost or invalid IP → stopping UPnP");
                     stop();
                 }
             }
@@ -540,30 +605,41 @@ public class MediaServerHubImpl implements MediaServerHub {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
-        if (pm != null && wakeLock == null) {
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MM:Wake");
-            // 4-hour timeout — prevents indefinite CPU wakelock if releaseLocks() is not called
-            wakeLock.acquire(4 * 60 * 60 * 1000L);
+        if (pm != null) {
+            if (wakeLock == null) {
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MM:Wake");
+                wakeLock.setReferenceCounted(false);
+            }
+            if (!wakeLock.isHeld()) {
+                wakeLock.acquire(4 * 60 * 60 * 1000L);
+            }
         }
 
-        if (wm != null && wifiLock == null) {
-            // Use WIFI_MODE_FULL_HIGH_PERF instead of WIFI_MODE_FULL_LOW_LATENCY
-            // LOW_LATENCY keeps the radio at maximum power continuously
-            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MM:Wifi");
-            wifiLock.acquire();
-        }
+        if (wm != null) {
+            if (wifiLock == null) {
+                // Use WIFI_MODE_FULL_HIGH_PERF instead of WIFI_MODE_FULL_LOW_LATENCY
+                // LOW_LATENCY keeps the radio at maximum power continuously
+                wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MM:Wifi");
+                wifiLock.setReferenceCounted(false);
+            }
+            if (!wifiLock.isHeld()) {
+                wifiLock.acquire();
+            }
 
-        if (wm != null && multicastLock == null) {
-            multicastLock = wm.createMulticastLock("MM:Multicast");
-            multicastLock.setReferenceCounted(false);
-            multicastLock.acquire();
+            if (multicastLock == null) {
+                multicastLock = wm.createMulticastLock("MM:Multicast");
+                multicastLock.setReferenceCounted(false);
+            }
+            if (!multicastLock.isHeld()) {
+                multicastLock.acquire();
+            }
         }
     }
 
     private void releaseLocks() {
-        try { if (wakeLock != null) wakeLock.release(); } catch (Exception ignored) {}
-        try { if (wifiLock != null) wifiLock.release(); } catch (Exception ignored) {}
-        try { if (multicastLock != null) multicastLock.release(); } catch (Exception ignored) {}
+        try { if (wakeLock != null && wakeLock.isHeld()) wakeLock.release(); } catch (Exception ignored) {}
+        try { if (wifiLock != null && wifiLock.isHeld()) wifiLock.release(); } catch (Exception ignored) {}
+        try { if (multicastLock != null && multicastLock.isHeld()) multicastLock.release(); } catch (Exception ignored) {}
 
         wakeLock = null;
         wifiLock = null;

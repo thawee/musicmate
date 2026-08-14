@@ -24,6 +24,9 @@ android {
     lint {
         abortOnError = true
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
     namespace = 'musicmate.core'
 }
 
@@ -60,4 +63,6 @@ dependencies {
     // Math & String Utilities
     implementation libs.commons.lang3
     implementation libs.commons.match3
+
+    testImplementation libs.junit
 }

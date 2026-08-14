@@ -888,7 +888,7 @@ public class BaseServer {
                 // Determine the list of songs based on the path
                 if (path.equalsIgnoreCase("Library/All Songs")) {
                     songsInContext = tagRepos.getAllMusics();
-                } else if (path.equalsIgnoreCase("Library/Recently Added")) {
+                } else if (path.equalsIgnoreCase("Library/Incoming Tracks") || path.equalsIgnoreCase("Library/Recently Added")) {
                     songsInContext = tagRepos.findRecentlyAdded(0, 0);
                 } else if (path.startsWith("Library/Genres/")) {
                     String name = path.substring("Library/Genres/".length());
@@ -1019,7 +1019,7 @@ public class BaseServer {
                 if (path == null || path.isEmpty() || path.equalsIgnoreCase("Library")) {
                     // Default top-level view
                     items = List.of(
-                            Map.of("type", "folder", "name", "Recently Added", "path", "Library/Recently Added"),
+                            Map.of("type", "folder", "name", "Incoming Tracks", "path", "Library/Incoming Tracks"),
                             Map.of("type", "folder", "name", "All Songs", "path", "Library/All Songs"),
                             Map.of("type", "folder", "name", "Artists", "path", "Library/Artists"),
                             Map.of("type", "folder", "name", "Genres", "path", "Library/Genres"),
@@ -1028,7 +1028,7 @@ public class BaseServer {
                 } else if (path.equalsIgnoreCase("Library/All Songs")) {
                     List<Track> songs = tagRepos.getAllMusicsForPlaylist();
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
-                } else if (path.equalsIgnoreCase("Library/Recently Added")) {
+                } else if (path.equalsIgnoreCase("Library/Incoming Tracks") || path.equalsIgnoreCase("Library/Recently Added")) {
                     List<Track> songs = tagRepos.findRecentlyAdded(0, 0);
                     items = songs.stream().map(this::getMap).collect(Collectors.toList());
                 } else if (path.equalsIgnoreCase("Library/Genres")) {

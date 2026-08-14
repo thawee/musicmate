@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;
+        script-src 'self' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data: *;
         connect-src 'self' ws: wss:;
@@ -12,7 +12,7 @@
     ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MusicMate</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwindcss.min.js"></script>
     <link rel="stylesheet" href="icons/bootstrap-icons.min.css">
     <script src="js/vibrant.min.js"></script>
     <script>
@@ -152,11 +152,11 @@
 <footer id="player-footer" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-800 shadow-2xl z-10 transition-colors duration-500">
     <div class="w-full max-w-screen-2xl mx-auto md:p-3"> <div class="hidden md:flex items-center space-x-6">
 
-        <div class="flex-1 min-w-0 flex items-center space-x-4 truncate">
-            <img id="footer-album-art" src="assets/no_cover.png" class="w-16 h-16 rounded object-cover cursor-pointer hover:ring-2 ring-blue-500 transition" alt="">
+        <div id="footer-track-info" class="flex-1 min-w-0 flex items-center space-x-4 truncate cursor-pointer group" title="Click to open Now Playing">
+            <img id="footer-album-art" src="assets/no_cover.png" class="w-16 h-16 rounded object-cover cursor-pointer group-hover:ring-2 ring-amber-400 transition" alt="">
             <div class="truncate">
                 <div class="flex items-center space-x-2">
-                    <h3 id="footer-title" class="font-bold text-black dark:text-white truncate">No Song Playing</h3>
+                    <h3 id="footer-title" class="font-bold text-black dark:text-white truncate group-hover:text-amber-400 transition">No Song Playing</h3>
                     <div id="footer-quality-badge"></div>
                 </div>
                 <p id="footer-artist-album" class="text-sm text-gray-600 dark:text-gray-400 truncate">Artist - Album</p>
@@ -165,11 +165,11 @@
 
         <div class="flex flex-col items-center flex-shrink-0">
             <div class="flex items-center space-x-6 text-2xl text-gray-600 dark:text-gray-300">
-                <i id="shuffle-btn" class="bi bi-shuffle cursor-pointer hover:text-blue-500" title="Shuffle"></i>
+                <i id="shuffle-btn" class="bi bi-shuffle cursor-pointer hover:text-amber-400" title="Shuffle"></i>
                 <i id="prev-btn" class="bi bi-skip-start-fill text-3xl cursor-pointer hover:text-black dark:hover:text-white"></i>
                 <i id="play-pause-btn" class="bi bi-play-circle-fill text-5xl cursor-pointer hover:text-black dark:hover:text-white"></i>
                 <i id="next-btn" class="bi bi-skip-end-fill text-3xl cursor-pointer hover:text-black dark:hover:text-white"></i>
-                <i id="repeat-btn" class="bi bi-repeat cursor-pointer hover:text-blue-500" title="Repeat All"></i>
+                <i id="repeat-btn" class="bi bi-repeat cursor-pointer hover:text-amber-400" title="Repeat All"></i>
             </div>
             <div class="w-full flex items-center space-x-2 text-xs font-mono text-gray-500 dark:text-gray-400 mt-1">
                 <span id="player-time-current">0:00</span>
@@ -181,9 +181,10 @@
         <div class="flex-1 min-w-0 flex items-center justify-end space-x-4">
             <span id="footer-renderer-name" class="text-sm text-gray-500 dark:text-gray-400 truncate">Local Playback</span>
             <div id="footer-renderer-container" class="relative">
-                <button id="footer-renderer-btn" class="text-2xl text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"><i class="bi bi-speaker"></i></button>
+                <button id="footer-renderer-btn" class="text-2xl text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" title="Select Audio Output Device"><i class="bi bi-speaker"></i></button>
                 <div id="footer-renderer-list" class="absolute hidden bottom-full right-0 mb-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg z-20 border border-gray-200 dark:border-gray-700"></div>
             </div>
+            <button id="footer-expand-btn" class="text-xl text-gray-600 dark:text-gray-300 hover:text-amber-400 transition" title="Open Fullscreen Now Playing (N)"><i class="bi bi-arrows-angle-expand"></i></button>
         </div>
     </div>
 
@@ -194,7 +195,7 @@
                 <span id="player-time-duration-mobile">0:00</span>
             </div>
             <div class="flex items-center justify-between mt-2">
-                <div class="flex items-center space-x-3 truncate min-w-0">
+                <div id="footer-track-info-mobile" class="flex items-center space-x-3 truncate min-w-0 cursor-pointer" title="Click to open Now Playing">
                     <img id="footer-album-art-mobile" src="assets/no_cover.png" class="w-9 h-9 rounded object-cover cursor-pointer" alt="">
                     <div class="truncate">
                         <div class="flex items-center space-x-1.5">
@@ -253,7 +254,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
 
             <div class="flex-shrink-0 flex justify-center">
-                <img id="now-playing-art" src="assets/no_cover.png" class="w-64 h-64 md:w-96 md:h-96 rounded-lg shadow-2xl">
+                <img id="now-playing-art" src="assets/no_cover.png" class="w-64 h-64 md:w-96 md:h-96 rounded-2xl shadow-2xl ring-1 ring-white/10 object-cover">
             </div>
 
             <div class="flex flex-col text-white w-full h-full">
@@ -284,18 +285,39 @@
                     <p id="now-playing-renderer" class="text-md text-gray-400 mt-2 flex items-center"></p>
 
                     <div class="mt-6 w-full">
-                        <canvas id="waveform-canvas" class="w-full h-16"></canvas>
+                        <canvas id="waveform-canvas" class="w-full h-16 cursor-pointer hover:opacity-90 transition-opacity rounded-lg" title="Click waveform to seek"></canvas>
                     </div>
 
                     <div class="flex justify-between text-sm font-mono text-gray-400 mt-1">
                         <span id="now-playing-time-current">0:00</span>
                         <span id="now-playing-time-duration">0:00</span>
                     </div>
+
+                    <!-- Full Playback Transport Controls inside Now Playing Modal -->
+                    <div class="flex items-center justify-between mt-5 mb-2">
+                        <div class="flex items-center space-x-6">
+                            <button id="np-shuffle-btn" class="text-xl text-gray-400 hover:text-white transition-colors" title="Shuffle">
+                                <i class="bi bi-shuffle"></i>
+                            </button>
+                            <button id="np-prev-btn" class="text-3xl text-gray-300 hover:text-white transition-colors" title="Previous">
+                                <i class="bi bi-skip-start-fill"></i>
+                            </button>
+                            <button id="np-play-pause-btn" class="text-5xl text-white hover:text-amber-400 transition-colors" title="Play/Pause">
+                                <i class="bi bi-play-circle-fill"></i>
+                            </button>
+                            <button id="np-next-btn" class="text-3xl text-gray-300 hover:text-white transition-colors" title="Next">
+                                <i class="bi bi-skip-end-fill"></i>
+                            </button>
+                            <button id="np-repeat-btn" class="text-xl text-gray-400 hover:text-white transition-colors" title="Repeat">
+                                <i class="bi bi-repeat"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="now-playing-metadata" class="mt-8 pt-6 border-t border-white/20 text-gray-300 text-sm overflow-y-auto max-h-[30vh]">
-                    <div id="metadata-loading-spinner" class="hidden text-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-300 mx-auto"></div>
+                <div id="now-playing-metadata" class="mt-4 pt-4 border-t border-white/10 text-gray-300 text-sm overflow-y-auto max-h-[30vh]">
+                    <div id="metadata-loading-spinner" class="hidden text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto"></div>
                     </div>
                     <div id="now-playing-metadata-content">
                     </div>
@@ -457,6 +479,13 @@
             modalText: document.getElementById('modal-text'),
             modalConfirmBtn: document.getElementById('modal-confirm-btn'),
             modalCancelBtn: document.getElementById('modal-cancel-btn'),
+
+            // Modal Playback Transport Controls
+            npShuffleBtn: document.getElementById('np-shuffle-btn'),
+            npPrevBtn: document.getElementById('np-prev-btn'),
+            npPlayPauseBtn: document.getElementById('np-play-pause-btn'),
+            npNextBtn: document.getElementById('np-next-btn'),
+            npRepeatBtn: document.getElementById('np-repeat-btn'),
         };
 
         // --- EVENT LISTENERS ---
@@ -472,7 +501,24 @@
         document.addEventListener('click', () => ui.rendererDropdownList.classList.add('hidden'));
         ui.rendererDropdownList.addEventListener('click', handleRendererSelect);
         ui.closeNowPlayingBtn.addEventListener('click', () => closeOverlay(ui.nowPlayingScreen));
-        ui.desktopPlayer.albumArt.addEventListener('click', () => openNowPlayingScreen());
+        if (ui.desktopPlayer.albumArt) {
+            ui.desktopPlayer.albumArt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openNowPlayingScreen();
+            });
+        }
+        const footerTrackInfo = document.getElementById('footer-track-info');
+        if (footerTrackInfo) footerTrackInfo.addEventListener('click', () => openNowPlayingScreen());
+        const footerTrackInfoMobile = document.getElementById('footer-track-info-mobile');
+        if (footerTrackInfoMobile) footerTrackInfoMobile.addEventListener('click', () => openNowPlayingScreen());
+        const footerExpandBtn = document.getElementById('footer-expand-btn');
+        if (footerExpandBtn) {
+            footerExpandBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openNowPlayingScreen();
+            });
+        }
+
         ui.desktopPlayer.playPauseBtn.addEventListener('click', () => sendMessage({ command: 'togglePlayPause' }));
         ui.desktopPlayer.nextBtn.addEventListener('click', () => sendMessage({ command: 'next' }));
         ui.desktopPlayer.prevBtn.addEventListener('click', () => sendMessage({ command: 'previous' }));
@@ -483,6 +529,43 @@
         ui.mobilePlayer.nextBtn.addEventListener('click', () => sendMessage({ command: 'next' }));
         ui.mobilePlayer.albumArt.addEventListener('click', () => openNowPlayingScreen());
         ui.modalCancelBtn.addEventListener('click', () => closeOverlay(ui.confirmationModal));
+
+        // Now Playing Modal Controls
+        if (ui.npPlayPauseBtn) ui.npPlayPauseBtn.addEventListener('click', () => sendMessage({ command: 'togglePlayPause' }));
+        if (ui.npNextBtn) ui.npNextBtn.addEventListener('click', () => sendMessage({ command: 'next' }));
+        if (ui.npPrevBtn) ui.npPrevBtn.addEventListener('click', () => sendMessage({ command: 'previous' }));
+        if (ui.npShuffleBtn) ui.npShuffleBtn.addEventListener('click', handleShuffleToggle);
+        if (ui.npRepeatBtn) ui.npRepeatBtn.addEventListener('click', handleRepeatToggle);
+
+        // Click on Waveform to Seek
+        if (ui.waveformCanvas) {
+            ui.waveformCanvas.addEventListener('click', (e) => {
+                const duration = (currentTrack && currentTrack.duration) || (currentPlaybackState && currentPlaybackState.duration) || 0;
+                if (!duration) return;
+                const rect = ui.waveformCanvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+                const seekTime = ratio * duration;
+                sendMessage({ command: 'seek', position: seekTime });
+            });
+        }
+
+        // Global Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'n' || e.key === 'N') {
+                if (ui.nowPlayingScreen.classList.contains('hidden')) {
+                    openNowPlayingScreen();
+                } else {
+                    closeOverlay(ui.nowPlayingScreen);
+                }
+            } else if (e.key === 'Escape') {
+                closeOverlay(ui.nowPlayingScreen);
+                closeOverlay(ui.songInfoScreen);
+                closeOverlay(ui.confirmationModal);
+            }
+        });
+
         window.addEventListener('resize', resizeWaveformCanvas);
 
         ui.searchInput.addEventListener('keypress', (e) => {
@@ -1182,21 +1265,25 @@
                 return;
             }
 
-            const state = currentPlaybackState;
+            const state = currentPlaybackState || {};
             const duration = (currentTrack ? currentTrack.duration : 0) || state.duration || 0;
-            const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0; // Get 0-100
+            const elapsed = state.elapsed || 0;
+            const progress = (duration > 0) ? (elapsed / duration) * 100 : 0;
 
             // Update all text/art content
-            updateNowPlayingScreenUI(currentTrack, currentPlaybackState, progress);
+            updateNowPlayingScreenUI(currentTrack, state, progress);
 
             // Check for metadata (waveform AND bio) and request if missing
-            const metadata = trackMetadataCache.get(currentTrack.trackId);
+            const trackId = currentTrack.trackId || currentTrack.id;
+            const metadata = trackId ? trackMetadataCache.get(trackId) : null;
             if (!metadata) {
                 // Show loading spinner for bio
                 ui.nowPlayingMetadataContent.innerHTML = '';
                 ui.metadataLoadingSpinner.classList.remove('hidden');
                 // Request metadata
-                sendMessage({ command: 'getTrackMetadata', trackId: currentTrack.trackId, artist: currentTrack.artist, album: currentTrack.album });
+                if (trackId) {
+                    sendMessage({ command: 'getTrackMetadata', trackId: trackId, artist: currentTrack.artist, album: currentTrack.album });
+                }
             } else {
                 // We have metadata, draw visuals (waveform and bio)
                 // Calculate 0-1 ratio for visuals
@@ -1381,12 +1468,32 @@
             ui.nowPlayingYearSeparator.classList.toggle('hidden', !(track.album && track.year));
 
             // It re-uses the name already stored in the footer
-            ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${ui.footerRendererName.textContent}`;
+            if (ui.nowPlayingRenderer) {
+                const rendererName = (ui.footerRendererName && ui.footerRendererName.textContent) ? ui.footerRendererName.textContent : 'Local Playback';
+                ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${rendererName}`;
+            }
+
+            // Sync modal playback controls
+            if (ui.npPlayPauseBtn) {
+                const isPlaying = state && state.state === 'playing';
+                const icon = ui.npPlayPauseBtn.querySelector('i');
+                if (icon) icon.className = isPlaying ? 'bi bi-pause-circle-fill' : 'bi bi-play-circle-fill';
+            }
+            if (ui.npShuffleBtn) {
+                ui.npShuffleBtn.classList.toggle('text-amber-400', !!shuffleMode);
+                ui.npShuffleBtn.classList.toggle('text-gray-400', !shuffleMode);
+            }
+            if (ui.npRepeatBtn) {
+                ui.npRepeatBtn.classList.toggle('text-amber-400', repeatMode !== 'none');
+                ui.npRepeatBtn.classList.toggle('text-gray-400', repeatMode === 'none');
+                const icon = ui.npRepeatBtn.querySelector('i');
+                if (icon) icon.className = repeatMode === 'one' ? 'bi bi-repeat-1' : 'bi bi-repeat';
+            }
 
             // Use the 'state' object that was passed in
-            ui.nowPlayingTimeCurrent.textContent = formatTime(state.elapsed);
-            const duration = track.duration || state.duration || 0;
-            ui.nowPlayingTimeDuration.textContent = formatTime(duration);
+            if (ui.nowPlayingTimeCurrent) ui.nowPlayingTimeCurrent.textContent = formatTime((state && state.elapsed) || 0);
+            const duration = track.duration || (state && state.duration) || 0;
+            if (ui.nowPlayingTimeDuration) ui.nowPlayingTimeDuration.textContent = formatTime(duration);
 
             // Pass the 0-1 ratio to the drawing function
             updateNowPlayingScreenVisuals(progressRatio);
@@ -1411,18 +1518,59 @@
                 ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height);
             }
 
-            // 2. Draw Artist/Album Bio
+            // 2. Draw Artist/Album Bio or Rich Audiophile Specs
             if (metadata && metadata.info) {
                 ui.metadataLoadingSpinner.classList.add('hidden');
                 let bioHtml = '';
-                if (metadata.info.artistBio) {
-                    bioHtml += `<h4 class="font-semibold text-white mb-2">${currentTrack.artist}</h4><p class="text-gray-300">${metadata.info.artistBio}</p>`;
+                const hasBio = metadata.info.artistBio && !metadata.info.artistBio.includes("No artist biography found");
+                const hasAlbum = metadata.info.albumBio && !metadata.info.albumBio.includes("No album information found");
+                if (hasBio) {
+                    bioHtml += `<h4 class="font-semibold text-white mb-2">${currentTrack.artist}</h4><p class="text-gray-300 leading-relaxed">${metadata.info.artistBio}</p>`;
                 }
-                if (metadata.info.albumBio) {
-                     bioHtml += `<h4 class="font-semibold text-white mt-4 mb-2">${currentTrack.album}</h4><p class="text-gray-300">${metadata.info.albumBio}</p>`;
+                if (hasAlbum) {
+                     bioHtml += `<h4 class="font-semibold text-white mt-4 mb-2">${currentTrack.album}</h4><p class="text-gray-300 leading-relaxed">${metadata.info.albumBio}</p>`;
                 }
-                if (bioHtml === '') {
-                    bioHtml = '<p class="text-gray-400">No additional information available.</p>';
+                if (!hasBio && !hasAlbum) {
+                    // Render rich audiophile technical details card
+                    bioHtml = `
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Format & Tier</span>
+                            <span class="text-white font-semibold text-sm">${currentTrack.format || 'FLAC'} ${currentTrack.quality ? '<span class="text-amber-400 font-normal text-xs">• ' + currentTrack.quality + '</span>' : ''}</span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Resolution</span>
+                            <span class="text-white font-semibold text-sm">${currentTrack.bitDepth ? currentTrack.bitDepth.replace(/[- ]?(bits?|Bits?)$/i, '') + '-Bit' : ''} ${currentTrack.sampleRate ? '/ ' + currentTrack.sampleRate : ''}</span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Dynamic Range</span>
+                            <span class="text-amber-300 font-semibold text-sm">${currentTrack.drs !== undefined && currentTrack.drs !== null ? 'DR' + currentTrack.drs + ' <span class="text-gray-400 font-normal text-xs">(' + (currentTrack.drs >= 13 ? 'Wide' : currentTrack.drs >= 8 ? 'Good' : 'Compressed') + ')</span>' : 'DR N/A'}</span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Channels</span>
+                            <span class="text-white font-semibold text-sm">${currentTrack.channels === 1 ? 'Mono (1.0)' : 'Stereo (2.0)'}</span>
+                        </div>
+                        ${currentTrack.bitrate ? `
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Bitrate</span>
+                            <span class="text-white font-semibold text-sm">${Math.round(currentTrack.bitrate / 1000)} kbps</span>
+                        </div>` : ''}
+                        ${currentTrack.track ? `
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Track Number</span>
+                            <span class="text-white font-semibold text-sm">#${currentTrack.track} ${currentTrack.disc ? '• Disc ' + currentTrack.disc : ''}</span>
+                        </div>` : ''}
+                        ${currentTrack.year ? `
+                        <div class="p-2 rounded-lg bg-black/20">
+                            <span class="text-gray-400 block font-medium">Release Year</span>
+                            <span class="text-white font-semibold text-sm">${currentTrack.year}</span>
+                        </div>` : ''}
+                        ${currentTrack.path ? `
+                        <div class="col-span-2 sm:col-span-4 p-2 rounded-lg bg-black/20 border border-white/5 truncate">
+                            <span class="text-gray-400 block font-medium text-[11px]">Source File</span>
+                            <span class="text-gray-300 font-mono text-[11px] truncate block" title="${currentTrack.path}">${currentTrack.path}</span>
+                        </div>` : ''}
+                    </div>`;
                 }
                 ui.nowPlayingMetadataContent.innerHTML = bioHtml;
 
@@ -1458,39 +1606,38 @@
             if (!waveformData || waveformData.length === 0) return;
 
             const points = waveformData.length / 2;
-            const barWidth = Math.max(1, width / points);
+            const barWidth = Math.max(1.5, (width / points) - 0.5);
             const progressPoint = width * progressPercentage;
 
             const playedPath = new Path2D();
             const unplayedPath = new Path2D();
 
-            //for (let i = 0; i < waveformData.length; i += 2) {
-            //    const x = (i / 2) * barWidth;
-            //    const min = (waveformData[i] || 0) * center;
-            //    const max = (waveformData[i + 1] || 0) * center;
-            //    const barHeight = Math.max(1, max - min);
-            //    const path = (x < progressPoint) ? playedPath : unplayedPath;
-            //    path.rect(x, center + min, barWidth, barHeight);
-            //}
             for (let i = 0; i < waveformData.length; i += 2) {
-                const x = (i / 2) * barWidth;
-
+                const x = (i / 2) * (width / points);
                 const min = waveformData[i] || 0;
                 const max = waveformData[i + 1] || 0;
 
-                // convert to canvas coords
                 const yTop = center + min * center;
                 const yBottom = center + max * center;
+                const barHeight = Math.max(2, yBottom - yTop);
 
-                const barHeight = Math.max(1, yBottom - yTop);
-
-                const path = (x < progressPoint) ? playedPath : unplayedPath;
-
-                path.rect(x, yTop, barWidth, barHeight);
+                const path = (x <= progressPoint) ? playedPath : unplayedPath;
+                if (path.roundRect) {
+                    path.roundRect(x, yTop, barWidth, barHeight, 1);
+                } else {
+                    path.rect(x, yTop, barWidth, barHeight);
+                }
             }
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+            // Played bars: vibrant gold gradient
+            const playedGrad = ctx.createLinearGradient(0, 0, 0, height);
+            playedGrad.addColorStop(0, '#FFE082');
+            playedGrad.addColorStop(1, '#FFB300');
+            ctx.fillStyle = playedGrad;
             ctx.fill(playedPath);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+
+            // Unplayed bars: crisp translucent white
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
             ctx.fill(unplayedPath);
         }
 

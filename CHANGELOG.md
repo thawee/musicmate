@@ -5,6 +5,55 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.20] - 2026-08-14
+
+### Added
+- **"Incoming Tracks" Triage & Natural Album Sorting (`TrackDao`, `strings.xml`, `Constants`, `BaseServer`)**:
+  - Renamed "Recently Added" to "Incoming Tracks" across the mobile app, database DAO, and WebUI / UPnP server routing to reflect unmanaged audio triage.
+  - Updated DAO query ordering to group tracks naturally by artist, album, and track sequence: `ORDER BY artist ASC, album ASC, CAST(track AS INTEGER) ASC, title ASC`.
+- **Music Center Server Panel UI/UX Refinements (`AudioHubBottomSheet`, `view_action_server_management_bottom_sheet.xml`)**:
+  - Added direct 1-tap "Open in Browser" action (`rounded_open_in_new_24`) next to the server URL to immediately preview/control the WebUI on the host device.
+  - Added dynamic streaming engine explainer captions under the `SonicNIO / CoreHTTP / Netty` toggle group describing real-time architecture advantages.
+  - Added DLNA 1.5 / UPnP AV active broadcast service badge with port indication.
+  - Modernized "Stop MediaServer" with Material 3 destructive tonal styling and translucent crimson background.
+- **Discover Music Folders Dialog UI/UX Modernization (`MainActivity`, `view_action_directories.xml`, `view_action_listview_item.xml`)**:
+  - Replaced crude default programmatic buttons with sleek Material 3 Tonal storage chips (`+ Primary`, `+ SD Card`) featuring folder icons and gold accents.
+  - Replaced rigid 220dp list height with dynamic auto-sizing (`setListViewHeightBasedOnChildren`) so the list card perfectly hugs the directory items with no empty black void.
+  - Enhanced directory rows with folder icons, middle-ellipsized 2-line path visibility, and red ripple delete icon buttons.
+  - Polished checkboxes and action buttons ("Cancel" / "Start Scan") with gold Material 3 filled styling.
+- **WebUI Now Playing Screen & Waveform Experience Upgrade (`index.html`, `MusicInfoRepository`)**:
+  - Added full playback transport controls (Shuffle, Previous, large Play/Pause, Next, Repeat) directly inside the fullscreen Now Playing modal.
+  - Added click-to-seek support on the waveform visualizer to scrub tracks directly by clicking the waveform bars.
+  - Styled waveform with radiant gold linear gradients (`#FFE082` -> `#FFB300`) on played bars and crisp translucent white on unplayed bars.
+  - Replaced raw "No artist biography found" / "No album information found" placeholders with a rich, glassmorphism **Audiophile Technical Specifications** grid (Container, Format, Resolution, Dynamic Range Score, Channel Mode, Bitrate, Track #, Source Path).
+  - Made Now Playing instantly accessible by clicking the bottom bar album art, song title, artist text, or new expand button (`bi-arrows-angle-expand`), plus global hotkey `N` (open/close) and `Escape` (dismiss).
+- **100% Offline Self-Contained WebUI (`index.html`, `tailwindcss.min.js`)**:
+  - Bundled Tailwind CSS locally in `app/src/main/assets/webui/js/tailwindcss.min.js` and removed external CDN dependency (`https://cdn.tailwindcss.com`), allowing full WebUI functionality on standalone Wi-Fi hotspots and offline local networks without internet access.
+
+### Fixed
+- **Android 13+ Bluetooth Codec Reflection & Cache Invalidation (`AudioOutputHelper`, `MusicMateServiceImpl`)**:
+  - Guarded against hidden `BluetoothA2dp.getCodecStatus()` reflection invocations that throw `SecurityException` (`CDM association / BLUETOOTH_PRIVILEGED required`) on API 33+.
+  - Prevented `refreshBluetoothCodecStatus()` from clearing cached Bluetooth codec details on Android 13+, ensuring data received via `CODEC_CONFIG_CHANGED` broadcasts persists until explicit device disconnection.
+  - Registered broadcast receiver with `Context.RECEIVER_EXPORTED` and attached framework `ClassLoader` to ensure safe unmarshalling of `android.bluetooth.BluetoothCodecStatus` parcelables.
+- **MediaSessionManager Permission Guard (`MusicMateServiceImpl`)**:
+  - Replaced naked `mediaSessionManager.getActiveSessions(null)` calls with guarded `refreshExternalPlayersSafe()` using explicit `MediaNotificationListener` component checks to prevent `SecurityException: Missing permission to control media`.
+- **DLNA UPnP Auto-Rebind on Wi-Fi Roaming & Doze Wakeup (`MediaServerHubImpl`)**:
+  - Implemented `onLinkPropertiesChanged` and IP change tracking (`lastBoundIp`) in `MediaServerHubImpl` to detect DHCP renewals, Wi-Fi mesh AP roaming, and Doze wakeups.
+  - Added debounced auto-restart logic (`restart()`) so the jUPnP stack and HTTP Web Server seamlessly rebind to the new IP address without requiring the user to force-close and restart the app.
+  - Strengthened `acquireLocks()` with `isHeld()` validation to re-acquire `WifiManager.MulticastLock` and `WifiLock` dynamically on network restoration, preventing Android from dropping SSDP multicast packets (`239.255.255.250:1900`).
+- **HttpCore 5 Benign Client Disconnect Logging (`HttpCoreWebServerImpl`)**:
+  - Added `isClientDisconnect()` filtering in `HttpCoreWebServerImpl` to route normal client disconnects (`Connection reset by peer`, `Broken pipe`, `ClosedChannelException` during track seeking or browser tab close) to debug logs (`Log.d`) instead of generating full error stack traces (`Log.e`).
+- **Netty 4.2 Web Server 10/10 Architecture Upgrade (`NettyWebServerImpl`)**:
+  - Attached `ChannelFutureListener` on zero-copy `DefaultFileRegion` stream completion to guarantee `RandomAccessFile` / `FileChannel` cleanup, eliminating file descriptor leaks during rapid scrubbing.
+  - Implemented REST JSON POST/PUT command dispatch via `wsHandler.handleCommand()` with `Server: getServerSignature()` response injection.
+  - Added ETag caching with HTTP `304 NOT_MODIFIED` handling for lightning-fast WebUI asset and artwork loading.
+  - Filtered benign socket disconnects in `exceptionCaught` handlers across HTTP and WebSocket pipelines.
+- **WebUI Now Playing Stability & Null-Safety (`index.html`)**:
+  - Implemented strict null-checks (`currentPlaybackState || {}`) when interacting with the mini-player before the first WebSocket broadcast arrives, preventing `TypeError` crashes.
+  - Added `e.stopPropagation()` to cover art click listeners to prevent duplicate simultaneous popups caused by nested event bubbling.
+  - Fixed play/pause and repeat mode toggle visual desync by correctly mapping `shuffleMode`, `repeatMode`, and `state.state` properties.
+  - Cleaned redundant `-Bit` suffixes from Audiophile resolution specs to elegantly render as `16-Bit / 44.1kHz`.
+
 ## [3.18.19] - 2026-08-14
 
 ### Added

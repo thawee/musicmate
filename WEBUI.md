@@ -13,7 +13,7 @@ The Web UI is a modern, responsive Single Page Application (SPA) designed to ser
 *   **Communication**: WebSockets for real-time state synchronization.
 
 ### Key Features
-*   **Library Browser**: Hierarchical browsing of Artists, Genres, Playlists, and Recently Added tracks.
+*   **Library Browser**: Hierarchical browsing of Artists, Genres, Playlists, and Incoming Tracks.
 *   **Immersive "Now Playing"**: Full-screen view with a dynamic waveform, high-res art, and artist biographies.
 *   **Audio Quality Badges**: Detailed technical info (Format, Bit Depth, Sample Rate, and Dynamic Range Score) displayed with contextual logic.
 *   **Multi-Renderer Control**: Switch playback between local device and discovered UPnP/DLNA targets.

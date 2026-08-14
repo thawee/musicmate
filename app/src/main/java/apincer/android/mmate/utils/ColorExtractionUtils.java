@@ -16,12 +16,14 @@ public class ColorExtractionUtils {
      * @param albumArt    The album art bitmap to extract colors from.
      * @param background  The root background view to tint with the dominant color.
      * @param titleText   The title text view to tint with a high-contrast color.
-     * @param seekBar     The progress bar or seek bar to tint with the vibrant color.
      */
     public static void applyDynamicColorsFromAlbumArt(Bitmap albumArt, View background, TextView titleText, ProgressBar seekBar) {
         if (albumArt == null || albumArt.isRecycled()) return;
 
-        Palette.from(albumArt).generate(palette -> {
+        Bitmap safeAlbumArt = BitmapHelper.ensureSoftwareBitmap(albumArt);
+        if (safeAlbumArt == null || safeAlbumArt.isRecycled()) return;
+
+        Palette.from(safeAlbumArt).generate(palette -> {
             if (palette != null) {
                 // Get the dominant and vibrant colors
                 Palette.Swatch dominantSwatch = palette.getDominantSwatch();

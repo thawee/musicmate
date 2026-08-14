@@ -153,7 +153,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 │  - Storage & Collection Stats│              │  - Manage Library Folders    │
 │  - Browse (All, Artist, Genre)│              │  - App Settings & Features   │
 │  - Curate (Collections)      │              │  - Permissions & Storage     │
-│  - Discover (Recently Added) │              │  - Diagnostics & About       │
+│  - Discover (Incoming Tracks)│              │  - Diagnostics & About       │
 │  - Quality Grade Filtering   │              │                              │
 │  menu_music_collection.xml   │              │  menu_music_mate.xml         │
 └──────────────────────────────┘              └──────────────────────────────┘
@@ -163,7 +163,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
    - **Header (`view_header_left_menu.xml`):** Displays total song count, total library duration, and a visual multi-storage space usage bar (`UIUtils.buildStoragesStatus`).
    - **Browse Group:** All Songs, Artists, Genres.
    - **Curate Group:** Collections / Folders.
-   - **Discover Group:** Recently Added, Similar Songs.
+   - **Discover Group:** Incoming Tracks, Similar Songs.
    - **Audiophile Group:** Quality Grade (Hi-Res, FLAC, Lossy classification).
 
 2. **Right Slide Menu — App Control & Diagnostics (`menu_music_mate.xml`):**

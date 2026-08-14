@@ -183,7 +183,11 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
 
                         @Override
                         public void exception(IOSession session, Exception ex) {
-                            Log.e(TAG, "Session exception: " + session.getRemoteAddress(), ex);
+                            if (isClientDisconnect(ex)) {
+                                Log.d(TAG, "Client disconnected: " + session.getRemoteAddress() + " (" + ex.getMessage() + ")");
+                            } else {
+                                Log.e(TAG, "Session exception: " + session.getRemoteAddress(), ex);
+                            }
                         }
 
                         @Override
@@ -208,6 +212,27 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         } catch (Exception ex) {
             throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
         }
+    }
+
+    private static boolean isClientDisconnect(Exception ex) {
+        if (ex == null) return false;
+        String msg = ex.getMessage();
+        if (msg != null) {
+            String lower = msg.toLowerCase();
+            if (lower.contains("connection reset") || lower.contains("broken pipe")
+                    || lower.contains("connection abort") || lower.contains("closed by peer")
+                    || lower.contains("shutdown")) {
+                return true;
+            }
+        }
+        Throwable cause = ex.getCause();
+        if (cause instanceof Exception && cause != ex) {
+            return isClientDisconnect((Exception) cause);
+        }
+        return ex instanceof java.nio.channels.ClosedChannelException
+                || ex instanceof java.io.EOFException
+                || ex instanceof java.net.SocketTimeoutException
+                || ex instanceof java.net.SocketException;
     }
 
     @Override
