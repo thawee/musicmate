@@ -98,7 +98,7 @@ coilkt-coil3 = { module = "io.coil-kt.coil3:coil", version = "3.5.0" }
 coilkt-coil3-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version = "3.5.0" }
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
 chrisbanes-photoview = { module = "com.github.chrisbanes:PhotoView", version = "2.3.0" }
-philjay-mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version = "v3.1.0" }
+
 sparrow007-carouselrecyclerview = { module = "com.github.sparrow007:carouselrecyclerview", version = "1.2.6" }
 iwgang-simplifyspan = { module = "com.github.iwgang:simplifyspan", version = "2.2" }
 vanniktech-textbuilder = { module = "com.vanniktech:textbuilder", version = "0.5.0" }

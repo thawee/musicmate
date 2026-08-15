@@ -740,18 +740,29 @@ public class MediaServerHubImpl implements MediaServerHub {
         List<RemoteDevice> result = new ArrayList<>();
 
         try {
-            List<Device> devices = new ArrayList<>(upnpService.getRegistry().getDevices());
-
-            for (Device device : devices) {
-                if (device instanceof RemoteDevice &&
-                        MEDIA_RENDERER_DEVICE_TYPE.equals(device.getType())) {
-
-                    result.add((RemoteDevice) device);
+            java.util.Collection<RemoteDevice> devices = upnpService.getRegistry().getRemoteDevices();
+            if (devices != null) {
+                for (RemoteDevice device : devices) {
+                    findRenderersRecursively(device, result);
                 }
             }
         } catch (Exception ignored) {}
 
         return result;
+    }
+
+    private void findRenderersRecursively(RemoteDevice device, List<RemoteDevice> result) {
+        if (device == null) return;
+        
+        if (device.getType() != null && "MediaRenderer".equalsIgnoreCase(device.getType().getType())) {
+            result.add(device);
+        }
+        
+        if (device.hasEmbeddedDevices()) {
+            for (RemoteDevice embedded : device.getEmbeddedDevices()) {
+                findRenderersRecursively(embedded, result);
+            }
+        }
     }
 
     /**
@@ -863,17 +874,24 @@ public class MediaServerHubImpl implements MediaServerHub {
      * Finds a service recursively within a device and its embedded devices.
      */
     private Service findServiceRecursively(Device device, UDAServiceType serviceType) {
-        if (device == null) return null;
+        if (device == null || serviceType == null) return null;
 
-        Service service = device.findService(serviceType);
-        if (service != null) {
-            return service;
+        // Find service ignoring version
+        if (device.getServices() != null) {
+            for (Service s : device.getServices()) {
+                if (s.getServiceType() != null && 
+                    serviceType.getType().equalsIgnoreCase(s.getServiceType().getType())) {
+                    return s;
+                }
+            }
         }
 
-        for (Device embeddedDevice : device.getEmbeddedDevices()) {
-            service = findServiceRecursively(embeddedDevice, serviceType);
-            if (service != null) {
-                return service;
+        if (device.hasEmbeddedDevices()) {
+            for (Device embeddedDevice : device.getEmbeddedDevices()) {
+                Service service = findServiceRecursively(embeddedDevice, serviceType);
+                if (service != null) {
+                    return service;
+                }
             }
         }
         return null;

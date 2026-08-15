@@ -29,13 +29,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.utils.ColorTemplate;
+
 import com.vanniktech.textbuilder.TextBuilder;
 
 import java.text.DecimalFormat;
@@ -349,52 +343,10 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         private void setupQualityChart(View v, Map<String, Integer> encList, String title) {
-            PieChart chart = v.findViewById(R.id.chartResolutions);
-            chart.setUsePercentValues(false);
-            //chart.setUsePercentValues(true);
-            chart.getDescription().setEnabled(false);
-            chart.setExtraOffsets(0, 4, 0, 0);
-
-            chart.setDragDecelerationFrictionCoef(0.95f);
-
-            chart.setDrawRoundedSlices(true);
-            chart.setDrawHoleEnabled(true);
-            chart.setHoleColor(Color.TRANSPARENT);
-
-            //chart.setHoleRadius(42f);
-            chart.setHoleRadius(32f);
-            chart.setTransparentCircleRadius(56f);
-
-            chart.setDrawCenterText(false);
-            chart.setCenterText("Songs");
-            chart.setCenterTextColor(Color.WHITE);
-
-            chart.setRotationAngle(0);
-            // disable rotation of the chart by touch
-            chart.setRotationEnabled(true);
-            chart.setHighlightPerTapEnabled(false);
-
-            Legend l = chart.getLegend();
-            l.setTextColor(Color.WHITE);
-            l.setWordWrapEnabled(true);
-
-            // entry label styling
-            chart.setEntryLabelColor(Color.WHITE);
-            chart.setDrawEntryLabels(false);
-            //  chart.setEntryLabelTypeface(tfRegular);
-            chart.setEntryLabelTextSize(10f);
-            setDataForEncodings(chart, encList, title);
-        }
-
-        private void setDataForEncodings(PieChart chart, Map<String, Integer> encList, String title) {
-            ArrayList<PieEntry> entries = new ArrayList<>();
-
-            // NOTE: The order of the entries when being added to the entries array determines their position around the center of
-            // the chart.
-            // add a lot of colors
-            ArrayList<Integer> colors = new ArrayList<>();
+            apincer.android.mmate.ui.widget.QualityPieChartView chart = v.findViewById(R.id.chartResolutions);
+            
+            List<apincer.android.mmate.ui.widget.QualityPieChartView.PieEntry> entries = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
-
             mappedColors.put(Constants.LEGEND_MQA, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
             mappedColors.put(Constants.LEGEND_DSD, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
             mappedColors.put(Constants.LEGEND_HIRES, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
@@ -403,51 +355,11 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put(Constants.LEGEND_LOSSY, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
 
             for(String enc: encList.keySet()) {
-                entries.add(new PieEntry(encList.get(enc), enc));
-                if(mappedColors.containsKey(enc)) {
-                    colors.add(mappedColors.get(enc));
-                }else {
-                    colors.add(ColorTemplate.COLORFUL_COLORS[0]);
-                }
+                int color = mappedColors.containsKey(enc) ? mappedColors.get(enc) : Color.GRAY;
+                entries.add(new apincer.android.mmate.ui.widget.QualityPieChartView.PieEntry(enc, encList.get(enc), color));
             }
 
-            PieDataSet dataSet = new PieDataSet(entries, title);
-            //setting size of the value
-            dataSet.setValueLinePart1OffsetPercentage(0.0f);
-            dataSet.setValueLinePart1Length(1f);
-            dataSet.setValueLinePart2Length(0.4f);
-
-            dataSet.setValueFormatter(new ValueFormatter() {
-                private final DecimalFormat mFormat = new DecimalFormat("#,###");
-                @SuppressLint("DefaultLocale")
-                @Override
-                public String getFormattedValue(float value) {
-                   // return String.format("%.1f", value); // Format to one decimal place
-                    return mFormat.format(value);
-                }
-            });
-
-            dataSet.setDrawIcons(false);
-            dataSet.setSliceSpace(2f); //space between each slice
-            dataSet.setValueLineColor(Color.WHITE);
-            dataSet.setSelectionShift(2f);
-            //setting position of the value
-            dataSet.setYValuePosition(PieDataSet.ValuePosition.INSIDE_SLICE); // display value outside with pointing line
-            dataSet.setUsingSliceColorAsValueLineColor(true);
-            dataSet.setAutomaticallyDisableSliceSpacing(true);
-
-            dataSet.setColors(colors);
-
-            PieData data = new PieData(dataSet);
-         //   data.setValueFormatter(new PercentFormatter());
-            data.setValueTextSize(10f);
-            data.setValueTextColor(Color.BLACK);
-            chart.setData(data);
-
-            // undo all highlights
-            chart.highlightValues(null);
-
-            chart.invalidate();
+            chart.setEntries(entries);
         }
 
     }

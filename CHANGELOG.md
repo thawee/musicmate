@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.18.20] - 2026-08-14
 
 ### Added
-- **"Incoming Tracks" Triage & Natural Album Sorting (`TrackDao`, `strings.xml`, `Constants`, `BaseServer`)**:
+- **Premium Scroll & Fast-Scroller Unification (`MainActivity`, `activity_main.xml`)**:
+  - Re-engineered the scroll-to-top interaction by placing a meticulously styled 36dp "Go to top" frosted glass FAB securely aligned with the right-edge `FastScroller`.
+  - Color-matched the new compact FAB with the obsidian deep glass of the bottom navigation dock for a seamless visual flow.
+- **Custom Native Quality Pie Chart & MPAndroidChart Removal (`QualityPieChartView`, `AboutActivity`)**:
+  - Completely stripped out the heavy, unmaintained `MPAndroidChart` bloatware (~2MB savings).
+  - Designed a 150-line, 0-dependency lightweight custom Android `View` (`QualityPieChartView`) utilizing direct native Canvas APIs to mathematically render the premium audiophile encoding chart on the About page.
+- **Enhanced Recursive DLNA Renderer Discovery (`MediaServerHubImpl`)**:
+  - Refactored UPnP service resolution to traverse deeply nested/embedded UPnP renderers.
+  - Removed rigid version enforcing (e.g. `MediaRenderer:1`) to gracefully discover newer generation AVTransport (V2/V3) rendering control clients.
+- **Incoming Tracks Triage (`TrackDao`, etc)**:
   - Renamed "Recently Added" to "Incoming Tracks" across the mobile app, database DAO, and WebUI / UPnP server routing to reflect unmanaged audio triage.
   - Updated DAO query ordering to group tracks naturally by artist, album, and track sequence: `ORDER BY artist ASC, album ASC, CAST(track AS INTEGER) ASC, title ASC`.
 - **Music Center Server Panel UI/UX Refinements (`AudioHubBottomSheet`, `view_action_server_management_bottom_sheet.xml`)**:

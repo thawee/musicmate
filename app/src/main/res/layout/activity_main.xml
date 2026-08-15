@@ -181,28 +181,24 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- 🔹 Scroll-to-top FAB (Liquid Glass) -->
+    <!-- 🔹 Premium Scroll-to-top FAB (Aligned near Fast Scroller) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_scroll_to_top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginStart="@dimen/dimen_8_dp"
-        android:layout_marginEnd="@dimen/dimen_8_dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
         android:layout_marginBottom="112dp"
         android:src="@drawable/rounded_arrow_shape_up_stack_24"
         android:contentDescription="@string/scroll_to_top"
-        app:fabSize="mini"
+        app:fabCustomSize="36dp"
+        app:maxImageSize="20dp"
         android:visibility="gone"
         tools:visibility="visible"
-
         app:backgroundTint="@null"
         android:background="@drawable/glass_fab_background"
         app:elevation="4dp"
         app:tint="?attr/colorOnSurface"/>
-
-    <!-- 🔹 Scroll-to-top FAB (Liquid Glass) -->
-
     <!-- 🔹 Floating Glass Dock (Unified Navigation & Playback) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"

@@ -399,6 +399,7 @@ public class MainActivity extends AppCompatActivity {
             fabScrollToTop.getBackground().setTint(alphaColor);
             fabScrollToTop.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
+
     }
 
     @Override
@@ -723,35 +724,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
-        // Instant scroll for very long lists
         fabScrollToTop.setOnClickListener(v -> {
             mRecyclerView.stopScroll();
             mRecyclerView.scrollToPosition(0);
-            mRecyclerView.postDelayed(() ->
-                    mRecyclerView.smoothScrollBy(0, 0), 10);
+            mRecyclerView.postDelayed(() -> mRecyclerView.smoothScrollBy(0, 0), 10);
         });
 
         ViewCompat.setOnApplyWindowInsetsListener(fabScrollToTop, (v, insets) -> {
-            // Get the system bar insets (which include the navigation bar)
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-
-            // Get the base margin you want from your dimensions
             int baseMargin = getResources().getDimensionPixelSize(R.dimen.dimen_64_dp);
-
-            // Get the view's existing layout parameters
             ViewGroup.LayoutParams params = v.getLayoutParams();
-
-            // Check if they are MarginLayoutParams (which they should be for a FAB)
             if (params instanceof ViewGroup.MarginLayoutParams marginParams) {
-
-                // Set the new bottom margin by adding the base margin and the inset
                 marginParams.bottomMargin = baseMargin + bottomInset;
-
-                // Re-apply the updated layout parameters to the view
                 v.setLayoutParams(marginParams);
             }
-
-            // Return the insets so other views can consume them
             return insets;
         });
 
@@ -805,21 +791,16 @@ public class MainActivity extends AppCompatActivity {
 
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                // --- FAB behavior ---
                 if (dy > 0) {
-                    // Scrolling down (list moving up)
                     if (fabScrollToTop.isShown()) {
                         fabScrollToTop.hide();
                     }
                 } else if (dy < 0) {
-                    // Scrolling up (list moving down)
-                    // Only show if we're not at the very top
                     if (firstVisibleItemPosition > 0 && !fabScrollToTop.isShown()) {
                         fabScrollToTop.show();
                     }
                 }
 
-                // Safety check: Always hide if we're at the top
                 if (firstVisibleItemPosition == 0 && fabScrollToTop.isShown()) {
                     fabScrollToTop.hide();
                 }
