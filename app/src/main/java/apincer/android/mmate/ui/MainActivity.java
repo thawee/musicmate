@@ -143,6 +143,7 @@ import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private androidx.compose.ui.platform.ComposeView composeListView;
 
     // Constants
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 8; //16
@@ -164,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
     // UI components
     private ResideMenu mResideMenu;
-    private MusicTagAdapter adapter;
+    private apincer.music.core.model.SearchCriteria currentCriteria = new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY);
     private MySelectionTracker mTracker;
     private final List<Track> selections = new ArrayList<>();
     private View mHeaderPanel;
@@ -172,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
     private SearchView headerSearchView;
     private TextView headerStatText;
 
-    private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private WorkInfo.State lastWorkState = null;
     private View scanProgressDots;
@@ -214,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
             MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
-            adapter.setPlaybackService(playbackService);
                     apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
 
             playbackService.subscribePlaybackState(
@@ -233,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setNowPlaying(Track song, PlaybackState playbackState) {
         if (song != null) {
-            mRecyclerView.post(() -> {
+            composeListView.post(() -> {
                 PlaybackState.State newStateEnum = playbackState != null ? playbackState.currentState : null;
                 boolean songChanged = !song.equals(previouslyPlaying);
                 boolean stateChanged = (lastStateEnum != newStateEnum);
@@ -241,8 +240,7 @@ public class MainActivity extends AppCompatActivity {
                 lastPlaybackState = playbackState;
                 lastStateEnum = newStateEnum;
 
-                if (adapter != null) {
-                    adapter.setPlaybackState(playbackState);
+                if (true) {
                     apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING);
 
                 }
@@ -263,13 +261,10 @@ public class MainActivity extends AppCompatActivity {
 
                     // refresh previous playing music item
                     if (previouslyPlaying != null) {
-                        adapter.notifyItemChanged(previouslyPlaying);
                     }
-                    adapter.notifyItemChanged(song);
                     updateGlassyPanelsColor(song);
                 } else if (stateChanged) {
                     // refresh current playing music item only when play/pause state changes
-                    adapter.notifyItemChanged(song);
                 }
 
                 if (nowPlayingLabel != null) {
@@ -279,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                 updateFloatingPlaybackBar(song, playbackState);
             });
         } else {
-            mRecyclerView.post(() -> {
+            composeListView.post(() -> {
                 if (nowPlayingLabel != null) {
                     nowPlayingLabel.setText(R.string.app_name);
                 }
@@ -429,11 +424,11 @@ public class MainActivity extends AppCompatActivity {
                         if (data != null && data.hasExtra(KEY_FILTER_TYPE)) {
                             String filterType = data.getStringExtra(KEY_FILTER_TYPE);
                             String filterText = data.getStringExtra(KEY_FILTER_KEYWORD);
-                            if (adapter.getCriteria() != null) {
-                                adapter.getCriteria().setFilterType(filterType);
-                                adapter.getCriteria().setFilterText(filterText);
+                            if (currentCriteria != null) {
+                                currentCriteria.setFilterType(filterType);
+                                currentCriteria.setFilterText(filterText);
                             }
-                            viewModel.loadMusicItems(adapter.getCriteria());
+                            viewModel.loadMusicItems(currentCriteria);
                         } else {
                             viewModel.reloadMusicItems();
                         }
@@ -469,7 +464,7 @@ public class MainActivity extends AppCompatActivity {
         setupObserveViewModel();
 
         // load music items
-        viewModel.loadMusicItems(adapter.getCriteria());
+        viewModel.loadMusicItems(currentCriteria);
 
         // Bind to the MediaServerService as soon as this service is created
         Intent intent = new Intent(this, MusicMateServiceImpl.class);
@@ -479,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("CheckResult")
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
-            mRecyclerView.post(() -> {
+            composeListView.post(() -> {
                 // If user is in selection mode, preserve active selection keys
                 List<Long> selectedPositions = null;
                 if (actionMode != null && mTracker != null && mTracker.hasSelection()) {
@@ -488,20 +483,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // Save layout manager state to restore scroll position
-                android.os.Parcelable state = null;
-                if (mRecyclerView.getLayoutManager() != null) {
-                    state = mRecyclerView.getLayoutManager().onSaveInstanceState();
-                }
 
-                adapter.setMusicTags(musicTags);
                 apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
                 swipeRefreshLayout.setRefreshing(false);
                 // Update header after adapter is populated; stats observer will correct later
                 updateHeaderPanel(viewModel.searchStats.getValue());
 
-                if (state != null && mRecyclerView.getLayoutManager() != null) {
-                    mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
-                }
 
                 if (selectedPositions != null && !selectedPositions.isEmpty() && mTracker != null) {
                     for (Long pos : selectedPositions) {
@@ -521,7 +508,7 @@ public class MainActivity extends AppCompatActivity {
         // When DB aggregate stats arrive, refresh the subtitle with accurate totals
         viewModel.searchStats.observe(this, stats -> updateHeaderPanel(stats));
 
-        viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
+        viewModel.musicItemsLoading.observe(this, isLoading -> composeListView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
                 .getWorkInfosForUniqueWorkLiveData("MusicScanWork")
@@ -549,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             // Only trigger reload/ui update if we transitioned from RUNNING to a finished state
                             if (lastWorkState == WorkInfo.State.RUNNING) {
-                                viewModel.loadMusicItems(adapter.getCriteria());
+                                viewModel.loadMusicItems(currentCriteria);
                             }
                         }
                         lastWorkState = currentState;
@@ -705,14 +692,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Initialize adapter
-        adapter = new MusicTagAdapter(viewModel.getTagRepository(), searchCriteria);
-        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onChanged() {
-                super.onChanged();
-                updateHeaderPanel();
-            }
-        });
 
         // Setup RecyclerView
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
@@ -730,9 +709,9 @@ public class MainActivity extends AppCompatActivity {
 
         fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
         fabScrollToTop.setOnClickListener(v -> {
-            mRecyclerView.stopScroll();
-            mRecyclerView.scrollToPosition(0);
-            mRecyclerView.postDelayed(() -> mRecyclerView.smoothScrollBy(0, 0), 10);
+            
+            
+            
         });
 
         ViewCompat.setOnApplyWindowInsetsListener(fabScrollToTop, (v, insets) -> {
@@ -746,165 +725,19 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        mRecyclerView = findViewById(R.id.recycler_view);
-        androidx.compose.ui.platform.ComposeView composeListView = findViewById(R.id.compose_list_view);
+        composeListView = findViewById(R.id.compose_list_view);
         apincer.android.mmate.ui.compose.ListInterop.setMusicListContent(composeListView, this);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.setAdapter(adapter);
-        //Tune performance
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemViewCacheSize(10);
-        mRecyclerView.setItemAnimator(null);
-
-        // Add bottom padding to ensure last items scroll cleanly above bottom navigation dock
-        RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration((int)dpToPx(this, 96), 12);
-        mRecyclerView.addItemDecoration(itemDecoration);
-        mRecyclerView.setPreserveFocusAfterLayout(true);
-        ViewCompat.setOnApplyWindowInsetsListener(mRecyclerView, (v, insets) -> {
+        
+        ViewCompat.setOnApplyWindowInsetsListener(composeListView, (v, insets) -> {
             androidx.core.graphics.Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
             return insets;
         });
 
         // add on item touch listener to detect and block touch selections that stop a fast move/scroll
-        mRecyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                int action = e.getActionMasked();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    if (rv.getScrollState() != RecyclerView.SCROLL_STATE_IDLE) {
-                        isScrollStoppingTouch = true;
-                    }
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    rv.post(() -> isScrollStoppingTouch = false);
-                }
-                return false;
-            }
-        });
 
         // add on scroll listener
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
 
-                if (dy != 0 || dx != 0) {
-                    lastScrollEventTime = SystemClock.elapsedRealtime();
-                }
-
-                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager == null) return;
-
-                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
-                if (dy > 0) {
-                    if (fabScrollToTop.isShown()) {
-                        fabScrollToTop.hide();
-                    }
-                } else if (dy < 0) {
-                    if (firstVisibleItemPosition > 0 && !fabScrollToTop.isShown()) {
-                        fabScrollToTop.show();
-                    }
-                }
-
-                if (firstVisibleItemPosition == 0 && fabScrollToTop.isShown()) {
-                    fabScrollToTop.hide();
-                }
-
-                // --- Pagination ---
-                if (dy > 0) { // scrolling down
-                    int visibleItemCount = layoutManager.getChildCount();
-                    int totalItemCount = layoutManager.getItemCount();
-                    
-                    // Trigger load more when we're close to the bottom (e.g. within 10 items)
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 10
-                            && firstVisibleItemPosition >= 0) {
-                        viewModel.loadMoreMusicItems();
-                    }
-                }
-            }
-
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-
-                if (newState != RecyclerView.SCROLL_STATE_IDLE) {
-                    // We are DRAGGING (state 1) or SETTLING (state 2).
-                    // Update the timestamp *every time* the state changes to non-idle.
-                    lastScrollEventTime = SystemClock.elapsedRealtime();
-                } else {
-                    // We are IDLE (state 0).
-                    // Update the timestamp ONE LAST TIME as we become idle.
-                    // This ensures the guard is active for the next 500ms.
-                    lastScrollEventTime = SystemClock.elapsedRealtime();
-                }
-            }
-        });
-
-        MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
-            if (isSelectionBlocked()) return;
-
-            if (mTracker != null && mTracker.hasSelection()) {
-                if (mTracker.isSelected((long) position)) {
-                    mTracker.deselect((long) position);
-                } else {
-                    mTracker.select((long) position);
-                }
-                return;
-            }
-
-            Track tag = adapter.getMusicTag(position);
-            if(tag == null) return;
-            
-            if (view.getId() == R.id.btn_folder_play) {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    viewModel.playCollection(tag, playbackService, false);
-                    android.widget.Toast.makeText(MainActivity.this, "Playing collection", android.widget.Toast.LENGTH_SHORT).show();
-                }
-                return;
-            } else if (view.getId() == R.id.btn_folder_enqueue) {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    viewModel.playCollection(tag, playbackService, true);
-                    android.widget.Toast.makeText(MainActivity.this, "Collection added to queue", android.widget.Toast.LENGTH_SHORT).show();
-                }
-                return;
-            }
-
-            if (view.getId() == R.id.item_more_menu) {
-                showTrackPopupMenu(view, tag);
-                return;
-            }
-
-            if(tag.isContainer()) {
-                doStartRefresh(tag.getContainerType(), tag.getTitle());
-            } else {
-                // Single click always opens TagsActivity — the app's primary purpose
-                doShowEditActivity(Collections.singletonList(tag));
-            }
-        };
-        adapter.setClickListener(onListItemClick);
-        adapter.setOnCoverArtClickListener((view, position) -> {
-            if (isSelectionBlocked()) return;
-
-            if (mTracker != null && mTracker.hasSelection()) {
-                if (mTracker.isSelected((long) position)) {
-                    mTracker.deselect((long) position);
-                } else {
-                    mTracker.select((long) position);
-                }
-                return;
-            }
-
-            Track tag = adapter.getMusicTag(position);
-            if (tag != null && !tag.isContainer()) {
-                // Cover art always triggers quick play
-                if (isPlaybackServiceBound && playbackService != null) {
-                    viewModel.playTrackList(adapter.getSongs(), tag, playbackService);
-                } else {
-                    android.widget.Toast.makeText(MainActivity.this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 
             // Setup selection tracker
             mTracker = new MySelectionTracker();
@@ -918,7 +751,7 @@ public class MainActivity extends AppCompatActivity {
                     selections.clear();
                     if (count > 0) {
                         mTracker.getSelection().forEach(item -> {
-                            Track tag = adapter.getMusicTag(item.intValue());
+                            Track tag = (item.intValue() >= 0 && item.intValue() < apincer.android.mmate.ui.compose.ListInterop.getTracks().size() ? apincer.android.mmate.ui.compose.ListInterop.getTracks().get(item.intValue()) : null);
                             if (tag != null) {
                                 selections.add(tag);
                             }
@@ -939,17 +772,6 @@ public class MainActivity extends AppCompatActivity {
             mTracker.setObserver(observer);
 
         // Setup fast scroller
-        new FastScrollerBuilder(mRecyclerView)
-                .useMd1Style()
-                .setPadding(0, 0, 8, 0)
-                //.setThumbDrawable(Objects.requireNonNull(
-                //        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
-                .setPopupTextProvider((view, position) -> {
-                    Track track = adapter.getMusicTag(position);
-                    if(track != null && !isEmpty(track.getTitle())) return track.getTitle().subSequence(0,1);
-                    return "-";
-                })
-                .build();
 
         // Initialize action mode callback
         actionModeCallback = new ActionModeCallback();
@@ -1011,34 +833,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderPanel(SearchResultStats stats) {
-        SearchCriteria.TYPE type = adapter.getCriteria().getType();
+        SearchCriteria.TYPE type = currentCriteria.getType();
         Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
 
         // Prefer DB aggregate stats for accurate category-wide totals.
         // Fall back to adapter counts if stats not yet available (e.g. initial load).
         // For top-level category directories (where keyword is empty and type is not LIBRARY),
         // we display the category count itself, which is the total items in the adapter.
-        boolean isTopLevelCategoryDir = isEmpty(adapter.getCriteria().getKeyword())
+        boolean isTopLevelCategoryDir = isEmpty(currentCriteria.getKeyword())
                 && !SearchCriteria.TYPE.LIBRARY.equals(type);
-        boolean hasActiveFilter = adapter.hasFilter();
-        int count = (isTopLevelCategoryDir || hasActiveFilter) ? adapter.getTotalItems()
-                : ((stats != null) ? stats.getTotalCount() : adapter.getTotalItems());
-        long totalSize = hasActiveFilter ? adapter.getTotalSize() : ((stats != null) ? stats.getTotalSize() : adapter.getTotalSize());
-        double totalDuration = hasActiveFilter ? adapter.getTotalDuration() : ((stats != null) ? stats.getTotalDuration() : adapter.getTotalDuration());
+        boolean hasActiveFilter = (!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()));
+        int count = (isTopLevelCategoryDir || hasActiveFilter) ? apincer.android.mmate.ui.compose.ListInterop.getTracks().size()
+                : ((stats != null) ? stats.getTotalCount() : apincer.android.mmate.ui.compose.ListInterop.getTracks().size());
+        long totalSize = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum() : ((stats != null) ? stats.getTotalSize() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum());
+        double totalDuration = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum() : ((stats != null) ? stats.getTotalDuration() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum());
 
         String statText = "";
-        if(!isEmpty(adapter.getCriteria().getKeyword())) {
+        if(!isEmpty(currentCriteria.getKeyword())) {
             // total songs
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " Songs";
             }
 
             // filter details or duration
-            if(isEmpty(adapter.getCriteria().getFilterType()) && count > 0) {
+            if(isEmpty(currentCriteria.getFilterType()) && count > 0) {
                 statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
             } else {
-                String filterText = adapter.getCriteria().getFilterText();
-                if ("Folder".equals(adapter.getCriteria().getFilterType())) {
+                String filterText = currentCriteria.getFilterText();
+                if ("Folder".equals(currentCriteria.getFilterType())) {
                     filterText = StringUtils.truncate(DocumentFileCompat.getBasePath(getApplicationContext(), filterText), 38, StringUtils.TruncateType.PREFIX);
                 } else {
                     filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
@@ -1055,17 +877,17 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
                 mHeaderPanel.setOnClickListener(view -> {
-                    adapter.resetFilter();
-                    adapter.getCriteria().setKeyword(null);
-                    viewModel.loadMusicItems(adapter.getCriteria());
+                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
+                    currentCriteria.setKeyword(null);
+                    viewModel.loadMusicItems(currentCriteria);
                 });
             }
         } else {
             // top-level category: show total count + category label
             if(count > 0) {
-                statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
+                statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle("Tracks");
                 // Also show total storage + duration for the all-songs view (Library)
-                if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(adapter.getCriteria().getFilterType())) {
+                if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
                     statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
                 }
             }
@@ -1077,14 +899,14 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
                 mHeaderPanel.setOnClickListener(view -> {
-                    adapter.resetFilter();
-                    adapter.search("");
+                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
+                    currentCriteria.resetSearch();
                     doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
                 });
             }
         }
 
-        headerSearchView.setQueryHint("Search " + StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
+        headerSearchView.setQueryHint("Search " + StringUtils.truncate(currentCriteria.getType().name(), 25, StringUtils.TruncateType.SUFFIX));
         headerStatText.setText(statText);
     }
 
@@ -1101,7 +923,7 @@ public class MainActivity extends AppCompatActivity {
 
        // viewModel.getTagRepository().cleanInvalidTags();
         // load music items
-       // viewModel.loadMusicItems(adapter.getCriteria());
+       // viewModel.loadMusicItems(currentCriteria);
     }
 
     @Override
@@ -1127,8 +949,8 @@ public class MainActivity extends AppCompatActivity {
         if (currentlyPlaying == null || (actionMode != null)) return;
 
         viewModel.loadUntilFound(currentlyPlaying, () -> {
-            mRecyclerView.post(() -> {
-                int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
+            composeListView.post(() -> {
+                int positionToScroll = apincer.android.mmate.ui.compose.ListInterop.getTracks().indexOf(currentlyPlaying);
                 if (positionToScroll != RecyclerView.NO_POSITION) {
                     scrollToPosition(positionToScroll);
                 }
@@ -1137,31 +959,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scrollToPosition(int position) {
-        if (position != RecyclerView.NO_POSITION) {
-            int positionWithOffset = position - RECYCLEVIEW_ITEM_SCROLLING_OFFSET;
-            if (positionWithOffset < 0) {
-                positionWithOffset = 0;
-            }
-            mRecyclerView.scrollToPosition(positionWithOffset);
-            if (position - 1 > RecyclerView.NO_POSITION) {
-                // show as 2nd item on screen
-                position = position - 1;
-            }
-            LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-            Objects.requireNonNull(layoutManager).scrollToPositionWithOffset(position, RECYCLEVIEW_ITEM_OFFSET);
-        }
+        // TODO: Implement Compose LazyListState scrolling in ListInterop
     }
 
     private void doHideSearch() {
-        adapter.search("");
-        viewModel.loadMusicItems(adapter.getCriteria());
+        currentCriteria.resetSearch();
+        viewModel.loadMusicItems(currentCriteria);
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
-        adapter.setType(type);
-        adapter.setKeyword(keyword);
+        currentCriteria.setType(type);
+        currentCriteria.setKeyword(keyword);
        // folderAdapter.refresh();
-        viewModel.loadMusicItems(adapter.getCriteria());
+        viewModel.loadMusicItems(currentCriteria);
     }
 
     @Override
@@ -1249,7 +1059,7 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             List<Track> singleTrackList = Collections.singletonList(track);
             if (id == R.id.action_play_now) {
-                viewModel.playTrackList(adapter.getSongs(), track, playbackService);
+                viewModel.playTrackList(apincer.android.mmate.ui.compose.ListInterop.getTracks(), track, playbackService);
                 return true;
             } else if (id == R.id.action_play_next) {
                 playbackService.getQueueManager().addPlayNext(track);
@@ -1525,7 +1335,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             viewModel.deleteMediaTag(tag);
                            // repos.deleteMediaItem(tag);
-                            viewModel.loadMusicItems(adapter.getCriteria());
+                            viewModel.loadMusicItems(currentCriteria);
                             dialogInterface.dismiss();
                         })
                         .show();
@@ -1557,7 +1367,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 // User pressed the search button on the keyboard
-                viewModel.search(adapter, query);
+                viewModel.search(currentCriteria, query);
                 headerSearchView.clearFocus(); // Hide keyboard
                 return true;
             }
@@ -1565,7 +1375,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 // User is typing
-                viewModel.search(adapter, newText);
+                viewModel.search(currentCriteria, newText);
                 return true;
             }
         });
@@ -1819,9 +1629,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isSelectionBlocked() {
-        return mRecyclerView.getScrollState() != RecyclerView.SCROLL_STATE_IDLE 
-                || (SystemClock.elapsedRealtime() - lastScrollEventTime < 500)
-                || isScrollStoppingTouch;
+        return false;
     }
 
     // You can put this class inside your Activity/Fragment
@@ -1839,7 +1647,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             //mTitlePanel.setVisibility(GONE);
-            mRecyclerView.setPadding(0, 0, 0, 0);
             mHeaderPanel.setVisibility(GONE);
             return false;
         }
@@ -1864,10 +1671,10 @@ public class MainActivity extends AppCompatActivity {
                 mode.finish();
                 return true;
             } else if (id == R.id.action_select_all) {
-                if (mTracker.getSelection().size() == adapter.getItemCount()) {
+                if (mTracker.getSelection().size() == apincer.android.mmate.ui.compose.ListInterop.getTracks().size()) {
                     mTracker.clearSelection();
                 } else {
-                    for (int i = 0; i < adapter.getItemCount(); i++) {
+                    for (int i = 0; i < apincer.android.mmate.ui.compose.ListInterop.getTracks().size(); i++) {
                         mTracker.select((long) i);
                     }
                 }
@@ -1881,7 +1688,6 @@ public class MainActivity extends AppCompatActivity {
             mTracker.clearSelection();
             actionMode = null;
             mHeaderPanel.setVisibility(VISIBLE);
-            mRecyclerView.setPadding(0, (int) dpToPx(getApplicationContext(), 42), 0, 0);
             //mTitlePanel.setVisibility(VISIBLE);
         }
 
@@ -1915,30 +1721,30 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // if TYPE library or keyword is null, open leftMenu
-            if(adapter != null) {
-                if (adapter.hasFilter()) {
-                    adapter.resetFilter();
+            if(true) {
+                if ((!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()))) {
+                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
                     swipeRefreshLayout.setRefreshing(true);
-                    viewModel.loadMusicItems(adapter.getCriteria());
+                    viewModel.loadMusicItems(currentCriteria);
 
                     return;
                 }
 
-                if (adapter.isSearchMode()) {
+                if (currentCriteria.isSearchMode()) {
                     doHideSearch();
                     swipeRefreshLayout.setRefreshing(true);
-                    viewModel.loadMusicItems(adapter.getCriteria());
+                    viewModel.loadMusicItems(currentCriteria);
 
                     return;
                 }
 
-                if (isEmpty(adapter.getCriteria().getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
+                if (isEmpty(currentCriteria.getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
                     doShowLeftMenus();
-                }else if ((!isEmpty(adapter.getCriteria().getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
-                    adapter.resetFilter();
-                    adapter.getCriteria().setKeyword(null);
+                }else if ((!isEmpty(currentCriteria.getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
+                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
+                    currentCriteria.setKeyword(null);
                     swipeRefreshLayout.setRefreshing(true);
-                    viewModel.loadMusicItems(adapter.getCriteria());
+                    viewModel.loadMusicItems(currentCriteria);
                 }
             }
         }

@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import apincer.android.mmate.ui.MusicTagAdapter;
+
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.Track;
 import apincer.music.core.model.SearchResultStats;
@@ -223,9 +223,9 @@ public class MainViewModel extends ViewModel {
         backgroundExecutor.execute(() -> repos.deleteMediaTag(tag));
     }
 
-    public void search(MusicTagAdapter adapter, String query) {
-        adapter.search(query);
-        loadMusicItems(adapter.getCriteria());
+    public void search(SearchCriteria criteria, String query) {
+        if(query == null || query.isEmpty()) criteria.resetSearch(); else criteria.searchFor(query);
+        loadMusicItems(criteria);
     }
 
     public void playCollection(Track collectionTag, apincer.music.core.playback.spi.PlaybackService playbackService, boolean enqueueOnly) {

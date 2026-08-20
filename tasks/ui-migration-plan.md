@@ -33,7 +33,7 @@
 
 ## Phase 5: The Final Boss (`MainActivity` List & Scaffold)
 *Goal: Replace the God-Activity's `RecyclerView` and `ResideMenu`.*
-- [x] **MusicTagAdapter:** Rewrite the complex `RecyclerView` adapter and `SelectionTracker` into a `LazyVerticalGrid` / `LazyColumn` with declarative `selected` states.
+- [x] **MusicTagAdapter:** Rewrite the complex `RecyclerView` adapter and `SelectionTracker` into a `LazyVerticalGrid` / `LazyColumn` with declarative `selected` states. (COMPLETED - Adapter fully excised from MainActivity)
 - [ ] **Navigation & Scaffold:** Replace the legacy `ResideMenu` with a standard Jetpack Compose Material 3 `ModalNavigationDrawer` and `Scaffold`.
 - [ ] **Empty State & Loading:** Convert `SmartSwipeRefreshLayout` and the empty list placeholder into Compose components.
 
