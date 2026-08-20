@@ -77,7 +77,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.selection.SelectionTracker;
+import apincer.android.mmate.ui.MySelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
     // UI components
     private ResideMenu mResideMenu;
     private MusicTagAdapter adapter;
-    private SelectionTracker<Long> mTracker;
+    private MySelectionTracker mTracker;
     private final List<Track> selections = new ArrayList<>();
     private View mHeaderPanel;
     private ImageView mBackButton;
@@ -901,43 +901,36 @@ public class MainActivity extends AppCompatActivity {
         });
 
             // Setup selection tracker
-            mTracker = new SelectionTracker.Builder<>(
-                    "selection-id",
-                    mRecyclerView,
-                    new MusicTagAdapter.KeyProvider(),
-                    new MusicTagAdapter.DetailsLookup(mRecyclerView),
-                    StorageStrategy.createLongStorage())
-                    .withSelectionPredicate(new MusicTrackSelectionPredicate(adapter))
-                    .build();
-            adapter.injectTracker(mTracker);
+            mTracker = new MySelectionTracker();
+            
 
             // Setup selection observer
-            SelectionTracker.SelectionObserver<Long> observer = new SelectionTracker.SelectionObserver<>() {
+            MySelectionTracker.SelectionObserver observer = new MySelectionTracker.SelectionObserver() {
                 @Override
                 public void onSelectionChanged() {
-                        int count = mTracker.getSelection().size();
-                        selections.clear();
-                        if (count > 0) {
-                            mTracker.getSelection().forEach(item -> {
-                                Track tag = adapter.getMusicTag(item.intValue());
-                                if (tag != null) {
-                                    selections.add(tag);
-                                }
-                            });
-                            if (actionMode == null) {
-                                actionMode = startSupportActionMode(actionModeCallback);
+                    int count = mTracker.getSelection().size();
+                    selections.clear();
+                    if (count > 0) {
+                        mTracker.getSelection().forEach(item -> {
+                            Track tag = adapter.getMusicTag(item.intValue());
+                            if (tag != null) {
+                                selections.add(tag);
                             }
-                        } else if (actionMode != null) {
-                            actionMode.finish();
-                            return;
+                        });
+                        if (actionMode == null) {
+                            actionMode = startSupportActionMode(actionModeCallback);
                         }
-                        if (actionMode != null) {
-                            actionMode.setTitle(StringUtils.formatSongSize(count));
-                            actionMode.invalidate();
-                        }
+                    } else if (actionMode != null) {
+                        actionMode.finish();
+                        actionMode = null;
+                    }
+                    if (actionMode != null) {
+                        actionMode.setTitle(count + " Selected");
+                        //actionMode.invalidate();
+                    }
                 }
             };
-            mTracker.addObserver(observer);
+            mTracker.setObserver(observer);
 
         // Setup fast scroller
         new FastScrollerBuilder(mRecyclerView)
@@ -1421,158 +1414,74 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        View cview = getLayoutInflater().inflate(R.layout.view_action_directories, null);
-
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
-        View btnOK = cview.findViewById(R.id.button_ok);
-        CheckBox checkboxFullScan = cview.findViewById(R.id.checkbox_full_scan);
-
         List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
         List<String> dirs = TagRepository.getDirectories(this);
+        List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
 
-        BaseAdapter adapter = new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return dirs.size();
-            }
+        // We need a reference to the AlertDialog so we can dismiss it from inside the Compose callbacks
+        final AlertDialog[] alertHolder = new AlertDialog[1];
 
-            @Override
-            public Object getItem(int i) {
-                return dirs.get(i);
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return i;
-            }
-
-            @SuppressLint("InflateParams")
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                if (view == null) {
-                    view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                }
-
-                String dir = dirs.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                View btnDelete = view.findViewById(R.id.btn_delete);
-
-                seq.setText((i + 1) + ".");
-                name.setText(dir);
-
-                if (defaultPathsSet.contains(dir)) {
-                    if (btnDelete != null) btnDelete.setVisibility(GONE);
+        View cview = apincer.android.mmate.ui.compose.DialogInterop.createMusicFoldersDialogView(
+            this,
+            dirs,
+            defaultPathsSet,
+            storageIds,
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); }, // onClose
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); }, // onCancel
+            (isDeep, updatedDirs) -> { // onScan
+                apincer.music.core.Settings.setDirectories(getApplicationContext(), updatedDirs);
+                if (isDeep) {
+                    new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
+                        .setTitle("Full Rescan")
+                        .setMessage(getString(R.string.directories_confirm_full_scan))
+                        .setPositiveButton("Start", (dialog, which) -> {
+                            apincer.android.mmate.worker.ScanAudioFileWorker.startScan(getApplicationContext(), true);
+                            if(alertHolder[0] != null) alertHolder[0].dismiss();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
                 } else {
-                    if (btnDelete != null) {
-                        btnDelete.setVisibility(VISIBLE);
-                        btnDelete.setOnClickListener(view1 -> {
-                            dirs.remove(dir);
-                            notifyDataSetChanged();
-                            setListViewHeightBasedOnChildren(itemsView);
-                        });
-                    }
+                    apincer.android.mmate.worker.ScanAudioFileWorker.startScan(getApplicationContext(), false);
+                    if(alertHolder[0] != null) alertHolder[0].dismiss();
                 }
-
-                return view;
+            },
+            (sid) -> { // onAddStorage
+                DialogProperties properties = new DialogProperties();
+                properties.selection_mode = DialogConfigs.SINGLE_MODE;
+                properties.selection_type = DialogConfigs.DIR_SELECT;
+                FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
+                dialog.setDialogSelectionListener(files -> {
+                    if (files != null && files.length > 0) {
+                        String f = files[0];
+                        // Re-trigger the dialog with new directory
+                        dirs.add(f);
+                        if(alertHolder[0] != null) alertHolder[0].dismiss();
+                        apincer.music.core.Settings.setDirectories(getApplicationContext(), dirs); // Save immediately
+                        doScanDirectories(); // Re-open
+                    }
+                });
+                dialog.setTitle("Select a Directory");
+                dialog.show();
             }
-        };
-
-        itemsView.setAdapter(adapter);
-        itemsView.post(() -> setListViewHeightBasedOnChildren(itemsView));
+        );
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
                 .create();
+        
+        alertHolder[0] = alert;
 
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
 
         // Make popup round corners
         if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            alert.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
 
-        List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
-        btnAddPanel.removeAllViews();
-
-        for (String sid : storageIds) {
-            com.google.android.material.button.MaterialButton btn = new com.google.android.material.button.MaterialButton(
-                    MainActivity.this, null, com.google.android.material.R.attr.materialButtonTonalStyle
-            );
-            btn.setText("+ " + StringUtils.capitalize(sid));
-            btn.setAllCaps(false);
-            btn.setTextSize(11f);
-            btn.setCornerRadius((int) dpToPx(MainActivity.this, 16));
-            btn.setIconResource(R.drawable.rounded_folder_24);
-            btn.setIconSize((int) dpToPx(MainActivity.this, 16));
-            btn.setIconTint(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.colorGold)));
-            btn.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.white));
-            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
-            btn.setPadding((int) dpToPx(MainActivity.this, 10), 0, (int) dpToPx(MainActivity.this, 12), 0);
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    (int) dpToPx(MainActivity.this, 34)
-            );
-            lp.setMarginStart((int) dpToPx(MainActivity.this, 6));
-            btn.setLayoutParams(lp);
-            btnAddPanel.addView(btn);
-
-            btn.setOnClickListener(view -> {
-                DialogProperties properties = new DialogProperties();
-                properties.selection_mode = DialogConfigs.SINGLE_MODE;
-                properties.selection_type = DialogConfigs.DIR_SELECT;
-                properties.root = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, ""));
-                properties.extensions = null;
-                properties.show_hidden_files = false;
-
-                FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
-                dialog.setTitle("Select Music Directory");
-                dialog.setPositiveBtnName("Add");
-                dialog.setNegativeBtnName("Cancel");
-                dialog.setDialogSelectionListener(files -> {
-                    dirs.add(files[0]);
-                    adapter.notifyDataSetChanged();
-                    setListViewHeightBasedOnChildren(itemsView);
-                });
-                dialog.show();
-            });
-        }
-
-        btnOK.setOnClickListener(v -> {
-            Settings.setDirectories(getApplicationContext(), dirs);
-            Log.i(TAG, "Starting scan music file.");
-            boolean isFullScan = checkboxFullScan.isChecked();
-            if (isFullScan) {
-                new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
-                        .setTitle("Full Rescan")
-                        .setMessage(getString(R.string.directories_confirm_full_scan))
-                        .setPositiveButton("Start", (dialog, which) -> {
-                            ScanAudioFileWorker.startScan(getApplicationContext(), true);
-                            alert.dismiss();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            } else {
-                ScanAudioFileWorker.startScan(getApplicationContext(), false);
-                alert.dismiss();
-            }
-        });
-
-        View btnClose = cview.findViewById(R.id.btn_close);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> alert.dismiss());
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(v -> alert.dismiss());
-        }
         alert.show();
     }
 
@@ -1674,393 +1583,170 @@ public class MainActivity extends AppCompatActivity {
     private void doDeleteMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
 
-        View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
+        final AlertDialog[] alertHolder = new AlertDialog[1];
+        apincer.android.mmate.ui.compose.ActionFilesState state = new apincer.android.mmate.ui.compose.ActionFilesState(selections);
+        
+        View cview = apincer.android.mmate.ui.compose.DialogInterop.createActionFilesDialogView(
+            this,
+            getString(R.string.title_removing_music_files),
+            R.drawable.rounded_delete_24,
+            state,
+            getString(R.string.move_to_trash),
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> {
+                state.setBusy(true);
+                state.setProgress(FileOperationTask.getInitialProgress(selections.size()));
+                operationTask.deleteFiles(getApplicationContext(), selections,
+                        new FileOperationTask.ProgressCallback() {
+                            @Override
+                            public void onProgress(Track tag, int progress, String status) {
+                                runOnUiThread(() -> {
+                                    state.updateStatus(tag, status);
+                                    state.setProgress(progress);
+                                    if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
+                                        playbackService.onTrackDeleted(tag);
+                                    }
+                                });
+                            }
 
-        Map<Track, String> statusList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        ImageView titleIcon = cview.findViewById(R.id.title_icon);
-        TextView titleText = cview.findViewById(R.id.title);
-        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
-        titleText.setText(R.string.title_removing_music_files);
-        fileListTitleText.setText(R.string.files_to_delete);
-        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_delete_24));
-
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
+                            @Override
+                            public void onComplete() {
+                                runOnUiThread(() -> {
+                                    viewModel.loadMusicItems();
+                                    state.setBusy(false);
+                                    if(alertHolder[0] != null) alertHolder[0].dismiss();
+                                });
+                            }
+                        });
             }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @SuppressLint("InflateParams")
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                if (view == null) {
-                    view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                }
-
-                Track tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-
-                seq.setText(String.valueOf(i + 1));
-                status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(getTrackDisplayName(tag));
-
-                return view;
-            }
-        });
-
-        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-        btnOK.setEnabled(true);
-        btnOK.setText(R.string.move_to_trash);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS / block;
-        List<Long> valueList = new ArrayList<>();
-
-        for (int i = 0; i < block; i++) {
-            valueList.add((long) sizeInBlock);
-        }
-
-      //  final double rate = 100.00 / selections.size();
-        int barColor = getColor(R.color.material_color_green_400);
-        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
+        );
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
                 .create();
-
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        alertHolder[0] = alert;
+        alert.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
-
         if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            alert.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            btnOK.setEnabled(false);
-           // btnOK.setVisibility(GONE);
-
-            progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
-
-            operationTask.deleteFiles(getApplicationContext(), selections,
-                    new FileOperationTask.ProgressCallback() {
-                        @Override
-                        public void onProgress(Track tag, int progress, String status) {
-                            runOnUiThread(() -> {
-                                statusList.put(tag, status);
-                                itemsView.invalidateViews();
-                                progressBar.setProgress(progress);
-                                progressBar.invalidate();
-                                if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
-                                    playbackService.onTrackDeleted(tag);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            runOnUiThread(() -> {
-                                viewModel.loadMusicItems();
-                                busy = false;
-                                alert.dismiss();
-                            });
-                        }
-                    });
-        });
-
-        View btnClose = cview.findViewById(R.id.btn_close);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
-
-        View.OnClickListener cancelListener = v -> {
-            alert.dismiss();
-            busy = false;
-        };
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(cancelListener);
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(cancelListener);
-        }
-
         alert.show();
     }
 
     private void doMoveMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
 
-        View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
+        final AlertDialog[] alertHolder = new AlertDialog[1];
+        apincer.android.mmate.ui.compose.ActionFilesState state = new apincer.android.mmate.ui.compose.ActionFilesState(selections);
+        
+        View cview = apincer.android.mmate.ui.compose.DialogInterop.createActionFilesDialogView(
+            this,
+            getString(R.string.files_to_move),
+            R.drawable.rounded_drive_file_move_24,
+            state,
+            getString(R.string.move_to_music),
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> {
+                state.setBusy(true);
+                state.setProgress(FileOperationTask.getInitialProgress(selections.size()));
+                operationTask.moveFiles(getApplicationContext(), selections,
+                        new FileOperationTask.ProgressCallback() {
+                            @Override
+                            public void onProgress(Track tag, int progress, String status) {
+                                runOnUiThread(() -> {
+                                    state.updateStatus(tag, status);
+                                    state.setProgress(progress);
+                                    if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
+                                        playbackService.onTrackDeleted(tag);
+                                    }
+                                });
+                            }
 
-        Map<Track, String> statusList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        TextView titleText = cview.findViewById(R.id.title);
-        ImageView titleIcon = cview.findViewById(R.id.title_icon);
-        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
-        titleText.setText(R.string.title_import_to_music_directory);
-        fileListTitleText.setText(R.string.files_to_move);
-        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_drive_file_move_24));
-
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
+                            @Override
+                            public void onComplete() {
+                                runOnUiThread(() -> {
+                                    viewModel.loadMusicItems();
+                                    state.setBusy(false);
+                                    if(alertHolder[0] != null) alertHolder[0].dismiss();
+                                });
+                            }
+                        });
             }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @SuppressLint("InflateParams")
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                if (view == null) {
-                    view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                }
-
-                Track tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-
-                seq.setText(String.valueOf(i + 1));
-                status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(getTrackDisplayName(tag));
-
-                return view;
-            }
-        });
-
-        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-        btnOK.setEnabled(true);
-        btnOK.setText(R.string.move_to_music);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS / block;
-        List<Long> valueList = new ArrayList<>();
-
-        for (int i = 0; i < block; i++) {
-            valueList.add((long) sizeInBlock);
-        }
-
-      //  final double rate = 100.00 / selections.size();
-        int barColor = getColor(R.color.material_color_green_400);
-        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
+        );
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
                 .create();
-
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        alertHolder[0] = alert;
+        alert.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
-
         if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            alert.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            btnOK.setEnabled(false);
-           // btnOK.setVisibility(GONE);
-
-            progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
-
-            operationTask.moveFiles(getApplicationContext(), selections,
-                    new FileOperationTask.ProgressCallback() {
-                        @Override
-                        public void onProgress(Track tag, int progress, String status) {
-                            runOnUiThread(() -> {
-                                statusList.put(tag, status);
-                                itemsView.invalidateViews();
-                                progressBar.setProgress(progress);
-                                progressBar.invalidate();
-                            });
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            // Call ViewModel method after operation is completed
-                            runOnUiThread(() -> {
-                                viewModel.loadMusicItems();
-                                busy = false;
-                                alert.dismiss();
-                            });
-                        }
-                    });
-        });
-
-        View btnClose = cview.findViewById(R.id.btn_close);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
-
-        View.OnClickListener cancelListener = v -> {
-            alert.dismiss();
-            busy = false;
-        };
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(cancelListener);
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(cancelListener);
-        }
-
         alert.show();
     }
 
     private void doEncodeAudioFiles(List<Track> selections) {
         if (selections.isEmpty()) return;
 
-        View cview = getLayoutInflater().inflate(R.layout.view_action_encoding_files, null);
-
-        Map<Track, String> statusList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
-        AutoCompleteTextView sampleRateView = cview.findViewById(R.id.sample_rate);
-        MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
-        ImageView titleIcon = cview.findViewById(R.id.title_icon);
-        if (titleIcon != null) {
-            titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_swap_horiz_24));
-        }
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-
-        btnOK.setText(R.string.convert);
-
-        String[] outputFormatList = getResources().getStringArray(R.array.output_formats);
-        setupListValuePopupFullList(outputFormat, Arrays.asList(outputFormatList));
-        outputFormat.setText(outputFormatList[0]); // default to FLAC (Balanced)
-
-        String[] sampleRateList = getResources().getStringArray(R.array.sample_rates);
-        setupListValuePopupFullList(sampleRateView, Arrays.asList(sampleRateList));
-        sampleRateView.setText(sampleRateList[0]); // default to Original (No Resampling)
-
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
-            }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @SuppressLint("InflateParams")
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                if (view == null) {
-                    view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                }
-
-                Track tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-
-                seq.setText(String.valueOf(i + 1));
-                status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(getTrackDisplayName(tag));
-
-                return view;
-            }
-        });
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS / block;
-        List<Long> valueList = new ArrayList<>();
-
-        for (int i = 0; i < block; i++) {
-            valueList.add((long) sizeInBlock);
-        }
-
-       // final double rate = 100.00 / selections.size();
-        int barColor = getColor(R.color.material_color_green_400);
-        // progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
-
+        apincer.android.mmate.ui.compose.FormatFilesState state = new apincer.android.mmate.ui.compose.FormatFilesState(selections);
+        
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
-                .setView(cview)
                 .setCancelable(true)
                 .create();
 
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
+        View cview = apincer.android.mmate.ui.compose.DialogInterop.createFormatFilesDialogView(
+            this,
+            state,
+            () -> alert.dismiss(),
+            () -> alert.dismiss(),
+            () -> {
+                busy = true;
+                state.isBusy().setValue(true);
+                state.getProgress().setValue(FileOperationTask.getInitialProgress(selections.size()));
 
-        if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+                int compressionLevel = FLAC_BALANCE_COMPRESS_LEVEL;
+                String targetExt;
+                String selectedFormat = state.getSelectedFormat().getValue();
+                
+                if (selectedFormat.contains(".aiff")) {
+                    targetExt = FILE_AIFF;
+                } else if (selectedFormat.contains(".mp3")) {
+                    targetExt = FILE_MP3;
+                } else if (selectedFormat.contains(".m4a")) {
+                    targetExt = FILE_ALAC;
+                } else {
+                    if (selectedFormat.contains("fast")) compressionLevel = FLAC_FAST_COMPRESS_LEVEL;
+                    else if (selectedFormat.contains("maximum")) compressionLevel = FLAC_MAXIMUM_COMPRESS_LEVEL;
+                    targetExt = FILE_FLAC;
+                }
 
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            btnOK.setEnabled(false);
-           // btnOK.setVisibility(GONE);
+                int targetSampleRate = 0;
+                String selectedSampleRateStr = state.getSelectedSampleRate().getValue();
+                if (selectedSampleRateStr.contains("96")) {
+                    targetSampleRate = 96000;
+                } else if (selectedSampleRateStr.contains("48")) {
+                    targetSampleRate = 48000;
+                } else if (selectedSampleRateStr.contains("44.1")) {
+                    targetSampleRate = 44100;
+                }
 
-            progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
-            int compressionLevel = FLAC_BALANCE_COMPRESS_LEVEL;
-            String targetExt;
-            String selectedFormat = outputFormat.getText().toString();
-            if(selectedFormat.contains(".aiff")) {
-                targetExt = FILE_AIFF;
-            }else if(selectedFormat.contains(".mp3")) {
-                targetExt = FILE_MP3;
-            }else if(selectedFormat.contains(".m4a")) {
-                targetExt = FILE_ALAC;
-            }else {
-                if(selectedFormat.contains("fast")) compressionLevel = FLAC_FAST_COMPRESS_LEVEL;
-                else if(selectedFormat.contains("maximum")) compressionLevel = FLAC_MAXIMUM_COMPRESS_LEVEL;
-                targetExt = FILE_FLAC;
-            }
-
-            int targetSampleRate = 0;
-            String selectedSampleRateStr = sampleRateView != null ? sampleRateView.getText().toString() : "";
-            if (selectedSampleRateStr.contains("96")) {
-                targetSampleRate = 96000;
-            } else if (selectedSampleRateStr.contains("48")) {
-                targetSampleRate = 48000;
-            } else if (selectedSampleRateStr.contains("44.1")) {
-                targetSampleRate = 44100;
-            }
-
-            operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel, targetSampleRate,
+                operationTask.encodeFiles(getApplicationContext(), selections, targetExt, compressionLevel, targetSampleRate,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(Track tag, int progress, String status) {
                             runOnUiThread(() -> {
-                                statusList.put(tag, status);
-                                itemsView.invalidateViews();
-                                progressBar.setProgress(progress);
-                                progressBar.invalidate();
+                                state.getStatusMap().put(tag, status);
+                                state.getProgress().setValue(progress);
                             });
                         }
 
@@ -2073,21 +1759,15 @@ public class MainActivity extends AppCompatActivity {
                             });
                         }
                     });
-        });
+            }
+        );
 
-        View btnClose = cview.findViewById(R.id.btn_close);
-        View btnCancel = cview.findViewById(R.id.button_cancel);
+        alert.setView(cview);
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
 
-        View.OnClickListener cancelListener = v -> {
-            alert.dismiss();
-            busy = false;
-        };
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(cancelListener);
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(cancelListener);
+        if (alert.getWindow() != null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
         alert.show();
@@ -2139,70 +1819,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // You can put this class inside your Activity/Fragment
-    private class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
-
-        private final MusicTagAdapter adapter;
-
-        // Pass in your adapter so the predicate can look up items
-        MusicTrackSelectionPredicate(@NonNull MusicTagAdapter adapter) {
-            this.adapter = adapter;
-        }
-
-        /**
-         * This is the main method that prevents selection.
-         * It's called for both touch and programmatic selection.
-         */
-        @Override
-        public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
-            if (isSelectionBlocked()) {
-                return false;
-            }
-
-            // We assume the 'key' is the position, based on your observer code.
-            int position = key.intValue();
-
-            if (position < 0 || position >= adapter.getItemCount()) {
-                return false; // Safety check for invalid positions
-            }
-
-            // Get the item from the adapter.
-            // NOTE: Make sure getMusicTag() returns the actual data object
-            // (e.g., MusicFolder or MusicFile)
-            Track item = adapter.getMusicTag(position);
-
-            // If the item IS a MusicFolder, REJECT any state change.
-            // This prevents it from being selected.
-           // return !(item instanceof MusicFolder);
-            return !item.isContainer();
-        }
-
-        /**
-         * This method is called specifically for touch events.
-         * We'll add the same logic here for safety.
-         */
-        @Override
-        public boolean canSetStateAtPosition(int position, boolean nextState) {
-            if (isSelectionBlocked()) {
-                return false;
-            }
-
-            if (position < 0 || position >= adapter.getItemCount()) {
-                return false;
-            }
-
-            Track item = adapter.getMusicTag(position);
-
-            // REJECT state change for MusicFolder
-            //return !(item instanceof MusicFolder);
-            return !item.isContainer();
-        }
-
-        @Override
-        public boolean canSelectMultiple() {
-            // You still want to allow multi-select for the files
-            return true;
-        }
-    }
 
     /**
      * Action Mode for handling contextual actions on selected items
