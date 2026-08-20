@@ -46,6 +46,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ContextMenu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,7 +134,6 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
-import apincer.android.residemenu.ResideMenu;
 import dagger.hilt.android.AndroidEntryPoint;
 import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 
@@ -144,6 +144,7 @@ import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private androidx.compose.ui.platform.ComposeView composeListView;
+    private View rootView;
 
     // Constants
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 8; //16
@@ -164,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
     private MainViewModel viewModel;
 
     // UI components
-    private ResideMenu mResideMenu;
     private apincer.music.core.model.SearchCriteria currentCriteria = new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY);
     private MySelectionTracker mTracker;
     private final List<Track> selections = new ArrayList<>();
@@ -389,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
             mHeaderPanel.getBackground().setTint(alphaColor);
             mHeaderPanel.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
-        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
         if (bottomNav != null && bottomNav.getBackground() != null) {
             bottomNav.getBackground().setTint(alphaColor);
             bottomNav.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
@@ -449,7 +449,8 @@ public class MainActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         // Set content view
-        setContentView(R.layout.activity_main);
+        rootView = getLayoutInflater().inflate(R.layout.activity_main, null);
+        setContentView(apincer.android.mmate.ui.compose.DrawerInterop.getComposeView(this, rootView));
 
         // Get the ViewModel. Hilt handles all the factory creation for you.
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
@@ -458,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
         setupHeaderPanel();
         setupBottomAppBar();
         setupRecycleView(searchCriteria);
-        setupResideMenus();
+        
 
         // Observe ViewModel LiveData
         setupObserveViewModel();
@@ -545,11 +546,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupHeaderPanel() {
-        mBlurBackground = findViewById(R.id.main_background_blur);
-        mHeaderPanel = findViewById(R.id.header_panel);
-        mBackButton = findViewById(R.id.header_back_btn);
-        headerSearchView = findViewById(R.id.search_view);
-        headerStatText = findViewById(R.id.header_stats_text);
+        mBlurBackground = rootView.findViewById(R.id.main_background_blur);
+        mHeaderPanel = rootView.findViewById(R.id.header_panel);
+        mBackButton = rootView.findViewById(R.id.header_back_btn);
+        headerSearchView = rootView.findViewById(R.id.search_view);
+        headerStatText = rootView.findViewById(R.id.header_stats_text);
 
         // Handle Status Bar Insets for Header
         ViewCompat.setOnApplyWindowInsetsListener(mHeaderPanel, (v, insets) -> {
@@ -569,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupBottomAppBar() {
         // Find components
-        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
         // setSupportActionBar(bottomNav); // Removed as CardView is not a Toolbar
 
         // Handle Navigation Bar Insets for Bottom Capsule
@@ -585,8 +586,8 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setElevation(8f);
         }
 
-        View leftMenu = findViewById(R.id.navigation_collections);
-        ImageView rightMenu = findViewById(R.id.navigation_settings);
+        View leftMenu = rootView.findViewById(R.id.navigation_collections);
+        ImageView rightMenu = rootView.findViewById(R.id.navigation_settings);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
@@ -603,16 +604,16 @@ public class MainActivity extends AppCompatActivity {
     private ImageView barNextBtn;
 
     private void setupFloatingPlaybackBar() {
-        floatingPlaybackBar = findViewById(R.id.docked_playback_bar);
+        floatingPlaybackBar = rootView.findViewById(R.id.docked_playback_bar);
         if (floatingPlaybackBar == null) return;
 
-        barAlbumArt = findViewById(R.id.bar_album_art);
-        barTrackTitle = findViewById(R.id.bar_track_title);
-        barTargetSubtitle = findViewById(R.id.bar_target_subtitle);
-        barPlayPauseBtn = findViewById(R.id.btn_dock_play_pause);
-        barNextBtn = findViewById(R.id.btn_dock_next);
+        barAlbumArt = rootView.findViewById(R.id.bar_album_art);
+        barTrackTitle = rootView.findViewById(R.id.bar_track_title);
+        barTargetSubtitle = rootView.findViewById(R.id.bar_target_subtitle);
+        barPlayPauseBtn = rootView.findViewById(R.id.btn_dock_play_pause);
+        barNextBtn = rootView.findViewById(R.id.btn_dock_next);
 
-        View titleContainer = findViewById(R.id.bar_title_container);
+        View titleContainer = rootView.findViewById(R.id.bar_title_container);
         View.OnClickListener openNowPlayingListener = v -> {
             // Sticky tab: reopen at the last tab the user viewed this session
             AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance();
@@ -660,7 +661,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setFloatingDockVisible(boolean visible) {
-        View bottomNav = findViewById(R.id.bottom_navigation_container);
+        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
         if (bottomNav != null) {
             if (visible) {
                 bottomNav.setVisibility(View.VISIBLE);
@@ -694,9 +695,9 @@ public class MainActivity extends AppCompatActivity {
         // Initialize adapter
 
         // Setup RecyclerView
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        emptyStateView = findViewById(R.id.empty_state_view);
-        scanProgressDots = findViewById(R.id.scan_progress_dots);
+        swipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
+        emptyStateView = rootView.findViewById(R.id.empty_state_view);
+        scanProgressDots = rootView.findViewById(R.id.scan_progress_dots);
         int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
         swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
 
@@ -707,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
             viewModel.loadMusicItems();
         });
 
-        fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
+        fabScrollToTop = rootView.findViewById(R.id.fab_scroll_to_top);
         fabScrollToTop.setOnClickListener(v -> {
             
             
@@ -725,7 +726,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        composeListView = findViewById(R.id.compose_list_view);
+        composeListView = rootView.findViewById(R.id.compose_list_view);
         apincer.android.mmate.ui.compose.ListInterop.setMusicListContent(composeListView, this);
         
         ViewCompat.setOnApplyWindowInsetsListener(composeListView, (v, insets) -> {
@@ -777,55 +778,13 @@ public class MainActivity extends AppCompatActivity {
         actionModeCallback = new ActionModeCallback();
     }
 
-    private void setupResideMenus() {
-        // Attach to current activity
-        mResideMenu = new ResideMenu(this);
-        mResideMenu.setBackground(R.drawable.bg);
-        mResideMenu.attachToActivity(this);
-        mResideMenu.setScaleValue(0.54f);
-        mResideMenu.setSwipeDirectionDisable(ResideMenu.DIRECTION_LEFT);
-        mResideMenu.setSwipeDirectionDisable(ResideMenu.DIRECTION_RIGHT);
-        mResideMenu.setOnMenuItemClickListener(item -> {
-            onOptionsItemSelected(item);
-            mResideMenu.closeMenu();
-        });
-
-        // Create menus
-        mResideMenu.setMenuRes(R.menu.menu_music_mate, ResideMenu.DIRECTION_RIGHT);
-        mResideMenu.setMenuRes(R.menu.menu_music_collection, ResideMenu.DIRECTION_LEFT);
-    }
 
     private void doShowLeftMenus() {
-        if (Settings.isShowStorageSpace(getApplicationContext())) {
-            @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
-            // Explicitly set layout params because inflating with null root discards them
-            android.widget.RelativeLayout.LayoutParams params = new android.widget.RelativeLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-            int marginPx = (int) (12 * getResources().getDisplayMetrics().density);
-            params.setMargins(marginPx, marginPx, marginPx, marginPx);
-            storageView.setLayoutParams(params);
-
-            LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
-            TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
-
-            // Re-use the already-computed SearchResultStats from the ViewModel (avoids a redundant DB query)
-            SearchResultStats stats = viewModel.searchStats.getValue();
-            long songCount = (stats != null) ? stats.getTotalCount() : 0;
-            double totalDuration = (stats != null) ? stats.getTotalDuration() : 0;
-
-            totalSongText.setText(StringUtils.formatSongSize(songCount));
-            totalDurationText.setText(StringUtils.formatDuration(totalDuration, true));
-            UIUtils.buildStoragesStatus(getApplication(), panel);
-
-            mResideMenu.setLeftHeader(storageView);
-        }
-        mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
+        apincer.android.mmate.ui.compose.DrawerInterop.openDrawer();
     }
 
     private void doShowRightMenus() {
-        mResideMenu.openMenu(ResideMenu.DIRECTION_RIGHT);
+        apincer.android.mmate.ui.compose.DrawerInterop.openDrawer();
     }
 
     private void updateHeaderPanel() {
@@ -914,9 +873,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (mResideMenu.isOpened()) {
-            mResideMenu.closeMenu();
-        }
         if(headerSearchView != null) {
             headerSearchView.clearFocus();
         }
@@ -974,7 +930,59 @@ public class MainActivity extends AppCompatActivity {
         viewModel.loadMusicItems(currentCriteria);
     }
 
-    @Override
+    public void handleNavigationItemClick(int itemId) {
+        // Create a dummy MenuItem
+        MenuItem item = new MenuItem() {
+            @Override public int getItemId() { return itemId; }
+            @Override public int getGroupId() { return 0; }
+            @Override public int getOrder() { return 0; }
+            @Override public MenuItem setTitle(CharSequence title) { return this; }
+            @Override public MenuItem setTitle(int title) { return this; }
+            @Override public CharSequence getTitle() { return null; }
+            @Override public MenuItem setTitleCondensed(CharSequence title) { return this; }
+            @Override public CharSequence getTitleCondensed() { return null; }
+            @Override public MenuItem setIcon(Drawable icon) { return this; }
+            @Override public MenuItem setIcon(int iconRes) { return this; }
+            @Override public Drawable getIcon() { return null; }
+            @Override public MenuItem setIntent(Intent intent) { return this; }
+            @Override public Intent getIntent() { return null; }
+            @Override public MenuItem setShortcut(char numericChar, char alphaChar) { return this; }
+            @Override public MenuItem setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers) { return this; }
+            @Override public MenuItem setNumericShortcut(char numericChar) { return this; }
+            @Override public MenuItem setNumericShortcut(char numericChar, int numericModifiers) { return this; }
+            @Override public char getNumericShortcut() { return 0; }
+            @Override public int getNumericModifiers() { return 0; }
+            @Override public MenuItem setAlphabeticShortcut(char alphaChar) { return this; }
+            @Override public MenuItem setAlphabeticShortcut(char alphaChar, int alphaModifiers) { return this; }
+            @Override public char getAlphabeticShortcut() { return 0; }
+            @Override public int getAlphabeticModifiers() { return 0; }
+            @Override public MenuItem setCheckable(boolean checkable) { return this; }
+            @Override public boolean isCheckable() { return false; }
+            @Override public MenuItem setChecked(boolean checked) { return this; }
+            @Override public boolean isChecked() { return false; }
+            @Override public MenuItem setVisible(boolean visible) { return this; }
+            @Override public boolean isVisible() { return true; }
+            @Override public MenuItem setEnabled(boolean enabled) { return this; }
+            @Override public boolean isEnabled() { return true; }
+            @Override public boolean hasSubMenu() { return false; }
+            @Override public android.view.SubMenu getSubMenu() { return null; }
+            @Override public MenuItem setOnMenuItemClickListener(OnMenuItemClickListener menuItemClickListener) { return this; }
+            @Override public ContextMenu.ContextMenuInfo getMenuInfo() { return null; }
+            @Override public void setShowAsAction(int actionEnum) {}
+            @Override public MenuItem setShowAsActionFlags(int actionEnum) { return this; }
+            @Override public MenuItem setActionView(View view) { return this; }
+            @Override public MenuItem setActionView(int resId) { return this; }
+            @Override public View getActionView() { return null; }
+            @Override public MenuItem setActionProvider(android.view.ActionProvider actionProvider) { return this; }
+            @Override public android.view.ActionProvider getActionProvider() { return null; }
+            @Override public boolean expandActionView() { return false; }
+            @Override public boolean collapseActionView() { return false; }
+            @Override public boolean isActionViewExpanded() { return false; }
+            @Override public MenuItem setOnActionExpandListener(OnActionExpandListener listener) { return this; }
+        };
+        onOptionsItemSelected(item);
+    }
+
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
@@ -1706,10 +1714,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
-            if (mResideMenu.isOpened()) {
-                mResideMenu.closeMenu();
-                return;
-            }
 
             if (actionMode != null) {
                 actionMode.finish();
@@ -1753,9 +1757,9 @@ public class MainActivity extends AppCompatActivity {
     private void startDotAnimation() {
         if (dotAnimator != null) return;
 
-        View dot1 = findViewById(R.id.scan_dot1);
-        View dot2 = findViewById(R.id.scan_dot2);
-        View dot3 = findViewById(R.id.scan_dot3);
+        View dot1 = rootView.findViewById(R.id.scan_dot1);
+        View dot2 = rootView.findViewById(R.id.scan_dot2);
+        View dot3 = rootView.findViewById(R.id.scan_dot3);
 
         if (dot1 == null || dot2 == null || dot3 == null) return;
 
@@ -1824,7 +1828,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {
         if (tag != null) {
-            showTrackPopupMenu(findViewById(R.id.compose_list_view), tag);
+            showTrackPopupMenu(rootView.findViewById(R.id.compose_list_view), tag);
         }
     }
 
