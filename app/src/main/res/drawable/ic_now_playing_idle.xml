@@ -1,29 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
 
-    <!-- Outer Vinyl Disc Background -->
+    <!-- Layer 1: Vinyl Record slipping out of the sleeve -->
+    <!-- Record Body -->
     <path
-        android:fillColor="#1E2029"
-        android:pathData="M24,2A22,22 0,1,0 24,46A22,22 0,1,0 24,2Z" />
+        android:fillColor="#0A0A0A"
+        android:strokeColor="#1AFFFFFF"
+        android:strokeWidth="0.5"
+        android:pathData="M 28,8 A 16,16 0 1 1 28,40 A 16,16 0 1 1 28,8 Z" />
+    
+    <!-- Record Label -->
+    <path
+        android:fillColor="#151515"
+        android:strokeColor="#33FFB74D"
+        android:strokeWidth="0.5"
+        android:pathData="M 28,18 A 6,6 0 1 1 28,30 A 6,6 0 1 1 28,18 Z" />
+        
+    <!-- Record Spindle Hole -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M 28,22.5 A 1.5,1.5 0 1 1 28,25.5 A 1.5,1.5 0 1 1 28,22.5 Z" />
 
-    <!-- Outer Gold Ring Accent -->
-    <path
-        android:strokeColor="#FFD700"
-        android:strokeWidth="1.5"
-        android:pathData="M24,5A19,19 0,1,0 24,43A19,19 0,1,0 24,5Z" />
 
-    <!-- Inner Groove Ring -->
+    <!-- Layer 2: Premium Dark Album Sleeve Background -->
     <path
-        android:strokeColor="#3E4254"
+        android:pathData="M 6,6 L 34,6 Q 38,6 38,10 L 38,38 Q 38,42 34,42 L 6,42 Q 2,42 2,38 L 2,10 Q 2,6 6,6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="2"
+                android:startY="6"
+                android:endX="38"
+                android:endY="42">
+                <item android:color="#1F1F1F" android:offset="0.0" />
+                <item android:color="#121212" android:offset="0.5" />
+                <item android:color="#080808" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Layer 3: Sleeve Glass/Metal Rim Highlight -->
+    <path
+        android:strokeColor="#26FFFFFF"
         android:strokeWidth="1"
-        android:pathData="M24,11A13,13 0,1,0 24,37A13,13 0,1,0 24,11Z" />
+        android:pathData="M 6,6 L 34,6 Q 38,6 38,10 L 38,38 Q 38,42 34,42 L 6,42 Q 2,42 2,38 L 2,10 Q 2,6 6,6 Z" />
 
-    <!-- Center Gold Music Note -->
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M21,32C18.2,32 16,29.8 16,27C16,24.2 18.2,22 21,22C21.9,22 22.8,22.7 23.5,22.7V14C23.5,13.2 24.1,12.6 24.9,12.6L31.1,12.6C31.9,12.6 32.5,13.2 32.5,14V17C32.5,17.8 31.9,18.4 31.1,18.4L27,18.4V27C27,29.8 24.8,32 21,32Z" />
+    <!-- Layer 4: Minimalist Watermark Music Note centered in Sleeve -->
+    <group
+        android:scaleX="0.015"
+        android:scaleY="0.015"
+        android:translateX="12.8"
+        android:translateY="16.8">
+        <path
+            android:fillColor="#33FFFFFF" 
+            android:pathData="M400,840Q334,840 287,793Q240,746 240,680Q240,614 287,567Q334,520 400,520Q423,520 442.5,525.5Q462,531 480,542L480,160Q480,143 491.5,131.5Q503,120 520,120L680,120Q697,120 708.5,131.5Q720,143 720,160L720,240Q720,257 708.5,268.5Q697,280 680,280L560,280L560,680Q560,746 513,793Q466,840 400,840Z"/>
+    </group>
+
 </vector>

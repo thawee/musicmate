@@ -116,7 +116,7 @@
                             android:text="@string/label_audio_resolutions"
                             android:textColor="?attr/colorOnSurface"/>
 
-                        <apincer.android.mmate.ui.widget.QualityPieChartView
+                        <androidx.compose.ui.platform.ComposeView
                             android:id="@+id/chartResolutions"
                             android:layout_width="match_parent"
                             android:layout_height="220dp"

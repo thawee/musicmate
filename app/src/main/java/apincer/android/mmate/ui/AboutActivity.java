@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +12,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import androidx.compose.ui.platform.ComposeView;
+import apincer.android.mmate.ui.compose.ChartInterop;
+import apincer.android.mmate.ui.compose.PieEntry;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -30,9 +32,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 
-import com.vanniktech.textbuilder.TextBuilder;
+import apincer.android.mmate.utils.TextBuilder;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -343,9 +344,9 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         private void setupQualityChart(View v, Map<String, Integer> encList, String title) {
-            apincer.android.mmate.ui.widget.QualityPieChartView chart = v.findViewById(R.id.chartResolutions);
+            ComposeView chart = v.findViewById(R.id.chartResolutions);
             
-            List<apincer.android.mmate.ui.widget.QualityPieChartView.PieEntry> entries = new ArrayList<>();
+            List<PieEntry> entries = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
             mappedColors.put(Constants.LEGEND_MQA, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
             mappedColors.put(Constants.LEGEND_DSD, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
@@ -356,10 +357,10 @@ public class AboutActivity extends AppCompatActivity {
 
             for(String enc: encList.keySet()) {
                 int color = mappedColors.containsKey(enc) ? mappedColors.get(enc) : Color.GRAY;
-                entries.add(new apincer.android.mmate.ui.widget.QualityPieChartView.PieEntry(enc, encList.get(enc), color));
+                entries.add(new PieEntry(enc, encList.get(enc), color));
             }
 
-            chart.setEntries(entries);
+            ChartInterop.setQualityPieChartContent(chart, entries);
         }
 
     }

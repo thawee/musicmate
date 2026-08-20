@@ -239,19 +239,18 @@ public class MainViewModel extends ViewModel {
                 // Fetch all tracks in this collection
                 List<Track> items = repos.findMusic(criteria, 0, Integer.MAX_VALUE);
                 if (items != null && !items.isEmpty()) {
-                    // Update queue on main thread to avoid concurrent modification issues with UI
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                        apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
-                        if (!enqueueOnly) {
-                            queue.emptyPlayingQueue();
-                        }
-                        for (Track t : items) {
-                            queue.addPlayingQueue(t.getId());
-                        }
-                        if (!enqueueOnly) {
+                    apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
+                    if (!enqueueOnly) {
+                        queue.setPlayingQueue(items);
+                    } else {
+                        queue.enqueuePlayingQueue(items);
+                    }
+                    
+                    if (!enqueueOnly) {
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                             playbackService.playSong(items.get(0));
-                        }
-                    });
+                        });
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -261,15 +260,18 @@ public class MainViewModel extends ViewModel {
 
     public void playTrackList(List<Track> items, Track startTrack, apincer.music.core.playback.spi.PlaybackService playbackService) {
         if (items == null || items.isEmpty() || playbackService == null) return;
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-            apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
-            queue.emptyPlayingQueue();
-            for (Track t : items) {
-                if (t != null && !t.isContainer()) {
-                    queue.addPlayingQueue(t.getId());
-                }
+        
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                apincer.music.core.repository.QueueManager queue = playbackService.getQueueManager();
+                queue.setPlayingQueue(items);
+                
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    playbackService.playSong(startTrack != null ? startTrack : items.get(0));
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            playbackService.playSong(startTrack != null ? startTrack : items.get(0));
         });
     }
 }

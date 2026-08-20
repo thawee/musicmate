@@ -385,8 +385,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improved
 - **Ultra High-Res (352.8 kHz / DXD) Streaming Optimizations**:
-  - Increased file streaming chunk size from 64 KB to **256 KB** in both `SonicNIO` (`NioHttpServer`) and `HttpCore` (`HttpCoreWebServerImpl`).
-  - Expanded TCP socket send buffers (`SO_SNDBUF`) to **512 KB** to prevent Wi-Fi bandwidth stalls during high-rate (>10 Mbps) FLAC transfers to low-power DAPs (e.g. HiBy R3).
+  - Increased file streaming chunk size to **256 KB** and restored TCP socket send buffers (`SO_SNDBUF`) to **512 KB** across all engines (`SonicNIO`, `CoreHTTP`, and `Netty`) to prevent mid-track buffering and stalls during high-rate (>10 Mbps) FLAC streaming.
+
 
 ### Fixed
 - **DLNA Renderer Name Resolution**:

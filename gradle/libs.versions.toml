@@ -23,12 +23,13 @@ media3Session = "1.11.0"
 androidfastscrollKt = "v1.0.8"
 zxing-core = "3.5.4"
 jsoup = "1.23.1"
-aboutlibraries = "15.0.4"
+#aboutlibraries = "15.0.4"
 
 # Testing
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
+composeBom = "2026.08.00"
 
 [libraries]
 # Kotlin & Coroutines
@@ -44,7 +45,7 @@ androidx-annotation = { module = "androidx.annotation:annotation", version = "1.
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version = "1.8.0" }
 androidx-fragment = { module = "androidx.fragment:fragment", version = "1.9.0" }
 androidx-cardView = { module = "androidx.cardview:cardview", version = "1.0.0" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
+#androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
 androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version = "1.3.0" }
 androidx-concurrent = { module = "androidx.concurrent:concurrent-futures", version = "1.3.0" }
 androidx-recyclerView = { module = "androidx.recyclerview:recyclerview", version = "1.4.0" }
@@ -56,6 +57,16 @@ androidx-documentFile = { module = "androidx.documentfile:documentfile", version
 androidx-drawerlayout = { module = "androidx.drawerlayout:drawerlayout", version = "1.2.0" }
 androidx-loader = { module = "androidx.loader:loader", version = "1.2.0" }
 androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version = "1.1.0" }
+
+
+# Jetpack Compose
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 
 # AndroidX Lifecycle & WorkManager
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version = "2.11.0" }
@@ -84,13 +95,13 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.
 
 # Networking, Storage & UPnP
 square-okio = { module = "com.squareup.okio:okio", version = "3.18.1" }
-square-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version = "5.4.0" }
-jupnp-android = { module = "org.jupnp:org.jupnp.android", version = "3.0.4" }
-jupnp-support = { module = "org.jupnp:org.jupnp.support", version = "3.0.4" }
+square-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version = "5.5.0" }
+jupnp-android = { module = "org.jupnp:org.jupnp.android", version = "3.0.5" }
+jupnp-support = { module = "org.jupnp:org.jupnp.support", version = "3.0.5" }
 netty-codec-http = { module = "io.netty:netty-codec-http", version = "4.2.17.Final" }
 apache-httpcore = { module = "org.apache.httpcomponents.core5:httpcore5", version = "5.5-beta2" }
 apache-http2core = { module = "org.apache.httpcomponents.core5:httpcore5-h2", version = "5.5-beta2" }
-anggrayudi-storage = { module = "com.anggrayudi:storage", version = "2.3.0" }
+anggrayudi-storage = { module = "com.anggrayudi:storage", version = "3.0.1" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 # Image Loading & UI Enhancements
@@ -99,9 +110,6 @@ coilkt-coil3-network = { module = "io.coil-kt.coil3:coil-network-okhttp", versio
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
 chrisbanes-photoview = { module = "com.github.chrisbanes:PhotoView", version = "2.3.0" }
 
-sparrow007-carouselrecyclerview = { module = "com.github.sparrow007:carouselrecyclerview", version = "1.2.6" }
-iwgang-simplifyspan = { module = "com.github.iwgang:simplifyspan", version = "2.2" }
-vanniktech-textbuilder = { module = "com.vanniktech:textbuilder", version = "0.5.0" }
 tutorialsandroid-filepicker = { module = "io.github.tutorialsandroid:filepicker", version = "10.1.3" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 markwon-core = { module = "io.noties.markwon:core", version = "4.6.2" }
@@ -121,8 +129,9 @@ androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", vers
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
-android-aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
+#android-aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

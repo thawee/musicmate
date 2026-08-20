@@ -38,6 +38,9 @@ public class MusicItemBrowser extends AbstractContentBrowser {
 
         String id = myId.substring(itemPrefix.length());
         Track tag = tagRepos.findById(StringUtils.toLong(id));
+        if (tag == null) {
+            return null;
+        }
         result = buildMusicTrack(contentDirectory, tag, folderId, itemPrefix);
 
         return result;
@@ -54,7 +57,10 @@ public class MusicItemBrowser extends AbstractContentBrowser {
     public List<Item> browseItem(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Item> result = new ArrayList<>();
-        result.add((Item) browseMeta(contentDirectory, myId, firstResult, maxResults, orderby));
+        Item item = (Item) browseMeta(contentDirectory, myId, firstResult, maxResults, orderby);
+        if (item != null) {
+            result.add(item);
+        }
         return result;
     }
 

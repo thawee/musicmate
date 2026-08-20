@@ -215,6 +215,8 @@ public class MainActivity extends AppCompatActivity {
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
             adapter.setPlaybackService(playbackService);
+                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
+
             playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
@@ -241,6 +243,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (adapter != null) {
                     adapter.setPlaybackState(playbackState);
+                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING);
+
                 }
 
                 if (songChanged) {
@@ -490,6 +494,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 adapter.setMusicTags(musicTags);
+                apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
                 swipeRefreshLayout.setRefreshing(false);
                 // Update header after adapter is populated; stats observer will correct later
                 updateHeaderPanel(viewModel.searchStats.getValue());
@@ -742,7 +747,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mRecyclerView = findViewById(R.id.recycler_view);
-
+        androidx.compose.ui.platform.ComposeView composeListView = findViewById(R.id.compose_list_view);
+        apincer.android.mmate.ui.compose.ListInterop.setMusicListContent(composeListView, this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(adapter);
         //Tune performance
@@ -1984,4 +1990,36 @@ public class MainActivity extends AppCompatActivity {
     public boolean isPlaybackServiceBound() {
         return isPlaybackServiceBound && playbackService != null;
     }
+
+    public void onTrackClicked(apincer.music.core.model.Track tag, int position) {
+        if (isSelectionBlocked()) return;
+        if (mTracker != null && mTracker.hasSelection()) {
+            if (mTracker.isSelected((long) position)) {
+                mTracker.deselect((long) position);
+            } else {
+                mTracker.select((long) position);
+            }
+            return;
+        }
+
+        if(tag != null && tag.isContainer()) {
+            doStartRefresh(tag.getContainerType(), tag.getTitle());
+        } else if (tag != null) {
+            doShowEditActivity(java.util.Collections.singletonList(tag));
+        }
+    }
+
+    public void onTrackLongClicked(apincer.music.core.model.Track tag, int position) {
+        if (isSelectionBlocked()) return;
+        if (mTracker != null) {
+            mTracker.select((long) position);
+        }
+    }
+
+    public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {
+        if (tag != null) {
+            showTrackPopupMenu(findViewById(R.id.compose_list_view), tag);
+        }
+    }
+
 }

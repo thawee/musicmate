@@ -39,17 +39,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/rounded_delete_24"
-                app:tint="?attr/colorError" />
-
             <TextView
                 android:id="@+id/bottom_sheet_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:text="Remove track from Library?"
                 android:textColor="@color/white"
                 android:textSize="16sp"
@@ -69,7 +62,7 @@
             android:contentDescription="Close"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/round_close_24"
-            app:tint="@color/grey400" />
+            app:tint="?attr/colorOnSurfaceVariant" />
     </RelativeLayout>
 
     <!-- Single Prominent Primary Action Button -->
@@ -81,8 +74,9 @@
         android:text="@string/move_to_trash"
         app:icon="@drawable/rounded_delete_24"
         app:iconGravity="textStart"
-        app:backgroundTint="?attr/colorError"
-        android:textColor="?attr/colorOnError"/>
+        app:backgroundTint="?attr/colorErrorContainer"
+        android:textColor="?attr/colorOnErrorContainer"
+        app:iconTint="?attr/colorOnErrorContainer" />
 
     <!-- Cancel Button -->
     <com.google.android.material.button.MaterialButton
@@ -92,6 +86,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Cancel"
-        android:textColor="?attr/colorOnSurface"/>
+        android:textColor="?attr/colorOnSurfaceVariant"/>
 </LinearLayout>
 

@@ -294,8 +294,9 @@ The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
 
 ### High-Res (352.8 kHz / DXD) Streaming Optimizations
 To support seamless high-bitrate streaming (>10 Mbps) to DAPs (e.g. HiBy R3) over Wi-Fi without buffer underruns:
-* **File Streaming Chunk Size:** Increased from 64 KB to **256 KB** in `SonicNIO` (`NioHttpServer`) and `CoreHTTP` (`FileRangeEntityProducer`).
-* **Socket Transmission Buffers:** Expanded `SO_SNDBUF` / `SO_RCVBUF` to **512 KB** across all active server engines.
+* **High-Rate Buffer Allocation:** Restored hardcoded `SO_SNDBUF` (512 KB) in SonicNIO, Netty, and CoreHTTP, as relying on OS-level TCP Auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks causing mid-track DLNA buffering.
+* **Large File Streaming Chunks:** Increased payload chunk size to **256 KB** across all engines (`SonicNIO`, `CoreHTTP`, and `Netty`) to reduce application-level overhead and minimize NIO selector iterations during high-rate (>10 Mbps) FLAC streaming, eliminating mid-track freezes.
+* **Socket Timeouts:** Increased `soTimeout` and `keepAliveTimeout` from 30s to **120s** to tolerate longer latency spikes and prevent premature stream disconnections.
 
 ### Port & HTTP Endpoint Specification
 All server engines (`SonicNIO`, `CoreHTTP`, `Netty`) standardize on port **`9000`** and expose the following endpoint contract:

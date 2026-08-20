@@ -389,7 +389,7 @@ public class NioHttpServer implements Runnable {
     private int socketBacklog = 128;
     private int clientReadBufferSize = 8192;
     private boolean tcpNoDelay = true;
-    private long keepAliveTimeout = 30000; // 30 seconds for music streaming
+    private long keepAliveTimeout = 120_000; // 120 seconds for music streaming on poor network
     private long lastTimeoutCheck = 0;
     private int maxRequestSize = 2 * 1024 * 1024; // 2MB for requests (not file size)
     private int maxWebSocketFrameSize = 1024 * 1024; // 1MB max WebSocket frame
@@ -753,8 +753,8 @@ public class NioHttpServer implements Runnable {
         clientChannel.configureBlocking(false);
         clientChannel.setOption(StandardSocketOptions.TCP_NODELAY, tcpNoDelay);
 
-        // Increase socket send buffer for streaming
-        clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 512 * 1024); // 512KB for high-res streaming
+        clientChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 524288); // 512KB for hi-res streaming
         clientChannel.setOption(StandardSocketOptions.IP_TOS, 0x18); // 0x18 = Low Delay (0x10) | High Throughput (0x08)
 
         ConnectionAttachment attachment = attachmentPool.acquire();
@@ -1317,7 +1317,7 @@ public class NioHttpServer implements Runnable {
         ByteBuffer pendingWriteBuffer = null;
         private final Object stateLock = new Object();
         private long bodyReadStartTime = 0;
-        public static final long BODY_READ_TIMEOUT = 30_000; // 30 seconds
+        public static final long BODY_READ_TIMEOUT = 120_000; // 120 seconds for slow networks
         // Set when a WebSocket CLOSE frame is received; triggers proper closeConnection()
         // after the current parse cycle finishes, ensuring activeConnections is decremented.
         volatile boolean pendingClose = false;
@@ -1770,7 +1770,7 @@ public class NioHttpServer implements Runnable {
         private final long rangeLength;
         private final AtomicBoolean hasClosed = new AtomicBoolean(false);
 
-        private static final long CHUNK_SIZE = 256 * 1024; // 256KB chunks for smooth 352.8kHz/DXD streaming
+        private static final long CHUNK_SIZE = 262144; // 256KB chunks for smooth streaming
 
         private FileResponse(File file, HttpRequest request) throws IOException {
             super();

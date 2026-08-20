@@ -141,21 +141,18 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         }
     }
 
-    @Override
     public void initServer(InetAddress bindAddress) throws Exception {
         try {
             Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
 
             IOReactorConfig config = IOReactorConfig.custom()
                     .setIoThreadCount(2) // Optimized for better concurrency
-                    .setSoTimeout(Timeout.ofSeconds(30))
+                    .setSoTimeout(Timeout.ofSeconds(120)) // Increased from 30s to 120s for slow network tolerance
                     .setTcpNoDelay(true) // Reduce latency
                     .setSoKeepAlive(true)
-                    .setSelectInterval(TimeValue.ofMicroseconds(50)) // Faster selection
-                    .setSndBufSize(512 * 1024) // 512KB send buffer for high-res streaming
-                    .setRcvBufSize(512 * 1024) // 512KB receive buffer
+                    .setSndBufSize(524288) // 512KB send buffer for high-rate audio streaming
                     .setSoReuseAddress(true)
-                    .setTrafficClass(0x18) // 0x18 = Low Delay (0x10) | High Throughput (0x08)
+                    .setTrafficClass(0x10) // 0x10 = Low Delay
                     .build();
 
             final ResourceHandler resourceHandler = new ResourceHandler();
@@ -826,7 +823,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         private final ContentType contentType;
         private java.io.RandomAccessFile raf;
         private long bytesSent = 0;
-        private final byte[] buffer = new byte[262144]; // 256KB chunks for smooth 352.8kHz/DXD streaming
+        private final byte[] buffer = new byte[262144]; // 256KB chunks for smooth streaming on poor networks
 
         FileRangeEntityProducer(File file, long start, long length, ContentType contentType) {
             this.file = file;

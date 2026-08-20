@@ -54,10 +54,9 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constrainedHeight="true">
                     
-                    <com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer
+                    <apincer.android.mmate.ui.view.ReflectionContainer
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:reflect_gap="0dp">
+                        android:layout_height="wrap_content">
 
                         <apincer.android.mmate.ui.view.AspectRatioPhotoView
                             android:id="@+id/panel_cover_art"
@@ -67,7 +66,7 @@
                             app:heightRatio="1"
                             app:widthRatio="1"/>
 
-                    </com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer>
+                    </apincer.android.mmate.ui.view.ReflectionContainer>
 
                     <LinearLayout
                         android:id="@+id/title_container"

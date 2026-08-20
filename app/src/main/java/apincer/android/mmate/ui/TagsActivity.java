@@ -103,8 +103,7 @@ import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
-import cn.iwgang.simplifyspan.SimplifySpanBuild;
-import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
+import apincer.android.mmate.utils.TextBuilder;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.ImageLoader;
@@ -834,45 +833,46 @@ public class TagsActivity extends AppCompatActivity {
         ProgressBar spinner = cview.findViewById(R.id.analysis_progress_spinner); // From the new XML
 
         filenameText.setText(FileUtils.getFileName(track.getPath())+"."+FileUtils.getExtension(track.getPath()));
-        SimplifySpanBuild formatSpan = new SimplifySpanBuild("");
-        SimplifySpanBuild analyticsSpan = new SimplifySpanBuild("");
+        TextBuilder formatSpan = new TextBuilder(getApplicationContext());
+        TextBuilder analyticsSpan = new TextBuilder(getApplicationContext());
 
         // format
         final int textSize = 11;
         int labelColor = Color.GRAY;
         int valueColor = Color.WHITE;
 
-        formatSpan.append(new SpecialTextUnit("FORMAT\n", labelColor).setTextSize(textSize).useTextBold());
-        formatSpan.append(new SpecialTextUnit("  Type:\n", labelColor).setTextSize(textSize).useTextBold());
-        formatSpan.append(new SpecialTextUnit("  Sample Rate:\n", labelColor).setTextSize(textSize).useTextBold());
-        formatSpan.append(new SpecialTextUnit("  Bit Depth:\n", labelColor).setTextSize(textSize).useTextBold());
-        formatSpan.append(new SpecialTextUnit("  Size:\n", labelColor).setTextSize(textSize).useTextBold());
+        formatSpan.append("FORMAT\n", labelColor, textSize, true);
+        formatSpan.append("  Type:\n", labelColor, textSize, true);
+        formatSpan.append("  Sample Rate:\n", labelColor, textSize, true);
+        formatSpan.append("  Bit Depth:\n", labelColor, textSize, true);
+        formatSpan.append("  Size:\n", labelColor, textSize, true);
         formatLabel.setText(formatSpan.build());
 
-        formatSpan = new SimplifySpanBuild("\n");
+        formatSpan = new TextBuilder(getApplicationContext());
+        formatSpan.append("\n");
 
         String textValue = track.getFileType().toUpperCase();
-        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+        formatSpan.append(textValue+"\n", valueColor, textSize, false);
 
         textValue = formatAudioSampleRate(track.getAudioSampleRate(), true);
-        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+        formatSpan.append(textValue+"\n", valueColor, textSize, false);
 
         textValue = formatAudioBitsDepth(track.getAudioBitsDepth());
-        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+        formatSpan.append(textValue+"\n", valueColor, textSize, false);
 
         textValue = formatStorageSize(track.getFileSize());
-        formatSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+        formatSpan.append(textValue+"\n", valueColor, textSize, false);
 
         formatText.setText(formatSpan.build());
 
         // analytics
         //Signal Analytics, Nyquist, Dynamic Range, Peak Amplitude, RMS Level
-        analyticsSpan.append(new SpecialTextUnit("ANALYTICS\n", labelColor).setTextSize(textSize).useTextBold());
-        analyticsSpan.append(new SpecialTextUnit("  Nyquist:\n", labelColor).setTextSize(textSize).useTextBold());
-        analyticsSpan.append(new SpecialTextUnit("  Spectral Cutoff:\n", labelColor).setTextSize(textSize).useTextBold());
-        analyticsSpan.append(new SpecialTextUnit("  Dynamic Range:\n", labelColor).setTextSize(textSize).useTextBold());
-        analyticsSpan.append(new SpecialTextUnit("  True Peak:\n", labelColor).setTextSize(textSize).useTextBold());
-        analyticsSpan.append(new SpecialTextUnit("  RMS Level:",labelColor).setTextSize(textSize).useTextBold());
+        analyticsSpan.append("ANALYTICS\n", labelColor, textSize, true);
+        analyticsSpan.append("  Nyquist:\n", labelColor, textSize, true);
+        analyticsSpan.append("  Spectral Cutoff:\n", labelColor, textSize, true);
+        analyticsSpan.append("  Dynamic Range:\n", labelColor, textSize, true);
+        analyticsSpan.append("  True Peak:\n", labelColor, textSize, true);
+        analyticsSpan.append("  RMS Level:", labelColor, textSize, true);
         analyticsLabel.setText(analyticsSpan.build());
 
         qualityScore.setText(R.string.analyzing);
@@ -905,22 +905,23 @@ public class TagsActivity extends AppCompatActivity {
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
 
-                            SimplifySpanBuild analyticsSpan = new SimplifySpanBuild("\n");
+                            TextBuilder analyticsSpan = new TextBuilder(getApplicationContext());
+                            analyticsSpan.append("\n");
 
                             String textValue = formatAudioSampleRate(track.getAudioSampleRate() /2, true);
-                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             textValue = formatAudioSampleRate((long) r.rolloff, true);
-                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             textValue = String.format(Locale.ENGLISH,"%.2f dB", r.dynamicRange);
-                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             textValue = String.format(Locale.ENGLISH,"%.2f dB", r.peak);
-                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             textValue = String.format(Locale.ENGLISH,"%.2f dB", r.rms);
-                            analyticsSpan.append(new SpecialTextUnit(textValue+"\n", valueColor).setTextSize(textSize));
+                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             analyticsText.setText(analyticsSpan.build());
 
@@ -1021,9 +1022,9 @@ public class TagsActivity extends AppCompatActivity {
 
     private void updateViewPagers(Track musicTag) {
         if (activeFragment instanceof TagsEditorFragment) {
-            ((TagsEditorFragment) activeFragment).initEditorInputs(musicTag);
+            ((TagsEditorFragment) activeFragment).initEditorInputs();
         } else if (activeFragment instanceof TagsTechnicalFragment) {
-            ((TagsTechnicalFragment) activeFragment).displayTechnicalInfo(musicTag);
+            // ((TagsTechnicalFragment) activeFragment).displayTechnicalInfo(musicTag); // Re-renders automatically in Compose
         }
     }
 
@@ -1080,37 +1081,37 @@ public class TagsActivity extends AppCompatActivity {
 
         // Tag
         boolean hasPrv = false;
-        SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
-        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP + " ").setTextSize(12).useTextBold());
+        TextBuilder tagSpan = new TextBuilder(getApplicationContext());
+        tagSpan.append(StringUtils.SYMBOL_SEP + " ", 0, 12, true);
 
         if(!isEmpty(currentDisplayTag.getOrigin())) {
-            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getOrigin()).setTextSize(12).useTextBold());
+            tagSpan.append(currentDisplayTag.getOrigin(), 0, 12, true);
             hasPrv = true;
         }
         if(!isEmpty(currentDisplayTag.getGenre())) {
             if(hasPrv) {
-                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
+                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
             }
-            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getGenre()).setTextSize(12).useTextBold());
+            tagSpan.append(currentDisplayTag.getGenre(), 0, 12, true);
             hasPrv = true;
         }
         if(!isEmpty(currentDisplayTag.getMood())) {
             if(hasPrv) {
-                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
+                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
             }
-            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getMood()).setTextSize(12).useTextBold());
+            tagSpan.append(currentDisplayTag.getMood(), 0, 12, true);
             hasPrv = true;
         }
         if(!isEmpty(currentDisplayTag.getStyle())) {
             if(hasPrv) {
-                tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_ENC_SEP + " ").setTextSize(12).useTextBold());
+                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
             }
-            tagSpan.append(new SpecialTextUnit(currentDisplayTag.getStyle()).setTextSize(12).useTextBold());
+            tagSpan.append(currentDisplayTag.getStyle(), 0, 12, true);
             hasPrv = true;
         }
 
         if (hasPrv) {
-            tagSpan.append(new SpecialTextUnit(" " + StringUtils.SYMBOL_SEP).setTextSize(12).useTextBold());
+            tagSpan.append(" " + StringUtils.SYMBOL_SEP, 0, 12, true);
             tagInfo.setText(tagSpan.build());
             tagInfo.setVisibility(VISIBLE);
         } else {
@@ -1123,28 +1124,28 @@ public class TagsActivity extends AppCompatActivity {
             int metaInfoTextSize = 10; //12; //10
             int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
             int sepColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_600);
-            SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
+            TextBuilder spannableEnc = new TextBuilder(getApplicationContext());
 
             // encoding type
-            //spannableEnc.append(new SpecialTextUnit(currentDisplayTag.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
-            //spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
+            //spannableEnc.append(currentDisplayTag.getAudioEncoding().toUpperCase(), encColor, metaInfoTextSize, false);
+            //spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false);
 
             // bps
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor, metaInfoTextSize, false);
+            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor, metaInfoTextSize, false);
             if(TagUtils.isMQA(currentDisplayTag)) {
-                spannableEnc.append(new SpecialTextUnit(" ("+StringUtils.formatAudioSampleRate(currentDisplayTag.getMqaSampleRate(), true)+")", encColor).setTextSize(metaInfoTextSize));
+                spannableEnc.append(" ("+StringUtils.formatAudioSampleRate(currentDisplayTag.getMqaSampleRate(), true)+")", encColor, metaInfoTextSize, false);
             }
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(formatAudioBitRate(currentDisplayTag.getAudioBitRate()), encColor, metaInfoTextSize, false);
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor, metaInfoTextSize, false);
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
+            spannableEnc.append(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor, metaInfoTextSize, false);
 
             encInfo.setText(spannableEnc.build());
             encInfo.setOnClickListener(v -> {
@@ -1266,11 +1267,15 @@ public class TagsActivity extends AppCompatActivity {
 
         View btnClose = sheetView.findViewById(R.id.btn_close_trash_sheet);
         Button moveToTrashButton = sheetView.findViewById(R.id.button_move_to_trash);
+        Button btnCancel = sheetView.findViewById(R.id.button_cancel_trash);
         TextView title = sheetView.findViewById(R.id.bottom_sheet_title);
 
         title.setText(text);
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        }
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> bottomSheetDialog.dismiss());
         }
 
         moveToTrashButton.setOnClickListener(v -> {

@@ -21,6 +21,7 @@ plugins {
     alias libs.plugins.android.application
     alias libs.plugins.devtools.ksp
     alias libs.plugins.dagger.hilt
+    alias libs.plugins.kotlin.compose
 }
 
 android {
@@ -66,6 +67,7 @@ android {
 
     buildFeatures {
         dataBinding = false
+        compose = true
     }
 
     packagingOptions {
@@ -121,6 +123,16 @@ dependencies {
     implementation libs.androidx.viewpager2
     implementation libs.androidx.swiperefreshlayout
 
+    
+    // Jetpack Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.activity.compose
+    debugImplementation libs.androidx.compose.ui.tooling
+
     // Media & Playback Engine
     implementation libs.androidx.media
     implementation libs.androidx.media3.session
@@ -143,12 +155,9 @@ dependencies {
     ksp libs.androidx.hilt.compiler
 
     // UI Enhancements & Audiophile Visualizers
-    implementation libs.iwgang.simplifyspan
     implementation libs.androidfastscroll.kt
     implementation libs.chrisbanes.photoview
 
-    implementation libs.vanniktech.textbuilder
-    implementation libs.sparrow007.carouselrecyclerview
     implementation libs.tutorialsandroid.filepicker
     implementation libs.zxing.core
     implementation libs.markwon.core

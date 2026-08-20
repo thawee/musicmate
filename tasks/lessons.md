@@ -126,3 +126,5 @@
 
 
 
+
+- **Auto-select player bug**: When fixing "app auto selects android speaker as default", ensure that the previously selected player is restored from settings on startup. For DLNA targets that take time to be discovered via UPnP, create a placeholder `DMRPlayer` target (e.g. `uuid:...`) with a "Scanning for players..." display name, so that the app doesn't prematurely fallback to the local speaker while waiting for discovery.

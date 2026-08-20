@@ -1,0 +1,21 @@
+--- app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java
++++ app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java
+@@ -868,6 +868,9 @@
+             boolean wasPlaying = isPlaying();
+             Track activeTrack = getNowPlayingSong();
+ 
++            final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
++                && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
++
+             // 2. Deactivate current player IF DIFFERENT
+             currentPlayerFlow.getValue().ifPresent(oldTarget -> {
+                 if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
+@@ -893,7 +896,7 @@
+             updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+ 
+             // 4. Auto-transfer active track playback to new target
+-            if (controlled && activeTrack != null) {
++            if (controlled && activeTrack != null && !isSameTarget) {
+                 if (wasPlaying || resolvedTarget.isStreaming()) {
+                     playSong(activeTrack);
+                 }

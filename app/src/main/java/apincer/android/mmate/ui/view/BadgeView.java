@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
-import com.vanniktech.textbuilder.TextBuilder;
+import apincer.android.mmate.utils.TextBuilder;
 
 import apincer.android.mmate.R;
 

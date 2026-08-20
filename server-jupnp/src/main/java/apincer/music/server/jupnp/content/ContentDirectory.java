@@ -355,9 +355,14 @@ public class ContentDirectory {
         if (contentBrowser != null) {
                 if (browseFlag == BrowseFlag.METADATA) {
                     didlObject = contentBrowser.browseMeta(this, objectID, firstResult, maxResults, orderby);
-                    didl.addObject(didlObject);
-                    childCount = 1;
-                    totalMatches = 1;
+                    if (didlObject != null) {
+                        didl.addObject(didlObject);
+                        childCount = 1;
+                        totalMatches = 1;
+                    } else {
+                        childCount = 0;
+                        totalMatches = 0;
+                    }
                 } else {
                     List<DIDLObject> children = contentBrowser.browseChildren(this, objectID, firstResult, maxResults, orderby);
                     for (DIDLObject child : children) {

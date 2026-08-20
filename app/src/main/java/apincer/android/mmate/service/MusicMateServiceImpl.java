@@ -313,7 +313,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         if (playingPlayer != null) {
             switchPlayer(playingPlayer, true);
         } else if (!currentPlayerFlow.getValue().isPresent()) {
-            switchPlayer(localTarget, true);
+            String lastPlayerId = apincer.music.core.Settings.getLastPlayerTargetId(getApplicationContext());
+            if (lastPlayerId != null && !lastPlayerId.isEmpty()) {
+                switchPlayer(lastPlayerId, true);
+                if (!currentPlayerFlow.getValue().isPresent() && lastPlayerId.startsWith("uuid:")) {
+                    // It's a DLNA target that hasn't been discovered yet.
+                    // Create a placeholder target so we don't fallback to localTarget immediately.
+                    PlaybackTarget dummy = apincer.music.core.playback.DMRPlayer.Factory.create(lastPlayerId, "Scanning for players…", "");
+                    switchPlayer(dummy, true);
+                }
+            }
+            if (!currentPlayerFlow.getValue().isPresent()) {
+                switchPlayer(localTarget, true);
+            }
         }
 
         Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());
@@ -856,12 +868,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             boolean wasPlaying = isPlaying();
             Track activeTrack = getNowPlayingSong();
 
+            final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
+                && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
+
             // 2. Deactivate current player IF DIFFERENT
             currentPlayerFlow.getValue().ifPresent(oldTarget -> {
                 if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
                     deactivatePlayer(oldTarget);
                 }
             });
+
+            apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), resolvedTarget.getTargetId());
 
             // 3. Activate the new player
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
@@ -880,7 +897,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
 
             // 4. Auto-transfer active track playback to new target
-            if (controlled && activeTrack != null) {
+            if (controlled && activeTrack != null && !isSameTarget) {
                 if (wasPlaying || resolvedTarget.isStreaming()) {
                     playSong(activeTrack);
                 }

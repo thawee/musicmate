@@ -1333,7 +1333,10 @@ public class MediaServerHubImpl implements MediaServerHub {
 
             @Override
             protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
-
+                Log.e(TAG, "Event subscription failed: " + defaultMsg, exception);
+                activeSubscription = null;
+                subscriptionCallback = null;
+                startPolling(avTransport);
             }
 
             @Override

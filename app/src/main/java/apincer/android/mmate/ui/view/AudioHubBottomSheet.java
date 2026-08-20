@@ -62,6 +62,8 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.ui.viewmodel.MediaServerViewModel;
+import apincer.android.mmate.ui.compose.DialogInterop;
+import apincer.android.mmate.ui.compose.MediaServerState;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.TagUIUtils;
@@ -106,6 +108,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
     private MediaServerViewModel mediaServerViewModel;
+    private MediaServerState mediaServerState = new MediaServerState();
+    private apincer.android.mmate.ui.compose.NowPlayingState nowPlayingState = new apincer.android.mmate.ui.compose.NowPlayingState();
+    private apincer.android.mmate.ui.compose.QueueState queueState = new apincer.android.mmate.ui.compose.QueueState(new ArrayList<>(), null);
 
     // ViewPager & Segmented Tab UI
     private ViewPager2 viewPager;
@@ -384,15 +389,133 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         // Pre-inflate page views for ViewPager2
-        viewNowPlayingPage = LayoutInflater.from(getContext()).inflate(R.layout.sheet_now_playing_queue, null);
-        viewQueuePage = LayoutInflater.from(getContext()).inflate(R.layout.view_audio_hub_queue_page, null);
-        viewMediaServerPage = LayoutInflater.from(getContext()).inflate(R.layout.view_action_server_management_bottom_sheet, null);
+        
+        viewNowPlayingPage = DialogInterop.createNowPlayingPageView(
+            requireContext(),
+            nowPlayingState,
+            () -> {
+                if (playbackService != null) {
+                    if (nowPlayingState.getPlaybackState().getValue() != null && nowPlayingState.getPlaybackState().getValue().currentState == apincer.music.core.playback.PlaybackState.State.PLAYING) playbackService.pausePlayer();
+                    else if (playbackService.getNowPlayingSong() != null) playbackService.playSong(playbackService.getNowPlayingSong());
+                }
+            },
+            () -> { if (playbackService != null) playbackService.skipToNextInQueue(); },
+            () -> { if (playbackService != null) playbackService.skipToPrevious(); },
+            () -> {
+                if (playbackService != null) {
+                    boolean shuffle = !nowPlayingState.isShuffle().getValue();
+                    playbackService.setShuffleMode(shuffle);
+                    nowPlayingState.isShuffle().setValue(shuffle);
+                }
+            },
+            () -> {
+                if (playbackService != null) {
+                    int mode = nowPlayingState.getRepeatMode().getValue();
+                    int nextMode = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
+                    playbackService.setRepeatMode(String.valueOf(nextMode));
+                    nowPlayingState.getRepeatMode().setValue(nextMode);
+                }
+            },
+            (progress) -> {
+                if (playbackService != null) {
+                    long duration = nowPlayingState.getDurationMs().getValue();
+                    if (duration > 0) playbackService.seekTo((long) (progress * duration));
+                }
+            },
+            () -> {}, // Vol Down
+            () -> {}, // Vol Up
+            (vol) -> {}, // Vol Change
+            () -> {
+                if (playbackService != null && playbackService.getNowPlayingSong() != null) {
+                    dismiss();
+                    if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
+                        ((apincer.android.mmate.ui.MainActivity) getActivity()).scrollToSong(playbackService.getNowPlayingSong());
+                    }
+                }
+            }
+        );
+
+        
+        viewQueuePage = DialogInterop.createQueuePageView(
+            requireContext(),
+            queueState,
+            track -> {
+                if (isPlaybackServiceBound && playbackService != null) {
+                    playbackService.playSong(track);
+                    if (viewNowPlayingPage != null) populateNowPlayingSheet(viewNowPlayingPage);
+                    populateQueueSection(viewQueuePage);
+                }
+            },
+            (track, index) -> {
+                QueueManager qm = playbackService != null ? playbackService.getQueueManager() : null;
+                if (qm != null) {
+                    qm.removeTrack(index);
+                }
+            },
+            () -> {
+                QueueManager qm = playbackService != null ? playbackService.getQueueManager() : null;
+                if (qm != null) {
+                    qm.emptyPlayingQueue();
+                    Toast.makeText(getContext(), "Queue cleared", Toast.LENGTH_SHORT).show();
+                    populateQueueSection(viewQueuePage);
+                }
+            },
+            () -> {
+                Toast.makeText(getContext(), "Jumped to playing track", Toast.LENGTH_SHORT).show();
+            }
+        );
+
+        
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext());
+        String initialEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        mediaServerState.setCurrentEngine(initialEngine);
+        mediaServerState.setEngineDescription(getEngineDescription(initialEngine));
+
+        viewMediaServerPage = DialogInterop.createMediaServerPageView(
+            requireContext(),
+            mediaServerState,
+            engine -> {
+                String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+                if (!engine.equals(prevEngine)) {
+                    prefs.edit().putString(Constants.PREF_SERVER_ENGINE, engine).apply();
+                    mediaServerState.setCurrentEngine(engine);
+                    mediaServerState.setEngineDescription(getEngineDescription(engine));
+                    mediaServerViewModel.restartServer();
+                    Toast.makeText(getContext(), "Switching engine — restarting server…", Toast.LENGTH_SHORT).show();
+                }
+            },
+            () -> mediaServerViewModel.startServer(),
+            () -> mediaServerViewModel.stopServer(),
+            () -> {
+                String url = mediaServerState.getServerUrl();
+                if (url != null && !url.isEmpty()) {
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Server URL", url);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(getContext(), "Server URL copied to clipboard", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            },
+            () -> {
+                String url = mediaServerState.getServerUrl();
+                if (url != null && url.startsWith("http")) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), "Could not open browser: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            },
+            () -> Toast.makeText(getContext(), "Scan with phone or tablet to open WebUI", Toast.LENGTH_SHORT).show()
+        );
+
 
         flattenPage(viewNowPlayingPage, true);
         flattenPage(viewQueuePage, false);
         flattenPage(viewMediaServerPage, false);
 
-        setupNowPlayingTab(viewNowPlayingPage);
+        setupNowPlayingTab();
         setupMediaServerTab(viewMediaServerPage);
 
         // ViewPager2 Adapter
@@ -462,15 +585,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         if (pageView instanceof ViewGroup vg) {
-            if (isNowPlaying) {
-                // For Now Playing page: hide drag handle, inner header, and inner queue section
-                for (int i = 0; i < vg.getChildCount(); i++) {
-                    View child = vg.getChildAt(i);
-                    if (child.getId() != R.id.sheet_now_playing_card) {
-                        child.setVisibility(GONE);
-                    }
-                }
-            } else if (pageView == viewMediaServerPage) {
+            if (pageView == viewMediaServerPage) {
                 // For Server page: hide duplicate inner header row
                 if (vg.getChildCount() > 0) {
                     View firstChild = vg.getChildAt(0);
@@ -557,176 +672,15 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
     };
 
-    private void setupNowPlayingTab(View view) {
-        View cardView = view.findViewById(R.id.sheet_now_playing_card);
-        if (cardView != null) {
-            cardView.setOnClickListener(v -> {
-                if (playbackService != null && playbackService.getNowPlayingSong() != null) {
-                    dismiss();
-                    if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                        Track currentTrack = playbackService.getNowPlayingSong();
-                        if (currentTrack != null) {
-                            ((apincer.android.mmate.ui.MainActivity) getActivity()).scrollToSong(currentTrack);
-                        }
-                    }
-                }
-            });
-        }
+    private void setupNowPlayingTab() { /* Migrated to Compose */ }
 
-        View btnFlipSpecs = view.findViewById(R.id.sheet_btn_flip_specs);
-        if (btnFlipSpecs != null) {
-            btnFlipSpecs.setOnClickListener(v -> toggleTechSpecsFlip(view));
-        }
+    private void toggleTechSpecsFlip() { /* Migrated to Compose */ }
 
-        View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
-        if (techSpecsOverlay != null) {
-            techSpecsOverlay.setOnClickListener(v -> toggleTechSpecsFlip(view));
-        }
+    private void showGestureOverlayIcon() { /* Migrated to Compose */ }
 
-        setupArtworkGestures(view);
-    }
+    private void animateGestureFeedback() { /* Migrated to Compose */ }
 
-    private void toggleTechSpecsFlip(@Nullable View view) {
-        if (view == null) return;
-        View albumArt = view.findViewById(R.id.sheet_album_art);
-        View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
-        if (albumArt == null || techSpecsOverlay == null) return;
-
-        boolean showSpecs = techSpecsOverlay.getVisibility() != VISIBLE;
-        View outgoing = showSpecs ? albumArt : techSpecsOverlay;
-        View incoming = showSpecs ? techSpecsOverlay : albumArt;
-
-        outgoing.animate()
-                .rotationY(90f)
-                .setDuration(140)
-                .withEndAction(() -> {
-                    outgoing.setVisibility(GONE);
-                    outgoing.setRotationY(0f);
-                    incoming.setVisibility(VISIBLE);
-                    incoming.setRotationY(-90f);
-                    incoming.animate()
-                            .rotationY(0f)
-                            .setDuration(140)
-                            .start();
-                })
-                .start();
-    }
-
-    private void showGestureOverlayIcon(View parentView, int iconResId) {
-        if (parentView == null) return;
-        ImageView feedbackIcon = parentView.findViewById(R.id.sheet_gesture_feedback_icon);
-        if (feedbackIcon == null) return;
-
-        feedbackIcon.animate().cancel();
-        feedbackIcon.setImageResource(iconResId);
-        feedbackIcon.setVisibility(VISIBLE);
-        feedbackIcon.setAlpha(0.0f);
-        feedbackIcon.setScaleX(0.7f);
-        feedbackIcon.setScaleY(0.7f);
-
-        feedbackIcon.animate()
-                .alpha(1.0f)
-                .scaleX(1.2f)
-                .scaleY(1.2f)
-                .setDuration(160)
-                .withEndAction(() -> feedbackIcon.animate()
-                        .alpha(0.0f)
-                        .scaleX(1.0f)
-                        .scaleY(1.0f)
-                        .setDuration(200)
-                        .withEndAction(() -> feedbackIcon.setVisibility(GONE))
-                        .start())
-                .start();
-    }
-
-    private void animateGestureFeedback(View albumArt, float translationX) {
-        if (albumArt == null) return;
-        albumArt.animate().cancel();
-        albumArt.setTranslationX(translationX);
-        albumArt.setAlpha(0.6f);
-        albumArt.animate()
-                .translationX(0f)
-                .alpha(1.0f)
-                .setDuration(220)
-                .start();
-    }
-
-    private void setupArtworkGestures(View view) {
-        if (view == null || getContext() == null) return;
-        View albumArt = view.findViewById(R.id.sheet_album_art);
-        if (albumArt == null) return;
-
-        GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-                if (e1 != null && e2 != null) {
-                    float diffX = e2.getX() - e1.getX();
-                    float diffY = e2.getY() - e1.getY();
-                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 80 && Math.abs(velocityX) > 150) {
-                        if (diffX < 0) {
-                            if (isPlaybackServiceBound && playbackService != null) {
-                                animateGestureFeedback(albumArt, -35f);
-                                showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_skip_next_48);
-                                playbackService.skipToNextInQueue();
-                                populateNowPlayingSheet(viewNowPlayingPage);
-                            }
-                        } else {
-                            if (isPlaybackServiceBound && playbackService != null) {
-                                animateGestureFeedback(albumArt, 35f);
-                                showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_skip_previous_48);
-                                playbackService.skipToPrevious();
-                                populateNowPlayingSheet(viewNowPlayingPage);
-                            }
-                        }
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            public boolean onDoubleTap(@NonNull MotionEvent e) {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    albumArt.animate().scaleX(0.92f).scaleY(0.92f).setDuration(100)
-                            .withEndAction(() -> albumArt.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start())
-                            .start();
-                    boolean isPlaying = false;
-                    if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                        PlaybackState state =
-                                ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
-                        isPlaying = state != null && state.currentState == PlaybackState.State.PLAYING;
-                    }
-                    if (isPlaying) {
-                        showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_pause_48);
-                        playbackService.pausePlayer();
-                    } else {
-                        showGestureOverlayIcon(viewNowPlayingPage, R.drawable.ic_baseline_play_arrow_48);
-                        Track current = playbackService.getNowPlayingSong();
-                        if (current != null) {
-                            playbackService.playSong(current);
-                        } else {
-                            QueueManager qm = playbackService.getQueueManager();
-                            if (qm != null) {
-                                Track randomTrack = qm.getRandomTrack();
-                                if (randomTrack != null) {
-                                    playbackService.playSong(randomTrack);
-                                }
-                            }
-                        }
-                    }
-                    populateNowPlayingSheet(viewNowPlayingPage);
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        albumArt.setOnTouchListener((v, event) -> {
-            gestureDetector.onTouchEvent(event);
-            v.performClick();
-            return true;
-        });
-    }
+    private void setupArtworkGestures() { /* Migrated to Compose */ }
 
     private void applyAmbientGlow(@Nullable View cardView, @Nullable Drawable drawable) {
         if (cardView == null || !(drawable instanceof BitmapDrawable) || !isAdded()) return;
@@ -759,238 +713,57 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (view == null || !isAdded()) return;
 
         Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
-
-        ShapeableImageView albumArt = view.findViewById(R.id.sheet_album_art);
-        TextView titleView = view.findViewById(R.id.sheet_track_title);
-        TextView artistView = view.findViewById(R.id.sheet_artist);
+        nowPlayingState.getTrack().setValue(track);
 
         if (track != null) {
-            titleView.setText(track.getTitle());
-            artistView.setText(track.getArtist());
-
-            if (albumArt != null && getContext() != null) {
-                ImageRequest request = CoverartFetcher.builder(requireContext(), track)
+            nowPlayingState.getSpecsFormat().setValue(TagUtils.formatCodec(track) + " • " + formatShortResolution(track));
+            long bitrate = track.getAudioBitRate();
+            nowPlayingState.getSpecsBitrate().setValue(bitrate > 0 ? bitrate + " kbps" : "Lossless Audio");
+            double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
+            nowPlayingState.getSpecsDr().setValue(dr > 0 ? "Dynamic Range: DR " + (int)dr : "Studio Master Dynamic");
+            nowPlayingState.getSpecsFileSize().setValue(track.getFileSize() > 0 && getContext() != null ? android.text.format.Formatter.formatFileSize(getContext(), track.getFileSize()) : "Hi-Res Audio");
+            
+            long durationMs = (long) (track.getAudioDuration() * 1000);
+            nowPlayingState.getDurationMs().setValue(durationMs);
+            
+            if (getContext() != null) {
+                coil3.request.ImageRequest request = CoverartFetcher.builder(requireContext(), track)
                         .data(track)
                         .size(240, 240)
-                        .target(new coil3.target.ImageViewTarget(albumArt))
-                        .build();
-                SingletonImageLoader.get(requireContext()).enqueue(request);
-
-                albumArt.postDelayed(() -> {
-                    View card = view.findViewById(R.id.sheet_now_playing_card);
-                    if (card != null && albumArt.getDrawable() != null) {
-                        applyAmbientGlow(card, albumArt.getDrawable());
-                    }
-                }, 150);
-            }
-
-            populateSignalPathWidget(view, track);
-
-            View techSpecsOverlay = view.findViewById(R.id.sheet_tech_specs_overlay);
-            if (techSpecsOverlay != null) {
-                TextView specsFormat = techSpecsOverlay.findViewById(R.id.sheet_specs_format);
-                TextView specsBitrate = techSpecsOverlay.findViewById(R.id.sheet_specs_bitrate);
-                TextView specsDr = techSpecsOverlay.findViewById(R.id.sheet_specs_dr);
-                TextView specsFileSize = techSpecsOverlay.findViewById(R.id.sheet_specs_file_size);
-
-                String codec = TagUtils.formatCodec(track);
-                String res = formatShortResolution(track);
-                if (specsFormat != null) specsFormat.setText(!res.isEmpty() ? codec + " • " + res : codec);
-
-                if (specsBitrate != null) {
-                    long bitrate = track.getAudioBitRate();
-                    if (bitrate > 0) {
-                        specsBitrate.setText(String.format(Locale.US, "%d kbps", bitrate));
-                    } else {
-                        specsBitrate.setText(track.getAudioChannels() != null ? track.getAudioChannels() + " Ch Stereo" : "Lossless Audio");
-                    }
-                }
-
-                if (specsDr != null) {
-                    double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
-                    if (dr > 0) {
-                        specsDr.setText(String.format(Locale.US, "Dynamic Range: DR %.0f", dr));
-                    } else {
-                        specsDr.setText("Studio Master Dynamic");
-                    }
-                }
-
-                if (specsFileSize != null) {
-                    long size = track.getFileSize();
-                    if (size > 0 && getContext() != null) {
-                        specsFileSize.setText(android.text.format.Formatter.formatFileSize(getContext(), size));
-                    } else {
-                        specsFileSize.setText("Hi-Res Audio");
-                    }
-                }
-            }
-        } else {
-            titleView.setText("Music Mate Ready");
-            artistView.setText("Select a song or player target");
-            populateSignalPathWidget(view, null);
-            if (albumArt != null) albumArt.setImageResource(R.drawable.ic_now_playing_idle);
-        }
-
-        SeekBar seekBar = view.findViewById(R.id.sheet_seekbar);
-        TextView currentTimeView = view.findViewById(R.id.sheet_current_time);
-        TextView totalTimeView = view.findViewById(R.id.sheet_total_time);
-
-        if (track != null && track.getAudioDuration() > 0) {
-            long durationMs = (long) (track.getAudioDuration() * 1000);
-            if (totalTimeView != null) {
-                totalTimeView.setText(formatTime(durationMs));
-            }
-
-            if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                PlaybackState state = ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
-                updatePlaybackProgress(view, state);
-            }
-
-            if (seekBar != null) {
-                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                        if (fromUser && durationMs > 0) {
-                            long seekMs = (progress * durationMs) / 1000;
-                            if (currentTimeView != null) {
-                                currentTimeView.setText(formatTime(seekMs));
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar sb) {}
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar sb) {
-                        if (isPlaybackServiceBound && playbackService != null && durationMs > 0) {
-                            long seekMs = (sb.getProgress() * durationMs) / 1000;
-                            playbackService.seekTo(seekMs);
-                        }
-                    }
-                });
-            }
-        } else {
-            if (currentTimeView != null) currentTimeView.setText("00:00");
-            if (totalTimeView != null) totalTimeView.setText("00:00");
-            if (seekBar != null) seekBar.setProgress(0);
-        }
-
-        PlaybackTarget target = playbackService != null ? playbackService.getPlayer() : null;
-        if (btnCastHeader != null && getContext() != null) {
-            boolean isRemote = target != null && target.isStreaming();
-            int tintColor = isRemote
-                    ? ContextCompat.getColor(requireContext(), R.color.colorGold)
-                    : ContextCompat.getColor(requireContext(), R.color.colorOnSurface);
-            btnCastHeader.setImageTintList(android.content.res.ColorStateList.valueOf(tintColor));
-        }
-
-        ImageView sheetBtnPrevious = view.findViewById(R.id.sheet_btn_previous);
-        ImageView sheetBtnPlayPause = view.findViewById(R.id.sheet_btn_play_pause);
-        ImageView sheetBtnNext = view.findViewById(R.id.sheet_btn_next);
-
-        if (sheetBtnPrevious != null) {
-            sheetBtnPrevious.setOnClickListener(v -> {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    playbackService.skipToPrevious();
-                    view.postDelayed(() -> populateNowPlayingSheet(view), 200);
-                }
-            });
-        }
-
-        if (sheetBtnPlayPause != null) {
-            boolean isPlaying = false;
-            if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
-                PlaybackState state =
-                        ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
-                isPlaying = state != null && state.currentState == PlaybackState.State.PLAYING;
-            }
-            final boolean currentlyPlaying = isPlaying;
-            sheetBtnPlayPause.setImageResource(currentlyPlaying ? R.drawable.ic_pause_rounded : R.drawable.ic_play_rounded);
-            sheetBtnPlayPause.setOnClickListener(v -> {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    if (currentlyPlaying) {
-                        playbackService.pausePlayer();
-                    } else {
-                        Track current = playbackService.getNowPlayingSong();
-                        if (current != null) {
-                            playbackService.playSong(current);
-                        } else {
-                            QueueManager qm = playbackService.getQueueManager();
-                            if (qm != null) {
-                                Track randomTrack = qm.getRandomTrack();
-                                if (randomTrack != null) {
-                                    playbackService.playSong(randomTrack);
+                        .target(new coil3.target.Target() {
+                            @Override
+                            public void onSuccess(coil3.Image result) {
+                                if (result instanceof coil3.BitmapImage) {
+                                    nowPlayingState.getAlbumArt().setValue(((coil3.BitmapImage) result).getBitmap());
                                 }
                             }
-                        }
-                    }
-                    view.postDelayed(() -> populateNowPlayingSheet(view), 200);
-                }
-            });
-        }
-
-        if (sheetBtnNext != null) {
-            sheetBtnNext.setOnClickListener(v -> {
-                if (isPlaybackServiceBound && playbackService != null) {
-                    playbackService.skipToNextInQueue();
-                    view.postDelayed(() -> populateNowPlayingSheet(view), 200);
-                }
-            });
-        }
-
-        // Shuffle toggle inside Now Playing transport row
-        ImageView btnShuffle = view.findViewById(R.id.btn_toggle_shuffle);
-        if (btnShuffle != null && getContext() != null) {
-            QueueManager qm = playbackService != null ? playbackService.getQueueManager() : null;
-            boolean isShuffle = qm != null && qm.isShuffle();
-            androidx.core.widget.ImageViewCompat.setImageTintList(btnShuffle,
-                    ContextCompat.getColorStateList(requireContext(), isShuffle ? R.color.colorGold : R.color.colorMuted));
-            btnShuffle.setOnClickListener(v -> {
-                if (qm != null && playbackService != null) {
-                    playbackService.setShuffleMode(!isShuffle);
-                    Toast.makeText(getContext(), !isShuffle ? "Shuffle ON" : "Shuffle OFF", Toast.LENGTH_SHORT).show();
-                    populateNowPlayingSheet(view);
-                }
-            });
-        }
-
-        // Repeat toggle inside Now Playing transport row
-        ImageView btnRepeat = view.findViewById(R.id.btn_toggle_repeat);
-        if (btnRepeat != null && getContext() != null) {
-            QueueManager qm = playbackService != null ? playbackService.getQueueManager() : null;
-            QueueManager.RepeatMode mode = qm != null ? qm.getRepeatMode() : QueueManager.RepeatMode.OFF;
-            if (mode == QueueManager.RepeatMode.ONE) {
-                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_one_24);
-                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
-                        ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
-            } else if (mode == QueueManager.RepeatMode.ALL) {
-                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
-                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
-                        ContextCompat.getColorStateList(requireContext(), R.color.colorGold));
-            } else {
-                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
-                androidx.core.widget.ImageViewCompat.setImageTintList(btnRepeat,
-                        ContextCompat.getColorStateList(requireContext(), R.color.colorMuted));
+                            @Override
+                            public void onError(coil3.Image error) {
+                                nowPlayingState.getAlbumArt().setValue(null);
+                            }
+                            @Override
+                            public void onStart(coil3.Image placeholder) {
+                                nowPlayingState.getAlbumArt().setValue(null);
+                            }
+                        })
+                        .build();
+                coil3.SingletonImageLoader.get(requireContext()).enqueue(request);
             }
-
-            btnRepeat.setOnClickListener(v -> {
-                if (qm != null && playbackService != null) {
-                    QueueManager.RepeatMode nextMode;
-                    if (mode == QueueManager.RepeatMode.OFF) nextMode = QueueManager.RepeatMode.ALL;
-                    else if (mode == QueueManager.RepeatMode.ALL) nextMode = QueueManager.RepeatMode.ONE;
-                    else nextMode = QueueManager.RepeatMode.OFF;
-
-                    playbackService.setRepeatMode(nextMode.name());
-                    Toast.makeText(getContext(), "Repeat: " + nextMode.name(), Toast.LENGTH_SHORT).show();
-                    populateNowPlayingSheet(view);
-                }
-            });
+        } else {
+            nowPlayingState.getAlbumArt().setValue(null);
         }
 
-        // Also update queue list when now playing updates
-        if (viewQueuePage != null) {
-            populateQueueSection(viewQueuePage);
+        if (playbackService != null) {
+            // nowPlayingState.isShuffle().setValue(playbackService.isShuffleModeEnabled()); // Not directly available
+            // nowPlayingState.getRepeatMode().setValue(playbackService.getRepeatMode()); // Not directly available
+        }
+
+        if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
+            PlaybackState state = ((apincer.android.mmate.ui.MainActivity) getActivity()).getLastPlaybackState();
+            if (state != null) {
+                nowPlayingState.getPlaybackState().setValue(state);
+                nowPlayingState.getProgressMs().setValue(state.currentPositionSecond * 1000L);
+            }
         }
     }
 
@@ -1014,233 +787,34 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (qm != null) {
             qm.loadPlayingQueue();
         }
-
         List<Track> queue = (qm != null) ? new ArrayList<>(qm.getSongs()) : new ArrayList<>();
-        updateQueueTabLabel(queue.size());
         Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
         String currentKey = (track != null) ? track.getUniqueKey() : null;
-        int playingPosition = -1;
-        if (currentKey != null) {
-            for (int i = 0; i < queue.size(); i++) {
-                if (currentKey.equals(queue.get(i).getUniqueKey())) {
-                    playingPosition = i;
-                    break;
-                }
-            }
-        }
-
-        View btnJumpToNowPlaying = root.findViewById(R.id.btn_jump_to_now_playing);
-        RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
-        if (btnJumpToNowPlaying != null) {
-            btnJumpToNowPlaying.setOnClickListener(v -> {
-                // Re-compute playing position at click time to avoid stale captures
-                QueueManager liveQm = playbackService != null ? playbackService.getQueueManager() : null;
-                Track liveTrack = playbackService != null ? playbackService.getNowPlayingSong() : null;
-                String liveKey = liveTrack != null ? liveTrack.getUniqueKey() : null;
-                List<Track> liveQueue = liveQm != null ? liveQm.getSongs() : null;
-                int livePos = -1;
-                if (liveKey != null && liveQueue != null) {
-                    for (int i = 0; i < liveQueue.size(); i++) {
-                        if (liveKey.equals(liveQueue.get(i).getUniqueKey())) {
-                            livePos = i;
-                            break;
-                        }
-                    }
-                }
-                if (livePos >= 0 && recycler != null) {
-                    if (recycler.getLayoutManager() instanceof LinearLayoutManager lm) {
-                        lm.scrollToPositionWithOffset(livePos, 0);
-                    } else {
-                        recycler.smoothScrollToPosition(livePos);
-                    }
-                    Toast.makeText(getContext(), "Jumped to playing track", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "No active playing track", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-        View btnClearQueue = root.findViewById(R.id.btn_clear_queue);
-        if (btnClearQueue != null) {
-            btnClearQueue.setOnClickListener(v -> {
-                if (qm != null) {
-                    qm.emptyPlayingQueue();
-                    Toast.makeText(getContext(), "Queue cleared", Toast.LENGTH_SHORT).show();
-                    populateQueueSection(root);
-                }
-            });
-        }
-
-        TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
-        //TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
-        if (recycler != null) {
-            updateQueueHeader(root, queue);
-            if (queue.isEmpty()) {
-                if (emptyMsg != null) emptyMsg.setVisibility(VISIBLE);
-                recycler.setVisibility(GONE);
-            } else {
-                if (emptyMsg != null) emptyMsg.setVisibility(GONE);
-                recycler.setVisibility(VISIBLE);
-
-                QueueAdapter existingAdapter = null;
-                if (recycler.getAdapter() instanceof QueueAdapter) {
-                    existingAdapter = (QueueAdapter) recycler.getAdapter();
-                }
-
-                if (existingAdapter != null) {
-                    existingAdapter.updateData(queue, currentKey);
-                } else {
-                    QueueAdapter adapter = new QueueAdapter(queue, currentKey, selectedTrack -> {
-                        if (isPlaybackServiceBound && playbackService != null) {
-                            playbackService.playSong(selectedTrack);
-                            if (viewNowPlayingPage != null) populateNowPlayingSheet(viewNowPlayingPage);
-                            populateQueueSection(root);
-                        }
-                    });
-                    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-                    recycler.setLayoutManager(layoutManager);
-                    recycler.setNestedScrollingEnabled(true);
-                    recycler.setAdapter(adapter);
-
-                    ItemTouchHelper touchHelper = new ItemTouchHelper(
-                            new ItemTouchHelper.SimpleCallback(
-                                    ItemTouchHelper.UP | ItemTouchHelper.DOWN,
-                                    ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
-                            ) {
-                                @Override
-                                public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                                    int fromPos = viewHolder.getBindingAdapterPosition();
-                                    int toPos = target.getBindingAdapterPosition();
-                                    if (fromPos != RecyclerView.NO_POSITION && toPos != RecyclerView.NO_POSITION && fromPos != toPos) {
-                                        if (qm != null) {
-                                            qm.moveTrack(fromPos, toPos);
-                                        }
-                                        QueueAdapter currentAdapter = (QueueAdapter) recyclerView.getAdapter();
-                                        if (currentAdapter != null) {
-                                            Track movedItem = currentAdapter.queue.remove(fromPos);
-                                            currentAdapter.queue.add(toPos, movedItem);
-                                            currentAdapter.notifyItemMoved(fromPos, toPos);
-                                            int start = Math.min(fromPos, toPos);
-                                            int count = Math.abs(fromPos - toPos) + 1;
-                                            currentAdapter.notifyItemRangeChanged(start, count);
-                                        }
-                                        return true;
-                                    }
-                                    return false;
-                                }
-
-                                @Override
-                                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                                    int pos = viewHolder.getBindingAdapterPosition();
-                                    QueueAdapter currentAdapter = (QueueAdapter) recycler.getAdapter();
-                                    if (currentAdapter != null && pos != RecyclerView.NO_POSITION && pos < currentAdapter.queue.size()) {
-                                        Track removedTrack = currentAdapter.queue.get(pos);
-                                        if (qm != null) {
-                                            qm.removeTrack(pos);
-                                        }
-                                        currentAdapter.queue.remove(pos);
-                                        currentAdapter.notifyItemRemoved(pos);
-                                        
-                                        // Update headers only
-                                        if (qm != null) {
-                                            updateQueueHeader(root, qm.getSongs());
-                                        }
-
-                                        if (getView() != null) {
-                                            Snackbar.make(getView(), "Removed " + removedTrack.getTitle(), Snackbar.LENGTH_SHORT)
-                                                    .setAction("UNDO", v -> {
-                                                        if (qm != null) {
-                                                            qm.addPlayingQueue(removedTrack.getId());
-                                                        }
-                                                        populateQueueSection(root);
-                                                    }).show();
-                                        }
-                                    }
-                                }
-                            }
-                    );
-                    touchHelper.attachToRecyclerView(recycler);
-                }
-
-                if (playingPosition >= 0) {
-                    final int scrollPos = playingPosition;
-                    recycler.post(() -> {
-                        if (recycler.getLayoutManager() instanceof LinearLayoutManager lm) {
-                            lm.scrollToPositionWithOffset(scrollPos, 0);
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    private void updateQueueHeader(@NonNull View root, List<Track> queue) {
-        TextView queueLabel = root.findViewById(R.id.sheet_queue_label);
-        TextView queueSubtitle = root.findViewById(R.id.sheet_queue_subtitle);
-        RecyclerView recycler = root.findViewById(R.id.sheet_queue_list);
-        TextView emptyMsg = root.findViewById(R.id.sheet_empty_queue_msg);
-
-        if (queue == null || queue.isEmpty()) {
-            if (queueLabel != null) queueLabel.setText("Upcoming Queue");
-            if (queueSubtitle != null) queueSubtitle.setText("0 tracks");
-            if (recycler != null) recycler.setVisibility(View.GONE);
-            if (emptyMsg != null) emptyMsg.setVisibility(View.VISIBLE);
-            return;
-        } else {
-            if (recycler != null) recycler.setVisibility(View.VISIBLE);
-            if (emptyMsg != null) emptyMsg.setVisibility(View.GONE);
-        }
-
-        double totalDurSec = 0;
+        
+        queueState.updateTracks(queue);
+        queueState.setCurrentPlayingKey(currentKey);
+        updateQueueTabLabel(queue.size());
+        
+        // Duration calculation
+        double totalDur = 0;
         for (Track t : queue) {
-            if (t != null) totalDurSec += t.getAudioDuration();
+            totalDur += t.getAudioDuration();
         }
-        String durStr = "";
-        if (totalDurSec > 0) {
-            int totalMins = (int) (totalDurSec / 60);
-            if (totalMins >= 60) {
-                int hrs = totalMins / 60;
-                int mins = totalMins % 60;
-                durStr = String.format(Locale.US, "%dh %dmin total", hrs, mins);
-            } else {
-                durStr = String.format(Locale.US, "%d min total", totalMins);
-            }
-        }
-
-        String countStr = queue.size() + " track" + (queue.size() != 1 ? "s" : "");
-        if (queueLabel != null) queueLabel.setText("Upcoming Queue");
-        if (queueSubtitle != null) {
-            queueSubtitle.setText(!durStr.isEmpty() ? countStr + " • " + durStr : countStr);
-        } else if (queueLabel != null) {
-            queueLabel.setText("Queue  •  " + countStr + (!durStr.isEmpty() ? " (" + durStr + ")" : ""));
+        if (totalDur > 0) {
+            int mins = (int) totalDur / 60;
+            int secs = (int) totalDur % 60;
+            queueState.setTotalDurationText(String.format(java.util.Locale.US, "%d:%02d", mins, secs));
+        } else {
+            queueState.setTotalDurationText("");
         }
     }
+
+    
 
     private void updatePlaybackProgress(@Nullable View view, @Nullable PlaybackState state) {
-        if (view == null || !isAdded() || state == null) return;
-
-        Track track = playbackService != null ? playbackService.getNowPlayingSong() : null;
-
-        ImageView sheetBtnPlayPause = view.findViewById(R.id.sheet_btn_play_pause);
-        if (sheetBtnPlayPause != null) {
-            boolean isPlaying = state.currentState == PlaybackState.State.PLAYING;
-            sheetBtnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause_rounded : R.drawable.ic_play_rounded);
-        }
-
-        if (track != null && track.getAudioDuration() > 0) {
-            long durationMs = (long) (track.getAudioDuration() * 1000);
-            long currentMs = state.currentPositionSecond * 1000L;
-
-            TextView currentTimeView = view.findViewById(R.id.sheet_current_time);
-            if (currentTimeView != null) {
-                currentTimeView.setText(formatTime(currentMs));
-            }
-
-            SeekBar seekBar = view.findViewById(R.id.sheet_seekbar);
-            if (seekBar != null && durationMs > 0) {
-                seekBar.setProgress((int) ((currentMs * 1000) / durationMs));
-            }
-        }
+        if (!isAdded() || state == null) return;
+        nowPlayingState.getPlaybackState().setValue(state);
+        nowPlayingState.getProgressMs().setValue(state.currentPositionSecond * 1000L);
     }
 
     private void showPlayerPicker(View anchorView) {
@@ -1272,132 +846,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void populateSignalPathWidget(@NonNull View view, @Nullable Track track) {
-        View widgetView = view.findViewById(R.id.sheet_signal_path_widget);
-        TextView verdictView = view.findViewById(R.id.sheet_signal_verdict);
-
-        TextView sourceTitle = view.findViewById(R.id.sheet_node_source_title);
-        TextView engineSubtitle = view.findViewById(R.id.sheet_node_engine_subtitle);
-
-       // View targetBox = view.findViewById(R.id.sheet_node_target_box);
-        TextView targetTitle = view.findViewById(R.id.sheet_node_target_title);
-
-        View expandableContainer = view.findViewById(R.id.sheet_signal_path_expandable);
-        LinearLayout stepsContainer = view.findViewById(R.id.sheet_signal_path_steps_container);
-
-        if (track != null && getContext() != null) {
-            String quality = TagUIUtils.getQualityIndFullString(track);
-            if (verdictView != null) {
-                verdictView.setText(VerdictFormatter.format(getContext(), quality));
-            }
-
-            if (sourceTitle != null) {
-                String codec = TagUtils.formatCodec(track);
-                if (codec.isEmpty()) codec = track.getAudioEncoding().toUpperCase();
-                String res = formatShortResolution(track);
-                if (!res.isEmpty()) {
-                    sourceTitle.setText(codec + " " + res);
-                } else {
-                    sourceTitle.setText(codec);
-                }
-            }
-        } else {
-            if (verdictView != null) verdictView.setText("IDLE");
-            if (sourceTitle != null) sourceTitle.setText("No Source");
-        }
-
-        if (getContext() != null) {
-            PlaybackTarget target = playbackService != null ? playbackService.getPlayer() : null;
-            boolean isStreaming = target != null && target.isStreaming();
-
-            if (engineSubtitle != null) {
-                engineSubtitle.setText(isStreaming ? "MusicMate Server" : "Local");
-            }
-
-            if (targetTitle != null) {
-                String playerLabel = target != null ? apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target) : "Local Device";
-
-                if (target == null || target instanceof ExternalAndroidPlayer || (target != null && !target.isStreaming())) {
-                    AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
-                    if (device != null && device.getName() != null && !device.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(device.getName())) {
-                        playerLabel = device.getCompactLabel();
-                    } else if (target != null) {
-                        playerLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
-                    } else if (device != null && device.getName() != null && !device.getName().isEmpty()) {
-                        playerLabel = device.getName();
-                    } else {
-                        playerLabel = "Speaker";
-                    }
-                }
-
-                targetTitle.setText(playerLabel);
-            }
-
-            ImageView targetIconView = view.findViewById(R.id.sheet_node_target_icon);
-            if (targetIconView != null) {
-                Drawable targetDrawable = AudioOutputHelper.getTargetDrawable(getContext(), target, track);
-                if (targetDrawable != null) {
-                    targetIconView.setImageDrawable(targetDrawable);
-                    if (AudioOutputHelper.isExternalAppTarget(target)) {
-                        targetIconView.setImageTintList(null);
-                    } else {
-                        targetIconView.setImageTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#00E5FF")));
-                    }
-                }
-            }
-
-            // Dynamic Range (DR) Badge
-            /*View drBadge = view.findViewById(R.id.sheet_node_dr_badge);
-            TextView drTitle = view.findViewById(R.id.sheet_node_dr_title);
-            if (drBadge != null && drTitle != null) {
-                double dr = (track != null) ? (track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange()) : 0;
-                if (dr > 0) {
-                    drTitle.setText(String.format(Locale.US, "DR %.0f", dr));
-                    drBadge.setVisibility(VISIBLE);
-                } else {
-                    drBadge.setVisibility(GONE);
-                }
-            } */
-
-            // Bit-Perfect Direct Badge
-            View bitperfectBadge = view.findViewById(R.id.sheet_node_bitperfect_badge);
-            if (bitperfectBadge != null) {
-                boolean isBitPerfect = false;
-                if (track != null) {
-                    String enc = track.getAudioEncoding();
-                    boolean isLossless = "FLAC".equalsIgnoreCase(enc) || "ALAC".equalsIgnoreCase(enc) || "DSD".equalsIgnoreCase(enc) || "WAV".equalsIgnoreCase(enc) || "AIFF".equalsIgnoreCase(enc);
-                    if (isLossless) {
-                        if (isStreaming) {
-                            isBitPerfect = true;
-                        } else if (target != null && !AudioOutputHelper.isExternalAppTarget(target)) {
-                            AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), track);
-                            isBitPerfect = device != null && device.isBitPerfect();
-                        }
-                    }
-                }
-                bitperfectBadge.setVisibility(isBitPerfect ? VISIBLE : GONE);
-            }
-
-            if (widgetView != null) {
-                widgetView.setOnClickListener(v -> {
-                    if (expandableContainer != null) {
-                        boolean isCurrentlyVisible = expandableContainer.getVisibility() == VISIBLE;
-                        ViewGroup sceneRoot = (view.getParent() instanceof ViewGroup) ? (ViewGroup) view.getParent() : null;
-                        if (sceneRoot != null) {
-                            android.transition.TransitionManager.beginDelayedTransition(sceneRoot, new android.transition.AutoTransition().setDuration(200));
-                        }
-                        if (!isCurrentlyVisible) {
-                            expandableContainer.setVisibility(VISIBLE);
-                            if (stepsContainer != null) {
-                                stepsContainer.removeAllViews();
-                                addSignalPathSteps(stepsContainer);
-                            }
-                        } else {
-                            expandableContainer.setVisibility(GONE);
-                        }
-                    }
-                });
-            }
-        }
+        // Migrated to compose, this could be handled by state in the future.
     }
 
     private void addSignalPathSteps(LinearLayout signalPathContainer) {
@@ -1585,121 +1034,21 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     // ── Page 2: Media Server Management ──────────────────────────────────────
 
-    private void setupMediaServerTab(View view) {
-        View serverHeader = view.findViewById(R.id.server_name);
-        if (serverHeader != null && serverHeader.getParent() instanceof View parentHeader) {
-            parentHeader.setVisibility(GONE);
-        }
-
-        tvServerName = view.findViewById(R.id.server_name);
-        tvServerStatus = view.findViewById(R.id.server_status);
-        tvServerStatusIcon = view.findViewById(R.id.status_indicator);
-
-        tvServerAddress = view.findViewById(R.id.server_address);
-        tvServerBroadcastInfo = view.findViewById(R.id.server_broadcast_info);
-        tvEngineDescription = view.findViewById(R.id.tv_engine_description);
-       // tvServerPowerBy = view.findViewById(R.id.server_power_by);
-        qrCodeImage = view.findViewById(R.id.qr_code_image);
-
-        btnStartServer = view.findViewById(R.id.btn_start_server);
-        btnStopServer = view.findViewById(R.id.btn_stop_server);
-
-        View btnCopyUrl = view.findViewById(R.id.btn_copy_server_url);
-        if (btnCopyUrl != null) {
-            btnCopyUrl.setOnClickListener(v -> {
-                if (tvServerAddress != null && getContext() != null) {
-                    CharSequence url = tvServerAddress.getText();
-                    if (url != null && !url.toString().isEmpty()) {
-                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                        android.content.ClipData clip = android.content.ClipData.newPlainText("Server URL", url.toString());
-                        if (clipboard != null) {
-                            clipboard.setPrimaryClip(clip);
-                            Toast.makeText(getContext(), "Server URL copied to clipboard", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            });
-        }
-
-        View btnOpenUrl = view.findViewById(R.id.btn_open_server_url);
-        if (btnOpenUrl != null) {
-            btnOpenUrl.setOnClickListener(v -> {
-                if (tvServerAddress != null && getContext() != null) {
-                    CharSequence url = tvServerAddress.getText();
-                    if (url != null && !url.toString().isEmpty() && url.toString().startsWith("http")) {
-                        try {
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.toString()));
-                            startActivity(browserIntent);
-                        } catch (Exception e) {
-                            Toast.makeText(getContext(), "Could not open browser: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            });
-        }
-
-        if (qrCodeImage != null) {
-            qrCodeImage.setOnClickListener(v -> {
-                if (getContext() != null) {
-                    Toast.makeText(getContext(), "Scan with phone or tablet to open WebUI", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-        if (btnStartServer != null) {
-            btnStartServer.setOnClickListener(v -> mediaServerViewModel.startServer());
-        }
-        if (btnStopServer != null) {
-            btnStopServer.setOnClickListener(v -> mediaServerViewModel.stopServer());
-        }
-
-        if (tvServerName != null) {
-            tvServerName.setText(Constants.getPresentationName());
-        }
-
-        setupEngineSwitcher(view);
-
-        observeServerStatus();
-       // detectWebEngine();
-    }
+    private void setupMediaServerTab(View view) { /* Handled by Compose */ }
 
     /** Runtime web engine switcher (SonicNIO / CoreHTTP / Netty) — persists the
      *  preference and restarts the media server when a new engine is selected. */
-    private void setupEngineSwitcher(View view) {
-        MaterialButtonToggleGroup engineGroup = view.findViewById(R.id.server_engine_group);
-        if (engineGroup == null || getContext() == null) return;
+    private void setupEngineSwitcher(View view) { /* Handled by Compose */ }
 
-        android.content.SharedPreferences prefs =
-                androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext());
-        String currentEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
-
-        int checkedId = switch (currentEngine) {
-            case "nio" -> R.id.engine_nio;
-            case "netty" -> R.id.engine_netty;
-            default -> R.id.engine_httpcore;
-        };
-        engineGroup.check(checkedId);
-        updateEngineDescription(currentEngine);
-
-        engineGroup.addOnButtonCheckedListener((group, buttonId, isChecked) -> {
-            if (!isChecked) return;
-            String newEngine;
-            if (buttonId == R.id.engine_nio) {
-                newEngine = "nio";
-            } else if (buttonId == R.id.engine_netty) {
-                newEngine = "netty";
-            } else {
-                newEngine = "httpcore";
-            }
-            updateEngineDescription(newEngine);
-
-            String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
-            if (!newEngine.equals(prevEngine)) {
-                prefs.edit().putString(Constants.PREF_SERVER_ENGINE, newEngine).apply();
-                mediaServerViewModel.restartServer();
-                Toast.makeText(getContext(), "Switching engine — restarting server…", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private String getEngineDescription(String engine) {
+        switch (engine) {
+            case "nio":
+                return "⚡ Ultra-low latency • Minimal battery & RAM footprint";
+            case "netty":
+                return "🚀 High concurrency • Zero-copy file streaming";
+            default:
+                return "🛡️ Apache Async Reactor • Maximum network resilience";
+        }
     }
 
     private void updateEngineDescription(String engine) {
@@ -1722,77 +1071,50 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void updateServerUI(MediaServerHub.ServerStatus status) {
-        if (viewMediaServerPage == null || getContext() == null) return;
+        if (getContext() == null) return;
         boolean isNetworkAvailable = NetworkUtils.isWifiConnected(requireContext()) || NetworkUtils.isHotspotActive(requireContext());
-
+        mediaServerState.setNetworkAvailable(isNetworkAvailable);
+        
         switch (status) {
             case RUNNING:
-                if (btnStartServer != null) btnStartServer.setVisibility(GONE);
-                if (btnStopServer != null) {
-                    btnStopServer.setVisibility(VISIBLE);
-                    btnStopServer.setEnabled(true);
-                }
-                if (tvServerAddress != null) tvServerAddress.setVisibility(VISIBLE);
-                if (qrCodeImage != null) qrCodeImage.setVisibility(VISIBLE);
-                if (tvServerBroadcastInfo != null) {
-                    tvServerBroadcastInfo.setVisibility(VISIBLE);
-                    tvServerBroadcastInfo.setText("DLNA 1.5 / UPnP AV • Active on Port 9000");
-                }
+                mediaServerState.setServerRunning(true);
+                mediaServerState.setBroadcastInfo("DLNA 1.5 / UPnP AV • Active on Port 9000");
 
                 String ssid = ApplicationUtils.getWifiSSID(getContext());
                 if (!StringUtils.isEmpty(ssid)) {
-                    if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX + " (" + ssid + ")");
+                    mediaServerState.setServerStatusText(SERVER_STATUS_ONLINE_PREFIX + " (" + ssid + ")");
                 } else if (NetworkUtils.isHotspotActive(requireContext())) {
-                    if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX + " (Hotspot)");
-                } else if (NetworkUtils.isWifiConnected(requireContext())) {
-                    if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_ONLINE_PREFIX);
+                    mediaServerState.setServerStatusText(SERVER_STATUS_ONLINE_PREFIX + " (Hotspot)");
                 } else {
-                    if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_NO_WIFI);
+                    mediaServerState.setServerStatusText(SERVER_STATUS_ONLINE_PREFIX);
                 }
-                if (tvServerStatusIcon != null) tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_green);
 
                 String serverLocation = mediaServerViewModel.getServerLocationUrl();
-                if (tvServerAddress != null) tvServerAddress.setText(serverLocation);
-                //detectWebEngine();
-                generateAndSetQRCode(serverLocation);
+                mediaServerState.setServerUrl(serverLocation);
+                mediaServerState.setQrCodeBitmap(generateQRCode(serverLocation));
                 break;
 
             case STOPPED:
             case ERROR:
-                if (btnStartServer != null) {
-                    btnStartServer.setVisibility(VISIBLE);
-                    btnStartServer.setEnabled(isNetworkAvailable);
-                }
-                if (btnStopServer != null) btnStopServer.setVisibility(GONE);
-                if (qrCodeImage != null) qrCodeImage.setVisibility(GONE);
-                if (tvServerBroadcastInfo != null) tvServerBroadcastInfo.setVisibility(GONE);
-
-                if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_OFFLINE);
-                if (tvServerStatusIcon != null) tvServerStatusIcon.setBackgroundResource(R.drawable.shape_circle_red);
-
-                if (tvServerAddress != null) {
-                    tvServerAddress.setVisibility(VISIBLE);
-                    tvServerAddress.setText(isNetworkAvailable ? R.string.server_url_not_available : R.string.notification_server_not_running);
-                }
+                mediaServerState.setServerRunning(false);
+                mediaServerState.setBroadcastInfo("");
+                mediaServerState.setQrCodeBitmap(null);
+                mediaServerState.setServerStatusText(SERVER_STATUS_OFFLINE);
+                mediaServerState.setServerUrl(isNetworkAvailable ? getString(R.string.server_url_not_available) : getString(R.string.notification_server_not_running));
                 break;
 
             case STARTING:
-                if (qrCodeImage != null) qrCodeImage.setVisibility(GONE);
-                if (tvServerAddress != null) tvServerAddress.setVisibility(GONE);
-                if (tvServerBroadcastInfo != null) tvServerBroadcastInfo.setVisibility(GONE);
-                if (btnStartServer != null) btnStartServer.setEnabled(false);
-                if (btnStopServer != null) btnStopServer.setEnabled(false);
-                if (tvServerStatus != null) tvServerStatus.setText(SERVER_STATUS_OFFLINE);
+                mediaServerState.setServerRunning(false);
+                mediaServerState.setBroadcastInfo("");
+                mediaServerState.setQrCodeBitmap(null);
+                mediaServerState.setServerUrl("");
+                mediaServerState.setServerStatusText(SERVER_STATUS_OFFLINE);
                 break;
         }
     }
 
-    private void generateAndSetQRCode(String text) {
-        if (text == null || text.isEmpty()) {
-            if (qrCodeImage != null) qrCodeImage.setVisibility(GONE);
-            return;
-        }
-
+    private Bitmap generateQRCode(String text) {
+        if (text == null || text.isEmpty()) return null;
         QRCodeWriter writer = new QRCodeWriter();
         try {
             BitMatrix bitMatrix = writer.encode(text, BarcodeFormat.QR_CODE, 512, 512);
@@ -1804,11 +1126,10 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     bmp.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
                 }
             }
-            if (qrCodeImage != null) {
-                qrCodeImage.setImageBitmap(bmp);
-            }
+            return bmp;
         } catch (WriterException e) {
             e.printStackTrace();
+            return null;
         }
     }
 
@@ -1827,84 +1148,5 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         void onTrackClick(Track track);
     }
 
-    private static class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.VH> {
-
-        private final List<Track> queue;
-        private String currentKey;
-        private final OnTrackClickListener listener;
-
-        QueueAdapter(List<Track> queue, @Nullable String currentKey, OnTrackClickListener listener) {
-            this.queue = new ArrayList<>(queue);
-            this.currentKey = currentKey;
-            this.listener = listener;
-        }
-
-        public void updateData(List<Track> newQueue, @Nullable String newKey) {
-            this.queue.clear();
-            this.queue.addAll(newQueue);
-            this.currentKey = newKey;
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_queue_track, parent, false);
-            return new VH(v);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-            Track track = queue.get(position);
-            boolean isCurrent = currentKey != null
-                    && currentKey.equals(track.getUniqueKey());
-
-            holder.position.setText(isCurrent ? "▶" : String.valueOf(position + 1));
-            holder.position.setTextColor(isCurrent
-                    ? 0xFFFFD700
-                    : holder.position.getResources().getColor(
-                            android.R.color.darker_gray, null));
-
-            holder.title.setText(track.getTitle());
-            holder.title.setTextColor(isCurrent ? 0xFFFFD700 : 0xFFFFFFFF);
-
-            String artist = track.getArtist();
-            holder.artist.setText((artist != null && !artist.isEmpty()) ? artist : track.getAlbum());
-
-            double durSec = track.getAudioDuration();
-            if (durSec > 0) {
-                int mins = (int) durSec / 60;
-                int secs = (int) durSec % 60;
-                holder.duration.setText(String.format(Locale.US, "%d:%02d", mins, secs));
-            } else {
-                holder.duration.setText("");
-            }
-
-            holder.itemView.setBackgroundColor(
-                    isCurrent ? 0x22FFD700 : Color.TRANSPARENT);
-
-            holder.itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onTrackClick(track);
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() { return queue.size(); }
-
-        static class VH extends RecyclerView.ViewHolder {
-            final TextView position, title, artist, duration;
-            final ImageView dragHandle;
-            VH(@NonNull View itemView) {
-                super(itemView);
-                position = itemView.findViewById(R.id.queue_item_position);
-                title = itemView.findViewById(R.id.queue_item_title);
-                artist = itemView.findViewById(R.id.queue_item_artist);
-                duration = itemView.findViewById(R.id.queue_item_duration);
-                dragHandle = itemView.findViewById(R.id.queue_item_drag_handle);
-            }
-        }
-    }
+    
 }

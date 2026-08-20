@@ -61,4 +61,14 @@ public class Settings {
 
        // return PreferenceManager.getDefaultSharedPreferences(applicationContext);
     }
+
+    public static void setLastPlayerTargetId(Context context, String targetId) {
+        SharedPreferences prefs = getPreferences(context);
+        prefs.edit().putString("PREF_LAST_PLAYER_TARGET_ID", targetId).apply();
+    }
+
+    public static String getLastPlayerTargetId(Context context) {
+        SharedPreferences prefs = getPreferences(context);
+        return prefs.getString("PREF_LAST_PLAYER_TARGET_ID", null);
+    }
 }

@@ -402,7 +402,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                 } else {
                     // fallback for SSL
                     ctx.write(new HttpChunkedInput(
-                            new ChunkedFile(streamRaf, start, length, 8192)
+                            new ChunkedFile(streamRaf, start, length, 262144)
                     ));
                     ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 

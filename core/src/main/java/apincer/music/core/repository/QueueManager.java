@@ -68,6 +68,69 @@ public class QueueManager {
      */
     private final List<Integer> shuffleOrder = new ArrayList<>();
 
+    public synchronized void setPlayingQueue(List<Track> songs) {
+        if (songs == null || songs.isEmpty()) return;
+        
+        queueList.clear();
+        
+        // Use a Set to prevent duplicates efficiently
+        java.util.Set<Long> existingIds = new java.util.HashSet<>();
+        
+        for (Track song : songs) {
+            if (song != null && !song.isContainer() && existingIds.add(song.getId())) {
+                queueList.add(song);
+            }
+        }
+        
+        currentIndex = 0;
+        playbackIndex = 0;
+        
+        rebuildIndexMap();
+        
+        // Save the entire list to the DB in one shot
+        try {
+            dbHelper.savePlayingQueue(queueList);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist playing queue batch", e);
+        }
+        
+        updateShuffleOrder();
+    }
+
+    public synchronized void enqueuePlayingQueue(List<Track> songs) {
+        if (songs == null || songs.isEmpty()) return;
+        
+        java.util.Set<Long> existingIds = new java.util.HashSet<>();
+        for (Track existing : queueList) {
+            existingIds.add(existing.getId());
+        }
+        
+        boolean modified = false;
+        for (Track song : songs) {
+            if (song != null && !song.isContainer() && existingIds.add(song.getId())) {
+                queueList.add(song);
+                modified = true;
+            }
+        }
+        
+        if (!modified) return;
+        
+        if (currentIndex == -1) {
+            currentIndex = 0;
+            playbackIndex = 0;
+        }
+        
+        rebuildIndexMap();
+        
+        try {
+            dbHelper.savePlayingQueue(queueList);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist playing queue batch enqueue", e);
+        }
+        
+        updateShuffleOrder();
+    }
+
     public synchronized void addPlayingQueue(long trackId) {
         Track song = tagRepos.findById(trackId);
         if (song != null) {

@@ -42,3 +42,11 @@
 - **WebUI Offline & Stability:** WebUI operates 100% locally with bundled Tailwind JS, and Now Playing triggers are fully guarded against event bubbling and null state errors.
 - **Verification:** `./gradlew compileDebugSources testDebugUnitTest` passed cleanly with 0 errors.
 
+
+## Android UI Compose Migration
+- The complete strategic plan for migrating XML/Java views to Jetpack Compose is located in [ui-migration-plan.md](ui-migration-plan.md).
+- [x] Phase 1: Gradle Setup, Interop Wrapper, and "Discover Music Folders" dialog migration.
+- [x] Phase 2: Action Dialogs & Bottom Sheets (In Progress - Trash, Move, and Media Server Tab migrated).
+- [ ] Phase 3: Custom UI Widgets (Waveforms, Pie Charts).
+- [ ] Phase 4: Tags & Metadata Editors.
+- [x] Phase 5: MainActivity Scaffold - [ ] Phase 5: MainActivity Scaffold & List (The God Activity). List (The God Activity) - List Migration complete.

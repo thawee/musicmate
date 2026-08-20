@@ -155,7 +155,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
                             .option(ChannelOption.SO_KEEPALIVE, true)
                             .childOption(ChannelOption.ALLOCATOR, allocator)
                             //.childOption(ChannelOption.SO_RCVBUF, RECEIVE_BUFFER_SIZE) // better os to manager it
-                           // .childOption(ChannelOption.SO_SNDBUF, SEND_BUFFER_SIZE) // better os to manager it
+                            .childOption(ChannelOption.SO_SNDBUF, 524288)
                            // .option(ChannelOption.SO_TIMEOUT, SOCKET_TIMEOUT_MS)
                            // .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, SOCKET_TIMEOUT_MS)
                             .childHandler(new HttpServerInitializer(getProtocolFactory(), this.router.getConfiguration()));
