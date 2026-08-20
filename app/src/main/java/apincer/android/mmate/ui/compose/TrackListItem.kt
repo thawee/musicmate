@@ -61,19 +61,10 @@ fun TrackListItem(
                 .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            AndroidView(
-                factory = { ctx ->
-                    ImageView(ctx).apply {
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                    }
-                },
-                update = { view ->
-                    val request = ImageRequest.Builder(context)
-                        .data(track)
-                        .target(ImageViewTarget(view))
-                        .build()
-                    SingletonImageLoader.get(context).enqueue(request)
-                },
+            coil3.compose.AsyncImage(
+                model = track,
+                contentDescription = "Album Art",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
 

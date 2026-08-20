@@ -25,11 +25,13 @@ import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.utils.LogHelper;
+import coil3.ImageLoader;
+import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import dagger.hilt.android.HiltAndroidApp;
 
 @HiltAndroidApp
-public class MusixMateApp extends Application {
+public class MusixMateApp extends Application implements coil3.SingletonImageLoader.Factory {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
     @Inject
@@ -110,4 +112,16 @@ public class MusixMateApp extends Application {
     public TagRepository getTagRepository() {
         return tagRepos;
     }
+
+    @androidx.annotation.NonNull
+    @Override
+    public ImageLoader newImageLoader(@androidx.annotation.NonNull android.content.Context context) {
+        coil3.ComponentRegistry registry = new coil3.ComponentRegistry.Builder()
+            .add(new CoverartFetcher.Factory(getApplicationContext()), kotlin.jvm.JvmClassMappingKt.getKotlinClass(apincer.music.core.model.Track.class))
+            .build();
+        return new ImageLoader.Builder(context)
+                .components(registry)
+                .build();
+    }
+
 }

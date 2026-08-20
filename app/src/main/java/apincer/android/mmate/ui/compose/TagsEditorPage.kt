@@ -41,28 +41,15 @@ fun TagsEditorPage(
         // Preview Card
         TechCard(title = "PREVIEW") {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AndroidView(
-                    factory = { ctx ->
-                        ImageView(ctx).apply {
-                            scaleType = ImageView.ScaleType.CENTER_CROP
-                            layoutParams = android.view.ViewGroup.LayoutParams(
-                                (64 * resources.displayMetrics.density).toInt(),
-                                (64 * resources.displayMetrics.density).toInt()
-                            )
-                        }
+                coil3.compose.AsyncImage(
+                    model = track?.let { 
+                        CoverartFetcher.builder(context, it).data(it).build() 
                     },
+                    contentDescription = "Cover Art",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     modifier = Modifier
                         .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    update = { imageView ->
-                        track?.let {
-                            val request = CoverartFetcher.builder(context, it)
-                                .data(it)
-                                .target(ImageViewTarget(imageView))
-                                .build()
-                            SingletonImageLoader.get(context).enqueue(request)
-                        }
-                    }
+                        .clip(RoundedCornerShape(8.dp))
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {

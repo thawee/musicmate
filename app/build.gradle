@@ -166,6 +166,7 @@ dependencies {
     // Image Loading
     implementation libs.coilkt.coil3
     implementation libs.coilkt.coil3.network
+    implementation libs.coilkt.coil3.compose
 
     // Storage & Utilities
     implementation libs.anggrayudi.storage
