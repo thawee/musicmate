@@ -261,7 +261,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         controlPoint = upnpService.getControlPoint();
 
-        RegistryListener listener = new SimpleRegistryListener();
+        RegistryListener listener = new SimpleRegistryListener(this::notifyRenderersChanged);
         upnpService.getRegistry().addListener(listener);
 
         mediaServerDevice = MediaServerDeviceFactory.create(context, tagRepos);
@@ -409,37 +409,63 @@ public class MediaServerHubImpl implements MediaServerHub {
         }
     }
 
-    private void triggerDiscovery( ) {
-      //  boolean aggressive = true;
-        runOnUpnpThread(() -> {
-            //  if (!aggressive && now - lastDiscoveryTime < 5000) return;
+    private volatile java.util.function.Consumer<List<PlaybackTarget>> onRenderersChangedListener;
+    private ScheduledFuture<?> notifyTask;
 
-            lastDiscoveryTime = System.currentTimeMillis();
+    @Override
+    public void setOnRenderersChangedListener(java.util.function.Consumer<List<PlaybackTarget>> listener) {
+        this.onRenderersChangedListener = listener;
+    }
 
-            if (controlPoint == null) return;
-
-            try {
-                // 🔥 normal search
-                controlPoint.search();
-
-            } catch (Exception e) {
-                Log.w(TAG, "Discovery failed", e);
+    private void notifyRenderersChanged() {
+        if (onRenderersChangedListener == null) return;
+        synchronized (this) {
+            if (notifyTask != null && !notifyTask.isDone()) {
+                notifyTask.cancel(false);
             }
+            notifyTask = scheduler.schedule(() -> {
+                try {
+                    List<PlaybackTarget> targets = getPlaybackTargets();
+                    if (onRenderersChangedListener != null) {
+                        onRenderersChangedListener.accept(targets);
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to notify renderers changed", e);
+                }
+            }, 300, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void triggerMultiSearch(int mxSeconds) {
+        if (controlPoint == null) return;
+        try {
+            // 1. Broad query for all UPnP root devices and services
+            controlPoint.search(new org.jupnp.model.message.header.STAllHeader(), mxSeconds);
+            // 2. Targeted query for MediaRenderer devices (WiiM, KEF, Eversolo, Sony, Pioneer, etc.)
+            controlPoint.search(new org.jupnp.model.message.header.UDADeviceTypeHeader(new org.jupnp.model.types.UDADeviceType("MediaRenderer")), mxSeconds);
+            // 3. Targeted query for AVTransport services
+            controlPoint.search(new org.jupnp.model.message.header.UDAServiceTypeHeader(new org.jupnp.model.types.UDAServiceType("AVTransport")), mxSeconds);
+        } catch (Exception e) {
+            Log.w(TAG, "Multi-target discovery search failed", e);
+        }
+    }
+
+    private void triggerDiscovery() {
+        runOnUpnpThread(() -> {
+            lastDiscoveryTime = System.currentTimeMillis();
+            triggerMultiSearch(3);
         });
     }
 
     @Override
     public void refreshDiscovery() {
-        Log.d(TAG, "Manual refresh discovery triggered");
-        // Use MX=5 for manual rescan so slow devices have extra time to respond
+        Log.d(TAG, "Manual refresh discovery triggered with multi-target SSDP query");
         runOnUpnpThread(() -> {
             lastDiscoveryTime = System.currentTimeMillis();
-            if (controlPoint == null) return;
-            try {
-                controlPoint.search(new org.jupnp.model.message.header.STAllHeader(), 5);
-            } catch (Exception e) {
-                Log.w(TAG, "Manual discovery failed", e);
-            }
+            // Pulse 1: Immediate query with MX=4
+            triggerMultiSearch(4);
+            // Pulse 2: Second query at 1.5s to compensate for packet drops on noisy Wi-Fi networks
+            scheduler.schedule(() -> runOnUpnpThread(() -> triggerMultiSearch(3)), 1500, TimeUnit.MILLISECONDS);
         });
     }
 
@@ -754,8 +780,26 @@ public class MediaServerHubImpl implements MediaServerHub {
     private void findRenderersRecursively(RemoteDevice device, List<RemoteDevice> result) {
         if (device == null) return;
         
-        if (device.getType() != null && "MediaRenderer".equalsIgnoreCase(device.getType().getType())) {
-            result.add(device);
+        boolean isRenderer = (device.getType() != null && "MediaRenderer".equalsIgnoreCase(device.getType().getType()))
+                || findServiceRecursively(device, AV_TRANSPORT_TYPE) != null;
+        
+        if (isRenderer && isDeviceValidAndReachable(device)) {
+            // Deduplicate by UDN so identical root/embedded device instances are not listed twice
+            String udn = device.getIdentity() != null && device.getIdentity().getUdn() != null
+                    ? device.getIdentity().getUdn().getIdentifierString() : null;
+            boolean alreadyPresent = false;
+            if (udn != null) {
+                for (RemoteDevice existing : result) {
+                    if (existing.getIdentity() != null && existing.getIdentity().getUdn() != null
+                            && udn.equalsIgnoreCase(existing.getIdentity().getUdn().getIdentifierString())) {
+                        alreadyPresent = true;
+                        break;
+                    }
+                }
+            }
+            if (!alreadyPresent) {
+                result.add(device);
+            }
         }
         
         if (device.hasEmbeddedDevices()) {
@@ -763,6 +807,47 @@ public class MediaServerHubImpl implements MediaServerHub {
                 findRenderersRecursively(embedded, result);
             }
         }
+    }
+
+    private boolean isDeviceValidAndReachable(RemoteDevice device) {
+        if (device == null || device.getIdentity() == null || device.getIdentity().getDescriptorURL() == null) {
+            return false;
+        }
+        String host = device.getIdentity().getDescriptorURL().getHost();
+        if (host == null || host.isEmpty() || "127.0.0.1".equals(host) || "0.0.0.0".equals(host)) {
+            return false;
+        }
+        // Subnet sanity check: If we have lastBoundIp (e.g. 192.168.1.5), verify host starts with same /24 or /16
+        if (lastBoundIp != null && !lastBoundIp.isEmpty()) {
+            String mySubnet24 = getSubnet24(lastBoundIp);
+            String devSubnet24 = getSubnet24(host);
+            if (!mySubnet24.isEmpty() && !devSubnet24.isEmpty() && !mySubnet24.equals(devSubnet24)) {
+                // If subnets don't match on class C /24, check if /16 matches (e.g. 172.16.x or 10.x mesh networks)
+                if (!getSubnet16(lastBoundIp).equals(getSubnet16(host))) {
+                    Log.d(TAG, "Filtering out stale device on disparate subnet: " + host + " (current IP: " + lastBoundIp + ")");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private String getSubnet24(String ip) {
+        if (ip == null) return "";
+        int lastDot = ip.lastIndexOf('.');
+        return lastDot > 0 ? ip.substring(0, lastDot) : "";
+    }
+
+    private String getSubnet16(String ip) {
+        if (ip == null) return "";
+        int firstDot = ip.indexOf('.');
+        if (firstDot > 0) {
+            int secondDot = ip.indexOf('.', firstDot + 1);
+            if (secondDot > 0) {
+                return ip.substring(0, secondDot);
+            }
+        }
+        return "";
     }
 
     /**

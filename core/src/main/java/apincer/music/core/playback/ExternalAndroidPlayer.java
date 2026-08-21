@@ -117,6 +117,9 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
 
         public static PlaybackTarget create(Context context, String packageName) {
             if (packageName == null) return null;
+            if (context != null && packageName.equalsIgnoreCase(context.getPackageName())) {
+                return null; // Self app is handled by createLocalTarget
+            }
 
             if (ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName) || isPackageInstalled(context, packageName)) {
                 String playerName = getAppName(context, packageName);

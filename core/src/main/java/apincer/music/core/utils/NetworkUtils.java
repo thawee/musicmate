@@ -178,6 +178,14 @@ public class NetworkUtils {
     }
 
     /**
+     * Returns true when the given interface is an Ethernet interface (eth*, usb* tethering).
+     */
+    public static boolean isOnEthernetNetwork(NetworkInterface networkInterface, InetAddress address) {
+        String interfaceName = networkInterface.getName();
+        return interfaceName != null && (interfaceName.startsWith("eth") || interfaceName.startsWith("usb"));
+    }
+
+    /**
      * Returns true when the given interface is a WiFi hotspot / AP interface.
      * Common names across OEMs: {@code ap0} (Pixel/AOSP), {@code swlan0} (Samsung),
      * {@code wlan1} (some Qualcomm devices in concurrent AP+STA mode).

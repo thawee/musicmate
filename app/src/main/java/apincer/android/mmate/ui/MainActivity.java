@@ -15,7 +15,6 @@ import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
@@ -42,23 +41,17 @@ import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.QueueManager;
 import apincer.music.core.utils.PlayerNameUtils;
 import apincer.android.utils.FileUtils;
-import android.os.SystemClock;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ContextMenu;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AutoCompleteTextView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -69,7 +62,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
@@ -78,11 +70,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
-import apincer.android.mmate.ui.MySelectionTracker;
-import androidx.recyclerview.selection.StorageStrategy;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -91,20 +79,14 @@ import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -126,16 +108,12 @@ import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.TagRepository;
-import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
-import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
-import apincer.android.mmate.worker.ScanAudioFileWorker;
 import dagger.hilt.android.AndroidEntryPoint;
-import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 
 /**
  * Main Activity for MusicMate application
@@ -173,13 +151,10 @@ public class MainActivity extends AppCompatActivity {
     private SearchView headerSearchView;
     private TextView headerStatText;
 
-    private SwipeRefreshLayout swipeRefreshLayout;
     private WorkInfo.State lastWorkState = null;
     private View scanProgressDots;
     private android.animation.AnimatorSet dotAnimator = null;
-    private View emptyStateView;
-    private FloatingActionButton fabScrollToTop;
-
+    
     private TextView nowPlayingLabel;
     private ImageView mBlurBackground;
 
@@ -241,8 +216,8 @@ public class MainActivity extends AppCompatActivity {
                 lastStateEnum = newStateEnum;
 
                 if (true) {
-                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING);
-
+                    boolean isPlaying = playbackState != null && playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), isPlaying);
                 }
 
                 if (songChanged) {
@@ -312,6 +287,17 @@ public class MainActivity extends AppCompatActivity {
                     SingletonImageLoader.get(this).enqueue(request);
                 }
             }
+            if (dockProgressBar != null && playbackState != null) {
+                dockProgressBar.setVisibility(android.view.View.VISIBLE);
+                long current = playbackState.currentPositionSecond;
+                long total = (long) song.getAudioDuration();
+                if (total > 0) {
+                    dockProgressBar.setMax(1000);
+                    dockProgressBar.setProgress((int) ((current * 1000) / total));
+                } else {
+                    dockProgressBar.setProgress(0);
+                }
+            }
             if (barPlayPauseBtn != null && playbackState != null) {
                 if (playbackState.currentState == PlaybackState.State.PLAYING) {
                     barPlayPauseBtn.setImageResource(R.drawable.ic_baseline_pause_24);
@@ -332,6 +318,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     barTargetSubtitle.setText("Select target player");
                 }
+            }
+            if (dockProgressBar != null) {
+                dockProgressBar.setVisibility(android.view.View.GONE);
             }
             if (barAlbumArt != null) {
                 barAlbumArt.setVisibility(View.VISIBLE);
@@ -393,10 +382,6 @@ public class MainActivity extends AppCompatActivity {
         if (bottomNav != null && bottomNav.getBackground() != null) {
             bottomNav.getBackground().setTint(alphaColor);
             bottomNav.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
-        }
-        if (fabScrollToTop != null && fabScrollToTop.getBackground() != null) {
-            fabScrollToTop.getBackground().setTint(alphaColor);
-            fabScrollToTop.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
         }
 
     }
@@ -486,7 +471,7 @@ public class MainActivity extends AppCompatActivity {
                 // Save layout manager state to restore scroll position
 
                 apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
-                swipeRefreshLayout.setRefreshing(false);
+                apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
                 // Update header after adapter is populated; stats observer will correct later
                 updateHeaderPanel(viewModel.searchStats.getValue());
 
@@ -498,18 +483,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             if (musicTags == null || musicTags.isEmpty()) {
-                emptyStateView.setVisibility(View.VISIBLE);
-                swipeRefreshLayout.setVisibility(View.GONE);
+                
             } else {
-                emptyStateView.setVisibility(View.GONE);
-                swipeRefreshLayout.setVisibility(View.VISIBLE);
+                
             }
         });
 
         // When DB aggregate stats arrive, refresh the subtitle with accurate totals
         viewModel.searchStats.observe(this, stats -> updateHeaderPanel(stats));
 
-        viewModel.musicItemsLoading.observe(this, isLoading -> composeListView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
+        viewModel.musicItemsLoading.observe(this, isLoading -> composeListView.post(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
                 .getWorkInfosForUniqueWorkLiveData("MusicScanWork")
@@ -586,12 +569,11 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setElevation(8f);
         }
 
-        View leftMenu = rootView.findViewById(R.id.navigation_collections);
-        ImageView rightMenu = rootView.findViewById(R.id.navigation_settings);
-
+        View menuBtn = rootView.findViewById(R.id.navigation_collections);
         // Setup menu click listeners
-        leftMenu.setOnClickListener(v -> doShowLeftMenus());
-        rightMenu.setOnClickListener(v -> doShowRightMenus());
+        if (menuBtn != null) {
+            menuBtn.setOnClickListener(v -> doShowLeftMenus());
+        }
 
         setupFloatingPlaybackBar();
     }
@@ -599,6 +581,7 @@ public class MainActivity extends AppCompatActivity {
     private View floatingPlaybackBar;
     private ImageView barAlbumArt;
     private TextView barTrackTitle;
+    private android.widget.ProgressBar dockProgressBar;
     private TextView barTargetSubtitle;
     private ImageView barPlayPauseBtn;
     private ImageView barNextBtn;
@@ -609,6 +592,8 @@ public class MainActivity extends AppCompatActivity {
 
         barAlbumArt = rootView.findViewById(R.id.bar_album_art);
         barTrackTitle = rootView.findViewById(R.id.bar_track_title);
+        barTrackTitle.setSelected(true);
+        dockProgressBar = rootView.findViewById(R.id.dock_progress_bar);
         barTargetSubtitle = rootView.findViewById(R.id.bar_target_subtitle);
         barPlayPauseBtn = rootView.findViewById(R.id.btn_dock_play_pause);
         barNextBtn = rootView.findViewById(R.id.btn_dock_next);
@@ -695,36 +680,10 @@ public class MainActivity extends AppCompatActivity {
         // Initialize adapter
 
         // Setup RecyclerView
-        swipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
-        emptyStateView = rootView.findViewById(R.id.empty_state_view);
         scanProgressDots = rootView.findViewById(R.id.scan_progress_dots);
         int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
-        swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
 
-        // --- Set the listener ---
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            // This method is called when the user swipes
-            // 1. Load your new data here (e.g., make a network call)
-            viewModel.loadMusicItems();
-        });
 
-        fabScrollToTop = rootView.findViewById(R.id.fab_scroll_to_top);
-        fabScrollToTop.setOnClickListener(v -> {
-            
-            
-            
-        });
-
-        ViewCompat.setOnApplyWindowInsetsListener(fabScrollToTop, (v, insets) -> {
-            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-            int baseMargin = getResources().getDimensionPixelSize(R.dimen.dimen_64_dp);
-            ViewGroup.LayoutParams params = v.getLayoutParams();
-            if (params instanceof ViewGroup.MarginLayoutParams marginParams) {
-                marginParams.bottomMargin = baseMargin + bottomInset;
-                v.setLayoutParams(marginParams);
-            }
-            return insets;
-        });
 
         composeListView = rootView.findViewById(R.id.compose_list_view);
         apincer.android.mmate.ui.compose.ListInterop.setMusicListContent(composeListView, this);
@@ -768,6 +727,7 @@ public class MainActivity extends AppCompatActivity {
                         actionMode.setTitle(count + " Selected");
                         //actionMode.invalidate();
                     }
+                    apincer.android.mmate.ui.compose.ListInterop.updateSelectedTracks(new java.util.HashSet<>(selections));
                 }
             };
             mTracker.setObserver(observer);
@@ -783,9 +743,7 @@ public class MainActivity extends AppCompatActivity {
         apincer.android.mmate.ui.compose.DrawerInterop.openDrawer();
     }
 
-    private void doShowRightMenus() {
-        apincer.android.mmate.ui.compose.DrawerInterop.openDrawer();
-    }
+
 
     private void updateHeaderPanel() {
         updateHeaderPanel(null);
@@ -915,7 +873,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scrollToPosition(int position) {
-        // TODO: Implement Compose LazyListState scrolling in ListInterop
+        apincer.android.mmate.ui.compose.ListInterop.scrollToPosition(position);
     }
 
     private void doHideSearch() {
@@ -936,48 +894,70 @@ public class MainActivity extends AppCompatActivity {
             @Override public int getItemId() { return itemId; }
             @Override public int getGroupId() { return 0; }
             @Override public int getOrder() { return 0; }
+            @NonNull
             @Override public MenuItem setTitle(CharSequence title) { return this; }
+            @NonNull
             @Override public MenuItem setTitle(int title) { return this; }
             @Override public CharSequence getTitle() { return null; }
+            @NonNull
             @Override public MenuItem setTitleCondensed(CharSequence title) { return this; }
             @Override public CharSequence getTitleCondensed() { return null; }
+            @NonNull
             @Override public MenuItem setIcon(Drawable icon) { return this; }
+            @NonNull
             @Override public MenuItem setIcon(int iconRes) { return this; }
             @Override public Drawable getIcon() { return null; }
+            @NonNull
             @Override public MenuItem setIntent(Intent intent) { return this; }
             @Override public Intent getIntent() { return null; }
+            @NonNull
             @Override public MenuItem setShortcut(char numericChar, char alphaChar) { return this; }
+            @NonNull
             @Override public MenuItem setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers) { return this; }
+            @NonNull
             @Override public MenuItem setNumericShortcut(char numericChar) { return this; }
+            @NonNull
             @Override public MenuItem setNumericShortcut(char numericChar, int numericModifiers) { return this; }
             @Override public char getNumericShortcut() { return 0; }
             @Override public int getNumericModifiers() { return 0; }
+            @NonNull
             @Override public MenuItem setAlphabeticShortcut(char alphaChar) { return this; }
+            @NonNull
             @Override public MenuItem setAlphabeticShortcut(char alphaChar, int alphaModifiers) { return this; }
             @Override public char getAlphabeticShortcut() { return 0; }
             @Override public int getAlphabeticModifiers() { return 0; }
+            @NonNull
             @Override public MenuItem setCheckable(boolean checkable) { return this; }
             @Override public boolean isCheckable() { return false; }
+            @NonNull
             @Override public MenuItem setChecked(boolean checked) { return this; }
             @Override public boolean isChecked() { return false; }
+            @NonNull
             @Override public MenuItem setVisible(boolean visible) { return this; }
             @Override public boolean isVisible() { return true; }
+            @NonNull
             @Override public MenuItem setEnabled(boolean enabled) { return this; }
             @Override public boolean isEnabled() { return true; }
             @Override public boolean hasSubMenu() { return false; }
             @Override public android.view.SubMenu getSubMenu() { return null; }
+            @NonNull
             @Override public MenuItem setOnMenuItemClickListener(OnMenuItemClickListener menuItemClickListener) { return this; }
             @Override public ContextMenu.ContextMenuInfo getMenuInfo() { return null; }
             @Override public void setShowAsAction(int actionEnum) {}
+            @NonNull
             @Override public MenuItem setShowAsActionFlags(int actionEnum) { return this; }
+            @NonNull
             @Override public MenuItem setActionView(View view) { return this; }
+            @NonNull
             @Override public MenuItem setActionView(int resId) { return this; }
             @Override public View getActionView() { return null; }
+            @NonNull
             @Override public MenuItem setActionProvider(android.view.ActionProvider actionProvider) { return this; }
             @Override public android.view.ActionProvider getActionProvider() { return null; }
             @Override public boolean expandActionView() { return false; }
             @Override public boolean collapseActionView() { return false; }
             @Override public boolean isActionViewExpanded() { return false; }
+            @NonNull
             @Override public MenuItem setOnActionExpandListener(OnActionExpandListener listener) { return this; }
         };
         onOptionsItemSelected(item);
@@ -1041,9 +1021,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.menu_about_music_mate) {
             doShowAboutApp();
             return true;
-        } else if (item.getItemId() == R.id.navigation_settings) {
-            doShowRightMenus();
-            return true;
+
         } else if (item.getItemId() == R.id.menu_directories) {
             doScanDirectories();
             return true;
@@ -1120,7 +1098,6 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < renderers.size(); i++) {
                 apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
                 boolean isActive = current != null && current.getTargetId().equals(target.getTargetId());
-                boolean isRemote = target.isStreaming();
                 String baseLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
 
                 if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
@@ -1728,7 +1705,7 @@ public class MainActivity extends AppCompatActivity {
             if(true) {
                 if ((!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()))) {
                     currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
-                    swipeRefreshLayout.setRefreshing(true);
+                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
                     viewModel.loadMusicItems(currentCriteria);
 
                     return;
@@ -1736,7 +1713,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (currentCriteria.isSearchMode()) {
                     doHideSearch();
-                    swipeRefreshLayout.setRefreshing(true);
+                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
                     viewModel.loadMusicItems(currentCriteria);
 
                     return;
@@ -1747,7 +1724,7 @@ public class MainActivity extends AppCompatActivity {
                 }else if ((!isEmpty(currentCriteria.getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
                     currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
                     currentCriteria.setKeyword(null);
-                    swipeRefreshLayout.setRefreshing(true);
+                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
                     viewModel.loadMusicItems(currentCriteria);
                 }
             }
@@ -1825,6 +1802,27 @@ public class MainActivity extends AppCompatActivity {
             mTracker.select((long) position);
         }
     }
+
+    public void onFolderPlayClicked(apincer.music.core.model.Track tag) {
+        if (isPlaybackServiceBound && playbackService != null) {
+            viewModel.playCollection(tag, playbackService, false);
+            android.widget.Toast.makeText(this, "Playing collection", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void onFolderEnqueueClicked(apincer.music.core.model.Track tag) {
+        if (isPlaybackServiceBound && playbackService != null) {
+            viewModel.playCollection(tag, playbackService, true);
+            android.widget.Toast.makeText(this, "Collection added to queue", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void onListRefresh() {
+        apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
+        viewModel.loadMusicItems();
+        apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
+    }
+
 
     public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {
         if (tag != null) {

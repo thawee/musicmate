@@ -123,8 +123,25 @@
 - **Dynamic Dialog ListView Sizing & Programmatic MaterialButton Theming**:
   - Never hardcode fixed pixel heights (e.g. `220dp`) on `ListView` in modal dialogs as it leaves large empty black voids when lists have few items. Use a dynamic height calculator (`setListViewHeightBasedOnChildren()`) on the adapter or `post()` cycle.
   - When creating buttons programmatically (e.g. storage partition selectors), avoid `new Button(context)`. Use `new MaterialButton(context, null, materialButtonTonalStyle)` with explicit corner radii, icon resources, and tinted backgrounds so buttons blend seamlessly into the dark theme.
-
-
-
-
+- **DLNA Renderer Discovery, SSDP Multi-Target Bursts & Subnet Filtering**:
+  - *SSDP Multi-Targeting:* Never rely solely on generic `ssdp:all` (`STAllHeader`) for UPnP discovery. Embedded audiophile renderers (WiiM, Eversolo, KEF, Sony, Yamaha) frequently filter `ssdp:all` to conserve bandwidth. Always broadcast multi-target M-SEARCH queries: `ssdp:all`, `urn:schemas-upnp-org:device:MediaRenderer:1`, and `urn:schemas-upnp-org:service:AVTransport:1` in 2 burst pulses (0s and 1.5s) to overcome UDP packet drops.
+  - *Broad Service Discovery:* In UPnP AV, identify renderers by either `MediaRenderer` device type OR presence of `AVTransport` service (`findServiceRecursively(device, AV_TRANSPORT_TYPE) != null`), ensuring compatibility with custom-typed renderers (e.g. Sonos, Heos, custom streamers).
+  - *Subnet Reachability & Ghost Renderers:* When enumerating renderers, validate descriptor host IPs against the current bound network subnet to filter out stale/ghost devices cached from previous Wi-Fi networks.
+  - *Startup Target Reconciliation & Safety Fallback:* When restoring a previously selected DLNA renderer (`uuid:...`) on startup, create a temporary placeholder with `"Scanning for players…"`. Connect `RegistryListener` to `MusicMateServiceImpl` to automatically reconcile the placeholder when the live device appears. Attach an 8-second timeout task to fall back to `localTarget` if the device is offline or powered down.
+- **jUPnP Namespace URI Conflicts with Multiple Media Renderers**:
+  - *Root Cause:* In `MediaServerConfiguration`, overriding `createNamespace()` to return empty string `""` from `getDevicePath(Device device)` causes every discovered UPnP device's event callback URI to collapse to `/dms/svc/upnp-org/RenderingControl/event/cb`.
+  - When a second renderer (e.g. `HiBy Music HiBy MediaRender`) is discovered alongside another renderer (e.g. `Ropieee-UPnP/AV`), jUPnP throws `RegistrationException: URI namespace conflict with already registered resource` and rejects the second device entirely.
+  - *Fix:* Always return `new Namespace("/dms")` without stripping device UDNs so every remote device is assigned its own unique URI path (`/dms/uuid:.../svc/...`).
 - **Auto-select player bug**: When fixing "app auto selects android speaker as default", ensure that the previously selected player is restored from settings on startup. For DLNA targets that take time to be discovered via UPnP, create a placeholder `DMRPlayer` target (e.g. `uuid:...`) with a "Scanning for players..." display name, so that the app doesn't prematurely fallback to the local speaker while waiting for discovery.
+- **BottomSheet Compose Viewport & Primary Action Placement**:
+  - In modal bottom sheets and viewpager pages with fixed or dynamic peek heights, never place primary lifecycle/power actions (such as Start/Stop or Connect) at the very bottom below dividers and long description blocks without `Modifier.verticalScroll(rememberScrollState())`. Layout constraints or multi-line text wrapping will push the buttons below the fold / screen edge.
+  - Position primary actions directly inside the top Hero Status Card (or persistent sticky header) with high-contrast Material 3 buttons, and wrap content in `verticalScroll` so the view remains fully accessible and responsive across all device sizes and font scales.
+- **Floating Mini-Player Dock Layout & Thumb Ergonomics**:
+  - Mini-player bars and persistent bottom docks should follow the standard left-to-right hierarchy: `[Album Art]` ➔ `[Title & Subtitle]` ➔ `[Transport Controls]` ➔ `[Drawer/Menu Action]`.
+  - Placing album art on the far left anchors the visual identity of the playing media with the text information, while placing the navigation/collections menu button on the far right optimizes for comfortable one-handed thumb reach for right-handed users.
+- **Media3 ExoPlayer Main-Thread Confinement During Background Player Switching**:
+  - Media3 `ExoPlayer` enforces that all player control methods (`play()`, `pause()`, `stop()`, `release()`, `setMediaItem()`) are executed strictly on the application's Main thread Looper. Calling any ExoPlayer method directly from background threads (e.g. jUPnP registry listeners or executor thread pools like `pool-8-thread-1` when deactivating the local player to switch to a remote DLNA renderer) throws `IllegalStateException: Player is accessed on the wrong thread`.
+  - Always guard and route internal ExoPlayer operations through `runOnMainThread(Runnable)` in controllers like `AndroidPlayerController` to ensure thread-safe execution across asynchronous events.
+- **Compose Badges Single-Line Soft-Wrap Enforcement**:
+  - In Jetpack Compose, `Text` defaults to `softWrap = true` and `maxLines = Int.MAX_VALUE`. When nested in horizontal `Row` layouts inside `Modifier.weight(1f)` containers, any tight horizontal space causes hyphenated labels (e.g. `"HI-RES"`, `"24-BIT"`) to split across multiple lines, deforming compact badges into tall vertical boxes.
+  - Always enforce `maxLines = 1` and `softWrap = false` on all chip and badge text components (`QualityBadge`, `ResolutionBadge`, `NewBadge`, `DynamicRangeMeter`), optimize letter-spacing and padding, and scale meter widths (e.g. 30dp x 6dp) to guarantee clean, un-deformed single-line badges across all device resolutions.

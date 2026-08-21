@@ -1,9 +1,8 @@
 package apincer.android.mmate.ui.compose
 
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
 
@@ -17,6 +16,7 @@ class NowPlayingState {
     val durationMs = mutableStateOf(0L)
     
     // Tech Specs
+    val specsVerdict = mutableStateOf("")
     val specsFormat = mutableStateOf("")
     val specsBitrate = mutableStateOf("")
     val specsDr = mutableStateOf("")
@@ -31,4 +31,7 @@ class NowPlayingState {
     
     // Signal Path
     val signalPathSteps = mutableStateListOf<String>()
+    val targetTitle = mutableStateOf("")
+    val targetBadge = mutableStateOf("")
+    val targetDetails = mutableStateOf("")
 }

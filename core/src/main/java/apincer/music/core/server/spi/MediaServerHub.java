@@ -51,4 +51,6 @@ public interface MediaServerHub {
     /** Trigger an immediate UPnP M-SEARCH to rediscover all renderers on the network. */
     void refreshDiscovery();
 
+    /** Register a listener invoked whenever DLNA renderers are added, updated, or removed. */
+    void setOnRenderersChangedListener(java.util.function.Consumer<List<PlaybackTarget>> listener);
 }

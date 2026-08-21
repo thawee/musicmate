@@ -1,11 +1,7 @@
 package apincer.android.mmate.ui.view;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_NO_WIFI;
 import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_OFFLINE;
 import static apincer.android.mmate.service.MusicMateServiceImpl.SERVER_STATUS_ONLINE_PREFIX;
-import static apincer.music.core.utils.StringUtils.SYMBOL_ENC_SEP;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,17 +17,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,16 +29,11 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.palette.graphics.Palette;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.imageview.ShapeableImageView;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textview.MaterialTextView;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -66,7 +51,6 @@ import apincer.android.mmate.ui.compose.DialogInterop;
 import apincer.android.mmate.ui.compose.MediaServerState;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
-import apincer.android.mmate.utils.TagUIUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.DMRPlayer;
@@ -78,11 +62,8 @@ import apincer.music.core.repository.QueueManager;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
-import apincer.music.core.utils.PlayerNameUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
-import coil3.SingletonImageLoader;
-import coil3.request.ImageRequest;
 import dagger.hilt.android.AndroidEntryPoint;
 
 /**
@@ -108,9 +89,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
     private MediaServerViewModel mediaServerViewModel;
-    private MediaServerState mediaServerState = new MediaServerState();
-    private apincer.android.mmate.ui.compose.NowPlayingState nowPlayingState = new apincer.android.mmate.ui.compose.NowPlayingState();
-    private apincer.android.mmate.ui.compose.QueueState queueState = new apincer.android.mmate.ui.compose.QueueState(new ArrayList<>(), null);
+    private final MediaServerState mediaServerState = new MediaServerState();
+    private final apincer.android.mmate.ui.compose.NowPlayingState nowPlayingState = new apincer.android.mmate.ui.compose.NowPlayingState();
+    private final apincer.android.mmate.ui.compose.QueueState queueState = new apincer.android.mmate.ui.compose.QueueState(new ArrayList<>(), null);
 
     // ViewPager & Segmented Tab UI
     private ViewPager2 viewPager;
@@ -123,18 +104,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     private View viewNowPlayingPage;
     private View viewQueuePage;
     private View viewMediaServerPage;
-
-    // Media Server UI
-    private TextView tvServerName;
-    private TextView tvServerStatus;
-    private View tvServerStatusIcon;
-    private TextView tvServerAddress;
-    private TextView tvServerBroadcastInfo;
-    private TextView tvEngineDescription;
-   // private TextView tvServerPowerBy;
-    private ImageView qrCodeImage;
-    private Button btnStartServer;
-    private Button btnStopServer;
 
     public AudioHubBottomSheet() {
         // Default constructor
@@ -480,12 +449,29 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                     prefs.edit().putString(Constants.PREF_SERVER_ENGINE, engine).apply();
                     mediaServerState.setCurrentEngine(engine);
                     mediaServerState.setEngineDescription(getEngineDescription(engine));
-                    mediaServerViewModel.restartServer();
+                    if (playbackService instanceof MusicMateServiceImpl msi) {
+                        msi.stopServers();
+                        msi.startServers();
+                    } else if (mediaServerViewModel != null) {
+                        mediaServerViewModel.restartServer();
+                    }
                     Toast.makeText(getContext(), "Switching engine — restarting server…", Toast.LENGTH_SHORT).show();
                 }
             },
-            () -> mediaServerViewModel.startServer(),
-            () -> mediaServerViewModel.stopServer(),
+            () -> {
+                if (playbackService instanceof MusicMateServiceImpl msi) {
+                    msi.startServers();
+                } else if (mediaServerViewModel != null) {
+                    mediaServerViewModel.startServer();
+                }
+            },
+            () -> {
+                if (playbackService instanceof MusicMateServiceImpl msi) {
+                    msi.stopServers();
+                } else if (mediaServerViewModel != null) {
+                    mediaServerViewModel.stopServer();
+                }
+            },
             () -> {
                 String url = mediaServerState.getServerUrl();
                 if (url != null && !url.isEmpty()) {
@@ -549,7 +535,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 pageView.setLayoutParams(new FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
-                container.addView(pageView);
+                container.addView(pageView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
 
             @Override
@@ -583,16 +569,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (pageView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams params) {
             params.setMargins(0, 0, 0, 0);
         }
-
-        if (pageView instanceof ViewGroup vg) {
-            if (pageView == viewMediaServerPage) {
-                // For Server page: hide duplicate inner header row
-                if (vg.getChildCount() > 0) {
-                    View firstChild = vg.getChildAt(0);
-                    if (firstChild != null) firstChild.setVisibility(GONE);
-                }
-            }
-        }
     }
 
     private void updatePageIndicator(int position) {
@@ -619,7 +595,9 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         } else if (position == TAB_QUEUE && isPlaybackServiceBound && viewQueuePage != null) {
             populateQueueSection(viewQueuePage);
         } else if (position == TAB_MEDIA_SERVER && viewMediaServerPage != null) {
-            if (mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null) {
+            if (playbackService instanceof MusicMateServiceImpl msi && msi.getStatusLiveData() != null && msi.getStatusLiveData().getValue() != null) {
+                updateServerUI(msi.getStatusLiveData().getValue());
+            } else if (mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null && mediaServerViewModel.getServerStatus().getValue() != null) {
                 updateServerUI(mediaServerViewModel.getServerStatus().getValue());
             }
         }
@@ -674,14 +652,6 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
     private void setupNowPlayingTab() { /* Migrated to Compose */ }
 
-    private void toggleTechSpecsFlip() { /* Migrated to Compose */ }
-
-    private void showGestureOverlayIcon() { /* Migrated to Compose */ }
-
-    private void animateGestureFeedback() { /* Migrated to Compose */ }
-
-    private void setupArtworkGestures() { /* Migrated to Compose */ }
-
     private void applyAmbientGlow(@Nullable View cardView, @Nullable Drawable drawable) {
         if (cardView == null || !(drawable instanceof BitmapDrawable) || !isAdded()) return;
         Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
@@ -717,10 +687,22 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
 
         if (track != null) {
             nowPlayingState.getSpecsFormat().setValue(TagUtils.formatCodec(track) + " • " + formatShortResolution(track));
+            
+            String verdict;
+            if (TagUtils.isLossy(track)) {
+                verdict = "STANDARD QUALITY";
+            } else if (track.getAudioBitsDepth() >= 24 && track.getAudioSampleRate() > 48000) {
+                verdict = "HI-RES STUDIO MASTER";
+            } else if (track.getAudioBitsDepth() >= 24) {
+                verdict = "24-BIT STUDIO QUALITY";
+            } else {
+                verdict = "CD Quality";
+            }
+            nowPlayingState.getSpecsVerdict().setValue(verdict);
             long bitrate = track.getAudioBitRate();
-            nowPlayingState.getSpecsBitrate().setValue(bitrate > 0 ? bitrate + " kbps" : "Lossless Audio");
+            nowPlayingState.getSpecsBitrate().setValue(bitrate > 0 ? (bitrate / 1000) + " kbps" : "Lossless Audio");
             double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
-            nowPlayingState.getSpecsDr().setValue(dr > 0 ? "Dynamic Range: DR " + (int)dr : "Studio Master Dynamic");
+            nowPlayingState.getSpecsDr().setValue(dr > 0 ? "DR " + (int)dr : "DR Unknown");
             nowPlayingState.getSpecsFileSize().setValue(track.getFileSize() > 0 && getContext() != null ? android.text.format.Formatter.formatFileSize(getContext(), track.getFileSize()) : "Hi-Res Audio");
             
             long durationMs = (long) (track.getAudioDuration() * 1000);
@@ -729,7 +711,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
             if (getContext() != null) {
                 coil3.request.ImageRequest request = CoverartFetcher.builder(requireContext(), track)
                         .data(track)
-                        .size(240, 240)
+                        .size(800, 800)
                         .target(new coil3.target.Target() {
                             @Override
                             public void onSuccess(coil3.Image result) {
@@ -754,8 +736,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
 
         if (playbackService != null) {
-            // nowPlayingState.isShuffle().setValue(playbackService.isShuffleModeEnabled()); // Not directly available
-            // nowPlayingState.getRepeatMode().setValue(playbackService.getRepeatMode()); // Not directly available
+             nowPlayingState.isShuffle().setValue(playbackService.getQueueManager().isShuffle()); // Not directly available
+             nowPlayingState.getRepeatMode().setValue(playbackService.getQueueManager().getRepeatMode().ordinal()); // Not directly available
         }
 
         if (getActivity() instanceof apincer.android.mmate.ui.MainActivity) {
@@ -765,6 +747,8 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 nowPlayingState.getProgressMs().setValue(state.currentPositionSecond * 1000L);
             }
         }
+        
+        populateSignalPathWidget(view, track);
     }
 
     public void refreshUI() {
@@ -775,8 +759,12 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         if (viewQueuePage != null) {
             populateQueueSection(viewQueuePage);
         }
-        if (viewMediaServerPage != null && mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null) {
-            updateServerUI(mediaServerViewModel.getServerStatus().getValue());
+        if (viewMediaServerPage != null) {
+            if (playbackService instanceof MusicMateServiceImpl msi && msi.getStatusLiveData() != null && msi.getStatusLiveData().getValue() != null) {
+                updateServerUI(msi.getStatusLiveData().getValue());
+            } else if (mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null && mediaServerViewModel.getServerStatus().getValue() != null) {
+                updateServerUI(mediaServerViewModel.getServerStatus().getValue());
+            }
         }
     }
 
@@ -846,49 +834,7 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void populateSignalPathWidget(@NonNull View view, @Nullable Track track) {
-        // Migrated to compose, this could be handled by state in the future.
-    }
-
-    private void addSignalPathSteps(LinearLayout signalPathContainer) {
-        if (signalPathContainer == null || playbackService == null || getContext() == null) return;
-        signalPathContainer.removeAllViews();
-
-        Track song = playbackService.getNowPlayingSong();
-        if (song == null) {
-            TextView emptyText = new TextView(getContext());
-            emptyText.setText("No active audio route telemetry available.");
-            emptyText.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorMuted));
-            emptyText.setTextSize(12f);
-            signalPathContainer.addView(emptyText);
-            return;
-        }
-
-        boolean isLossyFile = TagUtils.isLossy(song);
-        boolean isHiRes = TagUtils.isHiRes(song);
-
-        // --- Step 1: Source ---
-        int sourceShape = R.drawable.shape_node_source;
-        int sourceIcon = R.drawable.ic_baseline_audio_file_24;
-        String sourceTitle = isLossyFile ? "Source: Lossy Compressed Audio" : (isHiRes ? "Source: Hi-Res Lossless Audio" : "Source: Lossless CD Quality");
-        String songTitleText = song.getTitle();
-        if (!StringUtils.isEmpty(song.getArtist())) {
-            songTitleText = songTitleText + " — " + song.getArtist();
-        }
-
-        String codec = TagUtils.formatCodec(song);
-        if (codec.isEmpty()) {
-            codec = song.getAudioEncoding().toUpperCase();
-        }
-
-        String sourceBadge = isHiRes ? "HI-RES" : (isLossyFile ? "LOSSY" : "LOSSLESS");
-        String sourceText = songTitleText + "\n" +
-                "Format: " + codec + SYMBOL_ENC_SEP + TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate()) +
-                " (" + (song.getAudioBitRate() > 0 ? (song.getAudioBitRate() / 1000) + " kbps" : "VBR") + ")\n" +
-                "Container: " + (song.getFileType() != null ? song.getFileType().toUpperCase() : "AUDIO");
-
-        addSignalPathStep(signalPathContainer, sourceShape, sourceIcon, sourceTitle, sourceBadge, sourceText, true);
-
-        // --- Step 2: Transport Engine ---
+        if (playbackService == null) return;
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             if (playbackTarget.isStreaming() && !(playbackTarget instanceof DMRPlayer) && playbackTarget.getDescription() != null) {
@@ -907,138 +853,41 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
                 }
             }
 
-            boolean isStreaming = playbackTarget.isStreaming();
-            int transportShape = R.drawable.shape_node_transport;
-            int transportIcon = R.drawable.ic_baseline_audio_path_24;
-            String transportTitle = "MusicMate Transport Engine";
-            String transportBadge = isStreaming ? "NETWORK STREAMER" : "LOCAL TRANSPORT";
-            String serverDetails = ApplicationUtils.getFriendlyDeviceName() + " • v" + ApplicationUtils.getVersionNumber(getContext()) + "\n" +
-                    (isStreaming ? "Streaming via HTTP Media Server Pipeline" : "Direct Local Storage IO Read");
-
-            addSignalPathStep(signalPathContainer, transportShape, transportIcon, transportTitle, transportBadge, serverDetails, true);
-
-            // --- Step 3: Target Audio Output ---
-            int targetShape;
-            String targetTitle;
-            String targetBadge;
-            String targetDetails;
-
             if (playbackTarget instanceof ExternalAndroidPlayer player) {
+                AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext() != null ? getContext() : view.getContext(), track);
+                boolean isBitPerfect = device.isBitPerfect();
+                boolean isBluetooth = device.isBluetooth();
+                
+                String label = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(player);
                 if ("local".equalsIgnoreCase(player.getTargetId())) {
-                    AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(getContext(), song);
-                    boolean isBitPerfect = device.isBitPerfect();
-                    boolean isBluetooth = device.isBluetooth();
-                    targetShape = isBitPerfect ? R.drawable.shape_node_target_bitperfect : R.drawable.shape_node_target;
-                    int targetIcon = (device.getResId() != 0) ? device.getResId() : (isBitPerfect ? R.drawable.ic_baseline_usb_24 : (isBluetooth ? R.drawable.ic_round_bluetooth_audio_24 : R.drawable.ic_baseline_volume_up_24));
-                    targetTitle = "Output Device: " + device.getName();
-                    targetBadge = isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH A2DP" : "SYSTEM OUTPUT");
-
-                    StringBuilder devBuf = new StringBuilder();
-                    devBuf.append("Type: ").append(device.getDescription());
-                    if (!StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
-                        devBuf.append(" • ").append(device.getCodec());
-                    }
-                    devBuf.append("\nSpecs: ").append(TagUtils.formatResolution(device.getBitPerSampling(), device.getSamplingRate(), -1));
-                    if (isBitPerfect) {
-                        devBuf.append("\nStatus: Bit-Perfect Direct USB Hardware Passthrough (1:1)");
-                    } else if (isBluetooth) {
-                        devBuf.append("\nStatus: Active Bluetooth A2DP Wireless Stream");
-                    } else {
-                        devBuf.append("\nStatus: ").append(device.getFriendyDescription());
-                    }
-                    targetDetails = devBuf.toString();
-
-                    View stepView = addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
-                    if (isBluetooth && stepView != null) {
-                        View card = stepView.findViewById(R.id.step_card_container);
-                        if (card != null) {
-                            card.setOnClickListener(v -> AudioOutputHelper.openSystemAudioOrBluetooth(getContext()));
-                        }
-                    }
-                } else {
-                    targetShape = R.drawable.shape_node_target;
-                    targetTitle = "External Player: " + player.getDisplayName();
-                    targetBadge = "EXTERNAL APP";
-                    Drawable targetDrawable = ExternalAndroidPlayer.Factory.getAppIcon(getContext(), player.getTargetId());
-                    String pkgDesc = ExternalAndroidPlayer.Factory.getAppDescription(getContext(), player.getTargetId());
-                    targetDetails = "Package: " + player.getTargetId() + (pkgDesc != null ? "\n" + pkgDesc : "");
-                    if (targetDrawable != null) {
-                        addSignalPathStep(signalPathContainer, targetShape, targetDrawable, targetTitle, targetBadge, targetDetails, false, true);
-                    } else {
-                        addSignalPathStep(signalPathContainer, targetShape, R.drawable.ic_round_speaker_24, targetTitle, targetBadge, targetDetails, false);
-                    }
+                    String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Phone Speaker";
+                    label = android.os.Build.MODEL + " • " + devName;
                 }
+                
+                nowPlayingState.getTargetTitle().setValue(label);
+                nowPlayingState.getTargetBadge().setValue(isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH" : "SYS OUT"));
+                
+                StringBuilder devBuf = new StringBuilder();
+                devBuf.append(device.getDescription());
+                if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
+                    devBuf.append(" — ").append(device.getCodec());
+                } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getFriendyDescription())) {
+                    devBuf.append(" — ").append(device.getFriendyDescription());
+                }
+                nowPlayingState.getTargetDetails().setValue(devBuf.toString());
             } else {
-                targetShape = R.drawable.shape_node_target;
-                int targetIcon = R.drawable.ic_dlna;
-                targetTitle = "Network Target: " + playbackTarget.getDisplayName();
-                targetBadge = "DLNA RENDERER";
-                String playerLabel = PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget);
-                targetDetails = playerLabel + "\nProtocol: UPnP AVTransport / DLNA Render";
-                addSignalPathStep(signalPathContainer, targetShape, targetIcon, targetTitle, targetBadge, targetDetails, false);
+                nowPlayingState.getTargetTitle().setValue(apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(playbackTarget));
+                nowPlayingState.getTargetBadge().setValue("DLNA");
+                nowPlayingState.getTargetDetails().setValue(apincer.music.core.utils.PlayerNameUtils.getTwoLinePlayerLabel(playbackTarget));
             }
         }
-    }
-
-    private View addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, String title, String badgeText, String description, boolean hasNext) {
-        return addSignalPathStep(container, shapeResId, iconResId, null, title, badgeText, description, hasNext, false);
-    }
-
-    private View addSignalPathStep(LinearLayout container, int shapeResId, Drawable iconDrawable, String title, String badgeText, String description, boolean hasNext, boolean isExternalApp) {
-        return addSignalPathStep(container, shapeResId, 0, iconDrawable, title, badgeText, description, hasNext, isExternalApp);
-    }
-
-    private View addSignalPathStep(LinearLayout container, int shapeResId, int iconResId, Drawable iconDrawable, String title, String badgeText, String description, boolean hasNext, boolean isExternalApp) {
-        if (getContext() == null) return null;
-        View stepView = LayoutInflater.from(getContext()).inflate(R.layout.signal_path_step, container, false);
-        View cardContainer = stepView.findViewById(R.id.step_card_container);
-        ImageView iconView = stepView.findViewById(R.id.step_icon);
-        MaterialTextView titleTextView = stepView.findViewById(R.id.step_title);
-        TextView badgeTextView = stepView.findViewById(R.id.step_badge);
-        MaterialTextView descriptionTextView = stepView.findViewById(R.id.step_description);
-        View lineView = stepView.findViewById(R.id.vertical_line);
-
-        if (cardContainer != null) {
-            cardContainer.setBackgroundResource(shapeResId);
-        }
-        if (iconView != null) {
-            if (iconDrawable != null) {
-                iconView.setImageDrawable(iconDrawable);
-            } else if (iconResId != 0) {
-                iconView.setImageResource(iconResId);
-            }
-            if (isExternalApp) {
-                iconView.setImageTintList(null);
-            }
-        }
-        if (titleTextView != null) titleTextView.setText(title);
-
-        if (badgeTextView != null) {
-            if (StringUtils.isEmpty(badgeText)) {
-                badgeTextView.setVisibility(GONE);
-            } else {
-                badgeTextView.setVisibility(VISIBLE);
-                badgeTextView.setText(badgeText);
-            }
-        }
-
-        if (descriptionTextView != null) descriptionTextView.setText(description);
-
-        if (lineView != null) {
-            lineView.setVisibility(hasNext ? VISIBLE : View.INVISIBLE);
-        }
-
-        container.addView(stepView);
-        return stepView;
     }
 
     // ── Page 2: Media Server Management ──────────────────────────────────────
 
-    private void setupMediaServerTab(View view) { /* Handled by Compose */ }
-
-    /** Runtime web engine switcher (SonicNIO / CoreHTTP / Netty) — persists the
-     *  preference and restarts the media server when a new engine is selected. */
-    private void setupEngineSwitcher(View view) { /* Handled by Compose */ }
+    private void setupMediaServerTab(View view) {
+        observeServerStatus();
+    }
 
     private String getEngineDescription(String engine) {
         switch (engine) {
@@ -1051,23 +900,13 @@ public class AudioHubBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    private void updateEngineDescription(String engine) {
-        if (tvEngineDescription == null) return;
-        switch (engine) {
-            case "nio":
-                tvEngineDescription.setText("⚡ Ultra-low latency • Minimal battery & RAM footprint");
-                break;
-            case "netty":
-                tvEngineDescription.setText("🚀 High-concurrency streaming • Zero-copy DMA throughput");
-                break;
-            default:
-                tvEngineDescription.setText("🛡️ Apache Async Reactor • Maximum network resilience");
-                break;
-        }
-    }
-
     private void observeServerStatus() {
-        mediaServerViewModel.getServerStatus().observe(getViewLifecycleOwner(), this::updateServerUI);
+        if (mediaServerViewModel != null && mediaServerViewModel.getServerStatus() != null) {
+            mediaServerViewModel.getServerStatus().observe(getViewLifecycleOwner(), this::updateServerUI);
+        }
+        if (playbackService instanceof MusicMateServiceImpl msi && msi.getStatusLiveData() != null) {
+            msi.getStatusLiveData().observe(getViewLifecycleOwner(), this::updateServerUI);
+        }
     }
 
     private void updateServerUI(MediaServerHub.ServerStatus status) {

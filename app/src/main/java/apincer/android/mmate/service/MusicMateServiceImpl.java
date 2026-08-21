@@ -5,6 +5,11 @@ import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotif
 import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.Notification;
 import android.app.Service;
+import androidx.media3.session.MediaLibraryService;
+import androidx.media3.session.MediaSession;
+import androidx.media3.session.DefaultMediaNotificationProvider;
+import apincer.android.mmate.R;
+import androidx.media3.session.MediaLibraryService.MediaLibrarySession;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
@@ -68,7 +73,7 @@ import kotlinx.coroutines.flow.StateFlowKt;
  * NO internal ExoPlayer - only monitors and controls external apps and streaming targets.
  */
 @AndroidEntryPoint
-public class MusicMateServiceImpl extends Service implements PlaybackService {
+public class MusicMateServiceImpl extends MediaLibraryService implements PlaybackService {
     private static final String TAG = "MusicMateServiceImpl";
 
     enum RUNNING_MODE {MONITOR, CONTROL}
@@ -94,6 +99,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     QueueManager queueManager;
 
     private AndroidPlayerController androidPlayer;
+    private MediaLibrarySession mediaLibrarySession;
 
     private MediaSessionManager mediaSessionManager;
 
@@ -119,6 +125,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
+    private ScheduledFuture<?> dmrStartupTimeoutTask;
 
     private volatile long lastPreloadedTrackId = -1;
     private volatile long lastPlaybackTrackId = -1;
@@ -296,8 +303,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // Add external media session targets
         if (controllers != null) {
+            String selfPackage = getPackageName();
             for (MediaController controller : controllers) {
                 String packageName = controller.getPackageName();
+                if (selfPackage != null && selfPackage.equalsIgnoreCase(packageName)) {
+                    continue; // Skip self — MusicMate is already registered as the primary local player target
+                }
                 PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
                 if (player != null) {
                     addLocalPlaybackTarget(player, false);
@@ -321,6 +332,23 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                     // Create a placeholder target so we don't fallback to localTarget immediately.
                     PlaybackTarget dummy = apincer.music.core.playback.DMRPlayer.Factory.create(lastPlayerId, "Scanning for players…", "");
                     switchPlayer(dummy, true);
+
+                    // Schedule safety fallback to local target if previous DLNA renderer does not appear
+                    if (dmrStartupTimeoutTask != null) {
+                        dmrStartupTimeoutTask.cancel(false);
+                    }
+                    dmrStartupTimeoutTask = scheduler.schedule(() -> {
+                        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                        mainHandler.post(() -> {
+                            if (currentPlayerFlow.getValue().isPresent()) {
+                                PlaybackTarget cur = currentPlayerFlow.getValue().get();
+                                if (cur.isStreaming() && "Scanning for players…".equals(cur.getDisplayName())) {
+                                    Log.i(TAG, "DLNA target discovery timed out (8s) → falling back to local playback target");
+                                    switchPlayer(localTarget, true);
+                                }
+                            }
+                        });
+                    }, 8, TimeUnit.SECONDS);
                 }
             }
             if (!currentPlayerFlow.getValue().isPresent()) {
@@ -340,7 +368,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         try {
             // Only call it ONCE based on the Android version
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(SERVICE_ID, createInitialNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+                startForeground(SERVICE_ID, createInitialNotification());
             } else {
                 startForeground(SERVICE_ID, createInitialNotification());
             }
@@ -360,7 +388,19 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-        androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
+                androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
+        
+        // Initialize MediaLibrarySession for Media3
+        if (androidPlayer.getInternalExoPlayer() != null) {
+            mediaLibrarySession = new MediaLibrarySession.Builder(this, androidPlayer.getInternalExoPlayer(), new MediaLibrarySession.Callback() {})
+                .build();
+                
+            DefaultMediaNotificationProvider notificationProvider = new DefaultMediaNotificationProvider.Builder(this)
+                .setNotificationId(SERVICE_ID)
+                .build();
+            notificationProvider.setSmallIcon(R.drawable.ic_notification_default);
+            setMediaNotificationProvider(notificationProvider);
+        }
         ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
         if (PermissionUtils.isNotificationListenerEnabled(this)) {
             try {
@@ -382,6 +422,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // Init WebUI assets in background to avoid blocking UI thread during service creation
         Executors.newSingleThreadExecutor().execute(() -> initWebUIAssets(getApplicationContext()));
+
+        // Hook up live DLNA renderer discovery listener to automatically reconcile placeholder targets
+        if (mediaHub != null) {
+            mediaHub.setOnRenderersChangedListener(this::handleDiscoveredRenderers);
+        }
 
         // Initialize Bluetooth A2DP proxy for real-time codec telemetry
         AudioOutputHelper.initializeBluetooth(getApplicationContext());
@@ -486,10 +531,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     }
 
     @Override
-    public void onDestroy() {
-        // 1. Cancel the pending "Next Track" timer
+        public void onDestroy() {
+        if (mediaLibrarySession != null) {
+            mediaLibrarySession.release();
+            mediaLibrarySession = null;
+        }
+        // 1. Cancel the pending "Next Track" and DLNA startup timeout timers
         if (nextTrackTask != null) {
             nextTrackTask.cancel(true);
+        }
+        if (dmrStartupTimeoutTask != null) {
+            dmrStartupTimeoutTask.cancel(true);
+            dmrStartupTimeoutTask = null;
         }
 
         // 2. Shut down the scheduler
@@ -920,6 +973,34 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     }
 
+    private void handleDiscoveredRenderers(List<PlaybackTarget> renderers) {
+        if (renderers == null || renderers.isEmpty()) return;
+
+        Optional<PlaybackTarget> currentOpt = currentPlayerFlow.getValue();
+        if (currentOpt.isPresent()) {
+            PlaybackTarget current = currentOpt.get();
+            if (current.isStreaming()) {
+                String targetId = current.getTargetId();
+                for (PlaybackTarget live : renderers) {
+                    if (live != null && live.getTargetId().equals(targetId)) {
+                        // Reconcile placeholder with live device data
+                        if ("Scanning for players…".equals(current.getDisplayName())
+                                || !live.getDisplayName().equals(current.getDisplayName())
+                                || !live.getDescription().equals(current.getDescription())) {
+                            Log.i(TAG, "Reconciling live DLNA renderer: " + live.getDisplayName() + " [" + targetId + "]");
+                            if (dmrStartupTimeoutTask != null) {
+                                dmrStartupTimeoutTask.cancel(false);
+                                dmrStartupTimeoutTask = null;
+                            }
+                            currentPlayerFlow.setValue(Optional.of(live));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     private PlaybackTarget resolveStreamingPlayerTarget(PlaybackTarget player) {
         if (!player.isStreaming()) return player;
 
@@ -1167,7 +1248,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
         playbackStateFlow.setValue(state);
-        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerFlow.getValue().orElse(null), mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        // Only manually update notification if NOT using the local Media3 ExoPlayer
+        if (target == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
+            updateNotification(getApplicationContext(), state.currentTrack, target, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        }
     }
 
     @Override
@@ -1244,9 +1329,18 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     }
 
+    @androidx.annotation.Nullable
+    @Override
+    public MediaLibrarySession onGetSession(androidx.media3.session.MediaSession.ControllerInfo controllerInfo) {
+        return mediaLibrarySession;
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        if (intent != null && MediaLibraryService.SERVICE_INTERFACE.equals(intent.getAction())) {
+            return super.onBind(intent);
+        }
         return new MusicMateServiceImplBinder();
     }
 }

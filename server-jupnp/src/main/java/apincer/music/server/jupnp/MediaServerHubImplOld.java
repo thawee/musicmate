@@ -990,6 +990,11 @@ public class MediaServerHubImplOld implements MediaServerHub {
         triggerDiscovery();
     }
 
+    @Override
+    public void setOnRenderersChangedListener(java.util.function.Consumer<List<PlaybackTarget>> listener) {
+        // Legacy stub
+    }
+
     /**
      * Finds a service recursively within a device and its embedded devices.
      */

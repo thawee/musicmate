@@ -83,6 +83,21 @@ public class AndroidPlayerController {
     };
 
     @OptIn(markerClass = UnstableApi.class)
+    
+    private MediaItem buildMediaItem(Track track) {
+        androidx.media3.common.MediaMetadata metadata = new androidx.media3.common.MediaMetadata.Builder()
+                .setTitle(track.getTitle())
+                .setArtist(track.getArtist())
+                .setAlbumTitle(track.getAlbum())
+                .build();
+                
+        return new MediaItem.Builder()
+                .setMediaId(String.valueOf(track.getId()))
+                .setUri(Uri.fromFile(new File(track.getPath())))
+                .setMediaMetadata(metadata)
+                .build();
+    }
+
     public AndroidPlayerController(Context context, MediaSessionManager mediaSessionManager) {
         this.context = context;
         this.mediaSessionManager = mediaSessionManager;
@@ -263,18 +278,30 @@ public class AndroidPlayerController {
         return false;
     }
 
+    private void runOnMainThread(Runnable action) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            action.run();
+        } else {
+            mProgressHandler.post(action);
+        }
+    }
+
     public void setNextTrack(Track nextSong) {
         if (nextSong == null || nextSong.getPath() == null) return;
-        if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
-            try {
-                if (internalExoPlayer.getMediaItemCount() > 1) {
-                    internalExoPlayer.removeMediaItem(1);
+        if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            runOnMainThread(() -> {
+                if (internalExoPlayer != null) {
+                    try {
+                        if (internalExoPlayer.getMediaItemCount() > 1) {
+                            internalExoPlayer.removeMediaItem(1);
+                        }
+                        internalExoPlayer.addMediaItem(buildMediaItem(nextSong));
+                        Log.d(TAG, "Gapless ExoPlayer: Preloaded next media item: " + nextSong.getTitle());
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed to preload next media item in ExoPlayer", e);
+                    }
                 }
-                internalExoPlayer.addMediaItem(MediaItem.fromUri(Uri.fromFile(new File(nextSong.getPath()))));
-                Log.d(TAG, "Gapless ExoPlayer: Preloaded next media item: " + nextSong.getTitle());
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to preload next media item in ExoPlayer", e);
-            }
+            });
         }
     }
 
@@ -290,16 +317,20 @@ public class AndroidPlayerController {
             if (mediaController != null) {
                 mediaController.getTransportControls().playFromUri(songUri, null);
             } else if (playbackTargetId != null) {
-                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId) && internalExoPlayer != null) {
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
                     // Use internal ExoPlayer for local/bluetooth playback
-                    try {
-                        internalExoPlayer.clearMediaItems();
-                        internalExoPlayer.setMediaItem(MediaItem.fromUri(Uri.fromFile(new File(song.getPath()))));
-                        internalExoPlayer.prepare();
-                        internalExoPlayer.play();
-                    } catch (Exception e) {
-                        Log.e(TAG, "ExoPlayer playback failed", e);
-                    }
+                    runOnMainThread(() -> {
+                        if (internalExoPlayer != null) {
+                            try {
+                                internalExoPlayer.clearMediaItems();
+                                internalExoPlayer.setMediaItem(buildMediaItem(song));
+                                internalExoPlayer.prepare();
+                                internalExoPlayer.play();
+                            } catch (Exception e) {
+                                Log.e(TAG, "ExoPlayer playback failed", e);
+                            }
+                        }
+                    });
                 } else {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setDataAndType(songUri, "audio/*");
@@ -347,8 +378,12 @@ public class AndroidPlayerController {
     public void pause() {
         if (mediaController != null) {
             mediaController.getTransportControls().pause();
-        } else if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
-            internalExoPlayer.pause();
+        } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            runOnMainThread(() -> {
+                if (internalExoPlayer != null) {
+                    internalExoPlayer.pause();
+                }
+            });
         }
     }
 
@@ -363,16 +398,27 @@ public class AndroidPlayerController {
     public void stopPlaying() {
         if (mediaController != null) {
             mediaController.getTransportControls().stop();
-        } else if (internalExoPlayer != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
-            internalExoPlayer.stop();
+        } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            runOnMainThread(() -> {
+                if (internalExoPlayer != null) {
+                    internalExoPlayer.stop();
+                }
+            });
         }
+    }
+
+    
+    public ExoPlayer getInternalExoPlayer() {
+        return internalExoPlayer;
     }
 
     public void release() {
         unregisterCallback();
-        if (internalExoPlayer != null) {
-            internalExoPlayer.release();
-            internalExoPlayer = null;
-        }
+        runOnMainThread(() -> {
+            if (internalExoPlayer != null) {
+                internalExoPlayer.release();
+                internalExoPlayer = null;
+            }
+        });
     }
 }

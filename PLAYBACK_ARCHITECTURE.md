@@ -198,6 +198,7 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 ```
 
 - **Supported Apps:** USB Audio Player PRO, Neutron Music Player, Poweramp, HiBy Music, Foobar2000, NePLAYER Lite.
+- **Self-Package Filtering:** When querying `MediaSessionManager.getActiveSessions()`, MusicMate explicitly filters out its own package (`context.getPackageName()`) to ensure the app's native local player is not duplicated as an external third-party renderer in player pickers.
 - **Progress Tracking:** 1-second adaptive polling handler reading `MediaController.getPlaybackState().getPosition()`.
 - **Targeted Launching:** Custom URIs via `MusicFileProvider.getUriForFile()` granting temporary read permissions to external media packages.
 
@@ -214,4 +215,7 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 | `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
 | `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, CPU wakelocks, and MediaSession bridge. |
 | `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
-| `:app` | [`AudioHubBottomSheet.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java) | Now Playing UI, 3D specs card flip, DR badge, and signal path telemetry. |
+| `:app` | [`AudioHubBottomSheet.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java) | 3-tab Music Center container hosting Compose viewports. |
+| `:app` | [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) | Jetpack Compose Now Playing UI, 3D flip Audio Anatomy card with `ic_round_info_24` badge. |
+| `:app` | [`MediaServerPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MediaServerPage.kt) | Jetpack Compose Media Server management, Hero Status Card with Start/Stop controls & QR zoom dialog. |
+| `:app` | [`QueuePage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/QueuePage.kt) | Jetpack Compose upcoming queue list with duration telemetry and drag reordering. |

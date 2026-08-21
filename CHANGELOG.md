@@ -5,6 +5,52 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.21] - 2026-08-21
+
+### Added
+- **Music Center Media Server Jetpack Compose Redesign (`MediaServerPage.kt`, `AudioHubBottomSheet.java`)**:
+  - Rebuilt the Media Server management page with a prominent top **Hero Status Card** featuring live Wi-Fi SSID connectivity chip, status LED indicator, and high-contrast **Start / Stop** server controls.
+  - Implemented an interactive tap-to-enlarge QR code modal dialog with high-contrast presentation for cross-room WebUI discovery.
+  - Added dynamic WebUI Endpoint card with 1-tap "Open WebUI in Browser" and "Copy URL" clipboard actions.
+  - Designed segmented engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) with live architecture performance specs and zero label truncation.
+  - Wrapped content in `verticalScroll` to guarantee zero layout clipping across all device aspect ratios and font scales.
+- **Audio Anatomy Technical Specs Card Upgrade (`NowPlayingPage.kt`)**:
+  - Added dedicated gold `ic_round_info_24` icon to the `AUDIO ANATOMY` header row on the flip side of the Now Playing card.
+  - Redesigned technical specs into compact audiophile telemetry rows (Codec, Resolution, Bitrate, Dynamic Range score, File Size) with `verticalScroll` to prevent vertical clipping on all screen sizes.
+- **Floating Bottom Dock Thumb Ergonomics Optimization (`activity_main.xml`, `MainActivity.java`)**:
+  - Swapped positions of Cover Art and Menu button: Album Art is anchored on the far left next to song title/subtitle for natural left-to-right visual hierarchy, while the (M) Collections / Navigation Menu button is on the far right in the primary thumb zone for effortless one-handed reach.
+
+- **Dynamic Artwork Ambient Glow & Floating Sleeve Backdrop (`NowPlayingPage.kt`, `TrackListItem.kt`)**:
+  - Integrated `androidx.palette.graphics.Palette` to extract dynamic primary vibrant/dominant and secondary colors from the active album art.
+  - Rendered a smooth, 700ms animated multi-stop ambient gradient backlight behind the Now Playing hero container and a diffused radial ambient glow behind the album art.
+  - Added gradient hairline rim lighting and floating sleeve borders (`0.75dp`) to elevate cover art presentation to luxury audiophile standards.
+
+- **Precision Audiophile Telemetry & Quality Indicators (`AudioBadges.kt`, `TrackListItem.kt`, `NowPlayingPage.kt`)**:
+  - Redesigned `QualityBadge` into an 85% frosted obsidian glass capsule (`Color(0xD9121212)`) with a 4dp luminous status dot (Gold for Hi-Res, Cyan for DSD, Purple for MQA, Sky Blue for CD Lossless, Grey for MP3) and monospace typography.
+  - Added new `ResolutionBadge` (`24/96`, `16/44.1`, `DSD64`, `320k`) in song list items for comprehensive studio library metadata scanning.
+  - Enhanced output target indicators with luminous audio pipeline status dots (Emerald for Bit-Perfect Direct USB, Cyan for DLNA Network Streamer, Sky Blue for Bluetooth, Gold for Local DAC).
+
+### Fixed
+- **Cover Art Indicator Redesign & Glassmorphism Micro-Pill (`AudioBadges.kt`)**:
+  - Replaced bulky, flat brownish `NEW` / `DL` stickers with ultra-premium **85% deep frosted obsidian glass micro-pills** featuring a glowing 4dp status dot, hairline accent stroke (`#FFD700` gold / `#64B5F6` cyan), and tracked typography (`8.5sp`).
+- **Tag Editor Autocomplete Dropdown Restoration & Catalog Expansion (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `arrays.xml`)**:
+  - Restored Material 3 `ExposedDropdownMenuBox` dropdown selectors for **Genre**, **Style**, **Origin**, **Mood**, **Publisher**, and **Artist** with live type-to-filter suggestions, height bounding (`280dp`), and comprehensive global/audiophile preset catalogs.
+- **DLNA Renderer Discovery, SSDP Multi-Target Bursts & Ghost Target Pruning (`MediaServerHubImpl`, `SimpleRegistryListener`, `MusicMateServiceImpl`, `MediaServerAddressFactory`)**:
+  - Broadcast multi-target SSDP queries (`ssdp:all`, `urn:schemas-upnp-org:device:MediaRenderer:1`, and `urn:schemas-upnp-org:service:AVTransport:1`) in 2 burst pulses (0s and 1.5s) to eliminate discovery misses on devices that ignore `ssdp:all` or drop UDP packets.
+  - Enhanced renderer detection to identify all devices exposing the `AVTransport` service even if custom device types are used (e.g. Sonos, Heos, custom streamers).
+  - Wired `SimpleRegistryListener` to `MediaServerHub.setOnRenderersChangedListener()` to immediately notify `MusicMateServiceImpl` when devices are discovered, updated, or removed.
+  - Added dynamic target reconciliation in `MusicMateServiceImpl` to automatically upgrade placeholder startup targets (`"Scanning for players…"`) to live discovered `DMRPlayer` objects.
+  - Implemented an 8-second safety fallback timeout: if the previously selected DLNA renderer does not appear on the network within 8s, the app gracefully falls back to the local player instead of getting stuck on a ghost player.
+  - Fixed `RegistrationException: URI namespace conflict` in `MediaServerConfiguration` where overriding `getDevicePath()` to return `""` collapsed all discovered devices' event callback URIs to the same path, causing the second discovered renderer (e.g. `HiBy Music HiBy MediaRender`) to be rejected when `Ropieee` was already registered.
+  - Sanitized `MediaServerAddressFactory` to exclude cellular network interfaces from UPnP multicast, preventing multicast socket binding failures.
+  - Added subnet & reachability validation in `isDeviceValidAndReachable()` to filter out stale renderers on disparate subnets from previous Wi-Fi connections.
+- **Media Server Lifecycle Command Execution & Status Observation (`AudioHubBottomSheet.java`, `MediaServerManager.java`)**:
+  - Fixed missing `observeServerStatus()` registration in `AudioHubBottomSheet.java` so Compose state immediately reflects server start/stop transitions.
+  - Routed Start/Stop commands directly to the active `MusicMateServiceImpl` instance with seamless fallback to `MediaServerViewModel`.
+  - Fixed detached `MediaServerManager.stopServer()` intent dispatch to use `context.startService(intent)` instead of `stopService(intent)`, ensuring `ACTION_STOP_SERVER` commands are properly handled by `onStartCommand()`.
+- **MediaSession Active Sessions Self-Package Filtering (`MusicMateServiceImpl.java`, `ExternalAndroidPlayer.java`)**:
+  - Guarded against `MediaSessionManager.getActiveSessions()` returning MusicMate's own package, eliminating redundant `"Music Mate • v3.18.20"` duplicate entries in player pickers.
+
 ## [3.18.20] - 2026-08-14
 
 ### Added

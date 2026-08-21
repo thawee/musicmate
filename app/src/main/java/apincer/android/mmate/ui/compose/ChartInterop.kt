@@ -9,15 +9,19 @@ object ChartInterop {
     fun setQualityPieChartContent(view: ComposeView, entries: List<PieEntry>) {
         view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         view.setContent {
-            QualityPieChart(entries = entries)
+            MusicMateTheme {
+                QualityPieChart(entries = entries)
+            }
         }
     }
-    
+
     @JvmStatic
     fun setDynamicRangeMeterContent(view: ComposeView, track: Track?) {
         view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         view.setContent {
-            DynamicRangeMeter(track = track)
+            MusicMateTheme {
+                DynamicRangeMeter(track = track)
+            }
         }
     }
 }

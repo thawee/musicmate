@@ -2,7 +2,13 @@ package apincer.android.mmate.ui.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -12,19 +18,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import apincer.music.core.model.Track
-import apincer.music.core.utils.ReflectUtil
-import apincer.music.core.utils.StringUtils
-import apincer.music.core.repository.FileRepository
-import apincer.android.mmate.ui.TagsActivity
-import apincer.music.core.model.AudioTag
 import apincer.music.core.codec.FFMPegReader
 import apincer.music.core.codec.TagReader
-import androidx.compose.ui.platform.LocalContext
+import apincer.music.core.model.Track
+import apincer.music.core.repository.FileRepository
+import apincer.music.core.utils.ReflectUtil
+import apincer.music.core.utils.StringUtils
 
 data class TechField(val name: String, val currentVal: String, val defaultVal: String)
 

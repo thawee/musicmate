@@ -1,33 +1,52 @@
 package apincer.android.mmate.ui.compose
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import apincer.music.core.model.Track
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
-import android.widget.ImageView
-import coil3.SingletonImageLoader
-import coil3.request.ImageRequest
-import coil3.target.ImageViewTarget
 import apincer.android.mmate.coil3.CoverartFetcher
+import apincer.music.core.model.Track
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagsEditorPage(
     track: Track?,
     state: TagsEditorState,
-    albumArtistOptions: List<String>
+    albumArtistOptions: List<String> = emptyList(),
+    artistOptions: List<String> = emptyList(),
+    genreOptions: List<String> = emptyList(),
+    styleOptions: List<String> = emptyList(),
+    originOptions: List<String> = emptyList(),
+    moodOptions: List<String> = emptyList(),
+    publisherOptions: List<String> = emptyList()
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -66,10 +85,11 @@ fun TagsEditorPage(
                 onValueChange = { state.title = it; state.titleModified = true },
                 label = "Title"
             )
-            EditorTextField(
+            EditorDropdownField(
                 value = state.artist,
                 onValueChange = { state.artist = it; state.artistModified = true },
-                label = "Artist"
+                label = "Artist",
+                options = artistOptions
             )
             EditorTextField(
                 value = state.album,
@@ -82,28 +102,32 @@ fun TagsEditorPage(
                 label = "Album Artist",
                 options = albumArtistOptions
             )
-            EditorTextField(
+            EditorDropdownField(
                 value = state.genre,
                 onValueChange = { state.genre = it; state.genreModified = true },
-                label = "Genre"
+                label = "Genre",
+                options = genreOptions
             )
-            EditorTextField(
+            EditorDropdownField(
                 value = state.style,
                 onValueChange = { state.style = it; state.styleModified = true },
-                label = "Style"
+                label = "Style",
+                options = styleOptions
             )
             Row(modifier = Modifier.fillMaxWidth()) {
-                EditorTextField(
+                EditorDropdownField(
                     value = state.origin,
                     onValueChange = { state.origin = it; state.originModified = true },
                     label = "Origin",
+                    options = originOptions,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                EditorTextField(
+                EditorDropdownField(
                     value = state.mood,
                     onValueChange = { state.mood = it; state.moodModified = true },
                     label = "Mood",
+                    options = moodOptions,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -128,10 +152,11 @@ fun TagsEditorPage(
                     keyboardType = KeyboardType.Number
                 )
             }
-            EditorTextField(
+            EditorDropdownField(
                 value = state.publisher,
                 onValueChange = { state.publisher = it; state.publisherModified = true },
-                label = "Publisher"
+                label = "Publisher",
+                options = publisherOptions
             )
         }
     }
@@ -167,6 +192,25 @@ fun EditorDropdownField(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val filteredOptions = remember(value, options) {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty() || trimmed == "-") {
+            options.take(60)
+        } else {
+            // Prioritize items that start with the query, followed by items containing the query
+            val startsWith = mutableListOf<String>()
+            val contains = mutableListOf<String>()
+            for (opt in options) {
+                if (opt.startsWith(trimmed, ignoreCase = true)) {
+                    startsWith.add(opt)
+                } else if (opt.contains(trimmed, ignoreCase = true)) {
+                    contains.add(opt)
+                }
+            }
+            val combined = (startsWith + contains).distinct()
+            if (combined.isNotEmpty()) combined.take(50) else options.take(50)
+        }
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -179,21 +223,34 @@ fun EditorDropdownField(
             value = value,
             onValueChange = onValueChange,
             label = { Text(label) },
+            trailingIcon = {
+                if (options.isNotEmpty()) {
+                    androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
+            },
             modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryEditable, true)
+                .menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryEditable, true)
                 .fillMaxWidth(),
             singleLine = true
         )
-        if (options.isNotEmpty()) {
+        if (options.isNotEmpty() && filteredOptions.isNotEmpty()) {
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.heightIn(max = 280.dp)
             ) {
-                options.forEach { selectionOption ->
+                filteredOptions.forEach { selectionOption ->
                     DropdownMenuItem(
-                        text = { Text(selectionOption) },
+                        text = { 
+                            Text(
+                                text = selectionOption,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            ) 
+                        },
                         onClick = {
-                            onValueChange(selectionOption)
+                            val finalVal = if (selectionOption.trim() == "-") "" else selectionOption
+                            onValueChange(finalVal)
                             expanded = false
                         }
                     )

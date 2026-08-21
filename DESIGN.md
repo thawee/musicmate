@@ -282,25 +282,29 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 
 ### A. Unified Floating Dock (`CardView 20dp` Corner Radius)
 - **Geometry:** `MaterialCardView` with `20dp` corner radius, `12dp` horizontal / `8dp` bottom margins so the dock floats cleanly above the list edge with insets margin (`systemBars.bottom + 8dp`).
-- **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and menu.
-- **Playing State:** Dynamically embeds mini album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
+- **Layout Architecture (Left-to-Right Hierarchy):**
+  - **Far Left:** Mini Album Artwork thumbnail (`bar_album_art`, 44dp × 44dp), serving as the primary visual anchor for the playing track (tap opens Music Center).
+  - **Center:** Docked Playback Bar with marquee scrolling track title (`bar_track_title`), target output player subtitle (`bar_target_subtitle`), and Play/Pause & Next transport controls.
+  - **Far Right:** Collections / Navigation Menu button (`navigation_collections`, 48dp × 48dp), positioned on the right edge in the primary reach zone for effortless one-handed thumb navigation.
+- **Idle State:** Displays idle audio icon, app title ("MusicMate"), and target player prompt.
+- **Playing State:** Dynamically embeds live album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
 - **Interactions:**
-  - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §8C). The Audio Route Path widget lives on the `Playback` tab — no separate long-press shortcut exists.
+  - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §8C).
+  - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
 
 ### B. Tag Activity True Bottom Action Capsule (`shape_bottom_frosted_panel`)
 - **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins).
 - **Edge-to-Edge Padding Rule:** The container is pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge.
 - **Safe Area Inset Handling:** System navigation bar insets (`systemBars.bottom + 8dp`) are applied dynamically as bottom padding to the inner panel (`bottom_navigation_panel`), ensuring action buttons ([Delete], [Organize], [More], [Edit/Save]) sit cleanly above the gesture bar with zero detached space.
 
-### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet`)
+### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet` in Jetpack Compose)
 Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport**:
 
-1. **`[ Playback ]` Tab:** Maximum vertical viewport for expanded artwork, transport controls (Prev / Play-Pause / Next), and the 1-line 3-node Audio Route Path widget.
-2. **`[ Queue ]` Tab:** Dedicated full-height list of upcoming tracks, total remaining duration header (`X min total`), drag-to-reorder handles, and swipe-to-remove. The tab label shows a live count (`Queue (12)`).
-3. **`[ Server ]` Tab:** Embeds live DLNA Media Server status, server address with QR code and copy-URL action, start/stop controls, and a runtime engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) that persists the preference and restarts the server on change.
-   - *Out of scope (for now):* server port configuration (port is fixed at `WEB_SERVER_PORT = 9000`) and per-client connection telemetry — revisit if core APIs are added.
+1. **`[ Playback ]` Tab (`NowPlayingPage.kt`):** Edge-to-edge album artwork, bottom overlay title and target pill, glowing seekbar, full transport controls, and interactive 3D Y-axis flip card revealing the **Audio Anatomy** spec sheet (with gold `ic_round_info_24` badge, Codec, Resolution, Bitrate, Dynamic Range, and File Size in compact scrollable rows).
+2. **`[ Queue ]` Tab (`QueuePage.kt`):** Dedicated full-height list of upcoming tracks, total remaining duration header (`X min total`), drag-to-reorder handles, and swipe-to-remove. The tab label shows a live count (`Queue (12)`).
+3. **`[ Server ]` Tab (`MediaServerPage.kt`):** Jetpack Compose Media Server management featuring a top Hero Status Card (live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop power action button), 1-tap WebUI actions, tap-to-enlarge high-contrast QR code modal, and segmented engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) with dynamic architecture descriptions.
 
-### C. Contextual Navigation
+### D. Contextual Navigation
 - **Queue Tab row tap:** Immediately **plays the tapped track** — the queue is a playback surface, not a navigation surface.
 - **Now Playing card tap (Playback tab):** Dismisses the sheet and smoothly scrolls the main library list to the currently playing song's position.
 
@@ -473,6 +477,17 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   2. Clean `settings.gradle` to only include active project modules.
   3. Prune unused transitive dependencies from local submodules (`androidtagview`, `crashreporter`) and remove duplicate dependencies in `core/build.gradle`.
 - **Consequences:** Cleaner dependency tree, faster compilation times, lower memory footprint during builds, and straightforward dependency auditing.
+
+### ADR-011: Floating Bottom Dock Layout Hierarchy & Music Center Compose Architecture
+- **Status:** Accepted
+- **Date:** 2026-08-21
+- **Context:** The floating dock previously placed the (M) Menu button on the left and the album art on the right, which inverted standard media player ergonomics (album art as leading visual anchor; menu in the primary one-handed right thumb zone). In addition, the Media Server tab required a full Jetpack Compose overhaul with a prominent Hero Status Card and reliable Start/Stop control execution, while the 3D flip Audio Anatomy card needed a dedicated info icon and compact typography to prevent vertical clipping on smaller viewports.
+- **Decision:**
+  1. **Dock Layout Inversion:** Swap positions in `activity_main.xml` so Mini Album Art (`bar_album_art`) is on the far left, Play/Pause/Next in the center, and Collections/Menu (`navigation_collections`) on the far right.
+  2. **Media Server Compose Redesign:** Implement `MediaServerPage.kt` with a prominent Hero Status Card containing live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop buttons, interactive QR code zoom modal dialog, and segmented engine switcher with zero label truncation.
+  3. **Direct Service Execution & Reactive Observation:** Ensure `AudioHubBottomSheet` directly invokes `msi.stopServers()` / `startServers()` and observes `MusicMateServiceImpl.getStatusLiveData()` alongside `MediaServerViewModel` to ensure instant UI reactivity.
+  4. **Compact Audio Anatomy Card:** Add `ic_round_info_24` to the `AUDIO ANATOMY` header and restructure technical specs into compact horizontal rows with `verticalScroll` to eliminate vertical clipping across all aspect ratios.
+- **Consequences:** Intuitive left-to-right visual scan pattern, comfortable one-handed thumb navigation, zero layout clipping, and reliable reactive server controls.
 
 ---
 

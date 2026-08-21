@@ -329,5 +329,28 @@ MusicMate operates as a full **Digital Media Controller (DMC)** using UPnP `AVTr
 | **Volume Control** | `RenderingControl` | `SetVolume` | Controls master volume (0–100) (`playerSetVolume`) |
 | **Position Sync** | `AVTransport` | `GetPositionInfo` | Periodic polling syncs UI seek bar with DMR progress |
 
+---
+
+## 9 — Multi-Target SSDP Bursts, Subnet Sanitation & Target Reconciliation
+
+> Added in 2026.08 (`MediaServerHubImpl`, `SimpleRegistryListener`, `MusicMateServiceImpl`, `MediaServerAddressFactory`).
+
+### Multi-Target SSDP Search Bursts
+Rather than relying only on `ssdp:all` (`STAllHeader`), `MediaServerHubImpl.triggerMultiSearch()` broadcasts three query headers concurrently:
+1. `STAllHeader` (broad query for all UPnP root devices and services)
+2. `UDADeviceTypeHeader("MediaRenderer")` (targeted query for media renderers like WiiM, KEF, Eversolo, Sony)
+3. `UDAServiceTypeHeader("AVTransport")` (targeted query for active transport controllers)
+
+In `refreshDiscovery()`, searches are fired in 2 pulses (0s and 1.5s) with MX=4 to compensate for UDP packet drops on congested Wi-Fi networks.
+
+### Subnet Reachability & Ghost Target Elimination
+When UPnP devices are enumerated in `getMediaRenderers()`, `isDeviceValidAndReachable()` compares the host IP of the descriptor URL with the bound IP (`lastBoundIp`). Devices on non-matching subnets (e.g. from previous Wi-Fi networks) are immediately filtered out. In addition, `MediaServerAddressFactory` excludes cellular interfaces (`rmnet*`) from multicast binding.
+
+### Dynamic Placeholder Reconciliation & 8-Second Startup Fallback
+* When restoring a previously selected DLNA renderer (`uuid:...`) on startup, a placeholder target (`"Scanning for players…"`) is created in `currentPlayerFlow`.
+* When the live renderer is discovered, `MusicMateServiceImpl.handleDiscoveredRenderers()` immediately reconciles the placeholder to the live device with its active IP and friendly name.
+* If the renderer does not appear within **8 seconds** (e.g. powered off or user changed networks), `dmrStartupTimeoutTask` automatically falls back to `localTarget` (Android Player / DAC / BT), eliminating ghost players.
+
+
 
 

@@ -21,9 +21,10 @@ public class MediaServerAddressFactory extends NetworkAddressFactoryImpl {
             return false;
         }
 
-        // Allow WiFi client interfaces (wlan*) AND hotspot/AP interfaces (ap*, swlan*).
+        // Allow WiFi client interfaces (wlan*), hotspot/AP interfaces (ap*, swlan*), and Ethernet.
+        // Explicitly exclude cellular interfaces (rmnet*) as they do not support UPnP multicast.
         return NetworkUtils.isOnWifiNetwork(networkInterface, address)
                 || NetworkUtils.isOnHotspotInterface(networkInterface, address)
-                || NetworkUtils.isOnCellularNetwork(networkInterface, address);
+                || NetworkUtils.isOnEthernetNetwork(networkInterface, address);
     }
 }

@@ -78,6 +78,9 @@ public class MediaServerManager {
             // This ensures the manager always reflects the service's true state.
             serviceStatusLiveData = service.getStatusLiveData();
             serviceStatusLiveData.observeForever(statusObserver);
+            if (serviceStatusLiveData.getValue() != null) {
+                serverStatusLiveData.postValue(serviceStatusLiveData.getValue());
+            }
 
             if(toStartServer) {
                 service.startServers();
@@ -132,11 +135,21 @@ public class MediaServerManager {
     }
 
     public void startServer() {
-        //Log.d(TAG, "Requesting to start MusicMateService");
         if(isBound && service != null) {
             service.startServers();
         }else {
             toStartServer = true;
+            Intent intent = new Intent(context, MusicMateServiceImpl.class);
+            intent.setAction(ACTION_START_SERVER);
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent);
+                } else {
+                    context.startService(intent);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error sending start server intent", e);
+            }
             doBindService();
         }
     }
@@ -146,11 +159,14 @@ public class MediaServerManager {
         if(isBound && service != null) {
             service.stopServers();
         }else {
-            serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STOPPED);
+            serverStatusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
             Intent intent = new Intent(context, MusicMateServiceImpl.class);
             intent.setAction(ACTION_STOP_SERVER);
-            //Safely stops the service without triggering background start limits
-            context.stopService(intent);
+            try {
+                context.startService(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error sending stop server intent", e);
+            }
         }
     }
 

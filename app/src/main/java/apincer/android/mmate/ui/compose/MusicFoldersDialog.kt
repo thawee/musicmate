@@ -139,7 +139,7 @@ fun MusicFoldersDialog(
                         .heightIn(max = 250.dp)
                 ) {
                     LazyColumn {
-                        itemsIndexed(dirs) { index, dir ->
+                        itemsIndexed(dirs, key = { _, dir -> dir }) { index, dir ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

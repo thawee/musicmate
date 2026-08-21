@@ -19,7 +19,9 @@ object DialogInterop {
         onAddStorage: java.util.function.Consumer<String>
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 MusicFoldersDialog(
                     initialDirectories = directories,
                     defaultPaths = defaultPaths,
@@ -29,6 +31,7 @@ object DialogInterop {
                     onScan = { isDeep, dirs -> onScan.accept(isDeep, dirs) },
                     onAddStorage = { sid -> onAddStorage.accept(sid) }
                 )
+            }
             }
         }
     }
@@ -45,7 +48,9 @@ object DialogInterop {
         onOk: Runnable
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 ActionFilesDialog(
                     title = title,
                     titleIconRes = titleIconRes,
@@ -55,6 +60,7 @@ object DialogInterop {
                     onCancel = { onCancel.run() },
                     onOk = { onOk.run() }
                 )
+            }
             }
         }
     }
@@ -71,7 +77,9 @@ object DialogInterop {
         onQrCodeClicked: Runnable
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 MediaServerPage(
                     state = state,
                     onEngineChanged = { onEngineChanged.accept(it) },
@@ -81,6 +89,7 @@ object DialogInterop {
                     onOpenUrlClicked = { onOpenUrlClicked.run() },
                     onQrCodeClicked = { onQrCodeClicked.run() }
                 )
+            }
             }
         }
     }
@@ -95,7 +104,9 @@ object DialogInterop {
         onJumpToPlaying: Runnable
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 QueuePage(
                     state = state,
                     onTrackClicked = { onTrackClicked.accept(it) },
@@ -103,6 +114,7 @@ object DialogInterop {
                     onClearQueue = { onClearQueue.run() },
                     onJumpToPlaying = { onJumpToPlaying.run() }
                 )
+            }
             }
         }
     }
@@ -116,13 +128,16 @@ object DialogInterop {
         onOk: Runnable
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 FormatFilesDialog(
                     state = state,
                     onClose = { onClose.run() },
                     onCancel = { onCancel.run() },
                     onOk = { onOk.run() }
                 )
+            }
             }
         }
     }
@@ -143,7 +158,9 @@ object DialogInterop {
         onTrackClicked: Runnable
     ): View {
         return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
+                MusicMateTheme {
                 NowPlayingPage(
                     state = state,
                     onPlayPause = { onPlayPause.run() },
@@ -157,6 +174,7 @@ object DialogInterop {
                     onVolumeChanged = { onVolumeChanged.accept(it) },
                     onTrackClicked = { onTrackClicked.run() }
                 )
+            }
             }
         }
     }

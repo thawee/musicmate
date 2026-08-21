@@ -77,31 +77,6 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     protected Namespace createNamespace() {
-         final String DESC_XML = "/description.xml";
-        final String SCPD_XML = "/scpd.xml";
-        return new Namespace("/dms") {
-            @Override
-            public URI getDescriptorPath(Device device) {
-                return appendPathToBaseURI(getDevicePath(device.getRoot()) + DESC_XML);
-            }
-            @Override
-            public String getDescriptorPathString(Device device) {
-                return decodedPath + getDevicePath(device.getRoot()) + DESC_XML;
-            }
-
-            @Override
-            public URI getDescriptorPath(Service service) {
-                return appendPathToBaseURI(getServicePath(service) + SCPD_XML);
-            }
-
-            @Override
-            protected String getDevicePath(Device device) {
-                if (device.getIdentity().getUdn() == null) {
-                    throw new IllegalStateException("Can't generate local URI prefix without UDN");
-                }
-                // return empty string
-                return "";
-            }
-        };
+        return new Namespace("/dms");
     }
 }

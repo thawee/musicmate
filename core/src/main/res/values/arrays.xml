@@ -64,28 +64,42 @@
     <string-array name="default_album_artist" >
         <item>Various Artists</item>
         <item>Soundtrack</item>
+        <item>Original Soundtrack (OST)</item>
+        <item>Original Broadway Cast</item>
+        <item>Tribute</item>
     </string-array>
     <string-array name="default_publisher" >
-        <!-- audio recording company -->
-        <item>Joox</item>
-        <item>Qobuz</item>
-        <item>Apple</item>
-        <item>Spotify</item>
-        <item>Tidal</item>
-        <item>2L</item>
-        <item>HD Tracks</item>
-        <item>NativeDSD</item>
-        <item>Onkyo</item>
-        <item>GMM Grammy</item>
-        <item>Audioquest</item>
+        <!-- audiophile & major record labels -->
+        <item>2L (Nordic Sound)</item>
+        <item>Analogue Productions</item>
+        <item>Apple Music</item>
+        <item>Audioquest Music</item>
+        <item>Bakery Music</item>
+        <item>Blue Note Records</item>
         <item>Chesky Records</item>
+        <item>Decca Records</item>
+        <item>Deutsche Grammophon</item>
+        <item>ECM Records</item>
+        <item>GMM Grammy</item>
+        <item>HDtracks</item>
+        <item>JVC XRCD</item>
+        <item>Joox</item>
         <item>Linn Records</item>
+        <item>LoveIs</item>
+        <item>Mobile Fidelity Sound Lab (MFSL)</item>
+        <item>NativeDSD Music</item>
+        <item>Onkyo Music</item>
+        <item>Opus 3 Records</item>
+        <item>Qobuz</item>
+        <item>RS Music</item>
         <item>Sheffield Lab</item>
-        <item>Stockfisch</item>
-        <item>Telarc Records</item>
-        <item>Opus3</item>
-        <item>JVC</item>
-        <item>MFSL</item>
+        <item>Sony Classical</item>
+        <item>Spotify</item>
+        <item>Stockfisch Records</item>
+        <item>Telarc</item>
+        <item>Tidal</item>
+        <item>Universal Music</item>
+        <item>Warner Music</item>
     </string-array>
 
     <array name="auto_size_text_sizes">
@@ -108,20 +122,25 @@
     <string-array name="genres_core">
         <item>Pop</item>
         <item>Rock</item>
-        <item>Hip-Hop/Rap</item>
-        <item>R&amp;B</item>
         <item>Jazz</item>
-        <item>Blues</item>
         <item>Classical</item>
-        <item>Electronic</item>
-        <item>Country</item>
+        <item>R&amp;B / Soul</item>
+        <item>Hip-Hop / Rap</item>
+        <item>Electronic / EDM</item>
+        <item>Acoustic / Vocal</item>
+        <item>Blues</item>
         <item>Folk</item>
-        <item>Latin</item>
-        <item>Reggae</item>
-        <item>Soul &amp; Funk</item>
+        <item>Country</item>
+        <item>Bossa Nova</item>
+        <item>Soundtrack / OST</item>
+        <item>Alternative / Indie</item>
         <item>Metal</item>
         <item>Punk</item>
-        <item>Alternative</item>
+        <item>Latin</item>
+        <item>Reggae &amp; Ska</item>
+        <item>Funk</item>
+        <item>Ambient</item>
+        <item>World Traditional</item>
     </string-array>
 
     <string-array name="genres_thai">
@@ -129,18 +148,27 @@
         <item>Luk Krung</item>
         <item>Mor Lam</item>
         <item>Phuea Chiwit</item>
+        <item>Thai Pop</item>
+        <item>Thai Rock</item>
+        <item>Thai Indie</item>
+        <item>Kantrum</item>
+        <item>Kam Mueang</item>
     </string-array>
 
     <string-array name="moods">
         <item> - </item>
         <item>Calm</item>
+        <item>Chill / Relax</item>
         <item>Energetic</item>
         <item>Happy</item>
-        <item>Sad</item>
+        <item>Sad / Melancholy</item>
         <item>Romantic</item>
-        <item>Moody</item>
-        <item>Focus</item>
+        <item>Moody / Dark</item>
+        <item>Focus / Study</item>
         <item>Nostalgic</item>
+        <item>Inspiring</item>
+        <item>Workout</item>
+        <item>Sleep</item>
     </string-array>
 
     <string-array name="styles">
@@ -148,19 +176,33 @@
         <item> - </item>
         <item>Acoustic</item>
         <item>Ballad</item>
+        <item>Live / Concert</item>
         <item>Orchestral</item>
+        <item>Vocal / Audiophile</item>
+        <item>Instrumental</item>
+        <item>Unplugged</item>
         <item>Synth-based</item>
         <item>Indie</item>
         <item>Ambient</item>
         <item>Groove</item>
+        <item>Fusion</item>
+        <item>Lo-Fi</item>
+        <item>Remix</item>
     </string-array>
 
     <string-array name="origins">
         <item> - </item>
         <item>Thai</item>
-        <item>Laos</item>
-        <item>Asia</item>
+        <item>Western</item>
+        <item>US/UK</item>
+        <item>Japanese</item>
+        <item>Korean</item>
         <item>Chinese</item>
+        <item>Asia</item>
+        <item>Laos</item>
+        <item>European</item>
+        <item>Latin</item>
+        <item>World</item>
     </string-array>
 
     <!--

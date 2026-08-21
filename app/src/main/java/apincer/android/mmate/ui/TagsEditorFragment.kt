@@ -9,22 +9,20 @@ import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import apincer.android.mmate.R
 import apincer.android.mmate.ui.compose.TagsEditorPage
 import apincer.android.mmate.ui.compose.TagsEditorState
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import apincer.music.core.model.Track
 import apincer.music.core.repository.FileRepository
 import apincer.music.core.repository.TagRepository
-import apincer.music.core.model.Track
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.atomic.AtomicInteger
-import apincer.android.mmate.R
+import apincer.music.core.utils.MusicMateExecutors
 import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.ThaiEncodingUtils
-import apincer.android.mmate.utils.TagUIUtils
-import apincer.music.core.utils.MusicMateExecutors
-
-import apincer.music.core.utils.MusicPathTagParser
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicInteger
+import javax.inject.Inject
+import apincer.android.mmate.ui.compose.MusicMateTheme
 
 @AndroidEntryPoint
 class TagsEditorFragment : Fragment() {
@@ -47,18 +45,30 @@ class TagsEditorFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                val editItems = tagsActivity.editItems ?: emptyList()
-                val track = if (editItems.isNotEmpty()) editItems[0] else null
-                
-                // Initialize State once on recomposition if needed
-                
-                val albumArtistOptions = buildAlbumArtistOptions(track)
+                MusicMateTheme {
+                    val editItems = tagsActivity.editItems ?: emptyList()
+                    val track = if (editItems.isNotEmpty()) editItems[0] else null
 
-                TagsEditorPage(
-                    track = track,
-                    state = editorState,
-                    albumArtistOptions = albumArtistOptions
-                )
+                    val albumArtistOptions = buildAlbumArtistOptions(track)
+                    val artistOptions = buildArtistOptions(track)
+                    val genreOptions = buildGenreOptions(track)
+                    val styleOptions = buildStyleOptions(track)
+                    val originOptions = buildOriginOptions(track)
+                    val moodOptions = buildMoodOptions(track)
+                    val publisherOptions = buildPublisherOptions(track)
+
+                    TagsEditorPage(
+                        track = track,
+                        state = editorState,
+                        albumArtistOptions = albumArtistOptions,
+                        artistOptions = artistOptions,
+                        genreOptions = genreOptions,
+                        styleOptions = styleOptions,
+                        originOptions = originOptions,
+                        moodOptions = moodOptions,
+                        publisherOptions = publisherOptions
+                    )
+                }
             }
         }
     }
@@ -80,6 +90,106 @@ class TagsEditorFragment : Fragment() {
             if (artist.isNotEmpty() && !list.contains(artist)) list.add(artist)
             val albumArtist = StringUtils.trimToEmpty(tag.albumArtist)
             if (albumArtist.isNotEmpty() && !list.contains(albumArtist)) list.add(albumArtist)
+        }
+        return list
+    }
+
+    private fun buildArtistOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        if (tag != null) {
+            val artist = StringUtils.trimToEmpty(tag.artist)
+            if (artist.isNotEmpty() && !list.contains(artist)) list.add(artist)
+        }
+        try {
+            tagRepos.artistList?.forEach { a ->
+                val trimmed = StringUtils.trimToEmpty(a)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        } catch (e: Exception) {
+            Log.e("TagsEditorFragment", "Error loading artist list", e)
+        }
+        return list
+    }
+
+    private fun buildGenreOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        if (tag != null) {
+            val genre = StringUtils.trimToEmpty(tag.genre)
+            if (genre.isNotEmpty() && !list.contains(genre)) list.add(genre)
+        }
+        context?.let { ctx ->
+            TagRepository.getDefaultGenreList(ctx)?.forEach { g ->
+                val trimmed = StringUtils.trimToEmpty(g)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        }
+        try {
+            tagRepos.actualGenreList?.forEach { g ->
+                val trimmed = StringUtils.trimToEmpty(g)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        } catch (e: Exception) {
+            Log.e("TagsEditorFragment", "Error loading actual genre list", e)
+        }
+        return list
+    }
+
+    private fun buildStyleOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        context?.let { ctx ->
+            TagRepository.getDefaultStyleList(ctx)?.forEach { s ->
+                val trimmed = StringUtils.trimToEmpty(s)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        }
+        if (tag != null) {
+            val style = StringUtils.trimToEmpty(tag.style)
+            if (style.isNotEmpty() && !list.contains(style)) list.add(style)
+        }
+        return list
+    }
+
+    private fun buildOriginOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        context?.let { ctx ->
+            TagRepository.getDefaultOriginList(ctx)?.forEach { o ->
+                val trimmed = StringUtils.trimToEmpty(o)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        }
+        if (tag != null) {
+            val origin = StringUtils.trimToEmpty(tag.origin)
+            if (origin.isNotEmpty() && !list.contains(origin)) list.add(origin)
+        }
+        return list
+    }
+
+    private fun buildMoodOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        context?.let { ctx ->
+            TagRepository.getDefaultMoodList(ctx)?.forEach { m ->
+                val trimmed = StringUtils.trimToEmpty(m)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        }
+        if (tag != null) {
+            val mood = StringUtils.trimToEmpty(tag.mood)
+            if (mood.isNotEmpty() && !list.contains(mood)) list.add(mood)
+        }
+        return list
+    }
+
+    private fun buildPublisherOptions(tag: Track?): List<String> {
+        val list = mutableListOf<String>()
+        context?.let { ctx ->
+            tagRepos.getDefaultPublisherList(ctx)?.forEach { p ->
+                val trimmed = StringUtils.trimToEmpty(p)
+                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            }
+        }
+        if (tag != null) {
+            val publisher = StringUtils.trimToEmpty(tag.publisher)
+            if (publisher.isNotEmpty() && !list.contains(publisher)) list.add(publisher)
         }
         return list
     }

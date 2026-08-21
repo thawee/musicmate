@@ -103,7 +103,12 @@
             android:name=".service.MusicMateServiceImpl"
             android:foregroundServiceType="mediaPlayback"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
 
         <!-- mediaServerHub -->
         <!--

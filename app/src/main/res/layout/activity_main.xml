@@ -114,10 +114,6 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/swipe_refresh_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -128,7 +124,7 @@
                         android:layout_height="match_parent" />
                 </FrameLayout>
 
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            
 
             <FrameLayout
                 android:id="@+id/empty_state_view"
@@ -181,38 +177,22 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- 🔹 Premium Scroll-to-top FAB (Aligned near Fast Scroller) -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_scroll_to_top"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="112dp"
-        android:src="@drawable/rounded_arrow_shape_up_stack_24"
-        android:contentDescription="@string/scroll_to_top"
-        app:fabCustomSize="36dp"
-        app:maxImageSize="20dp"
-        android:visibility="gone"
-        tools:visibility="visible"
-        app:backgroundTint="@null"
-        android:background="@drawable/glass_fab_background"
-        app:elevation="4dp"
-        app:tint="?attr/colorOnSurface"/>
+
     <!-- 🔹 Floating Glass Dock (Unified Navigation & Playback) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:layout_gravity="bottom"
-        android:layout_marginHorizontal="12dp"
+        android:layout_marginHorizontal="6dp"
         android:layout_marginBottom="8dp"
         android:clickable="true"
         android:focusable="true"
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
         app:cardBackgroundColor="@android:color/transparent"
-        app:strokeWidth="0dp">
+        app:strokeWidth="1.5dp"
+        app:strokeColor="#26FFFFFF">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -221,57 +201,54 @@
             android:paddingHorizontal="12dp"
             android:gravity="center_vertical">
 
-            <!-- Left: Library Collections Button -->
+            <!-- Left: Mini Album Art (Tapping opens Music Center / Now Playing) -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/bar_album_art"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_now_playing_idle"
+                android:contentDescription="Now Playing"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
+
+            <!-- Right: Library Collections / MusicMate Menu Button -->
             <ImageView
                 android:id="@+id/navigation_collections"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_nav_collections"
-                android:contentDescription="@string/library"
+                android:src="@drawable/ic_nav_musicmate_menu"
+                android:contentDescription="MusicMate Menu"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 app:tint="?attr/colorOnSurface" />
 
-            <!-- Right: Menu Group -->
-            <LinearLayout
-                android:id="@+id/bottom_right_group"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical|end"
-                android:layout_alignParentEnd="true">
-
-                <ImageView
-                    android:id="@+id/navigation_settings"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_nav_musicmate_menu"
-                    android:contentDescription="@string/settings"
-                    app:tint="?attr/colorOnSurface" />
-            </LinearLayout>
+            <!-- Mini-Player Progress Bar -->
+            <ProgressBar
+                android:id="@+id/dock_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="0dp"
+                android:progressTint="#FFFFD700" android:progressBackgroundTint="#33FFFFFF"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:progress="45" />
 
             <!-- Center: Docked Playback Bar / App Title -->
             <LinearLayout
                 android:id="@+id/docked_playback_bar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_toEndOf="@id/navigation_collections"
-                android:layout_toStartOf="@id/bottom_right_group"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
+                android:layout_toEndOf="@id/bar_album_art"
+                android:layout_toStartOf="@id/navigation_collections"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-
-                <!-- Mini Album Art (Hidden when idle) -->
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/bar_album_art"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_musicmate_logo"
-                    android:visibility="gone"
-                    tools:visibility="visible"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
 
                 <!-- Track Info / Default Title -->
                 <LinearLayout
@@ -280,8 +257,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="6dp">
+                    android:layout_marginEnd="4dp">
 
                     <TextView
                         android:id="@+id/bar_track_title"
@@ -327,7 +303,6 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     app:tint="?attr/colorOnSurface" />
             </LinearLayout>
-
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
