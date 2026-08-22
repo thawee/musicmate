@@ -47,6 +47,9 @@ import kotlin.math.roundToInt
  *
  * Usage: wrap your LazyColumn content in a Box and put FastScrollbar on top.
  */
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+
 @Composable
 fun FastScrollbar(
     listState: LazyListState,
@@ -59,9 +62,11 @@ fun FastScrollbar(
 
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
 
     var isDragging by remember { mutableStateOf(false) }
     var bubbleLabel by remember { mutableStateOf("") }
+    var lastHapticLabel by remember { mutableStateOf("") }
 
     // Current scroll fraction [0..1] — derived from LazyListState
     val scrollFraction by remember {
@@ -80,14 +85,14 @@ fun FastScrollbar(
 
     // Thumb alpha — fade out when not dragging
     val thumbAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1f else 0.4f,
+        targetValue = if (isDragging) 1f else 0.45f,
         animationSpec = tween(durationMillis = 300),
         label = "thumbAlpha"
     )
 
     BoxWithConstraints(modifier = modifier) {
         val totalHeightPx = with(density) { maxHeight.toPx() }
-        val thumbHeightDp = 40.dp
+        val thumbHeightDp = 48.dp
         val thumbHeightPx = with(density) { thumbHeightDp.toPx() }
         val scrollRangePx = (totalHeightPx - thumbHeightPx).coerceAtLeast(1f)
 
@@ -103,38 +108,37 @@ fun FastScrollbar(
                         .align(Alignment.TopEnd)
                         .offset {
                             IntOffset(
-                                x = with(density) { (-52).dp.roundToPx() },
+                                x = with(density) { (-48).dp.roundToPx() },
                                 y = thumbOffsetPx.roundToInt()
                             )
                         }
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(8.dp, 8.dp, 0.dp, 8.dp))
-                        .background(Color(0xFFFFD700))
-                        .border(1.dp, Color(0xFFAA8800), RoundedCornerShape(8.dp, 8.dp, 0.dp, 8.dp)),
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 14.dp, bottomEnd = 2.dp))
+                        .background(Color(0xF0141414))
+                        .border(1.25.dp, Color(0xFFFFD700), RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 14.dp, bottomEnd = 2.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = bubbleLabel,
-                        color = Color.Black,
-                        fontSize = 20.sp,
+                        color = Color(0xFFFFD700),
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // ── Scroll thumb ─────────────────────────────────────────────────
+            // ── Scroll thumb with expanded 24dp touch target ────────────────
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .offset { IntOffset(x = 0, y = thumbOffsetPx.roundToInt()) }
-                    .width(4.dp)
-                    .size(width = 4.dp, height = thumbHeightDp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFFD700).copy(alpha = thumbAlpha))
-                    .alpha(thumbAlpha)
+                    .size(width = 24.dp, height = thumbHeightDp)
                     .pointerInput(totalItems) {
                         detectDragGestures(
-                            onDragStart = { isDragging = true },
+                            onDragStart = {
+                                isDragging = true
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            },
                             onDragEnd = { isDragging = false },
                             onDragCancel = { isDragging = false },
                             onDrag = { change, dragAmount ->
@@ -144,14 +148,30 @@ fun FastScrollbar(
                                 val targetIndex = (newFraction * (totalItems - 1))
                                     .roundToInt()
                                     .coerceIn(0, totalItems - 1)
-                                bubbleLabel = itemLabel(targetIndex)
+                                val currentLabel = itemLabel(targetIndex)
+                                if (currentLabel.isNotEmpty() && currentLabel != lastHapticLabel) {
+                                    lastHapticLabel = currentLabel
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                }
+                                bubbleLabel = currentLabel
                                 coroutineScope.launch {
                                     listState.scrollToItem(targetIndex)
                                 }
                             }
                         )
-                    }
-            )
+                    },
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                // Visual slim gold pill
+                Box(
+                    modifier = Modifier
+                        .size(width = 4.5.dp, height = thumbHeightDp)
+                        .padding(end = 1.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFFD700).copy(alpha = thumbAlpha))
+                        .alpha(thumbAlpha)
+                )
+            }
         }
     }
 }

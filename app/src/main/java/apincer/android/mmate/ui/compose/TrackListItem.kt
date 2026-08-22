@@ -159,19 +159,22 @@ fun TrackListItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    QualityBadge(track = track)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    ResolutionBadge(track = track)
+                    Spacer(modifier = Modifier.width(5.dp))
+                    DynamicRangeMeter(track = track)
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = StringUtils.formatDuration(track.audioDuration, false),
                         color = Color(0xFF888888),
                         fontSize = 11.sp,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontFeatureSettings = "tnum"
+                        ),
                         maxLines = 1,
                         softWrap = false
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    DynamicRangeMeter(track = track)
-                    Spacer(modifier = Modifier.width(5.dp))
-                    ResolutionBadge(track = track)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    QualityBadge(track = track)
                 }
             }
 

@@ -145,3 +145,6 @@
 - **Compose Badges Single-Line Soft-Wrap Enforcement**:
   - In Jetpack Compose, `Text` defaults to `softWrap = true` and `maxLines = Int.MAX_VALUE`. When nested in horizontal `Row` layouts inside `Modifier.weight(1f)` containers, any tight horizontal space causes hyphenated labels (e.g. `"HI-RES"`, `"24-BIT"`) to split across multiple lines, deforming compact badges into tall vertical boxes.
   - Always enforce `maxLines = 1` and `softWrap = false` on all chip and badge text components (`QualityBadge`, `ResolutionBadge`, `NewBadge`, `DynamicRangeMeter`), optimize letter-spacing and padding, and scale meter widths (e.g. 30dp x 6dp) to guarantee clean, un-deformed single-line badges across all device resolutions.
+- **Audiophile Metadata Row Hierarchy & Tabular Typography**:
+  - For premium music lists, group Sound Grade (`[• HI-RES]`) and Sample Rate (`[24/96]`) together as the leading "Format Signature" token on the left, followed by Loudness Dynamics (`DR12 [■■■░░]`), and finish with track length (`04:23`).
+  - Apply `fontFeatureSettings = "tnum"` (tabular numbers) to duration strings to prevent horizontal jitter as numbers change, and add 8% ambient accent glow tints to badge background layers for a glassmorphic look.

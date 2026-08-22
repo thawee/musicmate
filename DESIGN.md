@@ -487,7 +487,18 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   2. **Media Server Compose Redesign:** Implement `MediaServerPage.kt` with a prominent Hero Status Card containing live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop buttons, interactive QR code zoom modal dialog, and segmented engine switcher with zero label truncation.
   3. **Direct Service Execution & Reactive Observation:** Ensure `AudioHubBottomSheet` directly invokes `msi.stopServers()` / `startServers()` and observes `MusicMateServiceImpl.getStatusLiveData()` alongside `MediaServerViewModel` to ensure instant UI reactivity.
   4. **Compact Audio Anatomy Card:** Add `ic_round_info_24` to the `AUDIO ANATOMY` header and restructure technical specs into compact horizontal rows with `verticalScroll` to eliminate vertical clipping across all aspect ratios.
-- **Consequences:** Intuitive left-to-right visual scan pattern, comfortable one-handed thumb navigation, zero layout clipping, and reliable reactive server controls.
+### ADR-012: Flagship Audiophile Provenance Hierarchy, Tactile Micro-Haptics & Pure Compose Bottom Sheet
+- **Status:** Accepted
+- **Date:** 2026-08-22
+- **Context:** Music track cards previously lacked a consistent audiophile provenance ordering, causing resolution badges and dynamic range meters to appear in inconsistent positions. Numeric time strings shifted horizontally when scrolling rapidly due to proportional font glyph widths. Furthermore, fast scrolling and transport controls lacked tactile haptic feedback, and the legacy Bottom Sheet container used ViewPager2 rather than pure Jetpack Compose sheet physics.
+- **Decision:**
+  1. **Option A Audiophile Provenance Hierarchy:** Enforce standard left-to-right studio flow on track cards: `[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`.
+  2. **Tabular Numerals:** Apply `fontFeatureSettings = "tnum"` to track duration text (`04:23`), ensuring identical character width across digits (`0` through `9`) to prevent horizontal jitter during scrolling.
+  3. **Luminous Glass Aura:** Add an 8% accent-tinted background with a 38% alpha frosted glass border to `QualityBadge` and `ResolutionBadge`.
+  4. **Tactile Micro-Haptics:** Add `LocalHapticFeedback` ticks (`TextHandleMove`) on alphabet transitions during fast-scrolling and on playback transport button presses (Play, Pause, Skip, Previous, Shuffle, Repeat).
+  5. **Pure Compose Modal Bottom Sheet:** Implement `AudioHubSheet.kt` (`ModalBottomSheet` + `HorizontalPager`) for 120Hz gesture navigation across Playback, Queue, and Server tabs.
+  6. **Bulletproof Drawer Interop:** Bind `drawerState` directly via `SideEffect` in `DrawerInterop.kt` and set `elevation = 4dp` on the right (M) menu button in `activity_main.xml`.
+- **Consequences:** Cohesive studio provenance layout, rock-solid numerical stability during fast scrolling, tactile physical engagement, and silky 120Hz gesture physics.
 
 ---
 

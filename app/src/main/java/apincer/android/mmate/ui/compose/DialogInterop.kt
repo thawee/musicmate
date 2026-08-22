@@ -178,4 +178,74 @@ object DialogInterop {
             }
         }
     }
+
+    @JvmStatic
+    fun createAudioHubSheetView(
+        context: Context,
+        nowPlayingState: NowPlayingState,
+        queueState: QueueState,
+        mediaServerState: MediaServerState,
+        initialTab: Int,
+        onDismissRequest: Runnable,
+        onSelectTargetPlayer: Runnable,
+        onPlayPause: Runnable,
+        onNext: Runnable,
+        onPrevious: Runnable,
+        onShuffleToggle: Runnable,
+        onRepeatToggle: Runnable,
+        onSeek: java.util.function.Consumer<Float>,
+        onVolumeDown: Runnable,
+        onVolumeUp: Runnable,
+        onVolumeChanged: java.util.function.Consumer<Float>,
+        onTrackClicked: Runnable,
+        onQueueTrackClicked: java.util.function.Consumer<Track>,
+        onQueueTrackRemoved: BiConsumer<Track, Int>,
+        onQueueClear: Runnable,
+        onQueueJumpToPlaying: Runnable,
+        onEngineChanged: java.util.function.Consumer<String>,
+        onStartServerClicked: Runnable,
+        onStopServerClicked: Runnable,
+        onCopyUrlClicked: Runnable,
+        onOpenUrlClicked: Runnable,
+        onQrCodeClicked: Runnable
+    ): View {
+        return ComposeView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setContent {
+                MusicMateTheme {
+                    AudioHubSheet(
+                        nowPlayingState = nowPlayingState,
+                        queueState = queueState,
+                        mediaServerState = mediaServerState,
+                        initialTab = initialTab,
+                        onDismissRequest = { onDismissRequest.run() },
+                        onSelectTargetPlayer = { onSelectTargetPlayer.run() },
+                        onPlayPause = { onPlayPause.run() },
+                        onNext = { onNext.run() },
+                        onPrevious = { onPrevious.run() },
+                        onShuffleToggle = { onShuffleToggle.run() },
+                        onRepeatToggle = { onRepeatToggle.run() },
+                        onSeek = { onSeek.accept(it) },
+                        onVolumeDown = { onVolumeDown.run() },
+                        onVolumeUp = { onVolumeUp.run() },
+                        onVolumeChanged = { onVolumeChanged.accept(it) },
+                        onTrackClicked = { onTrackClicked.run() },
+                        onQueueTrackClicked = { onQueueTrackClicked.accept(it) },
+                        onQueueTrackRemoved = { track, index -> onQueueTrackRemoved.accept(track, index) },
+                        onQueueClear = { onQueueClear.run() },
+                        onQueueJumpToPlaying = { onQueueJumpToPlaying.run() },
+                        onEngineChanged = { onEngineChanged.accept(it) },
+                        onStartServerClicked = { onStartServerClicked.run() },
+                        onStopServerClicked = { onStopServerClicked.run() },
+                        onCopyUrlClicked = { onCopyUrlClicked.run() },
+                        onOpenUrlClicked = { onOpenUrlClicked.run() },
+                        onQrCodeClicked = { onQrCodeClicked.run() }
+                    )
+                }
+            }
+        }
+    }
 }

@@ -1,3 +1,73 @@
+# Flagship Audiophile UX Transformation (5-Step Master Plan)
+
+## Objectives
+Transform MusicMate into a tier-1 flagship audiophile player through tactile micro-haptics, hardware signal path telemetry, shimmer loading, pure Compose shell components, and unified Compose modal sheets.
+
+- [x] **Step 1: Tactile Micro-Haptics & Fast-Scroll Fluidity**
+  - Added `LocalHapticFeedback` ticks on alphabet bubble change and drag start in `FastScrollbar.kt`.
+  - Expanded fast scroll touch target to 24dp with an ultra-fine 4.5dp visible gold indicator.
+  - Added micro-haptic feedback to all transport controls (Play/Pause, Skip, Previous, Shuffle, Repeat) in `NowPlayingPage.kt`.
+- [x] **Step 2: Audio Signal Path Telemetry & Hardware Driver Pill**
+  - Configured output target telemetry pill in `NowPlayingPage.kt` with dynamic LED status dots (Bit-Perfect Green, DLNA Cyan, Bluetooth Blue, Local Gold).
+- [x] **Step 3: Skeleton Shimmer & Modern Scanning HUD**
+  - Created `TrackListItemShimmer.kt` with animated linear gradient shimmer.
+  - Integrated shimmer placeholders into `MusicListScreen.kt` for seamless loading states when fetching or scanning tracks.
+- [x] **Step 5: Pure Compose Audio Hub Modal Sheet Container**
+  - Created `AudioHubSheet.kt` (`ModalBottomSheet` + `HorizontalPager`) hosting Playback, Queue, and Server pages with unified gesture physics.
+  - Added `createAudioHubSheetView` in `DialogInterop.kt`.
+- [ ] **Step 4: Pure Compose Top Search Bar & Floating Glass Mini-Player Dock**
+  - Build pure Compose top search bar & mini-player dock into `MainScaffold.kt`.
+- [x] **Step 6: Build & Verification**
+  - Verified with `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 7s** (0 errors).
+
+# Navigation Drawer Active Item Highlight & (M) Icon Review
+
+## Objectives
+1. **Highlight Active Item in Drawer (`MainScaffold.kt`, `DrawerInterop.kt`)**: Add active category tracking and highlight the currently active drawer item with a gold accent tint (`Color(0x22FFD700)`), gold border (`0.75dp`), and gold text/icon.
+2. **Sync Active State with Library Filter (`MainActivity.java`, `DrawerInterop.kt`)**: Expose `DrawerInterop.updateActiveItem(itemId)` and update active menu item whenever library search criteria changes (All Songs, Artists, Genres, Playlists, Incoming, Similar, Sound Grade).
+3. **Review (M) Icon Functionality & Ergonomics**: Verify touch targets, ripple feedback, content descriptions, and smooth trigger flow.
+4. **Verification & Build**: Compile and verify with `./gradlew compileDebugSources testDebugUnitTest`.
+
+- [x] **1. Implement Active Item Highlight in `MainScaffold.kt` & `DrawerInterop.kt`**
+  - Added `activeItemId` state in `DrawerInterop.kt` and connected `isSelected` styling to `DrawerItem` in `MainScaffold.kt` (frosted gold background `Color(0x22FFD700)`, gold border `0.75dp`, gold typography/icon, and trailing gold indicator dot).
+- [x] **2. Connect Criteria Sync in `MainActivity.java`**
+  - Added `syncActiveDrawerItem()` in `MainActivity.java` invoked on startup and upon filtering/refreshing (All Songs, Artists, Genres, Playlists, Incoming, Similar, Sound Grade).
+- [x] **3. Verify (M) Icon Feedback & Accessibility**
+  - Verified `navigation_collections` in `activity_main.xml` with 48x48dp touch target, borderless ripple, and direct binding to `doShowLeftMenus()`.
+- [x] **4. Build & Unit Test Verification (`./gradlew compileDebugSources testDebugUnitTest`)**
+  - Verified with Gradle: `BUILD SUCCESSFUL in 16s`, 0 errors.
+- [x] **5. Update Documentation & Lessons**
+  - Updated `tasks/todo.md`.
+
+## Review & Results
+- **Active Navigation Highlight**: The left navigation drawer now highlights the active library category with frosted gold styling and a gold trailing dot indicator, providing clear visual location awareness.
+- **Criteria Synchronization**: Any library view changes automatically sync with `DrawerInterop.updateActiveItem()`.
+- **(M) Menu Icon Verification**: Confirmed full 48dp touch target with ripple feedback on the floating mini-player dock.
+
+# Music List Option A Audiophile Provenance Layout & Glass Aura Polish
+
+## Objectives
+1. **Metadata Row Reordering (`TrackListItem.kt`)**: Reorder metadata row to Option A: `[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`.
+2. **Ambient Glass Aura & Tinted Badges (`AudioBadges.kt`)**: Enhance `QualityBadge` and `ResolutionBadge` with subtle accent-tinted glassmorphic background surfaces (`Color(0xD9101010)` + accent alpha tint) and glowing borders.
+3. **Tabular Duration Numbers & Refined DR Meter (`DynamicRangeMeters.kt`, `TrackListItem.kt`)**: Add `fontFeatureSettings = "tnum"` to duration text and refine DR meter bar styling.
+4. **Verification & Build**: Compile and verify with unit tests.
+
+- [x] **1. Reorder Metadata Row in `TrackListItem.kt` to Option A**
+  - Reordered row to: `[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`.
+- [x] **2. Upgrade Badges with Ambient Glass Glow in `AudioBadges.kt`**
+  - Added 8% accent-tinted background (`bgBase + bgTint`) and 38% alpha crisp glass border.
+- [x] **3. Polish Duration & DR Meter in `DynamicRangeMeters.kt` & `TrackListItem.kt`**
+  - Added `fontFeatureSettings = "tnum"` (tabular numbers) to duration text to ensure fixed digit widths across all tracks.
+- [x] **4. Build & Unit Test Verification (`./gradlew compileDebugSources testDebugUnitTest`)**
+  - Verified with Gradle: `BUILD SUCCESSFUL in 27s`, 0 errors.
+- [x] **5. Update Documentation & Lessons**
+  - Updated `tasks/todo.md` and `tasks/lessons.md`.
+
+## Review & Results
+- **Option A Implementation**: Successfully reordered the metadata row to lead with the Sound Grade/Tier token (`[• HI-RES] [24/96]`), followed by Loudness Dynamics (`DR12 [■■■░░]`), and grounded by Duration (`04:23`).
+- **Ambient Glass Glow**: Added subtle 8% accent aura tints to badge backgrounds and tightened borders.
+- **Verification**: `./gradlew compileDebugSources testDebugUnitTest` passed cleanly in 27s.
+
 # Audio Badge Text Wrapping & Layout Density Fix
 
 ## Objectives

@@ -44,15 +44,17 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
         else -> Color(0xFF9E9E9E)
     }
 
-    val bgBase = Color(0xD9121212)
-    val borderColor = accentColor.copy(alpha = 0.35f)
+    val bgBase = Color(0xD9101010)
+    val bgTint = accentColor.copy(alpha = 0.08f)
+    val borderColor = accentColor.copy(alpha = 0.38f)
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(bgBase)
+            .background(bgTint)
             .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.5.dp, vertical = 1.5.dp),
+            .padding(horizontal = 5.dp, vertical = 1.5.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -64,7 +66,7 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
                     .clip(CircleShape)
                     .background(accentColor)
             )
-            Spacer(modifier = Modifier.width(3.dp))
+            Spacer(modifier = Modifier.width(3.5.dp))
             Text(
                 text = label,
                 color = Color.White,
@@ -93,15 +95,17 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier) {
         else -> Color(0xFF9E9E9E)
     }
 
-    val bgBase = Color(0xD9121212)
-    val borderColor = accentColor.copy(alpha = 0.35f)
+    val bgBase = Color(0xD9101010)
+    val bgTint = accentColor.copy(alpha = 0.08f)
+    val borderColor = accentColor.copy(alpha = 0.38f)
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(bgBase)
+            .background(bgTint)
             .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.5.dp, vertical = 1.5.dp),
+            .padding(horizontal = 5.dp, vertical = 1.5.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -113,7 +117,7 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier) {
                     .clip(CircleShape)
                     .background(accentColor)
             )
-            Spacer(modifier = Modifier.width(3.dp))
+            Spacer(modifier = Modifier.width(3.5.dp))
             Text(
                 text = label,
                 color = Color.White,
@@ -156,9 +160,9 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xD91A1A1A))
+            .background(Color(0xD9141414))
             .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.dp, vertical = 1.5.dp),
+            .padding(horizontal = 4.5.dp, vertical = 1.5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

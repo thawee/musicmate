@@ -550,6 +550,7 @@ fun NowPlayingPage(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Transport Controls
+            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -557,7 +558,13 @@ fun NowPlayingPage(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onShuffleToggle, modifier = Modifier.size(48.dp)) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onShuffleToggle()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(
                         painterResource(id = R.drawable.ic_baseline_shuffle_24),
                         contentDescription = "Shuffle",
@@ -566,7 +573,13 @@ fun NowPlayingPage(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onPrevious, modifier = Modifier.size(56.dp)) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onPrevious()
+                    },
+                    modifier = Modifier.size(56.dp)
+                ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_previous_rounded),
                         contentDescription = "Previous",
@@ -582,7 +595,10 @@ fun NowPlayingPage(
                         .size(76.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                        .clickable { onPlayPause() },
+                        .clickable {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                            onPlayPause()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     val isPlaying = state.playbackState.value.currentState == PlaybackState.State.PLAYING
@@ -595,7 +611,13 @@ fun NowPlayingPage(
                 }
                 
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = onNext, modifier = Modifier.size(56.dp)) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onNext()
+                    },
+                    modifier = Modifier.size(56.dp)
+                ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_next_rounded),
                         contentDescription = "Next",
@@ -604,7 +626,13 @@ fun NowPlayingPage(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = onRepeatToggle, modifier = Modifier.size(48.dp)) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onRepeatToggle()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
                     val repeatIcon = if (state.repeatMode.value == 2) R.drawable.ic_baseline_repeat_one_24 else R.drawable.ic_baseline_repeat_24
                     Icon(
                         painterResource(id = repeatIcon),

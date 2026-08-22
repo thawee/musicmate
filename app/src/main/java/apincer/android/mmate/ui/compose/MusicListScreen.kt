@@ -71,23 +71,45 @@ fun MusicListScreen(
         modifier = modifier.fillMaxSize()
     ) {
         if (tracks.isEmpty()) {
-            // Empty State
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "No Music Found",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Scan your device to find music files.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            if (isRefreshing) {
+                // Skeleton Shimmer Loading State
+                val shimmerBrush = rememberShimmerBrush()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 4.dp, vertical = 8.dp)
+                ) {
+                    repeat(7) {
+                        TrackListItemShimmer(brush = shimmerBrush)
+                    }
+                }
+            } else {
+                // Empty State with Brand Insignia
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
+                        contentDescription = null,
+                        tint = Color(0x66FFFFFF),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No Music Found",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Scan your device or check storage permissions.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFAAAAAA)
+                    )
+                }
             }
         } else {
             val listState = rememberLazyListState()

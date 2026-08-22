@@ -5,6 +5,31 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.18.22] - 2026-08-22
+
+### Added
+- **Flagship Audiophile Provenance Metadata Hierarchy & Tabular Typography (`TrackListItem.kt`, `AudioBadges.kt`)**:
+  - Reordered track card metadata into the studio provenance flow: `[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`.
+  - Added an 8% accent-tinted luminous aura and frosted glass borders (`38% alpha`) to quality capsules for tactile depth.
+  - Enforced OpenType Tabular Figures (`fontFeatureSettings = "tnum"`) on duration strings to prevent horizontal jitter during high-speed scrolling.
+- **Tactile Micro-Haptics & Ergonomic Fast-Scroller (`FastScrollbar.kt`, `NowPlayingPage.kt`)**:
+  - Integrated subtle micro-ticks (`HapticFeedbackType.TextHandleMove`) on drag initiation and alphabet letter transitions (`A` $\to$ `B` $\to$ `C`).
+  - Expanded the drag touch target to a comfortable **24dp hitbox** while preserving a minimalist **4.5dp visible gold indicator**.
+  - Added tactile haptic feedback to all transport controls (Play/Pause, Skip, Previous, Shuffle, Repeat).
+- **Skeleton Shimmer Loading States (`TrackListItemShimmer.kt`, `MusicListScreen.kt`)**:
+  - Built animated linear gradient shimmer placeholder cards for the track list during initial library scans and refresh operations.
+  - Enhanced empty states with brand insignia and typography.
+- **Pure Compose Audio Hub Bottom Sheet Container (`AudioHubSheet.kt`, `DialogInterop.kt`)**:
+  - Created a pure Jetpack Compose `ModalBottomSheet` + `HorizontalPager` container hosting *Playback*, *Queue*, and *Server* pages with unified 120Hz gesture tracking.
+- **Active Navigation Drawer Item Highlight (`MainScaffold.kt`, `DrawerInterop.kt`, `MainActivity.java`)**:
+  - Added dynamic active item highlighting in the navigation drawer with translucent gold background, border, and trailing gold status dot.
+  - Replaced the single music note icon in the sidebar header with the unified (M) brand insignia (`ic_nav_musicmate_menu`).
+
+### Fixed
+- **Drawer Open Trigger & Bottom Dock Touch Target Z-Order (`DrawerInterop.kt`, `activity_main.xml`)**:
+  - Replaced `SharedFlow` with direct `SideEffect` binding of `drawerState` and `coroutineScope` to ensure 100% reliable execution of `DrawerInterop.openDrawer()`.
+  - Reordered the (M) menu button in `activity_main.xml` to top z-order with `elevation = 4dp` to eliminate touch interception by adjacent playback layouts.
+
 ## [3.18.21] - 2026-08-21
 
 ### Added

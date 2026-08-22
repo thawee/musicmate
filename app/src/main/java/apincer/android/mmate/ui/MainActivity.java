@@ -444,6 +444,10 @@ public class MainActivity extends AppCompatActivity {
         setupHeaderPanel();
         setupBottomAppBar();
         setupRecycleView(searchCriteria);
+        if (searchCriteria != null) {
+            currentCriteria = searchCriteria;
+        }
+        syncActiveDrawerItem();
         
 
         // Observe ViewModel LiveData
@@ -885,7 +889,33 @@ public class MainActivity extends AppCompatActivity {
         currentCriteria.setType(type);
         currentCriteria.setKeyword(keyword);
        // folderAdapter.refresh();
+        syncActiveDrawerItem();
         viewModel.loadMusicItems(currentCriteria);
+    }
+
+    private void syncActiveDrawerItem() {
+        if (currentCriteria == null) return;
+        SearchCriteria.TYPE type = currentCriteria.getType();
+        int activeId = R.id.menu_library_all_songs;
+        if (SearchCriteria.TYPE.ARTIST.equals(type)) {
+            activeId = R.id.menu_tag_artist;
+        } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
+            activeId = R.id.menu_tag_genre;
+        } else if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
+            activeId = R.id.menu_collection;
+        } else if (SearchCriteria.TYPE.SOUND_GRADE.equals(type)) {
+            activeId = R.id.menu_sound_grade;
+        } else if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
+            String kw = currentCriteria.getKeyword();
+            if (Constants.TITLE_INCOMING_SONGS.equals(kw)) {
+                activeId = R.id.menu_library_recently_added;
+            } else if (Constants.TITLE_DUPLICATE.equals(kw)) {
+                activeId = R.id.menu_library_similar_songs;
+            } else {
+                activeId = R.id.menu_library_all_songs;
+            }
+        }
+        apincer.android.mmate.ui.compose.DrawerInterop.updateActiveItem(activeId);
     }
 
     public void handleNavigationItemClick(int itemId) {

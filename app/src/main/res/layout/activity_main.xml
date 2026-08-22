@@ -213,18 +213,6 @@
                 android:contentDescription="Now Playing"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
 
-            <!-- Right: Library Collections / MusicMate Menu Button -->
-            <ImageView
-                android:id="@+id/navigation_collections"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_nav_musicmate_menu"
-                android:contentDescription="MusicMate Menu"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="?attr/colorOnSurface" />
-
             <!-- Mini-Player Progress Bar -->
             <ProgressBar
                 android:id="@+id/dock_progress_bar"
@@ -303,6 +291,19 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     app:tint="?attr/colorOnSurface" />
             </LinearLayout>
+
+            <!-- Right: Library Collections / MusicMate Menu Button -->
+            <ImageView
+                android:id="@+id/navigation_collections"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_nav_musicmate_menu"
+                android:contentDescription="MusicMate Menu"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:elevation="4dp"
+                app:tint="?attr/colorOnSurface" />
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
