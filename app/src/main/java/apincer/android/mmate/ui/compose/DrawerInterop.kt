@@ -1,15 +1,11 @@
 package apincer.android.mmate.ui.compose
 
-import android.view.View
+import android.content.Context
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import apincer.android.mmate.ui.MainActivity
-import kotlinx.coroutines.flow.MutableSharedFlow
-
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,10 +44,10 @@ object DrawerInterop {
 
     @JvmStatic
     fun getComposeView(
-        activity: MainActivity,
-        legacyView: View
+        context: Context,
+        callbacks: MainScaffoldCallbacks? = null
     ): ComposeView {
-        val composeView = ComposeView(activity)
+        val composeView = ComposeView(context)
         composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         composeView.setContent {
             MusicMateTheme {
@@ -64,9 +60,8 @@ object DrawerInterop {
                 }
 
                 MainScaffold(
-                    activity = activity,
-                    legacyView = legacyView,
                     drawerState = state,
+                    callbacks = callbacks,
                     activeItemId = activeItemIdState.intValue
                 )
             }

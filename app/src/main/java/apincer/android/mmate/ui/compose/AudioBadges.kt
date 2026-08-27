@@ -179,6 +179,26 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
+    if (track == null) return
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+    ) {
+        QualityBadge(track = track)
+        Spacer(modifier = Modifier.width(6.dp))
+        ResolutionBadge(track = track)
+        Spacer(modifier = Modifier.width(6.dp))
+        DynamicRangeMeter(track = track)
+        Spacer(modifier = Modifier.width(6.dp))
+        RatingBadge(track = track, mode = "mini")
+        Spacer(modifier = Modifier.width(6.dp))
+        NewBadge(track = track)
+    }
+}
+
+@Composable
 fun NewBadge(track: Track?, modifier: Modifier = Modifier) {
     if (track == null || track.isManaged) return
 

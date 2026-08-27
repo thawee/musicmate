@@ -5,6 +5,27 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.0] - 2026-08-27
+
+### Added
+- **100% Pure Jetpack Compose Architecture**:
+  - Completed total migration from legacy XML views to pure Jetpack Compose across the entire application ecosystem (`MainActivity`, `AboutActivity`, `SettingsActivity`, `PermissionActivity`, and `TagsActivity`).
+  - Implemented `AboutScreen.kt` with dynamic audio tier donut distribution chart and interactive technical specs reference.
+  - Implemented `SettingsScreen.kt` with segmented streaming engine selector (`CoreHTTP`, `SonicNIO`, `Netty`) and library preferences.
+  - Implemented `PermissionScreen.kt` with audiophile onboarding cards and status chips.
+  - Replaced legacy `TagsActivity` header layout with `TagHeaderBadges` ComposeView.
+  - Safely removed legacy custom views (`BadgeView`, `DurationView`, `ResolutionView`, `QualityIndicatorView`, `DynamicRangeView`, `RatingIndicatorView`, `NewIndicatorView`, `TriangleLabelView`, `ReflectionContainer`) and 7 obsolete XML layout files.
+- **10/10 Flagship Audiophile UI/UX Elevation**:
+  - **Fading Edge Alpha Masks (`FadingEdge.kt`, `MainScaffold.kt`, `NowPlayingPage.kt`)**: Added smooth 8–10dp horizontal gradient alpha fade masks on scrolling marquee titles and artists, eliminating harsh text cutoff edges.
+  - **Dual-Layer Breathing Ambient Artwork Glow (`NowPlayingPage.kt`)**: Enhanced cover art backdrop with animated pulse scale and alpha oscillation driven by real-time `Palette` color extraction.
+  - **Rich Animated Empty States (`MusicListScreen.kt`, `QueuePage.kt`)**: Designed animated radar/pulse empty state with gold insignia and `"Refresh Library"` button for music lists, and interactive guidance card for empty playback queues.
+  - **Tactile Micro-Haptics (`NowPlayingPage.kt`)**: Integrated `LocalHapticFeedback` on transport buttons, volume step controls, and scrubber milestones.
+  - **Spring Motion Physics**: Tuned `Spring.DampingRatioMediumBouncy` on 3D perspective card flips and modal dialogs.
+- **Reactive Media Server Status & QR Synchronization (`MainActivity.java`, `BitmapHelper.java`)**:
+  - Added live observation of `MediaServerHub.ServerStatus` LiveData in `MainActivity`.
+  - Added on-the-fly QR code bitmap generation via ZXing in `BitmapHelper.generateQRCode()`.
+  - Connected immediate reactive UI feedback when starting, stopping, or switching streaming server engines.
+
 ## [3.18.22] - 2026-08-22
 
 ### Added

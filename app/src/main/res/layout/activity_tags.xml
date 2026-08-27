@@ -108,44 +108,12 @@
 
                 <include layout="@layout/fragment_editor_preview" />
                 
-                <LinearLayout
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/tags_header_badges"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
                     android:layout_gravity="center"
-                    android:padding="8dp">
-
-                    <apincer.android.mmate.ui.view.BadgeView
-                        android:id="@+id/icon_codec"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <apincer.android.mmate.ui.view.QualityIndicatorView
-                        android:id="@+id/icon_quality_indicator"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"/>
-
-                    <apincer.android.mmate.ui.view.DynamicRangeView
-                        android:id="@+id/dynamic_range_db_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"/>
-
-                    <apincer.android.mmate.ui.view.RatingIndicatorView
-                        android:id="@+id/rating_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        app:mode="mini"/>
-
-                    <apincer.android.mmate.ui.view.NewIndicatorView
-                        android:id="@+id/new_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"/>
-                </LinearLayout>
+                    android:padding="8dp" />
             </LinearLayout>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>

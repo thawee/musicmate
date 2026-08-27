@@ -34,13 +34,12 @@ fun MusicFoldersDialog(
 
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = Color(0xF2161618),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
         modifier = Modifier.padding(12.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF262626)) // bg_dialog_dark_blur approx
+            modifier = Modifier.fillMaxWidth()
         ) {
             // Drag handle
             Box(

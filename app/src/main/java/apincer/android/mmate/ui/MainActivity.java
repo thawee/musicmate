@@ -29,9 +29,8 @@ import android.os.IBinder;
 import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 
-import apincer.android.mmate.coil3.CoverartFetcher;
-import apincer.android.mmate.ui.view.AudioHubBottomSheet;
 import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.android.mmate.ui.compose.MainScaffoldState;
 import coil3.BitmapImage;
 import coil3.Image;
 import coil3.SingletonImageLoader;
@@ -109,7 +108,9 @@ import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
 import apincer.music.core.repository.TagRepository;
 
+import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
@@ -119,10 +120,8 @@ import dagger.hilt.android.AndroidEntryPoint;
  * Main Activity for MusicMate application
  */
 @AndroidEntryPoint
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements apincer.android.mmate.ui.compose.MainScaffoldCallbacks {
     private static final String TAG = "MainActivity";
-    private androidx.compose.ui.platform.ComposeView composeListView;
-    private View rootView;
 
     // Constants
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 8; //16
@@ -146,17 +145,8 @@ public class MainActivity extends AppCompatActivity {
     private apincer.music.core.model.SearchCriteria currentCriteria = new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY);
     private MySelectionTracker mTracker;
     private final List<Track> selections = new ArrayList<>();
-    private View mHeaderPanel;
-    private ImageView mBackButton;
-    private SearchView headerSearchView;
-    private TextView headerStatText;
 
     private WorkInfo.State lastWorkState = null;
-    private View scanProgressDots;
-    private android.animation.AnimatorSet dotAnimator = null;
-    
-    private TextView nowPlayingLabel;
-    private ImageView mBlurBackground;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -189,7 +179,14 @@ public class MainActivity extends AppCompatActivity {
             MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
-                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
+            apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
+
+            if (playbackService instanceof MusicMateServiceImpl msi) {
+                runOnUiThread(() -> {
+                    msi.getStatusLiveData().observe(MainActivity.this, MainActivity.this::updateMediaServerState);
+                    updateMediaServerState(msi.getStatusLiveData().getValue());
+                });
+            }
 
             playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
@@ -206,184 +203,137 @@ public class MainActivity extends AppCompatActivity {
     private PlaybackState.State lastStateEnum = null;
 
     private void setNowPlaying(Track song, PlaybackState playbackState) {
-        if (song != null) {
-            composeListView.post(() -> {
-                PlaybackState.State newStateEnum = playbackState != null ? playbackState.currentState : null;
-                boolean songChanged = !song.equals(previouslyPlaying);
-                boolean stateChanged = (lastStateEnum != newStateEnum);
+        runOnUiThread(() -> {
+            PlaybackState.State newStateEnum = playbackState != null ? playbackState.currentState : null;
+            boolean songChanged = (song != null && !song.equals(previouslyPlaying));
+            lastPlaybackState = playbackState;
+            lastStateEnum = newStateEnum;
 
-                lastPlaybackState = playbackState;
-                lastStateEnum = newStateEnum;
+            boolean isPlaying = playbackState != null && playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+            apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(song, isPlaying);
 
-                if (true) {
-                    boolean isPlaying = playbackState != null && playbackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
-                    apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), isPlaying);
-                }
-
-                if (songChanged) {
-                    if (Settings.isListFollowNowPlaying(getBaseContext()) && (actionMode == null)) {
-                        // only scrolled on first event for each song
-                        if (scrollRunnable != null) {
-                            scrollHandler.removeCallbacks(scrollRunnable);
-                        }
-                        scrollRunnable = () -> {
-                            if (!busy) {
-                                scrollToSong(song);
-                            }
-                        };
-                        scrollHandler.postDelayed(scrollRunnable, 500); // 0.5 seconds
-                    }
-
-                    // refresh previous playing music item
-                    if (previouslyPlaying != null) {
-                    }
-                    updateGlassyPanelsColor(song);
-                } else if (stateChanged) {
-                    // refresh current playing music item only when play/pause state changes
-                }
-
-                if (nowPlayingLabel != null) {
-                    nowPlayingLabel.setText(R.string.app_name);
-                }
-                previouslyPlaying = song;
-                updateFloatingPlaybackBar(song, playbackState);
-            });
-        } else {
-            composeListView.post(() -> {
-                if (nowPlayingLabel != null) {
-                    nowPlayingLabel.setText(R.string.app_name);
-                }
-                lastPlaybackState = playbackState;
-                lastStateEnum = playbackState != null ? playbackState.currentState : null;
-                previouslyPlaying = null;
-                updateFloatingPlaybackBar(null, playbackState);
-            });
-        }
-    }
-
-    private void updateFloatingPlaybackBar(Track song, PlaybackState playbackState) {
-        if (song != null && (actionMode == null)) {
-            if (barTrackTitle != null) {
-                barTrackTitle.setText(song.getTitle());
+            String targetSubtitle = "";
+            if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
+                targetSubtitle = PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer());
+            } else if (song != null && song.getArtist() != null) {
+                targetSubtitle = song.getArtist();
             }
-            if (barTargetSubtitle != null) {
-                barTargetSubtitle.setVisibility(View.VISIBLE);
-                if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
-                    barTargetSubtitle.setText(PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer()));
+
+            float progress = 0f;
+            if (song != null && song.getAudioDuration() > 0 && playbackState != null) {
+                progress = (float) playbackState.currentPositionSecond / (float) song.getAudioDuration();
+            }
+
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateNowPlaying(song, isPlaying, targetSubtitle, progress);
+
+            // Update AudioHub sub-states
+            apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+            nps.getPlaybackState().setValue(playbackState != null ? playbackState : new PlaybackState());
+            nps.getTrack().setValue(song);
+            if (song != null) {
+                nps.getDurationMs().setValue((long) (song.getAudioDuration() * 1000.0));
+                nps.getProgressMs().setValue(playbackState != null ? playbackState.currentPositionSecond * 1000L : 0L);
+
+                // Quality verdict
+                String verdict;
+                if (apincer.music.core.utils.TagUtils.isLossy(song)) {
+                    verdict = "STANDARD QUALITY";
+                } else if (song.getAudioBitsDepth() >= 24 && song.getAudioSampleRate() > 48000) {
+                    verdict = "HI-RES STUDIO MASTER";
+                } else if (song.getAudioBitsDepth() >= 24) {
+                    verdict = "24-BIT STUDIO QUALITY";
                 } else {
-                    barTargetSubtitle.setText(song.getArtist());
+                    verdict = "CD Quality";
                 }
-            }
-            if (barAlbumArt != null) {
-                barAlbumArt.setVisibility(View.VISIBLE);
-                String songTag = song.getPath();
-                if (!songTag.equals(barAlbumArt.getTag())) {
-                    barAlbumArt.setTag(songTag);
-                    ImageRequest request = CoverartFetcher.builder(this, song)
-                            .data(song)
-                            .size(240, 240)
-                            .target(new coil3.target.ImageViewTarget(barAlbumArt))
-                            .build();
-                    SingletonImageLoader.get(this).enqueue(request);
-                }
-            }
-            if (dockProgressBar != null && playbackState != null) {
-                dockProgressBar.setVisibility(android.view.View.VISIBLE);
-                long current = playbackState.currentPositionSecond;
-                long total = (long) song.getAudioDuration();
-                if (total > 0) {
-                    dockProgressBar.setMax(1000);
-                    dockProgressBar.setProgress((int) ((current * 1000) / total));
-                } else {
-                    dockProgressBar.setProgress(0);
-                }
-            }
-            if (barPlayPauseBtn != null && playbackState != null) {
-                if (playbackState.currentState == PlaybackState.State.PLAYING) {
-                    barPlayPauseBtn.setImageResource(R.drawable.ic_baseline_pause_24);
-                    barPlayPauseBtn.setContentDescription(getString(R.string.pause));
-                } else {
-                    barPlayPauseBtn.setImageResource(R.drawable.ic_baseline_play_arrow_24);
-                    barPlayPauseBtn.setContentDescription(getString(R.string.play));
-                }
-            }
-        } else {
-            if (barTrackTitle != null) {
-                barTrackTitle.setText(R.string.app_name);
-            }
-            if (barTargetSubtitle != null) {
-                barTargetSubtitle.setVisibility(View.VISIBLE);
-                if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
-                    barTargetSubtitle.setText(PlayerNameUtils.getDropdownPlayerLabel(playbackService.getPlayer()));
-                } else {
-                    barTargetSubtitle.setText("Select target player");
-                }
-            }
-            if (dockProgressBar != null) {
-                dockProgressBar.setVisibility(android.view.View.GONE);
-            }
-            if (barAlbumArt != null) {
-                barAlbumArt.setVisibility(View.VISIBLE);
-                barAlbumArt.setTag(null);
-                barAlbumArt.setImageResource(R.drawable.ic_now_playing_idle);
-            }
-        }
-    }
+                nps.getSpecsVerdict().setValue(verdict);
 
-    private void updateGlassyPanelsColor(Track song) {
-        ImageRequest request = CoverartFetcher.builder(this, song)
-                .data(song)
-                .size(300, 300) // Small size is fine for heavy blur
-                .target(new Target() {
-                    @Override
-                    public void onStart(@Nullable Image placeholder) {}
+                String fmtCodec = apincer.music.core.utils.TagUtils.formatCodec(song);
+                String fmtRes = apincer.music.core.utils.TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getAudioBitRate());
+                nps.getSpecsFormat().setValue(fmtCodec + (fmtRes.isEmpty() ? "" : " • " + fmtRes));
 
-                    @Override
-                    public void onSuccess(@NonNull Image image) {
-                        if (image instanceof BitmapImage) {
-                            Bitmap bitmap = ((BitmapImage) image).getBitmap();
-                            
-                            // Apply to full screen background with heavy blur
-                            if (mBlurBackground != null) {
-                                mBlurBackground.setImageBitmap(bitmap);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                    mBlurBackground.setRenderEffect(
-                                            RenderEffect.createBlurEffect(100f, 100f, Shader.TileMode.CLAMP)
-                                    );
+                long bitrate = song.getAudioBitRate();
+                nps.getSpecsBitrate().setValue(bitrate > 0 ? (bitrate / 1000) + " kbps" : "Lossless Audio");
+
+                double dr = song.getDrScore() > 0 ? song.getDrScore() : song.getDynamicRange();
+                nps.getSpecsDr().setValue(dr > 0 ? "DR " + (int) dr : "");
+
+                nps.getSpecsFileSize().setValue(song.getFileSize() > 0 ? android.text.format.Formatter.formatFileSize(this, song.getFileSize()) : "");
+
+                // Coil Image Loading into state.albumArt
+                coil3.request.ImageRequest imgRequest = apincer.android.mmate.coil3.CoverartFetcher.builder(this, song)
+                        .data(song)
+                        .size(800, 800)
+                        .target(new coil3.target.Target() {
+                            @Override
+                            public void onSuccess(coil3.Image result) {
+                                if (result instanceof coil3.BitmapImage) {
+                                    nps.getAlbumArt().setValue(((coil3.BitmapImage) result).getBitmap());
                                 }
                             }
-
-                            Bitmap paletteBitmap = BitmapHelper.ensureSoftwareBitmap(bitmap);
-                            if (paletteBitmap != null && !paletteBitmap.isRecycled()) {
-                                Palette.from(paletteBitmap).generate(palette -> {
-                                    if (palette != null) {
-                                        int color = palette.getVibrantColor(palette.getMutedColor(Color.DKGRAY));
-                                        applyGlassyColor(color);
-                                    }
-                                });
+                            @Override
+                            public void onError(coil3.Image error) {
+                                nps.getAlbumArt().setValue(null);
                             }
-                        }
+                            @Override
+                            public void onStart(coil3.Image placeholder) {
+                            }
+                        })
+                        .build();
+                coil3.SingletonImageLoader.get(this).enqueue(imgRequest);
+            } else {
+                nps.getAlbumArt().setValue(null);
+                nps.getSpecsVerdict().setValue("");
+                nps.getSpecsFormat().setValue("");
+                nps.getSpecsBitrate().setValue("");
+                nps.getSpecsDr().setValue("");
+                nps.getSpecsFileSize().setValue("");
+            }
+
+            // Target Title & Badge & Details
+            if (isPlaybackServiceBound && playbackService != null && playbackService.getPlayer() != null) {
+                apincer.music.core.playback.spi.PlaybackTarget player = playbackService.getPlayer();
+                if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
+                    AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(this, song);
+                    boolean isBitPerfect = device.isBitPerfect();
+                    boolean isBluetooth = device.isBluetooth();
+                    String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Phone Speaker";
+                    nps.getTargetTitle().setValue(devName);
+                    nps.getTargetBadge().setValue(isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH" : "DIRECT OUTPUT"));
+                    StringBuilder devBuf = new StringBuilder();
+                    devBuf.append(device.getDescription());
+                    if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
+                        devBuf.append(" — ").append(device.getCodec());
+                    } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getFriendyDescription())) {
+                        devBuf.append(" — ").append(device.getFriendyDescription());
                     }
+                    nps.getTargetDetails().setValue(devBuf.toString());
+                } else {
+                    nps.getTargetTitle().setValue(PlayerNameUtils.getDropdownPlayerLabel(player));
+                    nps.getTargetBadge().setValue(player.isStreaming() ? "DLNA" : "EXTERNAL APP");
+                    nps.getTargetDetails().setValue(player.getDescription() != null ? player.getDescription() : "");
+                }
+            } else {
+                nps.getTargetTitle().setValue("Local Audio");
+                nps.getTargetBadge().setValue("SYS OUT");
+                nps.getTargetDetails().setValue("System Default Output");
+            }
 
-                    @Override
-                    public void onError(@Nullable Image errorDrawable) {}
-                })
-                .build();
-        SingletonImageLoader.get(this).enqueue(request);
-    }
+            if (songChanged && song != null) {
+                if (Settings.isListFollowNowPlaying(getBaseContext()) && (actionMode == null)) {
+                    if (scrollRunnable != null) {
+                        scrollHandler.removeCallbacks(scrollRunnable);
+                    }
+                    scrollRunnable = () -> {
+                        if (!busy) {
+                            scrollToSong(song);
+                        }
+                    };
+                    scrollHandler.postDelayed(scrollRunnable, 500);
+                }
+            }
 
-    private void applyGlassyColor(int color) {
-        int alphaColor = ColorUtils.setAlphaComponent(color, 64); // ~25% opacity for better glass effect
-        if (mHeaderPanel != null && mHeaderPanel.getBackground() != null) {
-            mHeaderPanel.getBackground().setTint(alphaColor);
-            mHeaderPanel.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
-        }
-        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
-        if (bottomNav != null && bottomNav.getBackground() != null) {
-            bottomNav.getBackground().setTint(alphaColor);
-            bottomNav.getBackground().setTintMode(PorterDuff.Mode.SRC_ATOP);
-        }
-
+            previouslyPlaying = song;
+        });
     }
 
     @Override
@@ -394,11 +344,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the server here, where we are guaranteed to be in the foreground!
         mediaServerManager.startServer();
+        mediaServerManager.getServerStatus().observe(this, this::updateMediaServerState);
+        updateMediaServerState(mediaServerManager.getServerStatus().getValue());
 
         // Enable Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
-        //Enable Dynamic Colors
+        // Enable Dynamic Colors
         DynamicColors.applyToActivitiesIfAvailable(getApplication());
 
         tagViewResultLauncher = registerForActivityResult(
@@ -423,7 +375,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup status bar
         Window window = getWindow();
         WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
-        // If the background is dark, use light icons
         insetsController.setAppearanceLightStatusBars(false);
 
         // Get search criteria from intent
@@ -433,22 +384,19 @@ public class MainActivity extends AppCompatActivity {
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
-        // Set content view
-        rootView = getLayoutInflater().inflate(R.layout.activity_main, null);
-        setContentView(apincer.android.mmate.ui.compose.DrawerInterop.getComposeView(this, rootView));
+        // Set pure Compose content view
+        setContentView(apincer.android.mmate.ui.compose.DrawerInterop.getComposeView(this, this));
 
         // Get the ViewModel. Hilt handles all the factory creation for you.
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        // Setup UI components
-        setupHeaderPanel();
-        setupBottomAppBar();
-        setupRecycleView(searchCriteria);
+        // Setup Selection tracker & Action Mode
+        setupSelectionTracker();
+
         if (searchCriteria != null) {
             currentCriteria = searchCriteria;
         }
         syncActiveDrawerItem();
-        
 
         // Observe ViewModel LiveData
         setupObserveViewModel();
@@ -464,21 +412,16 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("CheckResult")
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
-            composeListView.post(() -> {
-                // If user is in selection mode, preserve active selection keys
+            runOnUiThread(() -> {
                 List<Long> selectedPositions = null;
                 if (actionMode != null && mTracker != null && mTracker.hasSelection()) {
                     selectedPositions = new ArrayList<>();
                     mTracker.getSelection().forEach(selectedPositions::add);
                 }
 
-                // Save layout manager state to restore scroll position
-
                 apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
                 apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
-                // Update header after adapter is populated; stats observer will correct later
                 updateHeaderPanel(viewModel.searchStats.getValue());
-
 
                 if (selectedPositions != null && !selectedPositions.isEmpty() && mTracker != null) {
                     for (Long pos : selectedPositions) {
@@ -486,17 +429,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-            if (musicTags == null || musicTags.isEmpty()) {
-                
-            } else {
-                
-            }
         });
 
         // When DB aggregate stats arrive, refresh the subtitle with accurate totals
-        viewModel.searchStats.observe(this, stats -> updateHeaderPanel(stats));
+        viewModel.searchStats.observe(this, this::updateHeaderPanel);
 
-        viewModel.musicItemsLoading.observe(this, isLoading -> composeListView.post(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
+        viewModel.musicItemsLoading.observe(this, isLoading -> runOnUiThread(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
                 .getWorkInfosForUniqueWorkLiveData("MusicScanWork")
@@ -506,23 +444,12 @@ public class MainActivity extends AppCompatActivity {
                         WorkInfo.State currentState = workInfo.getState();
                         boolean isRunning = currentState == WorkInfo.State.RUNNING;
                         if (isRunning) {
-                            if (scanProgressDots != null) {
-                                scanProgressDots.setVisibility(View.VISIBLE);
-                                startDotAnimation();
-                            }
                             int progress = workInfo.getProgress().getInt("progress_value", 0);
                             int total = workInfo.getProgress().getInt("total_files", 0);
-                            if (total > 0) {
-                                headerStatText.setText("Scanning: " + progress + "/" + total + " files");
-                            } else {
-                                headerStatText.setText("Scanning...");
-                            }
+                            String scanMsg = total > 0 ? "Scanning: " + progress + "/" + total + " files" : "Scanning…";
+                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, scanMsg);
                         } else if (currentState.isFinished()) {
-                            if (scanProgressDots != null) {
-                                scanProgressDots.setVisibility(View.GONE);
-                                stopDotAnimation();
-                            }
-                            // Only trigger reload/ui update if we transitioned from RUNNING to a finished state
+                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(false, "");
                             if (lastWorkState == WorkInfo.State.RUNNING) {
                                 viewModel.loadMusicItems(currentCriteria);
                             }
@@ -532,222 +459,48 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void setupHeaderPanel() {
-        mBlurBackground = rootView.findViewById(R.id.main_background_blur);
-        mHeaderPanel = rootView.findViewById(R.id.header_panel);
-        mBackButton = rootView.findViewById(R.id.header_back_btn);
-        headerSearchView = rootView.findViewById(R.id.search_view);
-        headerStatText = rootView.findViewById(R.id.header_stats_text);
-
-        // Handle Status Bar Insets for Header
-        ViewCompat.setOnApplyWindowInsetsListener(mHeaderPanel, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), systemBars.top + (int)dpToPx(this, 8), 
-                        v.getPaddingRight(), v.getPaddingBottom());
-            return insets;
-        });
-
-        // Glassy effect is handled by semi-transparent background drawables
-        // and dynamic tints in applyGlassyColor().
-        // setRenderEffect is disabled here to keep text and icons sharp.
-
-        setupSearchView();
-        openSearch();
-    }
-
-    private void setupBottomAppBar() {
-        // Find components
-        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
-        // setSupportActionBar(bottomNav); // Removed as CardView is not a Toolbar
-
-        // Handle Navigation Bar Insets for Bottom Capsule
-        if (bottomNav != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                if (v.getLayoutParams() instanceof MarginLayoutParams mlp) {
-                    mlp.bottomMargin = systemBars.bottom + (int)dpToPx(this, 8);
-                    v.setLayoutParams(mlp);
-                }
-                return insets;
-            });
-            bottomNav.setElevation(8f);
-        }
-
-        View menuBtn = rootView.findViewById(R.id.navigation_collections);
-        // Setup menu click listeners
-        if (menuBtn != null) {
-            menuBtn.setOnClickListener(v -> doShowLeftMenus());
-        }
-
-        setupFloatingPlaybackBar();
-    }
-
-    private View floatingPlaybackBar;
-    private ImageView barAlbumArt;
-    private TextView barTrackTitle;
-    private android.widget.ProgressBar dockProgressBar;
-    private TextView barTargetSubtitle;
-    private ImageView barPlayPauseBtn;
-    private ImageView barNextBtn;
-
-    private void setupFloatingPlaybackBar() {
-        floatingPlaybackBar = rootView.findViewById(R.id.docked_playback_bar);
-        if (floatingPlaybackBar == null) return;
-
-        barAlbumArt = rootView.findViewById(R.id.bar_album_art);
-        barTrackTitle = rootView.findViewById(R.id.bar_track_title);
-        barTrackTitle.setSelected(true);
-        dockProgressBar = rootView.findViewById(R.id.dock_progress_bar);
-        barTargetSubtitle = rootView.findViewById(R.id.bar_target_subtitle);
-        barPlayPauseBtn = rootView.findViewById(R.id.btn_dock_play_pause);
-        barNextBtn = rootView.findViewById(R.id.btn_dock_next);
-
-        View titleContainer = rootView.findViewById(R.id.bar_title_container);
-        View.OnClickListener openNowPlayingListener = v -> {
-            // Sticky tab: reopen at the last tab the user viewed this session
-            AudioHubBottomSheet sheet = AudioHubBottomSheet.newInstance();
-            sheet.show(getSupportFragmentManager(), AudioHubBottomSheet.TAG);
-        };
-
-        if (titleContainer != null) {
-            titleContainer.setOnClickListener(openNowPlayingListener);
-        }
-
-        if (barAlbumArt != null) {
-            barAlbumArt.setOnClickListener(openNowPlayingListener);
-        }
-        
-        if (barPlayPauseBtn != null) {
-            barPlayPauseBtn.setOnClickListener(v -> {
-                if (playbackService != null) {
-                    if (lastPlaybackState != null && lastPlaybackState.currentState == PlaybackState.State.PLAYING) {
-                        playbackService.pausePlayer();
-                    } else {
-                        Track nowPlaying = playbackService.getNowPlayingSong();
-                        if (nowPlaying != null) {
-                            playbackService.playSong(nowPlaying);
-                        } else {
-                            QueueManager qm = playbackService.getQueueManager();
-                            if (qm != null) {
-                                Track randomTrack = qm.getRandomTrack();
-                                if (randomTrack != null) {
-                                    playbackService.playSong(randomTrack);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        if (barNextBtn != null) {
-            barNextBtn.setOnClickListener(v -> {
-                if (playbackService != null) {
-                    playbackService.skipToNextInQueue();
-                }
-            });
-        }
-    }
-
     public void setFloatingDockVisible(boolean visible) {
-        View bottomNav = rootView.findViewById(R.id.bottom_navigation_container);
-        if (bottomNav != null) {
-            if (visible) {
-                bottomNav.setVisibility(View.VISIBLE);
-                bottomNav.animate()
-                        .alpha(1f)
-                        .translationY(0f)
-                        .setDuration(220)
-                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                        .start();
-            } else {
-                bottomNav.animate()
-                        .alpha(0f)
-                        .translationY(bottomNav.getHeight() > 0 ? bottomNav.getHeight() + dpToPx(this, 16) : dpToPx(this, 88))
-                        .setDuration(180)
-                        .setInterpolator(new android.view.animation.AccelerateInterpolator())
-                        .withEndAction(() -> bottomNav.setVisibility(View.INVISIBLE))
-                        .start();
-            }
-        }
+        apincer.android.mmate.ui.compose.MainScaffoldState.setFloatingDockVisible(visible);
     }
 
     public PlaybackState getLastPlaybackState() {
         return lastPlaybackState;
     }
 
-    private void setupRecycleView(SearchCriteria searchCriteria) {
-        if (searchCriteria == null) {
-            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.LIBRARY);
-        }
-
-        // Initialize adapter
-
-        // Setup RecyclerView
-        scanProgressDots = rootView.findViewById(R.id.scan_progress_dots);
-        int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
-
-
-
-        composeListView = rootView.findViewById(R.id.compose_list_view);
-        apincer.android.mmate.ui.compose.ListInterop.setMusicListContent(composeListView, this);
-        
-        ViewCompat.setOnApplyWindowInsetsListener(composeListView, (v, insets) -> {
-            androidx.core.graphics.Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
-            return insets;
-        });
-
-        // add on item touch listener to detect and block touch selections that stop a fast move/scroll
-
-        // add on scroll listener
-
-
-            // Setup selection tracker
-            mTracker = new MySelectionTracker();
-            
-
-            // Setup selection observer
-            MySelectionTracker.SelectionObserver observer = new MySelectionTracker.SelectionObserver() {
-                @Override
-                public void onSelectionChanged() {
-                    int count = mTracker.getSelection().size();
-                    selections.clear();
-                    if (count > 0) {
-                        mTracker.getSelection().forEach(item -> {
-                            Track tag = (item.intValue() >= 0 && item.intValue() < apincer.android.mmate.ui.compose.ListInterop.getTracks().size() ? apincer.android.mmate.ui.compose.ListInterop.getTracks().get(item.intValue()) : null);
-                            if (tag != null) {
-                                selections.add(tag);
-                            }
-                        });
-                        if (actionMode == null) {
-                            actionMode = startSupportActionMode(actionModeCallback);
+    private void setupSelectionTracker() {
+        mTracker = new MySelectionTracker();
+        MySelectionTracker.SelectionObserver observer = new MySelectionTracker.SelectionObserver() {
+            @Override
+            public void onSelectionChanged() {
+                int count = mTracker.getSelection().size();
+                selections.clear();
+                if (count > 0) {
+                    mTracker.getSelection().forEach(item -> {
+                        Track tag = (item.intValue() >= 0 && item.intValue() < apincer.android.mmate.ui.compose.ListInterop.getTracks().size() ? apincer.android.mmate.ui.compose.ListInterop.getTracks().get(item.intValue()) : null);
+                        if (tag != null) {
+                            selections.add(tag);
                         }
-                    } else if (actionMode != null) {
-                        actionMode.finish();
-                        actionMode = null;
+                    });
+                    if (actionMode == null) {
+                        actionMode = startSupportActionMode(actionModeCallback);
                     }
-                    if (actionMode != null) {
-                        actionMode.setTitle(count + " Selected");
-                        //actionMode.invalidate();
-                    }
-                    apincer.android.mmate.ui.compose.ListInterop.updateSelectedTracks(new java.util.HashSet<>(selections));
+                } else if (actionMode != null) {
+                    actionMode.finish();
+                    actionMode = null;
                 }
-            };
-            mTracker.setObserver(observer);
-
-        // Setup fast scroller
-
-        // Initialize action mode callback
+                if (actionMode != null) {
+                    actionMode.setTitle(count + " Selected");
+                }
+                apincer.android.mmate.ui.compose.ListInterop.updateSelectedTracks(new java.util.HashSet<>(selections));
+            }
+        };
+        mTracker.setObserver(observer);
         actionModeCallback = new ActionModeCallback();
     }
-
 
     private void doShowLeftMenus() {
         apincer.android.mmate.ui.compose.DrawerInterop.openDrawer();
     }
-
-
 
     private void updateHeaderPanel() {
         updateHeaderPanel(null);
@@ -755,12 +508,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateHeaderPanel(SearchResultStats stats) {
         SearchCriteria.TYPE type = currentCriteria.getType();
-        Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
 
-        // Prefer DB aggregate stats for accurate category-wide totals.
-        // Fall back to adapter counts if stats not yet available (e.g. initial load).
-        // For top-level category directories (where keyword is empty and type is not LIBRARY),
-        // we display the category count itself, which is the total items in the adapter.
         boolean isTopLevelCategoryDir = isEmpty(currentCriteria.getKeyword())
                 && !SearchCriteria.TYPE.LIBRARY.equals(type);
         boolean hasActiveFilter = (!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()));
@@ -770,14 +518,12 @@ public class MainActivity extends AppCompatActivity {
         double totalDuration = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum() : ((stats != null) ? stats.getTotalDuration() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum());
 
         String statText = "";
-        if(!isEmpty(currentCriteria.getKeyword())) {
-            // total songs
-            if(count > 0) {
+        if (!isEmpty(currentCriteria.getKeyword())) {
+            if (count > 0) {
                 statText = StringUtils.formatSongSize(count) + " Songs";
             }
 
-            // filter details or duration
-            if(isEmpty(currentCriteria.getFilterType()) && count > 0) {
+            if (isEmpty(currentCriteria.getFilterType()) && count > 0) {
                 statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
             } else {
                 String filterText = currentCriteria.getFilterText();
@@ -786,78 +532,31 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
                 }
-                if(!isEmpty(filterText)) {
+                if (!isEmpty(filterText)) {
                     statText = statText + " · [" + filterText + "]";
                 }
             }
-
-            // can back to higher category, except type library
-            if(SearchCriteria.TYPE.LIBRARY.equals(type)){
-                mBackButton.setImageDrawable(icon);
-                mHeaderPanel.setOnClickListener(null);
-            } else {
-                mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
-                mHeaderPanel.setOnClickListener(view -> {
-                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
-                    currentCriteria.setKeyword(null);
-                    viewModel.loadMusicItems(currentCriteria);
-                });
-            }
         } else {
-            // top-level category: show total count + category label
-            if(count > 0) {
+            if (count > 0) {
                 statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle("Tracks");
-                // Also show total storage + duration for the all-songs view (Library)
                 if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
                     statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
                 }
             }
-
-            // Allow back navigation to Library (All Songs) from top-level category lists (e.g. Codecs, Artists, Genres)
-            if(SearchCriteria.TYPE.LIBRARY.equals(type)){
-                mBackButton.setImageDrawable(icon);
-                mHeaderPanel.setOnClickListener(null);
-            } else {
-                mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
-                mHeaderPanel.setOnClickListener(view -> {
-                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
-                    currentCriteria.resetSearch();
-                    doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
-                });
-            }
         }
 
-        headerSearchView.setQueryHint("Search " + StringUtils.truncate(currentCriteria.getType().name(), 25, StringUtils.TruncateType.SUFFIX));
-        headerStatText.setText(statText);
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateHeaderStats(statText);
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(!SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if(headerSearchView != null) {
-            headerSearchView.clearFocus();
-        }
-
-       // viewModel.getTagRepository().cleanInvalidTags();
-        // load music items
-       // viewModel.loadMusicItems(currentCriteria);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        stopDotAnimation();
-        if(isPlaybackServiceBound) {
+        if (isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
         super.onDestroy();
@@ -867,7 +566,7 @@ public class MainActivity extends AppCompatActivity {
         if (currentlyPlaying == null || (actionMode != null)) return;
 
         viewModel.loadUntilFound(currentlyPlaying, () -> {
-            composeListView.post(() -> {
+            runOnUiThread(() -> {
                 int positionToScroll = apincer.android.mmate.ui.compose.ListInterop.getTracks().indexOf(currentlyPlaying);
                 if (positionToScroll != RecyclerView.NO_POSITION) {
                     scrollToPosition(positionToScroll);
@@ -888,9 +587,394 @@ public class MainActivity extends AppCompatActivity {
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         currentCriteria.setType(type);
         currentCriteria.setKeyword(keyword);
-       // folderAdapter.refresh();
         syncActiveDrawerItem();
         viewModel.loadMusicItems(currentCriteria);
+    }
+
+    public void onSearchQueryChanged(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            if (currentCriteria != null && currentCriteria.isSearchMode()) {
+                doHideSearch();
+            }
+        } else {
+            viewModel.search(currentCriteria, query.trim());
+        }
+    }
+
+    public void onSearchBackClicked() {
+        if (actionMode != null) {
+            actionMode.finish();
+            return;
+        }
+
+        if (currentCriteria != null && !(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty())) {
+            currentCriteria.setFilterText(null);
+            currentCriteria.setFilterType(null);
+            apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
+            viewModel.loadMusicItems(currentCriteria);
+            return;
+        }
+
+        if (currentCriteria != null && currentCriteria.isSearchMode()) {
+            doHideSearch();
+            apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
+            viewModel.loadMusicItems(currentCriteria);
+            return;
+        }
+
+        if (currentCriteria != null && (isEmpty(currentCriteria.getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType()))) {
+            doShowLeftMenus();
+        } else if (currentCriteria != null && !isEmpty(currentCriteria.getKeyword()) && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
+            currentCriteria.setFilterText(null);
+            currentCriteria.setFilterType(null);
+            currentCriteria.setKeyword(null);
+            apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
+            viewModel.loadMusicItems(currentCriteria);
+        }
+    }
+
+    public void onDockPlayPauseClicked() {
+        if (playbackService != null) {
+            if (lastPlaybackState != null && lastPlaybackState.currentState == PlaybackState.State.PLAYING) {
+                playbackService.pausePlayer();
+            } else {
+                Track nowPlaying = playbackService.getNowPlayingSong();
+                if (nowPlaying != null) {
+                    playbackService.playSong(nowPlaying);
+                } else {
+                    QueueManager qm = playbackService.getQueueManager();
+                    if (qm != null) {
+                        Track randomTrack = qm.getRandomTrack();
+                        if (randomTrack != null) {
+                            playbackService.playSong(randomTrack);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void onDockNextClicked() {
+        if (playbackService != null) {
+            playbackService.skipToNextInQueue();
+        }
+    }
+
+    public void onSelectPlaybackTargetClicked() {
+        if (!isPlaybackServiceBound || playbackService == null) return;
+        playbackService.refreshPlayerDiscovery();
+        updatePlayerPickerState();
+        MainScaffoldState.get().getShowPlayerPickerDialog().setValue(true);
+    }
+
+    public void onAudioHubPlayPause() {
+        onDockPlayPauseClicked();
+    }
+
+    public void onAudioHubNext() {
+        if (playbackService != null) playbackService.skipToNextInQueue();
+    }
+
+    public void onAudioHubPrevious() {
+        if (playbackService != null) playbackService.skipToPrevious();
+    }
+
+    public void onAudioHubShuffleToggle() {
+        if (playbackService != null) {
+            boolean shuffle = !apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().isShuffle().getValue();
+            playbackService.setShuffleMode(shuffle);
+            apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().isShuffle().setValue(shuffle);
+        }
+    }
+
+    public void onAudioHubRepeatToggle() {
+        if (playbackService != null) {
+            int mode = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().getValue();
+            int nextMode = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
+            playbackService.setRepeatMode(String.valueOf(nextMode));
+            apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().setValue(nextMode);
+        }
+    }
+
+    public void onAudioHubSeek(float progress) {
+        if (playbackService != null) {
+            long duration = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getDurationMs().getValue();
+            if (duration > 0) playbackService.seekTo((long) (progress * duration));
+        }
+    }
+
+    public void onAudioHubVolumeDown() {}
+    public void onAudioHubVolumeUp() {}
+    public void onAudioHubVolumeChanged(float vol) {}
+
+    public void onAudioHubTrackClicked() {
+        if (playbackService != null && playbackService.getNowPlayingSong() != null) {
+            apincer.android.mmate.ui.compose.MainScaffoldState.closeAudioHub();
+            scrollToSong(playbackService.getNowPlayingSong());
+        }
+    }
+
+    public void onAudioHubQueueTrackClicked(Track track) {
+        if (playbackService != null && track != null) {
+            playbackService.playSong(track);
+        }
+    }
+
+    public void onAudioHubQueueTrackRemoved(Track track, int index) {
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            playbackService.getQueueManager().removeTrack(index);
+        }
+    }
+
+    @Override
+    public void onAudioHubQueueClear() {
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            playbackService.getQueueManager().emptyPlayingQueue();
+            android.widget.Toast.makeText(this, "Queue cleared", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onAudioHubQueueJumpToPlaying() {
+        if (playbackService != null && playbackService.getNowPlayingSong() != null) {
+            apincer.android.mmate.ui.compose.MainScaffoldState.closeAudioHub();
+            scrollToSong(playbackService.getNowPlayingSong());
+        }
+    }
+
+    public void updateMediaServerState(MediaServerHub.ServerStatus status) {
+        apincer.android.mmate.ui.compose.MediaServerState state =
+                apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState();
+        if (state == null) return;
+
+        boolean isRunning = (status == MediaServerHub.ServerStatus.RUNNING || status == MediaServerHub.ServerStatus.CAST);
+        boolean networkAvailable = NetworkUtils.isServerNetworkAvailable(this);
+        state.setNetworkAvailable(networkAvailable);
+        state.setServerRunning(isRunning);
+
+        String engine = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        state.setCurrentEngine(engine);
+
+        if (isRunning) {
+            String url = Constants.getPresentationUrl();
+            state.setServerUrl(url);
+            String netDesc = NetworkUtils.isWifiConnected(this) ? "Wi-Fi" : NetworkUtils.isHotspotActive(this) ? "Hotspot" : "Local Network";
+            state.setBroadcastInfo("DLNA 1.5 • " + netDesc + " • Port " + apincer.music.core.server.BaseServer.WEB_SERVER_PORT);
+            state.setServerStatusText("DLNA Server Active");
+            state.setQrCodeBitmap(BitmapHelper.generateQRCode(url, 400, 400));
+        } else if (status == MediaServerHub.ServerStatus.STARTING) {
+            state.setServerStatusText("Starting Server…");
+            state.setServerUrl("");
+            state.setBroadcastInfo("Initializing streaming services…");
+            state.setQrCodeBitmap(null);
+        } else if (status == MediaServerHub.ServerStatus.ERROR || !networkAvailable) {
+            state.setServerStatusText("Network Disconnected");
+            state.setServerUrl("");
+            state.setBroadcastInfo("Wi-Fi / Hotspot required to stream");
+            state.setQrCodeBitmap(null);
+        } else {
+            state.setServerStatusText("Server Stopped");
+            state.setServerUrl("");
+            state.setBroadcastInfo(networkAvailable ? "Ready to stream" : "Wi-Fi / Hotspot disconnected");
+            state.setQrCodeBitmap(null);
+        }
+    }
+
+    public void onAudioHubEngineChanged(String engine) {
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        if (!engine.equals(prevEngine)) {
+            prefs.edit().putString(Constants.PREF_SERVER_ENGINE, engine).apply();
+            apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState().setCurrentEngine(engine);
+            if (playbackService instanceof MusicMateServiceImpl msi) {
+                msi.stopServers();
+                msi.startServers();
+            }
+            android.widget.Toast.makeText(this, "Switching engine — restarting server…", android.widget.Toast.LENGTH_SHORT).show();
+            updateMediaServerState(MediaServerHub.ServerStatus.STARTING);
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (playbackService instanceof MusicMateServiceImpl msi) {
+                    updateMediaServerState(msi.getStatusLiveData().getValue());
+                }
+            }, 600);
+        }
+    }
+
+    public void onAudioHubStartServer() {
+        mediaServerManager.startServer();
+        if (playbackService instanceof MusicMateServiceImpl msi) {
+            msi.startServers();
+        }
+        updateMediaServerState(MediaServerHub.ServerStatus.STARTING);
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (playbackService instanceof MusicMateServiceImpl msi) {
+                updateMediaServerState(msi.getStatusLiveData().getValue());
+            } else {
+                updateMediaServerState(mediaServerManager.getServerStatus().getValue());
+            }
+        }, 600);
+    }
+
+    public void onAudioHubStopServer() {
+        mediaServerManager.stopServer();
+        if (playbackService instanceof MusicMateServiceImpl msi) {
+            msi.stopServers();
+        }
+        updateMediaServerState(MediaServerHub.ServerStatus.STOPPED);
+    }
+
+    public void onAudioHubCopyUrl() {
+        String url = apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState().getServerUrl();
+        if (url != null && !url.isEmpty()) {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("Server URL", url);
+            if (clipboard != null) {
+                clipboard.setPrimaryClip(clip);
+                android.widget.Toast.makeText(this, "Server URL copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void onAudioHubOpenUrl() {
+        String url = apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState().getServerUrl();
+        if (url != null && !url.isEmpty()) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
+            startActivity(browserIntent);
+        }
+    }
+
+    public void onAudioHubQrCode() {}
+
+    // MainScaffoldCallbacks Interface Implementations
+    @Override
+    public void onNavigationItemClick(int itemId) {
+        handleNavigationItemClick(itemId);
+    }
+
+    @Override
+    public void onSearchQueryChange(String query) {
+        onSearchQueryChanged(query);
+    }
+
+    @Override
+    public void onSearchBackClick() {
+        onSearchBackClicked();
+    }
+
+    @Override
+    public void onTrackClick(Track track, int position) {
+        onTrackClicked(track, position);
+    }
+
+    @Override
+    public void onTrackLongClick(Track track, int position) {
+        onTrackLongClicked(track, position);
+    }
+
+    @Override
+    public void onTrackMenuClick(Track track, int position) {
+        onTrackMenuClicked(track, position);
+    }
+
+    @Override
+    public void onTrackQuickPlayClick(Track track) {
+        onTrackQuickPlayClicked(track);
+    }
+
+    @Override
+    public void onFolderPlayClick(Track track) {
+        onFolderPlayClicked(track);
+    }
+
+    @Override
+    public void onFolderEnqueueClick(Track track) {
+        onFolderEnqueueClicked(track);
+    }
+
+    @Override
+    public void onDockPlayPauseClick() {
+        onDockPlayPauseClicked();
+    }
+
+    @Override
+    public void onDockNextClick() {
+        onDockNextClicked();
+    }
+
+    @Override
+    public void onSelectPlaybackTargetClick() {
+        onSelectPlaybackTargetClicked();
+    }
+
+    @Override
+    public void onPlayerTargetSelected(apincer.music.core.playback.spi.PlaybackTarget target) {
+        if (playbackService != null && target != null) {
+            playbackService.switchPlayer(target, true);
+            setNowPlaying(playbackService.getNowPlayingSong(), lastPlaybackState);
+            updatePlayerPickerState();
+        }
+    }
+
+    @Override
+    public void onRescanTargets() {
+        if (playbackService != null) {
+            playbackService.refreshPlayerDiscovery();
+            MainScaffoldState.setPlayerScanning(true);
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                updatePlayerPickerState();
+                MainScaffoldState.setPlayerScanning(false);
+            }, 1200);
+        }
+    }
+
+    @Override
+    public void onOpenSystemAudioOutput() {
+        openSystemAudioOutputPanel();
+    }
+
+    @Override
+    public void onAudioHubTrackClick() {
+        onAudioHubTrackClicked();
+    }
+
+    @Override
+    public void onAudioHubQueueTrackClick(Track track) {
+        onAudioHubQueueTrackClicked(track);
+    }
+
+    @Override
+    public void onAudioHubQueueTrackRemove(Track track, int index) {
+        onAudioHubQueueTrackRemoved(track, index);
+    }
+
+    @Override
+    public void onEngineChanged(String engine) {
+        onAudioHubEngineChanged(engine);
+    }
+
+    @Override
+    public void onStartServerClicked() {
+        onAudioHubStartServer();
+    }
+
+    @Override
+    public void onStopServerClicked() {
+        onAudioHubStopServer();
+    }
+
+    @Override
+    public void onCopyUrlClicked() {
+        onAudioHubCopyUrl();
+    }
+
+    @Override
+    public void onOpenUrlClicked() {
+        onAudioHubOpenUrl();
+    }
+
+    @Override
+    public void onQrCodeClicked() {
+        onAudioHubQrCode();
     }
 
     private void syncActiveDrawerItem() {
@@ -1080,10 +1164,6 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.action_play_next) {
                 playbackService.getQueueManager().addPlayNext(track);
                 android.widget.Toast.makeText(MainActivity.this, "Playing next", android.widget.Toast.LENGTH_SHORT).show();
-                androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
-                if (sheet instanceof AudioHubBottomSheet audioHub) {
-                    audioHub.refreshUI();
-                }
                 return true;
             } else if (id == R.id.action_add_queue) {
                 playbackService.getQueueManager().addPlayingQueue(track.getId());
@@ -1110,24 +1190,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showPlayerPickerPopup(View anchorView) {
-        if (!isPlaybackServiceBound || playbackService == null) return;
+        onSelectPlaybackTargetClicked();
+    }
 
-        // Auto-trigger M-SEARCH the moment the popup opens — list will be fresh by the time
-        // the user finishes reading it, without requiring a manual rescan tap.
-        playbackService.refreshPlayerDiscovery();
-
-        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
+    public void updatePlayerPickerState() {
+        if (playbackService == null) return;
         List<apincer.music.core.playback.spi.PlaybackTarget> renderers = playbackService.getPlaybackTargets();
         apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
 
         apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice =
                 apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, playbackService.getNowPlayingSong());
 
-        // Group 0 = player targets (primary selection items)
+        List<apincer.android.mmate.ui.compose.PlayerTargetItem> items = new java.util.ArrayList<>();
         if (renderers != null && !renderers.isEmpty()) {
-            for (int i = 0; i < renderers.size(); i++) {
-                apincer.music.core.playback.spi.PlaybackTarget target = renderers.get(i);
-                boolean isActive = current != null && current.getTargetId().equals(target.getTargetId());
+            for (apincer.music.core.playback.spi.PlaybackTarget target : renderers) {
+                boolean isSelected = current != null && current.getTargetId().equals(target.getTargetId());
                 String baseLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
 
                 if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
@@ -1136,80 +1213,33 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                String label = isActive ? baseLabel + "  ✓" : baseLabel;
-                android.view.MenuItem item = popup.getMenu().add(0, i, i, label);
-
-                android.graphics.drawable.Drawable targetDrawable = AudioOutputHelper.getTargetDrawable(this, target, audioOutputDevice);
-                if (targetDrawable != null) {
-                    item.setIcon(targetDrawable);
+                int iconRes = R.drawable.rounded_music_cast_24;
+                if (target.isStreaming()) {
+                    iconRes = R.drawable.rounded_music_cast_24;
+                } else if (target.getTargetId() != null && (target.getTargetId().toLowerCase().contains("bt") || target.getTargetId().toLowerCase().contains("bluetooth"))) {
+                    iconRes = R.drawable.ic_round_bluetooth_audio_24;
+                } else if ("local".equalsIgnoreCase(target.getTargetId())) {
+                    iconRes = R.drawable.round_sd_storage_24;
                 }
+
+                String subtitle = "";
+                if (target.getDescription() != null) {
+                    subtitle = target.getDescription();
+                } else if ("local".equalsIgnoreCase(target.getTargetId()) && audioOutputDevice != null) {
+                    subtitle = audioOutputDevice.getName();
+                }
+
+                items.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(
+                        target,
+                        baseLabel,
+                        subtitle,
+                        iconRes,
+                        isSelected,
+                        target.isStreaming()
+                ));
             }
-        } else {
-            android.view.MenuItem noPlayersItem = popup.getMenu().add(0, -1, 0, "Scanning for players…");
-            noPlayersItem.setEnabled(false);
         }
-
-        // Group 1 = utility/discovery actions — visually separated from player targets.
-        // Order offset: Must use baseOrder > any Group 0 item index so Android MenuBuilder
-        // places Group 1 items strictly AFTER all Group 0 target renderers.
-        int baseOrder = (renderers != null ? renderers.size() : 0) + 10;
-        final int RESCAN_ID = 9999;
-        android.view.MenuItem rescanItem = popup.getMenu().add(1, RESCAN_ID, baseOrder, "Rescan for DLNA players");
-        rescanItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_baseline_refresh_24));
-
-        final int BLUETOOTH_ID = 9998;
-        android.view.MenuItem btItem = popup.getMenu().add(1, BLUETOOTH_ID, baseOrder + 1, "Bluetooth / System Output…");
-        btItem.setIcon(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_round_bluetooth_audio_24));
-
-        // Draw a visual divider between player targets and utility actions (API 28+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            popup.getMenu().setGroupDividerEnabled(true);
-        }
-
-        apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
-
-        popup.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == RESCAN_ID) {
-                // Manual rescan — auto-rescan already fired on open, this is a "try again" fallback
-                playbackService.refreshPlayerDiscovery();
-                android.widget.Toast.makeText(this, "Scanning for players…", android.widget.Toast.LENGTH_SHORT).show();
-                if (anchorView != null) {
-                    final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-                    final int[] attempts = {0};
-                    final int MAX_ATTEMPTS = 12;
-                    final Runnable[] poll = {null};
-                    poll[0] = () -> {
-                        attempts[0]++;
-                        List<apincer.music.core.playback.spi.PlaybackTarget> found =
-                                playbackService.getPlaybackTargets();
-                        boolean hasRemote = found != null && found.stream()
-                                .anyMatch(apincer.music.core.playback.spi.PlaybackTarget::isStreaming);
-                        if (hasRemote || attempts[0] >= MAX_ATTEMPTS) {
-                            showPlayerPickerPopup(anchorView);
-                        } else {
-                            handler.postDelayed(poll[0], 500);
-                        }
-                    };
-                    handler.postDelayed(poll[0], 500);
-                }
-                return true;
-            }
-            if (item.getItemId() == BLUETOOTH_ID) {
-                openSystemAudioOutputPanel();
-                return true;
-            }
-            if (renderers != null && item.getItemId() >= 0 && item.getItemId() < renderers.size()) {
-                apincer.music.core.playback.spi.PlaybackTarget selectedPlayer = renderers.get(item.getItemId());
-                playbackService.switchPlayer(selectedPlayer, true);
-                androidx.fragment.app.Fragment sheet = getSupportFragmentManager().findFragmentByTag(AudioHubBottomSheet.TAG);
-                if (sheet instanceof AudioHubBottomSheet audioHub) {
-                    audioHub.refreshUI();
-                }
-            }
-            return true;
-        });
-
-        popup.show();
+        MainScaffoldState.setPlayerTargets(items);
     }
 
 
@@ -1367,48 +1397,6 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("MUSIC_TAG_IDS", tagIds);
             tagViewResultLauncher.launch(intent);
         }
-    }
-
-    private void openSearch() {
-
-        // Show the SearchView
-        headerSearchView.setVisibility(View.VISIBLE);
-
-    }
-
-    private void setupSearchView() {
-        // This is the main listener for handling text changes and search submissions
-        headerSearchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                // User pressed the search button on the keyboard
-                viewModel.search(currentCriteria, query);
-                headerSearchView.clearFocus(); // Hide keyboard
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // User is typing
-                viewModel.search(currentCriteria, newText);
-                return true;
-            }
-        });
-
-        // This listener handles the "X" (close) button inside the SearchView
-        headerSearchView.setOnCloseListener(() -> {
-            // Note: This only fires if the search view is set to be iconified,
-            // which ours is not. We'll manually handle the 'X' button.
-            return false;
-        });
-
-        // Manually handle the "X" button click
-        ImageView closeButton = headerSearchView.findViewById(R.id.search_close_btn);
-        closeButton.setOnClickListener(v -> {
-            headerSearchView.setQuery("", false); // Clear the text
-            // You might also want to close the whole search bar here:
-            // closeSearch();
-        });
     }
 
     private void doDeleteMediaItems(List<Track> selections) {
@@ -1661,8 +1649,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            //mTitlePanel.setVisibility(GONE);
-            mHeaderPanel.setVisibility(GONE);
             return false;
         }
 
@@ -1702,8 +1688,6 @@ public class MainActivity extends AppCompatActivity {
         public void onDestroyActionMode(ActionMode mode) {
             mTracker.clearSelection();
             actionMode = null;
-            mHeaderPanel.setVisibility(VISIBLE);
-            //mTitlePanel.setVisibility(VISIBLE);
         }
 
         private List<Track> getSelections() {
@@ -1721,82 +1705,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
-
             if (actionMode != null) {
                 actionMode.finish();
                 return;
             }
-
-            if(headerSearchView != null) {
-                headerSearchView.clearFocus();
-            }
-
-            // if TYPE library or keyword is null, open leftMenu
-            if(true) {
-                if ((!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()))) {
-                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
-                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
-                    viewModel.loadMusicItems(currentCriteria);
-
-                    return;
-                }
-
-                if (currentCriteria.isSearchMode()) {
-                    doHideSearch();
-                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
-                    viewModel.loadMusicItems(currentCriteria);
-
-                    return;
-                }
-
-                if (isEmpty(currentCriteria.getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
-                    doShowLeftMenus();
-                }else if ((!isEmpty(currentCriteria.getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
-                    currentCriteria.setFilterText(null); currentCriteria.setFilterType(null);
-                    currentCriteria.setKeyword(null);
-                    apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
-                    viewModel.loadMusicItems(currentCriteria);
-                }
-            }
-        }
-    }
-
-    private void startDotAnimation() {
-        if (dotAnimator != null) return;
-
-        View dot1 = rootView.findViewById(R.id.scan_dot1);
-        View dot2 = rootView.findViewById(R.id.scan_dot2);
-        View dot3 = rootView.findViewById(R.id.scan_dot3);
-
-        if (dot1 == null || dot2 == null || dot3 == null) return;
-
-        // Bounce up (negative translationY) by 10 pixels
-        android.animation.ObjectAnimator anim1 = android.animation.ObjectAnimator.ofFloat(dot1, "translationY", 0f, -10f, 0f);
-        anim1.setDuration(1000);
-        anim1.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        anim1.setRepeatMode(android.animation.ValueAnimator.RESTART);
-
-        android.animation.ObjectAnimator anim2 = android.animation.ObjectAnimator.ofFloat(dot2, "translationY", 0f, -10f, 0f);
-        anim2.setDuration(1000);
-        anim2.setStartDelay(250);
-        anim2.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        anim2.setRepeatMode(android.animation.ValueAnimator.RESTART);
-
-        android.animation.ObjectAnimator anim3 = android.animation.ObjectAnimator.ofFloat(dot3, "translationY", 0f, -10f, 0f);
-        anim3.setDuration(1000);
-        anim3.setStartDelay(500);
-        anim3.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        anim3.setRepeatMode(android.animation.ValueAnimator.RESTART);
-
-        dotAnimator = new android.animation.AnimatorSet();
-        dotAnimator.playTogether(anim1, anim2, anim3);
-        dotAnimator.start();
-    }
-
-    private void stopDotAnimation() {
-        if (dotAnimator != null) {
-            dotAnimator.cancel();
-            dotAnimator = null;
+            onSearchBackClicked();
         }
     }
 
@@ -1823,6 +1736,15 @@ public class MainActivity extends AppCompatActivity {
             doStartRefresh(tag.getContainerType(), tag.getTitle());
         } else if (tag != null) {
             doShowEditActivity(java.util.Collections.singletonList(tag));
+        }
+    }
+
+    public void onTrackQuickPlayClicked(apincer.music.core.model.Track tag) {
+        if (tag == null) return;
+        if (isPlaybackServiceBound && playbackService != null) {
+            viewModel.playTrackList(apincer.android.mmate.ui.compose.ListInterop.getTracks(), tag, playbackService);
+        } else {
+            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1853,11 +1775,9 @@ public class MainActivity extends AppCompatActivity {
         apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
     }
 
-
     public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {
         if (tag != null) {
-            showTrackPopupMenu(rootView.findViewById(R.id.compose_list_view), tag);
+            showTrackPopupMenu(getWindow().getDecorView(), tag);
         }
     }
-
 }

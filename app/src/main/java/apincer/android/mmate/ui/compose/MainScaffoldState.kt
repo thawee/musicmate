@@ -1,0 +1,128 @@
+package apincer.android.mmate.ui.compose
+
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import apincer.music.core.model.Track
+import apincer.music.core.playback.PlaybackState
+
+class MainScaffoldState {
+    var searchQuery = mutableStateOf("")
+    var isBackVisible = mutableStateOf(false)
+    var headerStatsText = mutableStateOf("")
+    var isScanning = mutableStateOf(false)
+    var scanProgressText = mutableStateOf("")
+
+    var nowPlayingTrack = mutableStateOf<Track?>(null)
+    var isPlaying = mutableStateOf(false)
+    var outputTargetSubtitle = mutableStateOf("")
+    var playbackProgress = mutableFloatStateOf(0f)
+    var isFloatingDockVisible = mutableStateOf(true)
+
+    var showAudioHubSheet = mutableStateOf(false)
+    var audioHubInitialTab = mutableIntStateOf(0)
+
+    // Player picker modal state
+    var showPlayerPickerDialog = mutableStateOf(false)
+    val playerTargets = mutableStateListOf<PlayerTargetItem>()
+    var isPlayerScanning = mutableStateOf(false)
+
+    // Selection & refreshing state
+    val selectedTracks = mutableStateListOf<Track>()
+    var isRefreshing = mutableStateOf(false)
+
+    // Sub-states for AudioHubSheet
+    val nowPlayingState = NowPlayingState()
+    val queueState = QueueState(mutableListOf(), null)
+    val mediaServerState = MediaServerState()
+
+    companion object {
+        private val instance = MainScaffoldState()
+
+        @JvmStatic
+        fun get(): MainScaffoldState = instance
+
+        @JvmStatic
+        fun setSelectedTracks(tracks: List<Track>) {
+            instance.selectedTracks.clear()
+            instance.selectedTracks.addAll(tracks)
+        }
+
+        @JvmStatic
+        fun clearSelectedTracks() {
+            instance.selectedTracks.clear()
+        }
+
+        @JvmStatic
+        fun setRefreshing(refreshing: Boolean) {
+            instance.isRefreshing.value = refreshing
+        }
+
+        @JvmStatic
+        fun updateSearchQuery(query: String) {
+            instance.searchQuery.value = query
+        }
+
+        @JvmStatic
+        fun updateBackVisible(visible: Boolean) {
+            instance.isBackVisible.value = visible
+        }
+
+        @JvmStatic
+        fun updateHeaderStats(statsText: String) {
+            instance.headerStatsText.value = statsText
+        }
+
+        @JvmStatic
+        fun updateScanning(scanning: Boolean, progressText: String) {
+            instance.isScanning.value = scanning
+            instance.scanProgressText.value = progressText
+        }
+
+        @JvmStatic
+        fun updateNowPlaying(track: Track?, playing: Boolean, targetSubtitle: String, progress: Float) {
+            instance.nowPlayingTrack.value = track
+            instance.isPlaying.value = playing
+            instance.outputTargetSubtitle.value = targetSubtitle
+            instance.playbackProgress.floatValue = progress
+        }
+
+        @JvmStatic
+        fun setFloatingDockVisible(visible: Boolean) {
+            instance.isFloatingDockVisible.value = visible
+        }
+
+        @JvmStatic
+        fun openAudioHub(initialTab: Int) {
+            instance.audioHubInitialTab.intValue = initialTab.coerceIn(0, 2)
+            instance.showAudioHubSheet.value = true
+        }
+
+        @JvmStatic
+        fun closeAudioHub() {
+            instance.showAudioHubSheet.value = false
+        }
+
+        @JvmStatic
+        fun isAudioHubOpen(): Boolean {
+            return instance.showAudioHubSheet.value
+        }
+
+        @JvmStatic
+        fun setPlayerTargets(targets: List<PlayerTargetItem>) {
+            instance.playerTargets.clear()
+            instance.playerTargets.addAll(targets)
+        }
+
+        @JvmStatic
+        fun showPlayerPicker(show: Boolean) {
+            instance.showPlayerPickerDialog.value = show
+        }
+
+        @JvmStatic
+        fun setPlayerScanning(scanning: Boolean) {
+            instance.isPlayerScanning.value = scanning
+        }
+    }
+}

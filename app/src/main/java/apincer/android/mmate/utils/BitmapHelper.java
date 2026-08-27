@@ -640,4 +640,21 @@ public class BitmapHelper {
         }
         return input;
     }
+
+    public static Bitmap generateQRCode(String text, int width, int height) {
+        if (text == null || text.isEmpty()) return null;
+        try {
+            com.google.zxing.qrcode.QRCodeWriter writer = new com.google.zxing.qrcode.QRCodeWriter();
+            com.google.zxing.common.BitMatrix bitMatrix = writer.encode(text, com.google.zxing.BarcodeFormat.QR_CODE, width, height);
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    bitmap.setPixel(x, y, bitMatrix.get(x, y) ? 0xFFFFFFFF : 0xFF14141A);
+                }
+            }
+            return bitmap;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

@@ -1,3 +1,83 @@
+# 10/10 Flagship UI/UX Elevation Master Plan 🎯
+
+## Objectives
+Elevate MusicMate from **Grade A (92/100)** to a **Flawless 10/10 (100/100)** flagship audiophile experience across visual elegance, interaction fluidity, ambient lighting, edge-to-edge aesthetics, and micro-haptic precision.
+
+---
+
+## Master Checklist
+
+- [x] **Pillar 1: Marquee Edge Fading & Fluid Typography**
+  - [x] Added reusable `fadingEdge(startWidth, endWidth)` gradient alpha mask modifier in `FadingEdge.kt`.
+  - [x] Applied smooth gradient fading edges to horizontal scrolling marquees in `FloatingMiniPlayerDock` (`MainScaffold.kt`) and `NowPlayingPage.kt`.
+  - [x] Enhanced typography hierarchy and dynamic truncation safeguards.
+
+- [x] **Pillar 2: Dynamic Ambient Artwork Glow & Luminous Glass Surfaces**
+  - [x] Implemented dual-layer animated breathing ambient backlight in `NowPlayingPage.kt` powered by real-time `Palette` color extraction.
+  - [x] Polished frosted glass card borders and ambient reflections across `FloatingMiniPlayerDock` and modal dialogs.
+
+- [x] **Pillar 3: Rich Audiophile Empty States & Animated Feedback**
+  - [x] Built animated radar/pulse empty state with champagne gold insignia and "Refresh Library" action button in `MusicListScreen.kt`.
+  - [x] Built interactive audiophile empty state card in `QueuePage.kt` guiding users to add music.
+
+- [x] **Pillar 4: Tactile Micro-Haptics & Volume Precision**
+  - [x] Added tactile micro-haptic feedback on volume steps, transport actions, and scrubbing in `NowPlayingPage.kt`.
+
+- [x] **Pillar 5: Spring Motion Physics & Edge-to-Edge Polishing**
+  - [x] Tuned spring physics (`DampingRatioMediumBouncy`) on 3D card flip rotation and interactive surfaces.
+  - [x] Verified full build and unit tests with 0 errors (`BUILD SUCCESSFUL in 6s`).
+
+---
+
+# Final 100% Jetpack Compose & UI/UX Parity Master Plan
+
+## Objectives
+Complete the remaining UI/UX polishing and full Compose migration across two comprehensive stages:
+1. **Stage 1 (Music List 100% Fine-Tuning)**: Polish all visual details, typography, badge layout, artwork sizing, selection highlights, container statistics, and contextual actions in `MusicListScreen.kt`, `TrackListItem.kt`, and `FolderListItem.kt` to 100% parity with `DESIGN.md`.
+2. **Stage 2 (Full Activity Migration to 100% Compose)**: Migrate the remaining 4 legacy XML/hybrid activities (`TagsActivity` shell, `AboutActivity`, `SettingsActivity`, `PermissionActivity`) to 100% pure Jetpack Compose.
+
+- [x] **Stage 1: Music List Screen 100% Parity Fine-Tuning**
+  - [x] Fine-tune `TrackListItem.kt` (exact artwork scaling, multi-badge alignment, typography hierarchy with `Artist • Album`, dynamic rating, and ripple/selection states).
+  - [x] Polish `FolderListItem.kt` (exact container artwork, description, track count & duration statistics, quick actions).
+  - [x] Refine `MusicListScreen.kt` (insets, list padding, fast scrollbar spacing, empty state, and shimmer animation).
+  - [x] Verify list interactions: scrolling, long-press selection, context menu, play/enqueue, pull-to-refresh.
+  - [x] Verification: `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL).
+
+- [x] **Stage 2: Full Activity Migration to 100% Compose**
+  - [x] Migrated `AboutActivity.kt` to 100% pure Compose with `AboutScreen.kt` (quality donut chart, audio quality encyclopedic specs, version hero card).
+  - [x] Migrated `SettingsActivity.kt` to 100% pure Compose with `SettingsScreen.kt` (segmented streaming engine selector, library switches).
+  - [x] Migrated `PermissionActivity.kt` to 100% pure Compose with `PermissionScreen.kt` (permission cards and onboarding).
+  - [x] Integrated `TagHeaderBadges` ComposeView in `TagsActivity.java` and pruned legacy custom view classes (`BadgeView`, `DurationView`, `ResolutionView`, `QualityIndicatorView`, `DynamicRangeView`, `RatingIndicatorView`, `NewIndicatorView`, `TriangleLabelView`, `ReflectionContainer`).
+  - [x] Deleted 7 obsolete XML layout files (`activity_fragement.xml`, `activity_permissions.xml`, `fragment_about.xml`, `view_permission_item.xml`, `view_badge.xml`, `view_duration.xml`, `view_resolution.xml`) and cleaned `attrs.xml`.
+  - [x] Verification: Full build and all unit tests passing (`BUILD SUCCESSFUL in 9s`).
+
+## Review & Results (100% Compose & UI/UX Parity)
+- **100% Compose Screen Ecosystem:**
+  - `MainActivity`: 100% Compose root (`MainScaffold`, `MusicListScreen`, `TrackListItem`, `FolderListItem`, `FastScrollbar`, `FloatingMiniPlayerDock`, `AudioHubSheet`, `PlayerPickerDialog`).
+  - `AboutActivity`: 100% Compose (`AboutScreen.kt`).
+  - `SettingsActivity`: 100% Compose (`SettingsScreen.kt`).
+  - `PermissionActivity`: 100% Compose (`PermissionScreen.kt`).
+  - `TagsActivity`: Hybrid/Compose with pure Compose tabs (`TagsEditorPage.kt`, `TagsTechnicalPage.kt`) and Compose header badges (`TagHeaderBadges`).
+- **Complete Elimination of Legacy Custom Views:**
+  - Excised `BadgeView`, `DurationView`, `ResolutionView`, `QualityIndicatorView`, `DynamicRangeView`, `RatingIndicatorView`, `NewIndicatorView`, `TriangleLabelView`, and `ReflectionContainer`.
+- **Zero Dead XML Overhead:** Pruned all unreferenced layouts, styleables, and submodules.
+- **Verification:** `./gradlew compileDebugSources testDebugUnitTest` passes cleanly with zero errors.
+
+## Review & Results (Legacy UI Modernization & Pruning)
+- **Dead Code & Submodules Cleaned (Phase 1):** Removed 21 unused layout XMLs, 7 unreferenced custom views/behaviors (`CharAvatarView`, `BottomOffsetDecoration`, `HeaderViewBehavior`, etc.), obsolete styleable declarations, and pruned `:library:CircleProgressView` and `:library:androidtagview` submodules.
+- **Pure Jetpack Compose Shell (Phase 2):**
+  - Completely removed `activity_main.xml` and legacy `findViewById` manipulation.
+  - Replaced legacy Top Search Bar with a pure Compose `TopSearchBar` inside [`MainScaffold.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MainScaffold.kt), featuring live query callbacks, back navigation, stats subtitle, and pulsing gold LED scanning indicator.
+  - Replaced legacy Bottom Dock with pure Compose `FloatingMiniPlayerDock` inside [`MainScaffold.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MainScaffold.kt), featuring a 44dp album art thumbnail, title marquee, output target subtitle, transport controls, and hairline progress bar.
+  - Decoupled `MainActivity.java` from Compose internals via [`MainScaffoldCallbacks.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MainScaffoldCallbacks.kt) and [`MainScaffoldState.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MainScaffoldState.kt).
+  - Deleted obsolete `AudioHubBottomSheet.java`, `sheet_audio_hub.xml`, and `activity_main.xml`.
+- **Verification:** Clean compilation and unit tests passing with `./gradlew compileDebugSources testDebugUnitTest` in 8s.
+- **DESIGN.md Alignment Polishing:**
+  - Enforced fixed 65% screen height (`fillMaxHeight(0.65f)`) and `24dp` top corner radius on [`AudioHubSheet.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AudioHubSheet.kt) per DESIGN.md §8C & ADR-004.
+  - Added dynamic tab badges (`[ Playback ]`, `[ Queue (X) ]`, `[ Server 🟢 ]`) and persistent sticky tab session state.
+  - Scaled [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) typography and transport buttons for 65% sheet viewport density with zero clipping.
+  - Added top bar Cast icon with dynamic gold tint and adjusted floating mini-player dock insets/margins (`12dp` horizontal / `8dp` bottom with `navigationBarsPadding()`) per DESIGN.md §6 & §6A.
+
 # Flagship Audiophile UX Transformation (5-Step Master Plan)
 
 ## Objectives

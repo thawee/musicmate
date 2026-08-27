@@ -1,6 +1,12 @@
 package apincer.android.mmate.ui.compose
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -39,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.music.core.model.Track
 import kotlinx.coroutines.launch
@@ -57,6 +64,7 @@ fun MusicListScreen(
     onTrackClick: (Track, Int) -> Unit,
     onTrackLongClick: (Track, Int) -> Unit,
     onTrackMenuClick: (Track, Int) -> Unit,
+    onTrackQuickPlayClick: (Track) -> Unit = {},
     onFolderPlayClick: (Track) -> Unit,
     onFolderEnqueueClick: (Track) -> Unit,
     modifier: Modifier = Modifier
@@ -84,19 +92,67 @@ fun MusicListScreen(
                     }
                 }
             } else {
-                // Empty State with Brand Insignia
+                // Rich Audiophile Empty State with Animated Pulse
+                val infiniteTransition = rememberInfiniteTransition(label = "empty_state_pulse")
+                val pulseScale by infiniteTransition.animateFloat(
+                    initialValue = 0.85f,
+                    targetValue = 1.15f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(2500, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseScale"
+                )
+                val pulseAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.15f,
+                    targetValue = 0.35f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(2500, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseAlpha"
+                )
+
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
-                        contentDescription = null,
-                        tint = Color(0x66FFFFFF),
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(100.dp)
+                    ) {
+                        // Outer pulse ring
+                        Box(
+                            modifier = Modifier
+                                .size(90.dp * pulseScale)
+                                .background(
+                                    color = Color(0xFFFFD700).copy(alpha = pulseAlpha * 0.4f),
+                                    shape = CircleShape
+                                )
+                        )
+                        // Inner ambient badge container
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .background(
+                                    color = Color(0x33FFD700),
+                                    shape = CircleShape
+                                )
+                                .border(1.dp, Color(0x66FFD700), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
+                                contentDescription = null,
+                                tint = Color(0xFFFFD700),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = "No Music Found",
                         style = MaterialTheme.typography.titleMedium,
@@ -105,10 +161,32 @@ fun MusicListScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Scan your device or check storage permissions.",
+                        text = "Your library is currently empty or filtered.\nScan folders or refresh to load tracks.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFAAAAAA)
+                        color = Color(0xFFAAAAAA),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = onRefresh,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color(0xFFFFD700)
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_round_refresh_24),
+                            contentDescription = "Refresh",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = "Refresh Library",
+                            fontSize = 13.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         } else {
@@ -157,7 +235,8 @@ fun MusicListScreen(
                                 isPlaying = isPlaying,
                                 onClick = { onTrackClick(track, index) },
                                 onLongClick = { onTrackLongClick(track, index) },
-                                onMenuClick = { onTrackMenuClick(track, index) }
+                                onMenuClick = { onTrackMenuClick(track, index) },
+                                onQuickPlayClick = { onTrackQuickPlayClick(track) }
                             )
                         }
                     }

@@ -50,13 +50,12 @@ fun ActionFilesDialog(
 
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = Color(0xF2161618),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
         modifier = Modifier.padding(12.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF262626))
+            modifier = Modifier.fillMaxWidth()
         ) {
             // Drag handle
             Box(

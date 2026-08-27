@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui.compose
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,32 +58,57 @@ fun AudioHubSheet(
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    // DESIGN.md §8C & ADR-004: Sheet opens fully expanded at fixed 65% of screen height
+    val sheetHeight = (configuration.screenHeightDp.dp * 0.65f).coerceIn(420.dp, 680.dp)
+
     val pagerState = rememberPagerState(initialPage = initialTab.coerceIn(0, 2)) { 3 }
-    val tabs = listOf("Playback", "Queue", "Server")
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Save sticky tab selection
+    LaunchedEffect(pagerState.currentPage) {
+        MainScaffoldState.get().audioHubInitialTab.intValue = pagerState.currentPage
+    }
+
+    // Dynamic Tab Titles matching DESIGN.md §8C & §6C
+    val queueCount = queueState.tracks.size
+    val queueTitle = if (queueCount > 0) "Queue ($queueCount)" else "Queue"
+    val isServerActive = mediaServerState.isServerRunning
+    val serverTitle = if (isServerActive) "Server 🟢" else "Server"
+    val tabs = listOf("Playback", queueTitle, serverTitle)
+
+    // Dynamic Cast Icon Tint (§5B: Gold #FFC107 when DLNA active)
+    val target = nowPlayingState.targetTitle.value
+    val isDlnaCastActive = target.contains("DLNA", ignoreCase = true) || target.contains("Renderer", ignoreCase = true) || target.contains("Streamer", ignoreCase = true)
+    val castIconTint = if (isDlnaCastActive) Color(0xFFFFC107) else Color.White
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), // DESIGN.md §8C: 24dp top corner radius
         containerColor = Color(0xF0121212),
         scrimColor = Color.Black.copy(alpha = 0.65f),
         dragHandle = {
             Box(
                 modifier = Modifier
                     .padding(top = 10.dp, bottom = 6.dp)
-                    .size(width = 38.dp, height = 4.dp)
+                    .size(width = 40.dp, height = 4.dp)
                     .clip(CircleShape)
                     .background(Color(0x4DFFFFFF))
             )
         },
-        modifier = modifier.fillMaxHeight(0.94f)
+        modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header Row
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(sheetHeight)
+        ) {
+            // Header Row: Music Center title, Cast picker & Close button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                    .padding(horizontal = 20.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -109,7 +134,7 @@ fun AudioHubSheet(
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_music_cast_24),
                             contentDescription = "Select Player",
-                            tint = Color.White,
+                            tint = castIconTint,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -136,11 +161,11 @@ fun AudioHubSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 6.dp)
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .padding(horizontal = 18.dp, vertical = 4.dp)
+                    .height(38.dp)
+                    .clip(RoundedCornerShape(19.dp))
                     .background(Color(0x1AFFFFFF))
-                    .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                    .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(19.dp))
                     .padding(3.dp)
             ) {
                 Row(modifier = Modifier.fillMaxSize()) {
@@ -150,7 +175,7 @@ fun AudioHubSheet(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
-                                .clip(RoundedCornerShape(17.dp))
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(if (isSelected) Color(0x33FFD700) else Color.Transparent)
                                 .clickable {
                                     coroutineScope.launch {
@@ -170,7 +195,7 @@ fun AudioHubSheet(
                 }
             }
 
-            // Horizontal Pager with the 3 Pages
+            // Horizontal Pager with the 3 Pages (Playback | Queue | Server)
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
@@ -189,7 +214,8 @@ fun AudioHubSheet(
                         onVolumeDown = onVolumeDown,
                         onVolumeUp = onVolumeUp,
                         onVolumeChanged = onVolumeChanged,
-                        onTrackClicked = onTrackClicked
+                        onTrackClicked = onTrackClicked,
+                        onSelectTargetPlayer = onSelectTargetPlayer
                     )
                     1 -> QueuePage(
                         state = queueState,

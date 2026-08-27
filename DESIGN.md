@@ -1,6 +1,6 @@
 # MusicMate UI/UX Design System & Architectural Principles
 
-> **Last Updated:** 2026-08-11 · **Owner:** @thawee
+> **Last Updated:** 2026-08-27 · **Owner:** @thawee
 >
 > **Scope:** This document is authoritative for UI/UX, gestures, menus, theming, and modal surfaces. For playback engine internals see `PLAYBACK_ARCHITECTURE.md`; for the web interface see `WEBUI.md`; for the WebSocket protocol see `WEBSOCKET_API.md`.
 

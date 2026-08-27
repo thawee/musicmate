@@ -1,8 +1,10 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import apincer.android.mmate.R
+import apincer.android.mmate.coil3.CoverartFetcher
 import apincer.music.core.model.Track
 import apincer.music.core.utils.StringUtils
 
@@ -54,35 +58,39 @@ fun TrackListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onMenuClick: () -> Unit,
+    onQuickPlayClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val bgOverlay = if (isSelected) Color(0x221E88E5) else Color.Transparent
+    val bgOverlay = if (isSelected) Color(0x2B1E88E5) else Color.Transparent
+    val borderStroke = if (isSelected) BorderStroke(1.5.dp, Color(0xFF1E88E5)) else null
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(bgOverlay)
+            .then(if (borderStroke != null) Modifier.border(borderStroke, RoundedCornerShape(12.dp)) else Modifier)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 88.dp)
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ── Album Art (72dp to match XML) ────────────────────────────────
+            // ── Album Art (76dp) (DESIGN.md §2: Tap Art for Quick Play) ──────
             Box(
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(76.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF202020))
-                    .border(0.75.dp, Color(0x2EFFFFFF), RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(12.dp))
+                    .clickable(onClick = onQuickPlayClick)
             ) {
                 coil3.compose.AsyncImage(
-                    model = track,
+                    model = CoverartFetcher.builder(LocalContext.current, track).data(track).build(),
                     contentDescription = "Album Art",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -148,8 +156,15 @@ fun TrackListItem(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
+                val artistAlbumText = when {
+                    !track.artist.isNullOrEmpty() && !track.album.isNullOrEmpty() && !track.album.equals(track.title, ignoreCase = true) -> "${track.artist} • ${track.album}"
+                    !track.artist.isNullOrEmpty() -> track.artist
+                    !track.album.isNullOrEmpty() -> track.album
+                    else -> "Unknown Artist"
+                }
+
                 Text(
-                    text = track.artist ?: "Unknown Artist",
+                    text = artistAlbumText,
                     color = Color(0xFFAAAAAA),
                     fontSize = 12.sp,
                     maxLines = 1,

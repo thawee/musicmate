@@ -80,7 +80,7 @@ import static apincer.android.mmate.utils.UIUtils.dpToPx;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
-import apincer.android.mmate.ui.view.BadgeView;
+import apincer.android.mmate.ui.compose.DialogInterop;
 import apincer.android.mmate.ui.view.VerdictFormatter;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.UIUtils;
@@ -92,10 +92,6 @@ import apincer.music.core.authenticity.SpectrogramGenerator;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
-import apincer.android.mmate.ui.view.DynamicRangeView;
-import apincer.android.mmate.ui.view.NewIndicatorView;
-import apincer.android.mmate.ui.view.QualityIndicatorView;
-import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.ThaiEncodingUtils;
@@ -133,12 +129,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView albumView ;
     private TextView genreView;
     private TextView encInfo;
-   // private TextView pathInfo;
-    private BadgeView codecView;
-    private DynamicRangeView dynamicRangeView;
-    private QualityIndicatorView qualityIndicatorView;
-    private RatingIndicatorView ratingIndicatorView;
-    private NewIndicatorView newIndicatorView;
+    private androidx.compose.ui.platform.ComposeView tagsHeaderBadges;
 
     private Fragment activeFragment;
 
@@ -363,12 +354,7 @@ public class TagsActivity extends AppCompatActivity {
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
-        codecView = findViewById(R.id.icon_codec);
-        dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
-        //ratingView = findViewById(R.id.rating);
-        qualityIndicatorView = findViewById(R.id.icon_quality_indicator);
-        ratingIndicatorView = findViewById(R.id.rating_view);
-        newIndicatorView = findViewById(R.id.new_view);
+        tagsHeaderBadges = findViewById(R.id.tags_header_badges);
     }
     private void setupActionButtons(int mode) {
         currentEditMode = mode;
@@ -1044,13 +1030,9 @@ public class TagsActivity extends AppCompatActivity {
         // load resolution, quality, coverArt
         loadImages(currentDisplayTag);
         //resolutionView.setMusicItem(currentDisplayTag);
-        int txtColor = TagUtils.getCodecColor(getApplicationContext(), currentDisplayTag);
-        int bgColor = TagUtils.getCodecBgColor(getApplicationContext(), currentDisplayTag);
-        codecView.setBadge(currentDisplayTag.getAudioEncoding().toUpperCase(), txtColor, bgColor);
-        dynamicRangeView.setMusicItem(currentDisplayTag);
-        qualityIndicatorView.setMusicItem(currentDisplayTag);
-        ratingIndicatorView.setMusicItem(currentDisplayTag);
-        newIndicatorView.setMusicItem(currentDisplayTag);
+        if (tagsHeaderBadges != null) {
+            DialogInterop.setTagsHeaderBadges(tagsHeaderBadges, currentDisplayTag);
+        }
 
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {

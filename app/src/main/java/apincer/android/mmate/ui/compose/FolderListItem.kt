@@ -94,22 +94,39 @@ fun FolderListItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = track.album ?: "",
-                    color = Color(0xFFAAAAAA),
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = track.artist ?: "",
-                    color = Color(0xFF888888),
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                
+                val subtitle = track.description?.takeIf { it.isNotEmpty() } ?: track.album ?: ""
+                if (subtitle.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        color = Color(0xFFAAAAAA),
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Statistics line: e.g. "45 tracks • 3:24:10"
+                val count = track.childCount
+                val durStr = if (track.audioDuration > 0) apincer.music.core.utils.StringUtils.formatDuration(track.audioDuration, true) else ""
+                val statsText = when {
+                    count > 0 && durStr.isNotEmpty() -> "$count tracks • $durStr"
+                    count > 0 -> "$count tracks"
+                    durStr.isNotEmpty() -> durStr
+                    else -> track.artist ?: ""
+                }
+
+                if (statsText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = statsText,
+                        color = Color(0xFF888888),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             // ── Quick Actions (Enqueue / Play) ────────────────────────────────

@@ -183,7 +183,6 @@ dependencies {
 
     // Local Submodules
     implementation project(':library:library')
-    implementation project(':library:androidtagview')
     implementation project(':library:crashreporter')
 }
 

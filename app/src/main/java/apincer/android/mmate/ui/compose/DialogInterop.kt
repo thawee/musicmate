@@ -248,4 +248,13 @@ object DialogInterop {
             }
         }
     }
+
+    @JvmStatic
+    fun setTagsHeaderBadges(composeView: ComposeView, track: Track?) {
+        composeView.setContent {
+            MusicMateTheme {
+                TagHeaderBadges(track = track)
+            }
+        }
+    }
 }
