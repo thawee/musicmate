@@ -148,7 +148,8 @@ fun QueuePage(
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
-                            val color = if (dismissState.dismissDirection != null) Color(0x33FF5252) else Color.Transparent
+                            val isDismissing = dismissState.dismissDirection != SwipeToDismissBoxValue.Settled
+                            val color = if (isDismissing) Color(0x33FF5252) else Color.Transparent
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -156,7 +157,7 @@ fun QueuePage(
                                     .padding(horizontal = 20.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                if (dismissState.dismissDirection != null) {
+                                if (isDismissing) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.rounded_delete_24),
                                         contentDescription = "Delete",

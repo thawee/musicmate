@@ -30,6 +30,10 @@ public interface MediaServerHub {
 
     void playerActivate(String udn, PlaybackCallback callback);
 
+    default void playerActivateWithHandoff(String udn, PlaybackCallback callback, Track handoffTrack, long initialPositionMs) {
+        playerActivate(udn, callback);
+    }
+
     void playerDeactivate(String udn);
 
     void start();
@@ -46,6 +50,9 @@ public interface MediaServerHub {
     void playerSetVolume(String udn, int volume);
 
     void playerPlaySong(String rendererUdn, Track song);
+    default void playerPlaySong(String rendererUdn, Track song, long initialPositionMs) {
+        playerPlaySong(rendererUdn, song);
+    }
     void playerPlaySong(Track song);
 
     /** Trigger an immediate UPnP M-SEARCH to rediscover all renderers on the network. */

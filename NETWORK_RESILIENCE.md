@@ -351,6 +351,21 @@ When UPnP devices are enumerated in `getMediaRenderers()`, `isDeviceValidAndReac
 * When the live renderer is discovered, `MusicMateServiceImpl.handleDiscoveredRenderers()` immediately reconciles the placeholder to the live device with its active IP and friendly name.
 * If the renderer does not appear within **8 seconds** (e.g. powered off or user changed networks), `dmrStartupTimeoutTask` automatically falls back to `localTarget` (Android Player / DAC / BT), eliminating ghost players.
 
+---
 
+## 10 — Seamless Playback Handoff & Non-Destructive Session Adoption
 
+> Added in 2026.08 (`MediaServerHubImpl`, `MusicMateServiceImpl`).
 
+### Non-Destructive Session Adoption
+When switching to a DLNA renderer that is already playing an active stream:
+1. `GetTransportInfo` and `GetMediaInfo` read `CurrentTransportState`, `CurrentURI`, and DIDL-Lite XML (`dc:title`, `upnp:artist`, `upnp:album`).
+2. MusicMate attaches to the live session without issuing `Stop` or resetting the track, adopting track metadata and elapsed time seamlessly.
+
+### Precision Position Handoff (Local ➔ DLNA)
+When transferring an actively playing track from local headphones/speakers to an idle DLNA renderer:
+1. `switchPlayer()` captures the exact elapsed timestamp (`currentPositionMs`).
+2. `playerActivateWithHandoff()` sets transport URI, initiates `Play`, and schedules a precision UPnP `Seek(HH:MM:SS)` 300ms post-play to resume playback at the exact elapsed second.
+
+### 5-Second Gapless Preload Stabilization
+To prevent hardware DAC FIFO buffer acquisition stalls on renderers (e.g. HiBy R3, Eversolo, WiiM), `SetNextAVTransportURI` is dispatched with a 5-second post-start stabilization delay rather than at $t = 0$, ensuring jitter-free track start and rolling gapless transitions.

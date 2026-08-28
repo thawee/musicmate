@@ -1,1 +1,0 @@
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/CMakeLists.txt

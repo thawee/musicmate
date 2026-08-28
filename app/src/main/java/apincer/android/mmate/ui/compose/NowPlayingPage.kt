@@ -277,7 +277,7 @@ fun NowPlayingPage(
                                     .weight(1f)
                                     .padding(end = 12.dp)
                                     .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
-                                    .fadingEdge(startWidth = 0.dp, endWidth = 10.dp)
+                                    .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
                             )
 
                             Icon(
@@ -300,7 +300,7 @@ fun NowPlayingPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 0.dp, endWidth = 8.dp)
+                                .fadingEdge(startWidth = 8.dp, endWidth = 12.dp)
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -322,7 +322,7 @@ fun NowPlayingPage(
                             val formatText = state.specsFormat.value.ifEmpty {
                                 if (track != null) {
                                     val codec = TagUtils.formatCodec(track)
-                                    val res = TagUtils.formatResolution(track.audioBitsDepth, track.audioSampleRate, track.audioBitRate)
+                                    val res = TagUtils.formatResolution(track.audioBitsDepth, track.audioSampleRate, track.mqaSampleRate)
                                     if (res.isNotEmpty()) "$codec • $res" else codec
                                 } else ""
                             }

@@ -28,9 +28,11 @@ class MainScaffoldState {
     val playerTargets = mutableStateListOf<PlayerTargetItem>()
     var isPlayerScanning = mutableStateOf(false)
 
-    // Selection & refreshing state
+    // Track list, selection & scrolling state
+    val tracks = mutableStateListOf<Track>()
     val selectedTracks = mutableStateListOf<Track>()
     var isRefreshing = mutableStateOf(false)
+    var scrollToIndex = mutableIntStateOf(-1)
 
     // Sub-states for AudioHubSheet
     val nowPlayingState = NowPlayingState()
@@ -42,6 +44,12 @@ class MainScaffoldState {
 
         @JvmStatic
         fun get(): MainScaffoldState = instance
+
+        @JvmStatic
+        fun setTracks(tracks: List<Track>) {
+            instance.tracks.clear()
+            instance.tracks.addAll(tracks)
+        }
 
         @JvmStatic
         fun setSelectedTracks(tracks: List<Track>) {
@@ -57,6 +65,16 @@ class MainScaffoldState {
         @JvmStatic
         fun setRefreshing(refreshing: Boolean) {
             instance.isRefreshing.value = refreshing
+        }
+
+        @JvmStatic
+        fun scrollToPosition(index: Int) {
+            instance.scrollToIndex.intValue = index
+        }
+
+        @JvmStatic
+        fun resetScrollToIndex() {
+            instance.scrollToIndex.intValue = -1
         }
 
         @JvmStatic

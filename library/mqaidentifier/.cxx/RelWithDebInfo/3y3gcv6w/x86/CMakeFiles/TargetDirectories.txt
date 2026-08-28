@@ -1,3 +1,0 @@
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/RelWithDebInfo/3y3gcv6w/x86/CMakeFiles/rebuild_cache.dir
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/RelWithDebInfo/3y3gcv6w/x86/CMakeFiles/edit_cache.dir
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/RelWithDebInfo/3y3gcv6w/x86/CMakeFiles/mqaidentifier.dir

@@ -107,7 +107,7 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 # Image Loading & UI Enhancements
 coilkt-coil3 = { module = "io.coil-kt.coil3:coil", version = "3.6.0" }
 coilkt-coil3-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version = "3.6.0" }
-coilkt-coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.5.0" }
+coilkt-coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.6.0" }
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
 chrisbanes-photoview = { module = "com.github.chrisbanes:PhotoView", version = "2.3.0" }
 
@@ -126,6 +126,9 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.18" }
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+mockk = { module = "io.mockk:mockk", version = "1.14.11" }
+androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version = "2.2.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

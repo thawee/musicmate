@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 nps.getSpecsVerdict().setValue(verdict);
 
                 String fmtCodec = apincer.music.core.utils.TagUtils.formatCodec(song);
-                String fmtRes = apincer.music.core.utils.TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getAudioBitRate());
+                String fmtRes = apincer.music.core.utils.TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());
                 nps.getSpecsFormat().setValue(fmtCodec + (fmtRes.isEmpty() ? "" : " • " + fmtRes));
 
                 long bitrate = song.getAudioBitRate();

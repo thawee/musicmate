@@ -125,6 +125,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
+    private ScheduledFuture<?> preloadTask;
     private ScheduledFuture<?> dmrStartupTimeoutTask;
 
     private volatile long lastPreloadedTrackId = -1;
@@ -536,9 +537,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             mediaLibrarySession.release();
             mediaLibrarySession = null;
         }
-        // 1. Cancel the pending "Next Track" and DLNA startup timeout timers
+        // 1. Cancel the pending "Next Track", preload, and DLNA startup timeout timers
         if (nextTrackTask != null) {
             nextTrackTask.cancel(true);
+        }
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
         }
         if (dmrStartupTimeoutTask != null) {
             dmrStartupTimeoutTask.cancel(true);
@@ -920,9 +924,20 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
             boolean wasPlaying = isPlaying();
             Track activeTrack = getNowPlayingSong();
+            long currentPositionMs = 0;
+            apincer.music.core.playback.PlaybackState lastState = playbackStateFlow.getValue();
+            if (lastState != null && lastState.currentPositionSecond > 0) {
+                currentPositionMs = lastState.currentPositionSecond * 1000L;
+            }
 
             final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
                 && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
+
+            // If this is an unprompted / uncontrolled HTTP streaming request (controlled == false)
+            // and we ALREADY have an active controlled DMR player, do NOT switch or deactivate the current player!
+            if (!controlled && currentPlayerFlow.getValue().isPresent() && isControllable(currentPlayerFlow.getValue().get())) {
+                return;
+            }
 
             // 2. Deactivate current player IF DIFFERENT
             currentPlayerFlow.getValue().ifPresent(oldTarget -> {
@@ -937,9 +952,19 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
                 // Register callback to ensure we are listening to this session
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
+                if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
+                    playSong(activeTrack);
+                    if (currentPositionMs > 1000) {
+                        seekTo(currentPositionMs);
+                    }
+                }
             } else if (resolvedTarget.isStreaming()) {
                 startServers();
-                mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
+                if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
+                    mediaHub.playerActivateWithHandoff(resolvedTarget.getTargetId(), playbackCallback, activeTrack, currentPositionMs);
+                } else {
+                    mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
+                }
             }
 
             if (controlled || resolvedTarget.isStreaming()) {
@@ -948,13 +973,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
             updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
-
-            // 4. Auto-transfer active track playback to new target
-            if (controlled && activeTrack != null && !isSameTarget) {
-                if (wasPlaying || resolvedTarget.isStreaming()) {
-                    playSong(activeTrack);
-                }
-            }
         }
     }
 
@@ -1127,7 +1145,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         long trackId = track.getId();
 
-        // جلوگیری event ซ้ำ / duplicate events
+        // Avoid duplicate events
         if (trackId == lastPlaybackTrackId) {
             Log.d(TAG, "Event ignored (duplicate): " + track.getTitle());
             return;
@@ -1140,11 +1158,21 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // 1. Sync queue with actual renderer state
         queueManager.setPlaybackTrack(track);
 
-        // 2. Preload next track (PRIMARY)
-        preloadNextTrackSafe();
+        // 2. Preload next track with 5-second stabilization delay (prevents initial playback stutter)
+        schedulePreloadNextTrack(track);
 
         // 3. Setup fallback timer
         scheduleFallback(track);
+    }
+
+    private void schedulePreloadNextTrack(Track track) {
+        if (preloadTask != null && !preloadTask.isDone()) {
+            preloadTask.cancel(false);
+        }
+        // Allow DLNA renderer 5 seconds of clean playback stabilization before sending SetNextAVTransportURI
+        preloadTask = scheduler.schedule(() -> {
+            preloadNextTrackSafe();
+        }, 5000, TimeUnit.MILLISECONDS);
     }
 
     private void preloadNextTrackSafe() {
@@ -1193,8 +1221,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         lastPreloadedTrackId = -1;
         lastPlaybackTrackId = -1;
 
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
+            preloadTask = null;
+        }
+
         if (nextTrackTask != null) {
             nextTrackTask.cancel(true);
+            nextTrackTask = null;
         }
     }
 
@@ -1214,6 +1248,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onAccessMediaTrack(Track song) {
+        Track current = getNowPlayingSong();
+        if (current != null && song != null && current.getId() == song.getId()) {
+            // Track is already active, do not interrupt playback state
+            return;
+        }
         currentTrackFlow.setValue(Optional.ofNullable(song));
         runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();

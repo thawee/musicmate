@@ -29,15 +29,25 @@ import org.jupnp.model.types.UDADeviceType;
 import org.jupnp.model.types.UDAServiceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.registry.RegistryListener;
+import org.jupnp.support.avtransport.callback.GetMediaInfo;
 import org.jupnp.support.avtransport.callback.GetPositionInfo;
+import org.jupnp.support.avtransport.callback.GetTransportInfo;
 import org.jupnp.support.avtransport.callback.Pause;
 import org.jupnp.support.avtransport.callback.Play;
 import org.jupnp.support.avtransport.callback.Seek;
 import org.jupnp.support.avtransport.callback.SetAVTransportURI;
 import org.jupnp.support.avtransport.callback.Stop;
 import org.jupnp.support.renderingcontrol.callback.SetVolume;
+import org.jupnp.support.model.MediaInfo;
 import org.jupnp.support.model.PositionInfo;
 import org.jupnp.support.model.ProtocolInfos;
+import org.jupnp.support.model.TransportInfo;
+import org.jupnp.support.model.TransportState;
+import org.jupnp.support.contentdirectory.DIDLParser;
+import org.jupnp.support.model.DIDLContent;
+import org.jupnp.support.model.item.Item;
+import org.jupnp.support.model.DIDLObject;
+import apincer.music.core.model.AudioTag;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -697,6 +707,11 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void playerActivate(String rendererId, PlaybackCallback callback) {
+        playerActivateWithHandoff(rendererId, callback, null, 0);
+    }
+
+    @Override
+    public void playerActivateWithHandoff(String rendererId, PlaybackCallback callback, Track handoffTrack, long initialPositionMs) {
         this.playbackCallback = callback;
 
         runOnUpnpThread(() -> {
@@ -717,10 +732,131 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                 if (currentAVTransport != null) {
                     subscribeToRenderer(currentAVTransport);
+                    queryCurrentPlaybackInfoWithHandoff(currentAVTransport, handoffTrack, initialPositionMs);
                 }
             }
             Log.d(TAG, "Activated & Subscribed: " + rendererId);
         });
+    }
+
+    private void queryCurrentPlaybackInfo(Service avTransport) {
+        queryCurrentPlaybackInfoWithHandoff(avTransport, null, 0);
+    }
+
+    private void queryCurrentPlaybackInfoWithHandoff(Service avTransport, Track handoffTrack, long initialPositionMs) {
+        if (controlPoint == null || avTransport == null) return;
+
+        // 1. Query Transport State (PLAYING, PAUSED, STOPPED)
+        controlPoint.execute(new GetTransportInfo(avTransport) {
+            @Override
+            public void received(ActionInvocation invocation, TransportInfo transportInfo) {
+                if (transportInfo == null) return;
+                TransportState state = transportInfo.getCurrentTransportState();
+                if (state == TransportState.PLAYING) {
+                    // Renderer is ALREADY playing: adopt live session without resetting track
+                    serverStatus.setValue(ServerStatus.CAST);
+                    startPolling(avTransport);
+                    queryMediaInfoInternal(avTransport);
+                } else if (state == TransportState.PAUSED_PLAYBACK) {
+                    serverStatus.setValue(ServerStatus.RUNNING);
+                    queryMediaInfoInternal(avTransport);
+                } else {
+                    // Renderer is idle/stopped: perform seamless handoff if user was playing on previous player
+                    if (handoffTrack != null && currentRendererId != null) {
+                        Log.i(TAG, "Handoff: Starting active track " + handoffTrack.getTitle() + " at " + initialPositionMs + "ms on idle renderer");
+                        internalPlaySong(currentRendererId, handoffTrack, initialPositionMs);
+                        if (playbackCallback != null) {
+                            playbackCallback.onMediaTrackChanged(handoffTrack);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                Log.d(TAG, "GetTransportInfo query: " + defaultMsg);
+                if (handoffTrack != null && currentRendererId != null) {
+                    internalPlaySong(currentRendererId, handoffTrack, initialPositionMs);
+                }
+            }
+        });
+
+        // Query initial position
+        getAvTransportPosition(avTransport);
+    }
+
+    private void queryMediaInfoInternal(Service avTransport) {
+        if (controlPoint == null || avTransport == null) return;
+
+        // Query Media Info (Current Track metadata & URI)
+        controlPoint.execute(new GetMediaInfo(avTransport) {
+            @Override
+            public void received(ActionInvocation invocation, MediaInfo mediaInfo) {
+                if (mediaInfo == null) return;
+
+                String currentUri = mediaInfo.getCurrentURI();
+                String metadataXml = mediaInfo.getCurrentURIMetaData();
+
+                Track song = resolveTrackFromMediaInfo(currentUri, metadataXml);
+                if (song != null && playbackCallback != null) {
+                    playbackCallback.onMediaTrackChanged(song);
+                }
+            }
+
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                Log.d(TAG, "GetMediaInfo query: " + defaultMsg);
+            }
+        });
+    }
+
+    private Track resolveTrackFromMediaInfo(String currentUri, String metadataXml) {
+        if (currentUri != null && currentUri.contains("/music/")) {
+            try {
+                // e.g. http://192.168.1.10:8080/music/12345/file.flac
+                String afterMusic = currentUri.substring(currentUri.indexOf("/music/") + 7);
+                int slashIdx = afterMusic.indexOf('/');
+                String idStr = (slashIdx > 0) ? afterMusic.substring(0, slashIdx) : afterMusic;
+                long trackId = Long.parseLong(idStr);
+                Track tag = tagRepos.findById(trackId);
+                if (tag != null) return tag;
+            } catch (Exception ignore) {
+            }
+        }
+
+        if (metadataXml != null && !metadataXml.isEmpty()) {
+            try {
+                DIDLParser parser = new DIDLParser();
+                DIDLContent didl = parser.parse(metadataXml);
+                if (didl != null && !didl.getItems().isEmpty()) {
+                    Item songItem = didl.getItems().get(0);
+                    String title = songItem.getTitle();
+                    String artist = "";
+                    String album = "";
+
+                    if (songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class) != null) {
+                        artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
+                    }
+                    if (songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class) != null) {
+                        album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class);
+                    }
+
+                    if (!StringUtils.isEmpty(title)) {
+                        Track match = tagRepos.findMusic(title, artist, album);
+                        if (match != null) return match;
+
+                        AudioTag adHoc = new AudioTag();
+                        adHoc.setTitle(title);
+                        adHoc.setArtist(artist);
+                        adHoc.setAlbum(album);
+                        return adHoc;
+                    }
+                }
+            } catch (Exception e) {
+                Log.d(TAG, "Error parsing DIDL metadata on player activate: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     @Override
@@ -857,9 +993,13 @@ public class MediaServerHubImpl implements MediaServerHub {
      */
     @Override
     public void playerPlaySong(Track song) {
+        playerPlaySong(song, 0);
+    }
+
+    public void playerPlaySong(Track song, long initialPositionMs) {
         runOnUpnpThread(() -> {
             if(currentRendererId != null) {
-                internalPlaySong(currentRendererId, song);
+                internalPlaySong(currentRendererId, song, initialPositionMs);
             }
         });
     }
@@ -867,17 +1007,26 @@ public class MediaServerHubImpl implements MediaServerHub {
     /**
      * Commands a remote renderer to play a specific track.
      * Performs a multi-step sequence: Resolves Renderer -> Sets Transport URI -> Sends Play Command.
-     * * @param udn The Unique Device Name of the target renderer.
+     * @param udn The Unique Device Name of the target renderer.
      * @param song The {@link Track} containing metadata and stream information.
      */
     @Override
     public void playerPlaySong(String udn, Track song) {
+        playerPlaySong(udn, song, 0);
+    }
+
+    @Override
+    public void playerPlaySong(String udn, Track song, long initialPositionMs) {
         runOnUpnpThread(() -> {
-            internalPlaySong(udn, song);
+            internalPlaySong(udn, song, initialPositionMs);
         });
     }
 
     private void internalPlaySong(String udn, Track song) {
+        internalPlaySong(udn, song, 0);
+    }
+
+    private void internalPlaySong(String udn, Track song, long initialPositionMs) {
         if (upnpService == null) {
             Log.w(TAG, "UPnP not initialized");
             return;
@@ -899,7 +1048,6 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         // --- Create the URL for the song ---
         // This URL must point to your app's internal HTTP server.
-        // String songUrl = "http://"+ NetworkUtils.getIpAddress()+":"+  CONTENT_SERVER_PORT+CONTEXT_PATH_MUSIC + song.getId() + "/file." + song.getFileType();
         String songUrl = BaseServer.getMusicUrl(song);
 
         // Create a simple metadata string for the renderer (optional but recommended)
@@ -912,24 +1060,24 @@ public class MediaServerHubImpl implements MediaServerHub {
             public void success(ActionInvocation invocation) {
                 // 100ms buffer flush grace period to prevent pop/click audio artifacts on external DACs
                 if (scheduler != null && !scheduler.isShutdown()) {
-                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata), 100, TimeUnit.MILLISECONDS);
+                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata, initialPositionMs), 100, TimeUnit.MILLISECONDS);
                 } else {
-                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata, initialPositionMs);
                 }
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 if (scheduler != null && !scheduler.isShutdown()) {
-                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata), 100, TimeUnit.MILLISECONDS);
+                    scheduler.schedule(() -> executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata, initialPositionMs), 100, TimeUnit.MILLISECONDS);
                 } else {
-                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata);
+                    executeSetUriAndPlay(controlPoint, currentAVTransport, songUrl, metadata, initialPositionMs);
                 }
             }
         });
     }
 
-    private void executeSetUriAndPlay(ControlPoint controlPoint, Service avTransport, String songUrl, String metadata) {
+    private void executeSetUriAndPlay(ControlPoint controlPoint, Service avTransport, String songUrl, String metadata, long initialPositionMs) {
         controlPoint.execute(new SetAVTransportURI(avTransport, songUrl, metadata) {
             @Override
             public void success(ActionInvocation invocation) {
@@ -938,6 +1086,21 @@ public class MediaServerHubImpl implements MediaServerHub {
                     public void success(ActionInvocation invocation) {
                         serverStatus.setValue(ServerStatus.CAST);
                         startPolling(avTransport);
+
+                        // Seamless position handoff: seek to initial position
+                        if (initialPositionMs > 1000) {
+                            String seekTarget = formatDurationForDidl(initialPositionMs);
+                            if (scheduler != null && !scheduler.isShutdown()) {
+                                scheduler.schedule(() -> {
+                                    controlPoint.execute(new Seek(avTransport, seekTarget) {
+                                        @Override
+                                        public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                                            Log.w(TAG, "Handoff seek failed: " + defaultMsg);
+                                        }
+                                    });
+                                }, 300, TimeUnit.MILLISECONDS);
+                            }
+                        }
                     }
 
                     @Override
@@ -1202,8 +1365,8 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         if (controlPoint == null || avTransport == null) return;
 
-        // immediately request once (no wait 1s)
-        getAvTransportPosition(avTransport);
+        lastPosition = -1;
+        stagnantCount = 0;
 
         int gen = pollGen.incrementAndGet();
         scheduleNextPoll(avTransport, gen);
@@ -1270,7 +1433,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                         public void received(ActionInvocation invocation, PositionInfo positionInfo) {
 
                             long position = positionInfo.getTrackElapsedSeconds();
-                            if (position == lastPosition) {
+                            if (position > 0 && position == lastPosition) {
                                 stagnantCount++;
                             } else {
                                 stagnantCount = 0;
@@ -1295,7 +1458,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 }
                             }
 
-                            if (stagnantCount >= 8) {
+                            // Only trigger recovery if position was established (> 5s) and has been stuck for 15+ consecutive polls
+                            if (position > 5 && stagnantCount >= 15) {
                                 Log.w(TAG, " Playback stuck detected, serverStatus: "+serverStatus.getValue());
                                 stopPolling();
                                 if( serverStatus.getValue() == ServerStatus.CAST) {

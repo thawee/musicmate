@@ -5,6 +5,29 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.1] - 2026-08-28
+
+### Added
+- **Spotify Connect-Style Seamless DLNA Position Handoff (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`, `MediaServerHub.java`)**:
+  - Implemented smart elapsed position capture on target switching (`currentPositionMs`).
+  - Added `playerActivateWithHandoff(...)` and precision post-play UPnP `Seek(HH:MM:SS)` execution to resume playback at the exact elapsed second when transferring an active song to an idle renderer.
+  - Added continuous playback handoff when switching from DLNA back to local Android audio output.
+- **Non-Destructive Live DLNA Session Adoption (`MediaServerHubImpl.java`, `MusicMateServiceImpl.java`)**:
+  - Selecting an active DLNA renderer now connects to the live stream, parses DIDL-Lite metadata (`Title`, `Artist`, `Album`), and adopts track progress and duration without stopping or restarting the song.
+
+### Fixed
+- **DLNA Playback Stutter & Audio Interruption on Track Start (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`)**:
+  - Implemented 5-second post-start stabilization window for `SetNextAVTransportURI` gapless preloading, preventing FIFO buffer acquisition collisions on hardware DACs/renderers.
+  - Added DMR player collision guard in `switchPlayer()` to prevent uncontrolled incoming HTTP stream requests from resetting active DLNA sessions.
+  - Corrected stuck-playback recovery logic in `getAvTransportPosition()` to ignore initial 0-second buffer states and require $\ge 15$ stagnant polls before issuing recovery commands.
+- **Runtime Crashes & UI Polish**:
+  - Fixed `TagsActivity` inflation crash by replacing legacy `ReflectionContainer` with `FrameLayout`.
+  - Fixed `TagsViewModel` background thread assertion crash by switching LiveData mutations to `postValue()`.
+  - Corrected `mqaSampleRate` parameter passed to `TagUtils.formatResolution()`.
+  - Tuned marquee edge fading widths in `NowPlayingPage.kt` and `MainScaffold.kt`.
+- **Codebase & Library Pruning**:
+  - Pruned unused legacy library modules (`paralloid`, `placesAPI`, `slideDateTimePicker`, `spacetablayout`) and dead layout resources.
+
 ## [3.19.0] - 2026-08-27
 
 ### Added

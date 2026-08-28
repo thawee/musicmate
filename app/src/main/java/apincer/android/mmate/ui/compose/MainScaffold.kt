@@ -273,13 +273,13 @@ fun MainScaffold(
                         .weight(1f)
                 ) {
                     MusicListScreen(
-                        tracks = ListInterop.getTracks(),
-                        selectedTracks = if (state.selectedTracks.isNotEmpty()) state.selectedTracks.toSet() else ListInterop.getSelectedTracks(),
+                        tracks = state.tracks,
+                        selectedTracks = state.selectedTracks.toSet(),
                         nowPlayingTrack = state.nowPlayingTrack.value,
                         isPlaying = state.isPlaying.value,
-                        isRefreshing = state.isRefreshing.value || ListInterop.isRefreshing(),
-                        scrollToIndex = ListInterop.getScrollToIndex(),
-                        onScrollComplete = { ListInterop.resetScrollToIndex() },
+                        isRefreshing = state.isRefreshing.value,
+                        scrollToIndex = state.scrollToIndex.intValue,
+                        onScrollComplete = { state.scrollToIndex.intValue = -1 },
                         onRefresh = { callbacks?.onListRefresh() },
                         onTrackClick = { track, index ->
                             callbacks?.onTrackClick(track, index)
@@ -631,7 +631,7 @@ private fun FloatingMiniPlayerDock(
                         modifier = Modifier
                             .fillMaxWidth()
                             .basicMarquee(iterations = Int.MAX_VALUE, velocity = 28.dp)
-                            .fadingEdge(startWidth = 0.dp, endWidth = 8.dp)
+                            .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
                     )
                     if (outputTarget.isNotEmpty()) {
                         Text(
@@ -642,7 +642,7 @@ private fun FloatingMiniPlayerDock(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 0.dp, endWidth = 8.dp)
+                                .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
                         )
                     } else if (track != null && !track.artist.isNullOrEmpty()) {
                         Text(
@@ -653,7 +653,7 @@ private fun FloatingMiniPlayerDock(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 0.dp, endWidth = 8.dp)
+                                .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
                         )
                     }
                 }

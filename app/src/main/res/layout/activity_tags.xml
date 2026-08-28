@@ -54,7 +54,7 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constrainedHeight="true">
                     
-                    <apincer.android.mmate.ui.view.ReflectionContainer
+                    <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
@@ -66,7 +66,7 @@
                             app:heightRatio="1"
                             app:widthRatio="1"/>
 
-                    </apincer.android.mmate.ui.view.ReflectionContainer>
+                    </FrameLayout>
 
                     <LinearLayout
                         android:id="@+id/title_container"
