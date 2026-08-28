@@ -394,9 +394,109 @@ Transform MusicMate into a tier-1 flagship audiophile player through tactile mic
 - [x] **5. Document Results & Lessons**
   - Updated `tasks/todo.md`, `CHANGELOG.md`.
 
+---
 
+# Audio Anatomy Screen Refinement: Song Info & Player Info Removal 🎧
 
+## Objectives
+1. **Remove Player Output Info (`NowPlayingPage.kt`)**: Remove output target details (`targetDetails`) from the Audio Anatomy flip screen (as output device info is already handled on the front side of the Now Playing card via the interactive output target selector pill).
+2. **Add Comprehensive Song Metadata (`NowPlayingPage.kt`)**:
+   - Add **Duration** (e.g. `04:23` / `1:12:45` with tabular monospace numbers).
+   - Add **Audio Channels** (e.g. `Stereo (2.0)`, `Mono`, `5.1 Surround`).
+   - Add **Song/Album Metadata** (Track number `#3`, Year `1973`, Genre `Progressive Rock` when present).
+   - Retain & refine **Codec**, **Resolution**, **Bitrate**, **Dynamic Range (DR)**, and **File Size**.
+3. **Responsive Audiophile Layout**: Ensure all specs render in clean, compact, centered rows with `verticalScroll` and zero clipping across all screen aspect ratios.
+4. **Verification & Build**: Compile with `./gradlew compileDebugSources testDebugUnitTest` to ensure 0 errors and zero regressions.
 
+## Checklist
+- [x] **1. Refactor Audio Anatomy in `NowPlayingPage.kt`**
+  - [x] Removed `state.targetDetails.value` player info block from Audio Anatomy flip view.
+  - [x] Computed formatted `durationStr`, `channelsStr`, and `extraSongInfo` (track number, year, genre).
+  - [x] Organized layout into compact, balanced spec rows:
+    - Codec & Quality Hero
+    - Row 1: Resolution & Bitrate
+    - Row 2: Duration & Dynamic Range (DR)
+    - Row 3: Channels & File Size
+    - Row 4: Track # • Year • Genre (when available)
+    - "Tap to flip back" footer
+- [x] **2. Verify Build & Unit Tests**
+  - [x] Run `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL, 0 errors).
+- [x] **3. Document Changes**
+  - [x] Updated `tasks/todo.md`, `DESIGN.md`, and `CHANGELOG.md`.
 
+## Review & Results
+- **Player Info Removed from Flip Screen**: Excised `state.targetDetails.value` from the flip side of `NowPlayingPage.kt`. Output device and player routing are now centralized cleanly on the front target pill and top bar cast action button.
+- **Rich Song & Audio Metadata Added**:
+  - **Track Duration**: Formatted using `StringUtils.formatDuration(durationSec, false)` (e.g. `04:23`).
+  - **Audio Channels**: Cleanly detected and rendered as `Stereo`, `Mono`, or `5.1 Surround` / `7.1 Surround`.
+  - **Song Information**: Dynamic telemetry for Track number (`Track #3`), Release Year (`1973`), and Genre (`Progressive Rock`).
+  - **Audiophile Technical Specs**: Paired rows for `Resolution & Bitrate` (`24-bit 96.0 kHz • 1411 kbps`), `Duration & Dynamic Range` (`04:23 • DR 12`), and `Channels & File Size` (`Stereo • 45.2 MB`).
+- **Responsive Layout**: Wrapped in `verticalScroll(rememberScrollState())` with centered alignment and monospace typography for zero clipping on any device screen.
+- **Verification**: `./gradlew compileDebugSources testDebugUnitTest` verified successfully with 0 errors.
 
+---
+
+# Playback Tab Wide Quality Badge & Front Telemetry Streamlining 💎
+
+## Objectives
+1. **Support Expanded / Wide Mode in `QualityBadge` (`AudioBadges.kt`)**:
+   - Add `expanded: Boolean = false` parameter to both `QualityBadge` composables.
+   - For `expanded = true`: render full audiophile grade labels (`[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● CD QUALITY]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`).
+   - Style with 8dp rounded glass corners, 5dp glowing indicator dot, 10.5sp monospace font, and 8dp horizontal padding.
+2. **Streamline Front Card in `NowPlayingPage.kt`**:
+   - Remove redundant `formatText` (`Codec • Resolution`) from the front card overlay.
+   - Render `QualityBadge(track = track, expanded = true)` as a standalone tier capsule above the Output Target Pill.
+3. **Verification & Build**: Run `./gradlew compileDebugSources testDebugUnitTest`.
+
+## Checklist
+- [x] **1. Upgrade `QualityBadge` in `AudioBadges.kt`**
+  - [x] Added `expanded: Boolean = false` support with full descriptive quality names (`[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● CD QUALITY]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`).
+  - [x] Polished expanded pill geometry: `8dp` corners, `5dp` glowing LED dot, `10.5sp` bold monospace font, and `8dp` horizontal padding.
+- [x] **2. Update Playback Front Card in `NowPlayingPage.kt`**
+  - [x] Removed redundant `formatText` (`Codec • Resolution`) from the front card overlay.
+  - [x] Rendered `QualityBadge(track = track, expanded = true)` cleanly above the Output Target Pill.
+- [x] **3. Build & Test Verification**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL, 0 errors).
+- [x] **4. Documentation**
+  - [x] Updated `tasks/todo.md`, `DESIGN.md`, and `CHANGELOG.md`.
+
+## Review & Results
+- **Expanded Quality Pill**: The front playback card now features a wide streaming-tier quality pill (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) with frosted glass background, accent border, and luminous status dot.
+- **Deduplication**: Removed `Codec • Resolution` from the front card, keeping the front visual presentation clean and uncluttered while all technical specifications are accessible in full detail on the flip **Audio Anatomy** card.
+- **Verification**: Clean compilation and test execution with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL**, 0 errors).
+
+---
+
+# Audio Anatomy Data Reordering 📊
+
+## Objectives
+Reorganize the data hierarchy on the 3D flip **Audio Anatomy** screen ([`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt)) to Option 1:
+1. **Line 1 (Hero)**: Codec (e.g. `FLAC`, `DSD64`, `MP3`, `AAC`, `ALAC`, `WAV`, `AIFF`, `MQA`)
+2. **Row 1**: Resolution • Bitrate (`24-bit 96.0 kHz • 1411 kbps`)
+3. **Row 2**: Channels • Dynamic Range (`Stereo • DR 12`)
+4. **Row 3**: Duration • File Size (`04:23 • 45.2 MB`)
+5. **Row 4**: Track # • Year • Genre (`Track #3 • 1973 • Progressive Rock`) (when available)
+6. **Footer**: Tap to flip back
+
+## Checklist
+- [x] **1. Reorder Audio Anatomy Data Rows in `NowPlayingPage.kt`**
+  - [x] Line 1 (Hero): Codec header (`FLAC`, `DSD64`, `MP3`, etc.)
+  - [x] Row 1: Resolution & Bitrate (`24-bit 96.0 kHz • 1411 kbps`)
+  - [x] Row 2: Channels & Dynamic Range (`Stereo • DR 12`)
+  - [x] Row 3: Duration & File Size (`04:23 • 45.2 MB`)
+  - [x] Row 4: Track # • Year • Genre (`Track #3 • 1973 • Progressive Rock`)
+  - [x] Footer: "Tap to flip back"
+- [x] **2. Verify Build & Tests**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL, 0 errors).
+- [x] **3. Document Changes**
+  - [x] Updated `tasks/todo.md`, `DESIGN.md`, and `CHANGELOG.md`.
+
+## Review & Results
+- **Option 1 Data Order Implemented**: Successfully reordered the 3D flip **Audio Anatomy** card:
+  - **Line 1 (Hero)**: Codec (`FLAC`)
+  - **Row 1**: Resolution & Bitrate (`24-bit 96.0 kHz • 1411 kbps`)
+  - **Row 2**: Channels & Dynamic Range (`Stereo • DR 12`)
+  - **Row 3**: Duration & File Size (`04:23 • 45.2 MB`)
+  - **Row 4**: Track # • Year • Genre (`Track #3 • 1973 • Progressive Rock`)
+- **Verification**: Clean compilation and test execution with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL**, 0 errors).
 

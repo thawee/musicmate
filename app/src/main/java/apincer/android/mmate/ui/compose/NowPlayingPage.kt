@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui.compose
 
-import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -19,13 +18,33 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +65,7 @@ import androidx.palette.graphics.Palette
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
 import apincer.music.core.playback.PlaybackState
+import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
 import coil3.compose.AsyncImage
 
@@ -305,38 +325,15 @@ fun NowPlayingPage(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Quality Badge & Codec / Resolution Row
+                        // Quality Tier Badge (Expanded / Wide Pill)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (track != null) {
-                                QualityBadge(track = track)
-                                Spacer(modifier = Modifier.width(8.dp))
+                                QualityBadge(track = track, expanded = true)
                             } else if (state.specsVerdict.value.isNotEmpty()) {
-                                QualityBadge(labelStr = state.specsVerdict.value)
-                                Spacer(modifier = Modifier.width(8.dp))
-                            }
-
-                            // Codec & Format text
-                            val formatText = state.specsFormat.value.ifEmpty {
-                                if (track != null) {
-                                    val codec = TagUtils.formatCodec(track)
-                                    val res = TagUtils.formatResolution(track.audioBitsDepth, track.audioSampleRate, track.mqaSampleRate)
-                                    if (res.isNotEmpty()) "$codec • $res" else codec
-                                } else ""
-                            }
-                            if (formatText.isNotEmpty()) {
-                                Text(
-                                    text = formatText,
-                                    color = Color(0xFFDDDDDD),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontFamily = FontFamily.Monospace,
-                                    letterSpacing = 0.3.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                QualityBadge(labelStr = state.specsVerdict.value, expanded = true)
                             }
                         }
 
@@ -466,6 +463,29 @@ fun NowPlayingPage(
                         val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
                         val fileSizeStr = state.specsFileSize.value.ifEmpty { "" }
 
+                        val durationSec = if (track != null && track.audioDuration > 0) track.audioDuration else if (duration > 0) duration / 1000.0 else 0.0
+                        val durationStr = if (durationSec > 0) StringUtils.formatDuration(durationSec, false) else ""
+
+                        val rawChannels = track?.audioChannels?.trim() ?: ""
+                        val channelsStr = when {
+                            rawChannels == "1" -> "Mono"
+                            rawChannels == "2" -> "Stereo"
+                            rawChannels.contains("5.1") -> "5.1 Surround"
+                            rawChannels.contains("7.1") -> "7.1 Surround"
+                            rawChannels.isNotEmpty() -> rawChannels
+                            track != null -> "Stereo"
+                            else -> ""
+                        }
+
+                        val trackNumStr = track?.track?.takeIf { it.isNotBlank() && it != "0" }?.let { "Track #$it" }
+                        val yearStr = track?.year?.takeIf { it.isNotBlank() && it != "0" }
+                        val genreStr = track?.genre?.takeIf {
+                            it.isNotBlank() &&
+                            !it.equals("<unknown>", ignoreCase = true) &&
+                            !it.equals("Unknown", ignoreCase = true)
+                        }
+                        val extraSongInfo = listOfNotNull(trackNumStr, yearStr, genreStr).joinToString(" • ")
+
                         Text(
                             text = codecStr,
                             color = Color.White,
@@ -474,7 +494,7 @@ fun NowPlayingPage(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Resolution & Bitrate Row
+                        // Row 1: Resolution & Bitrate
                         val hasResolution = resolutionStr.isNotEmpty() && resolutionStr != "-"
                         val hasBitrate = bitrateStr.isNotEmpty() && bitrateStr != "-"
                         if (hasResolution || hasBitrate) {
@@ -506,17 +526,27 @@ fun NowPlayingPage(
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        // Dynamic Range & File Size Row
+                        // Row 2: Channels & Dynamic Range
+                        val hasChannels = channelsStr.isNotEmpty()
                         val hasDr = drStr.isNotEmpty() && drStr != "-"
-                        val hasFileSize = fileSizeStr.isNotEmpty() && fileSizeStr != "-"
-                        if (hasDr || hasFileSize) {
+                        if (hasChannels || hasDr) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
+                                if (hasChannels) {
+                                    Text(
+                                        text = channelsStr,
+                                        color = Color(0xFFEEEEEE),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = FontFamily.Monospace,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
                                 if (hasDr) {
                                     Text(
-                                        text = drStr,
+                                        text = if (hasChannels) " • $drStr" else drStr,
                                         color = Color(0xFFFFA000),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
@@ -524,9 +554,31 @@ fun NowPlayingPage(
                                         letterSpacing = 0.5.sp
                                     )
                                 }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+
+                        // Row 3: Duration & File Size
+                        val hasDuration = durationStr.isNotEmpty()
+                        val hasFileSize = fileSizeStr.isNotEmpty() && fileSizeStr != "-"
+                        if (hasDuration || hasFileSize) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (hasDuration) {
+                                    Text(
+                                        text = durationStr,
+                                        color = Color(0xFFBDBDBD),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = FontFamily.Monospace,
+                                        letterSpacing = 0.4.sp
+                                    )
+                                }
                                 if (hasFileSize) {
                                     Text(
-                                        text = if (hasDr) " • $fileSizeStr" else fileSizeStr,
+                                        text = if (hasDuration) " • $fileSizeStr" else fileSizeStr,
                                         color = Color(0xFF9E9E9E),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Normal,
@@ -538,17 +590,19 @@ fun NowPlayingPage(
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        // Output Target Details
-                        if (state.targetDetails.value.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                        // Row 4: Track # • Year • Genre (if present)
+                        if (extraSongInfo.isNotEmpty()) {
                             Text(
-                                text = state.targetDetails.value,
-                                color = Color(0xFF80D8FF),
+                                text = extraSongInfo,
+                                color = Color(0xFFAAAAAA),
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
                                 fontFamily = FontFamily.Monospace,
+                                letterSpacing = 0.3.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                modifier = Modifier.padding(horizontal = 12.dp)
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))

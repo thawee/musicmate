@@ -27,14 +27,30 @@ import apincer.music.core.model.Track
 import apincer.music.core.utils.TagUtils
 
 @Composable
-fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
+fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean = false) {
     if (track == null) return
-    var label = track.qualityInd ?: ""
-    if (label.isEmpty() || label == "-") {
-        label = TagUtils.getQualityIndicator(track)
+    val label = if (expanded) {
+        when {
+            TagUtils.isDSD(track) -> "DSD AUDIO"
+            TagUtils.isMQA(track) -> if (TagUtils.isMQAStudio(track)) "MQA STUDIO" else "MQA MASTER"
+            TagUtils.isHiRes(track) -> "HI-RES LOSSLESS"
+            TagUtils.isPCM24Bits(track) -> "24-BIT STUDIO"
+            TagUtils.isLossless(track) -> "CD QUALITY"
+            TagUtils.isLossy(track) -> "STANDARD QUALITY"
+            else -> {
+                val raw = track.qualityInd ?: TagUtils.getQualityIndicator(track)
+                if (raw.isEmpty() || raw == "-") "CD QUALITY" else raw.uppercase()
+            }
+        }
+    } else {
+        var raw = track.qualityInd ?: ""
+        if (raw.isEmpty() || raw == "-") {
+            raw = TagUtils.getQualityIndicator(track)
+        }
+        if (raw.isEmpty()) "-"
+        else if (raw.startsWith("MQA")) "MQA"
+        else raw
     }
-    if (label.isEmpty()) label = "-"
-    else if (label.startsWith("MQA")) label = "MQA"
 
     val accentColor = when {
         TagUtils.isDSD(track) -> Color(0xFF00E5FF)
@@ -45,16 +61,22 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
     }
 
     val bgBase = Color(0xD9101010)
-    val bgTint = accentColor.copy(alpha = 0.08f)
-    val borderColor = accentColor.copy(alpha = 0.38f)
+    val bgTint = accentColor.copy(alpha = if (expanded) 0.12f else 0.08f)
+    val borderColor = accentColor.copy(alpha = if (expanded) 0.45f else 0.38f)
+    val cornerRadius = if (expanded) 8.dp else 6.dp
+    val dotSize = if (expanded) 5.dp else 3.5.dp
+    val dotSpacing = if (expanded) 5.dp else 3.5.dp
+    val textFontSize = if (expanded) 10.5.sp else 9.sp
+    val hPadding = if (expanded) 8.dp else 5.dp
+    val vPadding = if (expanded) 3.5.dp else 1.5.dp
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(bgBase)
             .background(bgTint)
-            .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 5.dp, vertical = 1.5.dp),
+            .border(0.75.dp, borderColor, RoundedCornerShape(cornerRadius))
+            .padding(horizontal = hPadding, vertical = vPadding),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -62,18 +84,18 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(3.5.dp)
+                    .size(dotSize)
                     .clip(CircleShape)
                     .background(accentColor)
             )
-            Spacer(modifier = Modifier.width(3.5.dp))
+            Spacer(modifier = Modifier.width(dotSpacing))
             Text(
                 text = label,
                 color = Color.White,
-                fontSize = 9.sp,
+                fontSize = textFontSize,
                 fontWeight = FontWeight.Bold,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                letterSpacing = 0.2.sp,
+                letterSpacing = if (expanded) 0.3.sp else 0.2.sp,
                 maxLines = 1,
                 softWrap = false
             )
@@ -82,10 +104,24 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier) {
-    var label = labelStr ?: "-"
-    if (label.isEmpty()) label = "-"
-    else if (label.startsWith("MQA")) label = "MQA"
+fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier, expanded: Boolean = false) {
+    val raw = labelStr ?: "-"
+    val label = if (expanded) {
+        when {
+            raw.contains("DSD", ignoreCase = true) -> "DSD AUDIO"
+            raw.contains("MQA", ignoreCase = true) -> "MQA MASTER"
+            raw.contains("Hi-Res", ignoreCase = true) || raw.contains("HI-RES", ignoreCase = true) -> "HI-RES LOSSLESS"
+            raw.contains("24-BIT", ignoreCase = true) || raw.contains("Studio", ignoreCase = true) -> "24-BIT STUDIO"
+            raw.contains("CD", ignoreCase = true) || raw.contains("Lossless", ignoreCase = true) -> "CD QUALITY"
+            raw.contains("Standard", ignoreCase = true) || raw.contains("Lossy", ignoreCase = true) -> "STANDARD QUALITY"
+            raw.isNotEmpty() && raw != "-" -> raw.uppercase()
+            else -> "CD QUALITY"
+        }
+    } else {
+        if (raw.isEmpty()) "-"
+        else if (raw.startsWith("MQA")) "MQA"
+        else raw
+    }
 
     val accentColor = when {
         label.contains("DSD", ignoreCase = true) -> Color(0xFF00E5FF)
@@ -96,16 +132,22 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier) {
     }
 
     val bgBase = Color(0xD9101010)
-    val bgTint = accentColor.copy(alpha = 0.08f)
-    val borderColor = accentColor.copy(alpha = 0.38f)
+    val bgTint = accentColor.copy(alpha = if (expanded) 0.12f else 0.08f)
+    val borderColor = accentColor.copy(alpha = if (expanded) 0.45f else 0.38f)
+    val cornerRadius = if (expanded) 8.dp else 6.dp
+    val dotSize = if (expanded) 5.dp else 3.5.dp
+    val dotSpacing = if (expanded) 5.dp else 3.5.dp
+    val textFontSize = if (expanded) 10.5.sp else 9.sp
+    val hPadding = if (expanded) 8.dp else 5.dp
+    val vPadding = if (expanded) 3.5.dp else 1.5.dp
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(bgBase)
             .background(bgTint)
-            .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 5.dp, vertical = 1.5.dp),
+            .border(0.75.dp, borderColor, RoundedCornerShape(cornerRadius))
+            .padding(horizontal = hPadding, vertical = vPadding),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -113,18 +155,18 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(3.5.dp)
+                    .size(dotSize)
                     .clip(CircleShape)
                     .background(accentColor)
             )
-            Spacer(modifier = Modifier.width(3.5.dp))
+            Spacer(modifier = Modifier.width(dotSpacing))
             Text(
                 text = label,
                 color = Color.White,
-                fontSize = 9.sp,
+                fontSize = textFontSize,
                 fontWeight = FontWeight.Bold,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                letterSpacing = 0.2.sp,
+                letterSpacing = if (expanded) 0.3.sp else 0.2.sp,
                 maxLines = 1,
                 softWrap = false
             )

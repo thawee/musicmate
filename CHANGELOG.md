@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented 5-second post-start stabilization window for `SetNextAVTransportURI` gapless preloading, preventing FIFO buffer acquisition collisions on hardware DACs/renderers.
   - Added DMR player collision guard in `switchPlayer()` to prevent uncontrolled incoming HTTP stream requests from resetting active DLNA sessions.
   - Corrected stuck-playback recovery logic in `getAvTransportPosition()` to ignore initial 0-second buffer states and require $\ge 15$ stagnant polls before issuing recovery commands.
+- **Audio Anatomy Screen Refinement & Expanded Quality Badges (`NowPlayingPage.kt`, `AudioBadges.kt`)**:
+  - Enhanced the 3D flip Audio Anatomy card with comprehensive song metadata: Track Duration (`04:23`), Audio Channels (`Stereo (2.0)`, `Mono`, `5.1 Surround`), Dynamic Range, File Size, and Track # • Year • Genre telemetry.
+  - Removed redundant player/output device info from the flip side, consolidating output target management exclusively onto the front target pill and top bar cast picker.
+  - Upgraded front card quality indicator to an expanded, streaming-tier glass pill (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) and removed duplicate codec/resolution strings from the front overlay.
 - **Runtime Crashes & UI Polish**:
   - Fixed `TagsActivity` inflation crash by replacing legacy `ReflectionContainer` with `FrameLayout`.
   - Fixed `TagsViewModel` background thread assertion crash by switching LiveData mutations to `postValue()`.
