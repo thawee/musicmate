@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,10 +43,12 @@ fun AudioHubSheet(
     onVolumeDown: () -> Unit,
     onVolumeUp: () -> Unit,
     onVolumeChanged: (Float) -> Unit,
+    onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
     // Callbacks for QueuePage
     onQueueTrackClicked: (Track) -> Unit,
     onQueueTrackRemoved: (Track, Int) -> Unit,
+    onQueueTrackMoved: (Int, Int) -> Unit = { _, _ -> },
     onQueueClear: () -> Unit,
     onQueueJumpToPlaying: () -> Unit,
     // Callbacks for MediaServerPage
@@ -202,37 +205,53 @@ fun AudioHubSheet(
                     .fillMaxWidth()
                     .weight(1f)
             ) { page ->
-                when (page) {
-                    0 -> NowPlayingPage(
-                        state = nowPlayingState,
-                        onPlayPause = onPlayPause,
-                        onNext = onNext,
-                        onPrevious = onPrevious,
-                        onShuffleToggle = onShuffleToggle,
-                        onRepeatToggle = onRepeatToggle,
-                        onSeek = onSeek,
-                        onVolumeDown = onVolumeDown,
-                        onVolumeUp = onVolumeUp,
-                        onVolumeChanged = onVolumeChanged,
-                        onTrackClicked = onTrackClicked,
-                        onSelectTargetPlayer = onSelectTargetPlayer
-                    )
-                    1 -> QueuePage(
-                        state = queueState,
-                        onTrackClicked = onQueueTrackClicked,
-                        onTrackRemoved = onQueueTrackRemoved,
-                        onClearQueue = onQueueClear,
-                        onJumpToPlaying = onQueueJumpToPlaying
-                    )
-                    2 -> MediaServerPage(
-                        state = mediaServerState,
-                        onEngineChanged = onEngineChanged,
-                        onStartClicked = onStartServerClicked,
-                        onStopClicked = onStopServerClicked,
-                        onCopyUrlClicked = onCopyUrlClicked,
-                        onOpenUrlClicked = onOpenUrlClicked,
-                        onQrCodeClicked = onQrCodeClicked
-                    )
+                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                val pageScale = (1f - 0.05f * kotlin.math.abs(pageOffset)).coerceIn(0.94f, 1f)
+                val pageAlpha = (1f - 0.25f * kotlin.math.abs(pageOffset)).coerceIn(0.75f, 1f)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = pageScale
+                            scaleY = pageScale
+                            alpha = pageAlpha
+                        }
+                ) {
+                    when (page) {
+                        0 -> NowPlayingPage(
+                            state = nowPlayingState,
+                            onPlayPause = onPlayPause,
+                            onNext = onNext,
+                            onPrevious = onPrevious,
+                            onShuffleToggle = onShuffleToggle,
+                            onRepeatToggle = onRepeatToggle,
+                            onSeek = onSeek,
+                            onVolumeDown = onVolumeDown,
+                            onVolumeUp = onVolumeUp,
+                            onVolumeChanged = onVolumeChanged,
+                            onSleepTimerSelected = onSleepTimerSelected,
+                            onTrackClicked = onTrackClicked,
+                            onSelectTargetPlayer = onSelectTargetPlayer
+                        )
+                        1 -> QueuePage(
+                            state = queueState,
+                            onTrackClicked = onQueueTrackClicked,
+                            onTrackRemoved = onQueueTrackRemoved,
+                            onClearQueue = onQueueClear,
+                            onJumpToPlaying = onQueueJumpToPlaying,
+                            onMoveTrack = onQueueTrackMoved
+                        )
+                        2 -> MediaServerPage(
+                            state = mediaServerState,
+                            onEngineChanged = onEngineChanged,
+                            onStartClicked = onStartServerClicked,
+                            onStopClicked = onStopServerClicked,
+                            onCopyUrlClicked = onCopyUrlClicked,
+                            onOpenUrlClicked = onOpenUrlClicked,
+                            onQrCodeClicked = onQrCodeClicked
+                        )
+                    }
                 }
             }
         }

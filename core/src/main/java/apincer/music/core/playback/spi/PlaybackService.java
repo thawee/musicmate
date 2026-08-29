@@ -31,6 +31,10 @@ public interface PlaybackService {
     void playSong(Track song);
     void pausePlayer();
     void seekTo(long positionMs);
+    void setVolume(int volumePercent);
+    void adjustVolume(int direction);
+    void setSleepTimer(long minutes, boolean endOfTrack);
+    long getSleepTimerRemainingMs();
 
    void skipToNextInQueue();
 

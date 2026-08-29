@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,10 +26,15 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.music.core.model.Track
-import java.util.Locale
+import apincer.music.core.utils.StringUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +51,8 @@ fun QueuePage(
     onTrackClicked: (Track) -> Unit,
     onTrackRemoved: (Track, Int) -> Unit,
     onClearQueue: () -> Unit,
-    onJumpToPlaying: () -> Unit
+    onJumpToPlaying: () -> Unit,
+    onMoveTrack: (Int, Int) -> Unit = { _, _ -> }
 ) {
     Column(
         modifier = Modifier
@@ -131,7 +138,7 @@ fun QueuePage(
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                itemsIndexed(items = state.tracks, key = { _, track -> track.uniqueKey ?: track.hashCode().toString() }) { index, track ->
+                itemsIndexed(items = state.tracks, key = { index, track -> "${index}_${track.uniqueKey ?: track.id}" }) { index, track ->
                     val isPlaying = track.uniqueKey == state.currentPlayingKey
                     
                     val dismissState = rememberSwipeToDismissBoxState(
@@ -170,8 +177,13 @@ fun QueuePage(
                             QueueItem(
                                 track = track,
                                 index = index,
+                                totalCount = state.tracks.size,
                                 isPlaying = isPlaying,
-                                onClick = { onTrackClicked(track) }
+                                onClick = { onTrackClicked(track) },
+                                onMoveTrack = { from, to ->
+                                    state.moveTrack(from, to)
+                                    onMoveTrack(from, to)
+                                }
                             )
                         }
                     )
@@ -182,13 +194,17 @@ fun QueuePage(
 }
 
 @Composable
-fun QueueItem(track: Track, index: Int, isPlaying: Boolean, onClick: () -> Unit) {
+fun QueueItem(
+    track: Track,
+    index: Int,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    totalCount: Int = 0,
+    onMoveTrack: ((Int, Int) -> Unit)? = null
+) {
     val artist = track.artist?.takeIf { it.isNotEmpty() } ?: track.album ?: ""
-    val durationStr = if (track.audioDuration > 0) {
-        val mins = (track.audioDuration / 60).toInt()
-        val secs = (track.audioDuration % 60).toInt()
-        String.format(Locale.US, "%d:%02d", mins, secs)
-    } else ""
+    val durationStr = if (track.audioDuration > 0) StringUtils.formatDuration(track.audioDuration, false) else ""
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     Row(
         modifier = Modifier
@@ -228,16 +244,40 @@ fun QueueItem(track: Track, index: Int, isPlaying: Boolean, onClick: () -> Unit)
                 text = durationStr,
                 color = Color(0xFF757575),
                 fontSize = 11.sp,
-                modifier = Modifier.padding(end = 12.dp)
+                modifier = Modifier.padding(end = 8.dp)
             )
         }
 
-        // Drag handle placeholder for visual parity
+        // Functional drag handle with vertical drag detection and haptic feedback
+        var dragAccumulatedY by remember { mutableStateOf(0f) }
         Icon(
             painter = painterResource(id = R.drawable.rounded_drag_indicator_24),
             contentDescription = "Drag to reorder",
-            tint = Color(0xFF616161),
-            modifier = Modifier.size(24.dp)
+            tint = Color(0xFF888888),
+            modifier = Modifier
+                .size(32.dp)
+                .padding(4.dp)
+                .pointerInput(index, totalCount) {
+                    detectVerticalDragGestures(
+                        onDragStart = { dragAccumulatedY = 0f },
+                        onDragEnd = { dragAccumulatedY = 0f },
+                        onDragCancel = { dragAccumulatedY = 0f },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            dragAccumulatedY += dragAmount
+                            val threshold = 68f
+                            if (dragAccumulatedY > threshold && index < totalCount - 1) {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onMoveTrack?.invoke(index, index + 1)
+                                dragAccumulatedY -= threshold
+                            } else if (dragAccumulatedY < -threshold && index > 0) {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onMoveTrack?.invoke(index, index - 1)
+                                dragAccumulatedY += threshold
+                            }
+                        }
+                    )
+                }
         )
     }
 }

@@ -5,6 +5,57 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.2] - 2026-08-29
+
+### Added
+- **Kinetic Quality Donut Graph & Interactive Lossless HUD (`QualityPieChart.kt`, `AboutScreen.kt`)**:
+  - **Kinetic Sweep-In Animation:** Animated donut rendering sweeping dynamically from $0^\circ \rightarrow 360^\circ$ over 900ms (`FastOutSlowInEasing`).
+  - **Center Lossless HUD Readout:** Interactive center displaying total track count, dynamic active format labels, and real-time `% LOSSLESS` ratio pill badge.
+  - **Tactile Slice Highlight & Physics:** Interactive touch-to-select on donut arcs with slice thickness expansion (+25%) and dimming for unselected slices.
+  - **Rich Frosted Pill Legend Cards:** Replaced plain text dots with interactive frosted pill cards displaying color indicator, format name, track count, and percentage.
+- **About Screen Brand & Promotional Showcase Upgrades (`AboutScreen.kt`)**:
+  - **New Brand Identity Tagline:** Updated official subtitle and sharing templates to: *"Bit-Perfect Streaming, Home Control & Crafted for the Music You Love"*.
+  - **Share Library Snapshot:** Added a social sharing button generating an audiophile collection summary (*Track count, Hi-Res %, DSD %, CD %*) via Android share sheet for forums and communities.
+  - **Core Capabilities Showcase:** Added a 3-card architectural highlight section (*Lossless UPnP/DLNA Server, Studio Tag Master & Artwork, Bit-Perfect Acoustic Engine*).
+  - **Audiophile Philosophy Card:** Added the official manifesto regarding bit-perfect fidelity and zero DSP coloration.
+  - **Connect & Community:** Added direct Google Play rating and GitHub project repository action links.
+- **Fluid Navigation & Modal Animations (`PlayerPickerDialog.kt`, `NowPlayingPage.kt`, `MusicFoldersDialog.kt`, `AudioHubSheet.kt`)**:
+  - **Tactile Spring-Scale Modals:** Wrapped dialog surfaces (`PlayerPickerDialog`, `SleepTimerDialog`, `MusicFoldersDialog`) in responsive spring-scaling (`0.90f` $\rightarrow$ `1.0f`, `DampingRatioMediumBouncy`) and smooth alpha fade-in.
+  - **3D Depth Carousel in Audio Hub:** Implemented continuous `graphicsLayer` scale (`0.94f..1.0f`) and alpha (`0.75f..1.0f`) interpolation on `HorizontalPager` between *Playback*, *Queue*, and *Server* tabs for natural physical depth when swiping.
+- **(M) Brand Drawer Menu Redesign (`MainScaffold.kt`)**:
+  - Replaced the single long vertical list with an **Audiophile Command Capsule**:
+    - **Header Pill:** Version badge (`v3.19.2 • Hi-Res Edition`) and live library stats capsule (`headerStatsText`).
+    - **2×2 Core Library Quick Grid:** Compact frosted glass tiles (All Songs, Artists, Genres, Playlists) with gold active borders, reducing thumb reach height by 50%.
+    - **Grouped Frosted Surface Cards:** Encapsulated Discover & Audiophile options (Sound Grade `[ DR & Hi-Res ]`, Discover Similar, Incoming `[ New ]`) and System & Settings options with disclosure chevrons.
+    - **Tactile Haptics:** Micro-vibration feedback on menu tile and row interactions.
+- **Offline Audio Pre-Caching & DLNA Stream Buffer Engine (`AudioStreamCacheManager.java`, `MusicMateServiceImpl.java`, `PartialFileProducer.java`)**:
+  - Implemented an asynchronous in-memory LRU audio head cache (16MB capacity, 4MB per track) to pre-buffer upcoming queue tracks in background threads.
+  - Accelerated initial byte streaming (`Range: bytes=0-...`) directly from RAM in `PartialFileProducer`, completely bypassing disk I/O and SAF latency during song start and gapless transitions on remote DLNA/UPnP renderers.
+- **Sleep Timer with Gradual Fade-Out (`PlaybackService.java`, `MusicMateServiceImpl.java`, `NowPlayingPage.kt`, `MainActivity.java`)**:
+  - Implemented `setSleepTimer(minutes, endOfTrack)` and `getSleepTimerRemainingMs()` in `PlaybackService` and `MusicMateServiceImpl`.
+  - Added a dedicated Sleep Timer transport button and modal selector (15m, 30m, 45m, 60m, End of Track, Off) in `NowPlayingPage.kt`.
+  - Implemented automatic 5-step volume fade-down before pausing.
+- **Spring Micro-Interactions & Sensory Delight (`NowPlayingPage.kt`)**:
+  - Added tactile spring scale animations on the central Play/Pause button and transport controls.
+  - Added dynamic sound grade ambient aura fallbacks (Amber Gold for DSD, Deep Sapphire for 24-Bit/Hi-Res, Emerald Cyan for MQA, Royal Cobalt for CD).
+- **Functional Drag-to-Reorder in Upcoming Queue (`QueuePage.kt`, `QueueState.kt`, `MainActivity.java`)**:
+  - Implemented vertical drag gestures on queue drag handles with tactile haptic feedback per row step.
+  - Linked real-time queue reordering directly to `QueueManager.moveTrack(fromIndex, toIndex)` with persistent queue state saving.
+- **Integrated Luminous Volume Slider (`NowPlayingPage.kt`, `MainActivity.java`)**:
+  - Embedded a sleek, glowing gold-accented volume slider with volume down/up buttons directly into the bottom transport controls of `NowPlayingPage`.
+  - Added bidirectional volume synchronization with `AudioManager` and remote DLNA DMR streaming volume.
+
+### Fixed
+- **Queue Duplicate Key Crash Guard (`QueuePage.kt`)**:
+  - Replaced bare `uniqueKey` in `LazyColumn` with position-indexed composite key (`${index}_${track.uniqueKey ?: track.id}`), preventing app crashes when identical songs are enqueued multiple times.
+- **Duration Formatting Standardization for Long Audio (`NowPlayingPage.kt`, `QueuePage.kt`)**:
+  - Replaced raw integer division with `StringUtils.formatDuration(seconds, false)`, correctly rendering tracks, DJ sets, and mixes longer than 1 hour (e.g. `01:15:00` instead of `75:00`).
+- **Hardware Volume Routing to DLNA Renderers (`PlaybackService.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
+  - Implemented `setVolume(volumePercent)` and `adjustVolume(direction)` in `PlaybackService` and `MusicMateServiceImpl`.
+  - Routed Audio Hub volume gestures and sliders to UPnP `mediaHub.playerSetVolume` when streaming to remote DMR devices, with graceful fallback to local Android `AudioManager`.
+- **Defensive Non-Null Collections in Repository (`TagRepository.java`)**:
+  - Guaranteed non-null empty list returns in `findByCriteria` when querying paths.
+
 ## [3.19.1] - 2026-08-28
 
 ### Added
@@ -24,6 +75,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced the 3D flip Audio Anatomy card with comprehensive song metadata: Track Duration (`04:23`), Audio Channels (`Stereo (2.0)`, `Mono`, `5.1 Surround`), Dynamic Range, File Size, and Track # • Year • Genre telemetry.
   - Removed redundant player/output device info from the flip side, consolidating output target management exclusively onto the front target pill and top bar cast picker.
   - Upgraded front card quality indicator to an expanded, streaming-tier glass pill (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) and removed duplicate codec/resolution strings from the front overlay.
+- **Queue Synchronization & Music Folder Enqueueing Fix (`MainActivity.java`, `MainViewModel.kt`, `QueueState.kt`, `TagRepository.java`)**:
+  - Fixed disconnect where Compose `QueueState` was never updated from `QueueManager` upon enqueueing, track change, removal, or playback.
+  - Resolved music folder / directory collection tracks querying in `playCollection` via `findInPath`, ensuring folder enqueueing and playback populate all songs.
+  - Connected reactive queue syncing across service connection, `setNowPlaying`, single-track popup "Add to Queue", "Play Next", swipe-to-dismiss, and queue clear.
+- **Repeat Mode & Audio Control Polish (`MainActivity.java`, `MusicMateServiceImpl.java`)**:
+  - Fixed Repeat Mode toggle by mapping string integers (`0`, `1`, `2`) to enum names (`OFF`, `ALL`, `ONE`) and adding tolerant numeric parsing in `MusicMateServiceImpl.setRepeatMode()`.
+  - Initialized shuffle and repeat states in Compose `NowPlayingState` upon service connection.
+  - Implemented `onAudioHubVolumeDown()`, `onAudioHubVolumeUp()`, and `onAudioHubVolumeChanged()` using system `AudioManager` (`STREAM_MUSIC`).
 - **Runtime Crashes & UI Polish**:
   - Fixed `TagsActivity` inflation crash by replacing legacy `ReflectionContainer` with `FrameLayout`.
   - Fixed `TagsViewModel` background thread assertion crash by switching LiveData mutations to `postValue()`.

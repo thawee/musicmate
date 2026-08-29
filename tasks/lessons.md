@@ -153,3 +153,6 @@
 - **Mixed Kotlin/Java Compose Interop & Circular Dependencies**:
   - In mixed Kotlin/Java Gradle modules, Kotlin sources compile *before* Java sources. Kotlin files (`MainScaffold.kt`) cannot directly call newly added methods or properties on Java classes (`MainActivity.java`) without causing `Unresolved reference` errors.
   - *Pattern:* Define a decoupled Kotlin interface (`MainScaffoldCallbacks.kt`) and a centralized Kotlin state singleton (`MainScaffoldState.kt`). Have `MainActivity.java` implement `MainScaffoldCallbacks` and pass `this` into Compose via `DrawerInterop.getComposeView(context, callbacks)`. This eliminates circular dependencies, enforces complete separation of concerns, and enables 100% type-safe compilation in both directions.
+- **Canonical Repository & Package URLs**:
+  - When referencing or embedding public project links, source repositories, or community URLs in user-facing components (e.g. `AboutScreen.kt` or sharing templates), always check existing source metadata (such as `MANUFACTURER_URL` in `MediaServerDevice.java` -> `https://github.com/thawee/musicmate`) instead of assuming package namespace identifiers (`apincer`).
+

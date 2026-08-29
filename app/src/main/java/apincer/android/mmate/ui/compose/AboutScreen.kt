@@ -113,9 +113,10 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "High-Resolution Audio Engine & Tag Master",
-                            color = Color(0xFF9E9E9E),
-                            fontSize = 11.5.sp
+                            text = "Bit-Perfect Streaming, Crafted for the Music You Love",
+                            color = Color(0xFFB0B0B0),
+                            fontSize = 11.5.sp,
+                            lineHeight = 16.sp
                         )
                     }
                 }
@@ -123,6 +124,7 @@ fun AboutScreen(
 
             // ── 2. Library Quality Breakdown Donut Chart ────────────────────
             if (pieEntries.isNotEmpty()) {
+                val context = LocalContext.current
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color(0xFF16161E),
@@ -144,15 +146,124 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         QualityPieChart(
                             entries = pieEntries,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(220.dp)
+                            modifier = Modifier.fillMaxWidth()
                         )
+
+                        // ── Share Library Snapshot Button (Viral / Social Promo) ──
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Button(
+                            onClick = {
+                                val totalTracks = pieEntries.sumOf { it.value.toInt() }
+                                val breakdown = pieEntries.joinToString("\n") { entry ->
+                                    val pct = if (totalTracks > 0) (entry.value / totalTracks * 100).toInt() else 0
+                                    "  • ${entry.label}: ${entry.value.toInt()} tracks ($pct%)"
+                                }
+                                val shareText = buildString {
+                                    appendLine("🎼 My Audiophile Collection on MusicMate v$appVersion")
+                                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                                    appendLine("📊 Total Tracks: $totalTracks")
+                                    appendLine(breakdown)
+                                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                                    appendLine("⚡ Bit-Perfect Streaming, Crafted for the Music You Love")
+                                    appendLine("🔗 https://github.com/thawee/musicmate")
+                                }
+                                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(android.content.Intent.EXTRA_SUBJECT, "My MusicMate Collection")
+                                    putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, "Share Library Snapshot"))
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0x2BFFD700),
+                                contentColor = Color(0xFFFFD700)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_baseline_share_24),
+                                contentDescription = "Share",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Share Library Snapshot",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
 
-            // ── 3. Audio Format & Quality Encyclopedia ──────────────────────
+            // ── 3. Marquee Architectural Superpowers Showcase ────────────────
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF16161E),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1FFFFFFF)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "CORE CAPABILITIES",
+                        color = Color(0xFFFFB300),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+
+                    FeatureItem(
+                        iconRes = R.drawable.rounded_music_cast_24,
+                        title = "UPnP / DLNA Lossless Media Server",
+                        desc = "Stream 24-bit/192kHz & DSD bit-perfect across your home network with zero-latency RAM stream pre-caching."
+                    )
+                    FeatureItem(
+                        iconRes = R.drawable.rounded_style_24,
+                        title = "Studio Tag Master & Artwork",
+                        desc = "Full ID3v2.4, Vorbis, and DSF metadata curation with embedded lossless album art and lyrics."
+                    )
+                    FeatureItem(
+                        iconRes = R.drawable.rounded_equalizer_24,
+                        title = "Pure Acoustic Fidelity Engine",
+                        desc = "Direct DAC & DMR hardware volume sync, dynamic range metering, and gradual fade sleep timer."
+                    )
+                }
+            }
+
+            // ── 4. The Audiophile Philosophy Manifesto ───────────────────────
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF12121A),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "THE AUDIOPHILE PHILOSOPHY",
+                        color = Color(0xFFFFB300),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "“MusicMate is engineered for listeners who believe that sound reproduction should be authentic, bit-perfect, and dynamic — preserving the master studio intent without artificial coloration.”",
+                        color = Color(0xFFE0E0E0),
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
+            }
+
+            // ── 5. Audio Format & Quality Encyclopedia ──────────────────────
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFF16161E),
@@ -252,6 +363,103 @@ fun AboutScreen(
                     }
                 }
             }
+
+            // ── 6. Connect & Community ───────────────────────────────────────
+            val ctx = LocalContext.current
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF16161E),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1FFFFFFF)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "CONNECT & SUPPORT",
+                        color = Color(0xFFFFB300),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=apincer.android.mmate"))
+                            try { ctx.startActivity(intent) } catch (e: Exception) {}
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Rate on Google Play", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/thawee/musicmate"))
+                            try { ctx.startActivity(intent) } catch (e: Exception) {}
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(painterResource(id = R.drawable.ic_baseline_open_in_new_24), contentDescription = null, tint = Color(0xFF00E5FF), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("GitHub Project & Source", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeatureItem(
+    iconRes: Int,
+    title: String,
+    desc: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF22222E)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = Color(0xFFFFB300),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = desc,
+                color = Color(0xFFB0B0B0),
+                fontSize = 11.5.sp,
+                lineHeight = 16.sp
+            )
         }
     }
 }

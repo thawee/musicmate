@@ -142,5 +142,11 @@ class MainScaffoldState {
         fun setPlayerScanning(scanning: Boolean) {
             instance.isPlayerScanning.value = scanning
         }
+
+        @JvmStatic
+        @JvmOverloads
+        fun updateQueue(tracks: List<Track>, currentPlayingKey: String?, totalDurationText: String = "") {
+            instance.queueState.updateQueue(tracks, currentPlayingKey, totalDurationText)
+        }
     }
 }

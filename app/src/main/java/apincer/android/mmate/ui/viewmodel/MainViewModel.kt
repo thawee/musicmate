@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import apincer.android.mmate.ui.compose.MainScaffoldState
+import apincer.music.core.utils.StringUtils
 import javax.inject.Inject
 
 @HiltViewModel
@@ -255,24 +257,48 @@ class MainViewModel(
     fun playCollection(collectionTag: Track?, playbackService: PlaybackService?, enqueueOnly: Boolean) {
         if (collectionTag == null || playbackService == null) return
 
-        val criteria = SearchCriteria(collectionTag.containerType)
-        criteria.keyword = collectionTag.title
-
         viewModelScope.launch(ioDispatcher) {
             try {
-                val items: List<Track> = repos.findMusic(criteria, 0L, Long.MAX_VALUE) ?: emptyList()
-                if (items.isNotEmpty()) {
+                var items: List<Track> = emptyList()
+
+                // If collectionTag has directory path (e.g. music folder)
+                val path = collectionTag.uniqueKey?.takeIf { it.isNotBlank() && (it.startsWith("/") || it.contains("/")) }
+                    ?: collectionTag.path?.takeIf { it.isNotBlank() && (it.startsWith("/") || it.contains("/")) }
+
+                if (path != null && (collectionTag.containerType == SearchCriteria.TYPE.LIBRARY || collectionTag.containerType == null)) {
+                    items = repos.findInPath(path) ?: emptyList()
+                }
+
+                if (items.isEmpty()) {
+                    val criteria = SearchCriteria(collectionTag.containerType ?: SearchCriteria.TYPE.LIBRARY)
+                    criteria.keyword = collectionTag.title
+                    items = repos.findMusic(criteria, 0L, Long.MAX_VALUE) ?: emptyList()
+                }
+
+                // Filter out any container items to ensure pure playable songs
+                val songsToPlay = items.filter { !it.isContainer }
+                if (songsToPlay.isNotEmpty()) {
                     val queue = playbackService.queueManager
                     if (!enqueueOnly) {
-                        queue.setPlayingQueue(items)
+                        queue.setPlayingQueue(songsToPlay)
                     } else {
-                        queue.enqueuePlayingQueue(items)
+                        queue.enqueuePlayingQueue(songsToPlay)
                     }
 
                     if (!enqueueOnly) {
                         withContext(Dispatchers.Main) {
-                            playbackService.playSong(items[0])
+                            playbackService.playSong(songsToPlay[0])
                         }
+                    }
+
+                    // Sync queue state into Compose UI
+                    val allQueueSongs = queue.songs ?: emptyList()
+                    val nowPlaying = playbackService.nowPlayingSong ?: if (!enqueueOnly) songsToPlay[0] else null
+                    val playingKey = nowPlaying?.uniqueKey
+                    val totalSec = allQueueSongs.sumOf { (if (it.audioDuration > 0) it.audioDuration else 0.0).toLong() }
+                    val totalDurationStr = if (totalSec > 0) StringUtils.formatDuration(totalSec.toDouble(), true) else ""
+                    withContext(Dispatchers.Main) {
+                        MainScaffoldState.updateQueue(ArrayList(allQueueSongs), playingKey, totalDurationStr)
                     }
                 }
             } catch (e: Exception) {
@@ -286,11 +312,25 @@ class MainViewModel(
 
         viewModelScope.launch(ioDispatcher) {
             try {
-                val queue = playbackService.queueManager
-                queue.setPlayingQueue(items)
+                // Filter out container items
+                val songsToPlay = items.filter { !it.isContainer }
+                if (songsToPlay.isEmpty()) return@launch
 
+                val queue = playbackService.queueManager
+                queue.setPlayingQueue(songsToPlay)
+
+                val targetTrack = startTrack ?: songsToPlay[0]
                 withContext(Dispatchers.Main) {
-                    playbackService.playSong(startTrack ?: items[0])
+                    playbackService.playSong(targetTrack)
+                }
+
+                // Sync queue state into Compose UI
+                val allQueueSongs = queue.songs ?: emptyList()
+                val playingKey = targetTrack.uniqueKey
+                val totalSec = allQueueSongs.sumOf { (if (it.audioDuration > 0) it.audioDuration else 0.0).toLong() }
+                val totalDurationStr = if (totalSec > 0) StringUtils.formatDuration(totalSec.toDouble(), true) else ""
+                withContext(Dispatchers.Main) {
+                    MainScaffoldState.updateQueue(ArrayList(allQueueSongs), playingKey, totalDurationStr)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

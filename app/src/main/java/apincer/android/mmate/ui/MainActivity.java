@@ -191,6 +191,16 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
+            if (playbackService.getQueueManager() != null) {
+                apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
+                apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+                nps.isShuffle().setValue(qm.isShuffle());
+                int rMode = qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ALL ? 1
+                        : qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE ? 2 : 0;
+                nps.getRepeatMode().setValue(rMode);
+            }
+            updateVolumeState();
+            syncQueueState();
         }
 
         @Override
@@ -333,7 +343,30 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
 
             previouslyPlaying = song;
+            syncQueueState();
         });
+    }
+
+    public void syncQueueState() {
+        if (isPlaybackServiceBound && playbackService != null && playbackService.getQueueManager() != null) {
+            apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
+            List<Track> songs = qm.getSongs();
+            Track nowPlaying = playbackService.getNowPlayingSong();
+            String playingKey = nowPlaying != null ? nowPlaying.getUniqueKey() : null;
+
+            long totalSec = 0;
+            if (songs != null) {
+                for (Track t : songs) {
+                    if (t != null && t.getAudioDuration() > 0) {
+                        totalSec += (long) t.getAudioDuration();
+                    }
+                }
+            }
+            String totalDurationStr = totalSec > 0 ? apincer.music.core.utils.StringUtils.formatDuration(totalSec, true) : "";
+
+            List<Track> queueCopy = songs != null ? new ArrayList<>(songs) : Collections.emptyList();
+            runOnUiThread(() -> apincer.android.mmate.ui.compose.MainScaffoldState.updateQueue(queueCopy, playingKey, totalDurationStr));
+        }
     }
 
     @Override
@@ -691,7 +724,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (playbackService != null) {
             int mode = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().getValue();
             int nextMode = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
-            playbackService.setRepeatMode(String.valueOf(nextMode));
+            String modeStr = (nextMode == 1) ? "ALL" : (nextMode == 2) ? "ONE" : "OFF";
+            playbackService.setRepeatMode(modeStr);
             apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().setValue(nextMode);
         }
     }
@@ -703,9 +737,60 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
     }
 
-    public void onAudioHubVolumeDown() {}
-    public void onAudioHubVolumeUp() {}
-    public void onAudioHubVolumeChanged(float vol) {}
+    public void onAudioHubVolumeDown() {
+        if (playbackService != null && playbackService.getPlayer() != null && playbackService.getPlayer().isStreaming()) {
+            playbackService.adjustVolume(-1);
+            return;
+        }
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_LOWER, android.media.AudioManager.FLAG_SHOW_UI);
+            updateVolumeState();
+        }
+    }
+
+    public void onAudioHubVolumeUp() {
+        if (playbackService != null && playbackService.getPlayer() != null && playbackService.getPlayer().isStreaming()) {
+            playbackService.adjustVolume(1);
+            return;
+        }
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_RAISE, android.media.AudioManager.FLAG_SHOW_UI);
+            updateVolumeState();
+        }
+    }
+
+    public void onAudioHubVolumeChanged(float vol) {
+        apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+        if (nps != null) nps.getVolume().setValue(vol);
+
+        if (playbackService != null && playbackService.getPlayer() != null && playbackService.getPlayer().isStreaming()) {
+            playbackService.setVolume(Math.round(vol * 100));
+            return;
+        }
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            int max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC);
+            int target = Math.round(vol * max);
+            am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target, android.media.AudioManager.FLAG_SHOW_UI);
+        }
+    }
+
+    private void updateVolumeState() {
+        android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            int cur = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC);
+            int max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC);
+            if (max > 0) {
+                float vol = (float) cur / max;
+                apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+                if (nps != null) {
+                    nps.getVolume().setValue(vol);
+                }
+            }
+        }
+    }
 
     public void onAudioHubTrackClicked() {
         if (playbackService != null && playbackService.getNowPlayingSong() != null) {
@@ -723,6 +808,15 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     public void onAudioHubQueueTrackRemoved(Track track, int index) {
         if (playbackService != null && playbackService.getQueueManager() != null) {
             playbackService.getQueueManager().removeTrack(index);
+            syncQueueState();
+        }
+    }
+
+    @Override
+    public void onAudioHubQueueTrackMoved(int fromIndex, int toIndex) {
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            playbackService.getQueueManager().moveTrack(fromIndex, toIndex);
+            syncQueueState();
         }
     }
 
@@ -730,6 +824,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     public void onAudioHubQueueClear() {
         if (playbackService != null && playbackService.getQueueManager() != null) {
             playbackService.getQueueManager().emptyPlayingQueue();
+            syncQueueState();
             android.widget.Toast.makeText(this, "Queue cleared", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
@@ -930,6 +1025,31 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onOpenSystemAudioOutput() {
         openSystemAudioOutputPanel();
+    }
+
+    @Override
+    public void onAudioHubSleepTimerSelected(long minutes, boolean endOfTrack) {
+        if (playbackService != null) {
+            playbackService.setSleepTimer(minutes, endOfTrack);
+            apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+            if (nps != null) {
+                nps.isSleepTimerActive().setValue(minutes > 0 || endOfTrack);
+                if (endOfTrack) {
+                    nps.getSleepTimerText().setValue("Track End");
+                } else if (minutes > 0) {
+                    nps.getSleepTimerText().setValue(minutes + "m");
+                } else {
+                    nps.getSleepTimerText().setValue("");
+                }
+            }
+            if (minutes > 0) {
+                android.widget.Toast.makeText(this, "Sleep timer set for " + minutes + " minutes", android.widget.Toast.LENGTH_SHORT).show();
+            } else if (endOfTrack) {
+                android.widget.Toast.makeText(this, "Sleep timer set to stop after this song", android.widget.Toast.LENGTH_SHORT).show();
+            } else {
+                android.widget.Toast.makeText(this, "Sleep timer turned off", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -1163,10 +1283,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 return true;
             } else if (id == R.id.action_play_next) {
                 playbackService.getQueueManager().addPlayNext(track);
+                syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Playing next", android.widget.Toast.LENGTH_SHORT).show();
                 return true;
             } else if (id == R.id.action_add_queue) {
-                playbackService.getQueueManager().addPlayingQueue(track.getId());
+                playbackService.getQueueManager().addPlayingQueue(track);
+                syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Added to queue", android.widget.Toast.LENGTH_SHORT).show();
                 return true;
             } else if (id == R.id.action_encoding_file) {

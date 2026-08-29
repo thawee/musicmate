@@ -26,8 +26,10 @@ class NowPlayingState {
     val isShuffle = mutableStateOf(false)
     val repeatMode = mutableStateOf(0) // 0: None, 1: All, 2: One
     
-    // Volume
+    // Volume & Timer
     val volume = mutableStateOf(0f)
+    val sleepTimerText = mutableStateOf("")
+    val isSleepTimerActive = mutableStateOf(false)
     
     // Signal Path
     val signalPathSteps = mutableStateListOf<String>()

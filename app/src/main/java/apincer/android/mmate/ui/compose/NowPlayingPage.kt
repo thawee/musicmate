@@ -41,6 +41,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.palette.graphics.Palette
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
@@ -81,10 +83,12 @@ fun NowPlayingPage(
     onVolumeDown: () -> Unit,
     onVolumeUp: () -> Unit,
     onVolumeChanged: (Float) -> Unit,
+    onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
     onSelectTargetPlayer: () -> Unit = {}
 ) {
     var flipped by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (flipped) 180f else 0f,
         animationSpec = spring(
@@ -93,6 +97,17 @@ fun NowPlayingPage(
         ),
         label = "card_flip_rotation"
     )
+
+    // Dynamic Sound Grade Ambient Hue Fallback
+    fun fallbackGradeColors(grade: String): Pair<Color, Color> {
+        return when {
+            grade.contains("DSD", ignoreCase = true) -> Pair(Color(0xFFE65100), Color(0xFF261204)) // Warm Amber Gold
+            grade.contains("HI-RES", ignoreCase = true) || grade.contains("STUDIO", ignoreCase = true) || grade.contains("24-BIT", ignoreCase = true) -> Pair(Color(0xFF0D47A1), Color(0xFF061426)) // Deep Sapphire Cobalt
+            grade.contains("MQA", ignoreCase = true) -> Pair(Color(0xFF004D40), Color(0xFF021E19)) // Emerald Cyan
+            grade.contains("CD", ignoreCase = true) -> Pair(Color(0xFF1A237E), Color(0xFF0A0F2E)) // Royal Cobalt Blue
+            else -> Pair(Color(0xFF2C2416), Color(0xFF141414)) // Warm Velvet Obsidian
+        }
+    }
 
     // Breathing Ambient Glow Infinite Transition
     val infiniteTransition = rememberInfiniteTransition(label = "ambient_breathing")
@@ -124,8 +139,8 @@ fun NowPlayingPage(
     val colorGold = Color(0xFFFFB300)
     val colorGrey400 = Color(0xFFBDBDBD)
 
-    // Dynamic Artwork Ambient Glow Palette Extraction
-    val (ambientColor, secondaryAmbientColor) = remember(bitmap) {
+    // Dynamic Artwork Ambient Glow Palette Extraction with Grade Fallback
+    val (ambientColor, secondaryAmbientColor) = remember(bitmap, state.specsVerdict.value) {
         if (bitmap != null) {
             try {
                 val palette = Palette.from(bitmap).generate()
@@ -152,10 +167,10 @@ fun NowPlayingPage(
                 }
                 Pair(Color(primary), Color(secondary))
             } catch (e: Exception) {
-                Pair(Color(0xFF2C2416), Color(0xFF141414))
+                fallbackGradeColors(state.specsVerdict.value)
             }
         } else {
-            Pair(Color(0xFF2C2416), Color(0xFF141414))
+            fallbackGradeColors(state.specsVerdict.value)
         }
     }
 
@@ -512,6 +527,7 @@ fun NowPlayingPage(
                                         letterSpacing = 0.5.sp
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(6.dp))
                                 if (hasBitrate) {
                                     Text(
                                         text = if (hasResolution) " • $bitrateStr" else bitrateStr,
@@ -655,17 +671,17 @@ fun NowPlayingPage(
                     .padding(horizontal = 4.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val curSec = (progress / 1000).toInt()
-                val totSec = (duration / 1000).toInt()
+                val curSec = progress / 1000.0
+                val totSec = duration / 1000.0
                 Text(
-                    text = String.format("%02d:%02d", curSec / 60, curSec % 60),
+                    text = if (curSec > 0) StringUtils.formatDuration(curSec, false) else "00:00",
                     color = colorGrey400,
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = FontFamily.Monospace
                 )
                 Text(
-                    text = String.format("%02d:%02d", totSec / 60, totSec % 60),
+                    text = if (totSec > 0) StringUtils.formatDuration(totSec, false) else "00:00",
                     color = colorGrey400,
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Medium,
@@ -673,10 +689,95 @@ fun NowPlayingPage(
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
+            // Luminous Volume Slider Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onVolumeDown()
+                    },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_volume_down_24),
+                        contentDescription = "Volume Down",
+                        tint = colorGrey400,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                @OptIn(ExperimentalMaterial3Api::class)
+                Slider(
+                    value = state.volume.value.coerceIn(0f, 1f),
+                    onValueChange = { vol ->
+                        state.volume.value = vol
+                        onVolumeChanged(vol)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 4.dp),
+                    thumb = {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(Color(0x33FFFFFF), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .background(colorGold, CircleShape)
+                            )
+                        }
+                    },
+                    track = { sliderState ->
+                        SliderDefaults.Track(
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = colorGold,
+                                inactiveTrackColor = Color(0x26FFFFFF)
+                            ),
+                            sliderState = sliderState,
+                            modifier = Modifier.height(2.dp).clip(CircleShape)
+                        )
+                    }
+                )
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onVolumeUp()
+                    },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_volume_up_24),
+                        contentDescription = "Volume Up",
+                        tint = colorGrey400,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             // Transport Controls
-            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+            val isPlaying = state.playbackState.value.currentState == PlaybackState.State.PLAYING
+            val playPauseScale by animateFloatAsState(
+                targetValue = if (isPlaying) 1f else 0.94f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                ),
+                label = "playPauseScale"
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -689,36 +790,40 @@ fun NowPlayingPage(
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onShuffleToggle()
                     },
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_baseline_shuffle_24),
                         contentDescription = "Shuffle",
                         tint = if (state.isShuffle.value) colorGold else colorGrey400,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(19.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onPrevious()
                     },
-                    modifier = Modifier.size(46.dp)
+                    modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_previous_rounded),
                         contentDescription = "Previous",
                         tint = Color.White,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                // Play / Pause Button
+                // Play / Pause Button with tactile spring scale
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
+                        .size(58.dp)
+                        .graphicsLayer {
+                            scaleX = playPauseScale
+                            scaleY = playPauseScale
+                        }
                         .clip(CircleShape)
                         .background(Color.White)
                         .clickable {
@@ -727,45 +832,162 @@ fun NowPlayingPage(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    val isPlaying = state.playbackState.value.currentState == PlaybackState.State.PLAYING
                     Icon(
                         painterResource(id = if (isPlaying) R.drawable.ic_pause_rounded else R.drawable.ic_play_rounded),
                         contentDescription = "Play/Pause",
                         tint = Color.Black,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(30.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onNext()
                     },
-                    modifier = Modifier.size(46.dp)
+                    modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_next_rounded),
                         contentDescription = "Next",
                         tint = Color.White,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onRepeatToggle()
                     },
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(38.dp)
                 ) {
                     val repeatIcon = if (state.repeatMode.value == 2) R.drawable.ic_baseline_repeat_one_24 else R.drawable.ic_baseline_repeat_24
                     Icon(
                         painterResource(id = repeatIcon),
                         contentDescription = "Repeat",
                         tint = if (state.repeatMode.value > 0) colorGold else colorGrey400,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        showSleepTimerDialog = true
+                    },
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.ic_baseline_timer_24),
+                        contentDescription = "Sleep Timer",
+                        tint = if (state.isSleepTimerActive.value) colorGold else colorGrey400,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showSleepTimerDialog) {
+        SleepTimerDialog(
+            activeText = state.sleepTimerText.value,
+            onDismissRequest = { showSleepTimerDialog = false },
+            onSelectOption = { minutes, endOfTrack ->
+                onSleepTimerSelected(minutes, endOfTrack)
+            }
+        )
+    }
+}
+
+@Composable
+fun SleepTimerDialog(
+    activeText: String,
+    onDismissRequest: () -> Unit,
+    onSelectOption: (minutes: Long, endOfTrack: Boolean) -> Unit
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isVisible = true }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.90f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "timer_dialog_scale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(180),
+        label = "timer_dialog_alpha"
+    )
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    this.alpha = alpha
+                }
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF1C1C1E))
+                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                .padding(20.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Sleep Timer",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                val options = listOf(
+                    "15 Minutes" to Pair(15L, false),
+                    "30 Minutes" to Pair(30L, false),
+                    "45 Minutes" to Pair(45L, false),
+                    "60 Minutes" to Pair(60L, false),
+                    "End of Current Track" to Pair(0L, true),
+                    "Turn Off Timer" to Pair(0L, false)
+                )
+                options.forEach { (label, option) ->
+                    val (minutes, endOfTrack) = option
+                    val isSelected = when {
+                        endOfTrack -> activeText.contains("Track", ignoreCase = true)
+                        minutes > 0 -> activeText == "${minutes}m"
+                        else -> activeText.isEmpty()
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) Color(0x26FFD700) else Color.Transparent)
+                            .clickable {
+                                onSelectOption(minutes, endOfTrack)
+                                onDismissRequest()
+                            }
+                            .padding(vertical = 12.dp, horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isSelected) Color(0xFFFFD700) else Color(0xFFE0E0E0),
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                        if (isSelected) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_baseline_timer_24),
+                                contentDescription = null,
+                                tint = Color(0xFFFFD700),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -443,6 +443,8 @@ public class TagRepository {
                     list = dbHelper.findSimilarSongs(includeArtist, firstResult, maxResults);
                 } else if (Constants.TITLE_NO_COVERART.equals(criteria.getKeyword())) {
                     list = dbHelper.findNoEmbedCoverArtSong();
+                } else if (!StringUtils.isEmpty(criteria.getKeyword())) {
+                    list = dbHelper.findInPath(criteria.getKeyword());
                 }
             } else if (criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 list = dbHelper.findByPublisher(criteria.getKeyword());
@@ -499,6 +501,9 @@ public class TagRepository {
                 // default for MY_SONGS and others
           //      list = dbHelper.findMySongs();
             }
+        if (list == null) {
+            list = Collections.emptyList();
+        }
         return list;
     }
 

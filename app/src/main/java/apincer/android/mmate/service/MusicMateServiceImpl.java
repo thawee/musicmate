@@ -44,6 +44,7 @@ import javax.inject.Inject;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
+import apincer.music.core.playback.AudioStreamCacheManager;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.QueueManager;
@@ -605,6 +606,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void playSong(Track song) {
         if (song != null) {
             queueManager.addPlayingQueue(song.getId());
+            AudioStreamCacheManager.getInstance().preloadTrack(song);
+            Track nextSong = queueManager.getNextTrack();
+            if (nextSong != null) {
+                AudioStreamCacheManager.getInstance().preloadTrack(nextSong);
+            }
         }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             runningMode = RUNNING_MODE.CONTROL;
@@ -625,6 +631,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void skipToNextInQueue() {
+        if (sleepTimerEndOfTrack) {
+            sleepTimerEndOfTrack = false;
+            sleepTimerEndTimeMs = 0;
+            pausePlayer();
+            return;
+        }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalSkipToNextOnDMRPlayer(playbackTarget);
@@ -780,7 +792,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void setRepeatMode(String mode) {
         try {
-            queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.valueOf(mode));
+            if ("0".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
+            } else if ("1".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.ALL);
+            } else if ("2".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.ONE);
+            } else {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.valueOf(mode));
+            }
         } catch (IllegalArgumentException e) {
             Log.w(TAG, "Unknown repeat mode: " + mode + ", defaulting to OFF");
             queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
@@ -835,11 +855,87 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     }
 
+    private int dmrVolume = 50;
+
+    @Override
+    public void setVolume(int volumePercent) {
+        PlaybackTarget currentTarget = getPlayer();
+        if (currentTarget != null && currentTarget.isStreaming()) {
+            dmrVolume = Math.max(0, Math.min(100, volumePercent));
+            try {
+                mediaHub.playerSetVolume(currentTarget.getTargetId(), dmrVolume);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to set DMR volume", e);
+            }
+        }
+    }
+
+    @Override
+    public void adjustVolume(int direction) {
+        PlaybackTarget currentTarget = getPlayer();
+        if (currentTarget != null && currentTarget.isStreaming()) {
+            int step = 5 * (direction > 0 ? 1 : -1);
+            setVolume(dmrVolume + step);
+        }
+    }
+
+    private java.util.Timer sleepTimer;
+    private long sleepTimerEndTimeMs = 0;
+    private boolean sleepTimerEndOfTrack = false;
+
+    @Override
+    public void setSleepTimer(long minutes, boolean endOfTrack) {
+        if (sleepTimer != null) {
+            sleepTimer.cancel();
+            sleepTimer = null;
+        }
+        sleepTimerEndOfTrack = endOfTrack;
+        if (minutes <= 0 && !endOfTrack) {
+            sleepTimerEndTimeMs = 0;
+            return;
+        }
+        if (endOfTrack) {
+            sleepTimerEndTimeMs = -1;
+            return;
+        }
+        long durationMs = minutes * 60 * 1000L;
+        sleepTimerEndTimeMs = System.currentTimeMillis() + durationMs;
+        sleepTimer = new java.util.Timer("SleepTimer", true);
+        sleepTimer.schedule(new java.util.TimerTask() {
+            @Override
+            public void run() {
+                fadeOutAndPause();
+            }
+        }, durationMs);
+    }
+
+    @Override
+    public long getSleepTimerRemainingMs() {
+        if (sleepTimerEndOfTrack) return -1;
+        if (sleepTimerEndTimeMs <= 0) return 0;
+        return Math.max(0, sleepTimerEndTimeMs - System.currentTimeMillis());
+    }
+
+    private void fadeOutAndPause() {
+        new Thread(() -> {
+            try {
+                for (int i = 4; i >= 1; i--) {
+                    adjustVolume(-1);
+                    Thread.sleep(500);
+                }
+                pausePlayer();
+                sleepTimerEndTimeMs = 0;
+                sleepTimerEndOfTrack = false;
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     private void preloadNextTrack() {
         Track next = queueManager.getNextTrack();
 
         if (next != null) {
             Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
+            AudioStreamCacheManager.getInstance().preloadTrack(next);
             try {
                 PlaybackTarget player = getActivePlayer();
                 if (player != null && isControllable(player)) {
@@ -982,6 +1078,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         queueManager.setPlaybackTrack(getNowPlayingSong());
         Track track = queueManager.getNextTrack();
         if(track != null) {
+            AudioStreamCacheManager.getInstance().preloadTrack(track);
             PlaybackTarget player = getActivePlayer();
             if (player != null && isControllable(player)) {
                 mediaHub.setNextTrack(track);

@@ -32,9 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -73,14 +75,15 @@ fun MainScaffold(
         drawerState = drawerState,
         scrimColor = Color.Black.copy(alpha = 0.6f),
         drawerContent = {
-            // ── Dark-themed drawer sheet ────────────────────────────────────
+            val haptic = LocalHapticFeedback.current
+            // ── Dark-themed audiophile drawer sheet ────────────────────────────
             Box(
                 modifier = Modifier
-                    .width(300.dp)
+                    .width(310.dp)
                     .fillMaxHeight()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFF1A1A2E), Color(0xFF121212))
+                            colors = listOf(Color(0xFF1E1C2B), Color(0xFF131317), Color(0xFF0E0E12))
                         )
                     )
             ) {
@@ -88,152 +91,273 @@ fun MainScaffold(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
+                        .padding(bottom = 36.dp)
                 ) {
-                    // Header branding
-                    Box(
+                    // ── 1. HEADER CAPSULE ─────────────────────────────────────
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 48.dp, bottom = 20.dp, start = 24.dp, end = 24.dp)
+                            .padding(top = 44.dp, bottom = 14.dp, start = 18.dp, end = 18.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                                 contentDescription = null,
                                 tint = drawerGold,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(30.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "MusicMate",
-                                color = drawerWhite,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.5).sp
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "MusicMate",
+                                    color = drawerWhite,
+                                    fontSize = 19.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.4).sp
+                                )
+                                Text(
+                                    text = "v3.19.2 • Hi-Res Edition",
+                                    color = drawerGold.copy(alpha = 0.85f),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        if (state.headerStatsText.value.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Surface(
+                                color = Color(0x14FFFFFF),
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(0.75.dp, Color(0x1FFFFFFF)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.rounded_equalizer_24),
+                                        contentDescription = null,
+                                        tint = drawerGold,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = state.headerStatsText.value,
+                                        color = Color(0xFFDDDDDD),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    HorizontalDivider(color = drawerDivider, thickness = 0.5.dp)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    // ── Library section ──────────────────────────────────────
-                    DrawerSectionHeader("Library")
-                    DrawerItem(
-                        text = "All Songs",
-                        iconResId = R.drawable.rounded_library_music_24,
-                        isSelected = (activeItemId == R.id.menu_library_all_songs)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_library_all_songs)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Artists",
-                        iconResId = R.drawable.rounded_for_you_24,
-                        isSelected = (activeItemId == R.id.menu_tag_artist)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_tag_artist)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Genres",
-                        iconResId = R.drawable.rounded_style_24,
-                        isSelected = (activeItemId == R.id.menu_tag_genre)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_tag_genre)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Playlists",
-                        iconResId = R.drawable.rounded_order_play_24,
-                        isSelected = (activeItemId == R.id.menu_collection)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_collection)
-                        coroutineScope.launch { drawerState.close() }
-                    }
+                    // ── 2. CORE LIBRARY (2×2 Quick-Action Grid) ───────────────
+                    DrawerSectionHeader("Core Library")
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    DrawerDivider()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            DrawerTile(
+                                text = "All Songs",
+                                iconResId = R.drawable.rounded_library_music_24,
+                                isSelected = (activeItemId == R.id.menu_library_all_songs),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_library_all_songs)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            DrawerTile(
+                                text = "Artists",
+                                iconResId = R.drawable.rounded_for_you_24,
+                                isSelected = (activeItemId == R.id.menu_tag_artist),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_tag_artist)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                        }
 
-                    // ── Discover section ─────────────────────────────────────
-                    DrawerSectionHeader("Discover")
-                    DrawerItem(
-                        text = "Incoming Tracks",
-                        iconResId = R.drawable.rounded_add_diamond_24,
-                        isSelected = (activeItemId == R.id.menu_library_recently_added)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_library_recently_added)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Discover Similar",
-                        iconResId = R.drawable.rounded_auto_awesome_motion_24,
-                        isSelected = (activeItemId == R.id.menu_library_similar_songs)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_library_similar_songs)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Sound Grade",
-                        iconResId = R.drawable.rounded_equalizer_24,
-                        isSelected = (activeItemId == R.id.menu_sound_grade)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_sound_grade)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-
-                    DrawerDivider()
-
-                    // ── Configuration section ────────────────────────────────
-                    DrawerSectionHeader("Settings & More")
-                    DrawerItem(
-                        text = "Manage Library",
-                        iconResId = R.drawable.rounded_folder_managed_24,
-                        isSelected = (activeItemId == R.id.menu_directories)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_directories)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Settings",
-                        iconResId = R.drawable.ic_round_settings_24,
-                        isSelected = (activeItemId == R.id.menu_settings)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_settings)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Storage Access",
-                        iconResId = R.drawable.round_sd_storage_24,
-                        isSelected = (activeItemId == R.id.menu_files_permission)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_files_permission)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Notifications",
-                        iconResId = R.drawable.ic_round_notification_add_24,
-                        isSelected = (activeItemId == R.id.menu_notification_access)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_notification_access)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "Diagnostics",
-                        iconResId = R.drawable.rounded_bug_report_24,
-                        isSelected = (activeItemId == R.id.menu_about_crash)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_about_crash)
-                        coroutineScope.launch { drawerState.close() }
-                    }
-                    DrawerItem(
-                        text = "About MusicMate",
-                        iconResId = R.drawable.rounded_info_24,
-                        isSelected = (activeItemId == R.id.menu_about_music_mate)
-                    ) {
-                        callbacks?.onNavigationItemClick(R.id.menu_about_music_mate)
-                        coroutineScope.launch { drawerState.close() }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            DrawerTile(
+                                text = "Genres",
+                                iconResId = R.drawable.rounded_style_24,
+                                isSelected = (activeItemId == R.id.menu_tag_genre),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_tag_genre)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            DrawerTile(
+                                text = "Playlists",
+                                iconResId = R.drawable.rounded_order_play_24,
+                                isSelected = (activeItemId == R.id.menu_collection),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_collection)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // ── 3. DISCOVERY & AUDIOPHILE TOOLS ───────────────────────
+                    DrawerSectionHeader("Discover & Audiophile")
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Surface(
+                        color = Color(0x12FFFFFF),
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(0.75.dp, Color(0x1AFFFFFF)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Column {
+                            DrawerCardItem(
+                                text = "Sound Grade",
+                                iconResId = R.drawable.rounded_equalizer_24,
+                                isSelected = (activeItemId == R.id.menu_sound_grade),
+                                badge = "Hi-Res / DR",
+                                badgeColor = drawerGold
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_sound_grade)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Discover Similar",
+                                iconResId = R.drawable.rounded_auto_awesome_motion_24,
+                                isSelected = (activeItemId == R.id.menu_library_similar_songs)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_library_similar_songs)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Incoming Tracks",
+                                iconResId = R.drawable.rounded_add_diamond_24,
+                                isSelected = (activeItemId == R.id.menu_library_recently_added),
+                                badge = "New",
+                                badgeColor = Color(0xFF00E5FF)
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_library_recently_added)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // ── 4. SYSTEM & PREFERENCES ───────────────────────────────
+                    DrawerSectionHeader("Settings & System")
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Surface(
+                        color = Color(0x12FFFFFF),
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(0.75.dp, Color(0x1AFFFFFF)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Column {
+                            DrawerCardItem(
+                                text = "Manage Library",
+                                iconResId = R.drawable.rounded_folder_managed_24,
+                                isSelected = (activeItemId == R.id.menu_directories),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_directories)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Settings",
+                                iconResId = R.drawable.ic_round_settings_24,
+                                isSelected = (activeItemId == R.id.menu_settings),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_settings)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Storage Access",
+                                iconResId = R.drawable.round_sd_storage_24,
+                                isSelected = (activeItemId == R.id.menu_files_permission),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_files_permission)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Notifications",
+                                iconResId = R.drawable.ic_round_notification_add_24,
+                                isSelected = (activeItemId == R.id.menu_notification_access),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_notification_access)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "Diagnostics",
+                                iconResId = R.drawable.rounded_bug_report_24,
+                                isSelected = (activeItemId == R.id.menu_about_crash),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_about_crash)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = "About MusicMate",
+                                iconResId = R.drawable.rounded_info_24,
+                                isSelected = (activeItemId == R.id.menu_about_music_mate),
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                callbacks?.onNavigationItemClick(R.id.menu_about_music_mate)
+                                coroutineScope.launch { drawerState.close() }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -349,9 +473,11 @@ fun MainScaffold(
             onVolumeDown = { callbacks?.onAudioHubVolumeDown() },
             onVolumeUp = { callbacks?.onAudioHubVolumeUp() },
             onVolumeChanged = { vol -> callbacks?.onAudioHubVolumeChanged(vol) },
+            onSleepTimerSelected = { minutes, endOfTrack -> callbacks?.onAudioHubSleepTimerSelected(minutes, endOfTrack) },
             onTrackClicked = { callbacks?.onAudioHubTrackClick() },
             onQueueTrackClicked = { track -> callbacks?.onAudioHubQueueTrackClick(track) },
             onQueueTrackRemoved = { track, index -> callbacks?.onAudioHubQueueTrackRemove(track, index) },
+            onQueueTrackMoved = { from, to -> callbacks?.onAudioHubQueueTrackMoved(from, to) },
             onQueueClear = { callbacks?.onAudioHubQueueClear() },
             onQueueJumpToPlaying = { callbacks?.onAudioHubQueueJumpToPlaying() },
             onEngineChanged = { engine -> callbacks?.onEngineChanged(engine) },
@@ -720,49 +846,76 @@ private fun DrawerSectionHeader(title: String) {
         color = drawerGold,
         fontSize = 10.sp,
         fontWeight = FontWeight.Bold,
-        letterSpacing = 1.5.sp,
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 4.dp)
+        letterSpacing = 1.4.sp,
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 2.dp)
     )
 }
 
 @Composable
-private fun DrawerDivider() {
-    Spacer(modifier = Modifier.height(8.dp))
-    HorizontalDivider(
-        color = drawerDivider,
-        thickness = 0.5.dp,
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-}
-
-@Composable
-private fun DrawerItem(
+private fun DrawerTile(
     text: String,
     iconResId: Int,
     isSelected: Boolean = false,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val bgColor = if (isSelected) Color(0x2BFFD700) else Color(0x12FFFFFF)
+    val borderColor = if (isSelected) drawerGold.copy(alpha = 0.65f) else Color(0x1AFFFFFF)
+    val contentColor = if (isSelected) drawerGold else drawerWhite
+    val iconColor = if (isSelected) drawerGold else Color(0xFFBDBDBD)
+
+    Surface(
+        color = bgColor,
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(0.75.dp, borderColor),
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = iconResId),
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                color = contentColor,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun DrawerCardItem(
+    text: String,
+    iconResId: Int,
+    isSelected: Boolean = false,
+    badge: String? = null,
+    badgeColor: Color = Color.Unspecified,
+    showChevron: Boolean = false,
+    onClick: () -> Unit
+) {
     val bgColor = if (isSelected) Color(0x22FFD700) else Color.Transparent
     val contentColor = if (isSelected) drawerGold else drawerWhite
-    val iconColor = if (isSelected) drawerGold else drawerGray
-    val borderModifier = if (isSelected) {
-        Modifier.border(0.75.dp, drawerGold.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
-    } else Modifier
+    val iconColor = if (isSelected) drawerGold else Color(0xFFBDBDBD)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 2.dp)
-            .clip(RoundedCornerShape(12.dp))
             .background(bgColor)
-            .then(borderModifier)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
+            .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -770,17 +923,42 @@ private fun DrawerItem(
             painter = painterResource(id = iconResId),
             contentDescription = null,
             tint = iconColor,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(19.dp)
         )
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = text,
             color = contentColor,
-            fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            fontSize = 13.5.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f)
         )
-        if (isSelected) {
-            Spacer(modifier = Modifier.weight(1f))
+
+        if (badge != null) {
+            Surface(
+                color = badgeColor.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(6.dp),
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, badgeColor.copy(alpha = 0.4f)),
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text(
+                    text = badge,
+                    color = badgeColor,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+
+        if (showChevron) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = Color(0x4DFFFFFF),
+                modifier = Modifier.size(16.dp)
+            )
+        } else if (isSelected) {
             Box(
                 modifier = Modifier
                     .size(5.dp)

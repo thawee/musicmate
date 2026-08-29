@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,11 +37,34 @@ fun MusicFoldersDialog(
     var isDeepAudit by remember { mutableStateOf(false) }
     val dirs = remember { mutableStateListOf(*initialDirectories.toTypedArray()) }
 
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isVisible = true }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.90f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "folders_dialog_scale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(180),
+        label = "folders_dialog_alpha"
+    )
+
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xF2161618),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
-        modifier = Modifier.padding(12.dp)
+        modifier = Modifier
+            .padding(12.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            }
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
