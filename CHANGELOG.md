@@ -5,47 +5,58 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.19.2] - 2026-08-29
+## [3.19.2] - 2026-08-30
 
 ### Added
-- **Kinetic Quality Donut Graph & Interactive Lossless HUD (`QualityPieChart.kt`, `AboutScreen.kt`)**:
-  - **Kinetic Sweep-In Animation:** Animated donut rendering sweeping dynamically from $0^\circ \rightarrow 360^\circ$ over 900ms (`FastOutSlowInEasing`).
-  - **Center Lossless HUD Readout:** Interactive center displaying total track count, dynamic active format labels, and real-time `% LOSSLESS` ratio pill badge.
-  - **Tactile Slice Highlight & Physics:** Interactive touch-to-select on donut arcs with slice thickness expansion (+25%) and dimming for unselected slices.
-  - **Rich Frosted Pill Legend Cards:** Replaced plain text dots with interactive frosted pill cards displaying color indicator, format name, track count, and percentage.
-- **About Screen Brand & Promotional Showcase Upgrades (`AboutScreen.kt`)**:
-  - **New Brand Identity Tagline:** Updated official subtitle and sharing templates to: *"Bit-Perfect Streaming, Home Control & Crafted for the Music You Love"*.
-  - **Share Library Snapshot:** Added a social sharing button generating an audiophile collection summary (*Track count, Hi-Res %, DSD %, CD %*) via Android share sheet for forums and communities.
-  - **Core Capabilities Showcase:** Added a 3-card architectural highlight section (*Lossless UPnP/DLNA Server, Studio Tag Master & Artwork, Bit-Perfect Acoustic Engine*).
-  - **Audiophile Philosophy Card:** Added the official manifesto regarding bit-perfect fidelity and zero DSP coloration.
-  - **Connect & Community:** Added direct Google Play rating and GitHub project repository action links.
-- **Fluid Navigation & Modal Animations (`PlayerPickerDialog.kt`, `NowPlayingPage.kt`, `MusicFoldersDialog.kt`, `AudioHubSheet.kt`)**:
-  - **Tactile Spring-Scale Modals:** Wrapped dialog surfaces (`PlayerPickerDialog`, `SleepTimerDialog`, `MusicFoldersDialog`) in responsive spring-scaling (`0.90f` $\rightarrow$ `1.0f`, `DampingRatioMediumBouncy`) and smooth alpha fade-in.
-  - **3D Depth Carousel in Audio Hub:** Implemented continuous `graphicsLayer` scale (`0.94f..1.0f`) and alpha (`0.75f..1.0f`) interpolation on `HorizontalPager` between *Playback*, *Queue*, and *Server* tabs for natural physical depth when swiping.
-- **(M) Brand Drawer Menu Redesign (`MainScaffold.kt`)**:
-  - Replaced the single long vertical list with an **Audiophile Command Capsule**:
-    - **Header Pill:** Version badge (`v3.19.2 • Hi-Res Edition`) and live library stats capsule (`headerStatsText`).
-    - **2×2 Core Library Quick Grid:** Compact frosted glass tiles (All Songs, Artists, Genres, Playlists) with gold active borders, reducing thumb reach height by 50%.
-    - **Grouped Frosted Surface Cards:** Encapsulated Discover & Audiophile options (Sound Grade `[ DR & Hi-Res ]`, Discover Similar, Incoming `[ New ]`) and System & Settings options with disclosure chevrons.
-    - **Tactile Haptics:** Micro-vibration feedback on menu tile and row interactions.
-- **Offline Audio Pre-Caching & DLNA Stream Buffer Engine (`AudioStreamCacheManager.java`, `MusicMateServiceImpl.java`, `PartialFileProducer.java`)**:
-  - Implemented an asynchronous in-memory LRU audio head cache (16MB capacity, 4MB per track) to pre-buffer upcoming queue tracks in background threads.
-  - Accelerated initial byte streaming (`Range: bytes=0-...`) directly from RAM in `PartialFileProducer`, completely bypassing disk I/O and SAF latency during song start and gapless transitions on remote DLNA/UPnP renderers.
-- **Sleep Timer with Gradual Fade-Out (`PlaybackService.java`, `MusicMateServiceImpl.java`, `NowPlayingPage.kt`, `MainActivity.java`)**:
-  - Implemented `setSleepTimer(minutes, endOfTrack)` and `getSleepTimerRemainingMs()` in `PlaybackService` and `MusicMateServiceImpl`.
-  - Added a dedicated Sleep Timer transport button and modal selector (15m, 30m, 45m, 60m, End of Track, Off) in `NowPlayingPage.kt`.
-  - Implemented automatic 5-step volume fade-down before pausing.
-- **Spring Micro-Interactions & Sensory Delight (`NowPlayingPage.kt`)**:
-  - Added tactile spring scale animations on the central Play/Pause button and transport controls.
-  - Added dynamic sound grade ambient aura fallbacks (Amber Gold for DSD, Deep Sapphire for 24-Bit/Hi-Res, Emerald Cyan for MQA, Royal Cobalt for CD).
-- **Functional Drag-to-Reorder in Upcoming Queue (`QueuePage.kt`, `QueueState.kt`, `MainActivity.java`)**:
-  - Implemented vertical drag gestures on queue drag handles with tactile haptic feedback per row step.
-  - Linked real-time queue reordering directly to `QueueManager.moveTrack(fromIndex, toIndex)` with persistent queue state saving.
-- **Integrated Luminous Volume Slider (`NowPlayingPage.kt`, `MainActivity.java`)**:
-  - Embedded a sleek, glowing gold-accented volume slider with volume down/up buttons directly into the bottom transport controls of `NowPlayingPage`.
-  - Added bidirectional volume synchronization with `AudioManager` and remote DLNA DMR streaming volume.
+- **Centralized Design Tokens Architecture (`MusicMateDesignTokens.kt`, `MusicMateTheme.kt`)**:
+  - Centralized design tokens across Surfaces (Obsidian `#121212`, Charcoal `#1E1E1E`, Elevated `#2C2C2C`, Glassmorphic Cards `#D9101010`), Brand Accents (Gold `#FFD700`, Warm Amber `#FFB300`, Acoustic Teal `#80CBC4`), Audio Provenance (DSD Cyan, Hi-Res Gold, MQA Magenta, CD Sky Blue, Lossy Slate), Dynamic Range Temperature Spectrum, and standard geometry tokens.
+- **Adaptive Chromatic Player & Tactile Haptics (`NowPlayingPage.kt`, `AudioBadges.kt`)**:
+  - Enhanced seekbar with dynamic active track ambient glow derived from the current album art palette with a dual-ring glowing halo thumb (colored halo + high-contrast white core).
+  - Added tactile micro-haptic feedback (`LocalHapticFeedback`) to Quick-Fix chips, seekbar scrubbing, and volume adjustment.
+- **Brand Identity & Network Asset Harmonization (`iconpng64.png`, `iconpng128.png`, `ic_notification_default.png`, `mipmap-*/ic_launcher.png`)**:
+  - **DMS Server DLNA/UPnP Icons:** Generated high-resolution 64×64 and 128×128 PNGs featuring the official Golden "M" emblem on dark radial obsidian, replacing legacy orange flame assets across all network control points (WiiM, BubbleUPnP, mconnect, Foobar2000).
+  - **Material 3 Status Bar Notification:** Replaced dated raster glyph with a crisp, pure white "M" brand silhouette on transparent background (`ic_notification_default.png`).
+  - **Legacy Launcher Fallbacks:** Re-rendered all mipmap densities (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) to guarantee 100% brand consistency on legacy launchers and dialogs.
+- **Expanded "More..." Power Menu & Quick-Fix Actions (`tag_more_actions_menu.xml`, `AudioBadges.kt`, `DialogInterop.kt`)**:
+  - Added grouped Material 3 items across Playback (`Play Track Now`, `Add to Queue`), Tag Curation (`Auto-Tag MusicBrainz`, `Search Online`, `Repair Thai Text Encoding`, `Clean Tag Noise`, `Format Title Case`), Audio Auditing (`Lossless Spectrum Verifier`), and File Utilities (`Open in File Manager`, `Search on Web`, `Reload Raw Tags`).
+  - Added interactive Quick-Fix chips on `TagPreviewHeader` for one-tap metadata repairs.
+- **Embedded Artwork & Metadata Health Inspector (`TagsTechnicalPage.kt`)**:
+  - Added real-time artwork dimension readout (e.g. `1400x1400 px`), MIME type, file size in KB, and visual UHD / HD / Low-Res rating badge.
+  - Added an 8-point quality standard assessment (Title, Artist, Album, Year, Genre, Track#, Artwork, Lossless) with percentage health score.
+- **Direct Cover Art Interaction (`TagsActivity.java`)**:
+  - Added tap-on-artwork action sheet (Online Search, Gallery Photo Picker via `ActivityResultLauncher`, Extract to Folder, Remove Art).
+
+### Changed
+- **Streamlined 1-Row Bottom Command Bar (`activity_tags.xml`)**:
+  - Replaced two stacked button rows with a single 1-row Material 3 dock (`Delete` on left, center mode actions with high-contrast primary Gold edit pill, and `More...` on right), reducing bottom navigation height from 120dp to 56dp.
+- **Unified Obsidian Preview Header (`TagPreviewHeader`, `AudioBadges.kt`)**:
+  - Replaced fragmented XML TextViews with a pure Compose obsidian header combining `QualityBadge`, `ResolutionBadge`, `DynamicRangeMeter`, `RatingBadge`, interactive Tag Pills (Origin, Genre, Mood, Style), and tabular monospace telemetry strip (`FLAC • 24/96 • 1411 kbps • Stereo • 04:23 • 45.2 MB`).
+- **Asynchronous Technical Diagnostics Extraction (`TagsTechnicalPage.kt`)**:
+  - Offloaded synchronous `TagReader.readFullTag`, `FFMPegReader.extractTagFromFile`, and reflection fields to `Dispatchers.IO` with `produceState`, eliminating UI frame drops during tab transitions.
+- **Song Info Editor Reactive State Synchronization (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `TagsTechnicalFragment.kt`)**:
+  - Removed redundant `PREVIEW -> Unknown Title` box from `TagsEditorPage.kt` and wired reactive `StateFlow` collection with `LaunchedEffect` to populate all form fields immediately upon background database load.
 
 ### Fixed
+- **Lossless Spectrogram Resampling & Ultrasonic Nyquist Preservation (`SpectrogramGenerator.java`)**:
+  - Removed hardcoded `-ar 48000` downsampler that artificially truncated genuine 96kHz and 192kHz Studio Masters at 24kHz, preserving full ultrasonic frequencies up to 48kHz.
+- **Spectrogram Cache Collision & Concurrency Race Condition (`SpectrogramGenerator.java`)**:
+  - Replaced static `/spectrogram.jpg` path with dynamic per-track timestamped hash caching (`spectrogram_<hash>.jpg`) and automated stale file eviction.
+- **Case-Insensitive DSD/DSF Query Integration (`TrackDao.java`)**:
+  - Updated Room SQL queries to `LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd')`, ensuring `.dsf` tracks (90%+ of DSD libraries) and mixed-case tags are correctly loaded in DSD smart playlists and duration/track counts.
+- **Room DAO Format Coverage & Case Normalization (`TrackDao.java`)**:
+  - Standardized Hi-Res (`alac`, `flac`, `aiff`, `aif`, `wave`, `wav`) and Compressed (`aac`, `mpeg`, `mp3`, `m4a`, `ogg`, `opus`, `wma`) queries to prevent undercounting.
+- **Unsaved Edits Back-Press Discard Dialog Sync (`TagsActivity.java`, `TagsEditorFragment.kt`)**:
+  - Connected Compose editor modification state with Activity `handleOnBackPressed()` to prevent accidental loss of user edits without confirmation.
+- **Redundant Duplicate Genre Display (`fragment_editor_preview.xml`, `TagsActivity.java`)**:
+  - Removed legacy XML `panel_genre` so `TagPreviewHeader`'s interactive Compose Genre pill is the single source of truth.
+- **Soft-Keyboard IME Insets & Scrolling Bottom Occlusion (`TagsEditorPage.kt`)**:
+  - Added `Modifier.imePadding()` and a bottom content spacer (`Spacer(modifier = Modifier.height(72.dp))`) to prevent form inputs from being hidden under the keyboard.
+- **Batch Multi-Value Placeholder Usability (`TagsEditorPage.kt`)**:
+  - Automatically clears `" - "` placeholder on field focus and edit to prevent accidental overwriting with literal placeholder text.
+- **Streaming Engine Zero Descriptor Leaks (`PartialFileProducer.java`)**:
+  - Enforced immediate closure of `RandomAccessFile` and `FileChannel` upon end-of-stream and EOF, preventing open file descriptor leaks over multi-hour playback sessions.
+- **Rapid Skip Cache Eviction (`AudioStreamCacheManager.java`)**:
+  - Added atomic task tracking in `AudioStreamCacheManager` to cancel obsolete background file reads when users quickly skip tracks in a queue.
 - **Queue Duplicate Key Crash Guard (`QueuePage.kt`)**:
   - Replaced bare `uniqueKey` in `LazyColumn` with position-indexed composite key (`${index}_${track.uniqueKey ?: track.id}`), preventing app crashes when identical songs are enqueued multiple times.
 - **Duration Formatting Standardization for Long Audio (`NowPlayingPage.kt`, `QueuePage.kt`)**:
@@ -53,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hardware Volume Routing to DLNA Renderers (`PlaybackService.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
   - Implemented `setVolume(volumePercent)` and `adjustVolume(direction)` in `PlaybackService` and `MusicMateServiceImpl`.
   - Routed Audio Hub volume gestures and sliders to UPnP `mediaHub.playerSetVolume` when streaming to remote DMR devices, with graceful fallback to local Android `AudioManager`.
+- **DLNA Position Polling Runaway Loop & Logcat Spam Fix (`MediaServerHubImpl.java`)**:
+  - Gated position polling strictly to active `CAST` state and terminated runaway 1-second loops when remote renderers stop responding, disconnect, or return SOAP 701 errors (`Current state of service prevents invoking that action`).
+  - Added failure counter with exponential backoff (2.5s) and automatic termination after 3 consecutive failures, transitioning server status to `RUNNING` and eliminating hundreds of failed SOAP queries per minute.
 - **Defensive Non-Null Collections in Repository (`TagRepository.java`)**:
   - Guaranteed non-null empty list returns in `findByCriteria` when querying paths.
 

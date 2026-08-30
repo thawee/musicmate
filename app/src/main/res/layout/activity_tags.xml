@@ -138,7 +138,7 @@
         android:paddingBottom="160dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <!-- 🔹 Floating Action Capsule (True Bottom Anchor) -->
+    <!-- 🔹 Floating Action Capsule (Streamlined 1-Row Bottom Command Bar) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
@@ -151,170 +151,195 @@
         app:cardBackgroundColor="@android:color/transparent"
         app:strokeWidth="0dp">
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/bottom_navigation_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="12dp"
-            android:paddingHorizontal="12dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="8dp"
+            android:paddingHorizontal="10dp"
             android:paddingBottom="8dp"
             android:background="@drawable/shape_bottom_frosted_panel">
 
-            <LinearLayout
-                android:id="@+id/main_menu_panel"
-                android:layout_width="match_parent"
+            <!-- Left: Delete Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_delete"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
+                android:minWidth="0dp"
+                android:paddingHorizontal="10dp"
+                android:text="@string/button_delete"
+                android:textColor="@color/colorError" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_delete"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_delete"
-                    android:textColor="@color/colorError" />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="@color/colorDividerSubtle" />
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="12dp"
-                    android:background="@color/colorDivider" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_organize"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_organize"
-                    android:textColor="@color/colorPrimary"
-                    app:cornerRadius="20dp" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="12dp"
-                    android:background="@color/colorDivider" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_more"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_more"
-                    android:textColor="?attr/colorOnSurface" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/preview_action_group"
-                android:layout_width="match_parent"
+            <!-- Center Mode Actions Container -->
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/main_menu_panel"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/action_editor"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_edit_song_info"
-                    android:textColor="@color/colorPrimary"
-                    android:contentDescription="Open editor"
-                    app:cornerRadius="20dp"/>
-            </LinearLayout>
+                android:layout_weight="1">
 
-            <LinearLayout
-                android:id="@+id/editor_action_group"
-                android:layout_width="match_parent"
+                <!-- 1. Preview Mode Center Actions -->
+                <LinearLayout
+                    android:id="@+id/preview_action_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_organize"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:text="@string/button_organize"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/action_editor"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/button_edit_song_info"
+                        android:textColor="@color/colorPrimary"
+                        android:contentDescription="Open editor"
+                        app:cornerRadius="20dp"/>
+                </LinearLayout>
+
+                <!-- 2. Editor Mode Center Actions -->
+                <LinearLayout
+                    android:id="@+id/editor_action_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/action_reformat"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:contentDescription="Format tags"
+                        app:icon="@drawable/round_auto_awesome_24" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@color/colorDividerSubtle" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/action_read_tag"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:contentDescription="Read tags from file"
+                        app:icon="@drawable/ic_file_rename_outline_24" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@color/colorDividerSubtle" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/action_save"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="12dp"
+                        android:contentDescription="Save changes"
+                        android:textColor="@color/colorPrimary"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_round_save_24"
+                        app:iconTint="@color/colorPrimary" />
+                </LinearLayout>
+
+                <!-- 3. Tech Info Mode Center Actions -->
+                <LinearLayout
+                    android:id="@+id/tech_action_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_reload_tag"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:contentDescription="Reload from file"
+                        app:icon="@drawable/round_restore_page_24" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@color/colorDividerSubtle" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_extract_coverart"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:contentDescription="Extract cover art"
+                        app:icon="@drawable/ic_round_image_24" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@color/colorDividerSubtle" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_remove_coverart"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="8dp"
+                        android:contentDescription="Remove cover art"
+                        app:icon="@drawable/ic_round_hide_image_24" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="@color/colorDividerSubtle" />
+
+            <!-- Right: More Actions Menu Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_more"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/main_menu_panel"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/action_reformat"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Format tags"
-                    app:icon="@drawable/round_auto_awesome_24" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="8dp"
-                    android:background="@color/colorDividerSubtle" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/action_read_tag"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Read tags from file"
-                    app:icon="@drawable/ic_file_rename_outline_24" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="8dp"
-                    android:background="@color/colorDividerSubtle" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/action_save"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Save changes"
-                    app:icon="@drawable/ic_round_save_24" />
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/tech_action_group"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/main_menu_panel"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_reload_tag"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Reload from file"
-                    app:icon="@drawable/round_restore_page_24" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="8dp"
-                    android:background="@color/colorDividerSubtle" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_extract_coverart"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Extract cover art"
-                    app:icon="@drawable/ic_round_image_24" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_marginHorizontal="8dp"
-                    android:background="@color/colorDividerSubtle" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_remove_coverart"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Remove cover art"
-                    app:icon="@drawable/ic_round_hide_image_24" />
-            </LinearLayout>
-        </RelativeLayout>
+                android:minWidth="0dp"
+                android:paddingHorizontal="10dp"
+                android:text="@string/button_more"
+                android:textColor="?attr/colorOnSurface" />
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

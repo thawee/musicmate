@@ -6,6 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -46,16 +50,23 @@ class TagsEditorFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 MusicMateTheme {
-                    val editItems = tagsActivity.editItems ?: emptyList()
-                    val track = if (editItems.isNotEmpty()) editItems[0] else null
+                    val editItems by tagsActivity.viewModel.editItemsFlow.collectAsState()
+                    val displayTag by tagsActivity.viewModel.displayTagFlow.collectAsState()
+                    val track = displayTag ?: editItems.firstOrNull()
 
-                    val albumArtistOptions = buildAlbumArtistOptions(track)
-                    val artistOptions = buildArtistOptions(track)
-                    val genreOptions = buildGenreOptions(track)
-                    val styleOptions = buildStyleOptions(track)
-                    val originOptions = buildOriginOptions(track)
-                    val moodOptions = buildMoodOptions(track)
-                    val publisherOptions = buildPublisherOptions(track)
+                    LaunchedEffect(editItems) {
+                        if (editItems.isNotEmpty() && !editorState.isAnyModified()) {
+                            populateEditorInputs(editItems)
+                        }
+                    }
+
+                    val albumArtistOptions = remember(track) { buildAlbumArtistOptions(track) }
+                    val artistOptions = remember(track) { buildArtistOptions(track) }
+                    val genreOptions = remember(track) { buildGenreOptions(track) }
+                    val styleOptions = remember(track) { buildStyleOptions(track) }
+                    val originOptions = remember(track) { buildOriginOptions(track) }
+                    val moodOptions = remember(track) { buildMoodOptions(track) }
+                    val publisherOptions = remember(track) { buildPublisherOptions(track) }
 
                     TagsEditorPage(
                         track = track,
@@ -195,31 +206,38 @@ class TagsEditorFragment : Fragment() {
     }
 
     fun initEditorInputs() {
-        val editItems = tagsActivity.editItems ?: emptyList()
-        if (editItems.isEmpty()) return
-        val tag = editItems[0]
+        val editItems = tagsActivity.getEditItems()
+        populateEditorInputs(editItems)
+    }
 
-        editorState.title = checkMultiValues(tag.title) { it.title }
-        editorState.artist = checkMultiValues(tag.artist) { it.artist }
-        editorState.album = checkMultiValues(tag.album) { it.album }
-        editorState.albumArtist = checkMultiValues(tag.albumArtist) { it.albumArtist }
-        editorState.track = checkMultiValues(tag.track) { it.track }
-        editorState.year = checkMultiValues(tag.year) { it.year }
-        editorState.genre = checkMultiValues(tag.genre) { it.genre }
-        editorState.mood = checkMultiValues(tag.mood) { it.mood }
-        editorState.style = checkMultiValues(tag.style) { it.style }
-        editorState.origin = checkMultiValues(tag.origin) { it.origin }
-        editorState.publisher = checkMultiValues(tag.publisher) { it.publisher }
+    fun populateEditorInputs(items: List<Track>) {
+        if (items.isEmpty()) return
+        val tag = items[0]
+
+        editorState.title = checkMultiValues(items, tag.title) { it.title }
+        editorState.artist = checkMultiValues(items, tag.artist) { it.artist }
+        editorState.album = checkMultiValues(items, tag.album) { it.album }
+        editorState.albumArtist = checkMultiValues(items, tag.albumArtist) { it.albumArtist }
+        editorState.track = checkMultiValues(items, tag.track) { it.track }
+        editorState.year = checkMultiValues(items, tag.year) { it.year }
+        editorState.genre = checkMultiValues(items, tag.genre) { it.genre }
+        editorState.mood = checkMultiValues(items, tag.mood) { it.mood }
+        editorState.style = checkMultiValues(items, tag.style) { it.style }
+        editorState.origin = checkMultiValues(items, tag.origin) { it.origin }
+        editorState.publisher = checkMultiValues(items, tag.publisher) { it.publisher }
         
         editorState.resetModified()
         tagsActivity.setDirty(false)
     }
 
-    private fun checkMultiValues(baseValue: String?, getter: (Track) -> String?): String {
-        val editItems = tagsActivity.editItems ?: emptyList()
-        if (editItems.size <= 1) return baseValue ?: ""
+    fun isModified(): Boolean {
+        return editorState.isAnyModified()
+    }
+
+    private fun checkMultiValues(items: List<Track>, baseValue: String?, getter: (Track) -> String?): String {
+        if (items.size <= 1) return baseValue ?: ""
         
-        for (item in editItems) {
+        for (item in items) {
             if (baseValue != getter(item)) {
                 return " - " // Multi-values marker
             }

@@ -1266,10 +1266,36 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         if (preloadTask != null && !preloadTask.isDone()) {
             preloadTask.cancel(false);
         }
-        // Allow DLNA renderer 5 seconds of clean playback stabilization before sending SetNextAVTransportURI
+
+        PlaybackTarget activePlayer = getActivePlayer();
+        boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
+                || mediaHub.isCurrentRendererHiBy();
+
+        long durationMs = track != null ? (long) (track.getAudioDuration() * 1000) : 0;
+        long preloadDelayMs;
+
+        if (isHiBy) {
+            // HiBy R3 / HiBy OS Firmware Protection:
+            // Sending SetNextAVTransportURI within initial startup causes HiBy's single-threaded
+            // decode FIFO buffer to reset or pause. Schedule preload only when the track is in its
+            // stable final phase (20s before track end), or bypass for short tracks (<=35s) and
+            // let scheduleFallback handle transition cleanly.
+            if (durationMs > 35000) {
+                preloadDelayMs = Math.max(15000, durationMs - 20000);
+            } else {
+                Log.d(TAG, "HiBy renderer: Track duration is short (" + (durationMs / 1000) + "s), skipping SetNextAVTransportURI to prevent buffer reset; fallback will handle handover.");
+                return;
+            }
+        } else {
+            // Standard renderers (WiiM, Eversolo, smart speakers): 5-second clean stabilization window
+            preloadDelayMs = 5000;
+        }
+
+        Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s (isHiBy=" + isHiBy + ")");
+
         preloadTask = scheduler.schedule(() -> {
             preloadNextTrackSafe();
-        }, 5000, TimeUnit.MILLISECONDS);
+        }, preloadDelayMs, TimeUnit.MILLISECONDS);
     }
 
     private void preloadNextTrackSafe() {
@@ -1327,6 +1353,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             nextTrackTask.cancel(true);
             nextTrackTask = null;
         }
+
+        AudioStreamCacheManager.getInstance().cancelPendingPreloads();
     }
 
     @Override

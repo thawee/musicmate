@@ -634,17 +634,23 @@ fun NowPlayingPage(
                 .fillMaxWidth()
                 .padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 8.dp)
         ) {
-            // Seekbar (Modern Thin glowing)
+            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
+            // Seekbar (Adaptive Chromatic Glowing Track & Dual Ring Thumb)
             @OptIn(ExperimentalMaterial3Api::class)
             Slider(
                 value = if (duration > 0) progress.toFloat() / duration.toFloat() else 0f,
-                onValueChange = onSeek,
+                onValueChange = { pos ->
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                    onSeek(pos)
+                },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 thumb = {
                     Box(
                         modifier = Modifier
-                            .size(14.dp)
-                            .background(Color(0x33FFFFFF), CircleShape),
+                            .size(16.dp)
+                            .background(animatedAmbientColor.copy(alpha = 0.4f), CircleShape)
+                            .border(0.75.dp, animatedAmbientColor.copy(alpha = 0.7f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
@@ -657,11 +663,11 @@ fun NowPlayingPage(
                 track = { sliderState ->
                     SliderDefaults.Track(
                         colors = SliderDefaults.colors(
-                            activeTrackColor = Color.White,
+                            activeTrackColor = animatedAmbientColor.copy(alpha = 0.95f),
                             inactiveTrackColor = Color(0x33FFFFFF)
                         ),
                         sliderState = sliderState,
-                        modifier = Modifier.height(2.dp).clip(CircleShape)
+                        modifier = Modifier.height(2.5.dp).clip(CircleShape)
                     )
                 }
             )
@@ -688,8 +694,6 @@ fun NowPlayingPage(
                     fontFamily = FontFamily.Monospace
                 )
             }
-
-            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
             // Luminous Volume Slider Row
             Row(
@@ -726,8 +730,9 @@ fun NowPlayingPage(
                     thumb = {
                         Box(
                             modifier = Modifier
-                                .size(12.dp)
-                                .background(Color(0x33FFFFFF), CircleShape),
+                                .size(13.dp)
+                                .background(colorGold.copy(alpha = 0.35f), CircleShape)
+                                .border(0.5.dp, colorGold.copy(alpha = 0.6f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Box(

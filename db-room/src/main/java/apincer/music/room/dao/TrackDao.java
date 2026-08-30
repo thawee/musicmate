@@ -55,25 +55,25 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE mood = :grouping OR style = :grouping OR origin = :grouping ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByGrouping(String grouping, long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHiRes(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHiRes48(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('aac', 'mpeg') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE LOWER(audioEncoding) IN ('aac', 'mpeg', 'mp3', 'm4a', 'ogg', 'opus', 'wma') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findHighQuality(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE qualityInd LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findMQASongs(long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('dsd', 'dff') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd') ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findDSDSongs(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE publisher LIKE '%' || :keyword || '%' ORDER BY title ASC")
     List<TrackEntity> findByPublisher(String keyword);
 
-    @Query("SELECT * FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE LOWER(audioEncoding) IN ('flac','alac','aiff','aif','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%' ORDER BY title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findCDQuality(long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE title LIKE '%' || :keyword || '%' OR artist LIKE '%' || :keyword || '%' OR album LIKE '%' || :keyword || '%' ORDER BY title ASC")
@@ -154,10 +154,10 @@ public interface TrackDao {
     List<AlbumStats> getAlbumStats();
 
     // --- Sound grade aggregations ---
-    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('dsd', 'dff')")
+    @Query("SELECT COUNT(*) FROM musictag WHERE LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd')")
     long countDSD();
 
-    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('dsd', 'dff')")
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd')")
     double durDSD();
 
     @Query("SELECT COUNT(*) FROM musictag WHERE qualityInd LIKE 'MQA%'")
@@ -166,28 +166,28 @@ public interface TrackDao {
     @Query("SELECT SUM(audioDuration) FROM musictag WHERE qualityInd LIKE 'MQA%'")
     double durMQA();
 
-    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT COUNT(*) FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
     long countHiRes();
 
-    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'")
     double durHiRes();
 
-    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT COUNT(*) FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
     long countStudio();
 
-    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'")
     double durStudio();
 
-    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT COUNT(*) FROM musictag WHERE LOWER(audioEncoding) IN ('flac','alac','aiff','aif','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
     long countCD();
 
-    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE LOWER(audioEncoding) IN ('flac','alac','aiff','aif','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'")
     double durCD();
 
-    @Query("SELECT COUNT(*) FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')")
+    @Query("SELECT COUNT(*) FROM musictag WHERE LOWER(audioEncoding) IN ('aac', 'mpeg', 'mp3', 'm4a', 'ogg', 'opus', 'wma')")
     long countCompressed();
 
-    @Query("SELECT SUM(audioDuration) FROM musictag WHERE audioEncoding IN ('aac', 'mpeg')")
+    @Query("SELECT SUM(audioDuration) FROM musictag WHERE LOWER(audioEncoding) IN ('aac', 'mpeg', 'mp3', 'm4a', 'ogg', 'opus', 'wma')")
     double durCompressed();
 
     @RawQuery

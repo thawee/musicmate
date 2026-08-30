@@ -2,7 +2,6 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static apincer.music.core.utils.StringUtils.formatAudioBitRate;
 import static apincer.music.core.utils.StringUtils.formatAudioBitsDepth;
 import static apincer.music.core.utils.StringUtils.formatAudioSampleRate;
 import static apincer.music.core.utils.StringUtils.formatStorageSize;
@@ -43,7 +42,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.PopupMenu;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -109,6 +107,17 @@ import coil3.size.Precision;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
 import coil3.target.Target;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import apincer.music.core.codec.FFMpegHelper;
+import apincer.music.core.repository.FileRepository;
+
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.regex.Pattern;
+
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -127,7 +136,6 @@ public class TagsActivity extends AppCompatActivity {
     private TextView titleView;
     private TextView artistView ;
     private TextView albumView ;
-    private TextView genreView;
     private TextView encInfo;
     private androidx.compose.ui.platform.ComposeView tagsHeaderBadges;
 
@@ -149,7 +157,6 @@ public class TagsActivity extends AppCompatActivity {
         this.isDirty = dirty;
     }
 
-
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
 
@@ -157,7 +164,19 @@ public class TagsActivity extends AppCompatActivity {
     TagRepository tagRepos;
 
     @Inject
+    FileRepository fileRepos;
+
+    @Inject
     FileOperationTask operationTask;
+
+    private final ActivityResultLauncher<String> coverArtPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    applySelectedCoverArt(uri);
+                }
+            }
+    );
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
@@ -237,6 +256,9 @@ public class TagsActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         coverArtView = findViewById(R.id.panel_cover_art);
+        if (coverArtView != null) {
+            coverArtView.setOnClickListener(v -> doShowCoverArtActions());
+        }
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
         
         // Set dynamic height for the collapsing header
@@ -351,9 +373,6 @@ public class TagsActivity extends AppCompatActivity {
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
         albumView = findViewById(R.id.panel_album);
-        genreView = findViewById(R.id.panel_genre);
-        encInfo = findViewById(R.id.panel_enc);
-        tagInfo = findViewById(R.id.panel_tag);
         tagsHeaderBadges = findViewById(R.id.tags_header_badges);
     }
     private void setupActionButtons(int mode) {
@@ -417,15 +436,11 @@ public class TagsActivity extends AppCompatActivity {
 
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_web_search) {
-                ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
+            if (itemId == R.id.action_play_now) {
+                doPlaySong();
                 return true;
-            } else if (itemId == R.id.action_spectrum) {
-                //ApplicationUtils.startAspect(this, viewModel.displayTag.getValue());
-                doShowSpectrum();
-                return true;
-            } else if (itemId == R.id.action_open_folder) {
-                ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
+            } else if (itemId == R.id.action_add_to_queue) {
+                doAddToQueue();
                 return true;
             } else if (itemId == R.id.action_auto_tag) {
                 doAutoTag();
@@ -433,6 +448,27 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_search_match_tags) {
                 doSearchAndMatchTags();
                 return true;
+            } else if (itemId == R.id.action_fix_thai_encoding) {
+                doFixThaiEncoding();
+                return true;
+            } else if (itemId == R.id.action_clean_tag_noise) {
+                doCleanTagNoise();
+                return true;
+            } else if (itemId == R.id.action_title_case) {
+                doFormatTitleCase();
+                return true;
+            } else if (itemId == R.id.action_spectrum) {
+                doShowSpectrum();
+                return true;
+            } else if (itemId == R.id.action_open_folder) {
+                ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
+                return true;
+            } else if (itemId == R.id.action_web_search) {
+                ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
+                return true;
+           /* } else if (itemId == R.id.action_reload_from_file) {
+                doResetTagFromFile();
+                return true; */
             }
             return false; // Return false if the item click is not handled
         });
@@ -801,6 +837,251 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
+    private void handleQuickFix(String actionId) {
+        if ("thai_fix".equals(actionId)) {
+            doFixThaiEncoding();
+        } else if ("auto_tag".equals(actionId)) {
+            doAutoTag();
+        } else if ("spectrum".equals(actionId)) {
+            doShowSpectrum();
+        }
+    }
+
+    private void doPlaySong() {
+        Track track = viewModel.displayTag.getValue();
+        if (track == null && !getEditItems().isEmpty()) {
+            track = getEditItems().get(0);
+        }
+        if (track == null) return;
+
+        if (playbackService != null) {
+            playbackService.playSong(track);
+            Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doAddToQueue() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            for (Track t : items) {
+                playbackService.getQueueManager().addPlayingQueue(t);
+            }
+            Toast.makeText(this, "Added " + items.size() + " track(s) to queue", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doCleanTagNoise() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        int cleaned = 0;
+        Pattern junkPattern = Pattern.compile(
+                "(?i)(\\[(flac|320k|320kbps|lossless|hq|hd|m4a|mp3|official|lyrics|video|explicit|remastered[^\\]]*)\\]|\\((official[^\\]\\)]*|lyrics?|video|audio|explicit|remastered[^\\)]*)\\)|https?://\\S+|www\\.\\S+)"
+        );
+
+        for (Track item : items) {
+            boolean changed = false;
+            if (!StringUtils.isEmpty(item.getTitle())) {
+                String original = item.getTitle();
+                String clean = junkPattern.matcher(original).replaceAll("").trim();
+                clean = clean.replaceAll("\\s{2,}", " ").replaceAll("^[-–—\\s]+|[-–—\\s]+$", "");
+                if (!clean.isEmpty() && !clean.equals(original)) {
+                    item.setTitle(clean);
+                    changed = true;
+                }
+            }
+            if (!StringUtils.isEmpty(item.getArtist())) {
+                String original = item.getArtist();
+                String clean = junkPattern.matcher(original).replaceAll("").trim();
+                clean = clean.replaceAll("\\s{2,}", " ").replaceAll("^[-–—\\s]+|[-–—\\s]+$", "");
+                if (!clean.isEmpty() && !clean.equals(original)) {
+                    item.setArtist(clean);
+                    changed = true;
+                }
+            }
+            if (changed) cleaned++;
+        }
+
+        redisplayTag();
+        isDirty = true;
+        Toast.makeText(this, "Cleaned tag noise on " + cleaned + " track(s)", Toast.LENGTH_SHORT).show();
+    }
+
+    private void doFormatTitleCase() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        int formatted = 0;
+        for (Track item : items) {
+            boolean changed = false;
+            if (!StringUtils.isEmpty(item.getTitle())) {
+                String titleCase = toTitleCase(item.getTitle());
+                if (!titleCase.equals(item.getTitle())) {
+                    item.setTitle(titleCase);
+                    changed = true;
+                }
+            }
+            if (!StringUtils.isEmpty(item.getArtist())) {
+                String titleCase = toTitleCase(item.getArtist());
+                if (!titleCase.equals(item.getArtist())) {
+                    item.setArtist(titleCase);
+                    changed = true;
+                }
+            }
+            if (!StringUtils.isEmpty(item.getAlbum())) {
+                String titleCase = toTitleCase(item.getAlbum());
+                if (!titleCase.equals(item.getAlbum())) {
+                    item.setAlbum(titleCase);
+                    changed = true;
+                }
+            }
+            if (changed) formatted++;
+        }
+
+        redisplayTag();
+        isDirty = true;
+        Toast.makeText(this, "Formatted Title Case on " + formatted + " track(s)", Toast.LENGTH_SHORT).show();
+    }
+
+    private String toTitleCase(String input) {
+        if (input == null || input.isEmpty()) return input;
+        StringBuilder sb = new StringBuilder();
+        boolean capitalizeNext = true;
+        for (char c : input.toCharArray()) {
+            if (Character.isWhitespace(c) || c == '(' || c == '[' || c == '-' || c == '/' || c == '.') {
+                capitalizeNext = true;
+                sb.append(c);
+            } else if (capitalizeNext) {
+                sb.append(Character.toTitleCase(c));
+                capitalizeNext = false;
+            } else {
+                sb.append(Character.toLowerCase(c));
+            }
+        }
+        return sb.toString();
+    }
+
+    public void doExtractEmbedCoverart() {
+        startProgressBar();
+        CompletableFuture.runAsync(() -> {
+            for (Track tag : getEditItems()) {
+                File pathFile = new File(tag.getPath()).getParentFile();
+                if (pathFile != null) {
+                    File coverArtFile = new File(pathFile, "Cover.jpg");
+                    FFMpegHelper.extractCoverArt(tag.getPath(), coverArtFile, null);
+                }
+            }
+        }).thenAccept(v -> {
+            runOnUiThread(() -> {
+                stopProgressBar();
+                Toast.makeText(this, "Cover art extracted to folder", Toast.LENGTH_SHORT).show();
+            });
+        }).exceptionally(ex -> {
+            runOnUiThread(this::stopProgressBar);
+            return null;
+        });
+    }
+
+    public void doRemoveEmbedCoverart() {
+        startProgressBar();
+        CompletableFuture.runAsync(() -> {
+            for (Track tag : getEditItems()) {
+                FFMpegHelper.removeCoverArt(getApplicationContext(), tag);
+                if (fileRepos != null) {
+                    fileRepos.scanMusicFile(new File(tag.getPath()), false);
+                }
+            }
+        }).thenAccept(v -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                stopProgressBar();
+                Toast.makeText(this, "Cover art removed", Toast.LENGTH_SHORT).show();
+            });
+        }).exceptionally(ex -> {
+            runOnUiThread(this::stopProgressBar);
+            return null;
+        });
+    }
+
+    private void doShowCoverArtActions() {
+        String[] options = new String[]{
+                getString(R.string.menu_search_cover_art),
+                getString(R.string.menu_pick_cover_art),
+                getString(R.string.menu_extract_coverart),
+                getString(R.string.menu_remove_coverart)
+        };
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.cd_album_art)
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        doSearchAndMatchTags();
+                    } else if (which == 1) {
+                        try {
+                            coverArtPickerLauncher.launch("image/*");
+                        } catch (Exception e) {
+                            Toast.makeText(this, "Could not open photo picker", Toast.LENGTH_SHORT).show();
+                        }
+                    } else if (which == 2) {
+                        doExtractEmbedCoverart();
+                    } else if (which == 3) {
+                        doRemoveEmbedCoverart();
+                    }
+                })
+                .show();
+    }
+
+    private void applySelectedCoverArt(android.net.Uri uri) {
+        startProgressBar();
+        CompletableFuture.runAsync(() -> {
+            try {
+                Track display = viewModel.displayTag.getValue();
+                if (display == null && !getEditItems().isEmpty()) {
+                    display = getEditItems().get(0);
+                }
+                if (display != null) {
+                    File parentDir = new File(display.getPath()).getParentFile();
+                    if (parentDir != null) {
+                        File targetCover = new File(parentDir, "Cover.jpg");
+                        try (InputStream in = getContentResolver().openInputStream(uri);
+                             OutputStream out = new FileOutputStream(targetCover)) {
+                            byte[] buffer = new byte[8192];
+                            int read;
+                            while ((read = in.read(buffer)) != -1) {
+                                out.write(buffer, 0, read);
+                            }
+                        }
+                        for (Track item : getEditItems()) {
+                            item.setAlbumArtFilename(targetCover.getAbsolutePath());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error applying selected cover art", e);
+            }
+        }).thenAccept(v -> {
+            runOnUiThread(() -> {
+                isDirty = true;
+                redisplayTag();
+                Track current = viewModel.displayTag.getValue();
+                if (current != null) {
+                    loadImages(current);
+                }
+                stopProgressBar();
+                Toast.makeText(this, "Cover art updated", Toast.LENGTH_SHORT).show();
+            });
+        }).exceptionally(ex -> {
+            runOnUiThread(this::stopProgressBar);
+            return null;
+        });
+    }
+
     @SuppressLint("SetTextI18n")
     private void doShowSpectrum() {
         if (getEditItems().isEmpty()) return;
@@ -1015,127 +1296,40 @@ public class TagsActivity extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     protected void updateTitlePanel(Track currentDisplayTag) {
-
         if (currentDisplayTag == null) {
-            // Handle null case, maybe clear fields or show placeholder
             titleView.setText("");
             artistView.setText("");
-            // ... clear other fields ...
             return;
         }
 
         titleView.setText(trim(currentDisplayTag.getTitle(), " - "));
         artistView.setText(trim(currentDisplayTag.getArtist(), " - "));
 
-        // load resolution, quality, coverArt
+        // load coverArt & blur background
         loadImages(currentDisplayTag);
-        //resolutionView.setMusicItem(currentDisplayTag);
+
         if (tagsHeaderBadges != null) {
-            DialogInterop.setTagsHeaderBadges(tagsHeaderBadges, currentDisplayTag);
+            DialogInterop.setTagsHeaderBadges(
+                    tagsHeaderBadges,
+                    currentDisplayTag,
+                    getEditItems().size(),
+                    this::handleQuickFix
+            );
         }
 
-        artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
+        artistView.setPaintFlags(artistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
-            //filter by artist
             doBackToMainActivity(Constants.FILTER_TYPE_ARTIST, currentDisplayTag.getArtist());
-
         });
-        if(isEmpty(currentDisplayTag.getAlbum())) {
+
+        if (isEmpty(currentDisplayTag.getAlbum())) {
             albumView.setText(String.format("[%s]", TagUtils.getDefaultAlbum(currentDisplayTag)));
-        }else {
+        } else {
             albumView.setText(currentDisplayTag.getAlbum());
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             albumView.setOnClickListener(view -> {
-                // filter by album
                 doBackToMainActivity(Constants.FILTER_TYPE_ALBUM, currentDisplayTag.getAlbum());
             });
-        }
-        String albumArtist = currentDisplayTag.getAlbumArtist();
-        String artist = currentDisplayTag.getArtist();
-        if (!isEmpty(albumArtist) && (isEmpty(artist) || !albumArtist.trim().equalsIgnoreCase(artist.trim()))) {
-            genreView.setText(albumArtist.trim());
-            genreView.setVisibility(VISIBLE);
-        } else {
-            genreView.setText("");
-            genreView.setVisibility(GONE);
-        }
-
-        // Tag
-        boolean hasPrv = false;
-        TextBuilder tagSpan = new TextBuilder(getApplicationContext());
-        tagSpan.append(StringUtils.SYMBOL_SEP + " ", 0, 12, true);
-
-        if(!isEmpty(currentDisplayTag.getOrigin())) {
-            tagSpan.append(currentDisplayTag.getOrigin(), 0, 12, true);
-            hasPrv = true;
-        }
-        if(!isEmpty(currentDisplayTag.getGenre())) {
-            if(hasPrv) {
-                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
-            }
-            tagSpan.append(currentDisplayTag.getGenre(), 0, 12, true);
-            hasPrv = true;
-        }
-        if(!isEmpty(currentDisplayTag.getMood())) {
-            if(hasPrv) {
-                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
-            }
-            tagSpan.append(currentDisplayTag.getMood(), 0, 12, true);
-            hasPrv = true;
-        }
-        if(!isEmpty(currentDisplayTag.getStyle())) {
-            if(hasPrv) {
-                tagSpan.append(" " + StringUtils.SYMBOL_ENC_SEP + " ", 0, 12, true);
-            }
-            tagSpan.append(currentDisplayTag.getStyle(), 0, 12, true);
-            hasPrv = true;
-        }
-
-        if (hasPrv) {
-            tagSpan.append(" " + StringUtils.SYMBOL_SEP, 0, 12, true);
-            tagInfo.setText(tagSpan.build());
-            tagInfo.setVisibility(VISIBLE);
-        } else {
-            tagInfo.setText("");
-            tagInfo.setVisibility(GONE);
-        }
-
-        // ENC info
-        try {
-            int metaInfoTextSize = 10; //12; //10
-            int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
-            int sepColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_600);
-            TextBuilder spannableEnc = new TextBuilder(getApplicationContext());
-
-            // encoding type
-            //spannableEnc.append(currentDisplayTag.getAudioEncoding().toUpperCase(), encColor, metaInfoTextSize, false);
-            //spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false);
-
-            // bps
-            spannableEnc.append(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor, metaInfoTextSize, false);
-            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
-            spannableEnc.append(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor, metaInfoTextSize, false);
-            if(TagUtils.isMQA(currentDisplayTag)) {
-                spannableEnc.append(" ("+StringUtils.formatAudioSampleRate(currentDisplayTag.getMqaSampleRate(), true)+")", encColor, metaInfoTextSize, false);
-            }
-            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
-
-            spannableEnc.append(formatAudioBitRate(currentDisplayTag.getAudioBitRate()), encColor, metaInfoTextSize, false);
-
-            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize));
-            spannableEnc.append(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor, metaInfoTextSize, false);
-
-            spannableEnc.append(StringUtils.SYMBOL_ENC_SEP, sepColor, 0, false); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
-            spannableEnc.append(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor, metaInfoTextSize, false);
-
-            encInfo.setText(spannableEnc.build());
-            encInfo.setOnClickListener(v -> {
-                //filter by path
-                File f = new File(currentDisplayTag.getPath());
-                doBackToMainActivity(Constants.FILTER_TYPE_PATH,  f.getParentFile().getPath());
-            });
-        }catch (Exception ex) {
-            Log.e(TAG, "updateTitlePanel", ex);
         }
     }
 
@@ -1320,8 +1514,12 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
+    public TagsViewModel getViewModel() {
+        return viewModel;
+    }
+
     public List<Track> getEditItems() {
-        List<Track> items = viewModel.editItems.getValue();
+        List<Track> items = viewModel != null ? viewModel.editItems.getValue() : null;
         return items != null ? items : java.util.Collections.emptyList();
     }
 
@@ -1355,7 +1553,12 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
-            if (isDirty) {
+            boolean hasUnsavedEdits = isDirty;
+            if (!hasUnsavedEdits && activeFragment instanceof TagsEditorFragment) {
+                hasUnsavedEdits = ((TagsEditorFragment) activeFragment).isModified();
+            }
+
+            if (hasUnsavedEdits) {
                 new MaterialAlertDialogBuilder(TagsActivity.this)
                         .setTitle("Discard changes?")
                         .setMessage("You have unsaved edits. Discard them?")

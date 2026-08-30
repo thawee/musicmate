@@ -526,13 +526,13 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 long contentLength = end - start + 1;
                 responseBuilder.addHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileLength);
 
-                // Use FileRangeEntityProducer with Range initial offset and length
-                responseBuilder.setEntity(new FileRangeEntityProducer(
+                // Use PartialFileProducer with 64KB DAP-optimized chunks and RAM pre-caching
+                responseBuilder.setEntity(new PartialFileProducer(
                         file, start, contentLength, ContentType.parse(contentHolder.getContentType())
                 ));
             } else {
-                responseBuilder.setEntity(AsyncEntityProducers.create(
-                        file, ContentType.parse(contentHolder.getContentType())
+                responseBuilder.setEntity(new PartialFileProducer(
+                        file, 0, fileLength, ContentType.parse(contentHolder.getContentType())
                 ));
             }
 
@@ -813,98 +813,6 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         @Override
         public byte[] toByteArray() {
             return super.toByteArray();
-        }
-    }
-
-    private static class FileRangeEntityProducer implements AsyncEntityProducer {
-        private final File file;
-        private final long start;
-        private final long length;
-        private final ContentType contentType;
-        private java.io.RandomAccessFile raf;
-        private long bytesSent = 0;
-        private final byte[] buffer = new byte[262144]; // 256KB chunks for smooth streaming on poor networks
-
-        FileRangeEntityProducer(File file, long start, long length, ContentType contentType) {
-            this.file = file;
-            this.start = start;
-            this.length = length;
-            this.contentType = contentType;
-        }
-
-        @Override
-        public boolean isRepeatable() {
-            return true;
-        }
-
-        @Override
-        public boolean isChunked() {
-            return false;
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType != null ? contentType.toString() : null;
-        }
-
-        @Override
-        public String getContentEncoding() {
-            return null;
-        }
-
-        @Override
-        public long getContentLength() {
-            return length;
-        }
-
-        @Override
-        public java.util.Set<String> getTrailerNames() {
-            return java.util.Collections.emptySet();
-        }
-
-        @Override
-        public int available() {
-            return (int) Math.min(262144, length - bytesSent);
-        }
-
-        @Override
-        public void produce(DataStreamChannel channel) throws java.io.IOException {
-            if (raf == null) {
-                raf = new java.io.RandomAccessFile(file, "r");
-                raf.seek(start);
-            }
-
-            if (bytesSent < length) {
-                long remaining = length - bytesSent;
-                int toRead = (int) Math.min(buffer.length, remaining);
-                int read = raf.read(buffer, 0, toRead);
-                if (read > 0) {
-                    bytesSent += read;
-                    channel.write(java.nio.ByteBuffer.wrap(buffer, 0, read));
-                } else {
-                    bytesSent = length;
-                }
-            }
-
-            if (bytesSent >= length) {
-                channel.endStream();
-                releaseResources();
-            }
-        }
-
-        @Override
-        public void failed(Exception cause) {
-            releaseResources();
-        }
-
-        @Override
-        public void releaseResources() {
-            if (raf != null) {
-                try {
-                    raf.close();
-                } catch (java.io.IOException ignored) {}
-                raf = null;
-            }
         }
     }
 }

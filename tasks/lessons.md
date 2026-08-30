@@ -155,4 +155,38 @@
   - *Pattern:* Define a decoupled Kotlin interface (`MainScaffoldCallbacks.kt`) and a centralized Kotlin state singleton (`MainScaffoldState.kt`). Have `MainActivity.java` implement `MainScaffoldCallbacks` and pass `this` into Compose via `DrawerInterop.getComposeView(context, callbacks)`. This eliminates circular dependencies, enforces complete separation of concerns, and enables 100% type-safe compilation in both directions.
 - **Canonical Repository & Package URLs**:
   - When referencing or embedding public project links, source repositories, or community URLs in user-facing components (e.g. `AboutScreen.kt` or sharing templates), always check existing source metadata (such as `MANUFACTURER_URL` in `MediaServerDevice.java` -> `https://github.com/thawee/musicmate`) instead of assuming package namespace identifiers (`apincer`).
+- **HiBy R3 / HiBy OS DLNA Gapless Preload Timing**:
+  - In HiBy OS / Linux DAP firmwares, the UPnP DMR stack is single-threaded and resets the active audio decoder pipeline if it receives `SetNextAVTransportURI` while still filling its initial ring buffer during track startup (at $t < 15\text{s}$).
+  - *Pattern:* Detect HiBy renderers (`DMRPlayer.isHiBy()`) and defer `SetNextAVTransportURI` until 20 seconds before track completion (`durationMs - 20000`). For short tracks ($\le 35\text{s}$), bypass `SetNextAVTransportURI` completely and allow MusicMate's precision fallback timer (`scheduleFallback`) to handle the transition cleanly.
+- **Stream File Descriptor Cleanup in Async HTTP Producers**:
+  - In Apache HttpCore async entity producers (`PartialFileProducer`), relying on garbage collection to close open `RandomAccessFile` and `FileChannel` descriptors causes file descriptor leaks during long playback sessions.
+  - *Pattern:* Always invoke `releaseResources()` immediately upon `channel.endStream()` when all bytes are produced (`bytesProduced >= length`) or EOF (`read == -1`) to close file descriptors the millisecond streaming finishes.
+- **Rapid Track Skip Queue Pre-Cache Eviction**:
+  - When users skip tracks rapidly in large queues, background audio preloader threads can queue up and read stale files from disk, causing I/O contention.
+  - *Pattern:* Keep a reference to the active `Future<?>` task in `AudioStreamCacheManager`, and cancel incomplete preload jobs upon new track selection or playback state reset (`cancelPendingPreloads()`).
+- **UPnP DMR Position Polling Circuit Breaking & Backoff**:
+  - Polling UPnP renderers for playback position via `GetPositionInfo` must NEVER be scheduled unconditionally in a self-perpetuating timer loop. When a renderer enters `STOPPED`, transitions tracks, sleeps, or disconnects, the DMR UPnP service returns SOAP 701 error code: *"Current state of service prevents invoking that action. Connection error or no response received."*
+  - *Pattern:* (1) Gate polling execution strictly on `serverStatus == ServerStatus.CAST`, (2) Only schedule the next polling cycle *after* receiving a response callback (not before), (3) Track consecutive failures; after the first failure back off to 2.5s, and after 3 consecutive failures halt polling completely (`stopPolling()`) and transition server status to `RUNNING`, eliminating infinite 1-second network spam and logcat flooding.
+- **Tag Activity UI/UX, 1-Row Bottom Command Bar & Compose Header Consolidation**:
+  - *Layout Streamlining:* Stacking multiple button rows in bottom command bars creates visual clutter and wastes vertical screen real estate (~120dp). Consolidating into a single 1-row horizontal layout (`Delete` on left, center mode actions with high-contrast primary Gold pill, `More...` on right) reduces bar height to 56dp and improves one-handed ergonomics.
+  - *Header Deduplication:* Avoid mixing legacy XML TextViews with Compose badges in collapsing headers, which causes duplicate telemetry readouts (e.g. bitrate/format in both XML text and Compose badges). Replace fragmented XML rows with a unified Compose component (`TagPreviewHeader`) that combines `QualityBadge`, `ResolutionBadge`, `DynamicRangeMeter`, interactive tag pills (Genre, Origin, Mood, Style), and a monospace specs strip (`FLAC • 24/96 • 1411 kbps • Stereo • 04:23 • 45.2 MB`) in frosted obsidian glass.
+  - *Direct Cover Art & Quick-Fix Affordances:* Give passive visual elements interactive affordances (e.g., tap-on-cover-art sheet for online search, gallery picking, and extraction; dynamic Quick-Fix chips for Thai encoding repair, auto-tagging, and lossless verification).
+- **Brand Identity Asset Synchronization Across Network & System Layers**:
+  - In Android UPnP/DLNA apps, app identity lives in multiple isolated asset locations:
+    1. *UPnP/DLNA XML Device Descriptors:* Discovered network clients (WiiM, BubbleUPnP, mconnect, Foobar2000) fetch icon byte arrays served from `assets/` (`iconpng64.png`, `iconpng128.png`). If un-synchronized during an app rebranding or icon redesign, external renderers will display stale legacy icons.
+    2. *Status Bar & Foreground Services:* Android notification small icons (`setSmallIcon`) require pure monochrome/white silhouettes with alpha transparency (`ic_notification_default.png`).
+    3. *Adaptive vs Legacy Launcher Fallbacks:* Android 8.0+ adaptive icons (`mipmap-anydpi-v26/ic_launcher.xml`) use layered vectors, while legacy launchers / fallback dialogs use `mipmap-*/ic_launcher.png`.
+- **Lossless Spectrogram Resampling & Ultrasonic Nyquist Preservation**:
+  - *Do Not Resample Hi-Res Auditing:* When analyzing lossless audio files for spectral authenticity, hardcoding `-ar 48000` caps the Nyquist frequency at 24kHz, cutting off genuine 96kHz and 192kHz ultrasonic content. For >96kHz audio, only downsample to 96kHz (`-ar 96000`) if downsampling is required for memory/speed, preserving the entire 48kHz frequency ceiling.
+- **SQLite / Room DAO Case-Sensitivity & Format Coverage**:
+  - *Case-Insensitive String Matches:* In Room `@Query`, string `IN ('flac', 'dsd')` is case-sensitive by default in SQLite. Always use `LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav')` and include common format variations (`'dsf'`, `'dsd'`, `'dff'`, `'sacd'`) to prevent smart playlist omission.
+
+
+
+
+
+
+
+
+
 

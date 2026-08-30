@@ -72,6 +72,48 @@ public class DMRPlayer implements PlaybackTarget {
         this.supports24Bit = supports24Bit;
     }
 
+    public boolean isHiBy() {
+        return getDeviceProfile() == DeviceProfile.HIBY;
+    }
+
+    public enum DeviceProfile {
+        WIIM("WiiM Audio Streamer", 3000),
+        EVERSOLO("Eversolo Master Streamer", 3000),
+        HIBY("HiBy DAP Renderer", -20000),
+        SHANLING("Shanling DAP Renderer", -15000),
+        SONOS("Sonos Speaker", 5000),
+        GENERIC("Standard DLNA Renderer", 5000);
+
+        private final String label;
+        private final long gaplessDelayMs; // positive = after start; negative = before track end
+
+        DeviceProfile(String label, long gaplessDelayMs) {
+            this.label = label;
+            this.gaplessDelayMs = gaplessDelayMs;
+        }
+
+        public String getLabel() { return label; }
+        public long getGaplessDelayMs() { return gaplessDelayMs; }
+    }
+
+    public DeviceProfile getDeviceProfile() {
+        String name = displayName != null ? displayName.toLowerCase() : "";
+        String id = udn != null ? udn.toLowerCase() : "";
+
+        if (name.contains("wiim") || id.contains("wiim") || name.contains("linkplay")) {
+            return DeviceProfile.WIIM;
+        } else if (name.contains("eversolo") || id.contains("eversolo") || name.contains("zidoo")) {
+            return DeviceProfile.EVERSOLO;
+        } else if (name.contains("hiby") || id.contains("hiby")) {
+            return DeviceProfile.HIBY;
+        } else if (name.contains("shanling") || id.contains("shanling")) {
+            return DeviceProfile.SHANLING;
+        } else if (name.contains("sonos") || id.contains("sonos")) {
+            return DeviceProfile.SONOS;
+        }
+        return DeviceProfile.GENERIC;
+    }
+
     public static class Factory {
         public static PlaybackTarget create(String urn, String friendlyName, String host) {
             return new DMRPlayer( urn,  friendlyName, host);

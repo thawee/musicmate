@@ -60,4 +60,8 @@ public interface MediaServerHub {
 
     /** Register a listener invoked whenever DLNA renderers are added, updated, or removed. */
     void setOnRenderersChangedListener(java.util.function.Consumer<List<PlaybackTarget>> listener);
+
+    default boolean isCurrentRendererHiBy() {
+        return false;
+    }
 }

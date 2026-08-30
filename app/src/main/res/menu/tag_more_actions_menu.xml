@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- TagsActivity "More Actions" Popup Menu.
-     Organized by functional groups: Tag Automation -> Audio Quality Analysis -> File & Web Utilities. -->
+     Organized by functional groups: Playback -> Metadata Curation -> Artwork -> Audio Quality -> Storage & Sharing. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Group 1: Metadata Automation & Lookup -->
+    <!-- Group 1: Playback & Queue -->
+    <group android:id="@+id/group_playback">
+        <item
+            android:id="@+id/action_play_now"
+            android:icon="@drawable/ic_round_play_arrow_24"
+            android:title="@string/menu_play_now"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_add_to_queue"
+            android:icon="@drawable/ic_round_queue_music_24"
+            android:title="@string/menu_add_to_queue"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 2: Metadata Automation & Curation -->
     <group android:id="@+id/group_tag_automation">
         <item
             android:id="@+id/action_auto_tag"
@@ -17,9 +32,27 @@
             android:icon="@drawable/ic_search_24dp"
             android:title="@string/search_match_tags"
             app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_fix_thai_encoding"
+            android:icon="@drawable/ic_round_translate_24"
+            android:title="@string/menu_fix_thai_encoding"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_clean_tag_noise"
+            android:icon="@drawable/ic_round_auto_fix_high_24"
+            android:title="@string/menu_clean_tag_noise"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_title_case"
+            android:icon="@drawable/ic_round_text_fields_24"
+            android:title="@string/menu_title_case"
+            app:showAsAction="never" />
     </group>
 
-    <!-- Group 2: Audio Analysis & Verification -->
+    <!-- Group 3: Audio Analysis & Verification -->
     <group android:id="@+id/group_audio_analysis">
         <item
             android:id="@+id/action_spectrum"
@@ -28,7 +61,7 @@
             app:showAsAction="never" />
     </group>
 
-    <!-- Group 3: File System & External Operations -->
+    <!-- Group 4: File System Utilities -->
     <group android:id="@+id/group_file_utils">
         <item
             android:id="@+id/action_open_folder"
@@ -41,6 +74,13 @@
             android:icon="@drawable/ic_search_24dp"
             android:title="@string/find_online"
             app:showAsAction="never" />
+<!--
+        <item
+            android:id="@+id/action_reload_from_file"
+            android:icon="@drawable/round_restore_page_24"
+            android:title="@string/menu_reload_from_file"
+            app:showAsAction="never" />
+            -->
     </group>
 
 </menu>

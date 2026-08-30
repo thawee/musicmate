@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -37,14 +39,16 @@ class TagsTechnicalFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 MusicMateTheme {
-                val editItems = tagsActivity.editItems ?: emptyList()
+                    val editItems by tagsActivity.viewModel.editItemsFlow.collectAsState()
+                    val displayTag by tagsActivity.viewModel.displayTagFlow.collectAsState()
+                    val track = displayTag ?: editItems.firstOrNull()
 
-                if (editItems.isNotEmpty()) {
-                    TagsTechnicalPage(
-                        track = editItems[0],
-                        fileRepos = fileRepos
-                    )
-                }
+                    if (track != null) {
+                        TagsTechnicalPage(
+                            track = track,
+                            fileRepos = fileRepos
+                        )
+                    }
                 }
             }
         }

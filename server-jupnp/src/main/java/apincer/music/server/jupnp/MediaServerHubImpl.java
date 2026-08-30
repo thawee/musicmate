@@ -148,6 +148,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     private long lastPosition = -1;
     private int stagnantCount = 0;
+    private int consecutivePollFailures = 0;
 
     // Thread model (IMPORTANT)
     private final ExecutorService upnpExecutor =
@@ -1367,18 +1368,27 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         lastPosition = -1;
         stagnantCount = 0;
+        consecutivePollFailures = 0;
 
         int gen = pollGen.incrementAndGet();
-        scheduleNextPoll(avTransport, gen);
+        scheduleNextPoll(avTransport, gen, getPollingInterval());
     }
 
-    private void scheduleNextPoll(Service avTransport, int gen) {
-        long delay = getPollingInterval();
+    private void scheduleNextPoll(Service avTransport, int gen, long delay) {
+        if (gen != pollGen.get() || avTransport == null || controlPoint == null) return;
+        if (serverStatus.getValue() != ServerStatus.CAST) {
+            stopPolling();
+            return;
+        }
+
         pollingTask = scheduler.schedule(() -> {
             if (gen != pollGen.get()) return; // kill old chain
+            if (serverStatus.getValue() != ServerStatus.CAST) {
+                stopPolling();
+                return;
+            }
 
-            getAvTransportPosition(avTransport);
-            scheduleNextPoll(avTransport, gen);
+            getAvTransportPosition(avTransport, gen);
         }, delay, TimeUnit.MILLISECONDS);
     }
 
@@ -1421,16 +1431,47 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void getAvTransportPosition(Service avTransport) {
+        getAvTransportPosition(avTransport, -1);
+    }
+
+    private void getAvTransportPosition(Service avTransport, int gen) {
+        if (avTransport == null || controlPoint == null) return;
+        if (gen != -1 && gen != pollGen.get()) return;
+
         try {
             controlPoint.execute(
                     new GetPositionInfo(avTransport) {
                         @Override
                         public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                            Log.d(TAG, "Polling position: failed - " + defaultMsg);
+                            if (gen == -1) {
+                                Log.d(TAG, "Initial position query failed: " + defaultMsg);
+                                return;
+                            }
+                            if (gen != pollGen.get()) return;
+
+                            consecutivePollFailures++;
+                            if (consecutivePollFailures <= 3) {
+                                if (consecutivePollFailures == 1) {
+                                    Log.d(TAG, "Polling position: failed (" + consecutivePollFailures + "/3) - " + defaultMsg);
+                                }
+                                // Backoff and retry with 2.5s delay
+                                scheduleNextPoll(avTransport, gen, 2500);
+                            } else {
+                                Log.i(TAG, "Renderer left playback state or stopped responding (" + defaultMsg + "). Halting polling loop.");
+                                stopPolling();
+                                if (serverStatus.getValue() == ServerStatus.CAST) {
+                                    serverStatus.setValue(ServerStatus.RUNNING);
+                                }
+                            }
                         }
 
                         @Override
                         public void received(ActionInvocation invocation, PositionInfo positionInfo) {
+                            if (gen != -1 && gen != pollGen.get()) return;
+
+                            if (gen != -1) {
+                                consecutivePollFailures = 0; // reset on success
+                            }
 
                             long position = positionInfo.getTrackElapsedSeconds();
                             if (position > 0 && position == lastPosition) {
@@ -1466,12 +1507,26 @@ public class MediaServerHubImpl implements MediaServerHub {
                                     // optional recovery
                                     attemptRecovery();
                                 }
+                                return;
+                            }
+
+                            // Cleanly schedule next poll after receiving response if active recurring poll
+                            if (gen != -1) {
+                                scheduleNextPoll(avTransport, gen, getPollingInterval());
                             }
                         }
                     }
             );
         } catch (Exception e) {
             Log.w(TAG, "getAvTransportPosition failed", e);
+            if (gen != -1) {
+                consecutivePollFailures++;
+                if (consecutivePollFailures <= 3) {
+                    scheduleNextPoll(avTransport, gen, 2500);
+                } else {
+                    stopPolling();
+                }
+            }
         }
     }
 
@@ -1495,14 +1550,16 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void stopPolling() {
-        if(pollingTask==null) return;
-
-        if (!pollingTask.isCancelled()) {
-            pollingTask.cancel(true);
-            stagnantCount = -1;
-            Log.d(TAG, "Polling task killed");
+        stagnantCount = 0;
+        consecutivePollFailures = 0;
+        pollGen.incrementAndGet(); // Invalidate any pending poll tasks
+        if (pollingTask != null) {
+            if (!pollingTask.isCancelled()) {
+                pollingTask.cancel(true);
+                Log.d(TAG, "Polling task killed");
+            }
+            pollingTask = null;
         }
-        pollingTask = null;
     }
 
     private void schedulePauseTimeout() {
@@ -1745,5 +1802,19 @@ public class MediaServerHubImpl implements MediaServerHub {
         } catch (Exception e) {
             Log.e(TAG, "Failed to parse LastChange", e);
         }
+    }
+
+    @Override
+    public boolean isCurrentRendererHiBy() {
+        if (currentRenderer != null && currentRenderer.getDetails() != null) {
+            String name = currentRenderer.getDetails().getFriendlyName();
+            if (name != null && name.toLowerCase().contains("hiby")) {
+                return true;
+            }
+        }
+        if (currentRendererId != null && currentRendererId.toLowerCase().contains("hiby")) {
+            return true;
+        }
+        return false;
     }
 }

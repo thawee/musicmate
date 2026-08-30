@@ -441,6 +441,19 @@
     <string name="ffmpeg_output">FFMPEG Output:</string>
     <string name="auto_tag">Auto-Tag (MusicBrainz)</string>
     <string name="search_match_tags">Search &amp; Match Tags</string>
+    <string name="menu_play_now">Play Track Now</string>
+    <string name="menu_add_to_queue">Add to Playing Queue</string>
+    <string name="menu_fix_thai_encoding">Repair Thai Text Encoding</string>
+    <string name="menu_clean_tag_noise">Clean Junk &amp; Suffixes</string>
+    <string name="menu_title_case">Format Title Case</string>
+    <string name="menu_extract_coverart">Extract Cover Art to Folder</string>
+    <string name="menu_remove_coverart">Remove Embedded Cover Art</string>
+    <string name="menu_share_file">Share Audio File</string>
+    <string name="menu_reload_from_file">Reload Raw Tags from File</string>
+    <string name="menu_search_cover_art">Search Album Art Online</string>
+    <string name="menu_pick_cover_art">Choose Cover Art from Gallery</string>
+    <string name="menu_view_cover_art">View Fullscreen Cover Art</string>
+    <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 
     <!-- New Indicator -->
     <string name="new_indicator">NEW</string>

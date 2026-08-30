@@ -21,10 +21,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.text.font.FontFamily
 import apincer.android.mmate.R
 import apincer.android.mmate.utils.TagUIUtils
 import apincer.music.core.model.Track
+import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
+import apincer.music.core.utils.ThaiEncodingUtils
 
 @Composable
 fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean = false) {
@@ -226,7 +234,7 @@ fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        horizontalArrangement = Arrangement.Center
     ) {
         QualityBadge(track = track)
         Spacer(modifier = Modifier.width(6.dp))
@@ -237,6 +245,164 @@ fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
         RatingBadge(track = track, mode = "mini")
         Spacer(modifier = Modifier.width(6.dp))
         NewBadge(track = track)
+    }
+}
+
+@Composable
+fun TagPreviewHeader(
+    track: Track?,
+    itemCount: Int = 1,
+    onQuickFixClick: ((String) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    if (track == null) return
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 1. Batch Mode Indicator (if multiple tracks selected)
+        if (itemCount > 1) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x33FFD700))
+                    .border(0.75.dp, Color(0x66FFD700), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "🎯 BATCH MODE • $itemCount TRACKS SELECTED",
+                    color = Color(0xFFFFD700),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+
+        // 2. Primary Badges Row (Quality, Resolution, DR, Rating, New)
+        TagHeaderBadges(track = track)
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // 3. Lossless Telemetry Specs Monospace Strip
+        val metaParts = mutableListOf<String>()
+        track.fileType?.let { if (it.isNotBlank()) metaParts.add(it.uppercase()) }
+        //val bitDepth = StringUtils.formatAudioBitsDepth(track.audioBitsDepth)
+        //if (bitDepth.isNotBlank()) metaParts.add(bitDepth)
+        //val sampleRate = StringUtils.formatAudioSampleRate(track.audioSampleRate, true)
+        //if (sampleRate.isNotBlank()) metaParts.add(sampleRate)
+        if (track.audioBitRate > 0) metaParts.add(StringUtils.formatAudioBitRate(track.audioBitRate))
+        val ch = track.audioChannels
+        if (!ch.isNullOrBlank()) metaParts.add(if (ch == "2" || ch.equals("Stereo", ignoreCase = true)) "Stereo" else "$ch ch")
+        if (track.audioDuration > 0) metaParts.add(StringUtils.formatDurationAsMinute(track.audioDuration))
+        if (track.fileSize > 0) metaParts.add(StringUtils.formatStorageSize(track.fileSize))
+
+        if (metaParts.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xD9101010))
+                    .border(0.5.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = metaParts.joinToString(" • "),
+                    color = Color(0xFFCCCCCC),
+                    fontSize = 9.5.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+        }
+
+        // 4. Interactive Tag Pills Row (Origin, Genre, Mood, Style)
+        val tagPills = mutableListOf<Pair<String, String>>()
+        if (!track.origin.isNullOrBlank()) tagPills.add("Origin" to track.origin)
+        if (!track.genre.isNullOrBlank()) tagPills.add("Genre" to track.genre)
+        if (!track.mood.isNullOrBlank()) tagPills.add("Mood" to track.mood)
+        if (!track.style.isNullOrBlank()) tagPills.add("Style" to track.style)
+
+        if (tagPills.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                tagPills.take(4).forEach { (_, value) ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xD9161616))
+                            .border(0.5.dp, Color(0x44888888), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = value,
+                            color = Color(0xFFEEEEEE),
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+            }
+        }
+
+        // 5. Contextual Quick-Fix Suggestion Chips (if anomalies or missing tags detected)
+        val quickFixes = mutableListOf<Pair<String, String>>()
+        val hasGarbledThai = listOf(track.title, track.artist, track.album, track.genre, track.composer)
+            .any { ThaiEncodingUtils.isGarbledThai(it) }
+        if (hasGarbledThai) {
+            quickFixes.add("thai_fix" to "🇹🇭 Fix Thai Encoding")
+        }
+        val isMissingTags = track.title.isNullOrBlank() || track.artist.isNullOrBlank() || track.album.isNullOrBlank()
+        if (isMissingTags) {
+            quickFixes.add("auto_tag" to "⚡ Auto-Tag")
+        }
+        if (track.dynamicRange <= 0 && track.audioBitsDepth >= 16) {
+            quickFixes.add("spectrum" to "🎼 Lossless Verifier")
+        }
+
+        val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
+        if (quickFixes.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                quickFixes.forEach { (actionId, label) ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x3364B5F6))
+                            .border(0.75.dp, Color(0x7764B5F6), RoundedCornerShape(12.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                onQuickFixClick?.invoke(actionId)
+                            }
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = label,
+                            color = Color(0xFF90CAF9),
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -70,6 +70,7 @@ public class PartialFileProducer implements AsyncEntityProducer {
         long remainingInRequest = length - bytesProduced;
         if (remainingInRequest <= 0) {
             channel.endStream();
+            releaseResources();
             return;
         }
 
@@ -85,6 +86,7 @@ public class PartialFileProducer implements AsyncEntityProducer {
             }
             if (bytesProduced >= length) {
                 channel.endStream();
+                releaseResources();
                 return;
             }
             if (preloadedOffset < preloadedBytes.length) {
@@ -103,6 +105,7 @@ public class PartialFileProducer implements AsyncEntityProducer {
         remainingInRequest = length - bytesProduced;
         if (remainingInRequest <= 0) {
             channel.endStream();
+            releaseResources();
             return;
         }
 
@@ -124,9 +127,11 @@ public class PartialFileProducer implements AsyncEntityProducer {
 
             if (bytesProduced >= length) {
                 channel.endStream();
+                releaseResources();
             }
         } else if (read == -1) {
             channel.endStream();
+            releaseResources();
         }
     }
 

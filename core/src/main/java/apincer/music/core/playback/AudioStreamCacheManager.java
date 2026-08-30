@@ -31,6 +31,8 @@ public class AudioStreamCacheManager {
 
     private final LruCache<String, byte[]> memoryCache;
     private final ExecutorService preloadExecutor;
+    private java.util.concurrent.Future<?> activePreloadFuture;
+    private final Object preloadLock = new Object();
 
     private AudioStreamCacheManager() {
         this.memoryCache = new LruCache<String, byte[]>(MAX_CACHE_BYTES) {
@@ -58,6 +60,19 @@ public class AudioStreamCacheManager {
     }
 
     /**
+     * Cancels any currently queued or executing background preload task.
+     * Useful during rapid queue track skipping.
+     */
+    public void cancelPendingPreloads() {
+        synchronized (preloadLock) {
+            if (activePreloadFuture != null && !activePreloadFuture.isDone()) {
+                activePreloadFuture.cancel(true);
+                activePreloadFuture = null;
+            }
+        }
+    }
+
+    /**
      * Asynchronously pre-buffers the first HEAD_CHUNK_SIZE bytes of the given track into memory.
      */
     public void preloadTrack(Track track) {
@@ -70,38 +85,46 @@ public class AudioStreamCacheManager {
             }
         }
 
-        preloadExecutor.submit(() -> {
-            try {
-                File file = new File(path);
-                if (!file.exists() || !file.canRead()) return;
+        synchronized (preloadLock) {
+            if (activePreloadFuture != null && !activePreloadFuture.isDone()) {
+                activePreloadFuture.cancel(true);
+            }
 
-                long fileLength = file.length();
-                if (fileLength <= 0) return;
+            activePreloadFuture = preloadExecutor.submit(() -> {
+                try {
+                    File file = new File(path);
+                    if (!file.exists() || !file.canRead()) return;
 
-                int bytesToRead = (int) Math.min(fileLength, HEAD_CHUNK_SIZE);
-                byte[] buffer = new byte[bytesToRead];
+                    long fileLength = file.length();
+                    if (fileLength <= 0) return;
 
-                try (RandomAccessFile raf = new RandomAccessFile(file, "r");
-                     FileChannel channel = raf.getChannel()) {
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-                    int totalRead = 0;
-                    while (totalRead < bytesToRead) {
-                        int read = channel.read(byteBuffer);
-                        if (read <= 0) break;
-                        totalRead += read;
-                    }
-                    if (totalRead > 0) {
-                        byte[] finalBuffer = (totalRead == bytesToRead) ? buffer : Arrays.copyOf(buffer, totalRead);
-                        synchronized (memoryCache) {
-                            memoryCache.put(path, finalBuffer);
+                    int bytesToRead = (int) Math.min(fileLength, HEAD_CHUNK_SIZE);
+                    byte[] buffer = new byte[bytesToRead];
+
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "r");
+                         FileChannel channel = raf.getChannel()) {
+                        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+                        int totalRead = 0;
+                        while (totalRead < bytesToRead && !Thread.currentThread().isInterrupted()) {
+                            int read = channel.read(byteBuffer);
+                            if (read <= 0) break;
+                            totalRead += read;
                         }
-                        Log.d(TAG, "Pre-buffered " + totalRead + " bytes for: " + track.getTitle());
+                        if (totalRead > 0 && !Thread.currentThread().isInterrupted()) {
+                            byte[] finalBuffer = (totalRead == bytesToRead) ? buffer : Arrays.copyOf(buffer, totalRead);
+                            synchronized (memoryCache) {
+                                memoryCache.put(path, finalBuffer);
+                            }
+                            Log.d(TAG, "Pre-buffered " + totalRead + " bytes for: " + track.getTitle());
+                        }
+                    }
+                } catch (Exception e) {
+                    if (!(e instanceof java.nio.channels.ClosedByInterruptException)) {
+                        Log.w(TAG, "Failed to preload track: " + track.getTitle(), e);
                     }
                 }
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to preload track: " + track.getTitle(), e);
-            }
-        });
+            });
+        }
     }
 
     /**

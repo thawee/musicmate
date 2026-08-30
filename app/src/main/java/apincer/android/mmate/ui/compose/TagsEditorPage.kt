@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,30 +56,10 @@ fun TagsEditorPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .verticalScroll(scrollState)
             .padding(8.dp)
     ) {
-        // Preview Card
-        TechCard(title = "PREVIEW") {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                coil3.compose.AsyncImage(
-                    model = track?.let { 
-                        CoverartFetcher.builder(context, it).data(it).build() 
-                    },
-                    contentDescription = "Cover Art",
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(text = track?.title ?: "Unknown Title", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                    Text(text = track?.simpleName ?: "", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-
         // Basic Info Card
         TechCard(title = "BASIC INFORMATION") {
             EditorTextField(
@@ -159,6 +141,8 @@ fun TagsEditorPage(
                 options = publisherOptions
             )
         }
+
+        Spacer(modifier = Modifier.height(72.dp))
     }
 }
 
@@ -172,8 +156,16 @@ fun EditorTextField(
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { input ->
+            val cleaned = if (value == " - " && input != " - ") {
+                input.replace(" - ", "").trimStart()
+            } else {
+                input
+            }
+            onValueChange(cleaned)
+        },
         label = { Text(label) },
+        placeholder = { if (value == " - ") Text("Multiple values", color = Color.Gray) },
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp),
@@ -221,8 +213,16 @@ fun EditorDropdownField(
     ) {
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { input ->
+                val cleaned = if (value == " - " && input != " - ") {
+                    input.replace(" - ", "").trimStart()
+                } else {
+                    input
+                }
+                onValueChange(cleaned)
+            },
             label = { Text(label) },
+            placeholder = { if (value == " - ") Text("Multiple values", color = Color.Gray) },
             trailingIcon = {
                 if (options.isNotEmpty()) {
                     androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)

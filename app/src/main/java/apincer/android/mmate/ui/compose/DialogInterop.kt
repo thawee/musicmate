@@ -249,11 +249,27 @@ object DialogInterop {
         }
     }
 
+    fun interface QuickFixListener {
+        fun onQuickFix(actionId: String)
+    }
+
     @JvmStatic
-    fun setTagsHeaderBadges(composeView: ComposeView, track: Track?) {
+    @JvmOverloads
+    fun setTagsHeaderBadges(
+        composeView: ComposeView,
+        track: Track?,
+        itemCount: Int = 1,
+        listener: QuickFixListener? = null
+    ) {
         composeView.setContent {
             MusicMateTheme {
-                TagHeaderBadges(track = track)
+                TagPreviewHeader(
+                    track = track,
+                    itemCount = itemCount,
+                    onQuickFixClick = { actionId ->
+                        listener?.onQuickFix(actionId)
+                    }
+                )
             }
         }
     }
