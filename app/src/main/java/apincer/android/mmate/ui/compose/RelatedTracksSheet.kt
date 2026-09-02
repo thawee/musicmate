@@ -309,7 +309,7 @@ fun RelatedTrackItemRow(
         ) {
             // 1. Track Index
             Text(
-                text = String.format("%02d", index),
+                text = String.format(java.util.Locale.US, "%02d", index),
                 color = Color(0xFF777777),
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
