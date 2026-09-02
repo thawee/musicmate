@@ -76,6 +76,12 @@ class TagsViewModel(
     private val _displayTagFlow = MutableStateFlow<Track?>(null)
     val displayTagFlow: StateFlow<Track?> = _displayTagFlow.asStateFlow()
 
+    private val _studioProvenanceFlow = MutableStateFlow(StudioProvenanceInfo())
+    val studioProvenanceFlow: StateFlow<StudioProvenanceInfo> = _studioProvenanceFlow.asStateFlow()
+
+    private val _relatedTracksSheetState = MutableStateFlow(RelatedTracksSheetState())
+    val relatedTracksSheetState: StateFlow<RelatedTracksSheetState> = _relatedTracksSheetState.asStateFlow()
+
     private fun setEditItems(items: List<Track>) {
         _editItemsFlow.value = items
         _editItems.postValue(items)
@@ -84,6 +90,7 @@ class TagsViewModel(
     private fun setDisplayTag(tag: Track?) {
         _displayTagFlow.value = tag
         _displayTag.postValue(tag)
+        loadStudioProvenance(tag)
     }
 
     fun processAudioTagEditEvent(items: List<Track>?) {
@@ -140,4 +147,120 @@ class TagsViewModel(
             }
         }
     }
+
+    fun loadStudioProvenance(track: Track?) {
+        if (track == null) {
+            _studioProvenanceFlow.value = StudioProvenanceInfo()
+            return
+        }
+
+        viewModelScope.launch(ioDispatcher) {
+            val artist = track.artist?.trim().orEmpty()
+            val album = track.album?.trim().orEmpty()
+            val path = track.path?.let { java.io.File(it).parent }.orEmpty()
+            val folderName = if (path.isNotEmpty()) java.io.File(path).name else ""
+
+            var artistCount = 0
+            var albumCount = 0
+            var folderCount = 0
+
+            if (artist.isNotEmpty() && !artist.startsWith("[")) {
+                val criteria = apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY).apply {
+                    filterType = apincer.music.core.Constants.FILTER_TYPE_ARTIST
+                    filterText = artist
+                }
+                artistCount = repos.getSearchStats(criteria)?.totalCount ?: 0
+            }
+
+            if (album.isNotEmpty() && !album.startsWith("[")) {
+                val criteria = apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY).apply {
+                    filterType = apincer.music.core.Constants.FILTER_TYPE_ALBUM
+                    filterText = album
+                }
+                albumCount = repos.getSearchStats(criteria)?.totalCount ?: 0
+            }
+
+            if (path.isNotEmpty()) {
+                val criteria = apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY).apply {
+                    filterType = apincer.music.core.Constants.FILTER_TYPE_PATH
+                    filterText = path
+                }
+                folderCount = repos.getSearchStats(criteria)?.totalCount ?: 0
+            }
+
+            _studioProvenanceFlow.value = StudioProvenanceInfo(
+                artist = artist,
+                artistCount = artistCount,
+                album = album,
+                albumCount = albumCount,
+                folderName = folderName,
+                folderPath = path,
+                folderCount = folderCount
+            )
+        }
+    }
+
+    fun openRelatedTracks(filterType: String, filterKeyword: String, title: String) {
+        if (filterKeyword.isBlank()) return
+        _relatedTracksSheetState.value = RelatedTracksSheetState(
+            isVisible = true,
+            title = title,
+            subtitle = "Loading studio tracks...",
+            filterType = filterType,
+            filterKeyword = filterKeyword,
+            tracks = emptyList(),
+            isLoading = true
+        )
+
+        viewModelScope.launch(ioDispatcher) {
+            val criteria = apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY).apply {
+                this.filterType = filterType
+                this.filterText = filterKeyword
+            }
+            val results = repos.findMusic(criteria) ?: emptyList()
+            val stats = repos.getSearchStats(criteria)
+            val count = (stats?.totalCount ?: results.size.toLong()).toInt()
+            val durationMin = if (stats != null && stats.totalDuration > 0) {
+                val totalSec = stats.totalDuration.toLong()
+                val hrs = totalSec / 3600
+                val mins = (totalSec % 3600) / 60
+                if (hrs > 0) "$hrs hr $mins min" else "$mins min"
+            } else ""
+            val subtitle = if (durationMin.isNotEmpty()) "$count Studio Tracks • $durationMin" else "$count Studio Tracks"
+
+            _relatedTracksSheetState.value = RelatedTracksSheetState(
+                isVisible = true,
+                title = title,
+                subtitle = subtitle,
+                filterType = filterType,
+                filterKeyword = filterKeyword,
+                tracks = results,
+                isLoading = false
+            )
+        }
+    }
+
+    fun closeRelatedTracks() {
+        _relatedTracksSheetState.value = _relatedTracksSheetState.value.copy(isVisible = false)
+    }
 }
+
+data class StudioProvenanceInfo(
+    val artist: String = "",
+    val artistCount: Int = 0,
+    val album: String = "",
+    val albumCount: Int = 0,
+    val folderName: String = "",
+    val folderPath: String = "",
+    val folderCount: Int = 0
+)
+
+data class RelatedTracksSheetState(
+    val isVisible: Boolean = false,
+    val title: String = "",
+    val subtitle: String = "",
+    val filterType: String = "",
+    val filterKeyword: String = "",
+    val tracks: List<Track> = emptyList(),
+    val isLoading: Boolean = false
+)

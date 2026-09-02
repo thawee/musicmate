@@ -5,7 +5,6 @@ import static android.view.View.VISIBLE;
 import static apincer.music.core.utils.StringUtils.formatAudioBitsDepth;
 import static apincer.music.core.utils.StringUtils.formatAudioSampleRate;
 import static apincer.music.core.utils.StringUtils.formatStorageSize;
-import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -15,7 +14,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
@@ -91,7 +89,6 @@ import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
-import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
@@ -109,9 +106,14 @@ import coil3.target.ImageViewTarget;
 import coil3.target.Target;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.widget.TooltipCompat;
+import com.google.android.material.button.MaterialButton;
+import android.net.Uri;
+import android.view.HapticFeedbackConstants;
 
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.repository.FileRepository;
+import apincer.music.core.provider.MusicFileProvider;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -135,7 +137,6 @@ public class TagsActivity extends AppCompatActivity {
 
     private TextView titleView;
     private TextView artistView ;
-    private TextView albumView ;
     private TextView encInfo;
     private androidx.compose.ui.platform.ComposeView tagsHeaderBadges;
 
@@ -372,18 +373,59 @@ public class TagsActivity extends AppCompatActivity {
         mBlurBackground = findViewById(R.id.main_background_blur);
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
-        albumView = findViewById(R.id.panel_album);
         tagsHeaderBadges = findViewById(R.id.tags_header_badges);
     }
+    private void performHapticClick(View v) {
+        if (v != null) {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+        }
+    }
+
+    private void performHapticLongClick(View v) {
+        if (v != null) {
+            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        }
+    }
+
     private void setupActionButtons(int mode) {
         currentEditMode = mode;
         android.widget.LinearLayout previewToggleGroup = findViewById(R.id.preview_action_group);
         android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
         android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
 
-        findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems());
-        findViewById(R.id.button_organize).setOnClickListener(v -> doMoveMediaItems());
-        findViewById(R.id.button_more).setOnClickListener(this::doShowMoreActions);
+        MaterialButton btnDelete = findViewById(R.id.button_delete);
+        MaterialButton btnOrganize = findViewById(R.id.button_organize);
+        MaterialButton btnMore = findViewById(R.id.button_more);
+        MaterialButton actionEditor = findViewById(R.id.action_editor);
+
+        // Tooltips for accessibility
+        TooltipCompat.setTooltipText(btnDelete, "Delete selected file(s)");
+        TooltipCompat.setTooltipText(btnOrganize, "Organize / Move media file(s)");
+        TooltipCompat.setTooltipText(btnMore, "More actions");
+        TooltipCompat.setTooltipText(actionEditor, "Open metadata editor");
+
+        // Batch count dynamic updates
+        int itemCount = getEditItems().size();
+        if (itemCount > 1) {
+            btnDelete.setText(getString(R.string.button_delete) + " (" + itemCount + ")");
+            btnOrganize.setText(getString(R.string.button_organize) + " (" + itemCount + ")");
+        } else {
+            btnDelete.setText(R.string.button_delete);
+            btnOrganize.setText(R.string.button_organize);
+        }
+
+        btnDelete.setOnClickListener(v -> {
+            performHapticClick(v);
+            doDeleteMediaItems();
+        });
+        btnOrganize.setOnClickListener(v -> {
+            performHapticClick(v);
+            doMoveMediaItems();
+        });
+        btnMore.setOnClickListener(v -> {
+            performHapticClick(v);
+            doShowMoreActions(v);
+        });
 
         if(mode == 0) {
             previewToggleGroup.setVisibility(VISIBLE);
@@ -392,13 +434,33 @@ public class TagsActivity extends AppCompatActivity {
             if (tabLayout != null) {
                 tabLayout.setVisibility(GONE);
             }
-            findViewById(R.id.action_editor).setOnClickListener(v -> {
+            actionEditor.setOnClickListener(v -> {
+                performHapticClick(v);
                 if (tabLayout != null) {
                     tabLayout.setVisibility(VISIBLE);
                 }
                 appBarLayout.setExpanded(false, true);
                 setupActionButtons(1);
             });
+
+            MaterialButton btnPreviewSave = findViewById(R.id.action_preview_save);
+            if (btnPreviewSave != null) {
+                TooltipCompat.setTooltipText(btnPreviewSave, "Save changes (Long-press to Save & Exit)");
+                if (itemCount > 1) {
+                    btnPreviewSave.setText(getString(R.string.btn_save) + " (" + itemCount + ")");
+                } else {
+                    btnPreviewSave.setText(R.string.btn_save);
+                }
+                btnPreviewSave.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    doSaveMediaItemsDirectly();
+                });
+                btnPreviewSave.setOnLongClickListener(v -> {
+                    performHapticLongClick(v);
+                    doSaveAndFinishDirectly();
+                    return true;
+                });
+            }
         } else if (mode == 1) {
             if (tabLayout != null) {
                 tabLayout.setVisibility(VISIBLE);
@@ -409,18 +471,70 @@ public class TagsActivity extends AppCompatActivity {
                 editorToggleGroup.setVisibility(VISIBLE);
                 techToggleGroup.setVisibility(GONE);
 
-                findViewById(R.id.action_reformat).setOnClickListener(v -> fragment.doFormatTags());
-                findViewById(R.id.action_read_tag).setOnClickListener(v -> fragment.doShowReadTagsPreview());
-                findViewById(R.id.action_save).setOnClickListener(v -> fragment.doSaveMediaItem());
+                MaterialButton btnReformat = findViewById(R.id.action_reformat);
+                MaterialButton btnReadTag = findViewById(R.id.action_read_tag);
+                MaterialButton btnSave = findViewById(R.id.action_save);
+
+                TooltipCompat.setTooltipText(btnReformat, "Format tags (Long-press for Full Clean Pipeline)");
+                TooltipCompat.setTooltipText(btnReadTag, "Read tags from file name");
+                TooltipCompat.setTooltipText(btnSave, "Save changes (Long-press to Save & Exit)");
+
+                if (itemCount > 1) {
+                    btnSave.setText(getString(R.string.btn_save) + " (" + itemCount + ")");
+                } else {
+                    btnSave.setText(R.string.btn_save);
+                }
+
+                btnReformat.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doFormatTags();
+                });
+                btnReformat.setOnLongClickListener(v -> {
+                    performHapticLongClick(v);
+                    doFullCleanPipeline();
+                    return true;
+                });
+
+                btnReadTag.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doShowReadTagsPreview();
+                });
+
+                btnSave.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doSaveMediaItem();
+                });
+                btnSave.setOnLongClickListener(v -> {
+                    performHapticLongClick(v);
+                    doSaveAndFinish(fragment);
+                    return true;
+                });
 
             } else if (activeFragment instanceof TagsTechnicalFragment fragment) {
                 previewToggleGroup.setVisibility(GONE);
                 editorToggleGroup.setVisibility(GONE);
                 techToggleGroup.setVisibility(VISIBLE);
 
-                findViewById(R.id.btn_reload_tag).setOnClickListener(v -> fragment.doResetTagFromFile());
-                findViewById(R.id.btn_extract_coverart).setOnClickListener(v -> fragment.doExtractEmbedCoverart());
-                findViewById(R.id.btn_remove_coverart).setOnClickListener(v -> fragment.doRemoveEmbedCoverart());
+                MaterialButton btnReload = findViewById(R.id.btn_reload_tag);
+                MaterialButton btnExtractArt = findViewById(R.id.btn_extract_coverart);
+                MaterialButton btnRemoveArt = findViewById(R.id.btn_remove_coverart);
+
+                TooltipCompat.setTooltipText(btnReload, "Reload tags from file");
+                TooltipCompat.setTooltipText(btnExtractArt, "Extract embedded cover art to folder");
+                TooltipCompat.setTooltipText(btnRemoveArt, "Remove embedded cover art");
+
+                btnReload.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doResetTagFromFile();
+                });
+                btnExtractArt.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doExtractEmbedCoverart();
+                });
+                btnRemoveArt.setOnClickListener(v -> {
+                    performHapticClick(v);
+                    fragment.doRemoveEmbedCoverart();
+                });
             }
         }
     }
@@ -448,14 +562,8 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_search_match_tags) {
                 doSearchAndMatchTags();
                 return true;
-            } else if (itemId == R.id.action_fix_thai_encoding) {
-                doFixThaiEncoding();
-                return true;
-            } else if (itemId == R.id.action_clean_tag_noise) {
-                doCleanTagNoise();
-                return true;
-            } else if (itemId == R.id.action_title_case) {
-                doFormatTitleCase();
+            } else if (itemId == R.id.action_smart_clean_format) {
+                doFullCleanPipeline();
                 return true;
             } else if (itemId == R.id.action_spectrum) {
                 doShowSpectrum();
@@ -466,9 +574,9 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_web_search) {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
                 return true;
-           /* } else if (itemId == R.id.action_reload_from_file) {
-                doResetTagFromFile();
-                return true; */
+            } else if (itemId == R.id.action_share) {
+                doShareAudioFile();
+                return true;
             }
             return false; // Return false if the item click is not handled
         });
@@ -839,7 +947,7 @@ public class TagsActivity extends AppCompatActivity {
 
     private void handleQuickFix(String actionId) {
         if ("thai_fix".equals(actionId)) {
-            doFixThaiEncoding();
+            doFullCleanPipeline();
         } else if ("auto_tag".equals(actionId)) {
             doAutoTag();
         } else if ("spectrum".equals(actionId)) {
@@ -857,6 +965,43 @@ public class TagsActivity extends AppCompatActivity {
         if (playbackService != null) {
             playbackService.playSong(track);
             Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doPlayTrack(Track track) {
+        if (track == null) return;
+        if (playbackService != null) {
+            playbackService.playSong(track);
+            Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doPlayAllTracks(List<Track> tracks) {
+        if (tracks == null || tracks.isEmpty()) return;
+        if (playbackService != null) {
+            playbackService.playSong(tracks.get(0));
+            if (playbackService.getQueueManager() != null && tracks.size() > 1) {
+                for (int i = 1; i < tracks.size(); i++) {
+                    playbackService.getQueueManager().addPlayingQueue(tracks.get(i));
+                }
+            }
+            Toast.makeText(this, "Playing " + tracks.size() + " tracks", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doQueueAllTracks(List<Track> tracks) {
+        if (tracks == null || tracks.isEmpty()) return;
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            for (Track t : tracks) {
+                playbackService.getQueueManager().addPlayingQueue(t);
+            }
+            Toast.makeText(this, "Added " + tracks.size() + " track(s) to queue", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
         }
@@ -965,6 +1110,171 @@ public class TagsActivity extends AppCompatActivity {
             }
         }
         return sb.toString();
+    }
+
+    private void doSaveAndFinish(TagsEditorFragment fragment) {
+        if (fragment != null) {
+            Toast.makeText(this, "Saving & closing...", Toast.LENGTH_SHORT).show();
+            fragment.doSaveMediaItem();
+            getWindow().getDecorView().postDelayed(this::finish, 600);
+        }
+    }
+
+    public void doSaveMediaItemsDirectly() {
+        if (activeFragment instanceof TagsEditorFragment fragment) {
+            fragment.doSaveMediaItem();
+            return;
+        }
+
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        startProgressBar();
+        int totalItems = items.size();
+        CompletableFuture.runAsync(() -> {
+            int success = 0;
+            int failed = 0;
+            int count = 0;
+            for (Track tag : items) {
+                try {
+                    boolean status = fileRepos != null && fileRepos.setMusicTag(tag);
+                    if (status) success++; else failed++;
+                } catch (Exception e) {
+                    failed++;
+                    Log.e(TAG, "doSaveMediaItemsDirectly error for " + tag.getPath(), e);
+                }
+                count++;
+                final int current = count;
+                runOnUiThread(() -> updateProgressBar(current + "/" + totalItems));
+            }
+            final int successCount = success;
+            final int failedCount = failed;
+            runOnUiThread(() -> {
+                stopProgressBar();
+                isDirty = false;
+                redisplayTag();
+                if (failedCount == 0) {
+                    Toast.makeText(this, "Saved " + successCount + " item(s)", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Saved " + successCount + " item(s), " + failedCount + " failed", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }, Executors.newSingleThreadExecutor());
+    }
+
+    private void doSaveAndFinishDirectly() {
+        Toast.makeText(this, "Saving & closing...", Toast.LENGTH_SHORT).show();
+        doSaveMediaItemsDirectly();
+        getWindow().getDecorView().postDelayed(this::finish, 600);
+    }
+
+    private void doFullCleanPipeline() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        startProgressBar();
+        CompletableFuture.supplyAsync(() -> {
+            int noiseCleaned = 0;
+            int titleCased = 0;
+            int thaiFixed = 0;
+
+            Pattern junkPattern = Pattern.compile(
+                    "(?i)(\\[(flac|320k|320kbps|lossless|hq|hd|m4a|mp3|official|lyrics|video|explicit|remastered[^\\]]*)\\]|\\((official[^\\]\\)]*|lyrics?|video|audio|explicit|remastered[^\\)]*)\\)|https?://\\S+|www\\.\\S+)"
+            );
+
+            for (Track item : items) {
+                // 1. Thai encoding repair
+                if (ThaiEncodingUtils.isGarbledThai(item.getTitle())) {
+                    item.setTitle(ThaiEncodingUtils.fixThaiEncoding(item.getTitle()));
+                    thaiFixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getArtist())) {
+                    item.setArtist(ThaiEncodingUtils.fixThaiEncoding(item.getArtist()));
+                    thaiFixed++;
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getAlbum())) {
+                    item.setAlbum(ThaiEncodingUtils.fixThaiEncoding(item.getAlbum()));
+                }
+                if (ThaiEncodingUtils.isGarbledThai(item.getGenre())) {
+                    item.setGenre(ThaiEncodingUtils.fixThaiEncoding(item.getGenre()));
+                }
+
+                // 2. Junk tag noise cleaning
+                if (!StringUtils.isEmpty(item.getTitle())) {
+                    String original = item.getTitle();
+                    String clean = junkPattern.matcher(original).replaceAll("").trim();
+                    clean = clean.replaceAll("\\s{2,}", " ").replaceAll("^[-–—\\s]+|[-–—\\s]+$", "");
+                    if (!clean.isEmpty() && !clean.equals(original)) {
+                        item.setTitle(clean);
+                        noiseCleaned++;
+                    }
+                }
+                if (!StringUtils.isEmpty(item.getArtist())) {
+                    String original = item.getArtist();
+                    String clean = junkPattern.matcher(original).replaceAll("").trim();
+                    clean = clean.replaceAll("\\s{2,}", " ").replaceAll("^[-–—\\s]+|[-–—\\s]+$", "");
+                    if (!clean.isEmpty() && !clean.equals(original)) {
+                        item.setArtist(clean);
+                    }
+                }
+
+                // 3. Title case standardisation
+                if (!StringUtils.isEmpty(item.getTitle())) {
+                    item.setTitle(toTitleCase(item.getTitle()));
+                    titleCased++;
+                }
+                if (!StringUtils.isEmpty(item.getArtist())) {
+                    item.setArtist(toTitleCase(item.getArtist()));
+                }
+                if (!StringUtils.isEmpty(item.getAlbum())) {
+                    item.setAlbum(toTitleCase(item.getAlbum()));
+                }
+            }
+            return String.format(Locale.getDefault(), "Full Clean Pipeline applied to %d track(s)", items.size());
+        }).thenAccept(msg -> {
+            runOnUiThread(() -> {
+                redisplayTag();
+                isDirty = true;
+                stopProgressBar();
+                Toast.makeText(this, "⚡ " + msg, Toast.LENGTH_SHORT).show();
+            });
+        }).exceptionally(ex -> {
+            runOnUiThread(() -> {
+                stopProgressBar();
+                Toast.makeText(this, "Clean failed: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+            });
+            return null;
+        });
+    }
+
+    private void doShareAudioFile() {
+        List<Track> items = getEditItems();
+        if (items.isEmpty()) return;
+
+        try {
+            if (items.size() == 1) {
+                Track track = items.get(0);
+                Uri fileUri = MusicFileProvider.getUriForFile(track.getPath());
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("audio/*");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, "Share Audio File"));
+            } else {
+                java.util.ArrayList<Uri> uriList = new java.util.ArrayList<>();
+                for (Track t : items) {
+                    uriList.add(MusicFileProvider.getUriForFile(t.getPath()));
+                }
+                Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                shareIntent.setType("audio/*");
+                shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriList);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, "Share " + items.size() + " Audio Files"));
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "doShareAudioFile", ex);
+            Toast.makeText(this, "Cannot share audio file: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void doExtractEmbedCoverart() {
@@ -1297,13 +1607,29 @@ public class TagsActivity extends AppCompatActivity {
     @SuppressLint("CheckResult")
     protected void updateTitlePanel(Track currentDisplayTag) {
         if (currentDisplayTag == null) {
-            titleView.setText("");
-            artistView.setText("");
+            if (titleView != null) titleView.setText("");
+            if (artistView != null) artistView.setText("");
             return;
         }
 
-        titleView.setText(trim(currentDisplayTag.getTitle(), " - "));
-        artistView.setText(trim(currentDisplayTag.getArtist(), " - "));
+        String title = trim(currentDisplayTag.getTitle(), " - ");
+        if (titleView != null) {
+            titleView.setText(title.isEmpty() ? "Unknown Title" : title);
+        }
+
+        String artist = trim(currentDisplayTag.getArtist(), " - ");
+        String album = trim(currentDisplayTag.getAlbum(), " - ");
+        if (artistView != null) {
+            if (artist.isEmpty() && album.isEmpty()) {
+                artistView.setText("");
+            } else if (album.isEmpty() || album.startsWith("[")) {
+                artistView.setText(artist);
+            } else if (artist.isEmpty()) {
+                artistView.setText(album);
+            } else {
+                artistView.setText(artist + " • " + album);
+            }
+        }
 
         // load coverArt & blur background
         loadImages(currentDisplayTag);
@@ -1313,23 +1639,13 @@ public class TagsActivity extends AppCompatActivity {
                     tagsHeaderBadges,
                     currentDisplayTag,
                     getEditItems().size(),
+                    viewModel,
+                    this::doPlayTrack,
+                    this::doPlayAllTracks,
+                    this::doQueueAllTracks,
+                    this::doBackToMainActivity,
                     this::handleQuickFix
             );
-        }
-
-        artistView.setPaintFlags(artistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        artistView.setOnClickListener(view -> {
-            doBackToMainActivity(Constants.FILTER_TYPE_ARTIST, currentDisplayTag.getArtist());
-        });
-
-        if (isEmpty(currentDisplayTag.getAlbum())) {
-            albumView.setText(String.format("[%s]", TagUtils.getDefaultAlbum(currentDisplayTag)));
-        } else {
-            albumView.setText(currentDisplayTag.getAlbum());
-            albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            albumView.setOnClickListener(view -> {
-                doBackToMainActivity(Constants.FILTER_TYPE_ALBUM, currentDisplayTag.getAlbum());
-            });
         }
     }
 

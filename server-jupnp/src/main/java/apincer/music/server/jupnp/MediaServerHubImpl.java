@@ -130,7 +130,8 @@ public class MediaServerHubImpl implements MediaServerHub {
     private String currentRendererId;
     private org.jupnp.model.gena.GENASubscription activeSubscription;
     private org.jupnp.controlpoint.SubscriptionCallback subscriptionCallback;
-    private boolean supportsGapless = true; // Default to true, then 'learn' otherwise
+    private boolean supportsGapless = false; // Default to false (safe-by-default for generic DLNA), opt-in only for verified gapless streamers
+    private volatile boolean isUserInitiatedStop = false;
     private volatile Track preloadedNextTrack;
     private volatile String preloadedNextUrl;
     private volatile long lastEventTime = 0;
@@ -1028,6 +1029,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void internalPlaySong(String udn, Track song, long initialPositionMs) {
+        isUserInitiatedStop = false;
         if (upnpService == null) {
             Log.w(TAG, "UPnP not initialized");
             return;
@@ -1090,7 +1092,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                         // Seamless position handoff: seek to initial position
                         if (initialPositionMs > 1000) {
-                            String seekTarget = formatDurationForDidl(initialPositionMs);
+                            String seekTarget = formatSeekTime(initialPositionMs);
                             if (scheduler != null && !scheduler.isShutdown()) {
                                 scheduler.schedule(() -> {
                                     controlPoint.execute(new Seek(avTransport, seekTarget) {
@@ -1208,10 +1210,15 @@ public class MediaServerHubImpl implements MediaServerHub {
      */
     @Override
     public void playerStop(String rendererUdn) {
+        isUserInitiatedStop = true;
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
-            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+            RemoteDevice device = resolveRenderer(rendererUdn);
+            if (device == null) {
+                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+            }
             if (device == null) {
                 Log.i(TAG, "Renderer not found: " + rendererUdn);
                 return;
@@ -1231,10 +1238,15 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void playerPause(String rendererUdn) {
+        isUserInitiatedStop = true;
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
-            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+            RemoteDevice device = resolveRenderer(rendererUdn);
+            if (device == null) {
+                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+            }
             if (device == null) return;
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
@@ -1249,22 +1261,45 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
+    private String formatSeekTime(long durationInMillis) {
+        long totalSeconds = Math.max(0, durationInMillis / 1000);
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        return String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
     @Override
     public void playerSeek(String rendererUdn, long positionMs) {
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
-            Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-            if (device == null) return;
+            RemoteDevice device = resolveRenderer(rendererUdn);
+            if (device == null) {
+                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+            }
+            if (device == null) {
+                Log.w(TAG, "playerSeek: Renderer not found for UDN: " + rendererUdn);
+                return;
+            }
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
             if (avTransportService == null || controlPoint == null) return;
 
-            String seekTarget = formatDurationForDidl(positionMs);
+            String seekTarget = formatSeekTime(positionMs);
+            Log.d(TAG, "playerSeek: Seeking to " + seekTarget + " (" + positionMs + "ms)");
             controlPoint.execute(new Seek(avTransportService, seekTarget) {
                 @Override
+                public void success(ActionInvocation invocation) {
+                    Log.i(TAG, "Seek succeeded to " + seekTarget);
+                    // Force an immediate position query to update UI seekbar
+                    getAvTransportPosition(avTransportService);
+                }
+
+                @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                    Log.w(TAG, "Seek failed: " + defaultMsg);
+                    Log.w(TAG, "Seek failed to " + seekTarget + ": " + defaultMsg);
                 }
             });
         });
@@ -1293,6 +1328,12 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void setNextTrack(Track nextSong) {
         if (controlPoint == null || nextSong == null) return;
+        // SAFE-BY-DEFAULT: Only dispatch SetNextAVTransportURI for verified gapless streamers (WiiM, Eversolo, Linn, Auralic).
+        // Generic DLNA renderers and DAPs use discrete handover with host RAM pre-caching.
+        if (!isCurrentRendererVerifiedGapless()) {
+            Log.d(TAG, "setNextTrack: Renderer not in verified gapless allowlist; skipping SetNextAVTransportURI.");
+            return;
+        }
 
         runOnUpnpThread(() -> {
             if(currentAVTransport == null && currentRenderer != null) {
@@ -1474,6 +1515,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                             }
 
                             long position = positionInfo.getTrackElapsedSeconds();
+                            long duration = positionInfo.getTrackDurationSeconds();
                             if (position > 0 && position == lastPosition) {
                                 stagnantCount++;
                             } else {
@@ -1482,7 +1524,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                             lastPosition = position;
 
-                            if (playbackCallback != null) {
+                            if (playbackCallback != null && position >= 0) {
                                 playbackCallback.onPlaybackStateTimeElapsedSeconds(position);
                             }
 
@@ -1496,6 +1538,11 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 Log.i(TAG, "Gapless: Renderer seamlessly transitioned to track → " + nextTrack.getTitle());
                                 if (playbackCallback != null) {
                                     playbackCallback.onMediaTrackChanged(nextTrack);
+                                }
+                            } else if (duration > 0 && position >= duration && position > 5) {
+                                Log.i(TAG, "Polling: Track duration complete (" + position + "s / " + duration + "s)");
+                                if (!isUserInitiatedStop && playbackCallback != null) {
+                                    playbackCallback.onPlaybackCompleted();
                                 }
                             }
 
@@ -1768,10 +1815,9 @@ public class MediaServerHubImpl implements MediaServerHub {
 
             if (posStr != null) {
                 int currentPositionSec = parseTimeToSeconds(posStr);
-                if (playbackCallback != null) {
+                if (playbackCallback != null && currentPositionSec >= 0) {
                     playbackCallback.onPlaybackStateTimeElapsedSeconds(currentPositionSec);
                 }
-                stopPolling(); // reduce traffic since event provides position
                 hasPosition = true;
             }
 
@@ -1787,15 +1833,20 @@ public class MediaServerHubImpl implements MediaServerHub {
                 if (currentAVTransport != null && pollingTask == null) {
                     startPolling(currentAVTransport);
                 }
-            } else if ("STOPPED".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state)) {
+            } else if ("STOPPED".equalsIgnoreCase(state)) {
                 stopPolling();
                 serverStatus.setValue(ServerStatus.RUNNING);
 
-                if (!supportsGapless) {
-                    playNextManual();
+                if (!isUserInitiatedStop && playbackCallback != null) {
+                    Log.i(TAG, "DLNA renderer stopped naturally at track end → triggering onPlaybackCompleted()");
+                    playbackCallback.onPlaybackCompleted();
                 } else {
                     schedulePauseTimeout();
                 }
+            } else if ("PAUSED".equalsIgnoreCase(state) || "PAUSED_PLAYBACK".equalsIgnoreCase(state)) {
+                stopPolling();
+                serverStatus.setValue(ServerStatus.RUNNING);
+                schedulePauseTimeout();
             } else if (hasPosition && !"STOPPED".equalsIgnoreCase(state)) {
                 serverStatus.setValue(ServerStatus.CAST);
             }
@@ -1808,12 +1859,59 @@ public class MediaServerHubImpl implements MediaServerHub {
     public boolean isCurrentRendererHiBy() {
         if (currentRenderer != null && currentRenderer.getDetails() != null) {
             String name = currentRenderer.getDetails().getFriendlyName();
-            if (name != null && name.toLowerCase().contains("hiby")) {
+            if (name != null) {
+                String lower = name.toLowerCase();
+                if (lower.contains("hiby") || lower.contains("r3") || lower.startsWith("r3")) {
+                    return true;
+                }
+            }
+            if (currentRenderer.getDetails().getManufacturerDetails() != null) {
+                String mfg = currentRenderer.getDetails().getManufacturerDetails().getManufacturer();
+                if (mfg != null && mfg.toLowerCase().contains("hiby")) {
+                    return true;
+                }
+            }
+            if (currentRenderer.getDetails().getModelDetails() != null) {
+                String model = currentRenderer.getDetails().getModelDetails().getModelName();
+                if (model != null && (model.toLowerCase().contains("hiby") || model.toLowerCase().contains("r3"))) {
+                    return true;
+                }
+            }
+        }
+        if (currentRendererId != null) {
+            String lower = currentRendererId.toLowerCase();
+            if (lower.contains("hiby") || lower.contains("r3")) {
                 return true;
             }
         }
-        if (currentRendererId != null && currentRendererId.toLowerCase().contains("hiby")) {
-            return true;
+        return false;
+    }
+
+    @Override
+    public boolean isCurrentRendererVerifiedGapless() {
+        if (currentRenderer != null && currentRenderer.getDetails() != null) {
+            String name = currentRenderer.getDetails().getFriendlyName();
+            if (name != null) {
+                String lower = name.toLowerCase();
+                if (lower.contains("wiim") || lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic") || lower.contains("audiopro")) {
+                    return true;
+                }
+            }
+            if (currentRenderer.getDetails().getManufacturerDetails() != null) {
+                String mfg = currentRenderer.getDetails().getManufacturerDetails().getManufacturer();
+                if (mfg != null) {
+                    String lower = mfg.toLowerCase();
+                    if (lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        if (currentRendererId != null) {
+            String lower = currentRendererId.toLowerCase();
+            if (lower.contains("wiim") || lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic")) {
+                return true;
+            }
         }
         return false;
     }

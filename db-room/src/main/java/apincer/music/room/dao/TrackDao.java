@@ -109,6 +109,9 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY track ASC, title ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults);
 
+    @Query("SELECT * FROM musictag WHERE album = :album ORDER BY CAST(track AS INTEGER) ASC, title ASC")
+    List<TrackEntity> findByAlbum(String album);
+
     @Query("SELECT * FROM musictag WHERE albumArtFilename = :albumUniqueKey LIMIT 1")
     TrackEntity findByAlbumArtFilename(String albumUniqueKey);
 

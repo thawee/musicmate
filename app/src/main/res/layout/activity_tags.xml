@@ -68,15 +68,19 @@
 
                     </FrameLayout>
 
+                    <!-- 🔲 Single Unified Bottom Gradient Scrim Over Cover Art -->
                     <LinearLayout
                         android:id="@+id/title_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentTop="true"
-                        android:background="@drawable/shape_background_main_header"
+                        android:layout_alignBottom="@id/panel_cover_art"
+                        android:background="@drawable/shape_bottom_cover_scrim"
                         android:orientation="vertical"
-                        android:paddingTop="42dp"
-                        android:paddingBottom="16dp">
+                        android:gravity="center_horizontal"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:paddingTop="36dp"
+                        android:paddingBottom="12dp">
 
                         <TextView
                             android:id="@+id/panel_title"
@@ -84,15 +88,24 @@
                             android:layout_height="wrap_content"
                             android:text="@string/sample_song_title"
                             android:maxLines="2"
-                            android:lines="2"
+                            android:ellipsize="end"
                             android:gravity="center"
-                            android:layout_gravity="top|center_horizontal"
                             android:fontFamily="@font/noto_sans_thai_bold"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@android:color/white"
                             android:textStyle="bold"
-                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                            android:layout_marginStart="24dp"
-                            android:layout_marginEnd="24dp" />
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/panel_artist"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/noto_sans_thai_regular"
+                            android:textColor="#DDDDDD"
+                            android:textSize="13.5sp" />
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -106,8 +119,6 @@
                 android:orientation="vertical"
                 android:paddingBottom="8dp">
 
-                <include layout="@layout/fragment_editor_preview" />
-                
                 <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/tags_header_badges"
                     android:layout_width="wrap_content"
@@ -138,7 +149,7 @@
         android:paddingBottom="160dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <!-- 🔹 Floating Action Capsule (Streamlined 1-Row Bottom Command Bar) -->
+    <!-- 🔹 Floating Action Dock (Accessible 2-Row Bottom Command Bar) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
@@ -155,37 +166,71 @@
             android:id="@+id/bottom_navigation_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="8dp"
-            android:paddingHorizontal="10dp"
-            android:paddingBottom="8dp"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="10dp"
             android:background="@drawable/shape_bottom_frosted_panel">
 
-            <!-- Left: Delete Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_delete"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+            <!-- Row 1: Global / File Related Menus -->
+            <LinearLayout
+                android:id="@+id/main_menu_panel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minWidth="0dp"
-                android:paddingHorizontal="10dp"
-                android:text="@string/button_delete"
-                android:textColor="@color/colorError" />
+                android:orientation="horizontal"
+                android:gravity="center">
 
-            <View
-                android:layout_width="1dp"
-                android:layout_height="20dp"
-                android:layout_marginHorizontal="4dp"
-                android:background="@color/colorDividerSubtle" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_delete"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="12dp"
+                    android:text="@string/button_delete"
+                    android:textColor="@color/colorError" />
 
-            <!-- Center Mode Actions Container -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:background="@color/colorDividerSubtle" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_organize"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="16dp"
+                    android:text="@string/button_organize"
+                    android:textColor="@color/colorPrimary"
+                    app:cornerRadius="20dp" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:background="@color/colorDividerSubtle" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_more"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="12dp"
+                    android:text="@string/button_more"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+
+            <!-- Row 2: Fragment / Context Dependent Actions -->
             <FrameLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1">
+                android:layout_marginTop="8dp">
 
-                <!-- 1. Preview Mode Center Actions -->
+                <!-- 1. Preview Mode Actions -->
                 <LinearLayout
                     android:id="@+id/preview_action_group"
                     android:layout_width="match_parent"
@@ -194,28 +239,43 @@
                     android:gravity="center">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/button_organize"
+                        android:id="@+id/action_editor"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
-                        android:text="@string/button_organize"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:paddingHorizontal="12dp"
+                        android:text="@string/button_edit_song_info"
+                        android:textColor="?attr/colorOnSurface"
+                        android:contentDescription="Open editor"
+                        app:icon="@drawable/ic_round_edit_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="6dp"
+                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/action_editor"
+                        android:id="@+id/action_preview_save"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="@string/button_edit_song_info"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="16dp"
+                        android:text="@string/btn_save"
                         android:textColor="@color/colorPrimary"
-                        android:contentDescription="Open editor"
-                        app:cornerRadius="20dp"/>
+                        android:contentDescription="Save changes"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_round_save_24"
+                        app:iconTint="@color/colorPrimary"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
                 </LinearLayout>
 
-                <!-- 2. Editor Mode Center Actions -->
+                <!-- 2. Editor Mode Actions (Song Info Fragment) -->
                 <LinearLayout
                     android:id="@+id/editor_action_group"
                     android:layout_width="match_parent"
@@ -230,14 +290,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
+                        android:paddingHorizontal="10dp"
+                        android:text="@string/btn_format"
                         android:contentDescription="Format tags"
-                        app:icon="@drawable/round_auto_awesome_24" />
+                        app:icon="@drawable/round_auto_awesome_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="20dp"
-                        android:layout_marginHorizontal="4dp"
+                        android:layout_marginHorizontal="6dp"
                         android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
@@ -246,14 +309,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
+                        android:paddingHorizontal="10dp"
+                        android:text="@string/btn_read"
                         android:contentDescription="Read tags from file"
-                        app:icon="@drawable/ic_file_rename_outline_24" />
+                        app:icon="@drawable/ic_file_rename_outline_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="20dp"
-                        android:layout_marginHorizontal="4dp"
+                        android:layout_marginHorizontal="6dp"
                         android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
@@ -262,15 +328,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="12dp"
+                        android:paddingHorizontal="14dp"
+                        android:text="@string/btn_save"
                         android:contentDescription="Save changes"
                         android:textColor="@color/colorPrimary"
                         app:cornerRadius="20dp"
                         app:icon="@drawable/ic_round_save_24"
-                        app:iconTint="@color/colorPrimary" />
+                        app:iconTint="@color/colorPrimary"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
                 </LinearLayout>
 
-                <!-- 3. Tech Info Mode Center Actions -->
+                <!-- 3. Tech Info Mode Actions (Tech Info Fragment) -->
                 <LinearLayout
                     android:id="@+id/tech_action_group"
                     android:layout_width="match_parent"
@@ -285,14 +354,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
+                        android:paddingHorizontal="10dp"
+                        android:text="@string/btn_reload"
                         android:contentDescription="Reload from file"
-                        app:icon="@drawable/round_restore_page_24" />
+                        app:icon="@drawable/round_restore_page_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="20dp"
-                        android:layout_marginHorizontal="4dp"
+                        android:layout_marginHorizontal="6dp"
                         android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
@@ -301,14 +373,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
+                        android:paddingHorizontal="10dp"
+                        android:text="@string/btn_extract_art"
                         android:contentDescription="Extract cover art"
-                        app:icon="@drawable/ic_round_image_24" />
+                        app:icon="@drawable/ic_round_image_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="20dp"
-                        android:layout_marginHorizontal="4dp"
+                        android:layout_marginHorizontal="6dp"
                         android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
@@ -317,28 +392,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="8dp"
+                        android:paddingHorizontal="10dp"
+                        android:text="@string/btn_remove_art"
                         android:contentDescription="Remove cover art"
-                        app:icon="@drawable/ic_round_hide_image_24" />
+                        app:icon="@drawable/ic_round_hide_image_24"
+                        app:iconPadding="4dp"
+                        app:iconSize="18dp" />
                 </LinearLayout>
             </FrameLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="20dp"
-                android:layout_marginHorizontal="4dp"
-                android:background="@color/colorDividerSubtle" />
-
-            <!-- Right: More Actions Menu Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_more"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="0dp"
-                android:paddingHorizontal="10dp"
-                android:text="@string/button_more"
-                android:textColor="?attr/colorOnSurface" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

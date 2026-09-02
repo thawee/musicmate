@@ -76,38 +76,54 @@ public class DMRPlayer implements PlaybackTarget {
         return getDeviceProfile() == DeviceProfile.HIBY;
     }
 
+    public boolean supportsPreload() {
+        return getDeviceProfile().isSupportsPreload();
+    }
+
     public enum DeviceProfile {
-        WIIM("WiiM Audio Streamer", 3000),
-        EVERSOLO("Eversolo Master Streamer", 3000),
-        HIBY("HiBy DAP Renderer", -20000),
-        SHANLING("Shanling DAP Renderer", -15000),
-        SONOS("Sonos Speaker", 5000),
-        GENERIC("Standard DLNA Renderer", 5000);
+        WIIM("WiiM Audio Streamer", 3000, true),
+        EVERSOLO("Eversolo Master Streamer", 3000, true),
+        LINN("Linn DS Player", 3000, true),
+        AURALIC("AURALiC Streamer", 3000, true),
+        HIBY("HiBy DAP Renderer", 0, false),
+        SHANLING("Shanling DAP Renderer", 0, false),
+        FIIO("FiiO DAP Renderer", 0, false),
+        SONOS("Sonos Speaker", 0, false),
+        GENERIC("Standard DLNA Renderer", 0, false);
 
         private final String label;
-        private final long gaplessDelayMs; // positive = after start; negative = before track end
+        private final long gaplessDelayMs; // positive = after start
+        private final boolean supportsPreload;
 
-        DeviceProfile(String label, long gaplessDelayMs) {
+        DeviceProfile(String label, long gaplessDelayMs, boolean supportsPreload) {
             this.label = label;
             this.gaplessDelayMs = gaplessDelayMs;
+            this.supportsPreload = supportsPreload;
         }
 
         public String getLabel() { return label; }
         public long getGaplessDelayMs() { return gaplessDelayMs; }
+        public boolean isSupportsPreload() { return supportsPreload; }
     }
 
     public DeviceProfile getDeviceProfile() {
         String name = displayName != null ? displayName.toLowerCase() : "";
         String id = udn != null ? udn.toLowerCase() : "";
 
-        if (name.contains("wiim") || id.contains("wiim") || name.contains("linkplay")) {
+        if (name.contains("wiim") || id.contains("wiim") || name.contains("linkplay") || name.contains("audiopro")) {
             return DeviceProfile.WIIM;
         } else if (name.contains("eversolo") || id.contains("eversolo") || name.contains("zidoo")) {
             return DeviceProfile.EVERSOLO;
-        } else if (name.contains("hiby") || id.contains("hiby")) {
+        } else if (name.contains("linn") || id.contains("linn")) {
+            return DeviceProfile.LINN;
+        } else if (name.contains("auralic") || id.contains("auralic") || name.contains("aries") || name.contains("altair")) {
+            return DeviceProfile.AURALIC;
+        } else if (name.contains("hiby") || id.contains("hiby") || name.contains("r3") || id.contains("r3") || name.startsWith("r3")) {
             return DeviceProfile.HIBY;
         } else if (name.contains("shanling") || id.contains("shanling")) {
             return DeviceProfile.SHANLING;
+        } else if (name.contains("fiio") || id.contains("fiio")) {
+            return DeviceProfile.FIIO;
         } else if (name.contains("sonos") || id.contains("sonos")) {
             return DeviceProfile.SONOS;
         }

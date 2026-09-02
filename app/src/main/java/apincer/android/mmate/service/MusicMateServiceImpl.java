@@ -938,6 +938,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             AudioStreamCacheManager.getInstance().preloadTrack(next);
             try {
                 PlaybackTarget player = getActivePlayer();
+                if (player instanceof apincer.music.core.playback.DMRPlayer && !((apincer.music.core.playback.DMRPlayer) player).supportsPreload()) {
+                    Log.d(TAG, "DMR does not support SetNextAVTransportURI; keeping in local memory cache only.");
+                    return;
+                }
                 if (player != null && isControllable(player)) {
                     mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
                 } else if (player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
@@ -1270,28 +1274,23 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         PlaybackTarget activePlayer = getActivePlayer();
         boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
                 || mediaHub.isCurrentRendererHiBy();
+        boolean supportsPreload = !(activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                || ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
 
-        long durationMs = track != null ? (long) (track.getAudioDuration() * 1000) : 0;
-        long preloadDelayMs;
-
-        if (isHiBy) {
-            // HiBy R3 / HiBy OS Firmware Protection:
-            // Sending SetNextAVTransportURI within initial startup causes HiBy's single-threaded
-            // decode FIFO buffer to reset or pause. Schedule preload only when the track is in its
-            // stable final phase (20s before track end), or bypass for short tracks (<=35s) and
-            // let scheduleFallback handle transition cleanly.
-            if (durationMs > 35000) {
-                preloadDelayMs = Math.max(15000, durationMs - 20000);
-            } else {
-                Log.d(TAG, "HiBy renderer: Track duration is short (" + (durationMs / 1000) + "s), skipping SetNextAVTransportURI to prevent buffer reset; fallback will handle handover.");
-                return;
+        if (isHiBy || !supportsPreload) {
+            Log.d(TAG, "Renderer (" + (activePlayer != null ? activePlayer.getDisplayName() : "HiBy/DMR") + ") does not support UPnP SetNextAVTransportURI. Pre-caching stream in memory for discrete handover.");
+            Track next = queueManager.getNextTrack();
+            if (next != null) {
+                AudioStreamCacheManager.getInstance().preloadTrack(next);
             }
-        } else {
-            // Standard renderers (WiiM, Eversolo, smart speakers): 5-second clean stabilization window
-            preloadDelayMs = 5000;
+            return;
         }
 
-        Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s (isHiBy=" + isHiBy + ")");
+        long preloadDelayMs = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                ? ((apincer.music.core.playback.DMRPlayer) activePlayer).getDeviceProfile().getGaplessDelayMs()
+                : 5000;
+
+        Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s");
 
         preloadTask = scheduler.schedule(() -> {
             preloadNextTrackSafe();

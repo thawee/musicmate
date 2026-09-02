@@ -17,9 +17,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **DMS Server DLNA/UPnP Icons:** Generated high-resolution 64×64 and 128×128 PNGs featuring the official Golden "M" emblem on dark radial obsidian, replacing legacy orange flame assets across all network control points (WiiM, BubbleUPnP, mconnect, Foobar2000).
   - **Material 3 Status Bar Notification:** Replaced dated raster glyph with a crisp, pure white "M" brand silhouette on transparent background (`ic_notification_default.png`).
   - **Legacy Launcher Fallbacks:** Re-rendered all mipmap densities (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) to guarantee 100% brand consistency on legacy launchers and dialogs.
+- **Unified Immersive Hero Cover Art Layout (`activity_tags.xml`, `TagsActivity.java`, `shape_bottom_cover_scrim.xml`)**:
+  - Transformed the Tag Preview header to match the Now Playing playback experience with a clean 1:1 square artwork viewport free of top scrims.
+  - Grouped Song Title (`panel_title`) and dynamically formatted subtitle (`{Artist} • {Album}`) at the bottom of the cover art over a smooth cinematic dark gradient scrim (`shape_bottom_cover_scrim.xml`).
+  - Completely eliminated the redundant split `[ Artist | Album ]` two-column layout (`fragment_editor_preview.xml`) and disruptive text click listeners.
+- **4-Tier Audiophile Header Hierarchy & Telemetry Footer Strip (`AudioBadges.kt`, `RelatedTracksSheet.kt`, `TagsViewModel.kt`, `DialogInterop.kt`)**:
+  - Reorganized the Tag Preview Header into a clear 4-tier narrative: **Tier 1 (Fidelity Badges)** ➔ **Tier 2 (2-Line Provenance Capsules)** ➔ **Tier 3 (Musical Taxonomy Chips)** ➔ **Tier 4 (Technical Telemetry Footer)**.
+  - Relocated the monospace specs strip (`FLAC • 24/96 • 4608 kbps • Stereo • 05:54 • 198 MB`) to the bottom of the card with dedicated breathing room (`7.dp`), acting as a clean technical grounding baseline.
+  - Embedded a structured 2-line Studio Provenance block on `TagPreviewHeader`: Row 1 = `[ 👤 {Artist} • N ❯ ]` (Gold) + `[ 💿 {Album} • N ❯ ]` (Teal), Row 2 = `[ 📁 {Folder} • N ❯ ]` (Slate Blue) with live database track counts and tactile haptic feedback.
+  - Positioned a dedicated **Musical Taxonomy Tier** directly underneath Provenance with intuitive category glyphs: `[ 🎸 Genre ]`, `[ 🎭 Mood ]`, `[ 🎨 Style ]`, and `[ 🌏 Origin ]`.
+  - Implemented `RelatedTracksSheet` Compose modal bottom sheet for seamless, in-place discography browsing without exiting the tag editor, featuring real-time audiophile tier badges, 1-tap playback, `Play All`, `Queue All`, and `View in Library` actions.
+  - Fixed database scoping for `FILTER_TYPE_PATH`, `FILTER_TYPE_ARTIST`, `FILTER_TYPE_ALBUM` across `RoomDbHelper.buildWhereClause()` and `TagRepository.findByCriteria()`, and introduced `findByAlbum(album)` sorted by track sequence.
 - **Expanded "More..." Power Menu & Quick-Fix Actions (`tag_more_actions_menu.xml`, `AudioBadges.kt`, `DialogInterop.kt`)**:
-  - Added grouped Material 3 items across Playback (`Play Track Now`, `Add to Queue`), Tag Curation (`Auto-Tag MusicBrainz`, `Search Online`, `Repair Thai Text Encoding`, `Clean Tag Noise`, `Format Title Case`), Audio Auditing (`Lossless Spectrum Verifier`), and File Utilities (`Open in File Manager`, `Search on Web`, `Reload Raw Tags`).
-  - Added interactive Quick-Fix chips on `TagPreviewHeader` for one-tap metadata repairs.
+  - Added grouped Material 3 items across Playback (`Play Track Now`, `Add to Queue`), Tag Curation (`Auto-Tag MusicBrainz`, `Search Online`, `Smart Clean & Format`), Audio Auditing (`Lossless Spectrum Verifier`), and File Utilities (`Open in File Manager`, `Search on Web`, `Share Audio File`, `Reload Raw Tags`).
+  - Enabled expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`) on the Tag Preview Header to achieve 100% visual parity with the Now Playing playback sheet.
+- **Command Bar Micro-Labels & Accessibility Tooltips (`activity_tags.xml`, `strings.xml`, `TagsActivity.java`)**:
+  - Added clear text labels alongside vector icons on Row 2 (`[✨ Format]`, `[📄 From File]`, `[💾 Save]`, `[🔄 Reload]`, `[🖼️ Extract]`, `[🗑️ Remove Art]`) paired with descriptive `TooltipCompat` tooltips.
+- **Tactile Micro-Haptics & Pro Long-Press Shortcuts (`TagsActivity.java`)**:
+  - Added `performHapticFeedback` on all button taps and long-presses.
+  - Long-pressing `[Format]` triggers the **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding repair in a single pass); long-pressing `[Save]` triggers **Save & Close**.
+- **Dynamic Multi-Track Batch Badging (`TagsActivity.java`)**:
+  - Dynamically displays selected track counts on buttons (`Delete (N)`, `Organize (N)`, `Save (N)`) when editing batches of songs.
 - **Embedded Artwork & Metadata Health Inspector (`TagsTechnicalPage.kt`)**:
   - Added real-time artwork dimension readout (e.g. `1400x1400 px`), MIME type, file size in KB, and visual UHD / HD / Low-Res rating badge.
   - Added an 8-point quality standard assessment (Title, Artist, Album, Year, Genre, Track#, Artwork, Lossless) with percentage health score.
@@ -27,16 +45,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added tap-on-artwork action sheet (Online Search, Gallery Photo Picker via `ActivityResultLauncher`, Extract to Folder, Remove Art).
 
 ### Changed
-- **Streamlined 1-Row Bottom Command Bar (`activity_tags.xml`)**:
-  - Replaced two stacked button rows with a single 1-row Material 3 dock (`Delete` on left, center mode actions with high-contrast primary Gold edit pill, and `More...` on right), reducing bottom navigation height from 120dp to 56dp.
+- **Accessible 2-Row Bottom Command Bar Architecture (`activity_tags.xml`, `TagsActivity.java`)**:
+  - Structured the bottom dock into two distinct functional tiers: Row 1 for permanent, high-frequency file operations (`[Delete]`, `[Organize]`, `[More...]`), and Row 2 for active fragment actions (`[Edit Song Info] | [Save]` in preview, `[Format] | [From File] | [Save]` in editor, `[Reload] | [Extract] | [Remove Art]` in tech info), maximizing thumb reach and touch accessibility.
 - **Unified Obsidian Preview Header (`TagPreviewHeader`, `AudioBadges.kt`)**:
   - Replaced fragmented XML TextViews with a pure Compose obsidian header combining `QualityBadge`, `ResolutionBadge`, `DynamicRangeMeter`, `RatingBadge`, interactive Tag Pills (Origin, Genre, Mood, Style), and tabular monospace telemetry strip (`FLAC • 24/96 • 1411 kbps • Stereo • 04:23 • 45.2 MB`).
 - **Asynchronous Technical Diagnostics Extraction (`TagsTechnicalPage.kt`)**:
   - Offloaded synchronous `TagReader.readFullTag`, `FFMPegReader.extractTagFromFile`, and reflection fields to `Dispatchers.IO` with `produceState`, eliminating UI frame drops during tab transitions.
+- **Elimination of On-Screen Volume Slider for Audiophile Bit-Perfect Clarity (`NowPlayingPage.kt`, `DESIGN.md`)**:
+  - Removed persistent on-screen horizontal volume slider row, preventing accidental seek touch collisions and UPnP SOAP volume command flooding on single-threaded DAPs.
+  - Reclaimed 40dp+ vertical viewport space for Album Artwork, chromatic glowing Seekbar, and primary transport controls. Local playback uses phone hardware volume buttons; streaming uses physical DAC/DAP analog dials for 100% bit-perfect output.
 - **Song Info Editor Reactive State Synchronization (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `TagsTechnicalFragment.kt`)**:
   - Removed redundant `PREVIEW -> Unknown Title` box from `TagsEditorPage.kt` and wired reactive `StateFlow` collection with `LaunchedEffect` to populate all form fields immediately upon background database load.
 
 ### Fixed
+- **DLNA / UPnP DMR Seeking & Position Scrubbing on HiBy R3 (`MediaServerHubImpl.java`)**:
+  - Replaced millisecond duration formatting (`%d:%02d:%02d.%03d`) with strict standard `HH:MM:SS` format (`%02d:%02d:%02d`) for UPnP `Seek` actions, resolving seek failures and SOAP errors on HiBy R3 / HiBy OS and embedded DAP renderers.
+  - Resolved renderer lookup across UDN formats and prefix variations with `resolveRenderer()`.
+  - Maintained active 1-second position polling throughout active playback (`serverStatus == CAST`) and removed premature polling termination on sporadic GENA events.
+- **Safe-by-Default DLNA Queue Preload Allowlist (`MediaServerHubImpl.java`, `DMRPlayer.java`, `MusicMateServiceImpl.java`)**:
+  - Configured DLNA gapless preload (`SetNextAVTransportURI`) to be **opt-in only for verified hardware streamers** (`WiiM`, `Linkplay`, `Eversolo`, `Zidoo`, `Linn`, `Auralic`).
+  - All generic DLNA renderers, DAPs (`HiBy`, `Shanling`, `FiiO`, `Astell&Kern`), Sonos, and smart TVs default to `supportsPreload = false`, leveraging MusicMate's ultra-reliable RAM pre-caching (`AudioStreamCacheManager`) and event-driven discrete handover to eliminate decoder buffer lockups across all consumer renderers.
+  - Added natural track completion detection when renderers transition to `STOPPED` at end-of-track, immediately notifying `playbackCallback.onPlaybackCompleted()` to advance to the next track in the queue with a `durationMs + 1.5s` safety fallback timer.
 - **Lossless Spectrogram Resampling & Ultrasonic Nyquist Preservation (`SpectrogramGenerator.java`)**:
   - Removed hardcoded `-ar 48000` downsampler that artificially truncated genuine 96kHz and 192kHz Studio Masters at 24kHz, preserving full ultrasonic frequencies up to 48kHz.
 - **Spectrogram Cache Collision & Concurrency Race Condition (`SpectrogramGenerator.java`)**:

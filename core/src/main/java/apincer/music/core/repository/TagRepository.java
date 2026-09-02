@@ -424,7 +424,19 @@ public class TagRepository {
         if (criteria.isSearchMode()) {
             // search title only, limit 5 songs
             list = dbHelper.findByKeyword(criteria.getSearchText(), firstResult, maxResults);
-        }else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
+        } else if (!StringUtils.isEmpty(criteria.getFilterType()) && !StringUtils.isEmpty(criteria.getFilterText())) {
+            String fType = criteria.getFilterType();
+            String fText = criteria.getFilterText().trim();
+            if (Constants.FILTER_TYPE_PATH.equalsIgnoreCase(fType)) {
+                list = dbHelper.findInPath(fText);
+            } else if (Constants.FILTER_TYPE_ARTIST.equalsIgnoreCase(fType)) {
+                list = dbHelper.findByArtist(fText, firstResult, maxResults);
+            } else if (Constants.FILTER_TYPE_ALBUM.equalsIgnoreCase(fType)) {
+                list = dbHelper.findByAlbum(fText);
+            } else if (Constants.FILTER_TYPE_GENRE.equalsIgnoreCase(fType)) {
+                list = dbHelper.findByGenre(fText, firstResult, maxResults);
+            }
+        } else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
                 if (StringUtils.isEmpty(criteria.getKeyword())) {
                     criteria.setKeyword(Constants.TITLE_ALL_SONGS);
                 }
@@ -705,6 +717,10 @@ public class TagRepository {
 
     public List<Track> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults) {
         return dbHelper.findByAlbumAndAlbumArtist(album, albumArtist, firstResult, maxResults);
+    }
+
+    public List<Track> findByAlbum(String album) {
+        return dbHelper.findByAlbum(album);
     }
 
     public List<Track> findMySongs() {

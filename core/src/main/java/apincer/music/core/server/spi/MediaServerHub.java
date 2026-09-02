@@ -64,4 +64,8 @@ public interface MediaServerHub {
     default boolean isCurrentRendererHiBy() {
         return false;
     }
+
+    default boolean isCurrentRendererVerifiedGapless() {
+        return false;
+    }
 }

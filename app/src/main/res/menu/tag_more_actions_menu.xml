@@ -34,21 +34,9 @@
             app:showAsAction="never" />
 
         <item
-            android:id="@+id/action_fix_thai_encoding"
-            android:icon="@drawable/ic_round_translate_24"
-            android:title="@string/menu_fix_thai_encoding"
-            app:showAsAction="never" />
-
-        <item
-            android:id="@+id/action_clean_tag_noise"
+            android:id="@+id/action_smart_clean_format"
             android:icon="@drawable/ic_round_auto_fix_high_24"
-            android:title="@string/menu_clean_tag_noise"
-            app:showAsAction="never" />
-
-        <item
-            android:id="@+id/action_title_case"
-            android:icon="@drawable/ic_round_text_fields_24"
-            android:title="@string/menu_title_case"
+            android:title="@string/menu_smart_clean_format"
             app:showAsAction="never" />
     </group>
 
@@ -74,13 +62,12 @@
             android:icon="@drawable/ic_search_24dp"
             android:title="@string/find_online"
             app:showAsAction="never" />
-<!--
+
         <item
-            android:id="@+id/action_reload_from_file"
-            android:icon="@drawable/round_restore_page_24"
-            android:title="@string/menu_reload_from_file"
+            android:id="@+id/action_share"
+            android:icon="@drawable/ic_round_share_24"
+            android:title="@string/menu_share_file"
             app:showAsAction="never" />
-            -->
     </group>
 
 </menu>

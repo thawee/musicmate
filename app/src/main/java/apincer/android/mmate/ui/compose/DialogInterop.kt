@@ -2,9 +2,13 @@ package apincer.android.mmate.ui.compose
 
 import android.content.Context
 import android.view.View
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
 import java.util.function.BiConsumer
 import apincer.music.core.model.Track
+import apincer.android.mmate.ui.viewmodel.TagsViewModel
+import apincer.android.mmate.ui.viewmodel.RelatedTracksSheetState
 
 object DialogInterop {
     @JvmStatic
@@ -259,17 +263,42 @@ object DialogInterop {
         composeView: ComposeView,
         track: Track?,
         itemCount: Int = 1,
+        viewModel: TagsViewModel? = null,
+        onPlayTrack: java.util.function.Consumer<Track>? = null,
+        onPlayAll: java.util.function.Consumer<List<Track>>? = null,
+        onQueueAll: java.util.function.Consumer<List<Track>>? = null,
+        onViewInLibrary: java.util.function.BiConsumer<String, String>? = null,
         listener: QuickFixListener? = null
     ) {
         composeView.setContent {
             MusicMateTheme {
-                TagPreviewHeader(
-                    track = track,
-                    itemCount = itemCount,
-                    onQuickFixClick = { actionId ->
-                        listener?.onQuickFix(actionId)
+                val provenance = viewModel?.studioProvenanceFlow?.collectAsState()?.value
+                val relatedSheetState = viewModel?.relatedTracksSheetState?.collectAsState()?.value
+
+                Box {
+                    TagPreviewHeader(
+                        track = track,
+                        itemCount = itemCount,
+                        provenance = provenance,
+                        onOpenRelated = { filterType, query, title ->
+                            viewModel?.openRelatedTracks(filterType, query, title)
+                        },
+                        onQuickFixClick = { actionId ->
+                            listener?.onQuickFix(actionId)
+                        }
+                    )
+
+                    if (relatedSheetState != null && relatedSheetState.isVisible) {
+                        RelatedTracksSheet(
+                            state = relatedSheetState,
+                            onDismissRequest = { viewModel.closeRelatedTracks() },
+                            onPlayTrack = { tr -> onPlayTrack?.accept(tr) },
+                            onPlayAll = { tracks -> onPlayAll?.accept(tracks) },
+                            onQueueAll = { tracks -> onQueueAll?.accept(tracks) },
+                            onViewInLibrary = { type, kw -> onViewInLibrary?.accept(type, kw) }
+                        )
                     }
-                )
+                }
             }
         }
     }

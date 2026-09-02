@@ -103,6 +103,8 @@ public interface DbHelper {
 
     List<Track> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults) ;
 
+    List<Track> findByAlbum(String album) ;
+
     Track findByAlbumArtFilename(String albumUniqueKey) ;
 
     List<Track> findByGenre(String name, long firstResult, long maxResults) ;

@@ -1,3 +1,39 @@
+# DLNA / UPnP Controller Stability & Reliability Master Plan 🛡️
+
+## Objectives
+Elevate MusicMate's DLNA / UPnP Digital Media Controller (DMC) and Digital Media Server (DMS) engine to **ultra-stable, audiophile-grade reliability** across all network conditions, embedded DAPs (HiBy R3, Shanling), flagship streamers (WiiM, Eversolo, Sonos), and background playback states.
+
+---
+
+## Master Checklist
+
+- [x] **Pillar 1: Command Serialization & Rate Limiting (Prevent DAP FIFO Overflows)**
+  - [x] Debounce UI seekbar scrubbing in `NowPlayingPage.kt` to dispatch `Seek` only upon slider release (`onValueChangeFinished`).
+  - [x] Throttle rapid DMR volume adjustments with `onValueChangeFinished` to prevent overwhelming single-threaded DAP UPnP microstacks.
+  - [x] Sequence multi-step transport commands (`Stop` ➔ `SetAVTransportURI` ➔ `Play` ➔ `Seek`) with safe 100ms DAC buffer flush delays.
+
+- [x] **Pillar 2: Adaptive Sync & Robust Playback State Machine**
+  - [x] Maintain dual-channel synchronization: primary GENA push events with adaptive `GetPositionInfo` polling watchdog.
+  - [x] Implement natural track end detection (`STOPPED` state / polling duration completion) guarded with `isUserInitiatedStop` to trigger `onPlaybackCompleted()`.
+  - [x] Reinforce precision safety fallback timer (`scheduleFallback`) at `track.duration + 1.5s` to guarantee queue auto-advance even under 100% packet loss.
+
+- [x] **Pillar 3: Device Profile Adaptability & Preload Management**
+  - [x] Centralize DAP/Streamer device profiles (`WiiM`, `Eversolo`, `HiBy`, `Shanling`, `Sonos`, `Generic`) in `DMRPlayer.DeviceProfile`.
+  - [x] Bypass UPnP `SetNextAVTransportURI` for non-preload DAPs (`supportsPreload = false`) to eliminate decoder buffer resets.
+  - [x] Pre-cache next track audio frames in Android host RAM (`AudioStreamCacheManager`) for sub-100ms instant discrete handover.
+
+- [x] **Pillar 4: Network & Power Resilience (Screen-Off / Background Reliability)**
+  - [x] Ensure `PowerManager.PARTIAL_WAKE_LOCK`, `WifiManager.WIFI_MODE_FULL_HIGH_PERF`, and `WifiManager.MulticastLock` are actively held throughout streaming.
+  - [x] Re-acquire locks and re-bind SSDP discovery dynamically upon Wi-Fi network reconnects or IP transitions.
+  - [x] Ensure zero file descriptor leaks in async HTTP file producers (`PartialFileProducer.java`) upon stream completion or cancellation.
+
+- [x] **Pillar 5: Verification & Quality Assurance**
+  - [x] Verify clean compilation with `./gradlew compileDebugSources`.
+  - [x] Execute complete test suite with `./gradlew testDebugUnitTest` (BUILD SUCCESSFUL).
+  - [x] Document lessons and update `CHANGELOG.md` and `tasks/lessons.md`.
+
+---
+
 # Architecture Modernization & Clean UDF Evolution Master Plan 🏗️
 
 ## Objectives
@@ -1022,9 +1058,133 @@ Reorganize the data hierarchy on the 3D flip **Audio Anatomy** screen ([`NowPlay
 - **60fps Buttery Smooth UI & Hardened Usability:** Offloaded heavy technical tag/FFmpeg extraction to background IO coroutines, protected user edits against accidental back-press dismissal, removed redundant duplicate header text, and added full soft-keyboard IME insets.
 - **Lossless Spectrum Fidelity & DSD Smart Database Integration:** Corrected spectrogram resampler to preserve full 48kHz ultrasonic spectrum on 96kHz/192kHz audio, and fixed Room DAO audio encoding queries so DSF/DSD/AIF/MP3/M4A formats are accurately indexed and queried.
 
+---
 
+# Tier 18: Tag Activity 2-Row Accessible Command Bar Architecture 🏷️
 
+## Objectives
+1. **Restore & Elevate 2-Row Command Bar Architecture (`activity_tags.xml`)**:
+   - **Row 1 (Top / Global File Operations)**: Cleanly group file/media actions (`[Delete]`, `[Organize]`, `[More...]`) so they remain consistently accessible across all views.
+   - **Row 2 (Bottom / Active Fragment Dependent)**: Dynamically present fragment-specific workflows (`[Edit Song Info]` in preview mode, `[Auto-Format]` / `[Read Tags]` / `[Save Changes]` in Song Info editor mode, `[Reload Tags]` / `[Extract Cover Art]` / `[Remove Cover Art]` in Tech Info mode).
+2. **Material 3 Frosted Ergonomics & Touch Accessibility**:
+   - Provide generous touch targets (`minWidth="0dp"`, `paddingHorizontal="12dp"`-`16dp"`), refined vertical rhythm (`8dp` row spacing), subtle frosted glass borders, and prominent Gold Tonal styling for key actions (`Organize`, `Edit Song Info`, `Save Changes`).
+3. **Verification & Testing**:
+   - Compile and verify with `./gradlew compileDebugSources testDebugUnitTest`.
 
+## Checklist
+- [x] **1. Refactor `activity_tags.xml` to 2-Row Architecture**
+  - [x] Implemented Row 1 (`main_menu_panel` with Delete, Organize, More).
+  - [x] Implemented Row 2 (`FrameLayout` containing `preview_action_group`, `editor_action_group`, `tech_action_group`).
+  - [x] Applied Material 3 styling tokens, generous touch padding (`paddingHorizontal="12dp"`-`16dp"`), and Frosted Glass panel design.
+- [x] **2. Verify `TagsActivity.java` Bindings & State Transitions**
+  - [x] Verified mode 0 (Preview) / mode 1 (Editor & Tech Info) visibility and listener attachments across tab changes.
+- [x] **3. Build & Test Verification**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL in 37s**, 0 errors).
+- [x] **4. Update Documentation & Lessons**
+  - [x] Updated `tasks/lessons.md` with user preference on command bar accessibility.
+  - [x] Marked checklist items complete in `tasks/todo.md`.
 
+## Review & Results
+- **Accessible 2-Row Command Bar Architecture:** Restructured the bottom action dock in `activity_tags.xml` into two distinct functional tiers:
+  - **Row 1 (File Operations):** Houses static, high-frequency file management actions (`[Delete]`, `[Organize]`, `[More...]`) that remain always visible and easily accessible regardless of the active tab.
+  - **Row 2 (Fragment Actions):** Dynamically updates with context-specific tools (`[Edit Song Info]` in preview mode, `[Auto-Format] | [Read Tags] | [Save Changes]` in Song Info mode, `[Reload Tags] | [Extract Cover Art] | [Remove Cover Art]` in Tech Info mode).
+- **Generous Touch Targets & Visual Hierarchy:** Enlarged button touch surfaces (`paddingHorizontal="12dp"`–`16dp"`, `minWidth="0dp"`), centered alignments, and highlighted key primary commit actions (`Organize`, `Edit Song Info`, `Save Changes`) in primary Material 3 Tonal Gold pill styling.
+- **Verification:** Verified compilation and all unit tests with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL**, 0 errors).
 
+---
+
+# Tier 19: Command Bar Intelligence, Micro-Labels, Haptics & Shortcuts 🚀
+
+## Objectives
+1. **Icon + Micro-Labels on Row 2 (`activity_tags.xml`, `strings.xml`)**:
+   - Add clear text labels alongside vector icons for all Row 2 buttons:
+     - Editor: `[✨ Format]`, `[📄 From File]`, `[💾 Save]`
+     - Tech Info: `[🔄 Reload]`, `[🖼️ Extract]`, `[🗑️ Remove Art]`
+   - Add rich Tooltips via `TooltipCompat.setTooltipText`.
+2. **Tactile Micro-Haptics on All Buttons (`TagsActivity.java`)**:
+   - Add responsive physical feedback on short taps and long presses.
+3. **Multi-Track Batch Count Badging (`TagsActivity.java`)**:
+   - Dynamically display `Delete (N)`, `Organize (N)`, and `Save (N)` when editing multiple tracks.
+4. **Pro Long-Press Shortcuts (`TagsActivity.java`)**:
+   - Long-press `[Format]`: Execute **Full Clean Pipeline** (Clean Noise + Title Case + Thai Fix).
+   - Long-press `[Save]`: Execute **Save & Finish** (commit and close).
+5. **Direct Share Audio File in Power Menu (`tag_more_actions_menu.xml`, `TagsActivity.java`)**:
+   - Add `[Share Audio File]` to the File Utilities group with single/multi-file `Intent.ACTION_SEND` support.
+6. **Verification & Testing**:
+   - Compile and verify with `./gradlew compileDebugSources testDebugUnitTest`.
+
+## Checklist
+- [x] **1. Add Strings & Update `tag_more_actions_menu.xml`**
+  - [x] Added `btn_format`, `btn_read`, `btn_save`, `btn_reload`, `btn_extract_art`, `btn_remove_art`.
+  - [x] Added `action_share` item to `tag_more_actions_menu.xml`.
+- [x] **2. Upgrade `activity_tags.xml` with Micro-Labels & Icons**
+  - [x] Configured `app:icon`, `app:iconPadding="4dp"`, `app:iconSize="18dp"`, and `android:text` on all Row 2 buttons (`Format`, `From File`, `Save`, `Reload`, `Extract`, `Remove Art`).
+- [x] **3. Implement Haptics, Batch Badges, Pro Shortcuts & Sharing in `TagsActivity.java`**
+  - [x] Added `performHapticClick(View v)` and `performHapticLongClick(View v)` hardware feedback.
+  - [x] Configured `TooltipCompat.setTooltipText` for all buttons across Row 1 & Row 2.
+  - [x] Wired dynamic batch count indicators (`Delete (N)`, `Organize (N)`, `Save (N)`).
+  - [x] Implemented long-press shortcut on Format (`doFullCleanPipeline()`) executing full noise cleaning + title casing + Thai encoding repair in one tap.
+  - [x] Implemented long-press shortcut on Save (`doSaveAndFinish()`).
+  - [x] Implemented `doShareAudioFile()` supporting single and multi-track audio sharing via `MusicFileProvider`.
+- [x] **4. Build & Test Verification**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL in 24s**, 0 errors).
+- [x] **5. Update Documentation & Lessons**
+  - [x] Updated `tasks/lessons.md` and `tasks/todo.md`.
+
+## Review & Results
+- **Micro-Labels & Icon Clarity:** Row 2 buttons now display clear, compact labels alongside Material vector icons (`[✨ Format]`, `[📄 From File]`, `[💾 Save]`, `[🔄 Reload]`, `[🖼️ Extract]`, `[🗑️ Remove Art]`), eliminating icon ambiguity while maintaining the exact 2-row layout.
+- **Micro-Haptics & Tooltip Accessibility:** Connected `performHapticFeedback` to all button taps and long-presses, and added descriptive `TooltipCompat` tooltips across all controls.
+- **Batch Mode Awareness:** Dynamically displays batch counts (`Delete (N)`, `Organize (N)`, `Save (N)`) when editing multiple tracks.
+- **Pro Gestures:** Long-pressing Format triggers the **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding fix), and long-pressing Save triggers **Save & Finish**.
+- **Audio File Sharing:** Added `Share Audio File` action to the power menu with seamless single/multi-file system chooser dispatch.
+- **Verification:** Compilation and all unit tests passed with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL**, 0 errors).
+
+---
+
+# Tier 20: Flagship Studio Provenance Capsules & Related Tracks Sheet 👑
+
+## Objectives
+1. **Studio Provenance Data Layer (`TagsViewModel.kt`)**:
+   - Asynchronously query related track counts and track lists from Room DAO for:
+     - Same Artist (`FILTER_TYPE_ARTIST`)
+     - Same Album (`FILTER_TYPE_ALBUM`)
+     - Same Directory / Folder (`FILTER_TYPE_PATH`)
+2. **Frosted Studio Provenance Capsules (`AudioBadges.kt`)**:
+   - Render 3 frosted glass micro-capsules on `TagPreviewHeader`:
+     - `[ 👤 {Artist} • {N} ❯ ]` (Gold accented)
+     - `[ 💿 {Album} • {N} ❯ ]` (Acoustic Teal accented)
+     - `[ 📁 {Folder} • {N} ❯ ]` (Slate Charcoal accented)
+   - Add tactile micro-haptics on press with scale ripple.
+3. **Pure Compose Frosted Context Sheet (`RelatedTracksSheet.kt`)**:
+   - Open full-featured frosted obsidian modal bottom sheet:
+     - Header with title, total tracks count, total duration, and close button.
+     - Scrollable track list with track numbers, Hi-Res / CD / DR badges, and monospace durations.
+     - 1-tap track playback (`onPlayTrack`).
+     - Sticky bottom actions: `[ ▶ Play All ]`, `[ ➕ Add All to Queue ]`, `[ 🔍 View in Library ]`.
+4. **Integration & Lifecycle Binding (`DialogInterop.kt`, `TagsActivity.java`)**:
+   - Connect ViewModel and PlaybackService actions (Play track, Play All, Add to Queue, Filter Library) seamlessly without exiting the tag editor.
+5. **Verification & Testing**:
+   - Compile and verify with `./gradlew compileDebugSources testDebugUnitTest`.
+   - Update `tasks/lessons.md`, `tasks/todo.md`, `DESIGN.md`, and `CHANGELOG.md`.
+
+## Checklist
+- [x] **1. Extend `TagsViewModel.kt` with Studio Provenance & Related Tracks State**
+  - [x] Added `StudioProvenanceInfo` and `RelatedTracksSheetState`.
+  - [x] Implemented asynchronous `loadStudioProvenance(track)` and `openRelatedTracks(type, keyword, title)`.
+- [x] **2. Create `RelatedTracksSheet.kt` in Compose**
+  - [x] Implemented frosted obsidian ModalBottomSheet with track list, audiophile quality badges, durations, and quick actions (`Play All`, `Queue All`, `In Library`).
+- [x] **3. Implement `StudioProvenanceSection` in `AudioBadges.kt`**
+  - [x] Built the 3 frosted capsules (`[ 👤 {Artist} • N ❯ ]`, `[ 💿 {Album} • N ❯ ]`, `[ 📁 {Folder} • N ❯ ]`) with live counts and haptic feedback.
+- [x] **4. Wire DialogInterop & `TagsActivity.java`**
+  - [x] Connected PlaybackService, QueueManager, and library filter callbacks via Java-friendly SAM Consumers.
+- [x] **5. Build & Test Verification**
+  - [x] Ran `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL in 5s**, 0 errors).
+- [x] **6. Update Documentation & Lessons**
+  - [x] Updated `tasks/lessons.md`, `tasks/todo.md`, `DESIGN.md` (ADR-014), and `CHANGELOG.md`.
+
+## Review & Results
+- **Flagship Audiophile Experience:** Elevated metadata discovery on the Tag Preview screen into an interconnected web of studio provenance inspired by Roon and Apple Music Classical.
+- **Frosted Studio Provenance Capsules:** Directly underneath the telemetry strip, tracks render 3 frosted micro-capsules (`Artist`, `Album`, `Folder`) with live database track counts and tactile haptic feedback.
+- **In-Place Discography Sheet (`RelatedTracksSheet.kt`):** Tapping any capsule opens an elegant Compose modal sheet showing all matching studio tracks with their real-time Hi-Res/CD/DR badges, allowing 1-tap playback, `Play All`, `Queue All`, or `View in Library` without losing tag-editing state.
+- **Verification:** Compilation and all unit tests passed with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL in 5s**, 0 errors).
 

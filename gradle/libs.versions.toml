@@ -4,7 +4,7 @@ minSdkVersion = "36"
 targetSdkVersion = "37"
 compileSdkVersion = "37"
 buildTools = "37.0.0"
-androidGradlePlugin = "9.3.2"
+androidGradlePlugin = "9.4.0"
 kotlin = "2.4.10"
 ksp = "2.3.9"
 
@@ -105,9 +105,9 @@ anggrayudi-storage = { module = "com.anggrayudi:storage", version = "3.0.1" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 # Image Loading & UI Enhancements
-coilkt-coil3 = { module = "io.coil-kt.coil3:coil", version = "3.6.0" }
-coilkt-coil3-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version = "3.6.0" }
-coilkt-coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.6.0" }
+coilkt-coil3 = { module = "io.coil-kt.coil3:coil", version = "3.6.1" }
+coilkt-coil3-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version = "3.6.1" }
+coilkt-coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.6.1" }
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
 chrisbanes-photoview = { module = "com.github.chrisbanes:PhotoView", version = "2.3.0" }
 

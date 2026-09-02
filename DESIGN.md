@@ -115,28 +115,38 @@ Focused exclusively on **batch tag management and file operations**.
 
 ### C. Tag Activity "More Actions" Menu (`tag_more_actions_menu.xml`)
 
-Organized into three functional groups with icons and visual group dividers (API 28+):
+Organized into four functional groups with Material vector icons and visual group dividers (API 28+):
 
 ```
 ┌─────────────────────────────────────────┐
-│  ✨  Auto-Tag (MusicBrainz)  ┐ Tag      │
-│  🔍  Search & Match Tags    ┘ Automation│
+│  ▶  Play Track Now          ┐ Playback  │
+│  ➕  Add to Playing Queue    ┘ & Queue   │
 │  ───────────────────────────────────────│ ← Group Divider
-│  📊  Verify Lossless Quality (Audio)    │
+│  ✨  Auto-Tag (MusicBrainz)  ┐ Metadata  │
+│  🔍  Search & Match Tags    │ Automation│
+│  🪄  Smart Clean & Format   ┘ & Cleanup │
+│  ───────────────────────────────────────│ ← Group Divider
+│  🎼  Lossless Spectrum Verifier (Audio) │
 │  ───────────────────────────────────────│ ← Group Divider
 │  📁  Show in File Manager    ┐ File &   │
-│  🌐  Search Song on Web      ┘ Web Ops  │
+│  🌐  Search Song on Web      │ Sharing  │
+│  📤  Share Audio File        ┘          │
 └─────────────────────────────────────────┘
 ```
 
-1. **Tag Automation Group (`group_tag_automation`):**
+1. **Playback & Queue Group (`group_playback`):**
+   - ▶ `Play Track Now` (`action_play_now`): Immediate direct playback via `PlaybackService`.
+   - ➕ `Add to Playing Queue` (`action_add_to_queue`): Append track(s) to active playing queue.
+2. **Metadata Automation & Curation Group (`group_tag_automation`):**
    - ✨ `Auto-Tag (MusicBrainz)` (`action_auto_tag`): Automated online metadata fetching and audio fingerprinting (AcoustID).
    - 🔍 `Search & Match Tags` (`action_search_match_tags`): Text-based search and tag matching dialog.
-2. **Audio Quality Analysis Group (`group_audio_analysis`):**
-   - 📊 `Verify Lossless Quality` (`action_spectrum`): High-resolution spectrum analysis and authenticity verification.
-3. **File System & Web Utilities (`group_file_utils`):**
+   - 🪄 `Smart Clean & Format` (`action_smart_clean_format`): 1-tap master pipeline combining junk noise stripping, title casing, and Thai encoding recovery.
+3. **Audio Analysis & Verification Group (`group_audio_analysis`):**
+   - 🎼 `Lossless Spectrum Verifier` (`action_spectrum`): High-resolution spectrogram analysis up to 48kHz frequency ceiling.
+4. **File System & Sharing Utilities (`group_file_utils`):**
    - 📁 `Show in File Manager` (`action_open_folder`): Launch system file manager at file location.
    - 🌐 `Search Song on Web` (`action_web_search`): Search song online in default web browser.
+   - 📤 `Share Audio File` (`action_share`): Direct system share sheet for single or batch audio files via `MusicFileProvider`.
 
 ---
 
@@ -292,10 +302,36 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
   - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §8C).
   - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
 
-### B. Tag Activity True Bottom Action Capsule (`shape_bottom_frosted_panel`)
-- **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins).
-- **Edge-to-Edge Padding Rule:** The container is pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge.
-- **Safe Area Inset Handling:** System navigation bar insets (`systemBars.bottom + 8dp`) are applied dynamically as bottom padding to the inner panel (`bottom_navigation_panel`), ensuring action buttons ([Delete], [Organize], [More], [Edit/Save]) sit cleanly above the gesture bar with zero detached space.
+### B. Tag Activity Accessible 2-Row Bottom Action Dock (`shape_bottom_frosted_panel`)
+- **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins), pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge with dynamic system navigation bar insets applied as bottom padding.
+- **2-Tier Functional Architecture:**
+  - **Row 1 (Static Global File Tier):** Permanent file operations (`[Delete]` in subtle error tone, `[⭐ Organize]` in primary Gold tonal pill, `[More... ⋯]`). Consistently accessible across Preview, Song Info, and Tech Info tabs.
+  - **Row 2 (Dynamic Active Fragment Tier):** Contextual workflows populated based on the active viewport:
+    - *Preview Mode:* `[✏️ Edit Song Info]` | `[💾 Save]` (Gold tonal pill). Always exposes an immediate Save button in preview mode so users can commit edits made via the "More..." power menu without switching tabs.
+    - *Song Info Editor Tab:* `[✨ Format]` | `[📄 From File]` | `[💾 Save]` (Gold tonal pill).
+    - *Tech Info Tab:* `[🔄 Reload]` | `[🖼️ Extract]` | `[🗑️ Remove Art]`.
+- **Unified Immersive Hero Cover Art Layout (`activity_tags.xml`):**
+  - **Clean Cover Artwork Viewport:** Full 1:1 aspect ratio album artwork (`AspectRatioPhotoView`) free of top scrims or distracting visual clutter, keeping 90%+ of the album art 100% visible.
+  - **Cinematic Bottom Gradient Scrim (`shape_bottom_cover_scrim`):** Groups the atomic Track Identity at the base of the artwork:
+    - **Title (`panel_title`):** Prominent bold 18sp white title text with clean ellipsis protection (`maxLines = 2`).
+    - **Subtitle (`panel_artist`):** Clean 13.5sp `#DDDDDD` subtitle formatted dynamically as `{Artist} • {Album}` (or single fallback if one is missing).
+  - **Eliminated Redundancy:** Completely removed the legacy split `[ Artist | Album ]` two-column box and top title scrim, unifying visual parity with the Now Playing playback viewport.
+- **Unified 4-Tier Audiophile Header Hierarchy (`TagPreviewHeader` in Compose):**
+  1. **Tier 1 — Quality Tier & Visual Badges:** Expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) identical to the Now Playing playback sheet, paired with `ResolutionBadge` (`[16/44.1]`, `[24/96]`, `[DSD64]`), `DynamicRangeMeter` (`[DR 11]`), star rating, and New status badge.
+  2. **Tier 2 — 2-Line Studio Provenance Capsules:** Frosted obsidian discovery micro-capsules with live track counts and haptic ripples:
+     - **Row 1 (Music Discography):** `[ 👤 {Artist} • N ❯ ]` (Gold `#FFD700`) & `[ 💿 {Album} • N ❯ ]` (Teal `#80CBC4`) with flex width and ellipsis protection.
+     - **Row 2 (Storage Location):** `[ 📁 {Folder} • N ❯ ]` (Slate Blue `#90CAF9`) centered underneath.
+     - *In-Place Discography Sheet (`RelatedTracksSheet.kt`):* Tapping any capsule opens an in-place frosted modal sheet with live track list, audiophile badges, 1-tap playback, `[ ▶ Play All ]`, and `[ ➕ Queue All ]` without closing the tag editor.
+  3. **Tier 3 — Musical Taxonomy & Character Chips:** Positioned cleanly below provenance to establish a natural narrative (Fidelity ➔ Provenance ➔ Taxonomy), featuring semantic emoji glyphs: `[ 🎸 Genre ]`, `[ 🎭 Mood ]`, `[ 🎨 Style ]`, and `[ 🌏 Origin ]`.
+  4. **Tier 4 — Grounding Technical Telemetry Footer Strip:** Positioned at the very base of the header card with dedicated top breathing space (`7.dp`), rendering a monospace specs baseline: `FLAC • 24/96 • 4608 kbps • Stereo • 05:54 • 198 MB`.
+- **Micro-Labels & Icon Styling:** Row 2 buttons feature compact, scannable text labels alongside Material vector icons (`minWidth="0dp"`, `10dp`–`16dp` horizontal touch padding) to eliminate icon-only ambiguity.
+- **Tactile Micro-Haptics & Tooltips:**
+  - `performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)` on all button clicks and `HapticFeedbackConstants.LONG_PRESS` on long presses.
+  - Comprehensive `TooltipCompat.setTooltipText` on every action across Row 1 and Row 2.
+- **Dynamic Multi-Track Batch Badging:** Buttons dynamically display active selection counts (`Delete (N)`, `Organize (N)`, `Save (N)`) when editing batches of songs.
+- **Pro Long-Press Shortcuts:**
+  - Long-press `[✨ Format]` ➔ Executes the **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding repair in a single pass).
+  - Long-press `[💾 Save]` ➔ Executes **Save & Close** (commits metadata and returns to track list).
 
 ### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet` in Jetpack Compose)
 Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport**:
@@ -500,6 +536,48 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   6. **Bulletproof Drawer Interop:** Bind `drawerState` directly via `SideEffect` in `DrawerInterop.kt` and set `elevation = 4dp` on the right (M) menu button in `activity_main.xml`.
 - **Consequences:** Cohesive studio provenance layout, rock-solid numerical stability during fast scrolling, tactile physical engagement, and silky 120Hz gesture physics.
 
+### ADR-013: Tag Activity Accessible 2-Row Command Bar Architecture & Pro Curation Workflows
+- **Status:** Accepted
+- **Date:** 2026-09-01
+- **Context:** An experimental 1-row command bar in `TagsActivity` compressed all actions into a single horizontal row, forcing secondary fragment actions into icon-only buttons or overflow menus. This compromised touch accessibility, created icon ambiguity (e.g. distinguishing formatting vs reading tags vs saving), and hid high-frequency curation shortcuts.
+- **Decision:**
+  1. **Restore 2-Row Functional Separation:** Establish a strict 2-tier command dock:
+     - **Row 1 (Static Global File Operations):** Permanent `[Delete]`, `[⭐ Organize]`, `[More... ⋯]` dock, always accessible across all views.
+     - **Row 2 (Dynamic Active Fragment Tier):** Contextual controls (`[✏️ Edit Song Info]` | `[💾 Save]` in preview, `[✨ Format] | [📄 From File] | [💾 Save]` in Song Info editor, `[🔄 Reload] | [🖼️ Extract] | [🗑️ Remove Art]` in Tech Info diagnostics).
+  2. **Micro-Labels & Icon Hierarchy:** Pair vector icons with explicit, scannable micro-labels and generous horizontal touch padding (`10dp`–`16dp`, `minWidth="0dp"`).
+  3. **Tactile Micro-Haptics & Tooltips:** Bind `performHapticFeedback` to all taps/long-presses and attach `TooltipCompat.setTooltipText` across all buttons.
+  4. **Dynamic Batch Badging:** Real-time multi-selection counts dynamically badge action buttons (`Delete (N)`, `Organize (N)`, `Save (N)`).
+  5. **Pro Long-Press Shortcuts:**
+     - Long-press `[✨ Format]`: Executes **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding repair in a single pass).
+     - Long-press `[💾 Save]`: Executes **Save & Close** (commits metadata and finishes activity).
+  6. **Direct File Sharing:** Integrated `[Share Audio File]` into the "More Actions" power menu for instant single/multi-file dispatch via `MusicFileProvider`.
+- **Consequences:** Maximizes one-handed reachability, eliminates icon ambiguity, preserves clean separation between global file and fragment contexts, and gives power users lightning-fast bulk curation gestures.
+
+### ADR-014: High-End Studio Provenance Capsules & In-Place Related Tracks Sheet
+- **Context:** On the Tag Preview screen, discovering other songs with the same Artist, same Album, or in the same Directory previously required abruptly closing the tag editor and dumping the user back into the main library list with a filter, breaking user inspection flow. Single-line rendering of 3 capsules also caused severe text truncation on narrow mobile viewports.
+- **Decision:**
+  1. **2-Line Studio Provenance Layout:** Embed 3 frosted glass micro-capsules on `TagPreviewHeader` across 2 structured rows:
+     - **Row 1 (Music Provenance):** `[ 👤 {Artist} • {N} ❯ ]` (Gold accented `#FFD700`) & `[ 💿 {Album} • {N} ❯ ]` (Acoustic Teal accented `#80CBC4`).
+     - **Row 2 (Storage & Location):** `[ 📁 {Folder} • {N} ❯ ]` (Slate Blue accented `#90CAF9`).
+     - Streamlined Auto-Tag: Eliminated conditional quick-fix chips to prevent vertical screen jumpiness; Auto-Tag is accessible cleanly via the `More...` power menu.
+  2. **In-Place Frosted Context Sheet (`RelatedTracksSheet.kt`):** Tapping any capsule smoothly slides up a Compose Modal Bottom Sheet with:
+     - Real-time track list with audiophile quality badges (`QualityBadge`, `ResolutionBadge`, `DynamicRangeMeter`).
+     - 1-tap track playback (`onPlayTrack`).
+     - Sticky bottom action dock: `[ ▶ Play All ]`, `[ ➕ Add All to Queue ]`, `[ 🔍 View in Library ]`.
+### ADR-015: Elimination of On-Screen Volume Slider for Audiophile Bit-Perfect Clarity & Ergonomic Focus
+- **Status:** Accepted
+- **Date:** 2026-09-02
+- **Context:** The Now Playing sheet previously contained an on-screen horizontal volume slider row sandwiched directly between the chromatic Seekbar and the primary transport controls. This caused multiple architectural and UX compromises:
+  1. *Bit-Perfect Digital Integrity:* Digital software volume attenuation reduces bit depth and dynamic resolution before audio reaches external DACs. Audiophiles stream in fixed 100% output mode and control volume on analog amplifiers, DAC preamps, or physical DAP dials.
+  2. *Hardware Button Redundancy:* Physical volume rocker buttons on the Android device already control media volume with tactile precision without consuming screen real estate.
+  3. *Touch Target Crowding & Accidental Seeks:* Having two parallel horizontal sliders (Seekbar and Volume) stacked vertically in close proximity (~40dp) caused frequent accidental track seeking when attempting to adjust volume, and vice-versa.
+  4. *UPnP Microstack Flooding:* Continuous sliding generated rapid bursts of UPnP SOAP `SetVolume` requests that overloaded single-threaded DAP microstacks (such as HiBy R3 and Shanling).
+- **Decision:**
+  1. Completely remove the persistent on-screen volume slider row from `NowPlayingPage.kt`.
+  2. Rely on Android hardware volume rocker buttons for local audio and physical volume dials on external DACs / DAPs / amplifiers for network streaming.
+  3. Dedicate the reclaimed vertical space (`10dp` breathing spacer) to expand touch margins and elevate visual focus on the Album Artwork, glowing chromatic Seekbar, and primary Transport buttons.
+- **Consequences:** Clean, distraction-free, modern playback UI (matching reference audiophile apps like Apple Music, Qobuz, and Roon); zero touch-target collision with the Seekbar; guaranteed bit-perfect digital signal output; zero UPnP volume command congestion.
+
 ---
 
 ## 10. Non-Goals
@@ -511,3 +589,4 @@ Deliberately out of scope to protect the core tag-management focus:
 - **No destructive actions (`Delete`, `Move`) in the single-track popup** — reserved for batch mode with mandatory preview dialogs (see §8B).
 - **No full music-player feature parity** — MusicMate delegates rich playback UX to external players/renderers; the built-in transport is intentionally minimal.
 - **No cloud sync / streaming-service integration** — the library model is local & LAN (DLNA/UPnP) only.
+

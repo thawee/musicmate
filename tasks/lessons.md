@@ -181,12 +181,27 @@
 - **SQLite / Room DAO Case-Sensitivity & Format Coverage**:
   - *Case-Insensitive String Matches:* In Room `@Query`, string `IN ('flac', 'dsd')` is case-sensitive by default in SQLite. Always use `LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav')` and include common format variations (`'dsf'`, `'dsd'`, `'dff'`, `'sacd'`) to prevent smart playlist omission.
 
-
-
-
-
-
-
-
-
+- **Tag Activity 2-Row Accessible Command Bar Architecture**:
+  - *Separation of File vs Fragment Contexts:* In multi-tab workflow activities (such as `TagsActivity`), combining global file operations (`Delete`, `Organize`, `More...`) with fragment-dependent actions (`Auto-Format`, `Read Tags`, `Save`, `Extract Cover Art`) into a single 1-row container crowds touch targets and creates confusing dynamic visibility shifts.
+  - *2-Row Tier Hierarchy:* A structured 2-row command bar architecture offers superior accessibility and clarity:
+    - **Row 1 (Static Global Layer):** Houses stable, high-frequency file operations (`[Delete]`, `[Organize]`, `[More...]`) that remain always visible and predictable.
+    - **Row 2 (Dynamic Fragment Layer):** Houses active fragment workflows (`[Edit Song Info]`, `[Auto-Format] | [Read Tags] | [Save Changes]`, or `[Reload Tags] | [Extract Art] | [Remove Art]`) with generous touch targets and prominent Gold primary action styling (`Save Changes`, `Edit Song Info`).
+- **Metadata Curation Menu Consolidation (Single-Tap Master Clean Pipeline)**:
+  - *Avoid Fragmented Micro-Actions:* Offering separate menu actions for encoding repair, bracket noise removal, and capitalization creates decision fatigue and clutters menus with 3+ items.
+  - *Unified Master Pipeline (`Smart Clean & Format`):* Since encoding repair only affects detected mojibake bytes, combine Thai recovery + noise stripping + Title Casing into a single **`Smart Clean & Format`** action (`doFullCleanPipeline()`). This reduces 3 menu entries into 1 clean tap while covering 100% of user cleanup needs.
+- **Studio Provenance & In-Place Discography Browsing (High-End Audiophile UX)**:
+  - *Do Not Disrupt Working Context:* When a user is inspecting or editing metadata, clicking an Artist, Album, or Folder name should not forcibly close the screen and dump them back into the main list. Abrupt screen destruction feels jarring and destroys work-in-progress state.
+  - *Elevated Capsules + Frosted Sheets:* Treat metadata as living studio provenance. Present Artist, Album, and Directory as frosted micro-capsules (`[ 👤 {Artist} • N ❯ ]`, `[ 💿 {Album} • N ❯ ]`, `[ 📁 {Folder} • N ❯ ]`) with live track count telemetry. Tapping smoothly presents an in-place `RelatedTracksSheet` (with audiophile quality badges, 1-tap playback, and queue actions), enabling deep music discovery while keeping the editing context 100% intact.
+- **SearchCriteria Filter Layering & Repository Routing**:
+  - *Do Not Rely Solely on Keyword in DbHelper:* When building SQL WHERE clauses and repository queries, always evaluate `criteria.getFilterType()` and `criteria.getFilterText()` before defaulting to `criteria.getKeyword()` or `criteria.getType()`. If `getFilterType()` is omitted in `buildWhereClause()` or `findByCriteria()`, queries for `FILTER_TYPE_PATH`, `FILTER_TYPE_ALBUM`, and `FILTER_TYPE_ARTIST` default to `TITLE_ALL_SONGS`, erroneously returning the entire music library instead of scoping to that specific directory or album.
+- **Unified Immersive Hero Cover Art Architecture (Playback Screen Parity)**:
+  - *Keep Track Identity Atomic:* Avoid splitting Title to the top of the artwork and Artist/Album to the bottom. In visual psychology, Song Title, Artist, and Album form a single atomic entity.
+  - *Single Cinematic Bottom Scrim:* Group Title (bold 18sp white) and Subtitle (`{Artist} • {Album}`, 13.5sp `#DDDDDD`) at the base of the artwork with a single bottom-up gradient (`shape_bottom_cover_scrim`). This preserves 90%+ of the cover art unobstructed, eliminates redundant 2-column split boxes, and establishes 100% visual consistency with the playback screen.
+- **DLNA / UPnP DMR Seeking & Queue Auto-Advance Protocol Robustness (HiBy R3 & Embedded DAPs)**:
+  - *Strict `HH:MM:SS` Seek Formatting:* Many embedded DLNA Digital Media Renderers (HiBy R3/HiBy OS, Linux UPnP stacks, Foobar2000, DAC streamers) strictly parse `Seek` `Target` strings in standard `HH:MM:SS` format (e.g., `00:04:15`). Passing single-digit hours or millisecond fractions (`0:04:15.000`) causes embedded C `sscanf` parsers to fail with SOAP Error 402 ("Invalid Args") or 710 ("Seek Mode Not Supported"). Always format `Seek` targets using `String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)`.
+  - *Safe-by-Default UPnP Preload Allowlist (`supportsPreload = false` by default):* Across the UPnP landscape, 90%+ of generic renderers, DAPs (HiBy, Shanling, FiiO, Astell&Kern), Sonos, and smart TVs do not properly implement UPnP `SetNextAVTransportURI` chaining in firmware, causing decode stalls or playback halting at track end. Default all devices (`GENERIC`, `HIBY`, `SHANLING`, `FIIO`, `SONOS`) to `supportsPreload = false` (discrete handover with host RAM pre-caching), and enable `supportsPreload = true` strictly via an **opt-in allowlist of verified hardware streamers** (`WIIM`, `EVERSOLO`, `LINN`, `AURALIC`).
+  - *Natural Track Completion vs User-Initiated Stop:* Embedded DAPs transition transport state to `STOPPED` upon reaching the end of the stream. When `LastChange` or polling receives `STOPPED`:
+    - Distinguish natural track completion from manual user actions via a volatile `isUserInitiatedStop` flag.
+    - On natural `STOPPED` (or when elapsed position reaches track duration), immediately notify `playbackCallback.onPlaybackCompleted()` to trigger `skipToNextInQueue()` in `MusicMateServiceImpl`, delivering instant discrete handover from RAM cache.
+  - *Continuous Position Polling:* Never terminate UPnP position polling when sporadic GENA position strings arrive. Keep 1-second interval polling active while `serverStatus == CAST` to ensure smooth real-time seekbar tracking across all DLNA renderers.
 

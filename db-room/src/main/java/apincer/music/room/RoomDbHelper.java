@@ -383,6 +383,11 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
+    public List<Track> findByAlbum(String album) {
+        return new ArrayList<>(trackDao.findByAlbum(album));
+    }
+
+    @Override
     public Track findByAlbumArtFilename(String albumUniqueKey) {
         return trackDao.findByAlbumArtFilename(albumUniqueKey);
     }
@@ -614,6 +619,29 @@ public class RoomDbHelper implements DbHelper {
             String like = "%" + criteria.getSearchText() + "%";
             return new String[]{"(title LIKE ? OR artist LIKE ? OR album LIKE ?)", like, like, like};
         }
+
+        if (criteria.getFilterType() != null && !criteria.getFilterType().isEmpty() &&
+            criteria.getFilterText() != null && !criteria.getFilterText().isEmpty()) {
+            String fType = criteria.getFilterType();
+            String fText = criteria.getFilterText().trim();
+            if (Constants.FILTER_TYPE_PATH.equalsIgnoreCase(fType)) {
+                String prefix = fText.endsWith("/") ? fText : fText + "/";
+                return new String[]{"path LIKE ?", prefix + "%"};
+            } else if (Constants.FILTER_TYPE_ARTIST.equalsIgnoreCase(fType)) {
+                return new String[]{
+                    "artist = ? OR artist LIKE ? OR artist LIKE ? OR artist LIKE ?",
+                    fText,
+                    fText + ",%",
+                    "%," + fText,
+                    "%," + fText + ",%"
+                };
+            } else if (Constants.FILTER_TYPE_ALBUM.equalsIgnoreCase(fType)) {
+                return new String[]{"album = ?", fText};
+            } else if (Constants.FILTER_TYPE_GENRE.equalsIgnoreCase(fType)) {
+                return new String[]{"genre = ?", fText};
+            }
+        }
+
         String kw;
         switch (criteria.getType()) {
             case LIBRARY:

@@ -383,6 +383,12 @@
     <string name="button_organize">Organize</string>
     <string name="button_more">More&#8230;</string>
     <string name="button_edit_song_info">Edit Song Info</string>
+    <string name="btn_format">Format</string>
+    <string name="btn_read">From File</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_reload">Reload</string>
+    <string name="btn_extract_art">Extract</string>
+    <string name="btn_remove_art">Remove Art</string>
 
     <!-- Server Management -->
     <string name="server_title">MusicMate Server</string>
@@ -443,6 +449,7 @@
     <string name="search_match_tags">Search &amp; Match Tags</string>
     <string name="menu_play_now">Play Track Now</string>
     <string name="menu_add_to_queue">Add to Playing Queue</string>
+    <string name="menu_smart_clean_format">Smart Clean &amp; Format</string>
     <string name="menu_fix_thai_encoding">Repair Thai Text Encoding</string>
     <string name="menu_clean_tag_noise">Clean Junk &amp; Suffixes</string>
     <string name="menu_title_case">Format Title Case</string>

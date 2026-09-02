@@ -28,11 +28,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.font.FontFamily
 import apincer.android.mmate.R
+import apincer.android.mmate.ui.viewmodel.StudioProvenanceInfo
 import apincer.android.mmate.utils.TagUIUtils
+import apincer.music.core.Constants
 import apincer.music.core.model.Track
 import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
 import apincer.music.core.utils.ThaiEncodingUtils
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean = false) {
@@ -236,7 +241,7 @@ fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        QualityBadge(track = track)
+        QualityBadge(track = track, expanded = true)
         Spacer(modifier = Modifier.width(6.dp))
         ResolutionBadge(track = track)
         Spacer(modifier = Modifier.width(6.dp))
@@ -249,9 +254,132 @@ fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun StudioCapsule(
+    icon: String,
+    name: String,
+    count: Int,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptic = LocalHapticFeedback.current
+    val countStr = if (count > 0) " • $count" else ""
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xD9141414))
+            .background(color.copy(alpha = 0.08f))
+            .border(0.75.dp, color.copy(alpha = 0.40f), RoundedCornerShape(8.dp))
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 8.dp, vertical = 3.5.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "$icon$name$countStr ❯",
+                color = Color(0xFFEEEEEE),
+                fontSize = 9.5.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun StudioProvenanceSection(
+    provenance: StudioProvenanceInfo,
+    onOpenRelated: (filterType: String, filterKeyword: String, title: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val hasArtist = provenance.artist.isNotBlank() && !provenance.artist.startsWith("[")
+    val hasAlbum = provenance.album.isNotBlank() && !provenance.album.startsWith("[")
+    val hasFolder = provenance.folderPath.isNotBlank()
+
+    if (!hasArtist && !hasAlbum && !hasFolder) return
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Line 1: Music Provenance (Artist & Album)
+        if (hasArtist || hasAlbum) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (hasArtist) {
+                    StudioCapsule(
+                        icon = "👤 ",
+                        name = provenance.artist,
+                        count = provenance.artistCount,
+                        color = Color(0xFFFFD700),
+                        onClick = {
+                            onOpenRelated(Constants.FILTER_TYPE_ARTIST, provenance.artist, "More by ${provenance.artist}")
+                        },
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
+                if (hasArtist && hasAlbum) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+                if (hasAlbum) {
+                    StudioCapsule(
+                        icon = "💿 ",
+                        name = provenance.album,
+                        count = provenance.albumCount,
+                        color = Color(0xFF80CBC4),
+                        onClick = {
+                            onOpenRelated(Constants.FILTER_TYPE_ALBUM, provenance.album, "Album: ${provenance.album}")
+                        },
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
+            }
+        }
+
+        // Line 2: Storage & Directory Location (Folder)
+        if (hasFolder) {
+            if (hasArtist || hasAlbum) {
+                Spacer(modifier = Modifier.height(4.5.dp))
+            }
+            val fName = provenance.folderName.ifBlank { "Folder" }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StudioCapsule(
+                    icon = "📁 ",
+                    name = fName,
+                    count = provenance.folderCount,
+                    color = Color(0xFF90CAF9),
+                    onClick = {
+                        onOpenRelated(Constants.FILTER_TYPE_PATH, provenance.folderPath, "Folder: $fName")
+                    },
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun TagPreviewHeader(
     track: Track?,
     itemCount: Int = 1,
+    provenance: StudioProvenanceInfo? = null,
+    onOpenRelated: ((filterType: String, filterKeyword: String, title: String) -> Unit)? = null,
     onQuickFixClick: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -285,15 +413,56 @@ fun TagPreviewHeader(
         // 2. Primary Badges Row (Quality, Resolution, DR, Rating, New)
         TagHeaderBadges(track = track)
 
-        Spacer(modifier = Modifier.height(6.dp))
+        // 3. Studio Provenance & Related Discography Capsules
+        if (provenance != null && onOpenRelated != null) {
+            StudioProvenanceSection(
+                provenance = provenance,
+                onOpenRelated = onOpenRelated
+            )
+        }
 
-        // 3. Lossless Telemetry Specs Monospace Strip
+        // 4. Musical Taxonomy & Character Pills (Genre, Mood, Style, Origin)
+        val tagPills = mutableListOf<Pair<String, String>>()
+        if (!track.genre.isNullOrBlank()) tagPills.add("🎸 " to track.genre)
+        if (!track.mood.isNullOrBlank()) tagPills.add("🎭 " to track.mood)
+        if (!track.style.isNullOrBlank()) tagPills.add("🎨 " to track.style)
+        if (!track.origin.isNullOrBlank()) tagPills.add("🌏 " to track.origin)
+
+        if (tagPills.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                tagPills.take(4).forEachIndexed { idx, (icon, value) ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xD9161616))
+                            .border(0.5.dp, Color(0x44888888), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "$icon$value",
+                            color = Color(0xFFDDDDDD),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (idx < tagPills.size - 1 && idx < 3) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                }
+            }
+        }
+
+        // 5. Technical Telemetry Specs Monospace Strip (Grounding Footer Baseline)
         val metaParts = mutableListOf<String>()
         track.fileType?.let { if (it.isNotBlank()) metaParts.add(it.uppercase()) }
-        //val bitDepth = StringUtils.formatAudioBitsDepth(track.audioBitsDepth)
-        //if (bitDepth.isNotBlank()) metaParts.add(bitDepth)
-        //val sampleRate = StringUtils.formatAudioSampleRate(track.audioSampleRate, true)
-        //if (sampleRate.isNotBlank()) metaParts.add(sampleRate)
         if (track.audioBitRate > 0) metaParts.add(StringUtils.formatAudioBitRate(track.audioBitRate))
         val ch = track.audioChannels
         if (!ch.isNullOrBlank()) metaParts.add(if (ch == "2" || ch.equals("Stereo", ignoreCase = true)) "Stereo" else "$ch ch")
@@ -301,6 +470,7 @@ fun TagPreviewHeader(
         if (track.fileSize > 0) metaParts.add(StringUtils.formatStorageSize(track.fileSize))
 
         if (metaParts.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(7.dp))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -319,88 +489,6 @@ fun TagPreviewHeader(
                     maxLines = 1,
                     softWrap = false
                 )
-            }
-        }
-
-        // 4. Interactive Tag Pills Row (Origin, Genre, Mood, Style)
-        val tagPills = mutableListOf<Pair<String, String>>()
-        if (!track.origin.isNullOrBlank()) tagPills.add("Origin" to track.origin)
-        if (!track.genre.isNullOrBlank()) tagPills.add("Genre" to track.genre)
-        if (!track.mood.isNullOrBlank()) tagPills.add("Mood" to track.mood)
-        if (!track.style.isNullOrBlank()) tagPills.add("Style" to track.style)
-
-        if (tagPills.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                tagPills.take(4).forEach { (_, value) ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xD9161616))
-                            .border(0.5.dp, Color(0x44888888), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = value,
-                            color = Color(0xFFEEEEEE),
-                            fontSize = 9.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
-                }
-            }
-        }
-
-        // 5. Contextual Quick-Fix Suggestion Chips (if anomalies or missing tags detected)
-        val quickFixes = mutableListOf<Pair<String, String>>()
-        val hasGarbledThai = listOf(track.title, track.artist, track.album, track.genre, track.composer)
-            .any { ThaiEncodingUtils.isGarbledThai(it) }
-        if (hasGarbledThai) {
-            quickFixes.add("thai_fix" to "🇹🇭 Fix Thai Encoding")
-        }
-        val isMissingTags = track.title.isNullOrBlank() || track.artist.isNullOrBlank() || track.album.isNullOrBlank()
-        if (isMissingTags) {
-            quickFixes.add("auto_tag" to "⚡ Auto-Tag")
-        }
-        if (track.dynamicRange <= 0 && track.audioBitsDepth >= 16) {
-            quickFixes.add("spectrum" to "🎼 Lossless Verifier")
-        }
-
-        val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-
-        if (quickFixes.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                quickFixes.forEach { (actionId, label) ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x3364B5F6))
-                            .border(0.75.dp, Color(0x7764B5F6), RoundedCornerShape(12.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                onQuickFixClick?.invoke(actionId)
-                            }
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                    ) {
-                        Text(
-                            text = label,
-                            color = Color(0xFF90CAF9),
-                            fontSize = 9.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
-                }
             }
         }
     }

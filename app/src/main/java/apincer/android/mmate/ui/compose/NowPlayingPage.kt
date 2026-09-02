@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -80,9 +81,9 @@ fun NowPlayingPage(
     onShuffleToggle: () -> Unit,
     onRepeatToggle: () -> Unit,
     onSeek: (Float) -> Unit,
-    onVolumeDown: () -> Unit,
-    onVolumeUp: () -> Unit,
-    onVolumeChanged: (Float) -> Unit,
+    onVolumeDown: () -> Unit = {},
+    onVolumeUp: () -> Unit = {},
+    onVolumeChanged: (Float) -> Unit = {},
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
     onSelectTargetPlayer: () -> Unit = {}
@@ -635,14 +636,21 @@ fun NowPlayingPage(
                 .padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 8.dp)
         ) {
             val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+            var isDragging by remember { mutableStateOf(false) }
+            var dragPosition by remember { mutableFloatStateOf(0f) }
 
             // Seekbar (Adaptive Chromatic Glowing Track & Dual Ring Thumb)
             @OptIn(ExperimentalMaterial3Api::class)
             Slider(
-                value = if (duration > 0) progress.toFloat() / duration.toFloat() else 0f,
+                value = if (isDragging) dragPosition else (if (duration > 0) progress.toFloat() / duration.toFloat() else 0f),
                 onValueChange = { pos ->
+                    if (!isDragging) isDragging = true
+                    dragPosition = pos
+                },
+                onValueChangeFinished = {
                     haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                    onSeek(pos)
+                    onSeek(dragPosition)
+                    isDragging = false
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 thumb = {
@@ -677,7 +685,8 @@ fun NowPlayingPage(
                     .padding(horizontal = 4.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val curSec = progress / 1000.0
+                val displayedProgress = if (isDragging) (dragPosition * duration).toLong() else progress
+                val curSec = displayedProgress / 1000.0
                 val totSec = duration / 1000.0
                 Text(
                     text = if (curSec > 0) StringUtils.formatDuration(curSec, false) else "00:00",
@@ -695,82 +704,7 @@ fun NowPlayingPage(
                 )
             }
 
-            // Luminous Volume Slider Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 1.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                        onVolumeDown()
-                    },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_baseline_volume_down_24),
-                        contentDescription = "Volume Down",
-                        tint = colorGrey400,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-
-                @OptIn(ExperimentalMaterial3Api::class)
-                Slider(
-                    value = state.volume.value.coerceIn(0f, 1f),
-                    onValueChange = { vol ->
-                        state.volume.value = vol
-                        onVolumeChanged(vol)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp),
-                    thumb = {
-                        Box(
-                            modifier = Modifier
-                                .size(13.dp)
-                                .background(colorGold.copy(alpha = 0.35f), CircleShape)
-                                .border(0.5.dp, colorGold.copy(alpha = 0.6f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .background(colorGold, CircleShape)
-                            )
-                        }
-                    },
-                    track = { sliderState ->
-                        SliderDefaults.Track(
-                            colors = SliderDefaults.colors(
-                                activeTrackColor = colorGold,
-                                inactiveTrackColor = Color(0x26FFFFFF)
-                            ),
-                            sliderState = sliderState,
-                            modifier = Modifier.height(2.dp).clip(CircleShape)
-                        )
-                    }
-                )
-
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                        onVolumeUp()
-                    },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_baseline_volume_up_24),
-                        contentDescription = "Volume Up",
-                        tint = colorGrey400,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Transport Controls
             val isPlaying = state.playbackState.value.currentState == PlaybackState.State.PLAYING
