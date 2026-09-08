@@ -204,4 +204,24 @@
     - Distinguish natural track completion from manual user actions via a volatile `isUserInitiatedStop` flag.
     - On natural `STOPPED` (or when elapsed position reaches track duration), immediately notify `playbackCallback.onPlaybackCompleted()` to trigger `skipToNextInQueue()` in `MusicMateServiceImpl`, delivering instant discrete handover from RAM cache.
   - *Continuous Position Polling:* Never terminate UPnP position polling when sporadic GENA position strings arrive. Keep 1-second interval polling active while `serverStatus == CAST` to ensure smooth real-time seekbar tracking across all DLNA renderers.
-
+- **DLNA & Local Unified Resume Protocol**:
+  - Resuming from pause on local Android audio (ExoPlayer) requires `internalExoPlayer.play()` without re-calling `setMediaItem()` or `prepare()`, which resets elapsed playback to `0:00`.
+  - On DLNA DMR renderers, unpausing requires issuing UPnP `Play(avTransportService)` without re-dispatching `SetAVTransportURI`, preventing stream re-initialization from the beginning.
+- **Queue Sequence Preservation on Playback**:
+  - Never unconditionally append tracks to the queue in `playSong(Track)`. If the track already exists in the queue (e.g. playing from a loaded album or playlist), keep its index intact and call `setCurrentTrack(song)` to maintain the sequential album flow and prevent premature queue termination.
+- **File Move Two-Phase Backup Guard**:
+  - In atomic file movement utilities with backup/rollback (`safeMove`), always verify `targetFile.exists()` prior to attempting a backup rename (`rename(targetPath, bakPath)`). Standard file organization workflows move tracks to newly targeted, non-existent destinations; assuming a target file exists causes the move to abort.
+- **Stable Shuffle Permutation**:
+  - Never call `updateShuffleOrder()` inside track progression handlers like `setPlaybackTrack()` or `setCurrentTrack()`. Once constructed, the randomized queue permutation must remain immutable throughout track transitions so subsequent tracks are consumed sequentially without re-scrambling played tracks back into the upcoming pool.
+- **Case-Insensitive Audio Encoding in SQL Queries**:
+  - Always wrap encoding column comparisons in `LOWER(audioEncoding)` in SQLite / Room queries, and align the set of extensions between DAO annotations and dynamic SQL builders (`buildWhereClause`).
+- **Custom ID3 Taxonomy Persistence (`TXXX` for MP3 & DSF)**:
+  - JAudiotagger maps MP3 and DSF metadata through `AbstractID3v2Tag`. When writing custom taxonomy tags (`STYLE`, `MOOD`, `ORIGIN`), create `TXXX` frames using `tag.createFrame(...)` rather than assuming format-specific tag classes.
+- **Activity Service Subscriptions & Lifecycle Leak Protection**:
+  - When registering continuous polling or observer subscriptions on a bound service (e.g., `subscribePlaybackState`), always hold the returned `AutoCloseable` handle in the Activity and close it on disconnect, re-subscription, and `onDestroy()`.
+- **Non-Interactive FFmpeg File Overwrite (`-y` Flag)**:
+  - Commands executed via FFmpegKit run headlessly without a terminal stdin. When generating or converting to files that may exist, always pass `-y` globally in options to prevent FFmpeg from blocking on interactive overwrite prompts.
+- **Defensive Seeking Boundary Clamping**:
+  - Always clamp user-requested seek milliseconds between 0 and track duration before forwarding to local or remote decoders.
+- **Exact Directory Path Matching in SQL LIKE Clauses**:
+  - When matching filesystem directories in SQL (`path LIKE ?`), ensure the prefix path terminates with a `/` (`prefix = path.endsWith("/") ? path : path + "/"`) to avoid matching sibling directories that share a common prefix.

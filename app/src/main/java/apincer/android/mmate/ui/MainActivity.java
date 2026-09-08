@@ -170,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
+    private AutoCloseable playbackStateSubscription = null;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
@@ -188,7 +189,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 });
             }
 
-            playbackService.subscribePlaybackState(
+            if (playbackStateSubscription != null) {
+                try {
+                    playbackStateSubscription.close();
+                } catch (Exception ignored) {}
+            }
+            playbackStateSubscription = playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
             if (playbackService.getQueueManager() != null) {
@@ -205,6 +211,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            if (playbackStateSubscription != null) {
+                try {
+                    playbackStateSubscription.close();
+                } catch (Exception ignored) {}
+                playbackStateSubscription = null;
+            }
             isPlaybackServiceBound = false;
             playbackService = null;
         }
@@ -589,6 +601,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     protected void onDestroy() {
+        if (playbackStateSubscription != null) {
+            try {
+                playbackStateSubscription.close();
+            } catch (Exception ignored) {}
+            playbackStateSubscription = null;
+        }
         if (isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -670,6 +688,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (playbackService != null) {
             if (lastPlaybackState != null && lastPlaybackState.currentState == PlaybackState.State.PLAYING) {
                 playbackService.pausePlayer();
+            } else if (lastPlaybackState != null && lastPlaybackState.currentState == PlaybackState.State.PAUSED) {
+                playbackService.resumePlayer();
             } else {
                 Track nowPlaying = playbackService.getNowPlayingSong();
                 if (nowPlaying != null) {

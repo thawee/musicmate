@@ -20,7 +20,10 @@ import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagField;
 import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.flac.FlacTag;
+import org.jaudiotagger.tag.id3.AbstractID3v2Frame;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.jaudiotagger.tag.id3.ID3v22Tag;
+import org.jaudiotagger.tag.id3.ID3v23Tag;
 import org.jaudiotagger.tag.id3.ID3v24Frame;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
@@ -163,6 +166,10 @@ public class JThinkWriter extends TagWriter {
             addIfNotNull(tag, createItunesField("MOOD", safe(musicTag.getMood())));
             addIfNotNull(tag, createItunesField("STYLE", safe(musicTag.getStyle())));
             addIfNotNull(tag, createItunesField("ORIGIN", safe(musicTag.getOrigin())));
+        } else if (tag instanceof AbstractID3v2Tag id3Tag) {
+            addTxxx(id3Tag, "STYLE", safe(musicTag.getStyle()));
+            addTxxx(id3Tag, "MOOD", safe(musicTag.getMood()));
+            addTxxx(id3Tag, "ORIGIN", safe(musicTag.getOrigin()));
         }
 
         // Embedded Cover Art Writing
@@ -199,10 +206,10 @@ public class JThinkWriter extends TagWriter {
             body.setDescription(key);
             body.setText(value);
 
-            ID3v24Frame frame = new ID3v24Frame("TXXX");
+            AbstractID3v2Frame frame = (tag instanceof ID3v22Tag) ? tag.createFrame("TXX") : tag.createFrame("TXXX");
             frame.setBody(body);
 
-            tag.addField(frame);
+            tag.setField(frame);
 
         } catch (Exception e) {
             Log.e(TAG, "Failed to add TXXX " + key, e);

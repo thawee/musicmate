@@ -56,17 +56,24 @@ public class FileSystem {
             // check original and tmp file is valid file size
             if (isValidSize(srcPath, tmpPath, true)) {
                 // copy file is ok, no lost file content
-                if(rename(context, targetPath, bakPath)) { // backup file
-                   // return rename(context, tmpPath, srcPath);
-                    if(rename(context, tmpPath, targetPath)) {
+                File targetFile = new File(targetPath);
+                boolean targetBackedUp = false;
+                if (targetFile.exists()) {
+                    targetBackedUp = rename(context, targetPath, bakPath); // backup file
+                }
+                if(rename(context, tmpPath, targetPath)) {
+                    if (targetBackedUp) {
                         delete(bakPath);
-                        delete(srcPath); // delete source file if everything ok
-                        return true;
-                    }else {
+                    }
+                    delete(srcPath); // delete source file if everything ok
+                    return true;
+                } else {
+                    if (targetBackedUp) {
                         rename(context, bakPath, targetPath);
                     }
+                    delete(tmpPath);
                 }
-            }else {
+            } else {
                 delete(tmpPath); // copy is fail, no valid file size
             }
         }
@@ -79,13 +86,19 @@ public class FileSystem {
             return;
         }
 
+        File targetFile = new File(targetPath);
+        boolean targetBackedUp = false;
         String bakPath = targetPath+"_tmp_safe_backup";
-        if(rename(context, targetPath, bakPath)) {
-            if(rename(context, srcPath, targetPath)) {
+        if (targetFile.exists()) {
+            targetBackedUp = rename(context, targetPath, bakPath);
+        }
+        if(rename(context, srcPath, targetPath)) {
+            if (targetBackedUp) {
                 delete(bakPath);
-                delete(srcPath);
-            }else {
-                rename(context, bakPath, targetPath); // copy is fail
+            }
+        } else {
+            if (targetBackedUp) {
+                rename(context, bakPath, targetPath); // rollback backup
             }
         }
     }

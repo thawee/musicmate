@@ -75,7 +75,7 @@ Defines any physical or network playback destination:
 
 ### `PlaybackService` (Interface)
 The master service API contract implemented by `MusicMateServiceImpl`:
-- **Transport Controls:** `playSong(Track)`, `pausePlayer()`, `stopPlaying()`, `skipToNextInQueue()`, `skipToPrevious()`, `seekTo(long)`.
+- **Transport Controls:** `playSong(Track)`, `pausePlayer()`, `resumePlayer()`, `stopPlaying()`, `skipToNextInQueue()`, `skipToPrevious()`, `seekTo(long)`.
 - **Queue Controls:** `setNextSongInQueue()`, `setShuffleMode(boolean)`, `setRepeatMode(RepeatMode)`.
 - **Target Management:** `switchPlayer(PlaybackTarget, boolean)`, `getPlayer()`, `getPlaybackTargets()`, `refreshPlayerDiscovery()`.
 - **Reactive State Subscriptions:** `subscribePlaybackState()`, `subscribeNowPlayingSong()`, `subscribePlaybackTarget()`.

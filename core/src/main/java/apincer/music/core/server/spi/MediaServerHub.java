@@ -46,6 +46,7 @@ public interface MediaServerHub {
 
     void playerStop(String udn);
     void playerPause(String udn);
+    default void playerResume(String udn) {}
     void playerSeek(String udn, long positionMs);
     void playerSetVolume(String udn, int volume);
 

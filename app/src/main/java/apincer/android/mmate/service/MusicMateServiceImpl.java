@@ -277,6 +277,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return currentPlayerFlow.getValue().orElse(null);
     }
 
+    private boolean isLocalTarget() {
+        PlaybackTarget player = getActivePlayer();
+        return player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId());
+    }
+
     private void updateAvailableExternalPlayers(List<MediaController> controllers) {
         // Remove all existing external Players
         addLocalPlaybackTarget(null, true);
@@ -474,7 +479,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     } else {
                         Track current = getNowPlayingSong();
                         if (current != null) {
-                            playSong(current);
+                            resumePlayer();
                         }
                     }
                     break;
@@ -605,7 +610,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void playSong(Track song) {
         if (song != null) {
-            queueManager.addPlayingQueue(song.getId());
+            if (!queueManager.containsTrack(song.getId())) {
+                queueManager.addPlayingQueue(song.getId());
+            }
+            queueManager.setCurrentTrack(song);
             AudioStreamCacheManager.getInstance().preloadTrack(song);
             Track nextSong = queueManager.getNextTrack();
             if (nextSong != null) {
@@ -754,6 +762,25 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     @Override
+    public void resumePlayer() {
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isControllable(playbackTarget)) {
+                try {
+                    mediaHub.playerResume(playbackTarget.getTargetId());
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to resume DMR: " + playbackTarget.getDisplayName(), e);
+                }
+                apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+                state.currentTrack = getNowPlayingSong();
+                onPlaybackStateChanged(state);
+            } else {
+                androidPlayer.resume();
+            }
+        });
+    }
+
+    @Override
     public void stopPlaying() {
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
@@ -848,7 +875,17 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget != null) {
             try {
-                mediaHub.playerSeek(currentTarget.getTargetId(), positionMs);
+                Track currentTrack = getNowPlayingSong();
+                long targetPos = Math.max(0, positionMs);
+                if (currentTrack != null && currentTrack.getAudioDuration() > 0) {
+                    long durationMs = (long) (currentTrack.getAudioDuration() * 1000.0);
+                    targetPos = Math.min(targetPos, durationMs);
+                }
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(currentTarget.getTargetId())) {
+                    androidPlayer.seekTo(targetPos);
+                } else {
+                    mediaHub.playerSeek(currentTarget.getTargetId(), targetPos);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to seek", e);
             }
@@ -1314,7 +1351,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         Log.d(TAG, "Gapless: Preloading → " + next.getTitle());
 
-        mediaHub.setNextTrack(next); // SetNextAVTransportURI
+        if (isLocalTarget()) {
+            androidPlayer.setNextTrack(next);
+        } else {
+            mediaHub.setNextTrack(next); // SetNextAVTransportURI
+        }
     }
 
     private void scheduleFallback(Track song) {
@@ -1414,7 +1455,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
         // Only manually update notification if NOT using the local Media3 ExoPlayer
         if (target == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
-            updateNotification(getApplicationContext(), state.currentTrack, target, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+            boolean isPlaying = state != null && state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+            updateNotification(getApplicationContext(), state != null ? state.currentTrack : null, target, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs(), isPlaying);
         }
     }
 

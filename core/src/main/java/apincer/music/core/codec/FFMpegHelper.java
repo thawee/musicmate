@@ -26,7 +26,7 @@ public class FFMpegHelper {
             String targetPath = pathFile.getAbsolutePath();
             String options = " -c:v copy ";
 
-            String cmd = " -hide_banner -nostats -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
+            String cmd = " -hide_banner -nostats -y -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
             LogHelper.setFFMpegOff();
             FFmpegKit.execute(cmd); // do not clear the result
             if(callback != null) {
@@ -44,7 +44,7 @@ public class FFMpegHelper {
             String options = " -vn -codec:a copy ";
            // String options =" -map 0:V -y -codec copy ";
 
-            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
+            String cmd = " -hide_banner -nostats -y -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
             LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -245,7 +245,7 @@ public class FFMpegHelper {
 
         String tmpTarget = srcPath.replace("." + ext, "_NEWFMT." + targetExt);
 
-        String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
+        String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
         Log.i(TAG, "Converting with cmd: " + cmd);
 
         try {

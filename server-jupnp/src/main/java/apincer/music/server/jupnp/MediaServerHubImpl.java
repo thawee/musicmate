@@ -1261,6 +1261,31 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
+    @Override
+    public void playerResume(String rendererUdn) {
+        isUserInitiatedStop = false;
+        runOnUpnpThread(() -> {
+            if (upnpService == null) return;
+
+            RemoteDevice device = resolveRenderer(rendererUdn);
+            if (device == null) {
+                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+            }
+            if (device == null) return;
+
+            Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+            if (avTransportService == null || controlPoint == null) return;
+
+            controlPoint.execute(new Play(avTransportService) {
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    Log.w(TAG, "Play (resume) failed: " + defaultMsg);
+                }
+            });
+        });
+    }
+
     private String formatSeekTime(long durationInMillis) {
         long totalSeconds = Math.max(0, durationInMillis / 1000);
         long hours = totalSeconds / 3600;

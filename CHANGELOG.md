@@ -5,6 +5,47 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.3] - 2026-09-08
+
+### Added
+- **Local ExoPlayer Precision Seeking (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`)**:
+  - Implemented `seekTo(positionMs)` with main thread dispatch in `AndroidPlayerController`, connecting the UI seekbar to local audio playback.
+- **Defensive Seek Clamping (`MusicMateServiceImpl.java`)**:
+  - Bound seek requests between `0` and current track duration in milliseconds, preventing negative offsets or decoder overrun errors.
+- **ExoPlayer Gapless Preload & Auto-Advance Handover (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`)**:
+  - Wired `setNextTrack()` directly into ExoPlayer's secondary media item queue for seamless on-device gapless playback; handled `MEDIA_ITEM_TRANSITION_REASON_AUTO` smoothly without redundant manual skip triggers.
+- **Lifecycle-Safe Activity State Subscriptions (`MainActivity.java`)**:
+  - Added `playbackStateSubscription` lifecycle tracking, properly closing scheduled 500ms executor subscriptions on rotation, service reconnect, and Activity destruction to prevent memory and scheduler leaks.
+- **Unit Test Coverage for Queue Resilience (`QueueManagerTest.java`)**:
+  - Added test cases covering shuffle stability across track changes, drag-and-drop index synchronization, in-place queue track selection, and queue clearing.
+
+### Changed
+- **Sound Grade & Codec Query Alignment (`RoomDbHelper.java`)**:
+  - Aligned dynamic SQL `buildWhereClause()` with `TrackDao` Room queries using `LOWER(audioEncoding)` and full support for all formats (`dsd`, `dsf`, `dff`, `sacd`, `aac`, `mpeg`, `mp3`, `m4a`, `ogg`, `opus`, `wma`, `flac`, `alac`, `aiff`, `aif`, `wave`, `wav`).
+  - Ensured accurate track counts and total durations across all sound grade categories.
+- **Directory Path Filtering & Normalization (`RoomDbHelper.java`)**:
+  - Normalized directory queries with trailing slash enforcement in `findInPath()` and mapped folder path filtering under `LIBRARY` criteria to prevent partial prefix sibling folder collisions and full-library query fallbacks.
+
+### Fixed
+- **Queue Track Rip-and-Append (`MusicMateServiceImpl.java`, `QueueManager.java`)**:
+  - Fixed issue where playing a track already in the queue removed it from its current position and re-appended it to the end; now selects track in-place via `setCurrentTrack()`, maintaining album sequence integrity.
+- **Pause / Resume State Preservation (`AndroidPlayerController.java`, `MediaServerHubImpl.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
+  - Added `resume()` to `AndroidPlayerController` (`internalExoPlayer.play()`) and `playerResume()` to DLNA streamer, preserving playback progress instead of restarting tracks from 0:00.
+- **Atomic File Move Backup Check (`FileSystem.java`)**:
+  - Guarded backup creation in `safeMove()` with `targetFile.exists()`, preventing file moves to new paths from failing due to nonexistent targets.
+- **Queue Shuffle Order Invariance (`QueueManager.java`)**:
+  - Preserved randomized `shuffleOrder` across track transitions instead of re-shuffling remaining tracks on every song change.
+- **Queue Drag-and-Drop Index Desynchronization (`QueueManager.java`)**:
+  - Synchronized `currentIndex` and `playbackIndex` to follow the active track during drag-and-drop reordering.
+- **Notification Play/Pause Button State (`MediaNotificationBuilder.java`, `MusicMateServiceImpl.java`)**:
+  - Fixed notification playback state synchronization to correctly display Pause when playing and Play when paused during local and casting sessions.
+- **ID3 Custom Taxonomy Writing for MP3 & DSF (`JThinkWriter.java`)**:
+  - Added `AbstractID3v2Tag` handling and modernized `addTxxx()` to write `STYLE`, `MOOD`, and `ORIGIN` frames across ID3v2 versions, ensuring edits to MP3 and DSF files persist correctly.
+- **Non-Interactive FFmpeg File Overwrite (`FFMpegHelper.java`, `FFMpegWriter.java`)**:
+  - Added global `-y` flag across all FFmpeg cover art extractions, removals, format conversions, and tag updates to prevent background process hangs on pre-existing files.
+- **Playing Queue Clearance & Thread Safety (`RoomDbHelper.java`, `QueueManager.java`)**:
+  - Synchronized `emptyPlayingQueue()` and reset shuffle/playback indices to prevent stale state retention.
+
 ## [3.19.2] - 2026-08-30
 
 ### Added

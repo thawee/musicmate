@@ -43,6 +43,7 @@ public class AndroidPlayerController {
     private MediaController mediaController;
     private PlaybackCallback playbackCallback;
     private ExoPlayer internalExoPlayer;
+    private Track nextTrack;
 
     private long lastUpdateSongTime;
 
@@ -129,7 +130,13 @@ public class AndroidPlayerController {
                     if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                         Log.d(TAG, "ExoPlayer: Gapless automatic track transition occurred");
                         if (playbackCallback != null) {
-                            playbackCallback.onPlaybackCompleted();
+                            if (nextTrack != null) {
+                                Track transitioningTrack = nextTrack;
+                                nextTrack = null;
+                                playbackCallback.onMediaTrackChanged(transitioningTrack);
+                            } else {
+                                playbackCallback.onPlaybackCompleted();
+                            }
                         }
                     }
                 }
@@ -288,6 +295,7 @@ public class AndroidPlayerController {
 
     public void setNextTrack(Track nextSong) {
         if (nextSong == null || nextSong.getPath() == null) return;
+        this.nextTrack = nextSong;
         if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
             runOnMainThread(() -> {
                 if (internalExoPlayer != null) {
@@ -307,6 +315,7 @@ public class AndroidPlayerController {
 
     public void play(Track song) {
         if (song == null || song.getPath() == null) return;
+        this.nextTrack = null;
 
         if (NEUTRON_MUSIC_PACK_NAME.equals(playbackTargetId)) {
             playInNeutron(context, song);
@@ -382,6 +391,30 @@ public class AndroidPlayerController {
             runOnMainThread(() -> {
                 if (internalExoPlayer != null) {
                     internalExoPlayer.pause();
+                }
+            });
+        }
+    }
+
+    public void resume() {
+        if (mediaController != null) {
+            mediaController.getTransportControls().play();
+        } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            runOnMainThread(() -> {
+                if (internalExoPlayer != null) {
+                    internalExoPlayer.play();
+                }
+            });
+        }
+    }
+
+    public void seekTo(long positionMs) {
+        if (mediaController != null) {
+            mediaController.getTransportControls().seekTo(positionMs);
+        } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+            runOnMainThread(() -> {
+                if (internalExoPlayer != null) {
+                    internalExoPlayer.seekTo(positionMs);
                 }
             });
         }

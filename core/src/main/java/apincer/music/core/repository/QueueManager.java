@@ -213,6 +213,14 @@ public class QueueManager {
         updateShuffleOrder();
     }
 
+    public synchronized boolean containsTrack(long trackId) {
+        return indexMap.containsKey(trackId);
+    }
+
+    public synchronized boolean containsTrack(Track track) {
+        return track != null && indexMap.containsKey(track.getId());
+    }
+
     public synchronized void savePlayingQueue(List<Track> songsInContext) {
         queueList.clear();
         indexMap.clear();
@@ -264,6 +272,21 @@ public class QueueManager {
      */
     public List<Track> getSongs() {
         return Collections.unmodifiableList(queueList);
+    }
+
+    public synchronized int getQueueSize() {
+        return queueList.size();
+    }
+
+    public synchronized int getCurrentIndex() {
+        return currentIndex;
+    }
+
+    public synchronized Track getCurrentTrack() {
+        if (currentIndex >= 0 && currentIndex < queueList.size()) {
+            return queueList.get(currentIndex);
+        }
+        return null;
     }
 
     /**
@@ -328,10 +351,10 @@ public class QueueManager {
         Integer idx = indexMap.get(track.getId());
         if (idx != null) {
             currentIndex = idx;
-        }
 
-        if (isShuffle) {
-            updateShuffleOrder();
+            if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
+                updateShuffleOrder();
+            }
         }
     }
 
@@ -347,8 +370,8 @@ public class QueueManager {
             playbackIndex = idx;
             currentIndex = idx;
 
-            if (isShuffle) {
-                updateShuffleOrder(); // re-anchor shuffle
+            if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
+                updateShuffleOrder();
             }
         }
     }
@@ -548,9 +571,20 @@ public class QueueManager {
 
     public synchronized void moveTrack(int fromPos, int toPos) {
         if (fromPos < 0 || fromPos >= queueList.size() || toPos < 0 || toPos >= queueList.size()) return;
+        Track currentTrack = (currentIndex >= 0 && currentIndex < queueList.size()) ? queueList.get(currentIndex) : null;
+        Track playbackTrack = (playbackIndex >= 0 && playbackIndex < queueList.size()) ? queueList.get(playbackIndex) : null;
+
         Track moved = queueList.remove(fromPos);
         queueList.add(toPos, moved);
         rebuildIndexMap();
+
+        if (currentTrack != null && indexMap.containsKey(currentTrack.getId())) {
+            currentIndex = indexMap.get(currentTrack.getId());
+        }
+        if (playbackTrack != null && indexMap.containsKey(playbackTrack.getId())) {
+            playbackIndex = indexMap.get(playbackTrack.getId());
+        }
+
         dbHelper.savePlayingQueue(queueList);
         updateShuffleOrder();
     }
@@ -597,10 +631,12 @@ public class QueueManager {
         }
     }
 
-    public void emptyPlayingQueue() {
+    public synchronized void emptyPlayingQueue() {
         dbHelper.emptyPlayingQueue();
         queueList.clear();
         indexMap.clear();
+        shuffleOrder.clear();
+        shuffleIndexMap.clear();
         currentIndex = -1;
         playbackIndex = -1;
     }

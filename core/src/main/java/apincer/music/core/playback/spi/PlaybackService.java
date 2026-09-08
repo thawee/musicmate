@@ -30,6 +30,7 @@ public interface PlaybackService {
 
     void playSong(Track song);
     void pausePlayer();
+    default void resumePlayer() {}
     void seekTo(long positionMs);
     void setVolume(int volumePercent);
     void adjustVolume(int direction);

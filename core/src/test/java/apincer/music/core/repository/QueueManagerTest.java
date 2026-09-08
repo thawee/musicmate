@@ -109,4 +109,73 @@ public class QueueManagerTest {
             assertTrue(random.getId() >= 1L && random.getId() <= 10L);
         }
     }
+
+    @Test
+    public void containsTrack_checksIndexMapCorrectly() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        queueManager.savePlayingQueue(Collections.singletonList(t1));
+
+        assertTrue(queueManager.containsTrack(1L));
+        assertTrue(queueManager.containsTrack(t1));
+        org.junit.Assert.assertFalse(queueManager.containsTrack(2L));
+        org.junit.Assert.assertFalse(queueManager.containsTrack(t2));
+    }
+
+    @Test
+    public void moveTrack_preservesActiveCurrentTrackIndex() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        Track t3 = createDummyTrack(3L, "Track 3");
+        List<Track> list = new ArrayList<>();
+        list.add(t1);
+        list.add(t2);
+        list.add(t3);
+        queueManager.savePlayingQueue(list);
+        queueManager.setCurrentTrack(t1); // currentIndex = 0
+
+        // Move t3 (index 2) to index 0. Now order is t3, t1, t2. t1 should now be at index 1!
+        queueManager.moveTrack(2, 0);
+        assertEquals(1, queueManager.getCurrentIndex());
+        assertEquals(1L, queueManager.getCurrentTrack().getId());
+    }
+
+    @Test
+    public void shuffleOrder_preservesSequenceAcrossPlaybackTransitions() {
+        List<Track> tracks = new ArrayList<>();
+        for (long i = 1; i <= 5; i++) {
+            tracks.add(createDummyTrack(i, "Track " + i));
+        }
+        queueManager.savePlayingQueue(tracks);
+        queueManager.setShuffle(true);
+
+        // First track is tracks.get(0) -> track 1
+        Track current = tracks.get(0);
+        queueManager.setPlaybackTrack(current);
+
+        // Get next track according to shuffle
+        Track next1 = queueManager.getNextTrack();
+        assertNotNull(next1);
+
+        // Transition to next1
+        queueManager.setPlaybackTrack(next1);
+
+        // The next track after next1 must NOT be current (track 1) again
+        Track next2 = queueManager.getNextTrack();
+        assertNotNull(next2);
+        assertTrue(next2.getId() != current.getId());
+    }
+
+    @Test
+    public void emptyPlayingQueue_resetsAllState() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        queueManager.savePlayingQueue(Collections.singletonList(t1));
+        queueManager.setShuffle(true);
+        assertEquals(1, queueManager.getQueueSize());
+
+        queueManager.emptyPlayingQueue();
+        assertEquals(0, queueManager.getQueueSize());
+        assertEquals(-1, queueManager.getCurrentIndex());
+        assertNull(queueManager.getNextTrack());
+    }
 }

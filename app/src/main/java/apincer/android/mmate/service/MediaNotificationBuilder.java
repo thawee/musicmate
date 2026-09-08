@@ -161,7 +161,7 @@ public class MediaNotificationBuilder {
             @Nullable PlaybackTarget player,
             MediaServerHub.ServerStatus status,
             long totalTracks) {
-        updateNotification(context, track, player, status, totalTracks, false);
+        updateNotification(context, track, player, status, totalTracks, status == MediaServerHub.ServerStatus.CAST);
     }
 
     public static void updateNotification(

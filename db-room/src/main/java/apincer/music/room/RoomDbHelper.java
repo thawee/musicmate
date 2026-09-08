@@ -137,7 +137,9 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public List<Track> findInPath(String path) {
-        return new ArrayList<>(trackDao.findInPath(path));
+        if (path == null) return Collections.emptyList();
+        String normalizedPath = path.endsWith("/") ? path : path + "/";
+        return new ArrayList<>(trackDao.findInPath(normalizedPath));
     }
 
     @Override
@@ -650,7 +652,8 @@ public class RoomDbHelper implements DbHelper {
                 if (Constants.TITLE_INCOMING_SONGS.equals(kw))  return new String[]{"isManaged = 0"};
                 if (Constants.TITLE_TO_ANALYST_DR.equals(kw))   return new String[]{"drScore = 0 OR dynamicRange = 0"};
                 if (Constants.TITLE_NO_COVERART.equals(kw))     return new String[]{"albumArtFilename IS NULL OR albumArtFilename = ''"};
-                return new String[]{""};
+                String prefix = kw.endsWith("/") ? kw : kw + "/";
+                return new String[]{"path LIKE ?", prefix + "%"};
 
             case PUBLISHER:
                 kw = criteria.getKeyword() != null ? criteria.getKeyword().trim() : "";
@@ -673,17 +676,17 @@ public class RoomDbHelper implements DbHelper {
                 kw = criteria.getKeyword();
                 if (kw == null || kw.isEmpty()) return new String[]{""};
                 if (Constants.TITLE_DSD.equals(kw))
-                    return new String[]{"audioEncoding IN ('dsd', 'dff')"};
+                    return new String[]{"LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd')"};
                 if (Constants.TITLE_MQA_MASTER_QUALITY.equals(kw))
                     return new String[]{"qualityInd LIKE 'MQA%'"};
                 if (Constants.TITLE_HIGH_QUALITY.equals(kw))
-                    return new String[]{"audioEncoding IN ('aac', 'mpeg')"};
+                    return new String[]{"LOWER(audioEncoding) IN ('aac', 'mpeg', 'mp3', 'm4a', 'ogg', 'opus', 'wma')"};
                 if (Constants.TITLE_CD_QUALITY.equals(kw))
-                    return new String[]{"audioEncoding IN ('flac','alac','aiff','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'"};
+                    return new String[]{"LOWER(audioEncoding) IN ('flac','alac','aiff','aif','wave','wav') AND audioBitsDepth = 16 AND qualityInd NOT LIKE 'MQA%'"};
                 if (Constants.TITLE_HIRES_QUALITY.equals(kw))
-                    return new String[]{"audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'"};
+                    return new String[]{"LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate >= 96000 AND qualityInd NOT LIKE 'MQA%'"};
                 if (Constants.TITLE_CD_EXT_QUALITY.equals(kw))
-                    return new String[]{"audioEncoding IN ('alac','flac','aiff','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'"};
+                    return new String[]{"LOWER(audioEncoding) IN ('alac','flac','aiff','aif','wave','wav') AND audioBitsDepth >= 24 AND audioSampleRate < 96000 AND qualityInd NOT LIKE 'MQA%'"};
                 return new String[]{""};
 
             case GENRE:

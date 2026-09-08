@@ -145,11 +145,11 @@ public class FFMpegWriter extends TagWriter {
         targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackKeys(tag);
         if(isEmpty(metadataKeys)) return false; // no change to write
-        String options = " -hide_banner -nostats ";
+        String options = " -hide_banner -nostats -y ";
         String copyOption = " -map 0 -y -codec copy ";
         if(isMPegFile(tag)) {
             //options = options + " -fflags +genpts ";
-            copyOption = " -c copy ";
+            copyOption = " -y -c copy ";
         }
 
        // String cmd = options +" -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";

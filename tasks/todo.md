@@ -1188,3 +1188,100 @@ Reorganize the data hierarchy on the 3D flip **Audio Anatomy** screen ([`NowPlay
 - **In-Place Discography Sheet (`RelatedTracksSheet.kt`):** Tapping any capsule opens an elegant Compose modal sheet showing all matching studio tracks with their real-time Hi-Res/CD/DR badges, allowing 1-tap playback, `Play All`, `Queue All`, or `View in Library` without losing tag-editing state.
 - **Verification:** Compilation and all unit tests passed with `./gradlew compileDebugSources testDebugUnitTest` (**BUILD SUCCESSFUL in 5s**, 0 errors).
 
+---
+
+# Master Code Review: Functional Issues & Robustness Audit 🔍
+
+## Objectives
+Conduct a comprehensive, staff-engineer-level audit of the MusicMate codebase to identify any functional issues, edge-case bugs, race conditions, resource leaks, or protocol non-conformances across:
+1. Audio Playback & Queue Engine (`MusicMateServiceImpl`, `QueueManager`, `AndroidPlayerController`, `DMRPlayer`)
+2. Media Server & Network Streaming (`PartialFileProducer`, Netty/HttpCore handlers, SSDP/jUPnP)
+3. Metadata Management, Tag Editing & Audio Inspection (`MediaMetadataReader`, `TagUtils`, `DbHelper`, file ops)
+4. UI / Presentation State & Concurrency (`MainViewModel`, `TagsViewModel`, `MainScaffoldState`, Compose interop)
+5. Android Platform & Lifecycle Compliance (Background execution, permissions, power/wake locks)
+
+## Audit Checklist
+- [x] **Phase 1: Audio Playback & State Machine Audit**
+  - [x] Inspect `MusicMateServiceImpl.java` (track completion, transitions, auto-advance, error recovery, audio focus)
+  - [x] Inspect `QueueManager.java` (bounds checks, index mutations, shuffle/repeat ordering, removal logic)
+  - [x] Inspect `AndroidPlayerController.java` (ExoPlayer thread confinement, audio attributes, error handling)
+  - [x] Inspect `DMRPlayer.java` (UPnP SOAP requests, state transitions, fallback timers, position info parsing)
+- [x] **Phase 2: Network & Media Server Engine Audit**
+  - [x] Inspect HTTP streaming & partial range handling (`PartialFileProducer.java`, MIME headers, buffer lifecycle)
+  - [x] Inspect jUPnP device registry, subscription renewals, IP change / network reconnect handlers
+  - [x] Inspect socket leaks, FileChannel/RandomAccessFile leaks under aborted/client disconnect requests
+- [x] **Phase 3: Metadata, Storage & Tag Engine Audit**
+  - [x] Inspect tag writing and file renaming/moving (transaction safety, file descriptor closing, rollback)
+  - [x] Inspect database operations (`DbHelper`, Room DAOs, queries, thread pools)
+  - [x] Inspect audio analysis (spectrogram generation, dynamic range calculation, temp file cleanup)
+- [x] **Phase 4: UI State Management, Compose & Concurrency Audit**
+  - [x] Inspect CoroutineScopes, StateFlow subscriptions, and LiveData interop for memory leaks
+  - [x] Inspect Compose-Java interop bridges (`ListInterop`, `DialogInterop`, `MainScaffoldState`)
+  - [x] Check crash vulnerabilities, null safety, and race conditions in UI triggers
+- [x] **Phase 5: Synthesis, Verification & Report Generation**
+  - [x] Categorize identified issues by severity (Critical, High, Medium, Low/Edge-case)
+  - [x] Formulate precise, elegant solutions and test validations
+  - [x] Produce structured Staff Engineer Code Review report for the user
+
+## Review Results: Identified Issues Summary
+| # | Severity | Component | Issue Summary |
+|---|---|---|---|
+| 1 | **Critical** | Playback Engine | Seek broken on local playback (`seekTo` only targets DLNA, `AndroidPlayerController` has no seek) |
+| 2 | **Critical** | Queue Engine | Playing track in queue rips it out & appends to end (`addPlayingQueue`), breaking album sequence |
+| 3 | **Critical** | Playback Engine | Resume from pause restarts track from 0:00 (no resume logic, calls `playSong` from beginning) |
+| 4 | **Critical** | File System | `FileSystem.safeMove()` fails if target doesn't exist (attempts to backup nonexistent target) |
+| 5 | **High** | Queue Engine | Shuffle mode reshuffles remaining tracks on every track change (re-randomizes played songs) |
+| 6 | **High** | Queue Engine | Drag-and-drop (`moveTrack`) desynchronizes active playing pointer (`currentIndex`) |
+| 7 | **High** | Playback Engine | ExoPlayer gapless preload is dead code; auto-advance triggers redundant manual skip |
+| 8 | **High** | UI / Notification | Notification always shows "Play" button during active playback (hardcoded `isPlaying=false`) |
+| 9 | **Medium** | Database / Analytics | Sound grade search statistics vs DAO query discrepancy (missing codecs & case sensitivity) |
+| 10 | **Medium** | Tag Engine | ID3 writer drops `STYLE`, `MOOD`, `ORIGIN` for MP3 and DSF (no `TXXX` frame writer) |
+| 11 | **Medium** | UI / Lifecycle | Activity context & repeating executor task leaked across rotations via `subscribePlaybackState` |
+| 12 | **Medium** | Queue Engine | `emptyPlayingQueue()` unsynchronized & leaves stale shuffle state |
+
+## Implementation Plan (Critical & High Severity)
+- [x] **Fix 1: Local Seek Implementation**
+  - [x] Add `seekTo(long positionMs)` to `AndroidPlayerController.java`
+  - [x] Update `MusicMateServiceImpl.seekTo(long positionMs)` to route to `androidPlayer` for local target
+- [x] **Fix 2: Queue Track Rip-and-Append Prevention**
+  - [x] Add `containsTrack(long id)` check before `queueManager.addPlayingQueue()` in `MusicMateServiceImpl.playSong()`
+  - [x] Ensure `queueManager.setCurrentTrack(id)` is called to select existing queue track in place
+- [x] **Fix 3: Resume from Pause State Preservation**
+  - [x] Add `resume()` in `AndroidPlayerController.java` using `internalExoPlayer.play()`
+  - [x] Add `resumePlayer()` in `MusicMateServiceImpl.java` routing to local or DLNA resume
+  - [x] Update `ACTION_TOGGLE_PLAYBACK` and UI play/pause toggles to call `resumePlayer()` when paused
+- [x] **Fix 4: SafeMove Target Nonexistent Check**
+  - [x] Guard target backup in `FileSystem.safeMove()` with `targetFile.exists()`
+  - [x] Only attempt rollback if `targetBackedUp` is true
+- [x] **Fix 5: Shuffle Order Stability Across Track Changes**
+  - [x] In `QueueManager.setPlaybackTrack()`, update `playbackIndex` from existing `shuffleIndexMap` instead of calling `updateShuffleOrder()`
+  - [x] Keep `updateShuffleOrder()` strictly for shuffle toggling or queue mutations
+- [x] **Fix 6: Queue Drag-and-Drop Index Synchronization**
+  - [x] In `QueueManager.moveTrack()`, recalculate `currentIndex` and `playbackIndex` based on current track ID
+- [x] **Fix 7: ExoPlayer Gapless Preload & Auto-Advance Transition**
+  - [x] Unify `schedulePreloadNextTrack()` to call `androidPlayer.setNextTrack()` for local target
+  - [x] In `AndroidPlayerController`, handle auto-advance cleanly without triggering redundant manual skip
+- [x] **Fix 8: Notification Play/Pause State Sync**
+  - [x] Pass `state == State.PLAYING` in `MusicMateServiceImpl.java` notification update
+  - [x] Fix default `updateNotification` overload in `MediaNotificationBuilder.java` to check `status == State.CAST`
+- [x] **Verification & Unit Tests**
+  - [x] Add targeted unit tests for `QueueManager` (shuffle stability, queue reordering, track selection)
+  - [x] Run `./gradlew testDebugUnitTest` and ensure all tests pass
+
+- [x] **Phase 2: Code Defects 1–6 Implementation**
+  - [x] **Defect 1: Sound Grade SQL Alignment in `RoomDbHelper.java`**
+    - [x] Align `buildWhereClause()` for `SOUND_GRADE` to use `LOWER(audioEncoding)` and match codecs/rates from `TrackDao.java:58-77`
+  - [x] **Defect 2: Custom Taxonomy in ID3 Tag Writer for MP3 & DSF in `JThinkWriter.java`**
+    - [x] Add `STYLE`, `MOOD`, and `ORIGIN` frame writing for `AbstractID3v2Tag` (supporting MP3, DSF, and other ID3 formats)
+  - [x] **Defect 3: Activity Context & Scheduler Leak on Rotation in `MainActivity.java`**
+    - [x] Store `AutoCloseable` subscription handle from `playbackService.subscribePlaybackState()`
+    - [x] Close subscription on service disconnect, re-subscribe, and in `onDestroy()`
+  - [x] **Defect 4: Missing `-y` Flag in FFmpeg Commands**
+    - [x] Add `-y` flag in `FFMpegHelper.java` (extract cover, remove cover, convert format)
+    - [x] Ensure `-y` flag in `FFMpegWriter.java` (write tags command)
+  - [x] **Defect 5: Unclamped Seek Parameter in `MusicMateServiceImpl.java`**
+    - [x] Clamp `positionMs` between `0` and current track duration in `seekTo()`
+  - [x] **Defect 6: Folder Filter Scope in `RoomDbHelper.java`**
+    - [x] Ensure `buildWhereClause()` handles directory paths when `criteria.getType() == LIBRARY` and normalizes path matching
+  - [x] **Verification & Test Suite**
+    - [x] Run `./gradlew testDebugUnitTest` and verify all tests pass
