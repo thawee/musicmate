@@ -225,3 +225,9 @@
   - Always clamp user-requested seek milliseconds between 0 and track duration before forwarding to local or remote decoders.
 - **Exact Directory Path Matching in SQL LIKE Clauses**:
   - When matching filesystem directories in SQL (`path LIKE ?`), ensure the prefix path terminates with a `/` (`prefix = path.endsWith("/") ? path : path + "/"`) to avoid matching sibling directories that share a common prefix.
+- **Standalone Module Extraction & Modernization Patterns**:
+  - *Clean Project Structure:* When extracting an embedded submodule into a top-level standalone project, establish standard modern Gradle conventions: root `settings.gradle`, root `build.gradle`, `gradle/libs.versions.toml`, and an `app/` subproject directory targeting Java 17, Android SDK 36, and AGP 9+.
+  - *Non-Constant Resource IDs in AGP 8+/9+:* Android Gradle Plugin makes resource IDs (`R.id.*`) non-final by default. Convert all `switch (id)` statements on resource IDs to `if-else` chains to avoid `constant expression required` compilation errors.
+  - *Room Architecture Best Practices:* Room database classes must be `public abstract class ... extends RoomDatabase` with abstract DAO getters. Room generates the implementation at compile time; never manually override SQLite helpers with `return null`. Avoid declaring `@PrimaryKey` on `@Embedded` entities (e.g. `Address`, `Contact`) as primary keys on embedded models are ignored by Room.
+  - *Apache HttpClient Elimination:* Apache HTTP Client (`org.apache.http.*`) has been removed from modern Android SDKs. Migrate directly to `OkHttpClient` with connection timeouts, pooled clients, and `try-with-resources` response body handling.
+  - *Scoped Storage & Modern Concurrency:* Replace deprecated `AsyncTask` with `ExecutorService` (`Executors.newSingleThreadExecutor()`) and replace deprecated `Environment.getExternalStorageDirectory()` with scoped storage (`context.getExternalFilesDir(...)`).
