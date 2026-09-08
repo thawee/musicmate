@@ -1285,3 +1285,64 @@ Conduct a comprehensive, staff-engineer-level audit of the MusicMate codebase to
     - [x] Ensure `buildWhereClause()` handles directory paths when `criteria.getType() == LIBRARY` and normalizes path matching
   - [x] **Verification & Test Suite**
     - [x] Run `./gradlew testDebugUnitTest` and verify all tests pass
+
+---
+
+# TripMate Extraction & Modernization Master Plan 🚀
+
+## Objectives
+Extract `TripMate` from `musicmate` into a dedicated standalone Android repository at `/Users/thawee.p/Workspaces/github/TripMate`, clean `musicmate`, and modernize TripMate's build system, database architecture, networking, concurrency, and SDK dependencies.
+
+## Master Checklist
+
+- [x] **Phase 1: Project Setup & Repository Extraction**
+  - [x] Move `/Users/thawee.p/Workspaces/github/musicmate/TripMate` to `/Users/thawee.p/Workspaces/github/TripMate`
+  - [x] Initialize standard Android project structure with root `settings.gradle`, root `build.gradle`, and `:app` module
+  - [x] Configure modern `gradle/libs.versions.toml` (SDK 36, AGP 9.4, Gradle 9.6, Room 2.8.4, OkHttp 4.12.0, OSMDroid 6.1.18, Material 3)
+  - [x] Copy Gradle wrapper (`gradlew`, `gradle/wrapper/`) to `/Users/thawee.p/Workspaces/github/TripMate`
+  - [x] Add clean `.gitignore` for Android project
+
+- [x] **Phase 2: Database Architecture Modernization (Room Standard)**
+  - [x] Prune dead ObjectBox code (`objectbox/` package, `objectbox-models/`)
+  - [x] Convert `OutdoorMateDatabase.java` to `public abstract class OutdoorMateDatabase extends RoomDatabase` with DAO getters
+  - [x] Fix `PlaceDao.java` query: add `WHERE type = :category` to `getByCategory()` and `OnConflictStrategy.REPLACE`
+  - [x] Fix `FeatureDao.java` query: add `WHERE category = :category` to `getByCategory()` and `OnConflictStrategy.REPLACE`
+  - [x] Refactor `MapsActivity.java` to query `OutdoorMateDatabase` / `PlaceDao` instead of ObjectBox, running off the main thread
+
+- [x] **Phase 3: Networking & Concurrency Modernization**
+  - [x] Refactor `PskHttpRequest.java` and `CacheImageDownloader.java` to use modern `OkHttpClient` instead of discontinued Apache `DefaultHttpClient`
+  - [x] Modernize `PlaceRepository.java`: replace deprecated `AsyncTask` with `ExecutorService` and fix storage directory paths with scoped storage
+  - [x] Remove `ObjectBox.init(this)` from `Application.java`
+  - [x] Resolve non-constant resource IDs in `switch` statements (`MapsActivity`, `ListDetailsActivity`) for AGP 9 compatibility
+
+- [x] **Phase 4: Verification, Git Commits & MusicMate Cleanup**
+  - [x] Verify clean compilation in `/Users/thawee.p/Workspaces/github/TripMate` via `./gradlew compileDebugSources` and packaging via `./gradlew assembleDebug`
+  - [x] Verify `musicmate` clean build via `./gradlew testDebugUnitTest` (all tests passing)
+  - [x] Initialize git repo and initial commit in `/Users/thawee.p/Workspaces/github/TripMate` (`feat: initialize TripMate standalone project with Room, OkHttp, and AGP 9`)
+  - [x] Commit deletion of `TripMate/` in `musicmate`
+
+## Review & Results (TripMate Extraction & Modernization)
+- **Standalone Repository Established:**
+  - Located at `/Users/thawee.p/Workspaces/github/TripMate` at the same level as `musicmate`.
+  - Configured with standard Android project layout: root `settings.gradle`, root `build.gradle`, `gradle/libs.versions.toml`, `gradle/wrapper/`, and `:app` module (`app/build.gradle`, `app/src/main/`).
+- **Toolchain Modernization:**
+  - Upgraded to **Gradle 9.6.0** and **Android Gradle Plugin 9.4.0**.
+  - Target SDK **36**, Compile SDK **36**, Min SDK **21**, Java 17 bytecode toolchain.
+- **Database Modernization (Room Standard):**
+  - Completely purged abandoned `io.objectbox` dependencies and classes (`objectbox/` package).
+  - Modernized `OutdoorMateDatabase` into a clean abstract Room singleton with `placeDao()` and `featureDao()`.
+  - Added `sourceName` and `sourceUrl` properties to Room entity `Place`.
+  - Refactored `PlaceDao` and `FeatureDao` with proper SQL `WHERE` clauses.
+  - Refactored `MapsActivity` to query `OutdoorMateDatabase` asynchronously via `ExecutorService`, eliminating main-thread UI stalls.
+- **Networking & Concurrency Modernization:**
+  - Completely eliminated all Apache HTTP Client legacy dependencies (`org.apache.http.*`).
+  - Migrated `PskHttpRequest` and `CacheImageDownloader` to `OkHttpClient 4.12.0` with connection pooling and resource management.
+  - Converted `PlaceRepository` and `MapsActivity` background tasks from deprecated `AsyncTask` to Java `ExecutorService`.
+  - Migrated hardcoded external storage access (`Environment.getExternalStorageDirectory()`) to scoped storage (`context.getExternalFilesDir("OutdoorMate")`).
+- **Verification:**
+  - `./gradlew compileDebugSources`: **BUILD SUCCESSFUL in 2s**.
+  - `./gradlew assembleDebug`: **BUILD SUCCESSFUL in 3s** (`app-debug.apk` 8.7 MB generated).
+  - Standalone git repo initialized at `TripMate` with initial commit `8be4c8c`.
+  - `TripMate/` directory cleanly excised from `musicmate`.
+  - `musicmate` unit test suite verified: **BUILD SUCCESSFUL in 30s** (all tests green).
+
