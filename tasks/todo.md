@@ -1511,6 +1511,50 @@ Elevate MusicMate from an 8.9/10 specialist app into a **true 10/10 flagship aud
   - Added unit test suite [`VUMeterAndBadgeTest.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/test/java/apincer/android/mmate/ui/compose/VUMeterAndBadgeTest.kt).
   - Full project test suite passes cleanly with zero errors (`./gradlew testDebugUnitTest` - BUILD SUCCESSFUL).
 
+---
 
+# Playback Screen Cover Art Gesture Refinement & Miss-Click Elimination
 
+## Problem Statement
+On the playback screen (`NowPlayingPage.kt`), a horizontal swipe gesture (`detectDragGestures`) on the cover art was configured to trigger next/previous track (`onNext()` / `onPrevious()`).
+This created severe interaction defects:
+1. **Accidental Track Skips (Miss-Clicks):** Any slight micro-drag or finger jitter while attempting to tap or double-tap the cover art (which flips the card to Audio Anatomy / Analog VU Meter or toggles Play/Pause) triggered an unintended track skip.
+2. **Conflict with HorizontalPager:** `NowPlayingPage` is page 0 of a 3-page `HorizontalPager` (`[Playback] | [Queue] | [Server]`) in `AudioHubSheet.kt`. Touching the cover art while trying to swipe into the Queue tab intercepted the drag event (`change.consume()`), skipping the song instead of navigating to Queue.
+3. **Double `pointerInput` Collision:** Stacking `detectTapGestures` and `detectDragGestures` caused gesture cancellation and erratic responsiveness.
+4. **Redundancy:** Dedicated, accessible micro-haptic transport buttons (`⏮` and `⏭`) already exist directly below the seekbar.
+
+## Objectives
+1. Remove the conflicting `detectDragGestures` from the cover art container in `NowPlayingPage.kt`.
+2. Clean up unused `detectDragGestures` import in `NowPlayingPage.kt`.
+3. Preserve crisp, reliable tap interactions on the cover art:
+   - Single tap: 3D Flip to Audio Anatomy / Analog VU Meter (`flipped = !flipped`).
+   - Double tap: Play / Pause toggle (`onPlayPause()`).
+4. Ensure smooth, conflict-free horizontal pager swiping between `Playback`, `Queue`, and `Server` tabs across the entire sheet surface.
+5. Verify build with `./gradlew compileDebugSources` and test suite with `./gradlew testDebugUnitTest`.
+6. Update `tasks/todo.md`, `tasks/lessons.md`, and `CHANGELOG.md`.
+
+## Master Checklist
+- [x] **1. Refactor Cover Art Gesture Modifier in `NowPlayingPage.kt`**
+  - [x] Remove `.pointerInput(Unit) { var dragAmount = 0f; detectDragGestures ... }`.
+  - [x] Retain `.pointerInput(Unit) { detectTapGestures(onDoubleTap = { onPlayPause() }, onTap = { flipped = !flipped }) }`.
+  - [x] Remove unused `detectDragGestures` import.
+- [x] **2. Verification & Build**
+  - [x] Run `./gradlew compileDebugSources` (BUILD SUCCESSFUL).
+  - [x] Run `./gradlew testDebugUnitTest` (BUILD SUCCESSFUL).
+- [x] **3. Documentation & Lessons**
+  - [x] Update `tasks/lessons.md`.
+  - [x] Update `CHANGELOG.md`.
+  - [x] Complete Review & Results in `tasks/todo.md`.
+
+## Review & Results
+- **Root Cause Confirmed:**
+  1. Stacking multiple `pointerInput(Unit)` modifiers with `detectTapGestures` and `detectDragGestures` on the cover art container caused gesture collision. Any slight finger jitter or roll (~5–10px) during a tap consumed touch coordinates via `change.consume()`, canceling card flip (`onTap`) and play/pause (`onDoubleTap`).
+  2. Because `NowPlayingPage` resides on page 0 of `HorizontalPager` (`[Playback] | [Queue] | [Server]`), touching the large album art container intercepted the user's horizontal drag gesture to navigate to Queue, causing an unintended track skip (`onNext()`) instead of tab switching.
+- **Fix Implemented:**
+  - Removed the conflicting `detectDragGestures` block and its unused import from [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt).
+  - Retained clean, 100% reliable `detectTapGestures` for single tap (card flip to Audio Anatomy / Analog VU Meter) and double tap (play/pause).
+  - Left horizontal dragging to the native `HorizontalPager` container, enabling fluid swiping between `Playback`, `Queue`, and `Server` tabs across the entire sheet surface.
+  - Track navigation remains crisp, deliberate, and accessible via the dedicated micro-haptic Previous (`⏮`) and Next (`⏭`) transport buttons.
+- **Verification:**
+  - Full project compilation and unit test suite verified with `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 9s**, 0 errors, all unit tests passed.
 

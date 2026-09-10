@@ -249,3 +249,8 @@
 - **Physical Ballistic Simulation & Vector Graphics in Compose Canvas**:
   - Realistic analog VU meter needle movement requires ANSI ballistic spring-damper dynamics ($F = (target - current) \cdot k - velocity \cdot c$) computed per-frame with `withFrameNanos`.
   - Avoid list destructuring with more than 5 elements (Kotlin stdlib only provides `component1()` through `component5()` for `List`); use dedicated `data class` structures (e.g. `VUMeterPalette`) for type safety and clean maintainability.
+- **Nested Gesture Collisions & Pager Swiping (`detectTapGestures` vs `detectDragGestures` in Paged Containers)**:
+  - When stacking multiple `.pointerInput(Unit)` modifiers (one for taps and one for drags) on a large container (like album art) hosted inside a `HorizontalPager`, two critical interaction defects emerge:
+    1. *Miss-Clicks & Tap Interception:* Any minute finger jitter (~5–10px) during a tap causes `detectDragGestures` with `change.consume()` to consume the touch event, cancelling the tap detector and making card flips or play/pause unresponsive.
+    2. *HorizontalPager Gesture Hijacking:* `change.consume()` in the drag detector unconditionally consumes horizontal touch movement across the screen. When users swipe between tabs (`[Playback] ➔ [Queue]`), touching the cover art intercepts the paging gesture and triggers track skipping instead of smooth tab navigation.
+  - *Pattern:* In paged bottom sheets or tabs, leave horizontal drag gestures to the native container (`HorizontalPager`). Restrict card interactions to explicit `detectTapGestures` (single tap for inspection/flip, double tap for play/pause), and let dedicated, tactile micro-haptic transport buttons (`⏮` and `⏭`) handle track skipping cleanly.

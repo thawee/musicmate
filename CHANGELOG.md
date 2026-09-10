@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unit Test Coverage (`VUMeterAndBadgeTest.kt`)**:
   - Added unit test suite verifying `VUMeterTheme` catalog and `getUnifiedBadgeText` formatting across Hi-Res FLAC, CD Lossless, DSD, and MP3.
 
+### Fixed
+- **Cover Art Gesture Collision & Pager Swiping Conflict (`NowPlayingPage.kt`)**:
+  - Removed conflicting horizontal drag gesture detector (`detectDragGestures`) from the playback screen's album art container.
+  - Eliminated accidental track skips caused by minute finger rolls during taps and resolved touch event cancellation for 3D card flips (`onTap`) and play/pause (`onDoubleTap`).
+  - Restored frictionless horizontal swiping across the entire playback viewport to navigate between the `[Playback]`, `[Queue]`, and `[Server]` tabs in `AudioHubSheet`'s `HorizontalPager`.
+
 ## [3.19.4] - 2026-09-10
 
 ### Added
