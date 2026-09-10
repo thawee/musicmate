@@ -261,4 +261,13 @@
 - **DIDL-Lite Duration Millisecond Scaling & UPnP Time String Parsing**:
   - UPnP/DLNA DIDL-Lite metadata requires track duration in `HH:MM:SS.mmm` format derived from milliseconds. Passing raw duration in seconds (e.g. 238) into millisecond formatters produces `0:00:00.238` instead of `0:03:58.000`. Always multiply seconds by 1000 before formatting.
   - Remote renderers return position/duration strings with decimal fractions (e.g., `00:03:58.238` or `03:58`). Never parse seconds with `Integer.parseInt(parts[2])`; parse using `Double.parseDouble()` to prevent `NumberFormatException` and position fallback to zero.
+- **RFC 7233 HTTP Range Clamping & Unsatisfiable Range Status**:
+  - Open or unbounded range requests (e.g., `bytes=0-2147483647`) sent by DLNA renderers or browsers must have the `end` position clamped to `fileLength - 1`. If unclamped, `Content-Length` claims the file is gigabytes in size, causing renderers to flag stream truncation when the file reaches actual EOF.
+  - When `start >= fileLength`, the server must return HTTP `416 Range Not Satisfiable` with `Content-Range: bytes */fileLength` instead of returning `206 Partial Content` with negative content length.
+  - Suffix ranges (`bytes=-500`) must be parsed by calculating `start = Math.max(fileLength - suffix, 0)` rather than throwing `NumberFormatException` on empty prefix strings.
+- **DLNA Natural Completion Latching & Polling Cancellation**:
+  - When a track reaches its natural duration or a renderer sends a `STOPPED` GENA event, immediately call `stopPolling()` and latch `isUserInitiatedStop = true;` before notifying `playbackCallback.onPlaybackCompleted()`. This prevents subsequent recurring poll cycles or duplicate `STOPPED` events from firing a duplicate skip before the new track begins.
+- **Continuous Compose Animation Choreographer Idling**:
+  - Frame-driven physics loops using `while (isActive) { withFrameNanos { ... } }` must check if visual elements have reached their resting state when paused (e.g. needles settled to 0). Breaking the loop allows the coroutine to complete and stops the 120Hz frame callback loop, preventing unnecessary battery and CPU drain while paused.
+
 

@@ -24,23 +24,17 @@ public class AudioStreamCacheManager {
 
     // Max 4MB pre-buffered head chunk per track
     public static final int HEAD_CHUNK_SIZE = 4 * 1024 * 1024; // 4MB
-    // Total 16MB cache capacity (can hold head chunks for up to 4 tracks simultaneously)
-    private static final int MAX_CACHE_BYTES = 16 * 1024 * 1024; // 16MB
+    private static final int BUFFER_SIZE = 64 * 1024; // 64KB direct buffer for zero GC page cache warming
 
     private static volatile AudioStreamCacheManager instance;
 
-    private final LruCache<String, byte[]> memoryCache;
+    private final LruCache<String, Boolean> preloadedPaths;
     private final ExecutorService preloadExecutor;
     private java.util.concurrent.Future<?> activePreloadFuture;
     private final Object preloadLock = new Object();
 
     private AudioStreamCacheManager() {
-        this.memoryCache = new LruCache<String, byte[]>(MAX_CACHE_BYTES) {
-            @Override
-            protected int sizeOf(String key, byte[] value) {
-                return value != null ? value.length : 0;
-            }
-        };
+        this.preloadedPaths = new LruCache<>(64);
         this.preloadExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r, "AudioPreloader");
             thread.setPriority(Thread.MIN_PRIORITY);
@@ -73,23 +67,20 @@ public class AudioStreamCacheManager {
     }
 
     /**
-     * Asynchronously pre-buffers the first HEAD_CHUNK_SIZE bytes of the given track into memory.
+     * Asynchronously pre-warms the first HEAD_CHUNK_SIZE bytes of the given track into the OS page cache.
+     * Uses zero JVM heap allocations and prevents flash storage read delays during track start.
      */
     public void preloadTrack(Track track) {
         if (track == null || track.getPath() == null) return;
         final String path = track.getPath();
 
-        synchronized (memoryCache) {
-            if (memoryCache.get(path) != null) {
-                return; // Already cached
+        synchronized (preloadedPaths) {
+            if (Boolean.TRUE.equals(preloadedPaths.get(path))) {
+                return; // Already warmed in page cache
             }
         }
 
         synchronized (preloadLock) {
-            if (activePreloadFuture != null && !activePreloadFuture.isDone()) {
-                activePreloadFuture.cancel(true);
-            }
-
             activePreloadFuture = preloadExecutor.submit(() -> {
                 try {
                     File file = new File(path);
@@ -99,23 +90,24 @@ public class AudioStreamCacheManager {
                     if (fileLength <= 0) return;
 
                     int bytesToRead = (int) Math.min(fileLength, HEAD_CHUNK_SIZE);
-                    byte[] buffer = new byte[bytesToRead];
+                    ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
 
                     try (RandomAccessFile raf = new RandomAccessFile(file, "r");
                          FileChannel channel = raf.getChannel()) {
-                        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
                         int totalRead = 0;
                         while (totalRead < bytesToRead && !Thread.currentThread().isInterrupted()) {
+                            byteBuffer.clear();
+                            int toRead = Math.min(byteBuffer.capacity(), bytesToRead - totalRead);
+                            byteBuffer.limit(toRead);
                             int read = channel.read(byteBuffer);
                             if (read <= 0) break;
                             totalRead += read;
                         }
                         if (totalRead > 0 && !Thread.currentThread().isInterrupted()) {
-                            byte[] finalBuffer = (totalRead == bytesToRead) ? buffer : Arrays.copyOf(buffer, totalRead);
-                            synchronized (memoryCache) {
-                                memoryCache.put(path, finalBuffer);
+                            synchronized (preloadedPaths) {
+                                preloadedPaths.put(path, Boolean.TRUE);
                             }
-                            Log.d(TAG, "Pre-buffered " + totalRead + " bytes for: " + track.getTitle());
+                            Log.d(TAG, "Pre-warmed " + totalRead + " bytes in OS page cache for: " + track.getTitle());
                         }
                     }
                 } catch (Exception e) {
@@ -128,31 +120,28 @@ public class AudioStreamCacheManager {
     }
 
     /**
-     * Retrieves pre-buffered bytes if the request falls within the cached range (start offset = 0).
+     * Legacy getter preserved for backward compatibility. Streaming now streams directly from FileChannel.
      */
     public byte[] getPreloadedHead(String path) {
-        if (path == null) return null;
-        synchronized (memoryCache) {
-            return memoryCache.get(path);
-        }
+        return null;
     }
 
     /**
-     * Evicts a specific track from the cache.
+     * Evicts a specific track from the preloaded paths cache.
      */
     public void evict(Track track) {
         if (track == null || track.getPath() == null) return;
-        synchronized (memoryCache) {
-            memoryCache.remove(track.getPath());
+        synchronized (preloadedPaths) {
+            preloadedPaths.remove(track.getPath());
         }
     }
 
     /**
-     * Clears all pre-buffered audio chunks.
+     * Clears all pre-buffered track paths.
      */
     public void clear() {
-        synchronized (memoryCache) {
-            memoryCache.evictAll();
+        synchronized (preloadedPaths) {
+            preloadedPaths.evictAll();
         }
     }
 }

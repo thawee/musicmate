@@ -1567,7 +1567,10 @@ public class MediaServerHubImpl implements MediaServerHub {
                             } else if (duration > 0 && position >= duration && position > 5) {
                                 Log.i(TAG, "Polling: Track duration complete (" + position + "s / " + duration + "s)");
                                 if (!isUserInitiatedStop && playbackCallback != null) {
+                                    stopPolling();
+                                    isUserInitiatedStop = true; // Guard against duplicate completion calls
                                     playbackCallback.onPlaybackCompleted();
+                                    return;
                                 }
                             }
 
@@ -1872,6 +1875,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 serverStatus.setValue(ServerStatus.RUNNING);
 
                 if (!isUserInitiatedStop && playbackCallback != null) {
+                    isUserInitiatedStop = true; // Guard against duplicate STOPPED GENA events
                     Log.i(TAG, "DLNA renderer stopped naturally at track end → triggering onPlaybackCompleted()");
                     playbackCallback.onPlaybackCompleted();
                 } else {

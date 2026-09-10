@@ -1621,3 +1621,57 @@ The user reported: *"after app play next song, it keep playing upto about 58 sec
 - **Verification:**
   - Ran `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 10s**, 0 compilation errors, all unit tests passed across all modules.
 
+---
+
+# Reliability, Resource Leak & Concurrency Defect Remediation
+
+## Objectives
+1. **Fix HTTP Range Request Parsing & HEAD responses in `HttpCoreWebServerImpl.java`:**
+   - Adhere to RFC 7233: clamp `end = Math.min(end, fileLength - 1)`.
+   - Handle suffix ranges (`bytes=-500`).
+   - Return HTTP `416 Range Not Satisfiable` with `Content-Range: bytes */fileLength` when `start >= fileLength`.
+   - Avoid attaching streaming entity to `HEAD` responses, only set `Content-Length` and `Content-Type`.
+2. **Prevent Duplicate `onPlaybackCompleted()` Calls in `MediaServerHubImpl.java`:**
+   - Stop polling and set `isUserInitiatedStop = true;` when track duration completion is reached in `getAvTransportPosition()`.
+   - Latch `isUserInitiatedStop = true;` on `STOPPED` GENA events before calling `onPlaybackCompleted()` to block duplicate events.
+3. **Eliminate 16MB Phantom Heap Cache & Preload Thrashing in `AudioStreamCacheManager.java`:**
+   - Eliminate dead 16MB `memoryCache` heap byte arrays.
+   - Warm OS kernel page cache with a reusable direct buffer without allocating 4MB heap arrays.
+   - Prevent immediate cancellation of `song` preload when `nextSong` is preloaded.
+4. **Pause Frame Animation Loop When Paused in `AnalogVUMeter.kt`:**
+   - Break `withFrameNanos` loop once needles settle to rest at 0 when `!isPlaying`.
+5. **Verification & Quality Assurance:**
+   - Run `./gradlew compileDebugSources testDebugUnitTest`.
+   - Update `tasks/lessons.md`, `CHANGELOG.md`, and `tasks/todo.md`.
+
+## Master Checklist
+- [x] **1. HTTP Range & HEAD Fix (`HttpCoreWebServerImpl.java`)**
+  - [x] Implement RFC 7233 range parsing with clamping and 416 status.
+  - [x] Handle HEAD requests with headers only.
+- [x] **2. DLNA Completion Double-Skip Guard (`MediaServerHubImpl.java`)**
+  - [x] Stop polling and latch `isUserInitiatedStop = true` on natural track completion.
+  - [x] Latch `isUserInitiatedStop = true` on `STOPPED` GENA events.
+- [x] **3. Heap Optimization & Preload Queue (`AudioStreamCacheManager.java`)**
+  - [x] Replace 16MB heap cache with direct buffer OS page cache warming.
+  - [x] Prevent premature preload cancellation.
+- [x] **4. VU Meter Animation Idle Pause (`AnalogVUMeter.kt`)**
+  - [x] Break animation loop when paused and needles settled at zero.
+- [x] **5. Verification & Tests**
+  - [x] Run `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL in 5s).
+  - [x] Add unit test suite `HttpRangeTest.java` in `:server-jupnp-httpcore`.
+- [x] **6. Documentation**
+  - [x] Update `tasks/lessons.md`.
+  - [x] Update `CHANGELOG.md`.
+  - [x] Update `tasks/todo.md` with Review & Results.
+
+## Review & Results
+- **Defects Fixed & Verified:**
+  1. *RFC 7233 HTTP Range Clamping & HEAD Entity Cleanup:* In `HttpCoreWebServerImpl.java`, clamped unbounded range requests (`bytes=0-2147483647`) to `fileLength - 1` to prevent DLNA player stream truncation errors. Implemented HTTP 416 (`SC_REQUESTED_RANGE_NOT_SATISFIABLE`) for offsets exceeding file length, added suffix range (`bytes=-500`) support, and eliminated streaming entity bodies for HEAD requests. Verified with new unit test suite `HttpRangeTest.java`.
+  2. *DLNA Completion Double-Skip Prevention:* In `MediaServerHubImpl.java`, invoked `stopPolling()` and latched `isUserInitiatedStop = true;` when track duration completes and when `STOPPED` GENA events are received. Blocks recurring polling loops and duplicate renderer GENA packets from skipping two tracks at once.
+  3. *16MB JVM Heap Waste Elimination:* In `AudioStreamCacheManager.java`, replaced unused 16MB `byte[]` heap cache with direct buffer OS kernel page cache pre-warming (`ByteBuffer.allocateDirect(64 * 1024)`). Removed premature preload cancellation on sequential tracks (`song` then `nextSong`).
+  4. *VU Meter Frame Loop Idling:* In `AnalogVUMeter.kt`, added a power-efficiency guard to break the `withFrameNanos` loop once needle levels and velocities settle to rest at zero when `isPlaying == false`, saving battery and CPU cycles while paused.
+- **Verification:**
+  - Complete build and unit test suite verified with `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 5s**, 0 compilation errors, all unit tests passed.
+
+
+

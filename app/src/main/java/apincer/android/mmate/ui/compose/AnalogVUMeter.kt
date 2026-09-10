@@ -177,6 +177,17 @@ fun AnalogVUMeter(
                     }
                 }
             }
+
+            // Power-efficiency guard: stop 120Hz frame loop once needles settle to zero during pause
+            if (!isPlaying && levelL < 0.001f && levelR < 0.001f && peakL < 0.001f && peakR < 0.001f && abs(velL) < 0.001f && abs(velR) < 0.001f) {
+                levelL = 0f
+                levelR = 0f
+                peakL = 0f
+                peakR = 0f
+                velL = 0f
+                velR = 0f
+                break
+            }
         }
     }
 

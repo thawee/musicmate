@@ -40,6 +40,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Corrected DIDL-Lite metadata track duration calculation in `MediaServerHubImpl`: converted `song.getAudioDuration()` (seconds) to milliseconds before calling `formatDurationForDidl()`, eliminating incorrect sub-second durations (`0:00:00.238` ➔ `0:03:58.000`).
   - Added robust parsing for millisecond fractions (`HH:MM:SS.mmm`) and 2-part formats (`MM:SS`) in `parseTimeToSeconds()`, preventing `NumberFormatException` during renderer status polling.
   - Added unit test suite `MediaServerHubTimeParsingTest` in `:server-jupnp`.
+- **RFC 7233 HTTP Range Request Clamping & HEAD Entity Cleanup (`HttpCoreWebServerImpl.java`)**:
+  - Clamped unbounded client range requests (`bytes=0-2147483647`) to `fileLength - 1`, preventing false stream truncation errors on DLNA renderers and mobile browsers.
+  - Implemented HTTP `416 Range Not Satisfiable` status with `Content-Range: bytes */fileLength` when requested start offset exceeds file size.
+  - Added support for suffix ranges (`bytes=-500`) and multi-part range headers.
+  - Corrected HTTP `HEAD` response handling by sending `Content-Length` and `Content-Type` headers without attaching an entity stream body.
+  - Added unit test suite `HttpRangeTest` in `:server-jupnp-httpcore`.
+- **DLNA Natural Completion Double-Skip Guard (`MediaServerHubImpl.java`)**:
+  - Stopped polling and latched `isUserInitiatedStop = true;` upon natural track duration completion and `STOPPED` GENA events, preventing recurring polling or duplicate event bursts from triggering double track skips.
+- **16MB JVM Heap Waste Elimination & Page Cache Warming (`AudioStreamCacheManager.java`)**:
+  - Replaced dead 16MB in-memory `byte[]` cache with an allocation-free direct buffer OS page cache warmer, liberating 16MB of JVM heap and eliminating 4MB GC churn during track transitions.
+  - Fixed executor cancellation race condition between current and next track preloads.
+- **Analog VU Meter Choreographer Animation Idling (`AnalogVUMeter.kt`)**:
+  - Added power-efficiency guard to break the 120Hz frame animation loop once needles settle to rest at 0 while playback is paused, preventing background battery and CPU consumption.
 
 ## [3.19.4] - 2026-09-10
 
