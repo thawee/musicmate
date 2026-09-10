@@ -1,6 +1,6 @@
 # MusicMate UI/UX Design System & Architectural Principles
 
-> **Last Updated:** 2026-08-27 · **Owner:** @thawee
+> **Last Updated:** 2026-09-10 · **Owner:** @thawee
 >
 > **Scope:** This document is authoritative for UI/UX, gestures, menus, theming, and modal surfaces. For playback engine internals see `PLAYBACK_ARCHITECTURE.md`; for the web interface see `WEBUI.md`; for the WebSocket protocol see `WEBSOCKET_API.md`.
 
@@ -20,20 +20,27 @@ MusicMate is fundamentally a **music library organization and tag management app
 
 ---
 
-## 2. Interaction Model & Gestures
+## 2. Interaction Model & Gestures (Dual Persona Architecture)
+
+MusicMate adapts to two distinct audiophile personas via a configurable **Interaction Mode** (`PREF_TAP_ACTION_MODE`):
 
 ```
-+-----------------------------------------------------------------------+
-|  [Art (Tap: Quick Play)]   Title / Artist / Album (Tap: Open Tags)  [⋮] |
-+-----------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+|  [Cover Art]      Title / Artist / Album (Specs: Quality • Resolution • DR)        [⋮]  |
+|                                                                                         |
+|  • Listener Mode:  Single Tap Row ➔ Quick Play   | Long Press ➔ Open TagsEditor        |
+|  • Curator Mode:   Single Tap Row ➔ TagsActivity | Tap Art ➔ Quick Play | Long Press ➔  |
++-----------------------------------------------------------------------------------------+
 ```
 
-| Gesture | Target | Destination / Action | State Dependency & Feedback |
+| Gesture | Target | Listener Mode (`TAP_MODE_LISTEN`) | Curator Mode (`TAP_MODE_CURATE`) |
 |---|---|---|---|
-| **Single Tap** | Song Row (Title, Subtitle, Info) | Open **`TagsActivity`** | Unconditional — always opens tag editor |
-| **Single Tap** | Cover Art Thumbnail | **Quick Play** track | If active player present: plays immediately.<br>If no player: art stays tappable but shows guidance Toast (`"No active player — connect a device first"`). |
-| **Long Press** | Song Row | Enter **Multi-Select Action Mode** | Shows selection checkboxes & top action bar |
-| **Tap `⋮`** | Row More Button | Open **Single-Track Popup** | Displays context actions for that specific file |
+| **Single Tap** | Song Row (Title, Specs) | **Quick Play** track immediately (`onTrackQuickPlayClicked`) | Open **`TagsActivity`** (Tag Editor & Technical Specs) |
+| **Single Tap** | Cover Art Thumbnail | **Quick Play** track / Pause toggle | **Quick Play** track |
+| **Long Press** | Song Row | Open **`TagsActivity`** (Direct deep-dive inspection) | Enter **Multi-Select Action Mode** (Batch Tagging) |
+| **Tap `⋮`** | Row More Button | Open **Single-Track Context Menu** | Open **Single-Track Context Menu** |
+
+> **User Switching:** Configured in `Settings` ➔ `INTERACTION MODE` via an instant segmented switcher `[ 🎧 Listener Mode | 🏷 Curator Mode ]`. Default is `Listener Mode` for casual music enjoyment, with 1-tap switching to `Curator Mode` for collection management sessions.
 
 ### Now Playing Cover Art Overlay & Playing Indicators
 - **Scoped Dynamic Visibility:** Cover art dark overlays (`shape_now_playing_cover_overlay.xml`) are hidden (`GONE`) for all non-playing tracks, leaving library artwork clean, bright, and un-obscured. Overlays are scoped strictly to the currently playing song (`tag.equals(playbackService.getNowPlayingSong())`).
@@ -256,17 +263,28 @@ The **Audio Route Path** telemetry widget (`AudioHubBottomSheet` & Now Playing c
 
 ---
 
-### D. Quality & Dynamic Range (DR) Badges
+### D. Quality, Resolution & Dynamic Range (DR) Badges
 
-File metadata badges use color-coded pill drawables to convey audio quality at a glance:
+File metadata badges use frosted obsidian glass micro-capsules (`Color(0xD9101010)`) with 8% accent tint, 38% alpha glowing borders, and luminous LED status dots:
 
-- **Hi-Res Audio:** Gold background (`shape_background_hires.xml`).
-- **Lossless (FLAC/ALAC):** Green tint (`shape_background_lossless.xml`).
-- **Lossy (MP3/AAC):** Neutral dark grey tint (`shape_background_lossy.xml`).
-- **Dynamic Range (DR):**
-  - **High DR (≥12):** Green (`#388E3C`)
-  - **Medium DR (8–11):** Amber (`#FBC02D`)
-  - **Low DR (≤7):** Red (`#D32F2F`)
+- **Quality Tier (`QualityBadge`):**
+  - **DSD / 1-Bit Direct:** Luminous Cyan LED dot (`#00E5FF`)
+  - **Hi-Res Audio (24-bit / ≥48kHz):** Luminous Gold LED dot (`#FFD700`)
+  - **MQA Studio / Master:** Luminous Violet LED dot (`#E040FB`)
+  - **CD Quality Lossless (16/44.1):** Luminous Sky Blue LED dot (`#64B5F6`)
+  - **Standard Lossy (MP3/AAC):** Neutral Steel Grey LED dot (`#9E9E9E`)
+  - *Expanded Mode:* In Now Playing hero cards, renders full audiophile grade tokens (`[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● CD QUALITY]`, `[● DSD AUDIO]`, `[● MQA MASTER]`).
+- **Studio Resolution (`ResolutionBadge`):** Displays compact precision rate tokens (`24/96`, `16/44.1`, `DSD64`, `320k`).
+- **Dynamic Range (`DynamicRangeMeters`):**
+  - **High DR (≥12):** Luminous Green (`#00E676`)
+  - **Medium DR (8–11):** Vibrant Amber (`#FFA000`)
+  - **Low DR (≤7):** Overload Crimson (`#FF3B30`)
+  - *Standard Mode:* Monospace numerical score + 30dp × 6dp rounded level bar.
+  - *Compact Mode:* Clean numerical token (`DR12`) when horizontal space is constrained.
+- **Responsive Badge Synthesis (`UnifiedAudioBadge` on Screens < 390dp):**
+  - To eliminate song title and artist ellipsis truncation on compact viewports, `TrackListItem.kt` automatically evaluates `LocalConfiguration.current.screenWidthDp`.
+  - **Screens < 390dp:** Fuses tier, depth, and sampling rate into a single unified badge (`[● HI-RES 24/96]`, `[● CD 16/44.1]`, `[● DSD64]`, `[● 320k]`) alongside compact `DR12` text, saving **~40dp of horizontal space**.
+  - **Screens ≥ 390dp:** Renders the full multi-badge studio provenance sequence (`[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`).
 
 ---
 
@@ -429,11 +447,11 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 > **Convention:** Each ADR records **Status** (`Proposed` / `Accepted` / `Superseded by ADR-XXX`), **Date**, **Context**, **Decision**, and **Consequences**. Never delete a superseded ADR — mark it `Superseded` and link its replacement so decision history is preserved.
 
 ### ADR-001: Unconditional Single-Tap to Tag Editor
-- **Status:** Accepted
+- **Status:** Superseded by ADR-016
 - **Date:** 2026-08
 - **Context:** Previously, tapping a song row conditionally opened `TagsActivity` only if the playback service was not connected; otherwise, it played the track. This caused unpredictable navigation behavior when a player connected in the background.
 - **Decision:** Row single-tap always opens `TagsActivity`. Tapping cover art handles quick play.
-- **Consequences:** Consistent mental model; users can reliably edit tags at any time.
+- **Consequences:** Consistent mental model; users can reliably edit tags at any time. (Superseded by ADR-016 to introduce user-configurable Listener vs Curator modes).
 
 ### ADR-002: Decoupled Menu Definitions
 - **Status:** Accepted
@@ -577,6 +595,73 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   2. Rely on Android hardware volume rocker buttons for local audio and physical volume dials on external DACs / DAPs / amplifiers for network streaming.
   3. Dedicate the reclaimed vertical space (`10dp` breathing spacer) to expand touch margins and elevate visual focus on the Album Artwork, glowing chromatic Seekbar, and primary Transport buttons.
 - **Consequences:** Clean, distraction-free, modern playback UI (matching reference audiophile apps like Apple Music, Qobuz, and Roon); zero touch-target collision with the Seekbar; guaranteed bit-perfect digital signal output; zero UPnP volume command congestion.
+
+### ADR-016: Dual Persona "Curator vs. Listener" Interaction Architecture
+- **Status:** Accepted (Supersedes ADR-001)
+- **Date:** 2026-09-10
+- **Context:** Historically, single-tapping a track unconditionally opened `TagsActivity` (ADR-001) to reinforce MusicMate's primary purpose as a library tag editor. However, daily listening workflows felt high-friction for users who use MusicMate as their primary music player, requiring a precise tap on the small album art thumbnail to initiate playback.
+- **Decision:**
+  1. Introduce a user-configurable **Interaction Mode** via `PREF_TAP_ACTION_MODE` (`"listen"` vs `"curate"`), configured via an instant segmented card in `SettingsScreen.kt`.
+  2. **Listener Mode (`TAP_MODE_LISTEN`):**
+     - Single-tap on track row: Starts instant playback (`onTrackQuickPlayClicked`).
+     - Long-press on track row: Opens `TagsActivity` for deep metadata curation.
+  3. **Curator Mode (`TAP_MODE_CURATE`):**
+     - Single-tap on track row: Opens `TagsActivity` (preserving existing power-curator workflows).
+     - Tap cover art thumbnail: Starts playback.
+     - Long-press on track row: Enters multi-select batch action mode.
+- **Consequences:** Eliminates friction for daily music listening without compromising power tag curation workflows; users choose their preferred app persona with one tap.
+
+### ADR-017: Responsive Badge Synthesis & Screen Density (< 390dp)
+- **Status:** Accepted
+- **Date:** 2026-09-10
+- **Context:** Rich audio telemetry badges (Quality grade, Resolution, Dynamic Range bar, Duration) occupied up to 180dp of horizontal width in `TrackListItem.kt`. On compact mobile devices (< 390dp screen width), this squeezed the text column, causing severe ellipsis truncation on track titles and artist names (e.g., `"Symphony No. 5 in C..."` or `"The Dark Side of..."`).
+- **Decision:**
+  1. Implement `UnifiedAudioBadge` in `AudioBadges.kt` that fuses Quality Tier and Studio Resolution into a single micro-capsule (`[● HI-RES 24/96]`, `[● CD 16/44.1]`, `[● DSD64]`, `[● 320k]`).
+  2. Implement compact mode in `DynamicRangeMeters.kt` (`compact = true`) which collapses the horizontal graphic level bar into concise monospace text (`DR12`).
+  3. Dynamically detect screen width in `TrackListItem.kt` via `LocalConfiguration.current.screenWidthDp < 390`: automatically switch to `UnifiedAudioBadge` + compact DR meter on compact viewports, liberating ~40dp of breathing room.
+- **Consequences:** Zero title and artist truncation on compact devices while preserving 100% of technical audio specs.
+
+### ADR-018: Visual "Audiophile Query Studio" & Dynamic Rule-Based Smart Playlists
+- **Status:** Accepted
+- **Date:** 2026-09-10
+- **Context:** Audiophiles require instant access to specific tiers of their music library (e.g. uncompressed high-dynamic-range masters, pure DSD archives, 24-bit studio releases). Static M3U playlists required manual curation and quickly became stale as new music was imported.
+- **Decision:**
+  1. Extend `PlaylistEntry.java` with `TYPE_SMART = "smart"` and criteria fields (`minDrScore`, `hiresOnly`, `dsdOnly`, `losslessOnly`, `minBitDepth`, `minSampleRate`).
+  2. Register 4 built-in flagship audiophile smart playlists (*Audiophile Sanctuary DR12+*, *Studio Masters Hi-Res*, *Pure DSD Archive*, *Lossless Master Vault*).
+  3. Implement `CreateSmartPlaylistDialog.kt` (Audiophile Query Studio) in Jetpack Compose:
+     - Real-time library match telemetry (`⚡ Live Match: X tracks • Y GB`).
+     - DR score threshold slider ($0\dots 16$).
+     - Quality tier chips (`Hi-Res`, `Lossless`, `DSD`, `24-bit Studio`).
+  4. Persist custom smart playlists to `custom_playlists.json` in app storage and expose across the Native UI, DLNA Media Server, and Web Remote UI.
+- **Consequences:** Dynamic, auto-updating audiophile collections with zero manual playlist maintenance and live query feedback.
+
+### ADR-019: Vintage Analog Needle VU Meter & Ballistic Studio Telemetry in Audio Anatomy
+- **Status:** Accepted
+- **Date:** 2026-09-10
+- **Context:** The 3D flip side of the Now Playing card ("Audio Anatomy") displayed static textual audio specifications (Codec, Bitrate, Channels, DR), lacking visual energy, dynamic feedback, and tactile audiophile appeal.
+- **Decision:**
+  1. Implement `AnalogVUMeter.kt` using pure Jetpack Compose `Canvas`.
+  2. Dual Stereo Channel Dials: Left and Right channels rendered side-by-side in a shared vintage chassis with decorrelated stereo phase harmonics.
+  3. ANSI Standard Ballistics: True mechanical spring-damper equations ($300\text{ms}$ rise time, $\sim 1.5\%$ overshoot) computed per-frame with `withFrameNanos`.
+  4. Logarithmic Decibel Scale: Calibrated $-20\text{ dB} \dots +3\text{ dB}$ scale with bold $0\text{ dB}$ reference and Red Overload Zone ($>0\text{ dB}$), peak hold indicators, and active overload LEDs.
+  5. 3 Legendary Audiophile Themes (interactive tap-to-cycle):
+     - *Accuphase Gold* (Champagne Gold dial face & amber incandescent glow)
+     - *McIntosh Blue* (Electric Cyan-Blue dial face & carmine red needles)
+     - *Studio Slate* (High-contrast dark reference)
+  6. Driven by UPnP / Local playback state, track Dynamic Range (DR score), volume, and ReplayGain true-peak telemetry.
+- **Consequences:** Transforms the Audio Anatomy flip screen into an authentic, living high-end analog hi-fi console that works across Local, USB Bit-Perfect, Bluetooth, and DLNA renderers.
+
+### ADR-020: Active ReplayGain 2.0 / EBU R128 Playback Leveling Engine with Anti-Clipping True-Peak Guard
+- **Status:** Accepted
+- **Date:** 2026-09-10
+- **Context:** Audio tracks in large libraries vary widely in mastering loudness, causing abrupt volume jumps between tracks. Furthermore, applying digital gain without peak limiting causes digital clipping distortion.
+- **Decision:**
+  1. Implement `ReplayGainManager.java` in `:core` to parse, cache, and compute loudness volume scaling ($10^{\frac{\text{gainDb} + \text{preAmpDb}}{20}}$) across Vorbis Comments, ID3v2 TXXX, and MP4 tags.
+  2. Integrate real-time ExoPlayer volume scaling in `AndroidPlayerController.java` during `play()` and gapless `onMediaItemTransition()`.
+  3. Anti-Clipping True-Peak Limiter: Dynamically clamp gain scalars ($scalar \times peak \le 1.0$) to guarantee zero digital overs.
+  4. User Preferences: Added configurable mode (`Track Gain`, `Album Gain`, `Off`), pre-amp slider ($-12\text{ dB} \dots +12\text{ dB}$), and limiter toggle in `SettingsScreen.kt`.
+  5. Universal Tag Interoperability: Writes standard Vorbis Comments, ID3v2 TXXX, and MP4 tags to audio files on disk, ensuring full compatibility with Poweramp, UAPP, Foobar2000, and Neutron.
+- **Consequences:** Consistent listening loudness across disparate masterings, zero clipping distortion, and complete cross-application metadata parity.
 
 ---
 

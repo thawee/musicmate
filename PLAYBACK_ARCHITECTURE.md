@@ -204,18 +204,72 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 
 ---
 
-## 8. Summary of Audio Module Map
+## 8. Active ReplayGain 2.0 / EBU R128 Loudness Leveling Architecture
+
+MusicMate incorporates an active, real-time loudness leveling engine (`ReplayGainManager.java`) designed to eliminate abrupt volume jumps between tracks and albums while safeguarding bit-perfect digital audio integrity.
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │ Audio File (FLAC, MP3, M4A, DSF, WAV, OGG)   │
+                  │ Reads: REPLAYGAIN_TRACK_GAIN / TRACK_PEAK    │
+                  │ Reads: REPLAYGAIN_ALBUM_GAIN / ALBUM_PEAK    │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │            ReplayGainManager                 │
+                  │  Gain Scalar = 10^((gainDb + preAmpDb) / 20) │
+                  │  Peak Guard: scalar * peak <= 1.0            │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │          AndroidPlayerController             │
+                  │  ExoPlayer.setVolume(clampedScalar)          │
+                  │  Recalculated on onMediaItemTransition()     │
+                  └──────────────────────────────────────────────┘
+```
+
+- **Loudness Modes:**
+  - `Track Gain`: Normalizes every song to standard $-18\text{ LUFS}$ / $89\text{ dB SPL}$.
+  - `Album Gain`: Preserves intentional dynamic volume contrasts across multi-track concept albums.
+  - `Off`: Passes unmodified linear output (fixed $1.0$).
+- **Anti-Clipping True-Peak Guard:** Prevents digital clipping distortion by evaluating $scalar \times peak \le 1.0$. If the boosted scalar would exceed full scale ($0\text{ dBFS}$), it is automatically clamped down.
+- **Cross-Player Metadata Parity:** Loudness tags analyzed by MusicMate are written back to standardized Vorbis Comments (`REPLAYGAIN_TRACK_GAIN`, `REPLAYGAIN_TRACK_PEAK`), ID3v2 TXXX, and MP4 tags via Jaudiotagger, ensuring full interoperability with Poweramp, UAPP, Foobar2000, and Neutron.
+
+---
+
+## 9. Dynamic Rule-Based Smart Playlists Engine
+
+Smart Playlists (`PlaylistEntry.TYPE_SMART`) provide real-time, rule-based music categorization driven by MusicMate's hardware audio telemetry:
+
+- **Matching Criteria (`PlaylistEntry.java`):**
+  - `minDrScore`: Minimum Dynamic Range threshold ($0\dots 16$).
+  - `hiresOnly`: Requires bit depth $\ge 24\text{-bit}$ and sample rate $> 48\text{ kHz}$.
+  - `dsdOnly`: Matches 1-bit Direct Stream Digital tracks (DSD64 through DSD512).
+  - `losslessOnly`: Matches bit-perfect formats (FLAC, ALAC, WAV, AIFF, DSD).
+  - `minBitDepth` & `minSampleRate`: Custom hardware thresholds.
+- **Audiophile Query Studio (`CreateSmartPlaylistDialog.kt`):** Live in-app query builder calculating matching track counts and storage footprint in real-time (`⚡ Live Match: X tracks • Y GB`).
+- **Persistence & Cross-Platform Sharing:** Saved to `custom_playlists.json` in app storage and dynamically served across the Native Android UI, DLNA/UPnP Media Server, and Web Remote UI.
+
+---
+
+## 10. Summary of Audio Module Map
 
 | Module | File | Key Responsibility |
 | :--- | :--- | :--- |
 | `:core` | [`PlaybackTarget.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackTarget.java) | Target abstraction for Local, External Apps, and DLNA. |
 | `:core` | [`PlaybackService.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackService.java) | Master playback service contract. |
+| `:core` | [`ReplayGainManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/ReplayGainManager.java) | Active ReplayGain 2.0 loudness scaling and anti-clipping true-peak guard. |
 | `:core` | [`QueueManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/QueueManager.java) | Deduplicated queue, shuffle order, and Room persistence. |
+| `:core` | [`PlaylistEntry.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/model/PlaylistEntry.java) | Dynamic Smart Playlist rules and metadata evaluation. |
 | `:core` | [`FFMpegHelper.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/codec/FFMpegHelper.java) | DSD 30kHz LPF filtering and 88.2kHz integer downsampling. |
 | `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
-| `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, CPU wakelocks, and MediaSession bridge. |
+| `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, ReplayGain volume leveling, and CPU wakelocks. |
 | `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
 | `:app` | [`AudioHubBottomSheet.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java) | 3-tab Music Center container hosting Compose viewports. |
 | `:app` | [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) | Jetpack Compose Now Playing UI, 3D flip Audio Anatomy card with `ic_round_info_24` badge. |
+| `:app` | [`AnalogVUMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AnalogVUMeter.kt) | Pure Compose Canvas ballistic VU meter with dual stereo dials and 3 audiophile themes. |
+| `:app` | [`CreateSmartPlaylistDialog.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/CreateSmartPlaylistDialog.kt) | Visual Audiophile Query Studio modal dialog with live matching telemetry. |
 | `:app` | [`MediaServerPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MediaServerPage.kt) | Jetpack Compose Media Server management, Hero Status Card with Start/Stop controls & QR zoom dialog. |
 | `:app` | [`QueuePage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/QueuePage.kt) | Jetpack Compose upcoming queue list with duration telemetry and drag reordering. |
