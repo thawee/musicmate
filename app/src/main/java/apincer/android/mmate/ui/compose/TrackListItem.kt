@@ -1,6 +1,14 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,9 +31,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -86,7 +99,11 @@ fun TrackListItem(
                     .size(76.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF202020))
-                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(12.dp))
+                    .border(
+                        width = if (isNowPlaying) 1.5.dp else 1.dp,
+                        color = if (isNowPlaying) colorGold.copy(alpha = 0.85f) else Color(0x1AFFFFFF),
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     .clickable(onClick = onQuickPlayClick)
             ) {
                 coil3.compose.AsyncImage(
@@ -104,36 +121,14 @@ fun TrackListItem(
                         .padding(4.dp)
                 )
 
-                // Premium Now Playing Overlay - Glassmorphism circular badge
+                // Audiophile Now Playing Indicator - Floating micro-badge at bottom-right
                 if (isNowPlaying) {
-                    // Subtle darkening to make the badge pop, without hiding the art completely
-                    Box(
+                    NowPlayingCoverBadge(
+                        isPlaying = isPlaying,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0x33000000)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Circular Frosted Glass Badge
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                .background(Color(0x80000000)) // Dark base
-                                .background(Color(0x1AFFFFFF)) // Frosted glass tint
-                                .border(1.dp, Color(0x4DFFFFFF), androidx.compose.foundation.shape.CircleShape), // Glass stroke
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(
-                                    id = if (isPlaying) R.drawable.rounded_equalizer_24
-                                    else R.drawable.ic_baseline_pause_24
-                                ),
-                                contentDescription = "Now Playing",
-                                tint = colorGold,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
+                            .align(Alignment.BottomEnd)
+                            .padding(5.dp)
+                    )
                 }
             }
 
@@ -220,3 +215,158 @@ fun TrackListItem(
         }
     }
 }
+
+/**
+ * Ultra-refined audiophile "Now Playing" cover art badge.
+ * Renders a compact, frosted glass micro-capsule in the bottom corner of the album art.
+ * - When playing: Displays dynamic, 4-bar animated equalizer spectrum in champagne gold.
+ * - When paused: Displays two sleek, centered precision pause bars in gold.
+ */
+@Composable
+fun NowPlayingCoverBadge(
+    isPlaying: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color(0xE6101010)) // 90% obsidian glass
+            .border(
+                width = 0.75.dp,
+                color = if (isPlaying) colorGold.copy(alpha = 0.65f) else Color(0x4DFFFFFF),
+                shape = RoundedCornerShape(6.dp)
+            )
+            .padding(horizontal = 5.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isPlaying) {
+            AnimatedEqualizerBars(
+                modifier = Modifier.size(width = 16.dp, height = 12.dp)
+            )
+        } else {
+            PausedIndicatorBars(
+                modifier = Modifier.size(width = 16.dp, height = 12.dp)
+            )
+        }
+    }
+}
+
+/**
+ * High-performance, zero-allocation animated equalizer bars.
+ * Driven by an [rememberInfiniteTransition] with staggered sinusoidal frequencies.
+ */
+@Composable
+private fun AnimatedEqualizerBars(
+    modifier: Modifier = Modifier,
+    barColorStart: Color = Color(0xFFFFE082), // Champagne gold highlight
+    barColorEnd: Color = Color(0xFFFFB300)    // Warm amber-gold base
+) {
+    val transition = rememberInfiniteTransition(label = "NowPlayingEqualizerTransition")
+
+    // 4 vertical bars with staggered durations and sinusoidal easing to simulate audio spectrum
+    val bar1 by transition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.85f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 440, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "eqBar1"
+    )
+    val bar2 by transition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 360, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "eqBar2"
+    )
+    val bar3 by transition.animateFloat(
+        initialValue = 0.30f,
+        targetValue = 0.90f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 520, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "eqBar3"
+    )
+    val bar4 by transition.animateFloat(
+        initialValue = 0.20f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 400, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "eqBar4"
+    )
+
+    val gradientBrush = remember(barColorStart, barColorEnd) {
+        Brush.verticalGradient(listOf(barColorStart, barColorEnd))
+    }
+
+    Canvas(modifier = modifier) {
+        val totalWidth = size.width
+        val totalHeight = size.height
+        val barCount = 4
+        val barWidth = (totalWidth * 0.16f).coerceAtLeast(1f)
+        val totalBarWidth = barWidth * barCount
+        val gap = (totalWidth - totalBarWidth) / (barCount - 1)
+        val cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f)
+
+        val fractions = floatArrayOf(bar1, bar2, bar3, bar4)
+
+        for (i in 0 until barCount) {
+            val fraction = fractions[i]
+            val barHeight = (totalHeight * fraction).coerceIn(barWidth, totalHeight)
+            val left = i * (barWidth + gap)
+            val top = totalHeight - barHeight
+
+            drawRoundRect(
+                brush = gradientBrush,
+                topLeft = Offset(left, top),
+                size = Size(barWidth, barHeight),
+                cornerRadius = cornerRadius
+            )
+        }
+    }
+}
+
+/**
+ * Sleek, precision pause glyph for the Now Playing badge when playback is paused.
+ */
+@Composable
+private fun PausedIndicatorBars(
+    modifier: Modifier = Modifier,
+    barColor: Color = colorGold
+) {
+    Canvas(modifier = modifier) {
+        val totalWidth = size.width
+        val totalHeight = size.height
+
+        val barWidth = (totalWidth * 0.16f).coerceAtLeast(1f)
+        val barHeight = totalHeight * 0.75f
+        val gap = barWidth * 1.5f
+        val totalPauseWidth = (barWidth * 2) + gap
+        val startX = (totalWidth - totalPauseWidth) / 2f
+        val top = (totalHeight - barHeight) / 2f
+        val cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f)
+
+        // Left pause bar
+        drawRoundRect(
+            color = barColor,
+            topLeft = Offset(startX, top),
+            size = Size(barWidth, barHeight),
+            cornerRadius = cornerRadius
+        )
+
+        // Right pause bar
+        drawRoundRect(
+            color = barColor,
+            topLeft = Offset(startX + barWidth + gap, top),
+            size = Size(barWidth, barHeight),
+            cornerRadius = cornerRadius
+        )
+    }
+}
+

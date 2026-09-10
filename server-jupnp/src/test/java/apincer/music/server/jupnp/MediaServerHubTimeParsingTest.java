@@ -48,4 +48,20 @@ public class MediaServerHubTimeParsingTest {
         assertEquals(0, MediaServerHubImpl.parseTimeToSeconds("NOT_IMPLEMENTED"));
         assertEquals(0, MediaServerHubImpl.parseTimeToSeconds("invalid"));
     }
+
+    @Test
+    public void testDLNAContentFeatures_bitrateThresholds() {
+        apincer.music.core.model.AudioTag tag = new apincer.music.core.model.AudioTag();
+        tag.setAudioEncoding(apincer.music.core.Constants.MEDIA_ENC_MPEG);
+
+        // 128 kbps = 128000 bps
+        tag.setAudioBitRate(128000);
+        String features128 = apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures(tag);
+        org.junit.Assert.assertTrue(features128.contains("DLNA.ORG_PN=MP3;"));
+
+        // 320 kbps = 320000 bps
+        tag.setAudioBitRate(320000);
+        String features320 = apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures(tag);
+        org.junit.Assert.assertTrue(features320.contains("DLNA.ORG_PN=MP3_320;"));
+    }
 }

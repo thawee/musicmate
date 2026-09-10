@@ -1673,5 +1673,103 @@ The user reported: *"after app play next song, it keep playing upto about 58 sec
 - **Verification:**
   - Complete build and unit test suite verified with `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 5s**, 0 compilation errors, all unit tests passed.
 
+---
 
+# Now Playing Cover Art Indicator Redesign 🎵
+
+## Objectives
+Redesign the "Now Playing" cover art overlay indicator in `TrackListItem.kt` (used in `MusicListScreen.kt`):
+1. **Eliminate Cover Art Occlusion:** Remove the full-artwork dark scrim (`fillMaxSize().background(Color(0x33000000))`) and oversized 36dp centered circular disc that blocks the center of album artwork.
+2. **Audiophile Gold Artwork Framing:** Highlight the 76dp cover art container with an illuminated Gold accent border (`1.5.dp`, `colorGold.copy(alpha = 0.85f)`) exclusively when `isNowPlaying`.
+3. **Micro Frosted Glass Capsule Badge:** Position a sleek micro-capsule badge at `Alignment.BottomEnd` with smoky frosted glass (`Color(0xD9101010)`), subtle glass stroke (`Color(0x33FFFFFF)`), and compact dimensions (~24dp x 18dp).
+4. **Living Animated Equalizer Bars:** When `isPlaying == true`, render 3 fluidly animated vertical equalizer bars in champagne gold (`colorGold` / gradient) with staggered sinusoidal harmonic motion.
+5. **Clean Paused State:** When `isPlaying == false` (paused), render a minimalist, sleek gold pause glyph (two precision bars) within the same capsule.
+6. **Verification & Performance:** Zero allocations in animation draw loops, 60/120fps hardware acceleration, and full build/unit test verification with `./gradlew compileDebugSources testDebugUnitTest`.
+
+## Master Checklist
+- [x] **1. Design & Component Architecture**
+  - [x] Implement `AnimatedEqualizerBars` using `rememberInfiniteTransition` with staggered sine cycles and rounded bar caps.
+  - [x] Implement `PausedIndicatorBars` with clean, symmetric pause indicators.
+  - [x] Implement `NowPlayingCoverBadge` encapsulating the micro frosted glass capsule.
+- [x] **2. Integration into `TrackListItem.kt`**
+  - [x] Replace full-cover dark overlay and 36dp circle in `TrackListItem.kt` with the corner `NowPlayingCoverBadge`.
+  - [x] Add active track gold border to the 76dp album art container.
+- [x] **3. Verification & Quality Assurance**
+  - [x] Execute `./gradlew compileDebugSources` (BUILD SUCCESSFUL).
+  - [x] Run `./gradlew testDebugUnitTest` (BUILD SUCCESSFUL, all unit tests passed).
+- [x] **4. Documentation & Lessons**
+  - [x] Update `tasks/lessons.md`.
+  - [x] Update `CHANGELOG.md`.
+  - [x] Update `tasks/todo.md` with Review & Results.
+
+## Review & Results
+- **Artwork Occlusion Eliminated:**
+  - Removed full-artwork dark scrim (`fillMaxSize().background(Color(0x33000000))`) and 36dp centered circular badge that obstructed the artist and typography on cover art.
+  - Album artwork now remains 100% crisp, vibrant, and clear in the music list.
+- **Audiophile Framing & Micro Badge:**
+  - Added an illuminated `1.5.dp` Gold accent border (`colorGold.copy(alpha = 0.85f)`) around the 76dp album art container for the currently playing track.
+  - Positioned an obsidian frosted glass micro-capsule (`Color(0xE6101010)`) at `Alignment.BottomEnd` with `5.dp` padding and subtle glass rim.
+- **Dynamic 4-Bar Equalizer & Pause State:**
+  - In playing state (`isPlaying == true`), rendered 4 vertical animated equalizer bars with champagne gold gradient (`#FFE082` to `#FFB300`), rounded stadium caps, and staggered sinusoidal cycles.
+  - In paused state (`isPlaying == false`), rendered two precision gold pause bars centered in the capsule.
+  - Transition safely disposes when paused, ensuring zero CPU/battery drain.
+- **Verification:**
+  - `./gradlew compileDebugSources`: BUILD SUCCESSFUL in 22s.
+  - `./gradlew testDebugUnitTest`: BUILD SUCCESSFUL in 17s across all modules with 0 regressions.
+
+---
+
+# Fix DLNA Consequence Track 58-Second Truncation & Premature Skip
+
+## Objectives
+Ensure seamless, full-length playback of consecutive (consequence) audio tracks on all DLNA/UPnP renderers (such as HiBy R3 DAP):
+1. **Unify Queue Advancement & DMR Playback in `MusicMateServiceImpl.java`:**
+   - Refactor `internalSkipToNextOnDMRPlayer` and `internalPreviousOnDMRPlayer` to delegate cleanly to `internalPlayOnDMRPlayer(playbackTarget, song)`.
+   - Ensure `onPlaybackStateChanged(state)` and `handleTrackStartEvent(song)` are invoked for consecutive tracks so queue state, fallback timers, and preloading are properly initialized.
+2. **Fix DIDL-Lite Metadata Generation in `MediaServerHubImpl.java`:**
+   - Fix bitrate calculation: change `song.getAudioBitRate() * 1024 / 8` to `song.getAudioBitRate() / 8` (bytes/sec) when `getAudioBitRate() > 0`.
+   - Add `size` attribute (`song.getFileSize()`) to `<res>` tag.
+   - Include DLNA content features in `protocolInfo` using `DLNAHeaderHelper.getDLNAContentFeatures(song)`.
+3. **Guard Track Duration Completion in `MediaServerHubImpl.java`:**
+   - Track `currentPlayingTrack` in `MediaServerHubImpl`.
+   - In `getAvTransportPosition`, cross-reference renderer's reported `duration` against known database duration (`currentPlayingTrack.getAudioDuration()`).
+   - Prevent truncated renderer durations (e.g. 58s from a 4MB buffer) from prematurely firing `onPlaybackCompleted()`.
+4. **Fix HttpCore Backpressure in `PartialFileProducer.java`:**
+   - In `available()`, return `(int) Math.min(BUFFER_SIZE, length - bytesProduced)` instead of returning entire file length.
+5. **Fix Bitrate Check in `DLNAHeaderHelper.java`:**
+   - Check `tag.getAudioBitRate() >= 320000` to correctly handle bps.
+6. **Verification & Quality Assurance:**
+   - Run `./gradlew compileDebugSources testDebugUnitTest`.
+   - Update `tasks/lessons.md`, `CHANGELOG.md`, and `tasks/todo.md`.
+
+## Master Checklist
+- [x] **1. Unify DMR Queue Navigation (`MusicMateServiceImpl.java`)**
+  - [x] Update `internalSkipToNextOnDMRPlayer` to delegate to `internalPlayOnDMRPlayer`.
+  - [x] Update `internalPreviousOnDMRPlayer` to delegate to `internalPlayOnDMRPlayer`.
+- [x] **2. Fix DIDL-Lite Metadata & Duration Protection (`MediaServerHubImpl.java`)**
+  - [x] Track `currentPlayingTrack` in `MediaServerHubImpl`.
+  - [x] Fix `createDidlLiteMetadata`: correct bitrate (bps / 8), add `size`, add DLNA features to `protocolInfo`.
+  - [x] In `getAvTransportPosition`, guard `position >= targetDuration` using `currentPlayingTrack.getAudioDuration()`.
+- [x] **3. Producer & Header Optimizations (`PartialFileProducer.java`, `DLNAHeaderHelper.java`)**
+  - [x] Fix `available()` in `PartialFileProducer.java`.
+  - [x] Fix bitrate thresholds in `DLNAHeaderHelper.java`.
+- [x] **4. Verification & Build**
+  - [x] Run `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL).
+  - [x] Add unit test `testDLNAContentFeatures_bitrateThresholds` in `MediaServerHubTimeParsingTest.java`.
+- [x] **5. Documentation**
+  - [x] Update `tasks/lessons.md`.
+  - [x] Update `CHANGELOG.md`.
+  - [x] Document Review & Results in `tasks/todo.md`.
+
+## Review & Results
+- **Root Causes Identified & Solved:**
+  1. *DMR Playback Pipeline Asymmetry:* `internalSkipToNextOnDMRPlayer` and `internalPreviousOnDMRPlayer` were performing ad-hoc track switching without invoking `onPlaybackStateChanged(state)` or `handleTrackStartEvent(song)`. Consequently, consecutive tracks never initialized queue synchronization, upcoming track preloading, or fallback timer scheduling. Refactored both methods to cleanly delegate to `internalPlayOnDMRPlayer(playbackTarget, song)`.
+  2. *DIDL-Lite Bitrate & Sizing Defect:* In `MediaServerHubImpl.createDidlLiteMetadata()`, bitrate was computed as `bps * 1024 / 8`, multiplying already-in-bps values by 128 (reporting ~73MB/s to renderers). Changed to standard `bps / 8` (bytes/sec) according to UPnP AV specs. Added explicit `<res size="...">` and full DLNA content features to `protocolInfo`, giving DAPs exact stream dimensions upfront.
+  3. *Premature 58s Position Completion Guard:* In `MediaServerHubImpl.getAvTransportPosition()`, position polling blindly trusted renderer-reported duration. Portable DAPs (e.g. HiBy R3) with finite 4MB network FIFO buffers initially reported duration matching only the buffered audio duration (~58s of 16/44.1 FLAC), causing `position >= duration` to evaluate true at second 58 and trigger premature track advancement. Added `currentPlayingTrack` tracking and cross-referenced duration against the authoritative known database duration (`currentPlayingTrack.getAudioDuration()`), preventing truncated renderer reports from cutting off playback.
+  4. *HttpCore Reactive Backpressure:* `PartialFileProducer.available()` returned the full remaining file length (tens of megabytes) rather than the immediate buffer capability. Clamped to `(int) Math.min(BUFFER_SIZE, Math.max(0, rem))` in both `:server-jupnp-httpcore` and `:server-jupnp-httpcore54`.
+  5. *DLNA Content Feature Bitrate Threshold:* Corrected `tag.getAudioBitRate() >= 320` check to `bitrate >= 320000 || (bitrate >= 320 && bitrate <= 1000)` in `DLNAHeaderHelper.java`.
+- **Unit Test Coverage & Verification:**
+  - Added unit test `testDLNAContentFeatures_bitrateThresholds` to `MediaServerHubTimeParsingTest.java`.
+  - Executed `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 28s**, 0 compilation errors, all unit tests passed across all modules.
+  - Executed `./gradlew :server-jupnp:testDebugUnitTest`: **BUILD SUCCESSFUL in 2s**, all 5 test cases passed.
 

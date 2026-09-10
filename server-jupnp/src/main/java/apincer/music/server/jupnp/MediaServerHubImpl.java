@@ -73,6 +73,9 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
+import apincer.music.server.jupnp.transport.DLNAHeaderHelper;
+import java.io.File;
 import kotlinx.coroutines.flow.MutableStateFlow;
 import kotlinx.coroutines.flow.StateFlow;
 import kotlinx.coroutines.flow.StateFlowKt;
@@ -132,6 +135,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     private org.jupnp.controlpoint.SubscriptionCallback subscriptionCallback;
     private boolean supportsGapless = false; // Default to false (safe-by-default for generic DLNA), opt-in only for verified gapless streamers
     private volatile boolean isUserInitiatedStop = false;
+    private volatile Track currentPlayingTrack;
     private volatile Track preloadedNextTrack;
     private volatile String preloadedNextUrl;
     private volatile long lastEventTime = 0;
@@ -1030,6 +1034,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     private void internalPlaySong(String udn, Track song, long initialPositionMs) {
         isUserInitiatedStop = false;
+        this.currentPlayingTrack = song;
         if (upnpService == null) {
             Log.w(TAG, "UPnP not initialized");
             return;
@@ -1158,17 +1163,48 @@ public class MediaServerHubImpl implements MediaServerHub {
     private String createDidlLiteMetadata(Track song, String songUrl) {
         String objectClass = "object.item.audioItem.musicTrack";
         String duration = formatDurationForDidl((long) (song.getAudioDuration() * 1000.0));
-        String bitrate = String.valueOf(song.getAudioBitRate() * 1024 / 8); // bps to Bps
-        String sampleRate = String.valueOf(song.getAudioSampleRate());
-        String bitsPerSample = String.valueOf(song.getAudioBitsDepth());
+        // In UPnP AV, bitrate in res element is in bytes/second (bps / 8)
+        String bitrate = song.getAudioBitRate() > 0 ? String.valueOf(song.getAudioBitRate() / 8) : null;
+        String sampleRate = song.getAudioSampleRate() > 0 ? String.valueOf(song.getAudioSampleRate()) : null;
+        String bitsPerSample = song.getAudioBitsDepth() > 0 ? String.valueOf(song.getAudioBitsDepth()) : null;
         String mimeType = MimeTypeUtils.getMimeTypeFromPath(song.getPath());
+        long fileSize = song.getFileSize();
+        if (fileSize <= 0 && song.getPath() != null) {
+            try {
+                fileSize = new File(song.getPath()).length();
+            } catch (Exception ignored) {}
+        }
+        int channels = TagUtils.getChannels(song);
 
         // DIDL-Lite is an XML format, so escape any special characters in titles, etc.
         String title = StringUtils.escapeXml(song.getTitle());
         String artist = StringUtils.escapeXml(song.getArtist());
         String album = StringUtils.escapeXml(song.getAlbum());
 
-        // Example DIDL-Lite structure
+        String dlnaFeatures = DLNAHeaderHelper.getDLNAContentFeatures(song);
+        String protocolInfo = "http-get:*:" + mimeType + ":" + (dlnaFeatures != null ? dlnaFeatures : "*");
+
+        StringBuilder resBuilder = new StringBuilder();
+        resBuilder.append("<res protocolInfo=\"").append(protocolInfo).append("\"");
+        if (duration != null && !duration.isEmpty()) {
+            resBuilder.append(" duration=\"").append(duration).append("\"");
+        }
+        if (fileSize > 0) {
+            resBuilder.append(" size=\"").append(fileSize).append("\"");
+        }
+        if (bitrate != null) {
+            resBuilder.append(" bitrate=\"").append(bitrate).append("\"");
+        }
+        if (sampleRate != null) {
+            resBuilder.append(" sampleFrequency=\"").append(sampleRate).append("\"");
+        }
+        if (bitsPerSample != null) {
+            resBuilder.append(" bitsPerSample=\"").append(bitsPerSample).append("\"");
+        }
+        if (channels > 0) {
+            resBuilder.append(" nrAudioChannels=\"").append(channels).append("\"");
+        }
+        resBuilder.append(">").append(songUrl).append("</res>");
 
         return "<DIDL-Lite " +
                 "xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" " +
@@ -1180,13 +1216,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 "<upnp:artist>" + artist + "</upnp:artist>" +
                 "<upnp:album>" + album + "</upnp:album>" +
                 "<upnp:class>" + objectClass + "</upnp:class>" +
-                "<res protocolInfo=\"http-get:*:" + mimeType + ":*\"" +
-                " duration=\"" + duration + "\"" +
-                " bitrate=\"" + bitrate + "\"" +
-                " sampleFrequency=\"" + sampleRate + "\"" +
-                " bitsPerSample=\"" + bitsPerSample + "\">" +
-                songUrl +
-                "</res>" +
+                resBuilder.toString() +
                 "</item>" +
                 "</DIDL-Lite>";
     }
@@ -1211,6 +1241,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void playerStop(String rendererUdn) {
         isUserInitiatedStop = true;
+        currentPlayingTrack = null;
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
@@ -1560,17 +1591,31 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 Track nextTrack = preloadedNextTrack;
                                 preloadedNextTrack = null;
                                 preloadedNextUrl = null;
+                                currentPlayingTrack = nextTrack;
                                 Log.i(TAG, "Gapless: Renderer seamlessly transitioned to track → " + nextTrack.getTitle());
                                 if (playbackCallback != null) {
                                     playbackCallback.onMediaTrackChanged(nextTrack);
                                 }
-                            } else if (duration > 0 && position >= duration && position > 5) {
-                                Log.i(TAG, "Polling: Track duration complete (" + position + "s / " + duration + "s)");
-                                if (!isUserInitiatedStop && playbackCallback != null) {
-                                    stopPolling();
-                                    isUserInitiatedStop = true; // Guard against duplicate completion calls
-                                    playbackCallback.onPlaybackCompleted();
-                                    return;
+                            } else {
+                                long expectedDuration = 0;
+                                Track playing = currentPlayingTrack;
+                                if (playing != null && playing.getAudioDuration() > 0) {
+                                    expectedDuration = (long) playing.getAudioDuration();
+                                }
+
+                                // Authoritative duration check:
+                                // If known track duration is present, use it to guard against
+                                // renderers reporting a truncated/stale duration (e.g. 58s from a 4MB buffer).
+                                long targetDuration = expectedDuration > 0 ? expectedDuration : duration;
+
+                                if (targetDuration > 0 && position >= targetDuration && position > 5) {
+                                    Log.i(TAG, "Polling: Track duration complete (" + position + "s / " + targetDuration + "s, renderer duration: " + duration + "s)");
+                                    if (!isUserInitiatedStop && playbackCallback != null) {
+                                        stopPolling();
+                                        isUserInitiatedStop = true; // Guard against duplicate completion calls
+                                        playbackCallback.onPlaybackCompleted();
+                                        return;
+                                    }
                                 }
                             }
 

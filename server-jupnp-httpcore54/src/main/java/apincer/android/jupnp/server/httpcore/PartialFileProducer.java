@@ -55,7 +55,7 @@ public class PartialFileProducer implements AsyncEntityProducer {
     @Override
     public int available() {
         long rem = length - bytesProduced;
-        return rem > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) rem;
+        return (int) Math.min(BUFFER_SIZE, Math.max(0, rem));
     }
 
     @Override

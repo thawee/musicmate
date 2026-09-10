@@ -29,11 +29,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unit Test Coverage (`VUMeterAndBadgeTest.kt`)**:
   - Added unit test suite verifying `VUMeterTheme` catalog and `getUnifiedBadgeText` formatting across Hi-Res FLAC, CD Lossless, DSD, and MP3.
 
+### Changed
+- **Audiophile "Now Playing" Cover Art Indicator Redesign (`TrackListItem.kt`)**:
+  - Eliminated the full-artwork dark scrim (`fillMaxSize().background(Color(0x33000000))`) and 36dp centered circular badge, allowing album cover artwork in the music list to remain 100% visible, bright, and un-occluded.
+  - Added an illuminated `1.5.dp` Gold accent border (`colorGold.copy(alpha = 0.85f)`) framing the 76dp cover art container for the currently playing track.
+  - Implemented `NowPlayingCoverBadge`: a floating obsidian frosted glass micro-capsule (`Color(0xE6101010)`) anchored at `Alignment.BottomEnd` with a subtle glass rim.
+  - Implemented `AnimatedEqualizerBars`: a zero-allocation 4-bar dynamic spectrum analyzer in champagne gold gradient (`#FFE082` to `#FFB300`) with rounded caps and staggered sinusoidal motion when actively playing.
+  - Implemented `PausedIndicatorBars`: two precision, centered gold pause bars when playback is paused, safely disposing infinite transitions during pause to eliminate CPU/battery drain.
+
 ### Fixed
 - **Cover Art Gesture Collision & Pager Swiping Conflict (`NowPlayingPage.kt`)**:
   - Removed conflicting horizontal drag gesture detector (`detectDragGestures`) from the playback screen's album art container.
   - Eliminated accidental track skips caused by minute finger rolls during taps and resolved touch event cancellation for 3D card flips (`onTap`) and play/pause (`onDoubleTap`).
   - Restored frictionless horizontal swiping across the entire playback viewport to navigate between the `[Playback]`, `[Queue]`, and `[Server]` tabs in `AudioHubSheet`'s `HorizontalPager`.
+- **DLNA Consequence Track 58-Second Truncation & Premature Advance (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`, `PartialFileProducer.java`, `DLNAHeaderHelper.java`)**:
+  - Unified DMR queue progression by refactoring `internalSkipToNextOnDMRPlayer` and `internalPreviousOnDMRPlayer` to delegate directly to `internalPlayOnDMRPlayer(playbackTarget, song)`, ensuring consecutive tracks receive full queue pointer synchronization, upcoming track preloading, and full duration safety fallback scheduling.
+  - Corrected UPnP DIDL-Lite `<res>` bitrate calculation from `bps * 1024 / 8` to standard bytes-per-second (`bps / 8`), eliminating bogus 73MB/s bitrate metadata sent to renderers.
+  - Added explicit `<res size="...">` attribute and DLNA content features to DIDL-Lite `<res protocolInfo="...">`, providing portable DAPs (HiBy, Shanling, FiiO) with precise stream sizing upfront.
+  - Guarded position polling duration completion in `MediaServerHubImpl`: cross-referenced renderer reported duration against the authoritative database duration (`currentPlayingTrack.getAudioDuration()`), preventing renderers with finite hardware network FIFO buffers (reporting 58s from a 4MB buffer) from prematurely advancing tracks before the full audio duration has elapsed.
+  - Aligned HttpCore `PartialFileProducer.available()` with reactive backpressure by returning `Math.min(BUFFER_SIZE, remaining)` instead of the unbounded file length.
+  - Corrected bitrate threshold checks in `DLNAHeaderHelper` (`>= 320000`) to properly recognize bits-per-second values for MP3 and AAC profiles.
 - **Premature Track Skip at ~58s & DLNA Stream Truncation (`PartialFileProducer.java`, `MediaServerHubImpl.java`)**:
   - Eliminated the 4MB in-memory buffer splicing bug in HttpCore's `PartialFileProducer` that caused HTTP streaming connections to abort prematurely at 4MB (which equals ~58 seconds of playback at typical bitrates), causing DLNA renderers to run out of data and skip.
   - Re-architected `PartialFileProducer` to stream directly from `FileChannel` in 64KB chunks with OS kernel page cache warming via `AudioStreamCacheManager.preloadTrack()`.

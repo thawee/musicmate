@@ -26,7 +26,8 @@ public class DLNAHeaderHelper {
         String flags = DLNA_FLAGS_STREAMING_LOSSLESS;
 
         if (isMPegFile(tag)) {
-            if (tag.getAudioBitRate() >= 320) {
+            long bitrate = tag.getAudioBitRate();
+            if (bitrate >= 320000 || (bitrate >= 320 && bitrate <= 1000)) {
                 return "DLNA.ORG_PN=MP3_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             } else {
                 return "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
@@ -46,7 +47,8 @@ public class DLNAHeaderHelper {
                 return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
             }
         } else if (isAACFile(tag)) {
-            if (tag.getAudioBitRate() >= 320) {
+            long bitrate = tag.getAudioBitRate();
+            if (bitrate >= 320000 || (bitrate >= 320 && bitrate <= 1000)) {
                 return "DLNA.ORG_PN=AAC_ADTS_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             } else {
                 return "DLNA.ORG_PN=AAC_ADTS;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;

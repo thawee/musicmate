@@ -667,27 +667,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget) {
-        resetGaplessState();
-
-        // get next song from queuemanager
         Track current = getNowPlayingSong();
         if (current != null) {
             queueManager.setCurrentTrack(current);
         }
         Track song = queueManager.getNextTrack();
-        if(song != null) {
-            try {
-                mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
-                queueManager.setPlaybackTrack(song);
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to skip next on DMR: " + playbackTarget.getDisplayName(), e);
-                return;
-            }
-            currentTrackFlow.setValue(Optional.of(song));
-            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
-            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-            state.currentTrack = song;
-            playbackStateFlow.setValue(state);
+        if (song != null) {
+            queueManager.setPlaybackTrack(song);
+            internalPlayOnDMRPlayer(playbackTarget, song);
         }
     }
 
@@ -715,25 +702,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void internalPreviousOnDMRPlayer(PlaybackTarget playbackTarget) {
-        resetGaplessState();
         Track current = getNowPlayingSong();
         if (current != null) {
             queueManager.setCurrentTrack(current);
         }
         Track song = queueManager.getPreviousTrack();
         if (song != null) {
-            try {
-                mediaHub.playerPlaySong(playbackTarget.getTargetId(), song);
-                queueManager.setPlaybackTrack(song);
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to skip previous on DMR: " + playbackTarget.getDisplayName(), e);
-                return;
-            }
-            currentTrackFlow.setValue(Optional.of(song));
-            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
-            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-            state.currentTrack = song;
-            playbackStateFlow.setValue(state);
+            queueManager.setPlaybackTrack(song);
+            internalPlayOnDMRPlayer(playbackTarget, song);
         }
     }
 
