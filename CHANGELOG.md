@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed conflicting horizontal drag gesture detector (`detectDragGestures`) from the playback screen's album art container.
   - Eliminated accidental track skips caused by minute finger rolls during taps and resolved touch event cancellation for 3D card flips (`onTap`) and play/pause (`onDoubleTap`).
   - Restored frictionless horizontal swiping across the entire playback viewport to navigate between the `[Playback]`, `[Queue]`, and `[Server]` tabs in `AudioHubSheet`'s `HorizontalPager`.
+- **Premature Track Skip at ~58s & DLNA Stream Truncation (`PartialFileProducer.java`, `MediaServerHubImpl.java`)**:
+  - Eliminated the 4MB in-memory buffer splicing bug in HttpCore's `PartialFileProducer` that caused HTTP streaming connections to abort prematurely at 4MB (which equals ~58 seconds of playback at typical bitrates), causing DLNA renderers to run out of data and skip.
+  - Re-architected `PartialFileProducer` to stream directly from `FileChannel` in 64KB chunks with OS kernel page cache warming via `AudioStreamCacheManager.preloadTrack()`.
+  - Corrected DIDL-Lite metadata track duration calculation in `MediaServerHubImpl`: converted `song.getAudioDuration()` (seconds) to milliseconds before calling `formatDurationForDidl()`, eliminating incorrect sub-second durations (`0:00:00.238` ➔ `0:03:58.000`).
+  - Added robust parsing for millisecond fractions (`HH:MM:SS.mmm`) and 2-part formats (`MM:SS`) in `parseTimeToSeconds()`, preventing `NumberFormatException` during renderer status polling.
+  - Added unit test suite `MediaServerHubTimeParsingTest` in `:server-jupnp`.
 
 ## [3.19.4] - 2026-09-10
 

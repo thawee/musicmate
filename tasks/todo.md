@@ -1558,3 +1558,66 @@ This created severe interaction defects:
 - **Verification:**
   - Full project compilation and unit test suite verified with `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 9s**, 0 errors, all unit tests passed.
 
+---
+
+# Fix Premature Track Skip at ~58 Seconds (Stream Truncation & DIDL Duration)
+
+## Problem Statement
+The user reported: *"after app play next song, it keep playing upto about 58 second, then it play next song"*.
+
+### Root Cause Analysis
+1. **`AudioStreamCacheManager` 4MB Preload Cliff in `PartialFileProducer.java`:**
+   - In `AudioStreamCacheManager`, `HEAD_CHUNK_SIZE` is exactly 4MB (`4 * 1024 * 1024 = 4,194,304 bytes`).
+   - For typical audio (e.g. 576 kbps / 72 KB/s), 4MB is **58.25 seconds** of playback!
+   - When `MusicMateServiceImpl` preloaded upcoming tracks, `AudioStreamCacheManager` buffered 4MB in RAM.
+   - In `PartialFileProducer.java` (`server-jupnp-httpcore`), the producer streamed from `preloadedBytes` until offset reached `preloadedBytes.length`.
+   - At the 4MB boundary (`preloadedOffset == preloadedBytes.length`), `PartialFileProducer.produce()` failed to return, falling through to step 2 in the exact same `produce()` callback, calling `channel.write()` twice in one cycle on a full HttpCore `DataStreamChannel`.
+   - This threw an `IllegalStateException` or aborted the stream at exactly 4MB.
+   - With the HTTP stream abruptly terminated at 4MB, the DLNA renderer ran out of data at ~58 seconds, entered `STOPPED`, which triggered `onPlaybackCompleted()` and skipped to the next song—which was ALSO preloaded with 4MB and therefore skipped at 58 seconds again!
+2. **DIDL-Lite Duration Seconds-to-Milliseconds Bug (`MediaServerHubImpl.java` & `MediaServerHubImplOld.java`):**
+   - In `MediaServerHubImpl.createDidlLiteMetadata()`, line 1160:
+     `String duration = formatDurationForDidl((long) song.getAudioDuration());`
+   - `song.getAudioDuration()` returns **seconds** (e.g. 238s for 3:58). But `formatDurationForDidl(long durationInMillis)` expects **milliseconds**.
+   - Passing seconds to `formatDurationForDidl` caused it to report `duration="0:00:00.238"` in DIDL-Lite metadata to the renderer instead of `0:03:58.000`!
+3. **Decimal Milliseconds & Format Handling in `parseTimeToSeconds` (`MediaServerHubImpl.java`):**
+   - Renderers often report time strings with millisecond fractions (e.g. `00:03:58.238` or `03:58`). `Integer.parseInt(parts[2])` threw `NumberFormatException` on any string with `.`, causing position/duration parsing to fail back to 0.
+
+## Objectives
+1. **Fix `PartialFileProducer.java` in `server-jupnp-httpcore`:**
+   - Stream cleanly and robustly using direct `FileChannel` / `RandomAccessFile` in 64KB chunks.
+   - Eliminate the fragile in-memory 4MB splicing cliff, preventing premature stream aborts.
+   - Ensure proper resource cleanup on stream completion or abortion.
+2. **Fix DIDL-Lite Duration in `MediaServerHubImpl.java` (and `MediaServerHubImplOld.java`):**
+   - Multiply `song.getAudioDuration() * 1000.0` when calling `formatDurationForDidl()`, so renderers receive correct `HH:MM:SS.mmm` metadata.
+3. **Enhance `parseTimeToSeconds` in `MediaServerHubImpl.java`:**
+   - Support `HH:MM:SS`, `HH:MM:SS.mmm`, `MM:SS`, and `MM:SS.mmm` defensively with `Double.parseDouble()`.
+4. **Verification & Testing:**
+   - Verify compilation and run all unit tests via `./gradlew compileDebugSources testDebugUnitTest`.
+5. **Update Documentation:**
+   - Update `tasks/lessons.md`, `CHANGELOG.md`, and `tasks/todo.md`.
+
+## Master Checklist
+- [x] **1. Fix `PartialFileProducer.java` in `server-jupnp-httpcore`**
+  - [x] Refactor `PartialFileProducer.java` to stream directly from `FileChannel` in 64KB chunks.
+  - [x] Remove error-prone `preloadedBytes` in-memory splicing cliff.
+- [x] **2. Fix DIDL Duration & `parseTimeToSeconds` in `server-jupnp`**
+  - [x] Pass `(long) (song.getAudioDuration() * 1000.0)` to `formatDurationForDidl()` in `MediaServerHubImpl.java` and `MediaServerHubImplOld.java`.
+  - [x] Upgrade `parseTimeToSeconds` in `MediaServerHubImpl.java` to parse decimals (`Double.parseDouble`) and 2-part `MM:SS`.
+- [x] **3. Verification & Build**
+  - [x] Run `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL, all unit tests passed).
+  - [x] Add unit test suite `MediaServerHubTimeParsingTest.java` in `:server-jupnp`.
+- [x] **4. Documentation & Lessons**
+  - [x] Update `tasks/lessons.md`.
+  - [x] Update `CHANGELOG.md`.
+  - [x] Complete Review & Results in `tasks/todo.md`.
+
+## Review & Results
+- **Root Causes Identified & Solved:**
+  1. *4MB Preload Cliff in `PartialFileProducer.java`:* `AudioStreamCacheManager.HEAD_CHUNK_SIZE` is 4MB. At standard 576 kbps audio bitrate, 4MB is exactly 58.25 seconds. `PartialFileProducer` streamed from `preloadedBytes` until the 4MB boundary and then attempted an illegal second `channel.write()` in the same HttpCore callback cycle, aborting the stream. The DLNA renderer ran out of buffer at ~58 seconds and triggered track completion. Replaced with direct `FileChannel` 64KB streaming and OS page cache warming via `AudioStreamCacheManager.preloadTrack()`.
+  2. *DIDL-Lite Duration Seconds-to-Milliseconds Scale:* `song.getAudioDuration()` (seconds, e.g. 238) was passed directly to `formatDurationForDidl(long durationInMillis)`, resulting in `0:00:00.238` sent to the renderer. Multiplied by 1000.0 so `0:03:58.000` is reported accurately.
+  3. *UPnP Position Parsing:* Added support for millisecond fractions and 2-part `MM:SS` duration strings using `Double.parseDouble()` to prevent `NumberFormatException` in `parseTimeToSeconds()`.
+- **Unit Test Coverage:**
+  - Added `MediaServerHubTimeParsingTest.java` covering DIDL duration formatting, standard time formats, fractional millisecond formats, and edge cases.
+- **Verification:**
+  - Ran `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL in 10s**, 0 compilation errors, all unit tests passed across all modules.
+

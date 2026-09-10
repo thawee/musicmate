@@ -1157,7 +1157,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      */
     private String createDidlLiteMetadata(Track song, String songUrl) {
         String objectClass = "object.item.audioItem.musicTrack";
-        String duration = formatDurationForDidl((long) song.getAudioDuration());
+        String duration = formatDurationForDidl((long) (song.getAudioDuration() * 1000.0));
         String bitrate = String.valueOf(song.getAudioBitRate() * 1024 / 8); // bps to Bps
         String sampleRate = String.valueOf(song.getAudioSampleRate());
         String bitsPerSample = String.valueOf(song.getAudioBitsDepth());
@@ -1196,7 +1196,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      * @param durationInMillis The duration in milliseconds.
      * @return A formatted string e.g., "0:04:33.000"
      */
-    private String formatDurationForDidl(long durationInMillis) {
+    static String formatDurationForDidl(long durationInMillis) {
         long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) % 60;
         long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) % 60;
@@ -1805,20 +1805,29 @@ public class MediaServerHubImpl implements MediaServerHub {
         }
     }
 
-    private int parseTimeToSeconds(String time) {
+    static int parseTimeToSeconds(String time) {
         if (time == null || time.isEmpty() || time.equals("NOT_IMPLEMENTED")) return 0;
 
         String[] parts = time.split(":");
-        if (parts.length != 3) return 0;
-
-        try {
-            int h = Integer.parseInt(parts[0]);
-            int m = Integer.parseInt(parts[1]);
-            int s = Integer.parseInt(parts[2]);
-            return h * 3600 + m * 60 + s;
-        } catch (Exception e) {
-            return 0;
+        if (parts.length == 2) {
+            try {
+                int m = Integer.parseInt(parts[0].trim());
+                double s = Double.parseDouble(parts[1].trim());
+                return m * 60 + (int) s;
+            } catch (Exception e) {
+                return 0;
+            }
+        } else if (parts.length == 3) {
+            try {
+                int h = Integer.parseInt(parts[0].trim());
+                int m = Integer.parseInt(parts[1].trim());
+                double s = Double.parseDouble(parts[2].trim());
+                return h * 3600 + m * 60 + (int) s;
+            } catch (Exception e) {
+                return 0;
+            }
         }
+        return 0;
     }
 
     private long getPollingInterval() {

@@ -1115,7 +1115,7 @@ public class MediaServerHubImplOld implements MediaServerHub {
      */
     private String createDidlLiteMetadata(Track song, String songUrl) {
         String objectClass = "object.item.audioItem.musicTrack";
-        String duration = formatDurationForDidl((long) song.getAudioDuration());
+        String duration = formatDurationForDidl((long) (song.getAudioDuration() * 1000.0));
         String bitrate = String.valueOf(song.getAudioBitRate() * 1024 / 8); // bps to Bps
         String sampleRate = String.valueOf(song.getAudioSampleRate());
         String bitsPerSample = String.valueOf(song.getAudioBitsDepth());
