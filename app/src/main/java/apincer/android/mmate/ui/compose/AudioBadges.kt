@@ -233,6 +233,97 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
     }
 }
 
+fun getUnifiedBadgeText(track: Track?): String {
+    if (track == null) return "-"
+
+    val qualityLabel = when {
+        TagUtils.isDSD(track) -> "DSD"
+        TagUtils.isHiRes(track) -> "HI-RES"
+        TagUtils.isPCM24Bits(track) -> "24-BIT"
+        TagUtils.isMQA(track) -> "MQA"
+        TagUtils.isLossless(track) -> "CD"
+        else -> ""
+    }
+
+    val resText = when {
+        TagUtils.isDSD(track) -> {
+            val dsdRate = track.audioSampleRate
+            if (dsdRate >= 22579200) "512"
+            else if (dsdRate >= 11289600) "256"
+            else if (dsdRate >= 5644800) "128"
+            else "64"
+        }
+        track.audioBitsDepth > 0 && track.audioSampleRate > 0 -> {
+            val bit = track.audioBitsDepth
+            val sr = (track.audioSampleRate / 1000.0)
+            val srFormatted = if (sr % 1.0 == 0.0) "${sr.toInt()}" else "$sr"
+            "$bit/$srFormatted"
+        }
+        track.audioBitRate > 0 -> {
+            "${(track.audioBitRate / 1000)}k"
+        }
+        else -> ""
+    }
+
+    return when {
+        qualityLabel.isNotEmpty() && resText.isNotEmpty() -> "$qualityLabel $resText"
+        qualityLabel.isNotEmpty() -> qualityLabel
+        resText.isNotEmpty() -> resText
+        else -> "-"
+    }
+}
+
+@Composable
+fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
+    if (track == null) return
+
+    val text = getUnifiedBadgeText(track)
+
+    val accentColor = when {
+        TagUtils.isDSD(track) -> Color(0xFF00E5FF)
+        TagUtils.isHiRes(track) || TagUtils.isPCM24Bits(track) -> Color(0xFFFFD700)
+        TagUtils.isMQA(track) -> Color(0xFFE040FB)
+        TagUtils.isLossless(track) -> Color(0xFF64B5F6)
+        else -> Color(0xFF9E9E9E)
+    }
+
+    val bgBase = Color(0xD9101010)
+    val bgTint = accentColor.copy(alpha = 0.08f)
+    val borderColor = accentColor.copy(alpha = 0.38f)
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(bgBase)
+            .background(bgTint)
+            .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
+            .padding(horizontal = 5.dp, vertical = 1.5.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(3.5.dp)
+                    .clip(CircleShape)
+                    .background(accentColor)
+            )
+            Spacer(modifier = Modifier.width(3.5.dp))
+            Text(
+                text = text,
+                color = Color.White,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 0.2.sp,
+                maxLines = 1,
+                softWrap = false
+            )
+        }
+    }
+}
+
 @Composable
 fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
     if (track == null) return

@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.List;
 
 import apincer.music.core.playback.ExternalAndroidPlayer;
+import apincer.music.core.playback.ReplayGainManager;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
@@ -133,6 +134,7 @@ public class AndroidPlayerController {
                             if (nextTrack != null) {
                                 Track transitioningTrack = nextTrack;
                                 nextTrack = null;
+                                applyReplayGain(transitioningTrack);
                                 playbackCallback.onMediaTrackChanged(transitioningTrack);
                             } else {
                                 playbackCallback.onPlaybackCompleted();
@@ -333,6 +335,7 @@ public class AndroidPlayerController {
                             try {
                                 internalExoPlayer.clearMediaItems();
                                 internalExoPlayer.setMediaItem(buildMediaItem(song));
+                                applyReplayGain(song);
                                 internalExoPlayer.prepare();
                                 internalExoPlayer.play();
                             } catch (Exception e) {
@@ -453,5 +456,16 @@ public class AndroidPlayerController {
                 internalExoPlayer = null;
             }
         });
+    }
+
+    private void applyReplayGain(Track song) {
+        if (internalExoPlayer == null || song == null) return;
+        try {
+            float volume = ReplayGainManager.getInstance().calculateGainVolume(context, song);
+            internalExoPlayer.setVolume(volume);
+            Log.d(TAG, "Applied ReplayGain volume: " + volume + " for track: " + song.getTitle());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to apply ReplayGain", e);
+        }
     }
 }

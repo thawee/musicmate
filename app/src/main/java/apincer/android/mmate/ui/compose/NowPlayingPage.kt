@@ -136,6 +136,7 @@ fun NowPlayingPage(
     val duration = state.durationMs.value
     val progress = state.progressMs.value
     val context = LocalContext.current
+    val isPlaying = state.playbackState.value.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING
 
     val colorGold = Color(0xFFFFB300)
     val colorGrey400 = Color(0xFFBDBDBD)
@@ -471,6 +472,23 @@ fun NowPlayingPage(
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
+                        // Vintage Analog VU Meter (Pillar 4 Flagship Telemetry)
+                        val trackDr = (track?.dynamicRange ?: 10.0).toInt()
+                        val trackPeak = track?.path?.let { p ->
+                            apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(p)?.trackPeak?.toFloat() ?: 1.0f
+                        } ?: 1.0f
+
+                        AnalogVUMeter(
+                            isPlaying = isPlaying,
+                            volume = state.volume.value,
+                            drScore = trackDr,
+                            trackPeak = trackPeak,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         val codecStr = track?.audioEncoding?.uppercase()?.ifEmpty { null } ?: state.specsFormat.value.split("•").firstOrNull()?.trim() ?: "UNKNOWN"
                         val sampleRateStr = if (track?.audioSampleRate != null && track.audioSampleRate > 0) "${track.audioSampleRate / 1000.0} kHz" else ""
                         val bitDepthStr = if (track?.audioBitsDepth != null && track.audioBitsDepth > 0) "${track.audioBitsDepth}-bit" else ""
@@ -543,10 +561,18 @@ fun NowPlayingPage(
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        // Row 2: Channels & Dynamic Range
+                        // Row 2: Channels, Dynamic Range & ReplayGain
                         val hasChannels = channelsStr.isNotEmpty()
                         val hasDr = drStr.isNotEmpty() && drStr != "-"
-                        if (hasChannels || hasDr) {
+                        val rgStr = state.specsReplayGain.value.ifEmpty {
+                            track?.path?.let { p ->
+                                val rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(p)
+                                val mode = apincer.music.core.Settings.getReplayGainMode(context)
+                                rg?.getDisplayString(mode)
+                            } ?: ""
+                        }
+                        val hasRg = rgStr.isNotEmpty()
+                        if (hasChannels || hasDr || hasRg) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
@@ -567,6 +593,16 @@ fun NowPlayingPage(
                                         color = Color(0xFFFFA000),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+                                if (hasRg) {
+                                    Text(
+                                        text = if (hasChannels || hasDr) " • $rgStr" else rgStr,
+                                        color = Color(0xFF64B5F6),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontFamily = FontFamily.Monospace,
                                         letterSpacing = 0.5.sp
                                     )

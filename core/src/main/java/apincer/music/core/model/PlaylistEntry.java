@@ -9,18 +9,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import apincer.music.core.utils.TagUtils;
 import kotlinx.serialization.Serializable;
 
 @Serializable
 public class PlaylistEntry {
     public static final String TYPE_TITLE = "title";
     public static final String TYPE_GENRE = "genre";
+    public static final String TYPE_SMART = "smart";
     private String name;
     private String uuid; // Added from your JSON sample
     private String type = TYPE_TITLE; // "song" or "album"
     private String note;
     private String version;
     private String description;
+
+    // Smart Playlist dynamic criteria
+    private double minDrScore = 0.0;
+    private boolean hiresOnly = false;
+    private boolean dsdOnly = false;
+    private boolean losslessOnly = false;
+    private int minBitDepth = 0;
+    private long minSampleRate = 0;
 
    private List<PlaylistRule> rules;
 
@@ -37,6 +47,24 @@ public class PlaylistEntry {
     public void setType(String type) { this.type = type; }
     public List<PlaylistRule> getRules() { return rules; }
     public void setRules(List<PlaylistRule> songs) { this.rules = songs; }
+
+    public double getMinDrScore() { return minDrScore; }
+    public void setMinDrScore(double minDrScore) { this.minDrScore = minDrScore; }
+
+    public boolean isHiresOnly() { return hiresOnly; }
+    public void setHiresOnly(boolean hiresOnly) { this.hiresOnly = hiresOnly; }
+
+    public boolean isDsdOnly() { return dsdOnly; }
+    public void setDsdOnly(boolean dsdOnly) { this.dsdOnly = dsdOnly; }
+
+    public boolean isLosslessOnly() { return losslessOnly; }
+    public void setLosslessOnly(boolean losslessOnly) { this.losslessOnly = losslessOnly; }
+
+    public int getMinBitDepth() { return minBitDepth; }
+    public void setMinBitDepth(int minBitDepth) { this.minBitDepth = minBitDepth; }
+
+    public long getMinSampleRate() { return minSampleRate; }
+    public void setMinSampleRate(long minSampleRate) { this.minSampleRate = minSampleRate; }
 
     public String getNote() {
         return note;
@@ -63,6 +91,9 @@ public class PlaylistEntry {
     }
 
     public void compileRules() {
+        if (TYPE_SMART.equals(type)) {
+            return;
+        }
         if(rules == null) return;
 
         for (PlaylistRule r : rules) {
@@ -116,6 +147,12 @@ public class PlaylistEntry {
     }
 
     public boolean isInPlaylist(Track track) {
+        if (track == null) return false;
+
+        if (TYPE_SMART.equals(type)) {
+            return matchesSmartCriteria(track);
+        }
+
         if(TYPE_TITLE.equals(type)) {
             Long key = songKey(track.getTitle(), track.getArtist());
             return titleIndexRules.contains(key);
@@ -135,6 +172,60 @@ public class PlaylistEntry {
             }
         }
         return false;
+    }
+
+    public boolean matchesSmartCriteria(Track track) {
+        if (track == null) return false;
+
+        // 1. Min DR Score filter
+        if (minDrScore > 0.0) {
+            double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
+            if (dr < minDrScore) {
+                return false;
+            }
+        }
+
+        // 2. DSD Only filter
+        if (dsdOnly) {
+            if (!TagUtils.isDSD(track)) {
+                return false;
+            }
+        }
+
+        // 3. Hi-Res Only filter (Hi-Res 24-bit+ PCM or DSD)
+        if (hiresOnly) {
+            boolean isHiRes = TagUtils.isHiRes(track) || TagUtils.isHiRes48(track) || track.getAudioBitsDepth() >= 24;
+            if (!isHiRes && !TagUtils.isDSD(track)) {
+                return false;
+            }
+        }
+
+        // 4. Lossless Only filter
+        if (losslessOnly) {
+            if (TagUtils.isLossy(track)) {
+                return false;
+            }
+            boolean isLossless = TagUtils.isLosslessFormat(track) || TagUtils.isLossless(track) || TagUtils.isHiRes(track) || TagUtils.isDSD(track);
+            if (!isLossless) {
+                return false;
+            }
+        }
+
+        // 5. Min Bit Depth filter
+        if (minBitDepth > 0) {
+            if (track.getAudioBitsDepth() < minBitDepth) {
+                return false;
+            }
+        }
+
+        // 6. Min Sample Rate filter
+        if (minSampleRate > 0) {
+            if (track.getAudioSampleRate() < minSampleRate) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static long songKey(String title, String artist) {

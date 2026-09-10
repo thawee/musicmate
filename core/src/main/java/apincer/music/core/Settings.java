@@ -71,4 +71,52 @@ public class Settings {
         SharedPreferences prefs = getPreferences(context);
         return prefs.getString("PREF_LAST_PLAYER_TARGET_ID", null);
     }
+
+    public static String getReplayGainMode(Context context) {
+        if (context == null) return "track";
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(Constants.PREF_REPLAYGAIN_MODE, "track");
+    }
+
+    public static void setReplayGainMode(Context context, String mode) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putString(Constants.PREF_REPLAYGAIN_MODE, mode).apply();
+    }
+
+    public static float getReplayGainPreamp(Context context) {
+        if (context == null) return 0.0f;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getFloat(Constants.PREF_REPLAYGAIN_PREAMP, 0.0f);
+    }
+
+    public static void setReplayGainPreamp(Context context, float preamp) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putFloat(Constants.PREF_REPLAYGAIN_PREAMP, preamp).apply();
+    }
+
+    public static boolean isReplayGainPreventClipping(Context context) {
+        if (context == null) return true;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING, true);
+    }
+
+    public static void setReplayGainPreventClipping(Context context, boolean prevent) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putBoolean(Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING, prevent).apply();
+    }
+
+    public static String getTapActionMode(Context context) {
+        if (context == null) return Constants.TAP_MODE_CURATE;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(Constants.PREF_TAP_ACTION_MODE, Constants.TAP_MODE_CURATE);
+    }
+
+    public static void setTapActionMode(Context context, String mode) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putString(Constants.PREF_TAP_ACTION_MODE, mode).apply();
+    }
 }

@@ -279,6 +279,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 double dr = song.getDrScore() > 0 ? song.getDrScore() : song.getDynamicRange();
                 nps.getSpecsDr().setValue(dr > 0 ? "DR " + (int) dr : "");
 
+                apincer.music.core.playback.ReplayGainManager.ReplayGainInfo rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(song.getPath());
+                String rgMode = apincer.music.core.Settings.getReplayGainMode(this);
+                nps.getSpecsReplayGain().setValue(rg != null ? rg.getDisplayString(rgMode) : "");
+
                 nps.getSpecsFileSize().setValue(song.getFileSize() > 0 ? android.text.format.Formatter.formatFileSize(this, song.getFileSize()) : "");
 
                 // Coil Image Loading into state.albumArt
@@ -583,7 +587,17 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
         } else {
             if (count > 0) {
-                statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle("Tracks");
+                String unitTitle;
+                if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
+                    unitTitle = count == 1 ? "Playlist" : "Playlists";
+                } else if (SearchCriteria.TYPE.ARTIST.equals(type)) {
+                    unitTitle = count == 1 ? "Artist" : "Artists";
+                } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
+                    unitTitle = count == 1 ? "Genre" : "Genres";
+                } else {
+                    unitTitle = "Tracks";
+                }
+                statText = StringUtils.formatSongSize(count) + " " + unitTitle;
                 if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
                     statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
                 }
@@ -1004,6 +1018,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onFolderEnqueueClick(Track track) {
         onFolderEnqueueClicked(track);
+    }
+
+    @Override
+    public void onSmartPlaylistCreated(apincer.music.core.model.PlaylistEntry entry) {
+        viewModel.loadMusicItems();
+        android.widget.Toast.makeText(this, "Smart Playlist '" + entry.getName() + "' created", android.widget.Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -1877,7 +1897,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if(tag != null && tag.isContainer()) {
             doStartRefresh(tag.getContainerType(), tag.getTitle());
         } else if (tag != null) {
-            doShowEditActivity(java.util.Collections.singletonList(tag));
+            String mode = Settings.getTapActionMode(this);
+            if (Constants.TAP_MODE_LISTEN.equalsIgnoreCase(mode)) {
+                onTrackQuickPlayClicked(tag);
+            } else {
+                doShowEditActivity(java.util.Collections.singletonList(tag));
+            }
         }
     }
 
@@ -1892,6 +1917,15 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onTrackLongClicked(apincer.music.core.model.Track tag, int position) {
         if (isSelectionBlocked()) return;
+        if (mTracker != null && mTracker.hasSelection()) {
+            mTracker.select((long) position);
+            return;
+        }
+        String mode = Settings.getTapActionMode(this);
+        if (Constants.TAP_MODE_LISTEN.equalsIgnoreCase(mode) && tag != null && !tag.isContainer()) {
+            doShowEditActivity(java.util.Collections.singletonList(tag));
+            return;
+        }
         if (mTracker != null) {
             mTracker.select((long) position);
         }

@@ -231,3 +231,21 @@
   - *Room Architecture Best Practices:* Room database classes must be `public abstract class ... extends RoomDatabase` with abstract DAO getters. Room generates the implementation at compile time; never manually override SQLite helpers with `return null`. Avoid declaring `@PrimaryKey` on `@Embedded` entities (e.g. `Address`, `Contact`) as primary keys on embedded models are ignored by Room.
   - *Apache HttpClient Elimination:* Apache HTTP Client (`org.apache.http.*`) has been removed from modern Android SDKs. Migrate directly to `OkHttpClient` with connection timeouts, pooled clients, and `try-with-resources` response body handling.
   - *Scoped Storage & Modern Concurrency:* Replace deprecated `AsyncTask` with `ExecutorService` (`Executors.newSingleThreadExecutor()`) and replace deprecated `Environment.getExternalStorageDirectory()` with scoped storage (`context.getExternalFilesDir(...)`).
+- **Header Category Unit Labeling & SearchCriteria.TYPE Scope**:
+  - `SearchCriteria.TYPE` defines library navigation domains: `LIBRARY`, `MEDIA_QUALITY`, `PUBLISHER`, `GENRE`, `PLAYLIST`, `SOUND_GRADE`, `ARTIST`. Do not assume synthetic types like `ALBUM` exist in this enum.
+  - When formatting category collection counters in headers or subtitles (e.g. `updateHeaderStats`), evaluate `criteria.getType()` to map pluralized unit names cleanly (`"Playlists"`, `"Artists"`, `"Genres"`) and fallback to `"Tracks"` only for song collections.
+- **Compose Text Line Wrapping & Ellipsis Truncation in List Items**:
+  - Defaulting to `maxLines = 1` with `TextOverflow.Ellipsis` on item titles with trailing action icons causes aggressive and visually jarring truncation (e.g., `"Audiophile Sanct..."`).
+  - For titles and descriptive metadata in list item rows, allow `maxLines = 2` with explicit `lineHeight` and compact trailing button touch targets (e.g., `36dp` with `18dp` icons) to give titles full breathing room across varying phone widths and font scales.
+- **Audiophile Insignia Theming for Abstract Collections**:
+  - Abstract collections like Smart Playlists (DR 12+, Studio Masters, Pure DSD, Lossless Vault) typically lack embedded album artwork on disk. Falling back to plain grey squares creates a drab, unpolished visual experience.
+  - Providing custom-crafted gradient insignias with rich typographic badges (e.g., `DR 12+ / AUDIOPHILE`, `24-BIT / STUDIO`, `DSD / 1-BIT DIRECT`, `VAULT / LOSSLESS`) elevates the UI to flagship audiophile caliber and provides immediate, unmistakable visual identification.
+- **Responsive Badge Synthesis & Screen Density (< 390dp)**:
+  - When rendering rich audio telemetry (Sound Grade, Resolution, DR score, Duration, More button) on mobile list rows, compact viewports (< 390dp) quickly run out of horizontal space, causing song titles and artist names to suffer aggressive ellipsis truncation.
+  - Introducing an adaptive `UnifiedAudioBadge` (`[● HI-RES 24/96]`, `[● CD 16/44.1]`, `[● DSD64]`) combined with a compact DR score text (`DR12`) frees ~40dp of horizontal breathing room on smaller screens while retaining 100% of technical audio specs.
+- **Dual Persona Interaction Architecture ("Curator vs. Listener")**:
+  - Different audiophiles use the player with distinct mindsets: power curators prioritize quick access to tag editing and audio analysis, while daily music listeners expect single-tap instant playback.
+  - Adding a configurable `PREF_TAP_ACTION_MODE` (`Listener Mode` vs. `Curator Mode`) elegantly solves this tension without compromising either persona: single-tap plays or inspects, while long-press and cover art taps provide instantaneous access to the alternate action.
+- **Physical Ballistic Simulation & Vector Graphics in Compose Canvas**:
+  - Realistic analog VU meter needle movement requires ANSI ballistic spring-damper dynamics ($F = (target - current) \cdot k - velocity \cdot c$) computed per-frame with `withFrameNanos`.
+  - Avoid list destructuring with more than 5 elements (Kotlin stdlib only provides `component1()` through `component5()` for `List`); use dedicated `data class` structures (e.g. `VUMeterPalette`) for type safety and clean maintainability.

@@ -23,7 +23,8 @@ import apincer.music.core.utils.TagUtils
 @Composable
 fun DynamicRangeMeter(
     track: Track?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     if (track == null) {
         Text(
@@ -56,27 +57,29 @@ fun DynamicRangeMeter(
             softWrap = false
         )
         
-        Spacer(modifier = Modifier.width(4.dp))
+        if (!compact) {
+            Spacer(modifier = Modifier.width(4.dp))
 
-        // Draw meter bar
-        Canvas(modifier = Modifier.size(width = 30.dp, height = 6.dp)) {
-            val maxScore = 20f
-            val normalized = (scoreVal.coerceIn(0, 20) / maxScore).coerceIn(0f, 1f)
-            
-            // Background track
-            drawRoundRect(
-                color = Color(0xFF333333),
-                size = size,
-                cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx())
-            )
-            
-            // Filled track
-            if (normalized > 0f) {
+            // Draw meter bar
+            Canvas(modifier = Modifier.size(width = 30.dp, height = 6.dp)) {
+                val maxScore = 20f
+                val normalized = (scoreVal.coerceIn(0, 20) / maxScore).coerceIn(0f, 1f)
+                
+                // Background track
                 drawRoundRect(
-                    color = drsColor,
-                    size = Size(width = size.width * normalized, height = size.height),
+                    color = Color(0xFF333333),
+                    size = size,
                     cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx())
                 )
+                
+                // Filled track
+                if (normalized > 0f) {
+                    drawRoundRect(
+                        color = drsColor,
+                        size = Size(width = size.width * normalized, height = size.height),
+                        cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx())
+                    )
+                }
             }
         }
     }

@@ -47,7 +47,8 @@ data class CoverArtInfo(
 data class TechData(
     val ffmpegInfo: String = "",
     val coverArtInfo: CoverArtInfo = CoverArtInfo(),
-    val parsedFields: List<TechField> = emptyList()
+    val parsedFields: List<TechField> = emptyList(),
+    val replayGainInfo: apincer.music.core.playback.ReplayGainManager.ReplayGainInfo? = null
 )
 
 @Composable
@@ -62,7 +63,7 @@ fun TagsTechnicalPage(
     
     // Read tags asynchronously on IO thread to prevent UI frame drops
     val techData by androidx.compose.runtime.produceState(
-        initialValue = TechData("Loading technical diagnostics...", CoverArtInfo(), emptyList()),
+        initialValue = TechData("Loading technical diagnostics...", CoverArtInfo(), emptyList(), null),
         key1 = track.path
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -108,7 +109,9 @@ fun TagsTechnicalPage(
                     TechField(field.name, mateVal, stdVal)
                 }
 
-            TechData(ffmpegInfo, coverArtInfo, parsedFields)
+            val rgInfo = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(track.path)
+
+            TechData(ffmpegInfo, coverArtInfo, parsedFields, rgInfo)
         }
     }
 
@@ -120,6 +123,10 @@ fun TagsTechnicalPage(
     ) {
         TechCard(title = "METADATA HEALTH AUDITOR") {
             MetadataHealthCard(track = track, coverArtInfo = techData.coverArtInfo)
+        }
+
+        TechCard(title = "REPLAYGAIN LOUDNESS TELEMETRY") {
+            ReplayGainCard(info = techData.replayGainInfo)
         }
 
         TechCard(title = "EMBEDDED COVER ART INSPECTOR") {
@@ -249,6 +256,73 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
                         fontSize = 11.sp
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReplayGainCard(info: apincer.music.core.playback.ReplayGainManager.ReplayGainInfo?) {
+    val hasTg = info?.hasTrackGain == true
+    val hasAg = info?.hasAlbumGain == true
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (hasTg || hasAg) "REPLAYGAIN 2.0 / EBU R128 DETECTED" else "NO REPLAYGAIN TAGS DETECTED",
+                color = if (hasTg || hasAg) Color(0xFF64B5F6) else Color.Gray,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+            Box(
+                modifier = Modifier
+                    .background(if (hasTg || hasAg) Color(0x2264B5F6) else Color(0x229E9E9E), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = if (hasTg || hasAg) "ACTIVE" else "UNTAGGED",
+                    color = if (hasTg || hasAg) Color(0xFF64B5F6) else Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Track Gain", fontSize = 11.sp, color = Color.Gray)
+                Text(
+                    text = if (hasTg) String.format(java.util.Locale.US, "%+.2f dB", info.trackGainDb) else "N/A",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Track Peak", fontSize = 11.sp, color = Color.Gray)
+                Text(
+                    text = if (hasTg && info.trackPeak > 0) String.format(java.util.Locale.US, "%.6f", info.trackPeak) else "N/A",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Album Gain", fontSize = 11.sp, color = Color.Gray)
+                Text(
+                    text = if (hasAg) String.format(java.util.Locale.US, "%+.2f dB", info.albumGainDb) else "N/A",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White
+                )
             }
         }
     }

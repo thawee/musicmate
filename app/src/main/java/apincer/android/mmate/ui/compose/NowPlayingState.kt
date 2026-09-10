@@ -20,6 +20,7 @@ class NowPlayingState {
     val specsFormat = mutableStateOf("")
     val specsBitrate = mutableStateOf("")
     val specsDr = mutableStateOf("")
+    val specsReplayGain = mutableStateOf("")
     val specsFileSize = mutableStateOf("")
     
     // Controls

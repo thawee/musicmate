@@ -28,6 +28,9 @@ class MainScaffoldState {
     val playerTargets = mutableStateListOf<PlayerTargetItem>()
     var isPlayerScanning = mutableStateOf(false)
 
+    // Smart playlist creator modal state
+    var showCreateSmartPlaylistDialog = mutableStateOf(false)
+
     // Track list, selection & scrolling state
     val tracks = mutableStateListOf<Track>()
     val selectedTracks = mutableStateListOf<Track>()
@@ -141,6 +144,11 @@ class MainScaffoldState {
         @JvmStatic
         fun setPlayerScanning(scanning: Boolean) {
             instance.isPlayerScanning.value = scanning
+        }
+
+        @JvmStatic
+        fun openCreateSmartPlaylistDialog() {
+            instance.showCreateSmartPlaylistDialog.value = true
         }
 
         @JvmStatic

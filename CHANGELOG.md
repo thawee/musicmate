@@ -5,6 +5,67 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.5] - 2026-09-10
+
+### Added
+- **Pillar 1: Responsive Badge Synthesis & Screen Density (`AudioBadges.kt`, `DynamicRangeMeters.kt`, `TrackListItem.kt`)**:
+  - Implemented `UnifiedAudioBadge` fusing format tier, bit depth, and sampling rate into a single compact micro-capsule (`[● HI-RES 24/96]`, `[● CD 16/44.1]`, `[● DSD64]`, `[● 320k]`).
+  - Added `compact: Boolean = false` mode to `DynamicRangeMeter` to collapse bar graphics into clean text (`DR12`).
+  - Added responsive screen width detection (`screenWidthDp < 390`) in `TrackListItem`: automatically toggles unified badges and compact DR meter on compact viewports, liberating ~40dp of horizontal breathing room and completely eliminating title/artist ellipses truncation.
+- **Pillar 2: Dual Persona "Curator vs. Listener" Interaction Modes (`Settings.java`, `Constants.java`, `SettingsScreen.kt`, `MainActivity.java`)**:
+  - Added `PREF_TAP_ACTION_MODE` preference (`"listen"` vs `"curate"`).
+  - Added "INTERACTION MODE" card in `SettingsScreen.kt` with segmented switcher between `🎧 Listener Mode` and `🏷 Curator Mode`.
+  - In `Listener Mode`: single-tap row starts instant playback, long-press opens tag editor (`TagsActivity`).
+  - In `Curator Mode`: single-tap row opens `TagsActivity` (preserving existing power-curator workflows), while tapping cover art starts playback.
+- **Pillar 3: Visual "Audiophile Query Studio" (Custom Smart Playlists) (`CreateSmartPlaylistDialog.kt`, `PlaylistRepository.java`, `MainScaffold.kt`)**:
+  - Built interactive Compose query builder dialog with real-time matching track count & storage telemetry (`⚡ Live Match: X tracks • Y GB`), Dynamic Range (DR) threshold slider ($0\dots 16$), and audio tier chips (`Hi-Res`, `Lossless`, `DSD`, `24-bit Studio`).
+  - Added custom smart playlist creation, editing, and deletion in `PlaylistRepository` backed by `custom_playlists.json` persistence.
+  - Added "New Smart Playlist" top bar action button (`rounded_playlist_add_24.xml`) in `MainScaffold` when browsing playlists.
+- **Pillar 4: Vintage Analog Needle VU Meter & Studio Telemetry (`AnalogVUMeter.kt`, `NowPlayingPage.kt`)**:
+  - Built `AnalogVUMeter` in Compose Canvas with dual stereo channel dials (Left & Right), calibrated $-20\text{ dB} \dots +3\text{ dB}$ logarithmic arc scale, and red overload zone.
+  - Implemented ANSI standard ballistic spring-damper physics (300ms rise, ~1.5% overshoot) with stereo phase decorrelation, driven by playback state, track dynamic range (DR), volume, and ReplayGain true-peak telemetry.
+  - Supported 3 legendary audiophile color themes switchable by tapping the meter chassis: Accuphase Champagne Gold, McIntosh Ocean Blue, and Studio Slate Reference.
+  - Embedded into the Audio Anatomy flip card in `NowPlayingPage.kt`.
+- **Unit Test Coverage (`VUMeterAndBadgeTest.kt`)**:
+  - Added unit test suite verifying `VUMeterTheme` catalog and `getUnifiedBadgeText` formatting across Hi-Res FLAC, CD Lossless, DSD, and MP3.
+
+## [3.19.4] - 2026-09-10
+
+### Added
+- **Active ReplayGain 2.0 / EBU R128 Playback Leveling Engine (`ReplayGainManager.java`, `AndroidPlayerController.java`)**:
+  - Real-time loudness normalization during local on-device playback using ExoPlayer linear volume scaling ($10^{\frac{\text{gainDb} + \text{preAmpDb}}{20}}$).
+  - Configurable playback modes: `Track Gain` (standard loudness matching), `Album Gain` (preserves album master volume progression), and `Off`.
+  - Configurable pre-amp gain $(-12 \text{ dB} \dots +12 \text{ dB})$ and anti-clipping true-peak limiter safeguard preventing digital clipping distortion ($scalar \times peak \le 1.0$).
+  - Seamless gapless audio transition support: ReplayGain volume scaling recalculates and applies dynamically on `onMediaItemTransition()`.
+  - Universal external player tag interoperability: writes standardized Vorbis Comments (`REPLAYGAIN_TRACK_GAIN`, `REPLAYGAIN_TRACK_PEAK`), ID3v2 TXXX, and MP4 tags to disk files, enabling Poweramp, Foobar2000, USB Audio Player PRO (UAPP), and Neutron to read loudness tags.
+- **Audiophile Playback Settings Card (`SettingsScreen.kt`, `SettingsActivity.kt`)**:
+  - Modern Jetpack Compose controls for ReplayGain mode selector, pre-amp slider steps, and anti-clipping true-peak limiter toggle.
+- **Audio Anatomy ReplayGain Telemetry (`NowPlayingPage.kt`, `TagsTechnicalPage.kt`, `NowPlayingState.kt`)**:
+  - Dynamic ReplayGain status pill (`RG -4.2 dB`) displayed on the Audio Anatomy flip card and dedicated technical diagnostics card in the tag editor.
+- **Dynamic Smart Playlists Engine (DR & Authenticity) (`PlaylistEntry.java`, `PlaylistRepository.java`, `playlists.json`)**:
+  - Dynamic rule matching engine evaluating on-device audio telemetry (`minDrScore`, `hiresOnly`, `dsdOnly`, `losslessOnly`, `minBitDepth`, `minSampleRate`).
+  - Added 4 flagship built-in audiophile smart playlists:
+    1. *Audiophile Sanctuary (DR12+)*: High dynamic range uncompressed masterings (DR12 and above).
+    2. *Studio Masters (Hi-Res)*: 24-bit studio quality and high sample rate masters (>= 24-bit / 48kHz).
+    3. *Pure DSD Archive*: 1-bit Direct Stream Digital recordings (DSD64, DSD128, DSD256).
+    4. *Lossless Master Vault*: Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD).
+  - Cross-platform availability: automatically evaluated across the Native Android UI, DLNA/UPnP Media Server, Web Remote UI, and M3U playlist exports.
+- **Unit Test Suite Expansion (`PlaylistEntrySmartTest.java`, `ReplayGainManagerTest.java`)**:
+  - Added unit test suites verifying smart playlist rules matching and ReplayGain dB-to-linear conversion with peak limiter clamping.
+
+### Changed
+- **Playlist Card Typography & Layout Density (`FolderListItem.kt`)**:
+  - Expanded playlist titles and descriptions to `maxLines = 2` with balanced line heights to eliminate aggressive ellipses truncation (`"Audiophile Sanct..."`, `"Lossless Master ..."`).
+  - Compacted action buttons to 36dp with 18dp icons to provide full horizontal breathing room.
+- **Audiophile Insignia Cover Art for Smart Playlists (`FolderListItem.kt`)**:
+  - Replaced plain placeholder grey boxes with custom gradient-rendered insignias and luxury typographic badges (`DR 12+ / AUDIOPHILE`, `24-BIT / STUDIO`, `DSD / 1-BIT DIRECT`, `VAULT / LOSSLESS`, `CLASSICAL / HERITAGE`, `REFERENCE / ARCHIVE`).
+
+### Fixed
+- **Top Header Collection Counter Unit (`MainActivity.java`)**:
+  - Corrected header subtitle to dynamically display `"10 Playlists"` (or `"Artists"`, `"Genres"`) instead of erroneously defaulting to `"10 Tracks"` when viewing category collections.
+- **Empty Playlist Track Count Subtitle (`FolderListItem.kt`)**:
+  - Provided a clean `"0 tracks"` fallback instead of rendering an empty subtitle line for unpopulated smart playlists.
+
 ## [3.19.3] - 2026-09-08
 
 ### Added

@@ -38,6 +38,18 @@ class SettingsActivity : ComponentActivity() {
             var artistAwareSimilarSongs by remember {
                 mutableStateOf(Settings.isArtistAwareSimilarSongs(this@SettingsActivity))
             }
+            var replayGainMode by remember {
+                mutableStateOf(Settings.getReplayGainMode(this@SettingsActivity))
+            }
+            var replayGainPreamp by remember {
+                mutableStateOf(Settings.getReplayGainPreamp(this@SettingsActivity))
+            }
+            var replayGainPreventClipping by remember {
+                mutableStateOf(Settings.isReplayGainPreventClipping(this@SettingsActivity))
+            }
+            var tapActionMode by remember {
+                mutableStateOf(Settings.getTapActionMode(this@SettingsActivity))
+            }
 
             MusicMateTheme {
                 SettingsScreen(
@@ -68,6 +80,26 @@ class SettingsActivity : ComponentActivity() {
                     onArtistAwareSimilarSongsChange = { checked ->
                         artistAwareSimilarSongs = checked
                         prefs.edit().putBoolean(Constants.PREF_ARTIST_AWARE_SIMILAR_SONGS, checked).apply()
+                    },
+                    replayGainMode = replayGainMode,
+                    onReplayGainModeChange = { newMode ->
+                        replayGainMode = newMode
+                        Settings.setReplayGainMode(this@SettingsActivity, newMode)
+                    },
+                    replayGainPreamp = replayGainPreamp,
+                    onReplayGainPreampChange = { newPreamp ->
+                        replayGainPreamp = newPreamp
+                        Settings.setReplayGainPreamp(this@SettingsActivity, newPreamp)
+                    },
+                    replayGainPreventClipping = replayGainPreventClipping,
+                    onReplayGainPreventClippingChange = { checked ->
+                        replayGainPreventClipping = checked
+                        Settings.setReplayGainPreventClipping(this@SettingsActivity, checked)
+                    },
+                    tapActionMode = tapActionMode,
+                    onTapActionModeChange = { newMode ->
+                        tapActionMode = newMode
+                        Settings.setTapActionMode(this@SettingsActivity, newMode)
                     },
                     onBackClick = { finish() }
                 )

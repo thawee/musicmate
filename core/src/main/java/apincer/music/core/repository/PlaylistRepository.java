@@ -71,6 +71,14 @@ public class PlaylistRepository {
                         entry.setType(entryObj.optString("type", PlaylistEntry.TYPE_TITLE));
                         entry.setNote(entryObj.optString("note", null));
                         entry.setDescription(entryObj.optString("description", null));
+
+                        // Smart playlist telemetry criteria
+                        entry.setMinDrScore(entryObj.optDouble("minDrScore", 0.0));
+                        entry.setHiresOnly(entryObj.optBoolean("hiresOnly", false));
+                        entry.setDsdOnly(entryObj.optBoolean("dsdOnly", false));
+                        entry.setLosslessOnly(entryObj.optBoolean("losslessOnly", false));
+                        entry.setMinBitDepth(entryObj.optInt("minBitDepth", 0));
+                        entry.setMinSampleRate(entryObj.optLong("minSampleRate", 0L));
                         
                         org.json.JSONArray rulesArray = entryObj.optJSONArray("rules");
                         if (rulesArray != null) {
@@ -102,6 +110,11 @@ public class PlaylistRepository {
                         }
                         entryList.add(entry);
                     }
+                    registerBuiltInSmartPlaylists(entryList);
+                    collection.setPlaylists(entryList);
+                } else {
+                    List<PlaylistEntry> entryList = new ArrayList<>();
+                    registerBuiltInSmartPlaylists(entryList);
                     collection.setPlaylists(entryList);
                 }
 
@@ -110,17 +123,177 @@ public class PlaylistRepository {
                     playlists = collection.getPlaylists();
                     Log.d(TAG, "Loaded " + playlists.size() + " playlist entries from JSON.");
                 } else {
-                    Log.e(TAG, "Failed to parse playlists.json or it's empty.");
-                    playlists = Collections.emptyList(); // Ensure it's not null
+                    List<PlaylistEntry> fallback = new ArrayList<>();
+                    registerBuiltInSmartPlaylists(fallback);
+                    collection.setPlaylists(fallback);
+                    collection.compileRules();
+                    playlists = fallback;
                 }
                 //populatePlaylistMap(playlists);
             } catch (Exception e) { // Catch parsing errors too
                 Log.e(TAG, "Error reading or parsing playlists.json", e);
-                playlists = Collections.emptyList();
+                List<PlaylistEntry> fallback = new ArrayList<>();
+                registerBuiltInSmartPlaylists(fallback);
+                playlists = fallback;
             }
         } else {
             Log.e(TAG, "Could not find playlists.json in assets");
-            playlists = Collections.emptyList();
+            List<PlaylistEntry> fallback = new ArrayList<>();
+            registerBuiltInSmartPlaylists(fallback);
+            playlists = fallback;
+        }
+        loadCustomPlaylistsFromDisk(context, playlists);
+    }
+
+    public static synchronized void saveCustomPlaylist(Context context, PlaylistEntry entry) {
+        if (entry == null || context == null) return;
+        if (entry.getUuid() == null || entry.getUuid().isEmpty()) {
+            entry.setUuid("custom-" + java.util.UUID.randomUUID().toString());
+        }
+        entry.setType(PlaylistEntry.TYPE_SMART);
+        boolean found = false;
+        for (int i = 0; i < playlists.size(); i++) {
+            if (entry.getUuid().equalsIgnoreCase(playlists.get(i).getUuid())) {
+                playlists.set(i, entry);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            playlists.add(entry);
+        }
+        writeCustomPlaylistsToDisk(context);
+    }
+
+    public static synchronized void deleteCustomPlaylist(Context context, String uuid) {
+        if (uuid == null || context == null) return;
+        playlists.removeIf(p -> uuid.equalsIgnoreCase(p.getUuid()));
+        writeCustomPlaylistsToDisk(context);
+    }
+
+    private static void writeCustomPlaylistsToDisk(Context context) {
+        try {
+            File file = new File(context.getFilesDir(), "custom_playlists.json");
+            org.json.JSONArray arr = new org.json.JSONArray();
+            for (PlaylistEntry p : playlists) {
+                if (PlaylistEntry.TYPE_SMART.equalsIgnoreCase(p.getType()) &&
+                    !UUID_SMART_DR12.equalsIgnoreCase(p.getUuid()) &&
+                    !UUID_SMART_HIRES.equalsIgnoreCase(p.getUuid()) &&
+                    !UUID_SMART_DSD.equalsIgnoreCase(p.getUuid()) &&
+                    !UUID_SMART_LOSSLESS.equalsIgnoreCase(p.getUuid())) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    obj.put("name", p.getName());
+                    obj.put("uuid", p.getUuid());
+                    obj.put("type", p.getType());
+                    obj.put("description", p.getDescription());
+                    obj.put("note", p.getNote());
+                    obj.put("minDrScore", p.getMinDrScore());
+                    obj.put("hiresOnly", p.isHiresOnly());
+                    obj.put("dsdOnly", p.isDsdOnly());
+                    obj.put("losslessOnly", p.isLosslessOnly());
+                    obj.put("minBitDepth", p.getMinBitDepth());
+                    obj.put("minSampleRate", p.getMinSampleRate());
+                    arr.put(obj);
+                }
+            }
+            try (FileWriter writer = new FileWriter(file)) {
+                writer.write(arr.toString());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error writing custom_playlists.json", e);
+        }
+    }
+
+    private static void loadCustomPlaylistsFromDisk(Context context, List<PlaylistEntry> entryList) {
+        if (context == null || entryList == null) return;
+        try {
+            File file = new File(context.getFilesDir(), "custom_playlists.json");
+            if (!file.exists()) return;
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new java.io.FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            org.json.JSONArray arr = new org.json.JSONArray(sb.toString());
+            for (int i = 0; i < arr.length(); i++) {
+                org.json.JSONObject entryObj = arr.getJSONObject(i);
+                PlaylistEntry entry = new PlaylistEntry();
+                entry.setName(entryObj.optString("name", null));
+                entry.setUuid(entryObj.optString("uuid", null));
+                entry.setType(entryObj.optString("type", PlaylistEntry.TYPE_SMART));
+                entry.setDescription(entryObj.optString("description", null));
+                entry.setNote(entryObj.optString("note", null));
+                entry.setMinDrScore(entryObj.optDouble("minDrScore", 0.0));
+                entry.setHiresOnly(entryObj.optBoolean("hiresOnly", false));
+                entry.setDsdOnly(entryObj.optBoolean("dsdOnly", false));
+                entry.setLosslessOnly(entryObj.optBoolean("losslessOnly", false));
+                entry.setMinBitDepth(entryObj.optInt("minBitDepth", 0));
+                entry.setMinSampleRate(entryObj.optLong("minSampleRate", 0L));
+                if (entryList.stream().noneMatch(p -> entry.getUuid() != null && entry.getUuid().equalsIgnoreCase(p.getUuid()))) {
+                    entryList.add(entry);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading custom_playlists.json", e);
+        }
+    }
+
+    public static final String UUID_SMART_DR12 = "smart-audiophile-sanctuary-dr12";
+    public static final String UUID_SMART_HIRES = "smart-studio-masters-hires";
+    public static final String UUID_SMART_DSD = "smart-pure-dsd-archive";
+    public static final String UUID_SMART_LOSSLESS = "smart-lossless-master-vault";
+
+    public static void registerBuiltInSmartPlaylists(List<PlaylistEntry> entryList) {
+        if (entryList == null) return;
+
+        // 1. Audiophile Sanctuary (DR12+)
+        if (entryList.stream().noneMatch(p -> UUID_SMART_DR12.equalsIgnoreCase(p.getUuid()) || "Audiophile Sanctuary (DR12+)".equalsIgnoreCase(p.getName()))) {
+            PlaylistEntry dr12 = new PlaylistEntry();
+            dr12.setName("Audiophile Sanctuary (DR12+)");
+            dr12.setUuid(UUID_SMART_DR12);
+            dr12.setType(PlaylistEntry.TYPE_SMART);
+            dr12.setMinDrScore(12.0);
+            dr12.setDescription("High dynamic range uncompressed masterings (DR12 and above).");
+            dr12.setNote("DR12+");
+            entryList.add(dr12);
+        }
+
+        // 2. Studio Masters (Hi-Res)
+        if (entryList.stream().noneMatch(p -> UUID_SMART_HIRES.equalsIgnoreCase(p.getUuid()) || "Studio Masters (Hi-Res)".equalsIgnoreCase(p.getName()))) {
+            PlaylistEntry hires = new PlaylistEntry();
+            hires.setName("Studio Masters (Hi-Res)");
+            hires.setUuid(UUID_SMART_HIRES);
+            hires.setType(PlaylistEntry.TYPE_SMART);
+            hires.setHiresOnly(true);
+            hires.setDescription("24-bit studio quality and high sample rate masters (>= 24-bit / 48kHz).");
+            hires.setNote("Hi-Res Studio");
+            entryList.add(hires);
+        }
+
+        // 3. Pure DSD Archive
+        if (entryList.stream().noneMatch(p -> UUID_SMART_DSD.equalsIgnoreCase(p.getUuid()) || "Pure DSD Archive".equalsIgnoreCase(p.getName()))) {
+            PlaylistEntry dsd = new PlaylistEntry();
+            dsd.setName("Pure DSD Archive");
+            dsd.setUuid(UUID_SMART_DSD);
+            dsd.setType(PlaylistEntry.TYPE_SMART);
+            dsd.setDsdOnly(true);
+            dsd.setDescription("1-bit Direct Stream Digital recordings (DSD64, DSD128, DSD256).");
+            dsd.setNote("DSD Audio");
+            entryList.add(dsd);
+        }
+
+        // 4. Lossless Master Vault
+        if (entryList.stream().noneMatch(p -> UUID_SMART_LOSSLESS.equalsIgnoreCase(p.getUuid()) || "Lossless Master Vault".equalsIgnoreCase(p.getName()))) {
+            PlaylistEntry lossless = new PlaylistEntry();
+            lossless.setName("Lossless Master Vault");
+            lossless.setUuid(UUID_SMART_LOSSLESS);
+            lossless.setType(PlaylistEntry.TYPE_SMART);
+            lossless.setLosslessOnly(true);
+            lossless.setDescription("Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD).");
+            lossless.setNote("Lossless Vault");
+            entryList.add(lossless);
         }
     }
 
@@ -231,7 +404,7 @@ public class PlaylistRepository {
         }
 
         PlaylistEntry entry = playlistOpt.get();
-        if (entry.getRules() == null) {
+        if (!PlaylistEntry.TYPE_SMART.equalsIgnoreCase(entry.getType()) && entry.getRules() == null) {
             return false;
         }
         return entry.isInPlaylist(track);
@@ -244,7 +417,7 @@ public class PlaylistRepository {
         }
 
         PlaylistEntry entry = playlistOpt.get();
-        if (entry.getRules() == null) {
+        if (!PlaylistEntry.TYPE_SMART.equalsIgnoreCase(entry.getType()) && entry.getRules() == null) {
             return false;
         }
         return entry.isInPlaylist(track);

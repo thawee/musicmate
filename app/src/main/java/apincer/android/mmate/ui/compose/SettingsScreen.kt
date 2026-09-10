@@ -33,6 +33,14 @@ fun SettingsScreen(
     onListFollowsNowPlayingChange: (Boolean) -> Unit,
     artistAwareSimilarSongs: Boolean,
     onArtistAwareSimilarSongsChange: (Boolean) -> Unit,
+    replayGainMode: String = "track",
+    onReplayGainModeChange: (String) -> Unit = {},
+    replayGainPreamp: Float = 0.0f,
+    onReplayGainPreampChange: (Float) -> Unit = {},
+    replayGainPreventClipping: Boolean = true,
+    onReplayGainPreventClippingChange: (Boolean) -> Unit = {},
+    tapActionMode: String = "curate",
+    onTapActionModeChange: (String) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -124,7 +132,168 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Section 2: Library & User Interface ───────────────────────────
+            // ── Section 2: Audiophile Playback (ReplayGain) ───────────────────
+            SettingsCard(title = "AUDIOPHILE PLAYBACK (REPLAYGAIN)") {
+                Text(
+                    text = "Loudness Leveling Mode",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Normalizes playback loudness across tracks using EBU R128 / ReplayGain tags",
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val modes = listOf(
+                        "off" to "Off",
+                        "track" to "Track Gain",
+                        "album" to "Album Gain"
+                    )
+                    modes.forEach { (key, label) ->
+                        val isSelected = replayGainMode.equals(key, ignoreCase = true)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
+                                .border(
+                                    1.dp,
+                                    if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { onReplayGainModeChange(key) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) Color(0xFFFFB300) else Color.White,
+                                fontSize = 12.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                if (!replayGainMode.equals("off", ignoreCase = true)) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    val preampDisplay = if (replayGainPreamp > 0) "+${replayGainPreamp.toInt()}" else "${replayGainPreamp.toInt()}"
+                    Text(
+                        text = "Pre-Amp Gain: $preampDisplay dB",
+                        color = Color.White,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val preamps = listOf(
+                            -3.0f to "-3 dB",
+                            0.0f to "0 dB",
+                            3.0f to "+3 dB"
+                        )
+                        preamps.forEach { (valDb, label) ->
+                            val isSelected = kotlin.math.abs(replayGainPreamp - valDb) < 0.1f
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { onReplayGainPreampChange(valDb) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) Color(0xFFFFB300) else Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SettingsSwitchRow(
+                        title = "Prevent Clipping",
+                        subtitle = "True-peak limiter automatically guards against inter-sample digital clipping",
+                        checked = replayGainPreventClipping,
+                        onCheckedChange = onReplayGainPreventClippingChange
+                    )
+                }
+            }
+
+            // ── Section: Interaction Mode (Curator vs. Listener) ──────────────
+            SettingsCard(title = "INTERACTION MODE") {
+                Text(
+                    text = "Track Tap Action",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = if (tapActionMode == "listen")
+                        "Single-tap plays song immediately. Long-press opens tag editor."
+                    else
+                        "Single-tap opens tag editor for curation. Tap album art to play.",
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val modes = listOf(
+                        "curate" to "🏷 Curator",
+                        "listen" to "🎧 Listener"
+                    )
+                    modes.forEach { (key, label) ->
+                        val isSelected = tapActionMode.equals(key, ignoreCase = true)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
+                                .border(
+                                    1.dp,
+                                    if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { onTapActionModeChange(key) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) Color(0xFFFFB300) else Color.White,
+                                fontSize = 12.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Section 3: Library & User Interface ───────────────────────────
             SettingsCard(title = "USER INTERFACE") {
                 SettingsSwitchRow(
                     title = "Display Storage Space",

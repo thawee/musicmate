@@ -173,12 +173,21 @@ fun TrackListItem(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                val screenWidthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+                val isCompact = screenWidthDp < 390
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    QualityBadge(track = track)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    ResolutionBadge(track = track)
-                    Spacer(modifier = Modifier.width(5.dp))
-                    DynamicRangeMeter(track = track)
+                    if (isCompact) {
+                        UnifiedAudioBadge(track = track)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        DynamicRangeMeter(track = track, compact = true)
+                    } else {
+                        QualityBadge(track = track)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        ResolutionBadge(track = track)
+                        Spacer(modifier = Modifier.width(5.dp))
+                        DynamicRangeMeter(track = track, compact = false)
+                    }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = StringUtils.formatDuration(track.audioDuration, false),

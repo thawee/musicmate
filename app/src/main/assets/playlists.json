@@ -1,6 +1,42 @@
 {
   "playlists": [
     {
+      "name": "Audiophile Sanctuary (DR12+)",
+      "uuid": "smart-audiophile-sanctuary-dr12",
+      "type": "smart",
+      "version": "1.0",
+      "note": "DR12+",
+      "minDrScore": 12.0,
+      "description": "High dynamic range uncompressed masterings (DR12 and above)."
+    },
+    {
+      "name": "Studio Masters (Hi-Res)",
+      "uuid": "smart-studio-masters-hires",
+      "type": "smart",
+      "version": "1.0",
+      "note": "Hi-Res Studio",
+      "hiresOnly": true,
+      "description": "24-bit studio quality and high sample rate masters (>= 24-bit / 48kHz)."
+    },
+    {
+      "name": "Pure DSD Archive",
+      "uuid": "smart-pure-dsd-archive",
+      "type": "smart",
+      "version": "1.0",
+      "note": "DSD Audio",
+      "dsdOnly": true,
+      "description": "1-bit Direct Stream Digital recordings (DSD64, DSD128, DSD256)."
+    },
+    {
+      "name": "Lossless Master Vault",
+      "uuid": "smart-lossless-master-vault",
+      "type": "smart",
+      "version": "1.0",
+      "note": "Lossless Vault",
+      "losslessOnly": true,
+      "description": "Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD)."
+    },
+    {
       "name": "The Masterpieces Archive",
       "uuid": "HighFidelityArchive",
       "type": "title",

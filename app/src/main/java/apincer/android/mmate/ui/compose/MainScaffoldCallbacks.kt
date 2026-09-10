@@ -42,4 +42,5 @@ interface MainScaffoldCallbacks {
     fun onCopyUrlClicked()
     fun onOpenUrlClicked()
     fun onQrCodeClicked()
+    fun onSmartPlaylistCreated(entry: apincer.music.core.model.PlaylistEntry) {}
 }

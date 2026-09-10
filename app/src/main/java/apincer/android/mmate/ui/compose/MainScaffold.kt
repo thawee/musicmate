@@ -387,7 +387,8 @@ fun MainScaffold(
                     isScanning = state.isScanning.value,
                     scanProgressText = state.scanProgressText.value,
                     isCastActive = isDlnaCast,
-                    onCastClick = { callbacks?.onSelectPlaybackTargetClick() }
+                    onCastClick = { callbacks?.onSelectPlaybackTargetClick() },
+                    onAddPlaylistClick = { state.showCreateSmartPlaylistDialog.value = true }
                 )
 
                 // ── Main Song List ───────────────────────────────────────────
@@ -506,6 +507,20 @@ fun MainScaffold(
             }
         )
     }
+
+    // ── Pure Compose Create Smart Playlist Modal Dialog ───────────────────────
+    if (state.showCreateSmartPlaylistDialog.value) {
+        val context = LocalContext.current
+        CreateSmartPlaylistDialog(
+            availableTracks = state.tracks,
+            onDismiss = { state.showCreateSmartPlaylistDialog.value = false },
+            onSave = { newEntry ->
+                apincer.music.core.repository.PlaylistRepository.saveCustomPlaylist(context, newEntry)
+                state.showCreateSmartPlaylistDialog.value = false
+                callbacks?.onSmartPlaylistCreated(newEntry)
+            }
+        )
+    }
 }
 
 // ── Top Search & Stats Bar (DESIGN.md §6 & §4) ──────────────────────────────
@@ -519,7 +534,8 @@ private fun TopSearchBar(
     isScanning: Boolean,
     scanProgressText: String,
     isCastActive: Boolean = false,
-    onCastClick: () -> Unit = {}
+    onCastClick: () -> Unit = {},
+    onAddPlaylistClick: () -> Unit = {}
 ) {
     Surface(
         color = Color(0xEB161616),
@@ -600,15 +616,35 @@ private fun TopSearchBar(
                         }
 
                         if (query.isNotEmpty()) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.round_close_24),
-                                contentDescription = "Clear search",
-                                tint = Color(0xAAFFFFFF),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable { onQueryChange("") }
-                            )
+                            IconButton(
+                                onClick = { onQueryChange("") },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.round_close_24),
+                                    contentDescription = "Clear",
+                                    tint = Color(0x99FFFFFF),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // New Smart Playlist action when browsing playlists
+                if (statsText.contains("Playlist", ignoreCase = true)) {
+                    IconButton(
+                        onClick = onAddPlaylistClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.rounded_playlist_add_24),
+                            contentDescription = "New Smart Playlist",
+                            tint = Color(0xFFFFB300),
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
 

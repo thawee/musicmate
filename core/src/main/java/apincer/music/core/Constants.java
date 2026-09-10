@@ -126,6 +126,12 @@ public final class Constants {
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
     public static final String PREF_SERVER_ENGINE = "preference_media_server_engine";
     public static final String PREF_ARTIST_AWARE_SIMILAR_SONGS = "preference_similar_songs_match_artist";
+    public static final String PREF_REPLAYGAIN_MODE = "preference_replaygain_mode";
+    public static final String PREF_REPLAYGAIN_PREAMP = "preference_replaygain_preamp";
+    public static final String PREF_REPLAYGAIN_PREVENT_CLIPPING = "preference_replaygain_prevent_clipping";
+    public static final String PREF_TAP_ACTION_MODE = "preference_tap_action_mode";
+    public static final String TAP_MODE_CURATE = "curate";
+    public static final String TAP_MODE_LISTEN = "listen";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
