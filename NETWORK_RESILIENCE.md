@@ -369,3 +369,24 @@ When transferring an actively playing track from local headphones/speakers to an
 
 ### 5-Second Gapless Preload Stabilization
 To prevent hardware DAC FIFO buffer acquisition stalls on renderers (e.g. HiBy R3, Eversolo, WiiM), `SetNextAVTransportURI` is dispatched with a 5-second post-start stabilization delay rather than at $t = 0$, ensuring jitter-free track start and rolling gapless transitions.
+
+---
+
+## 11 — RFC 7233 Range Streaming & Natural Track Completion Latching
+
+> Added in 2026.09 (`HttpCoreWebServerImpl`, `PartialFileProducer`, `MediaServerHubImpl`, `AudioStreamCacheManager`).
+
+### Zero-Cliff Direct Streaming (`PartialFileProducer`)
+* Eliminated in-memory 4MB buffer splicing, streaming directly from `FileChannel` in 64KB chunks with immediate file descriptor recycling upon EOF or cancellation.
+* Eliminates the premature ~58-second stream abort experienced on low-power DLNA renderers.
+
+### RFC 7233 Range Specification Compliance
+* **End Position Clamping:** Clamps open-ended client range requests (e.g. `bytes=0-2147483647`) to `fileLength - 1`, preventing false multi-gigabyte `Content-Length` headers and premature stream truncation errors.
+* **416 Status Guard:** Returns HTTP `416 Range Not Satisfiable` with `Content-Range: bytes */fileLength` when requested start offsets exceed file length.
+* **Suffix Range Resolution:** Accurately resolves suffix ranges (e.g. `bytes=-500`).
+* **HEAD Response Header Parity:** Sends `Content-Length` and `Content-Type` headers without attaching an entity body stream.
+
+### Natural Track Completion Latching
+* When the transport elapsed position reaches track duration (`position >= duration`) or when a `STOPPED` GENA event arrives, `stopPolling()` is called and `isUserInitiatedStop = true;` is latched immediately before notifying `playbackCallback.onPlaybackCompleted()`.
+* Guarantees that recurring polling ticks and duplicate renderer GENA packets cannot trigger double track skips.
+

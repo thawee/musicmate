@@ -663,6 +663,23 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   5. Universal Tag Interoperability: Writes standard Vorbis Comments, ID3v2 TXXX, and MP4 tags to audio files on disk, ensuring full compatibility with Poweramp, UAPP, Foobar2000, and Neutron.
 - **Consequences:** Consistent listening loudness across disparate masterings, zero clipping distortion, and complete cross-application metadata parity.
 
+### ADR-021: HTTP Streaming Reliability, RFC 7233 Range Clamping & DLNA Completion Latching
+- **Status:** Accepted
+- **Date:** 2026-09-10
+- **Context:**
+  1. Audio tracks streaming to DLNA renderers were skipping prematurely at ~58 seconds due to in-memory 4MB buffer splicing in `PartialFileProducer.java`.
+  2. Unbounded range requests (`Range: bytes=0-2147483647`) sent by modern renderers were not clamped, reporting 2GB Content-Length and causing stream truncation errors.
+  3. DIDL-Lite metadata passed raw seconds to a millisecond formatter, reporting sub-second durations (`0:00:00.238`).
+  4. Track completion polling in `MediaServerHubImpl` lacked completion latching, allowing recurring polling loops and duplicate GENA `STOPPED` event bursts to skip two songs at once.
+- **Decision:**
+  1. Re-architect `PartialFileProducer.java` to stream directly from `FileChannel` in 64KB chunks without fragile in-memory byte splicing.
+  2. Implement strict RFC 7233 range parsing in `HttpCoreWebServerImpl`: clamp `end = Math.min(end, fileLength - 1)`, return HTTP `416 Range Not Satisfiable` for out-of-bound offsets, parse suffix ranges (`bytes=-500`), and discard entity bodies on `HEAD` requests.
+  3. Correct DIDL-Lite duration scaling: `song.getAudioDuration() * 1000.0`.
+  4. Latch `isUserInitiatedStop = true;` and call `stopPolling()` immediately upon natural track completion and `STOPPED` GENA notifications to prevent double-skipping.
+  5. Replace `AudioStreamCacheManager` 16MB heap cache with direct buffer OS page cache pre-warming (`ByteBuffer.allocateDirect(64 * 1024)`).
+  6. Add animation idling in `AnalogVUMeter.kt` to break `withFrameNanos` loops once needles settle to rest at 0 while playback is paused.
+- **Consequences:** Bit-perfect, uninterrupted track streaming across all DLNA/UPnP renderers, zero phantom heap memory waste, and zero battery drain while paused.
+
 ---
 
 ## 10. Non-Goals
