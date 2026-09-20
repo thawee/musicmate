@@ -404,3 +404,6 @@
 - **Unmeasured Layout Division by Zero Guard**:
   - In `AppBarLayout.OnOffsetChangedListener`, `appBarLayout.getTotalScrollRange()` returns `0` before the view has completed its initial layout and measurement passes.
   - Calculating `1.0 / totalRange` produces `Infinity`, causing subsequent coordinate and scale calculations to explode to `-Infinity` or `NaN`. Always guard with `if (totalRange <= 0) return;`.
+- **Fluid Drag-Tracking Segmented Switchers in Jetpack Compose**:
+  - In Compose `HorizontalPager`, binding a sliding indicator's horizontal offset to `(pagerState.currentPage.toFloat() + pagerState.currentPageOffsetFraction)` inside `BoxWithConstraints` provides 1:1 real-time finger-following motion physics without discrete snap delays.
+  - Avoid crude string concatenations with raw unicode emojis (like `Server 🟢`) in luxury UI; compose dedicated micro-components (like hardware emerald jewel LEDs with subtle bounding geometry, or monospace count pill badges) to maintain typography hierarchy and cross-OEM visual consistency.

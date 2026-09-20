@@ -66,3 +66,16 @@ Perform an exhaustive "staff-engineer" level code review across all recently com
 - [x] Remove redundant `Icon` (`ic_round_info_24`) beside track title in `NowPlayingPage.kt`
 - [x] Expand track title to `.fillMaxWidth()` without artificial padding
 - [x] Verify test suite and compilation
+
+---
+
+# UI Modernization: Fluid Audiophile Glass Pill (`AudioHubSheet.kt`)
+- [x] 1. Plan and verify implementation architecture
+- [x] 2. Implement real-time 1:1 drag-tracking sliding pill indicator using `BoxWithConstraints` and `pagerState.currentPageOffsetFraction`
+- [x] 3. Replace crude string concatenations (`Server 🟢` and `Queue (X)`) with dedicated Compose micro-components:
+  - Hardware emerald jewel LED diode with ambient halo for active server status
+  - Monospace count pill badge chip for queue item count
+  - Refined typography with champagne gold vs muted titanium states
+- [x] 4. Apply luxury frosted obsidian glass styling (`Color(0xFF161616)`, champagne gold gradient fill, hairline metallic border)
+- [x] 5. Verify compilation and test suite
+- [x] 6. Update `CHANGELOG.md` and capture lessons in `tasks/lessons.md`

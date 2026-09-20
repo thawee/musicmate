@@ -53,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced bulk full-table loading in `processAllMusics()` and `cleanInvalidTag()` with paginated queries (`getTracksPaged(limit, offset)` in chunks of 500), eliminating OutOfMemoryError crashes when scanning massive music libraries.
 - **Now Playing Card Title Row Streamlining (`NowPlayingPage.kt`)**:
   - Removed redundant Info icon beside track title in favor of the full-surface 3D card flip gesture, expanding the title marquee across the full available card width.
+- **Fluid Audiophile Glass Pill Tab Switcher (`AudioHubSheet.kt`)**:
+  - Replaced static segmented buttons with real-time 1:1 finger-tracking sliding indicator pill in deep obsidian glass and champagne gold gradient.
+  - Replaced raw string emojis (`Server 🟢`) with an authentic hardware emerald jewel LED status diode.
+  - Replaced raw parenthesis count text (`Queue (X)`) with a dedicated monospace count badge chip.
 - **Dependency Upgrades (`gradle/libs.versions.toml`)**:
   - Upgraded Android Gradle Plugin to `9.4.1`, Room to `2.8.5`, Media3 Session to `1.11.1`, Jetpack Compose BOM to `2026.09.00`, and Netty Codec HTTP to `4.2.18.Final`.
 

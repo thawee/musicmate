@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,12 +76,9 @@ fun AudioHubSheet(
         MainScaffoldState.get().audioHubInitialTab.intValue = pagerState.currentPage
     }
 
-    // Dynamic Tab Titles matching DESIGN.md §8C & §6C
+    // Dynamic Tab State
     val queueCount = queueState.tracks.size
-    val queueTitle = if (queueCount > 0) "Queue ($queueCount)" else "Queue"
     val isServerActive = mediaServerState.isServerRunning
-    val serverTitle = if (isServerActive) "Server 🟢" else "Server"
-    val tabs = listOf("Playback", queueTitle, serverTitle)
 
     // Dynamic Cast Icon Tint (§5B: Gold #FFC107 when DLNA active)
     val target = nowPlayingState.targetTitle.value
@@ -178,39 +177,154 @@ fun AudioHubSheet(
                 }
             }
 
-            // Segmented Pill Switcher
-            Box(
+            // Fluid Audiophile Glass Pill Switcher
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 18.dp, vertical = 4.dp)
-                    .height(38.dp)
-                    .clip(RoundedCornerShape(19.dp))
-                    .background(Color(0x1AFFFFFF))
-                    .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(19.dp))
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFF161616))
+                    .border(0.75.dp, Color(0x24FFFFFF), RoundedCornerShape(20.dp))
                     .padding(3.dp)
             ) {
+                val tabWidth = maxWidth / 3
+                val pageFraction = (pagerState.currentPage.toFloat() + pagerState.currentPageOffsetFraction).coerceIn(0f, 2f)
+                val indicatorOffset = tabWidth * pageFraction
+
+                // 1. Fluid Sliding Indicator Pill (1:1 real-time drag-tracking)
+                Box(
+                    modifier = Modifier
+                        .offset(x = indicatorOffset)
+                        .width(tabWidth)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0x38FFD700), // Champagne gold ambient glow
+                                    Color(0x1CFFD700)  // Deep gold base
+                                )
+                            )
+                        )
+                        .border(
+                            0.75.dp,
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0x66FFD700), // Hairline metallic highlight
+                                    Color(0x26FFD700)
+                                )
+                            ),
+                            RoundedCornerShape(17.dp)
+                        )
+                )
+
+                // 2. Interactive Tab Labels Row
                 Row(modifier = Modifier.fillMaxSize()) {
-                    tabs.forEachIndexed { index, title ->
-                        val isSelected = pagerState.currentPage == index
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (isSelected) Color(0x33FFD700) else Color.Transparent)
-                                .clickable {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
+                    // Tab 0: Playback
+                    val isPlaybackSelected = kotlin.math.abs(pageFraction - 0f) < 0.5f
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(17.dp))
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(0)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Playback",
+                            color = if (isPlaybackSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                            fontSize = 12.5.sp,
+                            fontWeight = if (isPlaybackSelected) FontWeight.Bold else FontWeight.Medium,
+                            letterSpacing = 0.2.sp
+                        )
+                    }
+
+                    // Tab 1: Queue (with Monospace Count Pill)
+                    val isQueueSelected = kotlin.math.abs(pageFraction - 1f) < 0.5f
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(17.dp))
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(1)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = title,
-                                color = if (isSelected) Color(0xFFFFD700) else Color(0xFFAAAAAA),
+                                text = "Queue",
+                                color = if (isQueueSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
                                 fontSize = 12.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                fontWeight = if (isQueueSelected) FontWeight.Bold else FontWeight.Medium,
+                                letterSpacing = 0.2.sp
                             )
+                            if (queueCount > 0) {
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isQueueSelected) Color(0x33FFD700) else Color(0x22FFFFFF)
+                                        )
+                                        .padding(horizontal = 5.dp, vertical = 1.dp)
+                                ) {
+                                    Text(
+                                        text = queueCount.toString(),
+                                        color = if (isQueueSelected) Color(0xFFFFD700) else Color(0xBBFFFFFF),
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Tab 2: Server (with Emerald Jewel LED)
+                    val isServerSelected = kotlin.math.abs(pageFraction - 2f) < 0.5f
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(17.dp))
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(2)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Server",
+                                color = if (isServerSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                                fontSize = 12.5.sp,
+                                fontWeight = if (isServerSelected) FontWeight.Bold else FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            )
+                            if (isServerActive) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF00E676))
+                                )
+                            }
                         }
                     }
                 }
