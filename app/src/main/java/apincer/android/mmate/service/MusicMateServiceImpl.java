@@ -1497,12 +1497,18 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void onTrackDeleted(long trackId) {
         Track current = getNowPlayingSong();
-        if (current != null && current.getId() == trackId) {
-            Log.i(TAG, "Currently playing track deleted (ID " + trackId + "). Advancing to next track in queue.");
-            skipToNextInQueue();
-        }
+        boolean isCurrent = (current != null && current.getId() == trackId);
         if (queueManager != null) {
             queueManager.removeTrackById(trackId);
+        }
+        if (isCurrent) {
+            Log.i(TAG, "Currently playing track deleted (ID " + trackId + "). Advancing to next track in queue.");
+            Track next = (queueManager != null) ? queueManager.getCurrentTrack() : null;
+            if (next != null) {
+                playSong(next);
+            } else {
+                stopPlaying();
+            }
         }
     }
 

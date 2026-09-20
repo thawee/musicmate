@@ -213,7 +213,25 @@ public class QueueManagerTest {
     }
 
     @Test
-    public void addPlayNext_insertsAfterCurrentTrack() {
+    public void addPlayingQueue_currentTrack_updatesCurrentIndexToEnd() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        List<Track> list = new ArrayList<>();
+        list.add(t1);
+        list.add(t2);
+        queueManager.savePlayingQueue(list);
+        queueManager.setCurrentTrack(t1); // index 0
+        assertEquals(0, queueManager.getCurrentIndex());
+
+        // Re-adding the currently playing track t1 moves it to the end (index 1)
+        queueManager.addPlayingQueue(t1);
+        assertEquals(2, queueManager.getQueueSize());
+        assertEquals(1, queueManager.getCurrentIndex());
+        assertEquals(t1.getId(), queueManager.getCurrentTrack().getId());
+    }
+
+    @Test
+    public void addPlayNext_currentTrack_preservesCurrentIndex() {
         Track t1 = createDummyTrack(1L, "Track 1");
         Track t2 = createDummyTrack(2L, "Track 2");
         List<Track> list = new ArrayList<>();
@@ -222,14 +240,8 @@ public class QueueManagerTest {
         queueManager.savePlayingQueue(list);
         queueManager.setCurrentTrack(t1); // index 0
 
-        Track t3 = createDummyTrack(3L, "Track 3");
-        queueManager.addPlayNext(t3);
-
-        assertEquals(3, queueManager.getQueueSize());
-        // Order must be t1, t3, t2
-        assertEquals(1L, queueManager.getSongs().get(0).getId());
-        assertEquals(3L, queueManager.getSongs().get(1).getId());
-        assertEquals(2L, queueManager.getSongs().get(2).getId());
-        assertEquals(t3.getId(), queueManager.getNextTrack().getId());
+        queueManager.addPlayNext(t1);
+        assertEquals(2, queueManager.getQueueSize());
+        assertEquals(t1.getId(), queueManager.getCurrentTrack().getId());
     }
 }

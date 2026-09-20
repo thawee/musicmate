@@ -239,7 +239,9 @@ fun FullscreenStudioConsole(
     )
 
     // 4. Integrated Minimalist Studio Digital Clock
-    var studioClockTime by remember { mutableStateOf("") }
+    var studioClockTime by remember {
+        mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()))
+    }
     LaunchedEffect(Unit) {
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         while (isActive) {
@@ -1027,6 +1029,10 @@ private fun StudioHiFiScrubber(
         label = "thumbScale"
     )
 
+    val currentDragStart by rememberUpdatedState(onDragStart)
+    val currentDragChange by rememberUpdatedState(onDragChange)
+    val currentDragEnd by rememberUpdatedState(onDragEnd)
+
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
@@ -1034,24 +1040,24 @@ private fun StudioHiFiScrubber(
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
                     val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                    onDragChange(fraction)
-                    onDragEnd()
+                    currentDragChange(fraction)
+                    currentDragEnd()
                 }
             }
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onDragStart = { offset ->
-                        onDragStart()
+                        currentDragStart()
                         val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                        onDragChange(fraction)
+                        currentDragChange(fraction)
                     },
                     onHorizontalDrag = { change, _ ->
                         change.consume()
                         val fraction = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
-                        onDragChange(fraction)
+                        currentDragChange(fraction)
                     },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragEnd() }
+                    onDragEnd = { currentDragEnd() },
+                    onDragCancel = { currentDragEnd() }
                 )
             },
         contentAlignment = Alignment.CenterStart
@@ -1137,6 +1143,8 @@ private fun StudioLinearVolumeFader(
         }
     }
 
+    val currentVolumeChanged by rememberUpdatedState(onVolumeChanged)
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
@@ -1158,7 +1166,7 @@ private fun StudioLinearVolumeFader(
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
                         val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                        onVolumeChanged(fraction)
+                        currentVolumeChanged(fraction)
                     }
                 }
                 .pointerInput(Unit) {
@@ -1166,12 +1174,12 @@ private fun StudioLinearVolumeFader(
                         onDragStart = { offset ->
                             isDragging = true
                             dragVol = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                            onVolumeChanged(dragVol)
+                            currentVolumeChanged(dragVol)
                         },
                         onHorizontalDrag = { change, _ ->
                             change.consume()
                             dragVol = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
-                            onVolumeChanged(dragVol)
+                            currentVolumeChanged(dragVol)
                         },
                         onDragEnd = { isDragging = false },
                         onDragCancel = { isDragging = false }

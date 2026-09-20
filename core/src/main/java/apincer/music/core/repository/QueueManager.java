@@ -149,6 +149,8 @@ public class QueueManager {
                 break;
             }
         }
+        boolean wasCurrent = (existingIndex != -1 && existingIndex == currentIndex);
+        boolean wasPlayback = (existingIndex != -1 && existingIndex == playbackIndex);
         if (existingIndex != -1) {
             queueList.remove(existingIndex);
             if (existingIndex < currentIndex) {
@@ -160,6 +162,13 @@ public class QueueManager {
         }
 
         queueList.add(song);
+        int newIndex = queueList.size() - 1;
+        if (wasCurrent) {
+            currentIndex = newIndex;
+        }
+        if (wasPlayback) {
+            playbackIndex = newIndex;
+        }
         if (currentIndex == -1) {
             currentIndex = 0;
             playbackIndex = 0;
@@ -184,6 +193,8 @@ public class QueueManager {
                 break;
             }
         }
+        boolean wasCurrent = (existingIndex != -1 && existingIndex == currentIndex);
+        boolean wasPlayback = (existingIndex != -1 && existingIndex == playbackIndex);
         if (existingIndex != -1) {
             queueList.remove(existingIndex);
             if (existingIndex < currentIndex) {
@@ -201,6 +212,12 @@ public class QueueManager {
         } else {
             int insertPos = (currentIndex != -1 && currentIndex < queueList.size()) ? currentIndex + 1 : queueList.size();
             queueList.add(insertPos, song);
+            if (wasCurrent) {
+                currentIndex = insertPos;
+            }
+            if (wasPlayback) {
+                playbackIndex = insertPos;
+            }
         }
         rebuildIndexMap();
         try {

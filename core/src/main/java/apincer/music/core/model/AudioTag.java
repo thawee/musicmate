@@ -135,6 +135,12 @@ public class AudioTag implements Track {
         this.publisher = original.getPublisher();
         this.audioStartTime = original.getAudioStartTime();
 
+        this.mood = original.getMood();
+        this.style = original.getStyle();
+        this.origin = original.getOrigin();
+        this.bpm = original.getBpm();
+        this.fileLastModified = original.getFileLastModified();
+
         return this;
     }
 

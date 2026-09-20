@@ -80,8 +80,9 @@ fun ReelToReelTapeDeck(
 
     // Reel physics state (progress normalized 0f..1f)
     val progress = if (durationMs > 0) (progressMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    val currentProgress by rememberUpdatedState(progress)
 
-    LaunchedEffect(isPlaying, progress) {
+    LaunchedEffect(isPlaying) {
         var lastTime = System.nanoTime()
         var speedL = 0f
         var speedR = 0f
@@ -93,8 +94,9 @@ fun ReelToReelTapeDeck(
 
                 // As left reel empties (radius shrinks from 1.0 to 0.4), it rotates faster
                 // As right reel fills (radius grows from 0.4 to 1.0), it rotates slower
-                val leftRadiusFactor = (1.0f - progress * 0.6f).coerceIn(0.4f, 1.0f)
-                val rightRadiusFactor = (0.4f + progress * 0.6f).coerceIn(0.4f, 1.0f)
+                val p = currentProgress
+                val leftRadiusFactor = (1.0f - p * 0.6f).coerceIn(0.4f, 1.0f)
+                val rightRadiusFactor = (0.4f + p * 0.6f).coerceIn(0.4f, 1.0f)
 
                 val targetSpeedL = if (isPlaying) (120f / leftRadiusFactor) else 0f
                 val targetSpeedR = if (isPlaying) (120f / rightRadiusFactor) else 0f

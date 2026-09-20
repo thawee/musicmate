@@ -1928,9 +1928,9 @@ public class TagsActivity extends AppCompatActivity {
             double vScrollOffset = Math.abs(verticalOffset);
             // Only continue if there's an actual change
             if(vScrollOffset == prevScrollOffset) return;
-            prevScrollOffset = vScrollOffset;
-
-            double scrollRatio = 1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset;
+            int totalRange = appBarLayout.getTotalScrollRange();
+            if (totalRange <= 0) return;
+            double scrollRatio = (double) vScrollOffset / totalRange;
 
             // Scale cover art
             double scale = (1 - (scrollRatio * 0.2));

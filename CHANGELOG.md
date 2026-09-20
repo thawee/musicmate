@@ -36,11 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Zero-Latency Single Tap:** Decoupled `detectTapGestures` from double-tap detection to eliminate the standard 300ms tap evaluation delay, making mini-player tap to open the Audio Hub sheet instantaneous.
   - **Frictionless Swipe Navigation:** Integrated horizontal drag gesture detection (swipe left for Next, swipe right for Previous) and upward swipe gesture to smoothly expand the Audio Hub sheet.
   - **Tactile Circular Transport:** Upgraded mini-dock Play/Pause control to a 40dp circular button with semi-transparent frosted background and gold accent rim.
-- **Unit Test Suite Expansion (`AudioLevelProcessorTest.kt`, `FullscreenStudioConsoleTest.kt`, `NetworkUtilsTest.java`, `QueueManagerTest.java`)**:
+- **Unit Test Suite Expansion (`AudioLevelProcessorTest.kt`, `FullscreenStudioConsoleTest.kt`, `NetworkUtilsTest.java`, `QueueManagerTest.java`, `AudioTagTest.java`)**:
   - Added unit test coverage verifying RMS-to-dB conversion, dBFS-to-VU logarithmic normalization, `AudioTelemetryManager` thread-safe lifecycle and resets, and `AudioLevelProcessor` PCM audio format configuration.
   - Added unit test coverage in `FullscreenStudioConsoleTest.kt` verifying progress fraction calculations, visualizer mode states, `MainScaffoldState` fullscreen toggle state, `PREF_STUDIO_KEEP_SCREEN_ON` preference constant and toggle simulation, `testSanitizeTargetDeviceTitle()`, and `testClampToDarkroomObsidian()`.
   - Added unit test coverage in `NetworkUtilsTest.java` verifying virtual/VPN tunnel interface filtering (`isVirtualOrVpnInterface`).
-  - Added unit test coverage in `QueueManagerTest.java` verifying unknown track auto-enqueuing in `setPlaybackTrack`, duplicate prevention in `addPlayingQueue`, and insert ordering in `addPlayNext`.
+  - Added unit test coverage in `QueueManagerTest.java` verifying unknown track auto-enqueuing in `setPlaybackTrack`, duplicate prevention in `addPlayingQueue`, insert ordering in `addPlayNext`, and index pointer preservation when relocating active tracks.
+  - Added unit test coverage in `AudioTagTest.java` verifying clone completeness across all metadata fields (`mood`, `style`, `origin`, `bpm`, `fileLastModified`).
 
 ### Changed
 - **Global Output Device Title Sanitization & Non-Destructive Subtitles (`MainScaffold.kt`, `FullscreenStudioConsole.kt`)**:
@@ -88,6 +89,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `onComplete` callback support to `doSaveMediaItemsDirectly` and `doSaveMediaItem`.
 - **Compose Accessibility Semantics (`AudioBadges.kt`, `TrackListItem.kt`)**:
   - Added semantic `contentDescription` properties to download badges, new track badges, and rating indicators for improved screen-reader accessibility.
+- **Media3 `AudioProcessor` Input Buffer Consumption Contract (`AudioLevelProcessor.kt`)**:
+  - Removed erroneous `inputBuffer.position(posBefore)` rewind that violated Media3's `AudioProcessor` buffer consumption contract and caused audio sink output stalls.
+- **Reel-to-Reel Tape Deck Jitter & Physics State Resets (`ReelToReelTapeDeck.kt`)**:
+  - Decoupled `LaunchedEffect` from continuous playback progress changes via `rememberUpdatedState`, keying strictly on `isPlaying` to preserve rotational velocity and eliminate reel jitter.
+- **Deleted Track Infinite Replay Loop Under Repeat ONE (`MusicMateServiceImpl.java`)**:
+  - Reordered `onTrackDeleted(trackId)` to remove the deleted track from `QueueManager` before advancing the queue, preventing infinite replay loops of deleted files.
+- **Queue Pointer Synchronization on Track Relocation (`QueueManager.java`)**:
+  - Maintained `currentIndex` and `playbackIndex` pointers when `addPlayingQueue` or `addPlayNext` is called on the currently active track.
+- **Deterministic Paginated Database Iteration (`TrackDao.java`)**:
+  - Added explicit `ORDER BY id ASC` to `getTracksPaged(limit, offset)` to prevent skipped or repeated records during batch database operations.
+- **Complete Tag Metadata Field Preservation (`AudioTag.java`)**:
+  - Added missing fields (`mood`, `style`, `origin`, `bpm`, `fileLastModified`) to `AudioTag.copy()`.
+- **Collapsing Toolbar Scale Division by Zero (`TagsActivity.java`)**:
+  - Guarded against unmeasured `totalScrollRange <= 0` in `AppBarLayout.OnOffsetChangedListener` to prevent `-Infinity` scale calculations.
+- **Studio Console Gesture Stability & Clock Shift (`FullscreenStudioConsole.kt`)**:
+  - Wrapped gesture lambdas in `rememberUpdatedState` and initialized studio clock with current time to prevent startup layout shifts.
 
 
 ## [3.19.5] - 2026-09-10

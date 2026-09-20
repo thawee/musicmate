@@ -214,6 +214,6 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag")
     List<TrackEntity> getAllTracks();
 
-    @Query("SELECT * FROM musictag LIMIT :limit OFFSET :offset")
+    @Query("SELECT * FROM musictag ORDER BY id ASC LIMIT :limit OFFSET :offset")
     List<TrackEntity> getTracksPaged(int limit, int offset);
 }

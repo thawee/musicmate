@@ -385,5 +385,22 @@
 - **Immediate Tap Responsiveness with Long-Press (Avoid DoubleTap Delay in Compose)**:
   - In Jetpack Compose `detectTapGestures`, supplying an `onDoubleTap` callback introduces an inherent ~300ms delay to `onTap` while Compose waits to check if a second tap follows.
   - For high-frequency interactive surfaces (like a Mini-Player dock where single-tap must immediately open the Audio Hub), pair `onTap` with `onLongPress` instead. This guarantees 0ms tap latency on touch release, while long-press provides an intentional secondary action (jumping to the now-playing track in the music list) paired with distinct tactile feedback (`HapticFeedbackType.LongPress`).
-  - Use `rememberUpdatedState` for callback lambdas passed into `pointerInput(Unit)` to prevent rapid recompositions (e.g. from seekbar/progress updates) from restarting gesture detection or capturing stale state closures.
-
+- **Media3 `AudioProcessor.queueInput` Buffer Consumption Invariant**:
+  - In AndroidX Media3 `BaseAudioProcessor.queueInput(ByteBuffer inputBuffer)`, the processor is required by contract to advance `inputBuffer.position()` to reflect the number of bytes consumed and copied to the output buffer.
+  - Resetting `inputBuffer.position(posBefore)` instructs `DefaultAudioSink` that the buffer was rejected or zero bytes were consumed, causing the sink to stall or loop continuously. Analysis on audio samples must be strictly non-destructive (e.g. read from the cloned/output buffer or use absolute index getters) without rewinding the input buffer's position.
+- **Compose Physics Animation Loops & High-Frequency Keying**:
+  - Never key a continuous physics or damping animation loop (`LaunchedEffect(isPlaying, progress)`) on high-frequency, periodically updated progress variables (e.g., fractional progress updated every 500-1000ms by playback ticks).
+  - Restarting the coroutine on every progress tick destroys the local state variables (such as rotational speed and inertia velocity), resulting in visible stutters, speed resets, and micro-jitter. Key strictly on lifecycle/state triggers (`LaunchedEffect(isPlaying)`) and sample dynamic parameters via `rememberUpdatedState(progress)`.
+- **Active Track Deletion Queue Advancement Sequence**:
+  - When the currently playing track is deleted from storage, `queueManager.removeTrackById(trackId)` must execute *before* advancing playback to the next track.
+  - If `skipToNextInQueue()` is called before removing the track, and `repeatMode` is `ONE`, the queue manager advances to the same track, playing a deleted or non-existent file in an infinite loop. Removing the track from the queue first ensures `queueManager.getCurrentTrack()` advances cleanly to the actual next track or signals `stopPlaying()` if the queue is empty.
+- **Queue Pointer Desynchronization on Item Relocation**:
+  - In a queue manager tracking active pointers (`currentIndex`, `playbackIndex`), calling `addPlayingQueue` or `addPlayNext` on an item that already exists in the queue moves its position.
+  - If the track being relocated is the *currently playing track*, removing and re-inserting it at a new position invalidates `currentIndex` unless the pointer is explicitly updated to the track's new insertion index.
+- **Deterministic SQLite Pagination Invariant**:
+  - In Room/SQLite, `LIMIT :limit OFFSET :offset` queries without an explicit `ORDER BY` clause are inherently non-deterministic. If records are updated or deleted between page fetches (e.g. during batch cleanup routines like `cleanInvalidTag`), SQLite row iteration order can drift, causing items to be skipped or re-processed. Always enforce a stable deterministic sort order (e.g. `ORDER BY id ASC`).
+- **Data Model Clone Completeness (`AudioTag.copy`)**:
+  - When implementing deep copies or clones of entity models (`AudioTag.copy(Track)`), audit all fields across database schemas and metadata inspectors (`mood`, `style`, `origin`, `bpm`, `fileLastModified`). Omitting newly added metadata fields during copy operations silently drops user-edited or newly scanned tags during batch operations.
+- **Unmeasured Layout Division by Zero Guard**:
+  - In `AppBarLayout.OnOffsetChangedListener`, `appBarLayout.getTotalScrollRange()` returns `0` before the view has completed its initial layout and measurement passes.
+  - Calculating `1.0 / totalRange` produces `Infinity`, causing subsequent coordinate and scale calculations to explode to `-Infinity` or `NaN`. Always guard with `if (totalRange <= 0) return;`.

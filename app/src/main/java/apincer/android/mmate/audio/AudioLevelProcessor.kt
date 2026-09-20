@@ -32,11 +32,8 @@ class AudioLevelProcessor(
 
         // 1. Forward raw audio unmodified to output buffer for downstream AudioSink/AudioTrack
         val output = replaceOutputBuffer(remaining)
-        val posBefore = inputBuffer.position()
         output.put(inputBuffer)
         output.flip()
-        // Restore inputBuffer position to maintain caller invariant
-        inputBuffer.position(posBefore)
 
         // 2. Analyze PCM samples non-destructively using absolute indexed gets
         computeLevels(output)
