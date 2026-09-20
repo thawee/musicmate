@@ -58,6 +58,7 @@ fun AudioHubSheet(
     onCopyUrlClicked: () -> Unit,
     onOpenUrlClicked: () -> Unit,
     onQrCodeClicked: () -> Unit,
+    onOpenFullscreen: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -89,7 +90,7 @@ fun AudioHubSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), // DESIGN.md §8C: 24dp top corner radius
-        containerColor = Color(0xF0121212),
+        containerColor = Color(0xFF121212),
         scrimColor = Color.Black.copy(alpha = 0.65f),
         dragHandle = {
             Box(
@@ -138,6 +139,23 @@ fun AudioHubSheet(
                             painter = painterResource(id = R.drawable.rounded_music_cast_24),
                             contentDescription = "Select Player",
                             tint = castIconTint,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                onDismissRequest()
+                                onOpenFullscreen()
+                            }
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.rounded_fullscreen_24),
+                            contentDescription = "Studio Console Fullscreen",
+                            tint = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.size(20.dp)
                         )
                     }

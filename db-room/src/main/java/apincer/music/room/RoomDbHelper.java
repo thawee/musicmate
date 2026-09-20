@@ -109,9 +109,14 @@ public class RoomDbHelper implements DbHelper {
 
     @Override
     public void processAllMusics(TrackProcessor processor) {
-        List<TrackEntity> tracks = trackDao.getAllTracks();
-        for (TrackEntity track : tracks) {
-            processor.process(track);
+        final int PAGE_SIZE = 500;
+        int offset = 0;
+        List<TrackEntity> page;
+        while (!(page = trackDao.getTracksPaged(PAGE_SIZE, offset)).isEmpty()) {
+            for (TrackEntity track : page) {
+                processor.process(track);
+            }
+            offset += PAGE_SIZE;
         }
     }
 
@@ -395,7 +400,41 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
-    public void cleanInvalidTag() throws Exception {}
+    public void cleanInvalidTag() throws Exception {
+        final int PAGE_SIZE = 500;
+        int offset = 0;
+        boolean queueDirty = false;
+        List<TrackEntity> page;
+
+        while (!(page = trackDao.getTracksPaged(PAGE_SIZE, offset)).isEmpty()) {
+            List<TrackEntity> toDelete = new ArrayList<>();
+            for (TrackEntity track : page) {
+                String path = track.getPath();
+                if (path == null || path.isEmpty() || !new java.io.File(path).exists()) {
+                    Log.d("RoomDbHelper", "cleanInvalidTag: removing missing file from DB: " + path);
+                    toDelete.add(track);
+                    if (cachedQueueIds.remove(track.getId())) {
+                        queueDirty = true;
+                    }
+                }
+            }
+            if (!toDelete.isEmpty()) {
+                database.runInTransaction(() -> {
+                    for (TrackEntity t : toDelete) {
+                        trackDao.delete(t);
+                    }
+                });
+                // Don't increment offset by full PAGE_SIZE since we deleted some records
+                // The next page at the same offset will contain the records that shifted down
+                offset += (PAGE_SIZE - toDelete.size());
+            } else {
+                offset += PAGE_SIZE;
+            }
+        }
+        if (queueDirty) {
+            saveQueueToDisk();
+        }
+    }
 
     @Override
     public List<Track> findForPlaylist() {

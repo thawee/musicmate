@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
+import apincer.android.mmate.utils.GestureHints
 import apincer.music.core.model.Track
 import apincer.music.core.utils.StringUtils
 
@@ -52,6 +56,7 @@ fun QueuePage(
     onTrackRemoved: (Track, Int) -> Unit,
     onClearQueue: () -> Unit,
     onJumpToPlaying: () -> Unit,
+    onBrowseLibrary: () -> Unit = {},
     onMoveTrack: (Int, Int) -> Unit = { _, _ -> }
 ) {
     Column(
@@ -98,6 +103,17 @@ fun QueuePage(
             }
         }
 
+        // Gesture discovery hints for queue
+        if (state.tracks.isNotEmpty()) {
+            GestureHints.GestureHintBanner(
+                hints = listOf(
+                    GestureHints.HintType.SWIPE_QUEUE,
+                    GestureHints.HintType.DRAG_REORDER
+                ),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+        }
+
         if (state.tracks.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -135,6 +151,22 @@ fun QueuePage(
                     fontSize = 12.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = onBrowseLibrary,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFB300),
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = "Browse Library",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {

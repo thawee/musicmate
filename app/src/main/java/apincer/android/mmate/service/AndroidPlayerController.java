@@ -31,8 +31,14 @@ import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.common.audio.AudioProcessor;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.SeekParameters;
+import androidx.media3.exoplayer.audio.AudioSink;
+import androidx.media3.exoplayer.audio.DefaultAudioSink;
+import apincer.android.mmate.audio.AudioLevelProcessor;
+import apincer.android.mmate.audio.AudioTelemetryManager;
 
 public class AndroidPlayerController {
     private static final String TAG = "AndroidPlayerController";
@@ -100,6 +106,7 @@ public class AndroidPlayerController {
                 .build();
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     public AndroidPlayerController(Context context, MediaSessionManager mediaSessionManager) {
         this.context = context;
         this.mediaSessionManager = mediaSessionManager;
@@ -110,7 +117,24 @@ public class AndroidPlayerController {
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build();
 
-            this.internalExoPlayer = new ExoPlayer.Builder(context)
+            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context) {
+                @Nullable
+                @Override
+                protected AudioSink buildAudioSink(
+                        Context context,
+                        boolean enableFloatOutput,
+                        boolean enableAudioTrackPlaybackParams) {
+                    return new DefaultAudioSink.Builder(context)
+                            .setEnableFloatOutput(enableFloatOutput)
+                            .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                            .setAudioProcessors(new AudioProcessor[] {
+                                    new AudioLevelProcessor(null)
+                            })
+                            .build();
+                }
+            };
+
+            this.internalExoPlayer = new ExoPlayer.Builder(context, renderersFactory)
                     .setAudioAttributes(audioAttributes, true)
                     .setHandleAudioBecomingNoisy(true)
                     .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -148,6 +172,7 @@ public class AndroidPlayerController {
                         scheduleProgressUpdate();
                     } else {
                         stopProgressUpdate();
+                        AudioTelemetryManager.INSTANCE.reset();
                     }
                     if (playbackCallback != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
                         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
@@ -432,6 +457,7 @@ public class AndroidPlayerController {
     }
 
     public void stopPlaying() {
+        AudioTelemetryManager.INSTANCE.reset();
         if (mediaController != null) {
             mediaController.getTransportControls().stop();
         } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {

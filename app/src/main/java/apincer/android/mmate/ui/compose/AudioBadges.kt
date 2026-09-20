@@ -2,9 +2,14 @@ package apincer.android.mmate.ui.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,28 +21,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.text.font.FontFamily
 import apincer.android.mmate.R
 import apincer.android.mmate.ui.viewmodel.StudioProvenanceInfo
-import apincer.android.mmate.utils.TagUIUtils
 import apincer.music.core.Constants
 import apincer.music.core.model.Track
 import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
-import apincer.music.core.utils.ThaiEncodingUtils
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean = false) {
@@ -89,7 +89,8 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean
             .background(bgBase)
             .background(bgTint)
             .border(0.75.dp, borderColor, RoundedCornerShape(cornerRadius))
-            .padding(horizontal = hPadding, vertical = vPadding),
+            .padding(horizontal = hPadding, vertical = vPadding)
+            .semantics { contentDescription = "Audio quality: $label" },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -107,7 +108,7 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean
                 color = Color.White,
                 fontSize = textFontSize,
                 fontWeight = FontWeight.Bold,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                fontFamily = FontFamily.Monospace,
                 letterSpacing = if (expanded) 0.3.sp else 0.2.sp,
                 maxLines = 1,
                 softWrap = false
@@ -160,7 +161,8 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier, expanded: Boo
             .background(bgBase)
             .background(bgTint)
             .border(0.75.dp, borderColor, RoundedCornerShape(cornerRadius))
-            .padding(horizontal = hPadding, vertical = vPadding),
+            .padding(horizontal = hPadding, vertical = vPadding)
+            .semantics { contentDescription = "Audio quality: $label" },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -178,7 +180,7 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier, expanded: Boo
                 color = Color.White,
                 fontSize = textFontSize,
                 fontWeight = FontWeight.Bold,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                fontFamily = FontFamily.Monospace,
                 letterSpacing = if (expanded) 0.3.sp else 0.2.sp,
                 maxLines = 1,
                 softWrap = false
@@ -217,7 +219,8 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(6.dp))
             .background(Color(0xD9141414))
             .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.5.dp, vertical = 1.5.dp),
+            .padding(horizontal = 4.5.dp, vertical = 1.5.dp)
+            .semantics { contentDescription = "Resolution: $resText" },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -225,7 +228,7 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
             color = Color(0xFFDDDDDD),
             fontSize = 9.sp,
             fontWeight = FontWeight.SemiBold,
-            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+            fontFamily = FontFamily.Monospace,
             letterSpacing = 0.2.sp,
             maxLines = 1,
             softWrap = false
@@ -297,7 +300,8 @@ fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
             .background(bgBase)
             .background(bgTint)
             .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 5.dp, vertical = 1.5.dp),
+            .padding(horizontal = 5.dp, vertical = 1.5.dp)
+            .semantics { contentDescription = "Audio quality and resolution: $text" },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -345,42 +349,51 @@ fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StudioCapsule(
-    icon: String,
-    name: String,
-    count: Int,
-    color: Color,
+private fun StudioProvenanceRow(
+    label: String,
+    value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = LocalHapticFeedback.current
-    val countStr = if (count > 0) " • $count" else ""
-    Box(
+    Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xD9141414))
-            .background(color.copy(alpha = 0.08f))
-            .border(0.75.dp, color.copy(alpha = 0.40f), RoundedCornerShape(8.dp))
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onClick()
-            }
-            .padding(horizontal = 8.dp, vertical = 3.5.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 1.5.dp, horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "$icon$name$countStr ❯",
-                color = Color(0xFFEEEEEE),
-                fontSize = 9.5.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        Text(
+            text = label,
+            color = Color(0xFFAAAAAA),
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(60.dp),
+            maxLines = 1,
+            softWrap = false
+        )
+        Text(
+            text = value,
+            color = Color(0xFFEEEEEE),
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = ">",
+            color = Color(0xFF888888),
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }
 
@@ -396,190 +409,67 @@ fun StudioProvenanceSection(
 
     if (!hasArtist && !hasAlbum && !hasFolder) return
 
+    val haptic = LocalHapticFeedback.current
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Start
     ) {
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-        // Line 1: Music Provenance (Artist & Album)
-        if (hasArtist || hasAlbum) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xD9101010))
+                .border(0.5.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
+                .padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
+                Text(
+                    text = "LIBRARY",
+                    color = Color(0xFFCCCCCC),
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
                 if (hasArtist) {
-                    StudioCapsule(
-                        icon = "👤 ",
-                        name = provenance.artist,
-                        count = provenance.artistCount,
-                        color = Color(0xFFFFD700),
+                    StudioProvenanceRow(
+                        label = "Artist",
+                        value = provenance.artist,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onOpenRelated(Constants.FILTER_TYPE_ARTIST, provenance.artist, "More by ${provenance.artist}")
-                        },
-                        modifier = Modifier.weight(1f, fill = false)
+                        }
                     )
-                }
-                if (hasArtist && hasAlbum) {
-                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 if (hasAlbum) {
-                    StudioCapsule(
-                        icon = "💿 ",
-                        name = provenance.album,
-                        count = provenance.albumCount,
-                        color = Color(0xFF80CBC4),
+                    StudioProvenanceRow(
+                        label = "Album",
+                        value = provenance.album,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onOpenRelated(Constants.FILTER_TYPE_ALBUM, provenance.album, "Album: ${provenance.album}")
-                        },
-                        modifier = Modifier.weight(1f, fill = false)
+                        }
                     )
                 }
-            }
-        }
-
-        // Line 2: Storage & Directory Location (Folder)
-        if (hasFolder) {
-            if (hasArtist || hasAlbum) {
-                Spacer(modifier = Modifier.height(4.5.dp))
-            }
-            val fName = provenance.folderName.ifBlank { "Folder" }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StudioCapsule(
-                    icon = "📁 ",
-                    name = fName,
-                    count = provenance.folderCount,
-                    color = Color(0xFF90CAF9),
-                    onClick = {
-                        onOpenRelated(Constants.FILTER_TYPE_PATH, provenance.folderPath, "Folder: $fName")
-                    },
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun TagPreviewHeader(
-    track: Track?,
-    itemCount: Int = 1,
-    provenance: StudioProvenanceInfo? = null,
-    onOpenRelated: ((filterType: String, filterKeyword: String, title: String) -> Unit)? = null,
-    onQuickFixClick: ((String) -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    if (track == null) return
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 1. Batch Mode Indicator (if multiple tracks selected)
-        if (itemCount > 1) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x33FFD700))
-                    .border(0.75.dp, Color(0x66FFD700), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "🎯 BATCH MODE • $itemCount TRACKS SELECTED",
-                    color = Color(0xFFFFD700),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-        }
-
-        // 2. Primary Badges Row (Quality, Resolution, DR, Rating, New)
-        TagHeaderBadges(track = track)
-
-        // 3. Studio Provenance & Related Discography Capsules
-        if (provenance != null && onOpenRelated != null) {
-            StudioProvenanceSection(
-                provenance = provenance,
-                onOpenRelated = onOpenRelated
-            )
-        }
-
-        // 4. Musical Taxonomy & Character Pills (Genre, Mood, Style, Origin)
-        val tagPills = mutableListOf<Pair<String, String>>()
-        if (!track.genre.isNullOrBlank()) tagPills.add("🎸 " to track.genre)
-        if (!track.mood.isNullOrBlank()) tagPills.add("🎭 " to track.mood)
-        if (!track.style.isNullOrBlank()) tagPills.add("🎨 " to track.style)
-        if (!track.origin.isNullOrBlank()) tagPills.add("🌏 " to track.origin)
-
-        if (tagPills.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(5.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                tagPills.take(4).forEachIndexed { idx, (icon, value) ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xD9161616))
-                            .border(0.5.dp, Color(0x44888888), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "$icon$value",
-                            color = Color(0xFFDDDDDD),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    if (idx < tagPills.size - 1 && idx < 3) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
+                if (hasFolder) {
+                    val fName = provenance.folderName.ifBlank { "Folder" }
+                    StudioProvenanceRow(
+                        label = "Folder",
+                        value = fName,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onOpenRelated(Constants.FILTER_TYPE_PATH, provenance.folderPath, "Folder: $fName")
+                        }
+                    )
                 }
-            }
-        }
-
-        // 5. Technical Telemetry Specs Monospace Strip (Grounding Footer Baseline)
-        val metaParts = mutableListOf<String>()
-        track.fileType?.let { if (it.isNotBlank()) metaParts.add(it.uppercase()) }
-        if (track.audioBitRate > 0) metaParts.add(StringUtils.formatAudioBitRate(track.audioBitRate))
-        val ch = track.audioChannels
-        if (!ch.isNullOrBlank()) metaParts.add(if (ch == "2" || ch.equals("Stereo", ignoreCase = true)) "Stereo" else "$ch ch")
-        if (track.audioDuration > 0) metaParts.add(StringUtils.formatDurationAsMinute(track.audioDuration))
-        if (track.fileSize > 0) metaParts.add(StringUtils.formatStorageSize(track.fileSize))
-
-        if (metaParts.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(7.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xD9101010))
-                    .border(0.5.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = metaParts.joinToString(" • "),
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 9.5.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp,
-                    maxLines = 1,
-                    softWrap = false
-                )
             }
         }
     }
@@ -592,14 +482,15 @@ fun NewBadge(track: Track?, modifier: Modifier = Modifier) {
     val isDownload = TagUtils.isOnDownloadDir(track)
     val accentColor = if (isDownload) Color(0xFF64B5F6) else Color(0xFFFFD700)
     val borderColor = if (isDownload) Color(0x5564B5F6) else Color(0x55FFD700)
-    val bgBase = Color(0xD9101010) // 85% deep obsidian glass
+    val bgBase = Color(0xD9101010)
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(bgBase)
             .border(0.75.dp, borderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.5.dp, vertical = 1.5.dp),
+            .padding(horizontal = 4.5.dp, vertical = 1.5.dp)
+            .semantics { contentDescription = if (isDownload) "Downloaded track" else "New track" },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -655,6 +546,48 @@ fun RatingBadge(track: Track?, mode: String?, modifier: Modifier = Modifier) {
                     )
                 }
             }
+        }
+    }
+}
+@Composable
+fun TagPreviewHeader(
+    track: Track?,
+    itemCount: Int = 1,
+    provenance: StudioProvenanceInfo? = null,
+    onOpenRelated: ((filterType: String, filterKeyword: String, title: String) -> Unit)? = null,
+    onQuickFixClick: ((String) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    if (track == null) return
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (itemCount > 1) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x33FFD700))
+                    .border(0.75.dp, Color(0x66FFD700), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "🎯 BATCH MODE • $itemCount TRACKS SELECTED",
+                    color = Color(0xFFFFD700),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+        TagHeaderBadges(track = track)
+        if (provenance != null && onOpenRelated != null) {
+            StudioProvenanceSection(
+                provenance = provenance,
+                onOpenRelated = onOpenRelated
+            )
         }
     }
 }

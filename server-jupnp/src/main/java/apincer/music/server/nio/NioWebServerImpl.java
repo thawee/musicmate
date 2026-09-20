@@ -89,6 +89,9 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         String userAgent = request.getHeader("User-Agent", "Unknown");
         try {
             ContentHolder contentHolder = resolveRequest(rawUri, remoteHost, userAgent);
+            if (contentHolder == null || !contentHolder.exists()) {
+                return createErrorResponse(HTTP_NOT_FOUND, "Not found");
+            }
             if (contentHolder.isImage()) {
                 return createAlbumArtResponse(contentHolder, request);
             } else if (contentHolder.isMedia()) {
@@ -188,6 +191,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
                 wsHandler = null;
             }
         }
+        destroy();
     }
 
     @Override

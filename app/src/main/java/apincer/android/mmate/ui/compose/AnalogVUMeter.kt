@@ -90,6 +90,9 @@ fun AnalogVUMeter(
         showThemeBadge = false
     }
 
+    val liveTelemetry by apincer.android.mmate.audio.AudioTelemetryManager.levels.collectAsState()
+    val isLivePcm = isPlaying && liveTelemetry.isRealtime && (System.currentTimeMillis() - liveTelemetry.timestampMs < 500)
+
     // Ballistic physics state
     var levelL by remember { mutableFloatStateOf(0f) }
     var levelR by remember { mutableFloatStateOf(0f) }
@@ -111,37 +114,46 @@ fun AnalogVUMeter(
                 val targetL: Float
                 val targetR: Float
 
+                val currentLevels = apincer.android.mmate.audio.AudioTelemetryManager.levels.value
+                val isPcmActive = isPlaying && currentLevels.isRealtime && (System.currentTimeMillis() - currentLevels.timestampMs < 350)
+
                 if (isPlaying) {
-                    val t = now / 1_000_000_000.0
-                    val vol = if (volume <= 0f) 0.88f else volume.coerceIn(0.1f, 1.0f)
+                    if (isPcmActive) {
+                        // True Stereo PCM RMS Telemetry from ExoPlayer AudioProcessor
+                        targetL = currentLevels.levelL.coerceIn(0.0f, 1.05f)
+                        targetR = currentLevels.levelR.coerceIn(0.0f, 1.05f)
+                    } else {
+                        val t = now / 1_000_000_000.0
+                        val vol = if (volume <= 0f) 0.88f else volume.coerceIn(0.1f, 1.0f)
 
-                    // Dynamic Range (DR) Modulation:
-                    // High DR (e.g. DR14) -> dynamic swings, lower resting RMS, sharp transient peaks.
-                    // Low DR (e.g. DR6) -> compressed, high sustained RMS.
-                    val safeDr = drScore.coerceIn(4, 20)
-                    val drFactor = (safeDr - 4f) / 16f
+                        // Dynamic Range (DR) Modulation:
+                        // High DR (e.g. DR14) -> dynamic swings, lower resting RMS, sharp transient peaks.
+                        // Low DR (e.g. DR6) -> compressed, high sustained RMS.
+                        val safeDr = drScore.coerceIn(4, 20)
+                        val drFactor = (safeDr - 4f) / 16f
 
-                    // Musical Harmonic Synthesizers
-                    val beat1 = sin(t * 2.0 * PI * 1.85).toFloat()
-                    val beat2 = cos(t * 2.0 * PI * 3.7).toFloat()
-                    val swell = (sin(t * 2.0 * PI * 0.14).toFloat() * 0.5f + 0.5f)
+                        // Musical Harmonic Synthesizers (Procedural Fallback)
+                        val beat1 = sin(t * 2.0 * PI * 1.85).toFloat()
+                        val beat2 = cos(t * 2.0 * PI * 3.7).toFloat()
+                        val swell = (sin(t * 2.0 * PI * 0.14).toFloat() * 0.5f + 0.5f)
 
-                    // Left channel synthesis
-                    val flutterL = sin(t * 21.3).toFloat() * 0.07f + sin(t * 33.7).toFloat() * 0.04f
-                    val rawL = (0.40f + 0.28f * beat1 + 0.16f * beat2 + 0.16f * swell + flutterL) * vol
+                        // Left channel synthesis
+                        val flutterL = sin(t * 21.3).toFloat() * 0.07f + sin(t * 33.7).toFloat() * 0.04f
+                        val rawL = (0.40f + 0.28f * beat1 + 0.16f * beat2 + 0.16f * swell + flutterL) * vol
 
-                    // Right channel synthesis with stereo phase decorrelation
-                    val beat1R = sin(t * 2.0 * PI * 1.85 + 0.38).toFloat()
-                    val beat2R = cos(t * 2.0 * PI * 3.7 - 0.28).toFloat()
-                    val flutterR = sin(t * 23.9).toFloat() * 0.07f + sin(t * 28.4).toFloat() * 0.04f
-                    val rawR = (0.40f + 0.28f * beat1R + 0.16f * beat2R + 0.16f * swell + flutterR) * vol
+                        // Right channel synthesis with stereo phase decorrelation
+                        val beat1R = sin(t * 2.0 * PI * 1.85 + 0.38).toFloat()
+                        val beat2R = cos(t * 2.0 * PI * 3.7 - 0.28).toFloat()
+                        val flutterR = sin(t * 23.9).toFloat() * 0.07f + sin(t * 28.4).toFloat() * 0.04f
+                        val rawR = (0.40f + 0.28f * beat1R + 0.16f * beat2R + 0.16f * swell + flutterR) * vol
 
-                    val baseFloor = 0.22f - 0.12f * drFactor
-                    val headroom = 0.58f + 0.32f * drFactor
-                    val peakMod = trackPeak.coerceIn(0.75f, 1.25f)
+                        val baseFloor = 0.22f - 0.12f * drFactor
+                        val headroom = 0.58f + 0.32f * drFactor
+                        val peakMod = trackPeak.coerceIn(0.75f, 1.25f)
 
-                    targetL = (baseFloor + rawL * headroom * peakMod).coerceIn(0.04f, 0.98f)
-                    targetR = (baseFloor + rawR * headroom * peakMod).coerceIn(0.04f, 0.98f)
+                        targetL = (baseFloor + rawL * headroom * peakMod).coerceIn(0.04f, 0.98f)
+                        targetR = (baseFloor + rawR * headroom * peakMod).coerceIn(0.04f, 0.98f)
+                    }
                 } else {
                     targetL = 0f
                     targetR = 0f
@@ -232,7 +244,7 @@ fun AnalogVUMeter(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(118.dp)
+            .defaultMinSize(minHeight = 118.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(
                 Brush.verticalGradient(
@@ -281,8 +293,8 @@ fun AnalogVUMeter(
                 }
 
                 Text(
-                    text = "ANSI BALLISTICS • 300ms",
-                    color = Color.White.copy(alpha = 0.35f),
+                    text = if (isLivePcm) "LIVE PCM • 300ms ANSI" else "ANSI BALLISTICS • 300ms",
+                    color = if (isLivePcm) palette.needleColor.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.35f),
                     fontSize = 7.5.sp,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 0.5.sp

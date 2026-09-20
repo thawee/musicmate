@@ -81,10 +81,10 @@ public class DMRPlayer implements PlaybackTarget {
     }
 
     public enum DeviceProfile {
-        WIIM("WiiM Audio Streamer", 3000, true),
-        EVERSOLO("Eversolo Master Streamer", 3000, true),
-        LINN("Linn DS Player", 3000, true),
-        AURALIC("AURALiC Streamer", 3000, true),
+        WIIM("WiiM Audio Streamer", 0, false),
+        EVERSOLO("Eversolo Master Streamer", 0, false),
+        LINN("Linn DS Player", 0, false),
+        AURALIC("AURALiC Streamer", 0, false),
         HIBY("HiBy DAP Renderer", 0, false),
         SHANLING("Shanling DAP Renderer", 0, false),
         FIIO("FiiO DAP Renderer", 0, false),
@@ -118,7 +118,7 @@ public class DMRPlayer implements PlaybackTarget {
             return DeviceProfile.LINN;
         } else if (name.contains("auralic") || id.contains("auralic") || name.contains("aries") || name.contains("altair")) {
             return DeviceProfile.AURALIC;
-        } else if (name.contains("hiby") || id.contains("hiby") || name.contains("r3") || id.contains("r3") || name.startsWith("r3")) {
+        } else if (name.contains("hiby") || id.contains("hiby") || name.startsWith("r3 ") || name.equals("r3") || id.startsWith("hiby")) {
             return DeviceProfile.HIBY;
         } else if (name.contains("shanling") || id.contains("shanling")) {
             return DeviceProfile.SHANLING;

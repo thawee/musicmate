@@ -5,10 +5,10 @@ import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
-import java.util.function.BiConsumer
-import apincer.music.core.model.Track
 import apincer.android.mmate.ui.viewmodel.TagsViewModel
-import apincer.android.mmate.ui.viewmodel.RelatedTracksSheetState
+import apincer.music.core.model.Track
+import java.util.function.BiConsumer
+import java.util.function.Consumer
 
 object DialogInterop {
     @JvmStatic
@@ -267,7 +267,7 @@ object DialogInterop {
         onPlayTrack: java.util.function.Consumer<Track>? = null,
         onPlayAll: java.util.function.Consumer<List<Track>>? = null,
         onQueueAll: java.util.function.Consumer<List<Track>>? = null,
-        onViewInLibrary: java.util.function.BiConsumer<String, String>? = null,
+        onViewInLibrary: BiConsumer<String, String>? = null,
         listener: QuickFixListener? = null
     ) {
         composeView.setContent {

@@ -680,6 +680,56 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   6. Add animation idling in `AnalogVUMeter.kt` to break `withFrameNanos` loops once needles settle to rest at 0 while playback is paused.
 - **Consequences:** Bit-perfect, uninterrupted track streaming across all DLNA/UPnP renderers, zero phantom heap memory waste, and zero battery drain while paused.
 
+### ADR-022: Dual-Mode Audio Telemetry: Real-Time PCM Stereo VU Meter & Vintage Reel-to-Reel Tape Deck
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Context:**
+  1. The analog VU meter's needle physics were realistic, but its audio input was synthetic (sine oscillators modulated by DR score and ReplayGain peak).
+  2. For local playback via ExoPlayer, decoded PCM samples are available in-process and can drive real-time sample-accurate Left/Right channel decibel telemetry.
+  3. For remote DLNA streaming, the audio file is decoded directly on the external hardware streamer's DAC/DSP; local ExoPlayer is silent to avoid duplicate playback. Therefore, live PCM audio is unavailable on the phone during DLNA cast.
+  4. An authentic visualizer for DLNA must be driven by transport state (play/pause, elapsed progress, total duration) rather than raw PCM.
+- **Decision:**
+  1. **Real-Time PCM AudioProcessor:** Implemented `AudioLevelProcessor.kt` extending Media3 `BaseAudioProcessor` in `AndroidPlayerController.java`. Calculates sample-accurate Left and Right RMS decibels ($20 \log_{10}(\text{RMS})$) and true peak levels. Operates purely in-memory on decoded PCM buffers without requiring Android `RECORD_AUDIO` permission or triggering the microphone privacy indicator.
+  2. **Live Ballistic Dynamics:** Wired real PCM telemetry into `AnalogVUMeter.kt`, driving the ANSI ballistic spring-damper needles to live audio transients, bass hits, and vocal dynamics, with automatic fallback to procedural synthesis when PCM is idle.
+  3. **Vintage Reel-to-Reel Tape Deck Widget (`ReelToReelTapeDeck.kt`):** Built a pure Jetpack Compose Canvas tape deck widget emulating iconic studio master tape machines (Studer A820, Revox B77). Features dual rotating 3-hole NAB precision aluminum reels, dynamic supply & take-up tape pack radii tracking track progress, mechanical differential angular velocity ($\omega = v/r$), tape ribbon path, tape counter, and glowing RUN/PAUSE status lamp.
+  4. **Smart Dual-Mode Switching:** Automatically detects active playback target in `NowPlayingPage.kt` (`isDLNA == true` -> defaults to Reel-to-Reel Tape Deck; `isDLNA == false` -> defaults to Analog VU Meter), paired with an interactive 1-tap capsule switcher (`[VU METER]` ↔ `[TAPE DECK]`) to manually toggle widgets at any time.
+- **Consequences:** Delivers genuine sample-accurate studio needle dynamics during local listening (headphones, Bluetooth, USB DAC) and an authentic mechanical tape deck visualizer during DLNA Wi-Fi casting.
+
+### ADR-023: Fullscreen Landscape Studio Console ("Hi-Fi Desk Mode")
+- **Status:** Accepted
+- **Date:** 2026-09-18
+- **Context:**
+  1. When placing a phone or tablet on a desk listening stand, audio rack, or vehicle mount, standard vertical playback sheets provide insufficient layout width for comprehensive audio telemetry, dual-needle VU meters, and large album art.
+  2. Users desired a dedicated horizontal / landscape console experience accessible directly from the floating mini-player dock or Audio Hub sheet without requiring Android system-wide auto-rotate to be unlocked.
+  3. The Activity lifecycle must not destroy or recreate `MainActivity` when rotating to landscape, as activity recreation tears down background playback services and drops active UPnP/DLNA event subscriptions.
+- **Decision:**
+  1. **Activity Lifecycle Resilience:** Added `android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"` to `MainActivity` in `AndroidManifest.xml`. Configuration changes are handled seamlessly by Jetpack Compose without activity destruction or service reconnections.
+  2. **Programmatic Orientation & Dynamic Screen Wake Lock:** Implemented in `FullscreenStudioConsole.kt` using `DisposableEffect`:
+     - Sets `activity.requestedOrientation = SCREEN_ORIENTATION_SENSOR_LANDSCAPE` on entry, and cleanly restores `SCREEN_ORIENTATION_PORTRAIT` on exit.
+     - Dynamically manages `WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON` via `DisposableEffect(keepScreenOn)`.
+     - Provides an illuminated 1-tap quick toggle button in the console header (`rounded_wb_sunny_24` / `rounded_bedtime_24`) allowing users to easily toggle whether the screen stays awake or sleeps via system display timeout, persisted via `Settings.setStudioKeepScreenOn()`.
+     - Integrates `BackHandler` to exit fullscreen mode on Android system back gesture.
+  3. **Audiophile 50/50 Split-Bay Architecture:**
+     - **Left Bay (Visualizer Deck - 50%):** Houses a grand visualizer with smooth animated crossfading (`AnimatedContent`) between:
+       - *Grand Analog VU Meter* (stereo dials driven by real-time PCM decibel telemetry).
+       - *Grand Reel-to-Reel Tape Deck* (dynamic tape pack radii and mechanical rotation physics).
+       - *Grand Vinyl/Cover Art* with hairline gold glass border and depth shadows.
+       - Floating 1-tap switcher pill (`[VU METER]`, `[TAPE DECK]`, `[ALBUM ART]`).
+     - **Right Bay (Master Studio Telemetry & Transport Deck - 50%):**
+       - Quality verdict header (`HI-RES AUDIO`, `LOSSLESS`, `DSD`).
+       - Interactive hardware target selector pill with dynamic LED indicator dot (`Bit-Perfect Direct USB`, `DLNA Cast`, `Bluetooth`, `Local Audio`).
+       - Quick-action buttons: 1-tap "Keep Screen Awake" toggle button (`rounded_wb_sunny_24`) and Exit Fullscreen button (`rounded_fullscreen_exit_24`).
+       - Full-width title marquee (`basicMarquee`) and artist/album subtitle.
+       - Monospace technical diagnostics strip (Codec, Resolution `24-bit 96.0 kHz`, Dynamic Range `DR12`, ReplayGain `+0.4 dB`).
+       - High-precision time scrubbing slider with tabular monospace time readouts.
+       - Tactile studio transport controls (Shuffle, Previous, Play/Pause, Next, Repeat).
+       - Master volume fader bar with volume down/up icons.
+       - "Up Next" queue preview capsule.
+  4. **Direct Entry Points:**
+     - Expand `[⛶]` icon button and long-press gesture on `FloatingMiniPlayerDock` in `MainScaffold.kt`.
+     - Expand `[⛶]` icon button in `AudioHubSheet.kt` header.
+- **Consequences:** Provides a luxury desktop/rack listening console with configurable display wakefulness that stays responsive without disrupting ongoing playback or DLNA sessions.
+
 ---
 
 ## 10. Non-Goals

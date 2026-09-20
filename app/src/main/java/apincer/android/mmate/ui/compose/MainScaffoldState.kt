@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import apincer.music.core.model.Track
-import apincer.music.core.playback.PlaybackState
 
 class MainScaffoldState {
     var searchQuery = mutableStateOf("")
@@ -21,6 +20,7 @@ class MainScaffoldState {
     var isFloatingDockVisible = mutableStateOf(true)
 
     var showAudioHubSheet = mutableStateOf(false)
+    var showFullscreenConsole = mutableStateOf(false)
     var audioHubInitialTab = mutableIntStateOf(0)
 
     // Player picker modal state

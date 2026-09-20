@@ -124,7 +124,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     private Service currentAVTransport; // Add this line
     PlaybackCallback playbackCallback;
 
-    private final MutableStateFlow<ServerStatus> serverStatus = StateFlowKt.MutableStateFlow(ServerStatus.RUNNING);
+    private final MutableStateFlow<ServerStatus> serverStatus = StateFlowKt.MutableStateFlow(ServerStatus.STOPPED);
 
     private final Map<String, PlaybackTarget> localTargets = new ConcurrentHashMap<>();
     private final Set<String> subscribedDevices = new HashSet<>();
@@ -151,9 +151,9 @@ public class MediaServerHubImpl implements MediaServerHub {
     private static final long PAUSE_TIMEOUT_MS = 5 * 60 * 1000;
     private ScheduledFuture<?> pauseTimeoutTask;
 
-    private long lastPosition = -1;
-    private int stagnantCount = 0;
-    private int consecutivePollFailures = 0;
+    private volatile long lastPosition = -1;
+    private volatile int stagnantCount = 0;
+    private volatile int consecutivePollFailures = 0;
 
     // Thread model (IMPORTANT)
     private final ExecutorService upnpExecutor =
@@ -201,7 +201,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      * @param tagRepos Repository for track metadata and analysis results.
      */
     public MediaServerHubImpl(Context context, UpnpServiceConfiguration upnpServiceCfg, FileRepository fileRepos, TagRepository tagRepos) {
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.cfg = upnpServiceCfg;
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
@@ -259,6 +259,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 synchronized (stateLock) {
                     state = State.RUNNING;
                 }
+                serverStatus.setValue(ServerStatus.RUNNING);
 
                 Log.i(TAG, "UPnP started");
 
@@ -333,6 +334,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
             } finally {
                 releaseLocks();
+                serverStatus.setValue(ServerStatus.STOPPED);
 
                 synchronized (stateLock) {
                     state = State.IDLE;
@@ -378,6 +380,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 synchronized (stateLock) {
                     state = State.RUNNING;
                 }
+                serverStatus.setValue(ServerStatus.RUNNING);
                 Log.i(TAG, "UPnP restart completed successfully on IP: " + lastBoundIp);
             } catch (Exception e) {
                 Log.e(TAG, "UPnP restart failed", e);
@@ -467,6 +470,11 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void triggerDiscovery() {
+        if (serverStatus.getValue() == ServerStatus.CAST) {
+            // Suppress background SSDP multicast bursts during active audio streaming
+            // to preserve Wi-Fi airtime and avoid packet jitter.
+            return;
+        }
         runOnUpnpThread(() -> {
             lastDiscoveryTime = System.currentTimeMillis();
             triggerMultiSearch(3);
@@ -574,9 +582,11 @@ public class MediaServerHubImpl implements MediaServerHub {
                         Log.i(TAG, "Network IP changed (" + lastBoundIp + " -> " + currentIp + ") while running → auto-restarting UPnP");
                         restart();
                     } else {
-                        // Same IP, ensure locks and SSDP discovery are active
+                        // Same IP, ensure locks are active; avoid multicast discovery during active streaming
                         acquireLocks();
-                        refreshDiscovery();
+                        if (serverStatus.getValue() != ServerStatus.CAST) {
+                            refreshDiscovery();
+                        }
                     }
                 }
             } else {
@@ -804,8 +814,11 @@ public class MediaServerHubImpl implements MediaServerHub {
                 String metadataXml = mediaInfo.getCurrentURIMetaData();
 
                 Track song = resolveTrackFromMediaInfo(currentUri, metadataXml);
-                if (song != null && playbackCallback != null) {
-                    playbackCallback.onMediaTrackChanged(song);
+                if (song != null) {
+                    currentPlayingTrack = song;
+                    if (playbackCallback != null) {
+                        playbackCallback.onMediaTrackChanged(song);
+                    }
                 }
             }
 
@@ -1033,8 +1046,12 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void internalPlaySong(String udn, Track song, long initialPositionMs) {
-        isUserInitiatedStop = false;
         this.currentPlayingTrack = song;
+        // Clear stale gapless preload state from previous track — prevents leftover
+        // preloadedNextTrack from matching this song's URI in the GENA transition check
+        // and firing a spurious onMediaTrackChanged() during startup.
+        this.preloadedNextTrack = null;
+        this.preloadedNextUrl = null;
         if (upnpService == null) {
             Log.w(TAG, "UPnP not initialized");
             return;
@@ -1061,7 +1078,11 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Create a simple metadata string for the renderer (optional but recommended)
         String metadata = createDidlLiteMetadata(song, songUrl);
 
-        // Step 3: Stop current playback and allow 100ms DAC buffer flush before starting next track
+        // Step 3: Stop current playback and allow 100ms DAC buffer flush before starting next track.
+        // IMPORTANT: Mark as user-initiated BEFORE sending Stop so the GENA STOPPED event that
+        // the renderer echoes back does not trigger onPlaybackCompleted() on the new track.
+        // isUserInitiatedStop is reset to false only after Play actually succeeds (see executeSetUriAndPlay).
+        isUserInitiatedStop = true;
         ControlPoint controlPoint = upnpService.getControlPoint();
         controlPoint.execute(new Stop(currentAVTransport) {
             @Override
@@ -1092,6 +1113,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                 controlPoint.execute(new Play(avTransport) {
                     @Override
                     public void success(ActionInvocation invocation) {
+                        // Play confirmed by renderer — now safe to accept STOPPED events as real end-of-track.
+                        isUserInitiatedStop = false;
                         serverStatus.setValue(ServerStatus.CAST);
                         startPolling(avTransport);
 
@@ -1114,6 +1137,15 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                         Log.i(TAG, TAG+" - Play command failed: " + defaultMsg);
+                        isUserInitiatedStop = false;
+                        stopPolling();
+                        serverStatus.setValue(ServerStatus.RUNNING);
+                        if (playbackCallback != null) {
+                            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                            state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
+                            state.currentTrack = null;
+                            playbackCallback.onPlaybackStateChanged(state);
+                        }
                     }
                 });
             }
@@ -1121,7 +1153,15 @@ public class MediaServerHubImpl implements MediaServerHub {
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 Log.e(TAG, "SetAVTransportURI failed: " + defaultMsg);
+                isUserInitiatedStop = false;
                 stopPolling();
+                serverStatus.setValue(ServerStatus.RUNNING);
+                if (playbackCallback != null) {
+                    apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                    state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
+                    state.currentTrack = null;
+                    playbackCallback.onPlaybackStateChanged(state);
+                }
             }
         });
     }
@@ -1242,14 +1282,15 @@ public class MediaServerHubImpl implements MediaServerHub {
     public void playerStop(String rendererUdn) {
         isUserInitiatedStop = true;
         currentPlayingTrack = null;
+        preloadedNextTrack = null;
+        preloadedNextUrl = null;
+        stopPolling();
+        serverStatus.setValue(ServerStatus.RUNNING);
+        cancelPauseTimeout();
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
             RemoteDevice device = resolveRenderer(rendererUdn);
-            if (device == null) {
-                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
-            }
             if (device == null) {
                 Log.i(TAG, "Renderer not found: " + rendererUdn);
                 return;
@@ -1270,15 +1311,17 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void playerPause(String rendererUdn) {
         isUserInitiatedStop = true;
+        stopPolling();
+        serverStatus.setValue(ServerStatus.RUNNING);
+        schedulePauseTimeout();
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
             RemoteDevice device = resolveRenderer(rendererUdn);
             if (device == null) {
-                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+                Log.i(TAG, "Renderer not found: " + rendererUdn);
+                return;
             }
-            if (device == null) return;
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
             if (avTransportService == null || controlPoint == null) return;
@@ -1295,20 +1338,26 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void playerResume(String rendererUdn) {
         isUserInitiatedStop = false;
+        serverStatus.setValue(ServerStatus.CAST);
+        cancelPauseTimeout();
         runOnUpnpThread(() -> {
             if (upnpService == null) return;
 
             RemoteDevice device = resolveRenderer(rendererUdn);
             if (device == null) {
-                Device d = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-                if (d instanceof RemoteDevice) device = (RemoteDevice) d;
+                Log.i(TAG, "Renderer not found: " + rendererUdn);
+                return;
             }
-            if (device == null) return;
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
             if (avTransportService == null || controlPoint == null) return;
 
             controlPoint.execute(new Play(avTransportService) {
+                @Override
+                public void success(ActionInvocation invocation) {
+                    startPolling(avTransportService);
+                }
+
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                     Log.w(TAG, "Play (resume) failed: " + defaultMsg);
@@ -1406,6 +1455,8 @@ public class MediaServerHubImpl implements MediaServerHub {
             if (action == null) {
                 Log.w(TAG, "Gapless not supported: SetNextAVTransportURI missing");
                 supportsGapless = false;
+                preloadedNextTrack = null;
+                preloadedNextUrl = null;
                 return;
             }
 
@@ -1434,23 +1485,8 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
-    private void playNextManual() {
-        runOnUpnpThread(() -> {
-            // 1. Find what was just playing
-           // MediaTrack currentSong = tagRepos.getCurrentPlaying();
-           // if (currentSong == null) return;
-
-            // 2. Get the next one
-          //  MediaTrack nextSong = tagRepos.getNextSongInQueue(currentSong);
-           // if (nextSong != null) {
-             //   Log.i(TAG, "Manual Handover: Pushing next track: " + nextSong.getTitle());
-             //   internalPlaySong(currentRendererId, nextSong);
-            //}
-        });
-    }
-
     private ScheduledFuture<?> pollingTask;
-    private AtomicInteger pollGen = new AtomicInteger(0);
+    private final AtomicInteger pollGen = new AtomicInteger(0);
 
     /**
      * Periodically queries the renderer for the current playback position.
@@ -1559,6 +1595,20 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 if (serverStatus.getValue() == ServerStatus.CAST) {
                                     serverStatus.setValue(ServerStatus.RUNNING);
                                 }
+                                long tgt = (currentPlayingTrack != null && currentPlayingTrack.getAudioDuration() > 0)
+                                        ? Math.round(currentPlayingTrack.getAudioDuration()) : 0;
+                                if (!isUserInitiatedStop && tgt > 0 && lastPosition >= (tgt - 5) && playbackCallback != null) {
+                                    Log.i(TAG, "Renderer completed track before dropping responses (lastPosition=" + lastPosition + "s / " + tgt + "s). Triggering completion.");
+                                    isUserInitiatedStop = true;
+                                    playbackCallback.onPlaybackCompleted();
+                                } else if (!isUserInitiatedStop && playbackCallback != null) {
+                                    Log.w(TAG, "Renderer stopped responding mid-track (lastPosition=" + lastPosition + "s / " + tgt + "s). Halting playback state.");
+                                    apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                                    state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
+                                    state.currentTrack = currentPlayingTrack;
+                                    state.currentPositionSecond = lastPosition;
+                                    playbackCallback.onPlaybackStateChanged(state);
+                                }
                             }
                         }
 
@@ -1597,16 +1647,32 @@ public class MediaServerHubImpl implements MediaServerHub {
                                     playbackCallback.onMediaTrackChanged(nextTrack);
                                 }
                             } else {
+                                // Use Math.round() to avoid float-truncation cutting 1 second early
+                                // (e.g. 238.9s → 238 via cast, but 239 via round).
                                 long expectedDuration = 0;
                                 Track playing = currentPlayingTrack;
                                 if (playing != null && playing.getAudioDuration() > 0) {
-                                    expectedDuration = (long) playing.getAudioDuration();
+                                    expectedDuration = Math.round(playing.getAudioDuration());
                                 }
 
                                 // Authoritative duration check:
-                                // If known track duration is present, use it to guard against
-                                // renderers reporting a truncated/stale duration (e.g. 58s from a 4MB buffer).
-                                long targetDuration = expectedDuration > 0 ? expectedDuration : duration;
+                                // Always prefer tag metadata duration over renderer-reported duration.
+                                // Some renderers (WiiM, generic) report duration = bytes-served / bitrate,
+                                // which equals the pre-buffered 4MB chunk duration (~58s) rather than
+                                // the true track length. Only fall back to renderer duration if no tag
+                                // metadata is available AND renderer reports a plausible value (> 120s
+                                // to exclude obvious buffer artifacts).
+                                long targetDuration;
+                                if (expectedDuration > 0) {
+                                    targetDuration = expectedDuration;
+                                } else if (duration > 0 && duration > 120) {
+                                    // Renderer duration looks plausible — use it
+                                    targetDuration = duration;
+                                } else {
+                                    // Renderer duration is suspiciously short (likely buffer artifact);
+                                    // skip completion check this poll cycle.
+                                    targetDuration = 0;
+                                }
 
                                 if (targetDuration > 0 && position >= targetDuration && position > 5) {
                                     Log.i(TAG, "Polling: Track duration complete (" + position + "s / " + targetDuration + "s, renderer duration: " + duration + "s)");
@@ -1619,8 +1685,25 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 }
                             }
 
-                            // Only trigger recovery if position was established (> 5s) and has been stuck for 15+ consecutive polls
-                            if (position > 5 && stagnantCount >= 15) {
+                            // Check if playback reached near the end and stopped advancing (renderer reached EOF)
+                            long checkTargetDuration = 0;
+                            if (currentPlayingTrack != null && currentPlayingTrack.getAudioDuration() > 0) {
+                                checkTargetDuration = Math.round(currentPlayingTrack.getAudioDuration());
+                            } else if (duration > 120) {
+                                checkTargetDuration = duration;
+                            }
+                            if (!isUserInitiatedStop && checkTargetDuration > 0 && position >= (checkTargetDuration - 2) && stagnantCount >= 3) {
+                                Log.i(TAG, "Polling: Renderer reached end of track and stopped advancing (" + position + "s / " + checkTargetDuration + "s). Triggering completion.");
+                                stopPolling();
+                                isUserInitiatedStop = true;
+                                if (playbackCallback != null) {
+                                    playbackCallback.onPlaybackCompleted();
+                                }
+                                return;
+                            }
+
+                            // Only trigger recovery if position was established (> 5s), not user-stopped, not near end, and has been stuck for 8+ consecutive polls (~16-24s)
+                            if (!isUserInitiatedStop && position > 5 && stagnantCount >= 8) {
                                 Log.w(TAG, " Playback stuck detected, serverStatus: "+serverStatus.getValue());
                                 stopPolling();
                                 if( serverStatus.getValue() == ServerStatus.CAST) {
@@ -1881,9 +1964,20 @@ public class MediaServerHubImpl implements MediaServerHub {
     private long getPollingInterval() {
         long delta = System.currentTimeMillis() - lastEventTime;
 
-        if (delta < 2000) return 3000;   // good events → slow polling
-        if (delta < 5000) return 2000;   // medium
-        return 1000; // 500;                      // bad → aggressive
+        // Check distance to track end
+        long remainingSec = Long.MAX_VALUE;
+        if (currentPlayingTrack != null && currentPlayingTrack.getAudioDuration() > 0 && lastPosition >= 0) {
+            remainingSec = Math.max(0, Math.round(currentPlayingTrack.getAudioDuration()) - lastPosition);
+        }
+
+        // When nearing track end (last 10 seconds), poll more frequently to detect completion cleanly
+        if (remainingSec <= 10) {
+            return 1000;
+        }
+
+        if (delta < 2000) return 3000;   // good GENA events → slow polling
+        if (delta < 5000) return 2500;   // medium
+        return 2000;                     // no GENA events → steady 2s polling (protects renderer MCU from overload)
     }
 
     private void parseLastChange(String xml) {
@@ -1906,24 +2000,58 @@ public class MediaServerHubImpl implements MediaServerHub {
             Matcher m = STATE_PATTERN.matcher(xml);
             String state = m.find() ? m.group(1) : null;
             if ("PLAYING".equalsIgnoreCase(state)) {
+                boolean wasPollingActive = (pollingTask != null && !pollingTask.isDone() && !pollingTask.isCancelled());
                 serverStatus.setValue(ServerStatus.CAST);
 
                 // Cancel the pause/kill timeout
                 cancelPauseTimeout();
 
-                // Resume tracking position
-                if (currentAVTransport != null && pollingTask == null) {
+                // Resume tracking position if not already actively polling
+                if (currentAVTransport != null && !wasPollingActive) {
                     startPolling(currentAVTransport);
                 }
             } else if ("STOPPED".equalsIgnoreCase(state)) {
-                stopPolling();
-                serverStatus.setValue(ServerStatus.RUNNING);
-
                 if (!isUserInitiatedStop && playbackCallback != null) {
-                    isUserInitiatedStop = true; // Guard against duplicate STOPPED GENA events
-                    Log.i(TAG, "DLNA renderer stopped naturally at track end → triggering onPlaybackCompleted()");
-                    playbackCallback.onPlaybackCompleted();
+                    // Sanity-check: some renderers fire a spurious STOPPED event early
+                    // (e.g. during initial buffering, Wi-Fi stutter, or decoder reset) well before
+                    // the track actually ends. Determine effective playback position using either
+                    // the event's position or the last verified polling position.
+                    boolean nearEnd = true;
+                    if (currentPlayingTrack != null && currentPlayingTrack.getAudioDuration() > 0) {
+                        long trackDurationSec = Math.round(currentPlayingTrack.getAudioDuration());
+                        if (trackDurationSec > 0) {
+                            int reportedSec = (posStr != null) ? parseTimeToSeconds(posStr) : -1;
+                            long effectivePos = (reportedSec > 0) ? reportedSec : lastPosition;
+
+                            if (effectivePos > 0) {
+                                double pct = (double) effectivePos / trackDurationSec;
+                                nearEnd = pct >= 0.90 || effectivePos >= (trackDurationSec - 5);
+                                if (!nearEnd) {
+                                    Log.w(TAG, "GENA STOPPED ignored — position " + effectivePos + "s is only "
+                                            + String.format(java.util.Locale.US, "%.0f%%", pct * 100)
+                                            + " through " + trackDurationSec + "s track. Premature stop ignored.");
+                                }
+                            } else {
+                                // Position unknown and lastPosition <= 0: track stopped at start (<5s)
+                                Log.w(TAG, "GENA STOPPED ignored at track startup (duration: " + trackDurationSec + "s).");
+                                nearEnd = false;
+                            }
+                        }
+                    }
+
+                    if (nearEnd) {
+                        stopPolling();
+                        serverStatus.setValue(ServerStatus.RUNNING);
+                        isUserInitiatedStop = true; // Guard against duplicate STOPPED GENA events
+                        Log.i(TAG, "DLNA renderer stopped naturally at track end → triggering onPlaybackCompleted()");
+                        playbackCallback.onPlaybackCompleted();
+                        return;
+                    } else {
+                        Log.d(TAG, "Spurious STOPPED received early; keeping polling active to verify transport state.");
+                    }
                 } else {
+                    stopPolling();
+                    serverStatus.setValue(ServerStatus.RUNNING);
                     schedulePauseTimeout();
                 }
             } else if ("PAUSED".equalsIgnoreCase(state) || "PAUSED_PLAYBACK".equalsIgnoreCase(state)) {
@@ -1944,7 +2072,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             String name = currentRenderer.getDetails().getFriendlyName();
             if (name != null) {
                 String lower = name.toLowerCase();
-                if (lower.contains("hiby") || lower.contains("r3") || lower.startsWith("r3")) {
+                if (lower.contains("hiby") || lower.startsWith("r3 ") || lower.equals("r3")) {
                     return true;
                 }
             }
@@ -1956,14 +2084,17 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
             if (currentRenderer.getDetails().getModelDetails() != null) {
                 String model = currentRenderer.getDetails().getModelDetails().getModelName();
-                if (model != null && (model.toLowerCase().contains("hiby") || model.toLowerCase().contains("r3"))) {
-                    return true;
+                if (model != null) {
+                    String lower = model.toLowerCase();
+                    if (lower.contains("hiby") || lower.startsWith("r3 ") || lower.equals("r3")) {
+                        return true;
+                    }
                 }
             }
         }
         if (currentRendererId != null) {
             String lower = currentRendererId.toLowerCase();
-            if (lower.contains("hiby") || lower.contains("r3")) {
+            if (lower.contains("hiby") || lower.startsWith("r3 ") || lower.equals("r3")) {
                 return true;
             }
         }
@@ -1972,30 +2103,9 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public boolean isCurrentRendererVerifiedGapless() {
-        if (currentRenderer != null && currentRenderer.getDetails() != null) {
-            String name = currentRenderer.getDetails().getFriendlyName();
-            if (name != null) {
-                String lower = name.toLowerCase();
-                if (lower.contains("wiim") || lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic") || lower.contains("audiopro")) {
-                    return true;
-                }
-            }
-            if (currentRenderer.getDetails().getManufacturerDetails() != null) {
-                String mfg = currentRenderer.getDetails().getManufacturerDetails().getManufacturer();
-                if (mfg != null) {
-                    String lower = mfg.toLowerCase();
-                    if (lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic")) {
-                        return true;
-                    }
-                }
-            }
-        }
-        if (currentRendererId != null) {
-            String lower = currentRendererId.toLowerCase();
-            if (lower.contains("wiim") || lower.contains("linkplay") || lower.contains("eversolo") || lower.contains("zidoo") || lower.contains("linn") || lower.contains("auralic")) {
-                return true;
-            }
-        }
+        // Safe-by-default: disable UPnP SetNextAVTransportURI across DLNA renderers.
+        // Discrete handover paired with host RAM pre-warming (AudioStreamCacheManager)
+        // ensures instant next-track start without triggering renderer buffer flushes or premature skips.
         return false;
     }
 }

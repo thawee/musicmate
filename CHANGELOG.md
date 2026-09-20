@@ -5,6 +5,91 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.6] - 2026-09-20
+
+### Added
+- **Dual-Mode Audiophile Audio Telemetry (`AudioLevelProcessor.kt`, `AudioTelemetryManager.kt`, `ReelToReelTapeDeck.kt`, `AnalogVUMeter.kt`, `NowPlayingPage.kt`)**:
+  - **Real-Time PCM Stereo Audio Processor:** Implemented `AudioLevelProcessor` using Media3 `BaseAudioProcessor` in `AndroidPlayerController.java` to extract sample-accurate Left and Right channel RMS decibels ($20 \log_{10}(\text{RMS})$) and true peak levels from decoded PCM audio buffers. Operates in-process without requiring `RECORD_AUDIO` permission or triggering the Android microphone privacy indicator.
+  - **Live Ballistic VU Meter Dynamics:** Wired real PCM telemetry into `AnalogVUMeter.kt`, driving the ANSI ballistic spring-damper needles to live audio transients, bass hits, and vocal dynamics, with automatic fallback to dynamic range modulation when playing on external renderers.
+  - **Vintage Reel-to-Reel Tape Deck Widget (`ReelToReelTapeDeck.kt`):** Built a pure Jetpack Compose Canvas tape deck widget emulating iconic studio master tape machines (Studer A820 / Revox B77). Features dual rotating 3-hole NAB precision aluminum reels, dynamic supply & take-up tape pack radii tracking track progress, mechanical differential angular velocity ($\omega = v/r$), tape ribbon path, tape counter, and glowing RUN/PAUSE status lamp.
+  - **Smart Dual-Mode Switching:** Automatically detects active playback target in `NowPlayingPage.kt` (`isDLNA == true` -> defaults to Reel-to-Reel Tape Deck; `isDLNA == false` -> defaults to Analog VU Meter), paired with an interactive 1-tap capsule switcher (`[VU METER]` ↔ `[TAPE DECK]`) to manually toggle widgets at any time.
+- **Fullscreen Landscape Studio Console ("Hi-Fi Desk Mode") (`FullscreenStudioConsole.kt`, `MainScaffold.kt`, `MainScaffoldState.kt`, `AudioHubSheet.kt`, `AndroidManifest.xml`)**:
+  - **Audiophile Split-Bay Landscape Architecture:** Built an immersive 50/50 horizontal listening console for desk stands, audio racks, car mounts, and tablets.
+    - **Left Bay (Visualizer Deck):** Houses a grand visualizer with smooth animated crossfading (`AnimatedContent`) between Grand Analog VU Meter (live PCM stereo telemetry), Grand Reel-to-Reel Tape Deck (dynamic tape pack radii and differential angular velocity), and Grand Vinyl / Album Cover Art, with an interactive floating 1-tap switcher pill.
+    - **Right Bay (Master Studio Telemetry & Transport Deck):** Features sound quality verdict badges, interactive hardware output target selector chip with live color status dots (`Bit-Perfect Direct USB`, `DLNA Cast`, `Bluetooth`, `Local Audio`), full-width title marquee (`basicMarquee`), monospace technical diagnostics strip (Codec, 24-bit/96kHz, DR12, ReplayGain), high-precision time scrubber with monospace time readouts, tactile studio transport controls (Shuffle, Previous, Master Play/Pause, Next, Repeat), master volume fader bar, and "Up Next" queue preview capsule.
+  - **Zero-Interruption Orientation & Dynamic Screen Wake Lock:** Added `android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"` to `MainActivity` so rotating to landscape never destroys the Activity or resets background playback/DLNA subscriptions. Programmatically locks to landscape upon entry, restores portrait upon exit, and cleanly intercepts Android system back gestures via `BackHandler`.
+  - **1-Tap "Keep Screen Awake" Quick Toggle & Settings Preference (`rounded_wb_sunny_24.xml`, `rounded_bedtime_24.xml`, `Settings.java`, `SettingsScreen.kt`):**
+    - Added an illuminated 1-tap quick toggle button in the console header next to the exit button: glowing gold sun icon (`rounded_wb_sunny_24`) when awake (`FLAG_KEEP_SCREEN_ON` actively held), or subtle sleep moon icon (`rounded_bedtime_24`) when off (allowing standard Android screen timeout).
+    - Dynamically updates `activity.window` flags on the fly and persists `PREF_STUDIO_KEEP_SCREEN_ON` to `Settings`.
+    - Added "Keep Screen Awake in Fullscreen" toggle switch under the User Interface category in `SettingsScreen.kt`.
+  - **Quick Entry Points:** Integrated dedicated expand `[⛶]` icon button and long-press gesture on `FloatingMiniPlayerDock`, plus an expand button in the `AudioHubSheet` header.
+  - **10/10 Luxury Audiophile Refinement (`FullscreenStudioConsole.kt`, `ReelToReelTapeDeck.kt`, `AnalogVUMeter.kt`)**:
+    - **Dynamic Studio Ambilight:** Implemented ambient backlight extracted from album cover art via `Palette` with `clampToDarkroomObsidian()` (luminance clamped at 18%) and smooth $900\text{ms}$ cross-fading, giving an organic breathing backdrop without washing out instrument dials.
+    - **True Immersive Mode:** Configured `WindowInsetsControllerCompat` to hide status and navigation bars upon entry, preventing OS clock/battery collision with the console header, and added an integrated retro studio digital clock.
+    - **Symmetrical Dual-Chassis Bezels:** Housed Left (Visualizer) and Right (Master Control) bays in matching smoked-glass recessed bezels with hairline gold strokes and depth shadows.
+    - **De-cluttered Visualizer Bay:** Docked the `[ VU METER | TAPE DECK | ALBUM ART ]` switcher in a dedicated row below the canvas inside a `Column`, completely eliminating visual overlap with tape heads and rollers, and made `ReelToReelTapeDeck` and `AnalogVUMeter` scale dynamically via `defaultMinSize(minHeight = 118.dp)`.
+    - **Bespoke Audiophile Sliders:** Replaced stock Material 3 sliders with custom-drawn `StudioHiFiScrubber` (3dp illuminated track, amber gradient, and machined brass knurled thumb pip) and `StudioLinearVolumeFader` (calibrated dB attenuator).
+    - **Machined Master Transport & Clean Telemetry:** Designed concentric brushed-brass Play/Pause button with tactile depression, sanitized output target titles to strip raw IP addresses (`HiBy R3 (DLNA)`), and unified sound quality verdicts into leading diagnostic chips.
+    - **Track Identity Mini-Sleeve:** Added an interactive 46dp album art jacket in the Right Bay metadata row when in VU Meter or Tape Deck mode, featuring 1-tap expansion to full Cover Art mode and automatic collapse (`shrinkHorizontally`) when in Cover Art mode.
+- **Mini-Player Dock UX Enhancements & Quick Jump (`MainScaffold.kt`, `MainActivity.java`, `MainScaffoldCallbacks.kt`)**:
+  - **1-Touch Direct Jump to Active Track:** Added long-press gesture on the floating mini-player dock (both album artwork thumbnail and title/artist column) that smoothly locates, pages, and centers the currently playing song in the music list with tactile `HapticFeedbackType.LongPress` feedback.
+  - **Zero-Latency Single Tap:** Decoupled `detectTapGestures` from double-tap detection to eliminate the standard 300ms tap evaluation delay, making mini-player tap to open the Audio Hub sheet instantaneous.
+  - **Frictionless Swipe Navigation:** Integrated horizontal drag gesture detection (swipe left for Next, swipe right for Previous) and upward swipe gesture to smoothly expand the Audio Hub sheet.
+  - **Tactile Circular Transport:** Upgraded mini-dock Play/Pause control to a 40dp circular button with semi-transparent frosted background and gold accent rim.
+- **Unit Test Suite Expansion (`AudioLevelProcessorTest.kt`, `FullscreenStudioConsoleTest.kt`, `NetworkUtilsTest.java`, `QueueManagerTest.java`)**:
+  - Added unit test coverage verifying RMS-to-dB conversion, dBFS-to-VU logarithmic normalization, `AudioTelemetryManager` thread-safe lifecycle and resets, and `AudioLevelProcessor` PCM audio format configuration.
+  - Added unit test coverage in `FullscreenStudioConsoleTest.kt` verifying progress fraction calculations, visualizer mode states, `MainScaffoldState` fullscreen toggle state, `PREF_STUDIO_KEEP_SCREEN_ON` preference constant and toggle simulation, `testSanitizeTargetDeviceTitle()`, and `testClampToDarkroomObsidian()`.
+  - Added unit test coverage in `NetworkUtilsTest.java` verifying virtual/VPN tunnel interface filtering (`isVirtualOrVpnInterface`).
+  - Added unit test coverage in `QueueManagerTest.java` verifying unknown track auto-enqueuing in `setPlaybackTrack`, duplicate prevention in `addPlayingQueue`, and insert ordering in `addPlayNext`.
+
+### Changed
+- **Global Output Device Title Sanitization & Non-Destructive Subtitles (`MainScaffold.kt`, `FullscreenStudioConsole.kt`)**:
+  - Sanitized target device names across all surfaces to strip raw internal IP addresses and technical transport prefixes (e.g., `HiBy R3 (DLNA)`), keeping UI clean and readable.
+  - Formatted mini-player metadata row as `Artist • Output Target` using styled annotated spans (off-white for artist, semi-bold gold for target) so streaming context never replaces primary musical identity.
+- **Safe-by-Default Gapless Preload Disabling (`MediaServerHubImpl.java`)**:
+  - Disabled UPnP `SetNextAVTransportURI` across remote DLNA renderers by default. Discrete track handover combined with host RAM pre-buffering (`AudioStreamCacheManager`) eliminates DAC buffer flushes and premature track truncation on portable DAPs.
+- **Cursor-Paged Library Processing (`RoomDbHelper.java`, `TrackDao.java`)**:
+  - Replaced bulk full-table loading in `processAllMusics()` and `cleanInvalidTag()` with paginated queries (`getTracksPaged(limit, offset)` in chunks of 500), eliminating OutOfMemoryError crashes when scanning massive music libraries.
+- **Dependency Upgrades (`gradle/libs.versions.toml`)**:
+  - Upgraded Android Gradle Plugin to `9.4.1`, Room to `2.8.5`, Media3 Session to `1.11.1`, Jetpack Compose BOM to `2026.09.00`, and Netty Codec HTTP to `4.2.18.Final`.
+
+### Fixed
+- **DLNA Premature Completion on Renderer Buffering Stalls (`MediaServerHubImpl.java`)**:
+  - Guarded GENA `STOPPED` events against premature completion during renderer initial buffering or transient Wi-Fi drops. Cross-referenced reported playback position against track duration, requiring effective position to be near track end ($\ge 90\%$ or within 5 seconds) before advancing the queue.
+- **Passive HTTP Pre-Fetch Hijacking Active DMR Sessions (`MusicMateServiceImpl.java`, `BaseServer.java`)**:
+  - Added active controlled DMR session guards in `onAccessMediaTrack()` and `BaseServer.notifyPlayback()`. Passive HTTP GET requests issued by pre-buffering renderers no longer overwrite `currentTrackFlow` or prematurely reset playback timers while the DAP is still playing the current track.
+- **HttpCore Async File Streaming Spin-Loops & FD Leaks (`PartialFileProducer.java`)**:
+  - Handled `read <= 0` cleanly with `channel.endStream()` and `releaseResources()` to prevent infinite CPU spin-loops.
+  - Rewound file channel position for unwritten bytes on partial socket writes to guarantee byte stream continuity.
+  - Wrapped `produce()` in `try-catch` to guarantee `releaseResources()` (closing `RandomAccessFile` and `FileChannel`) on any I/O or runtime exception.
+- **Netty HTTP 416 Range Not Satisfiable & Remote Address Resolution (`NettyWebServerImpl.java`)**:
+  - Added RFC-compliant HTTP 416 (`REQUESTED_RANGE_NOT_SATISFIABLE`) response when `Range` start header exceeds file length.
+  - Resolved remote client IP address from socket address or `X-Forwarded-For` header instead of misinterpreting the `Server` response header.
+- **Embedded Server Security & Path Traversal Guards (`JettyWebServerImpl.java`, `WebServerImpl.java`, `NioWebServerImpl.java`)**:
+  - Tightened Jetty `AliasCheck` to restrict resource access strictly to canonical paths within `/storage/` and `/data/`.
+  - Disabled symlink traversal (`followLinks = false`) in Undertow's `PathResourceManager`.
+  - Added explicit null/existence checks in `NioWebServerImpl` returning clean HTTP 404 responses for non-existent content.
+  - Ensured `destroy()` is called on server stop across all implementations to release background executors and service bindings.
+- **Virtual VPN & Tunnel Interface Filtering for Media Streaming (`NetworkUtils.java`)**:
+  - Filtered out virtual VPN and tunnel adapters (`tun*`, `tap*`, `wg*`, `p2p*`, `dummy*`, `ipsec*`) from media server IP address selection, prioritizing physical Wi-Fi, Hotspot, and Ethernet interfaces to ensure DLNA renderers can reliably connect.
+- **Bluetooth Disconnect Guard for Remote Playback (`MusicMateServiceImpl.java`)**:
+  - Gated auto-pause handlers for `ACTION_AUDIO_BECOMING_NOISY` and Bluetooth `ACTION_ACL_DISCONNECTED` behind `isLocalTarget()`, preventing smartwatch or automotive Bluetooth disconnections from interrupting active DLNA cast playback.
+- **QueueManager Persistence Redundancy & Safe Handling (`QueueManager.java`)**:
+  - Removed redundant `addToPlayingQueue(song)` database writes inside `addPlayingQueue` and `addPlayNext` prior to batch queue persistence.
+  - Filtered out missing or deleted files upon loading the playing queue and auto-persisted the cleaned queue.
+  - Auto-enqueued unknown tracks and synchronized playback index in `setPlaybackTrack()`.
+- **AudioTag In-Place Mutation Bug (`AudioTag.java`)**:
+  - Fixed `AudioTag.copy()` to instantiate and return a clean clone rather than returning and mutating the original instance.
+- **Accidental Storage Root Deletion Guard (`FileRepository.java`)**:
+  - Added `isStorageRootDirectory()` safety boundary to prevent recursive directory cleanups from ascending into `/storage/emulated/0`, `/sdcard`, or `Music/`.
+- **Tag Editor Threading & Unsaved Edits Detection (`TagsActivity.java`, `TagsEditorFragment.kt`)**:
+  - Ensured asynchronous completion toasts and progress bars execute safely on the UI thread.
+  - Audited all child fragments in `onBackPressed` for unsaved modifications across all tabs (including Tech Info).
+  - Added `onComplete` callback support to `doSaveMediaItemsDirectly` and `doSaveMediaItem`.
+- **Compose Accessibility Semantics (`AudioBadges.kt`, `TrackListItem.kt`)**:
+  - Added semantic `contentDescription` properties to download badges, new track badges, and rating indicators for improved screen-reader accessibility.
+
+
 ## [3.19.5] - 2026-09-10
 
 ### Added
@@ -44,6 +129,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restored frictionless horizontal swiping across the entire playback viewport to navigate between the `[Playback]`, `[Queue]`, and `[Server]` tabs in `AudioHubSheet`'s `HorizontalPager`.
 - **DLNA Consequence Track 58-Second Truncation & Premature Advance (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`, `PartialFileProducer.java`, `DLNAHeaderHelper.java`)**:
   - Unified DMR queue progression by refactoring `internalSkipToNextOnDMRPlayer` and `internalPreviousOnDMRPlayer` to delegate directly to `internalPlayOnDMRPlayer(playbackTarget, song)`, ensuring consecutive tracks receive full queue pointer synchronization, upcoming track preloading, and full duration safety fallback scheduling.
+  - Prevented passive HTTP GET requests (triggered by renderer pre-fetching the upcoming track) from hijacking active playback state. Added active controlled session guards in `onAccessMediaTrack()` and `BaseServer.notifyPlayback()` so pre-buffering requests do not overwrite `currentTrackFlow` or prematurely reset timers while the DAP is still playing the current track.
+  - Corrected inverted `supportsPreload` logic in `schedulePreloadNextTrack()`: safe conjunction `(instanceof DMRPlayer) && supportsPreload()` ensures non-DMR players and portable DAPs (HiBy R3) default to discrete handover with host memory caching instead of premature UPnP `SetNextAVTransportURI` calls that abort the playing stream.
+  - Added gapless preload state hygiene in `MediaServerHubImpl`: cleared `preloadedNextTrack` and `preloadedNextUrl` on every `internalPlaySong()` and `playerStop()`, preventing stale track references from matching subsequent URIs during GENA position polling and firing spurious track transitions.
   - Corrected UPnP DIDL-Lite `<res>` bitrate calculation from `bps * 1024 / 8` to standard bytes-per-second (`bps / 8`), eliminating bogus 73MB/s bitrate metadata sent to renderers.
   - Added explicit `<res size="...">` attribute and DLNA content features to DIDL-Lite `<res protocolInfo="...">`, providing portable DAPs (HiBy, Shanling, FiiO) with precise stream sizing upfront.
   - Guarded position polling duration completion in `MediaServerHubImpl`: cross-referenced renderer reported duration against the authoritative database duration (`currentPlayingTrack.getAudioDuration()`), preventing renderers with finite hardware network FIFO buffers (reporting 58s from a 4MB buffer) from prematurely advancing tracks before the full audio duration has elapsed.

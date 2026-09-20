@@ -471,26 +471,23 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 return;
             }
 
-            // 3. Handle Range Header (Seeking)
+            // 3. Handle Range Header (Seeking) - RFC 7233 compliant
             Header rangeHeader = request.getHead().getFirstHeader("Range");
             long fileLength = file.length();
-            long start = 0;
-            long end = fileLength - 1;
+            HttpRange range = parseRange(rangeHeader != null ? rangeHeader.getValue() : null, fileLength);
 
-            boolean isPartial = false;
-            if (rangeHeader != null && rangeHeader.getValue().startsWith("bytes=")) {
-                try {
-                    String rangeValue = rangeHeader.getValue().substring(6);
-                    String[] parts = rangeValue.split("-");
-                    start = Long.parseLong(parts[0]);
-                    if (parts.length > 1 && !parts[1].isEmpty()) {
-                        end = Long.parseLong(parts[1]);
-                    }
-                    isPartial = true;
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to parse range header: " + rangeHeader.getValue());
-                }
+            if (!range.satisfiable) {
+                final AsyncResponseBuilder errBuilder = AsyncResponseBuilder.create(HttpStatus.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                errBuilder.addHeader(HttpHeaders.SERVER, getServerSignature());
+                errBuilder.addHeader(HttpHeaders.CONTENT_RANGE, "bytes */" + fileLength);
+                responseTrigger.submitResponse(errBuilder.build(), context);
+                return;
             }
+
+            long start = range.start;
+            long end = range.end;
+            long contentLength = range.getContentLength();
+            boolean isPartial = range.partial;
 
             // 4. Build Response with Zero-Copy Streaming
             final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(isPartial ? HttpStatus.SC_PARTIAL_CONTENT : HttpStatus.SC_OK);
@@ -505,16 +502,17 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
             responseBuilder.addHeader(HttpHeaders.ETAG, etag);
 
             if (isPartial) {
-                long contentLength = end - start + 1;
                 responseBuilder.addHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileLength);
+            }
 
-                // Use FileRangeEntityProducer with Range initial offset and length
-                responseBuilder.setEntity(new FileRangeEntityProducer(
-                        file, start, contentLength, ContentType.parse(contentHolder.getContentType())
-                ));
+            if ("HEAD".equalsIgnoreCase(requestMethod)) {
+                responseBuilder.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+                if (contentHolder.getContentType() != null) {
+                    responseBuilder.addHeader(HttpHeaders.CONTENT_TYPE, contentHolder.getContentType());
+                }
             } else {
-                responseBuilder.setEntity(AsyncEntityProducers.create(
-                        file, ContentType.parse(contentHolder.getContentType())
+                responseBuilder.setEntity(new PartialFileProducer(
+                        file, start, contentLength, ContentType.parse(contentHolder.getContentType())
                 ));
             }
 
@@ -797,95 +795,67 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
         }
     }
 
-    private static class FileRangeEntityProducer implements AsyncEntityProducer {
-        private final File file;
-        private final long start;
-        private final long length;
-        private final ContentType contentType;
-        private java.io.RandomAccessFile raf;
-        private long bytesSent = 0;
-        private final byte[] buffer = new byte[262144]; // 256KB chunks for smooth 352.8kHz/DXD streaming
+    static class HttpRange {
+        public final long start;
+        public final long end;
+        public final boolean partial;
+        public final boolean satisfiable;
 
-        FileRangeEntityProducer(File file, long start, long length, ContentType contentType) {
-            this.file = file;
+        public HttpRange(long start, long end, boolean partial, boolean satisfiable) {
             this.start = start;
-            this.length = length;
-            this.contentType = contentType;
+            this.end = end;
+            this.partial = partial;
+            this.satisfiable = satisfiable;
         }
 
-        @Override
-        public boolean isRepeatable() {
-            return true;
-        }
-
-        @Override
-        public boolean isChunked() {
-            return false;
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType != null ? contentType.toString() : null;
-        }
-
-        @Override
-        public String getContentEncoding() {
-            return null;
-        }
-
-        @Override
         public long getContentLength() {
-            return length;
+            return end - start + 1;
+        }
+    }
+
+    static HttpRange parseRange(String headerValue, long fileLength) {
+        if (headerValue == null || !headerValue.startsWith("bytes=")) {
+            return new HttpRange(0, Math.max(0, fileLength - 1), false, true);
         }
 
-        @Override
-        public java.util.Set<String> getTrailerNames() {
-            return java.util.Collections.emptySet();
-        }
-
-        @Override
-        public int available() {
-            return (int) Math.min(262144, length - bytesSent);
-        }
-
-        @Override
-        public void produce(DataStreamChannel channel) throws java.io.IOException {
-            if (raf == null) {
-                raf = new java.io.RandomAccessFile(file, "r");
-                raf.seek(start);
+        try {
+            String value = headerValue.substring(6).trim();
+            if (value.contains(",")) {
+                value = value.split(",")[0].trim();
             }
 
-            if (bytesSent < length) {
-                long remaining = length - bytesSent;
-                int toRead = (int) Math.min(buffer.length, remaining);
-                int read = raf.read(buffer, 0, toRead);
-                if (read > 0) {
-                    bytesSent += read;
-                    channel.write(java.nio.ByteBuffer.wrap(buffer, 0, read));
-                } else {
-                    bytesSent = length;
-                }
+            long start = 0;
+            long end = fileLength - 1;
+
+            if (value.startsWith("-")) {
+                // Suffix range: bytes=-500 (last 500 bytes)
+                long suffix = Long.parseLong(value.substring(1).trim());
+                start = Math.max(fileLength - suffix, 0);
+                end = fileLength - 1;
+            } else if (value.endsWith("-")) {
+                // Prefix range: bytes=500- (from byte 500 to EOF)
+                start = Long.parseLong(value.substring(0, value.length() - 1).trim());
+                end = fileLength - 1;
+            } else {
+                // Explicit range: bytes=500-1000
+                String[] parts = value.split("-");
+                start = Long.parseLong(parts[0].trim());
+                end = Long.parseLong(parts[1].trim());
             }
 
-            if (bytesSent >= length) {
-                channel.endStream();
-                releaseResources();
+            // RFC 7233 4.4: If start is past fileLength, range is unsatisfiable
+            if (start >= fileLength) {
+                return new HttpRange(start, end, true, false);
             }
-        }
 
-        @Override
-        public void failed(Exception cause) {
-            releaseResources();
-        }
+            // RFC 7233 2.1: Clamp end to fileLength - 1
+            if (end >= fileLength) end = fileLength - 1;
+            if (start < 0) start = 0;
+            if (start > end) start = 0;
 
-        @Override
-        public void releaseResources() {
-            if (raf != null) {
-                try {
-                    raf.close();
-                } catch (java.io.IOException ignored) {}
-                raf = null;
-            }
+            return new HttpRange(start, end, true, true);
+        } catch (Exception e) {
+            return new HttpRange(0, Math.max(0, fileLength - 1), false, true);
         }
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -70,6 +71,8 @@ import apincer.music.core.playback.PlaybackState
 import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
 import coil3.compose.AsyncImage
+
+typealias TelemetryWidgetMode = StudioVisualizerMode
 
 @Composable
 fun NowPlayingPage(
@@ -301,6 +304,7 @@ fun NowPlayingPage(
                                     .padding(end = 12.dp)
                                     .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
                                     .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
+                                    .clickable { onTrackClicked() }
                             )
 
                             Icon(
@@ -309,7 +313,7 @@ fun NowPlayingPage(
                                 tint = Color.White.copy(alpha = 0.9f),
                                 modifier = Modifier
                                     .size(24.dp)
-                                    .clickable { onTrackClicked() }
+                                    .clickable { flipped = !flipped }
                             )
                         }
 
@@ -343,10 +347,11 @@ fun NowPlayingPage(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         // Output Target Pill (Interactive Device Selector)
-                        val targetTitle = state.targetTitle.value.ifEmpty { "Local Audio" }
-                        val isBitPerfect = targetTitle.contains("Bit-Perfect", ignoreCase = true) || state.targetBadge.value.contains("Bit-Perfect", ignoreCase = true)
-                        val isDLNA = targetTitle.contains("DLNA", ignoreCase = true) || state.targetBadge.value.contains("DLNA", ignoreCase = true)
-                        val isBT = targetTitle.contains("BT", ignoreCase = true) || targetTitle.contains("Bluetooth", ignoreCase = true) || state.targetBadge.value.contains("Bluetooth", ignoreCase = true)
+                        val rawTargetTitle = state.targetTitle.value.ifEmpty { "Local Audio" }
+                        val cleanTargetTitle = remember(rawTargetTitle) { sanitizeTargetDeviceTitle(rawTargetTitle) }
+                        val isBitPerfect = rawTargetTitle.contains("Bit-Perfect", ignoreCase = true) || state.targetBadge.value.contains("Bit-Perfect", ignoreCase = true)
+                        val isDLNA = rawTargetTitle.contains("DLNA", ignoreCase = true) || state.targetBadge.value.contains("DLNA", ignoreCase = true)
+                        val isBT = rawTargetTitle.contains("BT", ignoreCase = true) || rawTargetTitle.contains("Bluetooth", ignoreCase = true) || state.targetBadge.value.contains("Bluetooth", ignoreCase = true)
                         val targetDotColor = when {
                             isBitPerfect -> Color(0xFF00E676)
                             isDLNA -> Color(0xFF00E5FF)
@@ -371,7 +376,7 @@ fun NowPlayingPage(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = targetTitle,
+                                text = cleanTargetTitle,
                                 color = Color.White.copy(alpha = 0.95f),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -471,6 +476,7 @@ fun NowPlayingPage(
                             trackPeak = trackPeak,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .height(135.dp)
                                 .padding(horizontal = 4.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -777,7 +783,7 @@ fun NowPlayingPage(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Play / Pause Button with tactile spring scale
+                // Play / Pause Button with tactile spring scale and refined gold/amber accent rim
                 Box(
                     modifier = Modifier
                         .size(58.dp)
@@ -785,8 +791,15 @@ fun NowPlayingPage(
                             scaleX = playPauseScale
                             scaleY = playPauseScale
                         }
+                        .shadow(
+                            elevation = if (isPlaying) 8.dp else 3.dp,
+                            shape = CircleShape,
+                            ambientColor = Color(0x33FFA000),
+                            spotColor = Color(0x55FFB300)
+                        )
                         .clip(CircleShape)
                         .background(Color.White)
+                        .border(BorderStroke(1.5.dp, Color(0xFFFFB300).copy(alpha = 0.5f)), CircleShape)
                         .clickable {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                             onPlayPause()
@@ -796,7 +809,7 @@ fun NowPlayingPage(
                     Icon(
                         painterResource(id = if (isPlaying) R.drawable.ic_pause_rounded else R.drawable.ic_play_rounded),
                         contentDescription = "Play/Pause",
-                        tint = Color.Black,
+                        tint = Color(0xFF141414),
                         modifier = Modifier.size(30.dp)
                     )
                 }

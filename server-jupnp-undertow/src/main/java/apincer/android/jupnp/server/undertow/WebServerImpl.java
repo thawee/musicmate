@@ -69,7 +69,7 @@ public class WebServerImpl extends BaseServer implements WebServer {
         // Use a larger attribute cache for these paths to avoid repeated disk I/O
         // This prevents the CPU from waking up just to check "lastModified" on every chunk request.
         int transferMinSize = 1024 * 100; // 100kB is plenty for file metadata
-        resourceHandler = new ResourceHandler(new PathResourceManager(Paths.get("/"), transferMinSize, true, true, safePaths))
+        resourceHandler = new ResourceHandler(new PathResourceManager(Paths.get("/"), transferMinSize, true, false, safePaths))
                 .setDirectoryListingEnabled(false);
     }
 

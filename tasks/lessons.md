@@ -14,6 +14,10 @@
 - **Compose Material 3 ModalBottomSheet Height Constraints**: In Material 3 Compose, passing `modifier = Modifier.fillMaxHeight(0.65f)` to `ModalBottomSheet(...)` does not reliably constrain the sheet container because the sheet surface can expand unbounded if its content uses `fillMaxSize()`. To enforce a fixed percentage height (e.g. 65% of screen height per `DESIGN.md` §8C), calculate `val sheetHeight = (LocalConfiguration.current.screenHeightDp.dp * 0.65f).coerceIn(min, max)` and apply `.height(sheetHeight)` directly to the root `Column` inside the sheet's content lambda.
 - **Compose Modal Dialogs vs Legacy Android View PopupMenu**: Never anchor legacy Android `PopupMenu`s to `activity.getWindow().getDecorView()` when triggered from or while a Compose `ModalBottomSheet` is open. `ModalBottomSheet` renders in a higher z-order dialog window, rendering the `PopupMenu` invisible, inaccessible, or unresponsive behind the modal sheet. Always implement selection pickers (like `PlayerPickerDialog`) as pure Compose dialogs with observable state in `MainScaffoldState`.
 - **Directory Image Loader Safeguard**: When resolving cover art resource paths, verify if the resolved path is a directory (using `file.isDirectory()`). Passing directory paths to image loading frameworks (like Coil) causes silent decode failures or broken images; instead, filter directories out and fallback to the default/missing cover image.
+- **Playback Sheet Visual Ergonomics (Avoid Postage-Stamp Thumbnails & Translucent Bleed)**:
+  - In a 65% modal bottom sheet, shrinking album art into a small floating square (e.g. ~140dp) creates massive dead space and looks like an unfinished widget on modern tall phones. Full-width/cinematic artwork with a smooth gradient overlay provides vastly superior visual impact and immersion.
+  - Never allow bottom sheets to use semi-transparent background colors (`containerColor = Color(0xF0121212)`) without an opaque base; underlying activity lists (text, icons) will bleed through as messy ghost artifacts behind controls and text.
+  - Avoid jamming extra linear faders (e.g. volume bars) into the bottom gesture inset zone where it clashes with Android system navigation.
 - **WebUI Nested Click Event Bubbling & Playback State Null-Safety**:
   - In WebUI mini-player bars, nested interactive elements (e.g. cover art `<img>` inside a container `<div id="footer-track-info">`) will trigger handlers twice in quick succession unless `e.stopPropagation()` is applied or event handling is consolidated onto the parent container.
   - When accessing playback state objects (`currentPlaybackState`, `currentTrack`) on user-initiated click actions (e.g., clicking cover art or expand buttons before the first status push from WebSocket), always use defensive null-checks (`state = currentPlaybackState || {}`, `(state && state.elapsed) || 0`) to prevent unhandled `TypeError: Cannot read properties of null` exceptions.
@@ -285,4 +289,101 @@
   - In position polling (`getAvTransportPosition()`), never test `position >= duration` against the unverified renderer duration alone. Cross-reference against the authoritative known database duration (`currentPlayingTrack.getAudioDuration()`). If the known duration is present (e.g. 240s), use it as the authoritative completion threshold to prevent premature skips at ~58 seconds.
 - **HttpCore `AsyncEntityProducer.available()` Backpressure Compliance**:
   - `available()` must return the number of bytes available for the immediate next buffer write (`Math.min(BUFFER_SIZE, remaining)`), not the entire remaining file length (`length - bytesProduced`). Returning multi-megabyte values violates HttpCore reactive backpressure and can lead to connection stalls.
+- **Passive HTTP Requests Must Not Hijack Active DLNA Playback State**:
+  - When a DLNA renderer pre-fetches the next track (triggered by `SetNextAVTransportURI`), the HTTP GET request to `/music/{next_id}/` triggers `BaseServer.notifyPlayback()` → `onAccessMediaTrack(nextSong)`. If `onAccessMediaTrack()` does not guard against an active controlled DMR session, it resets `currentTrackFlow`, timers, and preload state — making MusicMate think Song 3 is playing while the renderer is still in Song 2.
+  - **Always check `isControllable(getActivePlayer())` before allowing passive HTTP access notifications to modify playback state.** Active DMR sessions are managed exclusively by GENA events and position polling.
+- **Safe-By-Default `supportsPreload` Boolean Logic**:
+  - When computing `supportsPreload` from `instanceof DMRPlayer`, use `(activePlayer instanceof DMRPlayer) && dmr.supportsPreload()` (conjunction). Never use `!(activePlayer instanceof DMRPlayer) || dmr.supportsPreload()` (disjunction with negated instanceof) — that causes non-DMR players (e.g. `WebStreamingPlayer` from race conditions) to default to `supportsPreload = true`, dispatching `SetNextAVTransportURI` to renderers that abort the current stream to pre-buffer the next track.
+- **Clear Stale Gapless Preload State on Track Start and Stop**:
+  - `preloadedNextTrack` and `preloadedNextUrl` must be reset to `null` in both `internalPlaySong()` and `playerStop()`. If a previous gapless queue set `preloadedNextTrack` to Song 2, and the renderer was then restarted via discrete skip (not gapless transition), the stale reference can match Song 2's URI during GENA polling, firing a spurious `onMediaTrackChanged()` that restarts timers and triggers premature preload during the new track's startup window.
+
+- **`cleanInvalidTag()` Must Not Be a Stub — Always Remove Missing Files**:
+  - `RoomDbHelper.cleanInvalidTag()` was a silent no-op stub. Stubs in cleanup hooks always cause latent correctness bugs. When implementing a cleanup method, always do the actual work: iterate all tracks, check `new File(track.getPath()).exists()`, and delete stale records. Also scrub the persisted playing queue (`cachedQueueIds`) to prevent ghost tracks from reappearing.
+  - Pattern: always validate and implement lifecycle/cleanup methods at the point of writing; never leave them empty with intent to fill in later.
+
+- **Playing Queue Must Be Validated at Load Time Against File System**:
+  - The playing queue stores track IDs. When another app deletes a file, the ID remains in the persisted queue but the DB record and/or file is gone. Always validate file existence in `loadPlayingQueue()` by checking `new File(track.getPath()).exists()`. Skip and log any track whose file is missing, and persist the cleaned list back so the stale IDs don't accumulate across sessions.
+  - Two-layer pattern: (1) scan-time cleanup via `cleanInvalidTag()`, (2) runtime guard in `loadPlayingQueue()` — both are needed for correctness under all deletion timing scenarios.
+
+- **DLNA Premature Track Switching Root Causes & Invariants**:
+  - *Dynamic SetNextAVTransportURI Delay:* Never send `SetNextAVTransportURI` within the first 30 seconds of track playback. Flagship streamers (WiiM, Eversolo) or flaky firmware can interpret immediate `NextURI` arrival as an instant track handover command. Always schedule preload at 60% of known track duration (`clamp(max(gaplessDelay, 60% duration), 0, trackEnd - 30s)`).
+  - *Stop ➔ GENA Race on Track Startup:* Prior to issuing `SetAVTransportURI` and `Play`, an initial `Stop` command is dispatched to clear DAC buffers. The remote renderer broadcasts a `TransportState=STOPPED` GENA event in response. If `isUserInitiatedStop` is false, this reflected event fires `onPlaybackCompleted()` and skips the track being prepared. Always mark `isUserInitiatedStop = true` before sending `Stop` and only reset it to `false` when `Play` receives an affirmative success response.
+  - *Fallback Sync Needs ID Reset:* Forced track advance (`fallbackToNextTrack()`) must reset `lastPlaybackTrackId = -1`. Otherwise, the subsequent `onMediaTrackChanged()` from the renderer is discarded by the deduplication guard (`trackId == lastPlaybackTrackId`), leaving the forced track with no preload and no safety timeout.
+  - *Guard Renderer Duration Artifacts:* Only trust renderer-reported duration from `GetPositionInfo` if tag metadata is missing AND the reported value is plausible (`> 120s`), avoiding truncation caused by hardware 4MB read buffer size (~58s at 16/44.1).
+
+- **Fallback Timer Collisions Across Pause, Resume, and Seek**:
+  - Never let an absolute wall-clock timer (like `nextTrackTask`) run unmonitored while playback is paused. When a user pauses playback, `nextTrackTask`, `preloadTask`, and `trackStartTask` must be immediately cancelled.
+  - On resume or seek, calculate the remaining playback duration (`duration - currentPosition`) and reschedule the fallback timer with `remainingDuration + 1500ms`. Otherwise, pausing for 30s or seeking backward causes the original timer to fire prematurely in the middle of playback.
+
+- **Orphan Scheduled Tasks Race Condition**:
+  - Delayed tasks (e.g. `trackStartTask` at 1500ms) must be stored in a handle and cancelled in `resetGaplessState()`. When users rapidly skip tracks, unmanaged scheduled tasks fire for previous tracks, overriding the new track's state and queue progression.
+
+- **Queue End State in DMR Playback**:
+  - When skipping or falling back to the next track and `queueManager.getNextTrack()` returns `null` (end of queue), never leave the DMR player in `PLAYING` or hang silently. Call `internalStopOnDMRPlayer()` so both remote renderer and local UI transition to `STOPPED`.
+
+- **Spurious GENA `STOPPED` Watchdog Preservation**:
+  - If a renderer emits an early `STOPPED` GENA event (position < 90% and < duration - 5s), do not call `stopPolling()` or set `serverStatus = RUNNING`. Doing so kills the polling loop and leaves the controller blind if the renderer was only momentarily buffering or glitching. Keep the polling loop active to verify true transport state.
+
+- **Netty HTTP Remote IP Resolution & RFC 7233 416 Status**:
+  - In Netty inbound handlers, never look for client IP in `request.headers().get(HttpHeaderNames.SERVER)` (`Server` is an HTTP response header!). Resolve client IP from `ctx.channel().remoteAddress()` (or `X-Forwarded-For`).
+  - For Range requests where `start >= fileLength`, return HTTP 416 `REQUESTED_RANGE_NOT_SATISFIABLE` with `Content-Range: bytes */fileLength` instead of resetting start to 0.
+
+- **Media3 `BaseAudioProcessor` Non-Destructive Buffer Analysis**:
+  - In `queueInput(ByteBuffer inputBuffer)`, audio bytes must be forwarded downstream to `replaceOutputBuffer(count)` and flipped so downstream `AudioSink` / `AudioTrack` can play.
+  - When inspecting PCM samples for RMS and peak calculation, always use absolute-indexed getters (`buffer.getShort(pos)`, `buffer.getFloat(pos)`, `buffer.get(pos)`) or duplicate the buffer. Never mutate `position()` or `limit()` on the output buffer during analysis, as downstream sinks read from `position()` to `limit()`.
+  - In-process audio analysis via `AudioProcessor` operates completely in user-space memory, eliminating the need for `RECORD_AUDIO` permission or triggering the Android microphone privacy indicator.
+
+- **Separation of Telemetry Domains (Local vs DLNA)**:
+  - Local playback (ExoPlayer) decodes audio on the device and provides access to raw PCM samples. In contrast, remote DLNA/UPnP streaming offloads decoding to the external hardware streamer's DAC/DSP while local audio decoders remain silent.
+  - Attempting to capture PCM audio on the phone during DLNA streaming is architecturally invalid. Instead, pairing local playback with real-time PCM decibel meters (`AnalogVUMeter.kt`) and DLNA playback with transport-driven mechanical visualizers (`ReelToReelTapeDeck.kt` driven by elapsed/total progress and differential angular velocity) provides 100% authentic, high-fidelity visualizations across all playback targets.
+
+- **Activity Orientation Handling & Service Continuity (`configChanges`)**:
+  - By default, changing screen orientation destroys and recreates the `Activity`. In media apps controlling active playback sessions and network discovery (UPnP/DLNA subscriptions, SSDP listeners), activity recreation causes UI flickers, drops active subscriptions, and interrupts user interaction.
+  - Adding `android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"` to `MainActivity` prevents Android from destroying the Activity upon orientation switches. Jetpack Compose recomposes in place smoothly to the new window dimensions without resetting ViewModel state or dropping service connections.
+  - Using `DisposableEffect` to programmatically request `SCREEN_ORIENTATION_SENSOR_LANDSCAPE` allows turning any phone or tablet into an illuminated hi-fi desk console, while ensuring the original orientation is cleanly restored in `onDispose`.
+- **Dynamic Display Wake Locks in Jetpack Compose (`FLAG_KEEP_SCREEN_ON`)**:
+  - Pinned full-screen views (like desk mode or car consoles) often require keeping the display awake without forcing users into OS-level developer options.
+  - To make wakefulness dynamically toggleable in Compose, decouple window lifecycle from state observation: use a top-level `DisposableEffect(Unit)` to manage orientation and guarantee flag cleanup on exit, paired with a keyed `DisposableEffect(keepScreenOn)` to dynamically invoke `activity?.window?.addFlags(...)` or `clearFlags(...)` in response to user state changes. This ensures immediate UI responsiveness without flickering the screen or restarting compositions.
+- **Jetpack Compose: `weight(1f)` Inside `verticalScroll()` Requires Bounded Height**:
+  - In Jetpack Compose, wrapping a layout in `Modifier.verticalScroll(rememberScrollState())` measures children with unconstrained maximum height (`maxHeight = Constraints.Infinity`).
+  - If a child component (or custom widget like `AnalogVUMeter` or `ReelToReelTapeDeck`) contains internal columns or rows that utilize `Modifier.weight(...)`, Compose throws a fatal layout error: `IllegalStateException: A Column cannot have children with weight when incoming constraints have infinite maxHeight`.
+  - Using `Modifier.defaultMinSize(minHeight = ...)` on the widget does *not* solve this, because `defaultMinSize` only defines the floor (`minHeight`), leaving `maxHeight` unbounded.
+  - Fix: When embedding weighted canvas or flex components inside any vertically scrolling parent, always wrap or configure the widget with an explicit bounded height constraint (`Modifier.height(...)` or `Modifier.heightIn(min = ..., max = ...)`).
+- **Visualizer Parity Between Mini/Sheet Players and Fullscreen Desktops**:
+  - High-value telemetry components (such as ballistic stereo VU meters and vintage reel-to-reel tape decks) should not be buried behind non-obvious gestures (such as 3D flip cards).
+  - Providing a consistent, docked 3-way mode switcher (`[VU METER]` | `[TAPE DECK]` | `[ALBUM ART]`) across both the standard portrait Playback sheet (`NowPlayingPage.kt`) and the landscape console (`FullscreenStudioConsole.kt`) ensures that users immediately see animated audio telemetry during playback regardless of form factor.
+- **Cross-Surface Playback Design System Synchronization (Mini Dock, 65% Sheet, Landscape Console)**:
+  - *Global Device Title Sanitization:* Raw network telemetry (such as local IP addresses `192.168.1.52`) must be stripped uniformly (`sanitizeTargetDeviceTitle()`) across all playback UI surfaces so internal networking details never pollute user-facing views.
+  - *Non-Destructive Metadata Subtitles:* Secondary playback context (like output streaming target) must never replace or erase primary music metadata (like artist name). Formatting as `Artist • Output Device` with styled spans (clean off-white for artist, semi-bold gold for target) preserves full musical context.
+  - *Gesture Affordances on Mini Players:* Support horizontal swipe gestures (swipe left for Next, swipe right for Previous) and swipe-up/tap for sheet expansion on the mini-dock's center column, keeping action icons accessible without accidental gesture collision.
+  - *Landscape Ergonomics & Hit-Box Padding:* In landscape desk mode, scrubbers require an expanded invisible touch bounding box (e.g. 36dp vs 24dp) while maintaining a sleek 3dp visible rail, ensuring thumb navigation remains effortless on mobile and tablet touchscreens.
+- **Compose `painterResource` Type Restriction (`<shape>` vs `<vector>`)**:
+  - `androidx.compose.ui.res.painterResource(id)` strictly supports only `<vector>` (VectorDrawable) or rasterized asset types (.png, .jpg, .webp).
+  - Passing an XML `<shape>` drawable (e.g. `R.drawable.bg_drag_handle_pill`) throws a fatal runtime exception: `java.lang.IllegalArgumentException: Only VectorDrawables and rasterized asset types are supported ex. PNG, JPG, WEBP`.
+  - Always ensure resources referenced in Compose icons (like `GestureHints.HintType`) point to vector drawables (e.g. `R.drawable.rounded_delete_24`), never XML shapes.
+- **Streaming Server Lifecycle & Inner-Class Variable Shadowing**:
+  - In `BaseServer.java`, an inner anonymous `ServiceConnection` declared local fields with the same names (`nowPlayingSubscription`, etc.) as outer fields, leaving the outer fields `null` and making `destroy()` or unsubscribe a no-op while leaking periodic 500ms scheduled executor tasks. Always assign directly to outer fields or explicitly synchronize lifecycle methods.
+  - Subclasses of `BaseServer` must invoke `destroy()` inside `stopServer()` to clean up `Context.unbindService()` and close background subscription polling tasks.
+  - Non-web servers (such as `NioUPnpServerImpl`) must avoid eagerly binding to `MusicMateServiceImpl` since they do not publish WebUI telemetry, preventing unnecessary service connection churn.
+- **DLNA Renderer Abrupt Disconnect & State Recovery**:
+  - When an active UPnP DMR renderer is powered off or drops off Wi-Fi mid-track (`consecutivePollFailures > 3`), the controller must immediately notify `playbackCallback.onPlaybackStateChanged(STOPPED)`. Without this callback, the UI remains permanently frozen in a phantom `PLAYING` state.
+  - Failures in `executeSetUriAndPlay()` during `SetAVTransportURI` or `Play` SOAP actions must notify `playbackCallback.onPlaybackStateChanged(STOPPED)` to reset the service out of buffering/playing states.
+- **QueueManager Persistence Redundancy & Safe Handling**:
+  - Never invoke `addToPlayingQueue(song)` inside batch methods (`addPlayingQueue`, `addPlayNext`) before invoking `dbHelper.savePlayingQueue(queueList)`. The single-track write is redundant, risks inconsistent database state, and throws unchecked `RuntimeException` on SQL error. Catch and log database exceptions gracefully.
+  - In `setPlaybackTrack(track)`, if an external event (DLNA renderer switch, remote cast) specifies a track not present in `indexMap`, auto-enqueue it to ensure `playbackIndex` and `currentIndex` remain synchronized with what is physically playing.
+- **HttpCore `PartialFileProducer` Spin-Loop & File Descriptor Safety**:
+  - When reading from `FileChannel` in an asynchronous streaming producer, guard against `read <= 0` (e.g. `read == 0`). If `read == 0` is unhandled, HttpCore can enter a CPU-intensive spin loop. Terminate the stream cleanly with `channel.endStream()` and `releaseResources()`.
+  - Wrap `produce()` in `try-catch` to guarantee `releaseResources()` (closing `RandomAccessFile` and `FileChannel`) runs on any unhandled I/O or runtime exception, preventing file descriptor leaks upon client disconnects.
+- **DLNA Playback Immunity to Bluetooth Disconnects**:
+  - In `BroadcastReceiver` handlers for `ACTION_AUDIO_BECOMING_NOISY` and `BluetoothDevice.ACTION_ACL_DISCONNECTED`, never pause playback unconditionally. Always gate `pausePlayer()` behind `isLocalTarget()`. Disconnecting a smartwatch, Bluetooth tracker, or car system must never interrupt active DLNA or network streaming to an external receiver.
+- **Physical LAN Interface Prioritization vs. Virtual VPN Tunnels**:
+  - When selecting the host IP for media streaming URLs, always prioritize physical Wi-Fi (`wlan*`), Hotspot (`ap*`, `swlan*`), and Ethernet (`eth*`) interfaces. Virtual/VPN tunnels (`tun*`, `tap*`, `wg*`, `p2p*`) assign virtual subnets that are unreachable by local DLNA renderers. Always filter out virtual interfaces before picking fallback IPs.
+- **SSDP Multicast Suppression During Active Audio Streaming**:
+  - Multicast UDP packets (`239.255.255.250:1900`) are transmitted across Wi-Fi at slow base modulation rates (1–6 Mbps) and lack hardware ACKs. Triggering recurring 30-second SSDP `M-SEARCH` sweeps during active audio streaming starves Wi-Fi airtime and causes packet dropouts on high-res FLAC streams. Suppress background discovery when `serverStatus == CAST`.
+- **Adaptive SOAP Transport Polling for Renderer Stability**:
+  - Low-power audio streamer MCUs (LinkPlay, older DAPs) experience buffer underruns when slammed with HTTP SOAP `GetPositionInfo` requests every 1 second. Poll at a relaxed 2000–2500ms cadence throughout track progression, and only tighten to 1000ms during the final 10 seconds of track duration for accurate end-of-track detection.
+- **Immediate Tap Responsiveness with Long-Press (Avoid DoubleTap Delay in Compose)**:
+  - In Jetpack Compose `detectTapGestures`, supplying an `onDoubleTap` callback introduces an inherent ~300ms delay to `onTap` while Compose waits to check if a second tap follows.
+  - For high-frequency interactive surfaces (like a Mini-Player dock where single-tap must immediately open the Audio Hub), pair `onTap` with `onLongPress` instead. This guarantees 0ms tap latency on touch release, while long-press provides an intentional secondary action (jumping to the now-playing track in the music list) paired with distinct tactile feedback (`HapticFeedbackType.LongPress`).
+  - Use `rememberUpdatedState` for callback lambdas passed into `pointerInput(Unit)` to prevent rapid recompositions (e.g. from seekbar/progress updates) from restarting gesture detection or capturing stale state closures.
 

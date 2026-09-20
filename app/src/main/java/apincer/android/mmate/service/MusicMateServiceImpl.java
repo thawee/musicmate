@@ -128,6 +128,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     private ScheduledFuture<?> nextTrackTask;
     private ScheduledFuture<?> preloadTask;
     private ScheduledFuture<?> dmrStartupTimeoutTask;
+    private ScheduledFuture<?> trackStartTask;
 
     private volatile long lastPreloadedTrackId = -1;
     private volatile long lastPlaybackTrackId = -1;
@@ -179,9 +180,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             String action = intent != null ? intent.getAction() : null;
             if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)
                     || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                Log.d(TAG, "Audio output disconnected / becoming noisy. Auto-pausing playback.");
-                if (isPlaying()) {
+                if (isPlaying() && isLocalTarget()) {
+                    Log.d(TAG, "Audio output disconnected / becoming noisy. Auto-pausing local playback.");
                     pausePlayer();
+                } else {
+                    Log.d(TAG, "Audio output disconnected / becoming noisy, but active playback is remote (DLNA/Cast). Continuing playback.");
                 }
                 if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                     AudioOutputHelper.clearCachedBluetoothCodec();
@@ -390,7 +393,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
         }
 
-        statusObserver = status -> updateNotification(getApplicationContext(), null, null, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+        statusObserver = status -> {
+            PlaybackTarget activeTarget = getActivePlayer();
+            // Only update notification if NOT using the local Media3 ExoPlayer (Media3 handles its own)
+            if (activeTarget == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(activeTarget.getTargetId())) {
+                Track currentTrack = getNowPlayingSong();
+                MediaServerHub.ServerStatus s = (status != null) ? status : mediaHub.getStatus().getValue();
+                updateNotification(getApplicationContext(), currentTrack, activeTarget, s, tagRepos.getTotalSongs(), isPlaying());
+            }
+        };
         getStatusLiveData().observeForever(statusObserver);
 
         // external player controller
@@ -485,6 +496,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     break;
                 case ACTION_SKIP_TO_NEXT:
                 case ACTION_SKIP_NEXT:
+                case ACTION_PLAY_NEXT:
                     long deletedId = intent.getLongExtra(EXTRA_MUSIC_ID, -1);
                     if (deletedId != -1) {
                         onTrackDeleted(deletedId);
@@ -566,6 +578,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // 4. Cancel coroutines job
         serviceJob.cancel(null);
 
+        // Unregister renderer listener to prevent Singleton from holding reference to destroyed service
+        if (mediaHub != null) {
+            mediaHub.setOnRenderersChangedListener(null);
+        }
+
         // Ensure everything is cleaned up if the service is destroyed.
         stopServers();
 
@@ -615,10 +632,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
             queueManager.setCurrentTrack(song);
             AudioStreamCacheManager.getInstance().preloadTrack(song);
-            Track nextSong = queueManager.getNextTrack();
-            if (nextSong != null) {
-                AudioStreamCacheManager.getInstance().preloadTrack(nextSong);
-            }
         }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             runningMode = RUNNING_MODE.CONTROL;
@@ -660,6 +673,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     if (nextSong != null) {
                         queueManager.setPlaybackTrack(nextSong);
                         playSong(nextSong);
+                    } else {
+                        stopPlaying();
                     }
                 }
             }
@@ -675,6 +690,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         if (song != null) {
             queueManager.setPlaybackTrack(song);
             internalPlayOnDMRPlayer(playbackTarget, song);
+        } else {
+            Log.d(TAG, "internalSkipToNextOnDMRPlayer: Queue ended, stopping DMR");
+            internalStopOnDMRPlayer(playbackTarget);
         }
     }
 
@@ -731,9 +749,24 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         } catch (Exception e) {
             Log.w(TAG, "Failed to pause DMR: " + playbackTarget.getDisplayName(), e);
         }
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+            nextTrackTask = null;
+        }
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
+            preloadTask = null;
+        }
+        if (trackStartTask != null) {
+            trackStartTask.cancel(true);
+            trackStartTask = null;
+        }
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
         state.currentTrack = getNowPlayingSong();
+        if (playbackStateFlow.getValue() != null) {
+            state.currentPositionSecond = playbackStateFlow.getValue().currentPositionSecond;
+        }
         onPlaybackStateChanged(state);
     }
 
@@ -748,8 +781,30 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 }
                 apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
                 state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-                state.currentTrack = getNowPlayingSong();
+                Track currentSong = getNowPlayingSong();
+                state.currentTrack = currentSong;
+                long curPos = 0;
+                if (playbackStateFlow.getValue() != null) {
+                    curPos = playbackStateFlow.getValue().currentPositionSecond;
+                    state.currentPositionSecond = curPos;
+                }
                 onPlaybackStateChanged(state);
+
+                // Reschedule fallback timer based on remaining duration
+                if (currentSong != null && currentSong.getAudioDuration() > 0) {
+                    long remainingSec = Math.max(1, Math.round(currentSong.getAudioDuration()) - curPos);
+                    long delayMs = (remainingSec * 1000L) + 1500L;
+                    if (nextTrackTask != null) {
+                        nextTrackTask.cancel(true);
+                    }
+                    nextTrackTask = scheduler.schedule(() -> {
+                        Log.w(TAG, "Track end fallback triggered after resumed duration!");
+                        currentPlayerFlow.getValue().ifPresentOrElse(
+                                this::fallbackToNextTrack,
+                                () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+                        );
+                    }, delayMs, TimeUnit.MILLISECONDS);
+                }
             } else {
                 androidPlayer.resume();
             }
@@ -843,7 +898,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         onPlaybackStateChanged(state);
 
-        handleTrackStartEvent(song);
+        // C-2: Delay handleTrackStartEvent by 1.5s to allow the async Stop→SetURI→Play
+        // handshake to complete before the preload and fallback timers start.
+        // Firing these timers immediately after playerPlaySong() (which only queues the command)
+        // means the timers run from the wrong base time and the preload can fire before the
+        // renderer is even playing. onMediaTrackChanged() from GENA/polling remains the
+        // authoritative real-time trigger for subsequent track-start events.
+        trackStartTask = scheduler.schedule(() -> handleTrackStartEvent(song), 1500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -861,6 +922,21 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     androidPlayer.seekTo(targetPos);
                 } else {
                     mediaHub.playerSeek(currentTarget.getTargetId(), targetPos);
+                    // Reschedule fallback timer based on seek position
+                    if (currentTrack != null && currentTrack.getAudioDuration() > 0) {
+                        long durationMs = (long) (currentTrack.getAudioDuration() * 1000.0);
+                        long remainingMs = Math.max(1000L, durationMs - targetPos);
+                        if (nextTrackTask != null) {
+                            nextTrackTask.cancel(true);
+                        }
+                        nextTrackTask = scheduler.schedule(() -> {
+                            Log.w(TAG, "Track end fallback triggered after seek remaining duration!");
+                            currentPlayerFlow.getValue().ifPresentOrElse(
+                                    this::fallbackToNextTrack,
+                                    () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+                            );
+                        }, remainingMs + 1500L, TimeUnit.MILLISECONDS);
+                    }
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to seek", e);
@@ -943,37 +1019,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }).start();
     }
 
-    private void preloadNextTrack() {
-        Track next = queueManager.getNextTrack();
-
-        if (next != null) {
-            Log.d(TAG, "Gapless: Preloading next → " + next.getTitle());
-            AudioStreamCacheManager.getInstance().preloadTrack(next);
-            try {
-                PlaybackTarget player = getActivePlayer();
-                if (player instanceof apincer.music.core.playback.DMRPlayer && !((apincer.music.core.playback.DMRPlayer) player).supportsPreload()) {
-                    Log.d(TAG, "DMR does not support SetNextAVTransportURI; keeping in local memory cache only.");
-                    return;
-                }
-                if (player != null && isControllable(player)) {
-                    mediaHub.setNextTrack(next); // DLNA SetNextAVTransportURI
-                } else if (player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
-                    androidPlayer.setNextTrack(next); // ExoPlayer gapless media item
-                }
-            } catch (Exception e) {
-                Log.w(TAG, "Gapless: Failed to preload next track", e);
-            }
-        } else {
-            Log.d(TAG, "Gapless: No next track to preload");
-        }
-    }
-
     private void fallbackToNextTrack(PlaybackTarget player) {
         Track current = getNowPlayingSong();
         Track expectedNext = queueManager.getNextTrack();
 
         if (expectedNext == null) {
-            Log.w(TAG, "Fallback: No next track");
+            Log.w(TAG, "Fallback: No next track (queue ended), stopping playback");
+            internalStopOnDMRPlayer(player);
             return;
         }
 
@@ -984,15 +1036,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
 
         Log.w(TAG, "Fallback: Forcing next → " + expectedNext.getTitle());
-
-        try {
-            mediaHub.playerPlaySong(player.getTargetId(), expectedNext);
-            queueManager.setPlaybackTrack(expectedNext);
-        } catch (Exception e) {
-            Log.w(TAG, "Fallback: Failed to force next track", e);
-        }
-
-        lastPreloadedTrackId = -1;
+        queueManager.setPlaybackTrack(expectedNext);
+        internalPlayOnDMRPlayer(player, expectedNext);
     }
 
     @Override
@@ -1085,24 +1130,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
 
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
-            updateNotification(getApplicationContext(), null, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs());
+            Track active = getNowPlayingSong();
+            updateNotification(getApplicationContext(), active, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs(), isPlaying());
         }
     }
 
     @Override
     public void setNextSongInQueue() {
-        // get next track from que manager
         queueManager.setPlaybackTrack(getNowPlayingSong());
-        Track track = queueManager.getNextTrack();
-        if(track != null) {
-            AudioStreamCacheManager.getInstance().preloadTrack(track);
-            PlaybackTarget player = getActivePlayer();
-            if (player != null && isControllable(player)) {
-                mediaHub.setNextTrack(track);
-            } else if (player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
-                androidPlayer.setNextTrack(track);
-            }
-        }
+        preloadNextTrackSafe();
     }
 
     private void handleDiscoveredRenderers(List<PlaybackTarget> renderers) {
@@ -1259,8 +1295,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         long trackId = track.getId();
 
-        // Avoid duplicate events
-        if (trackId == lastPlaybackTrackId) {
+        // Avoid duplicate events unless the fallback task has already completed or repeat mode is active
+        boolean fallbackActive = nextTrackTask != null && !nextTrackTask.isDone();
+        boolean isRepeatOne = queueManager != null && queueManager.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE;
+        if (trackId == lastPlaybackTrackId && fallbackActive && !isRepeatOne) {
             Log.d(TAG, "Event ignored (duplicate): " + track.getTitle());
             return;
         }
@@ -1287,11 +1325,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         PlaybackTarget activePlayer = getActivePlayer();
         boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
                 || mediaHub.isCurrentRendererHiBy();
-        boolean supportsPreload = !(activePlayer instanceof apincer.music.core.playback.DMRPlayer)
-                || ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
+        // SAFE-BY-DEFAULT: Only DMRPlayer instances that explicitly report supportsPreload() = true
+        // may use UPnP SetNextAVTransportURI. Non-DMR players (WebStreamingPlayer) and unknown
+        // targets must NEVER default to supportsPreload = true.
+        boolean supportsPreload = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                && ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
 
         if (isHiBy || !supportsPreload) {
-            Log.d(TAG, "Renderer (" + (activePlayer != null ? activePlayer.getDisplayName() : "HiBy/DMR") + ") does not support UPnP SetNextAVTransportURI. Pre-caching stream in memory for discrete handover.");
+            Log.d(TAG, "Renderer (" + (activePlayer != null ? activePlayer.getDisplayName() : "Unknown") + ") does not support UPnP SetNextAVTransportURI. Pre-caching stream in memory for discrete handover.");
             Track next = queueManager.getNextTrack();
             if (next != null) {
                 AudioStreamCacheManager.getInstance().preloadTrack(next);
@@ -1299,11 +1340,31 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             return;
         }
 
-        long preloadDelayMs = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+        // Compute a dynamic preload delay:
+        // Fire SetNextAVTransportURI at 60% of the track's duration so the renderer
+        // has time to confirm playback is fully established before the next URI is queued.
+        // Use max(deviceGaplessDelayMs, 60% duration) but never more than the last 30s
+        // of the track, to maintain gapless crossfade behaviour on long tracks.
+        long deviceGaplessDelayMs = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
                 ? ((apincer.music.core.playback.DMRPlayer) activePlayer).getDeviceProfile().getGaplessDelayMs()
                 : 5000;
 
-        Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s");
+        long trackDurationMs = track != null && track.getAudioDuration() > 0
+                ? (long) (track.getAudioDuration() * 1000)
+                : 0;
+
+        long preloadDelayMs;
+        if (trackDurationMs > 0) {
+            long sixtyPctMs = (long) (trackDurationMs * 0.60);
+            long thirtySecFromEnd = Math.max(0, trackDurationMs - 30_000);
+            // Clamp: at least deviceGaplessDelay, at most 30s before end of track
+            preloadDelayMs = Math.min(Math.max(sixtyPctMs, deviceGaplessDelayMs), thirtySecFromEnd);
+            Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s"
+                    + " (60% of " + (trackDurationMs / 1000) + "s track)");
+        } else {
+            preloadDelayMs = deviceGaplessDelayMs;
+            Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s (no duration metadata)");
+        }
 
         preloadTask = scheduler.schedule(() -> {
             preloadNextTrackSafe();
@@ -1326,10 +1387,17 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         lastPreloadedTrackId = next.getId();
 
         Log.d(TAG, "Gapless: Preloading → " + next.getTitle());
+        AudioStreamCacheManager.getInstance().preloadTrack(next);
+
+        PlaybackTarget activePlayer = getActivePlayer();
+        boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
+                || mediaHub.isCurrentRendererHiBy();
+        boolean supportsPreload = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                && ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
 
         if (isLocalTarget()) {
             androidPlayer.setNextTrack(next);
-        } else {
+        } else if (activePlayer != null && isControllable(activePlayer) && !isHiBy && supportsPreload) {
             mediaHub.setNextTrack(next); // SetNextAVTransportURI
         }
     }
@@ -1351,7 +1419,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         nextTrackTask = scheduler.schedule(() -> {
             Log.w(TAG, "Track end fallback triggered after full duration!");
 
-            currentPlayerFlow.getValue().ifPresent(this::fallbackToNextTrack);
+            currentPlayerFlow.getValue().ifPresentOrElse(
+                    this::fallbackToNextTrack,
+                    () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+            );
 
         }, delay, TimeUnit.MILLISECONDS);
     }
@@ -1368,6 +1439,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         if (nextTrackTask != null) {
             nextTrackTask.cancel(true);
             nextTrackTask = null;
+        }
+
+        if (trackStartTask != null) {
+            trackStartTask.cancel(true);
+            trackStartTask = null;
         }
 
         AudioStreamCacheManager.getInstance().cancelPendingPreloads();
@@ -1389,6 +1465,18 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onAccessMediaTrack(Track song) {
+        // Guard: Do NOT let passive HTTP access requests hijack an active controlled playback session.
+        // When a DLNA renderer pre-fetches the next track (triggered by SetNextAVTransportURI),
+        // it issues an HTTP GET for the next song. That request must NOT reset currentTrack,
+        // timers, or preload state — the DMR's GENA events and polling handle transitions.
+        PlaybackTarget activePlayer = getActivePlayer();
+        if (activePlayer != null && isControllable(activePlayer)) {
+            Log.d(TAG, "onAccessMediaTrack: Ignoring passive HTTP request for '"
+                    + (song != null ? song.getTitle() : "null")
+                    + "' — active controlled DMR session in progress.");
+            return;
+        }
+
         Track current = getNowPlayingSong();
         if (current != null && song != null && current.getId() == song.getId()) {
             // Track is already active, do not interrupt playback state

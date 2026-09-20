@@ -7,7 +7,6 @@ import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import javax.inject.Singleton;
 
-import apincer.android.jupnp.server.httpcore.HttpCoreWebServerImpl;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.WebServer;

@@ -50,6 +50,9 @@ class SettingsActivity : ComponentActivity() {
             var tapActionMode by remember {
                 mutableStateOf(Settings.getTapActionMode(this@SettingsActivity))
             }
+            var studioKeepScreenOn by remember {
+                mutableStateOf(Settings.isStudioKeepScreenOn(this@SettingsActivity))
+            }
 
             MusicMateTheme {
                 SettingsScreen(
@@ -100,6 +103,11 @@ class SettingsActivity : ComponentActivity() {
                     onTapActionModeChange = { newMode ->
                         tapActionMode = newMode
                         Settings.setTapActionMode(this@SettingsActivity, newMode)
+                    },
+                    studioKeepScreenOn = studioKeepScreenOn,
+                    onStudioKeepScreenOnChange = { checked ->
+                        studioKeepScreenOn = checked
+                        Settings.setStudioKeepScreenOn(this@SettingsActivity, checked)
                     },
                     onBackClick = { finish() }
                 )

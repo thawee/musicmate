@@ -6,6 +6,7 @@
     android:id="@+id/main_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
     tools:context=".ui.TagsActivity">
 
     <!-- 🌌 Dynamic Blurred Background -->
@@ -115,16 +116,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
-                android:layout_marginBottom="@dimen/dimen_32_dp"
+                android:layout_marginBottom="8dp"
                 android:orientation="vertical"
-                android:paddingBottom="8dp">
+                android:paddingBottom="0dp">
 
                 <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/tags_header_badges"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:padding="8dp" />
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="4dp" />
             </LinearLayout>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -147,7 +149,8 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="160dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_marginBottom="0dp" />
 
     <!-- 🔹 Floating Action Dock (Accessible 2-Row Bottom Command Bar) -->
     <com.google.android.material.card.MaterialCardView

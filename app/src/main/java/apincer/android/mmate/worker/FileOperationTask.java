@@ -145,7 +145,7 @@ public class FileOperationTask {
         intent.putExtra(PlaybackService.EXTRA_MUSIC_ID, tag.getId());
 
         // Start the service
-        context.startService(intent);
+        androidx.core.content.ContextCompat.startForegroundService(context, intent);
     }
 
     /**

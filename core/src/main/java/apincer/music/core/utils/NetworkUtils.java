@@ -124,36 +124,32 @@ public class NetworkUtils {
     @NonNull
     public static String getIpAddress() {
         try {
-            // --- Step 1: Prioritize WiFi Interfaces ---
-            // Iterate through all network interfaces on the device.
+            // --- Step 1: Prioritize Physical WiFi, Hotspot, and Ethernet LAN Interfaces ---
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                // Check if the interface is up and is a WiFi client or hotspot interface.
-                if (ni.isUp() && isHotspotInterfaceName(ni.getName())) {
+                if (ni.isUp() && !ni.isLoopback() && !isVirtualOrVpnInterface(ni) &&
+                        (isWifiClientInterfaceName(ni.getName()) || isHotspotInterfaceName(ni.getName()) || isOnEthernetNetwork(ni, null))) {
                     for (InetAddress address : Collections.list(ni.getInetAddresses())) {
-                        // Find the first valid, non-loopback IPv4 address.
                         if (!address.isLoopbackAddress()) {
                             String hostAddress = address.getHostAddress();
                             if (hostAddress != null && IPV4_PATTERN.matcher(hostAddress).matches()) {
-                                //Log.d(TAG, "Found WiFi IP address: " + hostAddress);
-                                return hostAddress; // Return immediately with the WiFi IP.
+                                return hostAddress;
                             }
                         }
                     }
                 }
             }
 
-            // --- Step 2: Fallback to Other Interfaces (if no WiFi IP was found) ---
+            // --- Step 2: Fallback to Other Non-Cellular, Non-VPN Interfaces ---
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                // Skip interfaces that are down, loopback, or mobile data.
-                if (!ni.isUp() || ni.isLoopback() || isOnCellularNetwork(ni, null)) {
+                // Skip interfaces that are down, loopback, mobile data, or virtual/VPN tunnels
+                if (!ni.isUp() || ni.isLoopback() || isOnCellularNetwork(ni, null) || isVirtualOrVpnInterface(ni)) {
                     continue;
                 }
                 for (InetAddress address : Collections.list(ni.getInetAddresses())) {
                     if (!address.isLoopbackAddress()) {
                         String hostAddress = address.getHostAddress();
                         if (hostAddress != null && IPV4_PATTERN.matcher(hostAddress).matches()) {
-                            // Log.d(TAG, "Found fallback IP on interface '" + ni.getName() + "': " + hostAddress);
-                            return hostAddress; // Return the first valid IP on any other suitable interface.
+                            return hostAddress;
                         }
                     }
                 }
@@ -225,6 +221,20 @@ public class NetworkUtils {
                lowerName.startsWith("spipe") || 
                lowerName.startsWith("lte") || 
                lowerName.startsWith("ppp");
+    }
+
+    public static boolean isVirtualOrVpnInterface(NetworkInterface networkInterface) {
+        if (networkInterface == null) return false;
+        String name = networkInterface.getName();
+        if (name == null) return false;
+        String lowerName = name.toLowerCase(java.util.Locale.US);
+        return lowerName.startsWith("tun") ||
+               lowerName.startsWith("tap") ||
+               lowerName.startsWith("wg") ||
+               lowerName.startsWith("p2p") ||
+               lowerName.startsWith("dummy") ||
+               lowerName.contains("vpn") ||
+               lowerName.startsWith("ipsec");
     }
 
     /**

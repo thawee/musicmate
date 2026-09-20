@@ -254,6 +254,7 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                 }
             }
         }
+        destroy();
     }
 
     @Override

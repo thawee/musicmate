@@ -119,4 +119,16 @@ public class Settings {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putString(Constants.PREF_TAP_ACTION_MODE, mode).apply();
     }
+
+    public static boolean isStudioKeepScreenOn(Context context) {
+        if (context == null) return true;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_STUDIO_KEEP_SCREEN_ON, true);
+    }
+
+    public static void setStudioKeepScreenOn(Context context, boolean keepOn) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putBoolean(Constants.PREF_STUDIO_KEEP_SCREEN_ON, keepOn).apply();
+    }
 }

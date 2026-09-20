@@ -117,6 +117,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
         } finally {
             isRunning = false;
         }
+        destroy();
     }
 
     @Override
@@ -193,9 +194,11 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                 end = Long.parseLong(parts[1]);
             }
 
+            if (start >= fileLength || start < 0) {
+                return null; // 416 Range Not Satisfiable
+            }
             if (end >= fileLength) end = fileLength - 1;
-            if (start < 0) start = 0;
-            if (start > end) start = 0;
+            if (start > end) return null;
 
             return new Range(start, end, true);
 
@@ -244,7 +247,16 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
             }
 
             String rawPath = request.uri();
-            String remoteAddr = request.headers().get(HttpHeaderNames.SERVER);
+            String remoteAddr = request.headers().get("X-Forwarded-For");
+            if (remoteAddr == null || remoteAddr.isEmpty()) {
+                java.net.SocketAddress socketAddr = ctx.channel().remoteAddress();
+                if (socketAddr instanceof java.net.InetSocketAddress) {
+                    java.net.InetAddress inet = ((java.net.InetSocketAddress) socketAddr).getAddress();
+                    remoteAddr = (inet != null) ? inet.getHostAddress() : ((java.net.InetSocketAddress) socketAddr).getHostString();
+                } else if (socketAddr != null) {
+                    remoteAddr = socketAddr.toString();
+                }
+            }
             String userAgent = request.headers().get(HttpHeaderNames.USER_AGENT);
             if (rawPath == null) return;
 
@@ -327,6 +339,21 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                 long fileLength = raf.length();
 
                 Range range = parseRange(request.headers().get(HttpHeaderNames.RANGE), fileLength);
+                if (range == null) {
+                    if (raf != null) {
+                        try { raf.close(); } catch (Exception ignore) {}
+                        raf = null;
+                    }
+                    FullHttpResponse res = new DefaultFullHttpResponse(
+                            HTTP_1_1,
+                            REQUESTED_RANGE_NOT_SATISFIABLE,
+                            Unpooled.EMPTY_BUFFER
+                    );
+                    res.headers().set(HttpHeaderNames.CONTENT_RANGE, "bytes */" + fileLength);
+                    res.headers().set(HttpHeaderNames.SERVER, getServerSignature());
+                    ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
+                    return;
+                }
 
                 long start = range.start;
                 long end = range.end;

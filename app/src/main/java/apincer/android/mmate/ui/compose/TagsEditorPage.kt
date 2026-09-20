@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,13 +17,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,12 +35,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import apincer.android.mmate.coil3.CoverartFetcher
+import androidx.compose.ui.unit.sp
+import apincer.android.mmate.R
 import apincer.music.core.model.Track
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +50,7 @@ import apincer.music.core.model.Track
 fun TagsEditorPage(
     track: Track?,
     state: TagsEditorState,
+    onScanLibrary: () -> Unit = {},
     albumArtistOptions: List<String> = emptyList(),
     artistOptions: List<String> = emptyList(),
     genreOptions: List<String> = emptyList(),
@@ -52,6 +61,64 @@ fun TagsEditorPage(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+
+    if (track == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .graphicsLayer { clip = true }
+                    .background(Color(0x1AFFB300), RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0x33FFB300), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.rounded_library_music_24),
+                    contentDescription = null,
+                    tint = Color(0xFFFFD700),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No Track Selected",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Select a track from the library to edit its tags.",
+                color = Color(0xFF9E9E9E),
+                fontSize = 12.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(
+                onClick = onScanLibrary,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFB300),
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = "Scan Library",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        return
+    }
 
     Column(
         modifier = Modifier

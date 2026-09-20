@@ -41,6 +41,8 @@ fun SettingsScreen(
     onReplayGainPreventClippingChange: (Boolean) -> Unit = {},
     tapActionMode: String = "curate",
     onTapActionModeChange: (String) -> Unit = {},
+    studioKeepScreenOn: Boolean = true,
+    onStudioKeepScreenOnChange: (Boolean) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -324,6 +326,14 @@ fun SettingsScreen(
                     subtitle = "Matches title and artist (Turn off for title-only matching)",
                     checked = artistAwareSimilarSongs,
                     onCheckedChange = onArtistAwareSimilarSongsChange
+                )
+                HorizontalDivider(color = Color(0x14FFFFFF), modifier = Modifier.padding(vertical = 8.dp))
+
+                SettingsSwitchRow(
+                    title = "Keep Screen Awake in Fullscreen",
+                    subtitle = "Keeps the screen on while Fullscreen Desk Mode is open",
+                    checked = studioKeepScreenOn,
+                    onCheckedChange = onStudioKeepScreenOnChange
                 )
             }
         }

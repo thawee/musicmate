@@ -140,11 +140,6 @@ public class QueueManager {
 
     public synchronized void addPlayingQueue(Track song) {
         if (song == null) return;
-        try {
-            addToPlayingQueue(song);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to persist track to playing queue", e);
-        }
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -170,17 +165,16 @@ public class QueueManager {
             playbackIndex = 0;
         }
         rebuildIndexMap();
-        dbHelper.savePlayingQueue(queueList);
+        try {
+            dbHelper.savePlayingQueue(queueList);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist playing queue", e);
+        }
         updateShuffleOrder();
     }
 
     public synchronized void addPlayNext(Track song) {
         if (song == null) return;
-        try {
-            addToPlayingQueue(song);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to persist track to playing queue", e);
-        }
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -209,7 +203,11 @@ public class QueueManager {
             queueList.add(insertPos, song);
         }
         rebuildIndexMap();
-        dbHelper.savePlayingQueue(queueList);
+        try {
+            dbHelper.savePlayingQueue(queueList);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to persist playing queue", e);
+        }
         updateShuffleOrder();
     }
 
@@ -313,12 +311,29 @@ public class QueueManager {
             List<Track> songs = dbHelper.getPlayingQueue();
             queueList.clear();
             indexMap.clear();
+            boolean hadInvalid = false;
             for (int i = 0; i < songs.size(); i++) {
                 Track track = songs.get(i);
-                if(track == null) continue;
+                if (track == null) continue;
+                // Skip tracks whose files have been deleted by other apps
+                String path = track.getPath();
+                if (path == null || path.isEmpty() || !new java.io.File(path).exists()) {
+                    Log.w(TAG, "loadPlayingQueue: skipping missing file: " + path);
+                    hadInvalid = true;
+                    continue;
+                }
                 if (!indexMap.containsKey(track.getId())) {
                     queueList.add(track);
                     indexMap.put(track.getId(), queueList.size() - 1);
+                }
+            }
+
+            // Persist the cleaned queue so stale IDs are removed from storage
+            if (hadInvalid) {
+                try {
+                    dbHelper.savePlayingQueue(queueList);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to persist cleaned playing queue", e);
                 }
             }
 
@@ -366,13 +381,21 @@ public class QueueManager {
         if (track == null) return;
 
         Integer idx = indexMap.get(track.getId());
-        if (idx != null) {
-            playbackIndex = idx;
-            currentIndex = idx;
-
-            if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
-                updateShuffleOrder();
+        if (idx == null) {
+            queueList.add(track);
+            idx = queueList.size() - 1;
+            rebuildIndexMap();
+            try {
+                dbHelper.savePlayingQueue(queueList);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to persist auto-enqueued playback track", e);
             }
+        }
+        playbackIndex = idx;
+        currentIndex = idx;
+
+        if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
+            updateShuffleOrder();
         }
     }
 
@@ -562,10 +585,11 @@ public class QueueManager {
     }
 
     public void addToPlayingQueue(Track song) {
+        if (song == null) return;
         try {
             dbHelper.addToPlayingQueue(song);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            Log.e(TAG, "Failed to add track to playing queue in database", e);
         }
     }
 

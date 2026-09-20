@@ -14,17 +14,43 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -33,11 +59,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -445,11 +475,18 @@ fun MainScaffold(
                     progress = state.playbackProgress.floatValue,
                     onPlayPauseClick = { callbacks?.onDockPlayPauseClick() },
                     onNextClick = { callbacks?.onDockNextClick() },
+                    onPreviousClick = { callbacks?.onAudioHubPrevious() },
                     onOpenAudioHub = {
                         state.showAudioHubSheet.value = true
                     },
                     onOpenDrawer = {
                         coroutineScope.launch { drawerState.open() }
+                    },
+                    onOpenFullscreen = {
+                        state.showFullscreenConsole.value = true
+                    },
+                    onScrollToPlaying = {
+                        callbacks?.onDockLongClick()
                     }
                 )
             }
@@ -486,7 +523,28 @@ fun MainScaffold(
             onStopServerClicked = { callbacks?.onStopServerClicked() },
             onCopyUrlClicked = { callbacks?.onCopyUrlClicked() },
             onOpenUrlClicked = { callbacks?.onOpenUrlClicked() },
-            onQrCodeClicked = { callbacks?.onQrCodeClicked() }
+            onQrCodeClicked = { callbacks?.onQrCodeClicked() },
+            onOpenFullscreen = {
+                state.showFullscreenConsole.value = true
+            }
+        )
+    }
+
+    // ── Pure Compose Fullscreen Landscape Studio Console ("Hi-Fi Desk Mode") ─
+    if (state.showFullscreenConsole.value) {
+        FullscreenStudioConsole(
+            state = state.nowPlayingState,
+            queueState = state.queueState,
+            onDismissRequest = { state.showFullscreenConsole.value = false },
+            onPlayPause = { callbacks?.onAudioHubPlayPause() },
+            onNext = { callbacks?.onAudioHubNext() },
+            onPrevious = { callbacks?.onAudioHubPrevious() },
+            onShuffleToggle = { callbacks?.onAudioHubShuffleToggle() },
+            onRepeatToggle = { callbacks?.onAudioHubRepeatToggle() },
+            onSeek = { pos -> callbacks?.onAudioHubSeek(pos) },
+            onVolumeChanged = { vol -> callbacks?.onAudioHubVolumeChanged(vol) },
+            onSelectTargetPlayer = { callbacks?.onSelectPlaybackTargetClick() },
+            onQueueTrackClicked = { track -> callbacks?.onAudioHubQueueTrackClick(track) }
         )
     }
 
@@ -730,10 +788,16 @@ private fun FloatingMiniPlayerDock(
     progress: Float,
     onPlayPauseClick: () -> Unit,
     onNextClick: () -> Unit,
+    onPreviousClick: () -> Unit = {},
     onOpenAudioHub: () -> Unit,
-    onOpenDrawer: () -> Unit
+    onOpenDrawer: () -> Unit,
+    onOpenFullscreen: () -> Unit = {},
+    onScrollToPlaying: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val currentScrollToPlaying by rememberUpdatedState(onScrollToPlaying)
+    val currentOpenAudioHub by rememberUpdatedState(onOpenAudioHub)
 
     Surface(
         shape = RoundedCornerShape(20.dp), // DESIGN.md §6A: 20dp corner radius
@@ -750,13 +814,23 @@ private fun FloatingMiniPlayerDock(
                     .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Far Left: Album Art thumbnail (Click opens Audio Hub, DESIGN.md §6A)
+                // Far Left: Album Art thumbnail (Click opens Audio Hub, Long-press jumps to playing song in list)
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF2A2A2A))
-                        .clickable(onClick = onOpenAudioHub),
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { currentOpenAudioHub() },
+                                onLongPress = {
+                                    if (track != null) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        currentScrollToPlaying()
+                                    }
+                                }
+                            )
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     if (track != null) {
@@ -778,11 +852,53 @@ private fun FloatingMiniPlayerDock(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                // Center: Track Title & Output Subtitle
+                // Center: Track Title & Subtitle with Swipe Gestures & Long-Press Jump
+                var dragTotalX by remember { mutableFloatStateOf(0f) }
+                var dragTotalY by remember { mutableFloatStateOf(0f) }
+
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable(onClick = onOpenAudioHub)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { currentOpenAudioHub() },
+                                onLongPress = {
+                                    if (track != null) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        currentScrollToPlaying()
+                                    }
+                                }
+                            )
+                        }
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragStart = {
+                                    dragTotalX = 0f
+                                    dragTotalY = 0f
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    dragTotalX += dragAmount.x
+                                    dragTotalY += dragAmount.y
+                                },
+                                onDragEnd = {
+                                    val threshold = 36.dp.toPx()
+                                    if (dragTotalY < -threshold && kotlin.math.abs(dragTotalY) > kotlin.math.abs(dragTotalX)) {
+                                        onOpenAudioHub()
+                                    } else if (dragTotalX < -threshold) {
+                                        onNextClick()
+                                    } else if (dragTotalX > threshold) {
+                                        onPreviousClick()
+                                    }
+                                    dragTotalX = 0f
+                                    dragTotalY = 0f
+                                },
+                                onDragCancel = {
+                                    dragTotalX = 0f
+                                    dragTotalY = 0f
+                                }
+                            )
+                        }
                 ) {
                     Text(
                         text = track?.title ?: "MusicMate",
@@ -795,35 +911,57 @@ private fun FloatingMiniPlayerDock(
                             .basicMarquee(iterations = Int.MAX_VALUE, velocity = 28.dp)
                             .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
                     )
-                    if (outputTarget.isNotEmpty()) {
-                        Text(
-                            text = outputTarget,
-                            color = drawerGold.copy(alpha = 0.85f),
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
-                        )
-                    } else if (track != null && !track.artist.isNullOrEmpty()) {
-                        Text(
-                            text = track.artist,
-                            color = Color(0x99FFFFFF),
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
-                        )
+
+                    val cleanTarget = remember(outputTarget) { sanitizeTargetDeviceTitle(outputTarget) }
+                    val isLocal = cleanTarget.equals("Local Audio", ignoreCase = true) || cleanTarget.isEmpty()
+                    val artistName = track?.artist?.takeIf { it.isNotBlank() }
+
+                    val subtitleText = remember(artistName, cleanTarget, isLocal) {
+                        buildAnnotatedString {
+                            if (artistName != null) {
+                                append(artistName)
+                            }
+                            if (!isLocal) {
+                                if (artistName != null) {
+                                    append(" • ")
+                                }
+                                withStyle(
+                                    SpanStyle(
+                                        color = drawerGold.copy(alpha = 0.95f),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                ) {
+                                    append(cleanTarget)
+                                }
+                            } else if (artistName == null) {
+                                append("High-Fidelity Audio")
+                            }
+                        }
                     }
+
+                    Text(
+                        text = subtitleText,
+                        color = Color(0x99FFFFFF),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
+                            .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
+                    )
                 }
 
-                // Transport Controls
-                IconButton(
-                    onClick = onPlayPauseClick,
-                    modifier = Modifier.size(40.dp)
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // Transport Controls: Circular Tactile Play / Pause with Gold Accent Rim
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x22FFFFFF))
+                        .border(1.dp, drawerGold.copy(alpha = 0.5f), CircleShape)
+                        .clickable(onClick = onPlayPauseClick),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(
@@ -837,7 +975,7 @@ private fun FloatingMiniPlayerDock(
 
                 IconButton(
                     onClick = onNextClick,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
@@ -847,10 +985,23 @@ private fun FloatingMiniPlayerDock(
                     )
                 }
 
+                // Expand Fullscreen Studio Console Button
+                IconButton(
+                    onClick = onOpenFullscreen,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.rounded_fullscreen_24),
+                        contentDescription = "Fullscreen Studio Console",
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 // Far Right: MusicMate Drawer Menu Button (DESIGN.md §6A: 48dp target for thumb ergonomics)
                 IconButton(
                     onClick = onOpenDrawer,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),

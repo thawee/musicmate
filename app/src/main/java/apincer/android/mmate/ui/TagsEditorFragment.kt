@@ -250,6 +250,10 @@ class TagsEditorFragment : Fragment() {
     }
 
     fun doSaveMediaItem() {
+        doSaveMediaItem(null)
+    }
+
+    fun doSaveMediaItem(onComplete: Runnable?) {
         tagsActivity.startProgressBar()
         val itemsToSave = ArrayList(tagsActivity.editItems ?: emptyList())
         val totalItems = itemsToSave.size
@@ -280,15 +284,14 @@ class TagsEditorFragment : Fragment() {
         }.thenAccept {
             tagsActivity.refreshDisplayTag()
         }.whenComplete { _, exception ->
-            tagsActivity.stopProgressBar()
-            if (exception == null) {
-                tagsActivity.runOnUiThread {
+            tagsActivity.runOnUiThread {
+                tagsActivity.stopProgressBar()
+                if (exception == null) {
                     Toast.makeText(context, "Saved ${successCount.get()} item(s)", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                tagsActivity.runOnUiThread {
+                } else {
                     Toast.makeText(context, "Failed: ${exception.message}", Toast.LENGTH_SHORT).show()
                 }
+                onComplete?.run()
             }
         }
     }
@@ -369,14 +372,19 @@ class TagsEditorFragment : Fragment() {
             }
             Pair(totalFormatted, thaiFixedCount)
         }.thenAccept { (total, thaiFixed) ->
-            tagsActivity.refreshDisplayTag()
-            tagsActivity.stopProgressBar()
-            var msg = "Reformatted $total track(s)"
-            if (thaiFixed > 0) msg += " (Fixed Thai encoding on $thaiFixed)"
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            // thenAccept runs on ForkJoinPool — must switch to UI thread for Toast and UI updates
+            tagsActivity.runOnUiThread {
+                tagsActivity.refreshDisplayTag()
+                tagsActivity.stopProgressBar()
+                var msg = "Reformatted $total track(s)"
+                if (thaiFixed > 0) msg += " (Fixed Thai encoding on $thaiFixed)"
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
         }.exceptionally {
-            tagsActivity.refreshDisplayTag()
-            tagsActivity.stopProgressBar()
+            tagsActivity.runOnUiThread {
+                tagsActivity.refreshDisplayTag()
+                tagsActivity.stopProgressBar()
+            }
             null
         }
     }

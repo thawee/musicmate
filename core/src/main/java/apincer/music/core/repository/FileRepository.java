@@ -11,6 +11,7 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -185,8 +186,9 @@ public class FileRepository {
             if(isEmpty(coverartName) || DEFAULT_COVERART.equals(coverartName)) {
                 if (isManagedInLibrary(tag)) {
                     File pathFile = new File(path);
-                    pathFile = pathFile.getParentFile();
-                    pathFile = new File(pathFile, "Cover.jpg");
+                    File parentDir = pathFile.getParentFile();
+                    if (parentDir == null) return null;
+                    pathFile = new File(parentDir, "Cover.jpg");
                    // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
                     FFMpegHelper.extractCoverArt(path, pathFile, null);
                     return StringUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
@@ -623,6 +625,9 @@ public class FileRepository {
         // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
         if(mediaDir==null || (!mediaDir.exists())) return;
 
+        // BOUNDARY: Stop at known root paths to prevent accidental deletion
+        if(isStorageRootDirectory(mediaDir)) return;
+
         if(mediaDir.isDirectory()) {
            // boolean toClean = true;
             List<File> toDelete = new ArrayList<>();
@@ -657,6 +662,25 @@ public class FileRepository {
             cleanMediaDirectory(parentFolder);
         }
      }
+
+    /**
+     * Boundary check to prevent recursive directory deletion from climbing
+     * past well-known root paths (e.g., /sdcard, /storage/emulated/0, Music/).
+     */
+    private boolean isStorageRootDirectory(File dir) {
+        if (dir == null) return true;
+        String path = dir.getAbsolutePath();
+        // Stop at standard Android storage roots
+        if ("/storage/emulated/0".equals(path) || "/sdcard".equals(path)) return true;
+        File extStorageDir = Environment.getExternalStorageDirectory();
+        if (extStorageDir != null && path.equals(extStorageDir.getAbsolutePath())) return true;
+        // Stop at standard Music directory
+        File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+        if (musicDir != null && path.equals(musicDir.getAbsolutePath())) return true;
+        // Safety net: never go above depth 4 (e.g., /storage/emulated/0/Music)
+        if (path.split("/").length <= 4) return true;
+        return false;
+    }
 
     public boolean importAudioFile(Track item) {
         boolean status;

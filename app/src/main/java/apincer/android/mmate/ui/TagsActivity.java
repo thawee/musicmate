@@ -377,13 +377,13 @@ public class TagsActivity extends AppCompatActivity {
     }
     private void performHapticClick(View v) {
         if (v != null) {
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            apincer.android.mmate.utils.Haptics.INSTANCE.selection(v);
         }
     }
 
     private void performHapticLongClick(View v) {
         if (v != null) {
-            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            apincer.android.mmate.utils.Haptics.INSTANCE.longPress(v);
         }
     }
 
@@ -660,6 +660,7 @@ public class TagsActivity extends AppCompatActivity {
             return fixed;
         }).thenAccept(fixed -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
                 if (fixed > 0) {
@@ -670,6 +671,7 @@ public class TagsActivity extends AppCompatActivity {
             });
         }).exceptionally(throwable -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
                 Toast.makeText(this, "Error during auto-tag", Toast.LENGTH_SHORT).show();
@@ -874,6 +876,7 @@ public class TagsActivity extends AppCompatActivity {
             return changed;
         }).thenAccept(changed -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
                 if (changed) {
@@ -884,6 +887,7 @@ public class TagsActivity extends AppCompatActivity {
             });
         }).exceptionally(throwable -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
                 Toast.makeText(this, "Error applying selected match", Toast.LENGTH_SHORT).show();
@@ -932,12 +936,14 @@ public class TagsActivity extends AppCompatActivity {
             return fixed;
         }).thenAccept(fixed -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
                 Toast.makeText(this, "Fixed encoding for " + fixed + " fields", Toast.LENGTH_SHORT).show();
             });
         }).exceptionally(throwable -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 stopProgressBar();
             });
@@ -1115,19 +1121,32 @@ public class TagsActivity extends AppCompatActivity {
     private void doSaveAndFinish(TagsEditorFragment fragment) {
         if (fragment != null) {
             Toast.makeText(this, "Saving & closing...", Toast.LENGTH_SHORT).show();
-            fragment.doSaveMediaItem();
-            getWindow().getDecorView().postDelayed(this::finish, 600);
+            fragment.doSaveMediaItem(() -> {
+                // Called on completion — safe to finish now
+                runOnUiThread(this::finish);
+            });
         }
     }
 
     public void doSaveMediaItemsDirectly() {
+        doSaveMediaItemsDirectly(null);
+    }
+
+    public void doSaveMediaItemsDirectly(@Nullable Runnable onComplete) {
         if (activeFragment instanceof TagsEditorFragment fragment) {
-            fragment.doSaveMediaItem();
+            if (onComplete != null) {
+                fragment.doSaveMediaItem(onComplete);
+            } else {
+                fragment.doSaveMediaItem();
+            }
             return;
         }
 
         List<Track> items = getEditItems();
-        if (items.isEmpty()) return;
+        if (items.isEmpty()) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
 
         startProgressBar();
         int totalItems = items.size();
@@ -1158,14 +1177,14 @@ public class TagsActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Saved " + successCount + " item(s), " + failedCount + " failed", Toast.LENGTH_SHORT).show();
                 }
+                if (onComplete != null) onComplete.run();
             });
         }, Executors.newSingleThreadExecutor());
     }
 
     private void doSaveAndFinishDirectly() {
         Toast.makeText(this, "Saving & closing...", Toast.LENGTH_SHORT).show();
-        doSaveMediaItemsDirectly();
-        getWindow().getDecorView().postDelayed(this::finish, 600);
+        doSaveMediaItemsDirectly(this::finish);
     }
 
     private void doFullCleanPipeline() {
@@ -1233,6 +1252,7 @@ public class TagsActivity extends AppCompatActivity {
             return String.format(Locale.getDefault(), "Full Clean Pipeline applied to %d track(s)", items.size());
         }).thenAccept(msg -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
                 isDirty = true;
                 stopProgressBar();
@@ -1240,6 +1260,7 @@ public class TagsActivity extends AppCompatActivity {
             });
         }).exceptionally(ex -> {
             runOnUiThread(() -> {
+                if (isDestroyed() || isFinishing()) return;
                 stopProgressBar();
                 Toast.makeText(this, "Clean failed: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
             });
@@ -1522,22 +1543,24 @@ public class TagsActivity extends AppCompatActivity {
 
                         Log.d("AudioAnalysis", "Spectrogram saved: " + outputPath);
 
-                        ImageRequest imageRequest = new ImageRequest.Builder(getApplicationContext())
-                                .data(new File(outputPath))
-                                .size(Size.ORIGINAL)
-                                // Disables the memory cache (prevents showing the previous track's image)
-                                .memoryCachePolicy(CachePolicy.DISABLED)
-                                // Disables the disk cache (forces a fresh read from your FFmpeg output)
-                                .diskCachePolicy(CachePolicy.DISABLED)
-                                // Highly recommended for spectrograms to ensure sharp detail
-                                .precision(Precision.EXACT)
-                                .target(new ImageViewTarget(spectrumView))
-                                .build();
-                        SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
-                        if(completedNext[0]) {
-                            if (spinner != null) spinner.setVisibility(GONE);
-                        }
-                        completedNext[0] = true;
+                        runOnUiThread(() -> {
+                            ImageRequest imageRequest = new ImageRequest.Builder(getApplicationContext())
+                                    .data(new File(outputPath))
+                                    .size(Size.ORIGINAL)
+                                    // Disables the memory cache (prevents showing the previous track's image)
+                                    .memoryCachePolicy(CachePolicy.DISABLED)
+                                    // Disables the disk cache (forces a fresh read from your FFmpeg output)
+                                    .diskCachePolicy(CachePolicy.DISABLED)
+                                    // Highly recommended for spectrograms to ensure sharp detail
+                                    .precision(Precision.EXACT)
+                                    .target(new ImageViewTarget(spectrumView))
+                                    .build();
+                            SingletonImageLoader.get(getApplicationContext()).enqueue(imageRequest);
+                            if(completedNext[0]) {
+                                if (spinner != null) spinner.setVisibility(GONE);
+                            }
+                            completedNext[0] = true;
+                        });
                     }
 
                     @Override
@@ -1870,8 +1893,15 @@ public class TagsActivity extends AppCompatActivity {
             }
 
             boolean hasUnsavedEdits = isDirty;
-            if (!hasUnsavedEdits && activeFragment instanceof TagsEditorFragment) {
-                hasUnsavedEdits = ((TagsEditorFragment) activeFragment).isModified();
+            // Always check the editor fragment for modifications, regardless of which tab is active.
+            // Previously this only checked activeFragment, which missed edits when on the Tech Info tab.
+            if (!hasUnsavedEdits) {
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
+                    if (f instanceof TagsEditorFragment && f.isAdded()) {
+                        hasUnsavedEdits = ((TagsEditorFragment) f).isModified();
+                        break;
+                    }
+                }
             }
 
             if (hasUnsavedEdits) {

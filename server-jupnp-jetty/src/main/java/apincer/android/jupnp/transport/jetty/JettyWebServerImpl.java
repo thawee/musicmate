@@ -175,7 +175,17 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 });
 
                 //Required:
-                AliasCheck aliasCheck = (pathInContext, resource) -> true;
+                AliasCheck aliasCheck = (pathInContext, resource) -> {
+                    if (resource == null) return false;
+                    try {
+                        java.net.URI uri = resource.getURI();
+                        if (uri == null) return false;
+                        String path = java.nio.file.Paths.get(uri).toFile().getCanonicalPath();
+                        return path.startsWith("/storage/") || path.startsWith("/data/");
+                    } catch (Exception e) {
+                        return false;
+                    }
+                };
                 wsContext.setAliasChecks(Collections.singletonList(aliasCheck)); // bypass alias check
                 wsContext.setAllowNullPathInContext(true);
 

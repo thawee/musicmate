@@ -90,7 +90,8 @@ public class AudioTag implements Track {
 
     @Override
     public Track copy() {
-        return copy(this);
+        AudioTag clone = new AudioTag();
+        return clone.copy(this);
     }
 
     @Override

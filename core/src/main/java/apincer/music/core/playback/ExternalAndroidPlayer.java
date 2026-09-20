@@ -9,9 +9,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,10 +16,6 @@ import java.util.Set;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackTarget;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class ExternalAndroidPlayer implements PlaybackTarget {
 
@@ -186,7 +179,7 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
                 }
             } catch (Exception e) {
                 // e.g., PackageManager.NameNotFoundException
-                e.printStackTrace();
+                android.util.Log.w("ExternalAndroidPlayer", "Failed to get app description for: " + packageName, e);
             }
 
             // Return null or an empty string if no description is found

@@ -87,6 +87,8 @@ public class BaseServer {
     AutoCloseable playbackSubscription;
     AutoCloseable playbackStateSubscription;
 
+    private boolean isBound = false;
+
     public BaseServer(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
         this.fileRepos = fileRepos;
@@ -96,57 +98,50 @@ public class BaseServer {
         this.appVersion = ApplicationUtils.getVersionNumber(context);
         this.osVersion = Build.VERSION.RELEASE;
 
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        if (this instanceof WebServer) {
+            bindPlaybackService();
+        }
+    }
+
+    private void bindPlaybackService() {
+        if (isBound) return;
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
+            isBound = context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to bind to MusicMateServiceImpl: " + e.getMessage());
+        }
+    }
+
+    protected QueueManager getQueueManager() {
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            return playbackService.getQueueManager();
+        }
+        return this.queueManager;
     }
 
     private PlaybackService playbackService;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
-        AutoCloseable nowPlayingSubscription;
-        AutoCloseable playbackSubscription;
-        AutoCloseable playbackStateSubscription;
-
         @SuppressLint("CheckResult")
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            // Get the binder from the service and set the mediaServerService instance
             MusicMateServiceBinder binder = (MusicMateServiceBinder) service;
             playbackService = binder.getPlaybackService();
-            if(playbackCallback != null) {
-                //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+            if (playbackCallback != null) {
+                closeSubscriptions();
                 nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
-                        // onNext
                         mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
-
-                        // onError
-                        throwable -> {
-                            // Now you log the error instead of crashing!
-                            Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
-                        }
+                        throwable -> Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable)
                 );
-               // playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
                 playbackSubscription = playbackService.subscribePlaybackTarget(
-                        // onNext
-                        playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
-
-                        // onError
-                        throwable -> {
-                            // Now you log the error instead of crashing!
-                            Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
-                        }
+                        playbackTarget -> playbackTarget.ifPresent(playbackCallback::onPlaybackTargetChanged),
+                        throwable -> Log.e("BaseServer", "Error in playbackTarget subscription", throwable)
                 );
-                //playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
                 playbackStateSubscription = playbackService.subscribePlaybackState(
-                        // onNext
                         playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
-
-                        // onError
-                        throwable -> {
-                            // Now you log the error instead of crashing!
-                            Log.e("BaseServer", "Error in PlaybackState subscription", throwable);
-                        }
+                        throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable)
                 );
             }
         }
@@ -154,34 +149,34 @@ public class BaseServer {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             playbackService = null;
-            if (playbackStateSubscription != null) {
-                try { playbackStateSubscription.close(); } catch (Exception ignored) {}
-            }
-            if (playbackSubscription != null) {
-                try { playbackSubscription.close(); } catch (Exception ignored) {}
-            }
-            if (nowPlayingSubscription != null) {
-                try { nowPlayingSubscription.close(); } catch (Exception ignored) {}
-            }
+            closeSubscriptions();
         }
     };
 
-    public void destroy() {
-        // Dispose all subscriptions before unbinding
+    private synchronized void closeSubscriptions() {
         if (nowPlayingSubscription != null) {
             try { nowPlayingSubscription.close(); } catch (Exception ignored) {}
+            nowPlayingSubscription = null;
         }
         if (playbackSubscription != null) {
             try { playbackSubscription.close(); } catch (Exception ignored) {}
+            playbackSubscription = null;
         }
         if (playbackStateSubscription != null) {
             try { playbackStateSubscription.close(); } catch (Exception ignored) {}
+            playbackStateSubscription = null;
         }
+    }
 
-        if(playbackService != null) {
-            context.unbindService(serviceConnection);
-            playbackService = null;
+    public void destroy() {
+        closeSubscriptions();
+        if (isBound) {
+            try {
+                context.unbindService(serviceConnection);
+            } catch (Exception ignored) {}
+            isBound = false;
         }
+        playbackService = null;
     }
 
     public String getServerSignature() {
@@ -213,6 +208,15 @@ public class BaseServer {
 
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
+                // Defense-in-depth: Do NOT switch player or notify track access when a controlled
+                // DMR session is active. Passive HTTP GET requests from renderers pre-buffering
+                // the next track must not disrupt active playback state.
+                PlaybackTarget currentPlayer = playbackService.getPlayer();
+                if (currentPlayer != null && currentPlayer.isStreaming() && currentPlayer.canReadSate()) {
+                    // Active controlled DMR session — silently ignore passive HTTP notification
+                    return;
+                }
+
                 String cleanIp = NetworkUtils.extractIpAddress(clientIp);
                 PlaybackTarget player = WebStreamingPlayer.Factory.create(cleanIp, userAgent, cleanIp);
                 playbackService.switchPlayer(player, false);
@@ -430,33 +434,21 @@ public class BaseServer {
 
     private void registerPlaybackCallback(PlaybackCallback callback) {
         this.playbackCallback = callback;
-        if(playbackService != null) {
-            //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+        bindPlaybackService();
+        if (playbackService != null) {
+            closeSubscriptions();
             nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
-                    // onNext
                     mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
-
-                    // onError
-                    throwable -> {
-                        // Now you log the error instead of crashing!
-                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
-                    });
+                    throwable -> Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable)
+            );
             playbackSubscription = playbackService.subscribePlaybackTarget(
-                    playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
-
-                    // onError
-                    throwable -> {
-                        // Now you log the error instead of crashing!
-                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
-                    });
-            playbackStateSubscription =  playbackService.subscribePlaybackState(
+                    playbackTarget -> playbackTarget.ifPresent(playbackCallback::onPlaybackTargetChanged),
+                    throwable -> Log.e("BaseServer", "Error in playbackTarget subscription", throwable)
+            );
+            playbackStateSubscription = playbackService.subscribePlaybackState(
                     playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
-
-                    // onError
-                    throwable -> {
-                        // Now you log the error instead of crashing!
-                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
-                    });
+                    throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable)
+            );
         }
     }
 
@@ -861,7 +853,7 @@ public class BaseServer {
          * Handles the "emptyQueue" command. Clears the current playback queue.
          */
         private void handleEmptyQueue() {
-            queueManager.emptyPlayingQueue();
+            getQueueManager().emptyPlayingQueue();
         }
 
         /**
@@ -910,7 +902,7 @@ public class BaseServer {
 
                 // Set the queue in the repository and load it into the playback service
                 //tagRepos.savePlayingQueue(songsInContext);
-                queueManager.savePlayingQueue(songsInContext);
+                getQueueManager().savePlayingQueue(songsInContext);
                 playbackService.playSong(songToPlay);
 
             } catch (NumberFormatException e) {
@@ -958,7 +950,7 @@ public class BaseServer {
             if (songId == null || songId.isBlank()) return;
             try {
                 long trackId = Long.parseLong(songId);
-                queueManager.addPlayingQueue(trackId);
+                getQueueManager().addPlayingQueue(trackId);
             } catch (NumberFormatException e) {
                 Log.e(TAG, "handleAddToQueue: Invalid ID format " + songId, e);
             }
@@ -976,7 +968,7 @@ public class BaseServer {
                 // Fetching QueueItems which contain the order and the MusicTag
 
                 //List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
-                List<Track> songs = queueManager.getSongs();
+                List<Track> songs = getQueueManager().getSongs();
                 List<Map<String, ?>> queueAsMaps = songs.stream()
                         //.map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
                         .filter(java.util.Objects::nonNull) // Filter out any null tracks

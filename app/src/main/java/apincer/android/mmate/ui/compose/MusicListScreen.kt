@@ -47,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
+import apincer.android.mmate.utils.GestureHints
 import apincer.music.core.model.Track
 import kotlinx.coroutines.launch
 
@@ -207,7 +208,17 @@ fun MusicListScreen(
 
             // Box allows FastScrollbar and FAB to overlay on top
             Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Gesture discovery hints for new users
+                    GestureHints.GestureHintBanner(
+                        hints = listOf(
+                            GestureHints.HintType.TRACK_TAP,
+                            GestureHints.HintType.ART_TAP,
+                            GestureHints.HintType.LONG_PRESS
+                        )
+                    )
+
+                    LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -256,23 +267,26 @@ fun MusicListScreen(
                             ?.toString() ?: "#"
                     }
                 )
+            }
 
-                // Glassmorphism Go to Top FAB
+            // Glassmorphism Go to Top FAB - sibling of Column, child of outer Box
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 112.dp)
+            ) {
                 AnimatedVisibility(
                     visible = showFab,
                     enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut(),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 24.dp, bottom = 112.dp) // matches old xml margins
+                    exit = fadeOut() + scaleOut()
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp) // clickable area
+                            .size(48.dp)
                             .clip(CircleShape)
-                            .background(Color(0x80000000)) // dark base
-                            .background(Color(0x1AFFFFFF)) // frosted glass
-                            .border(1.5.dp, Color(0x4DFFFFFF), CircleShape) // glass edge
+                            .background(Color(0x80000000))
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.5.dp, Color(0x4DFFFFFF), CircleShape)
                             .clickable {
                                 coroutineScope.launch {
                                     listState.animateScrollToItem(0)
@@ -291,4 +305,5 @@ fun MusicListScreen(
             }
         }
     }
+}
 }

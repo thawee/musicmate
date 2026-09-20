@@ -178,4 +178,58 @@ public class QueueManagerTest {
         assertEquals(-1, queueManager.getCurrentIndex());
         assertNull(queueManager.getNextTrack());
     }
+
+    @Test
+    public void setPlaybackTrack_unknownTrack_autoEnqueuesAndSetsPlaybackIndex() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        queueManager.savePlayingQueue(Collections.singletonList(t1));
+        assertEquals(1, queueManager.getQueueSize());
+
+        Track tExternal = createDummyTrack(999L, "External Stream");
+        queueManager.setPlaybackTrack(tExternal);
+
+        assertEquals(2, queueManager.getQueueSize());
+        assertEquals(1, queueManager.getCurrentIndex());
+        assertNotNull(queueManager.getCurrentTrack());
+        assertEquals(999L, queueManager.getCurrentTrack().getId());
+        assertTrue(queueManager.containsTrack(999L));
+    }
+
+    @Test
+    public void addPlayingQueue_existingTrack_movesToEndWithoutDuplicate() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        List<Track> list = new ArrayList<>();
+        list.add(t1);
+        list.add(t2);
+        queueManager.savePlayingQueue(list);
+        assertEquals(2, queueManager.getQueueSize());
+
+        // Re-adding t1 should reposition t1 to the end, total size remains 2
+        queueManager.addPlayingQueue(t1);
+        assertEquals(2, queueManager.getQueueSize());
+        assertEquals(2L, queueManager.getSongs().get(0).getId());
+        assertEquals(1L, queueManager.getSongs().get(1).getId());
+    }
+
+    @Test
+    public void addPlayNext_insertsAfterCurrentTrack() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        List<Track> list = new ArrayList<>();
+        list.add(t1);
+        list.add(t2);
+        queueManager.savePlayingQueue(list);
+        queueManager.setCurrentTrack(t1); // index 0
+
+        Track t3 = createDummyTrack(3L, "Track 3");
+        queueManager.addPlayNext(t3);
+
+        assertEquals(3, queueManager.getQueueSize());
+        // Order must be t1, t3, t2
+        assertEquals(1L, queueManager.getSongs().get(0).getId());
+        assertEquals(3L, queueManager.getSongs().get(1).getId());
+        assertEquals(2L, queueManager.getSongs().get(2).getId());
+        assertEquals(t3.getId(), queueManager.getNextTrack().getId());
+    }
 }

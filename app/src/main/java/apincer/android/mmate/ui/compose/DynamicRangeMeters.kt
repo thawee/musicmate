@@ -13,6 +13,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +47,10 @@ fun DynamicRangeMeter(
     val drsColor = Color(TagUIUtils.getDRScoreColor(context, scoreVal))
 
     Row(
-        modifier = modifier,
+        modifier = modifier
+            .semantics {
+                contentDescription = "Dynamic Range: ${if (drScoreStr.isEmpty()) "unknown" else "DR $drScoreStr"}"
+            },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

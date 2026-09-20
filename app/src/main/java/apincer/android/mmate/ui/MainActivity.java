@@ -1,8 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static apincer.android.mmate.utils.UIUtils.dpToPx;
 import static apincer.music.core.Constants.FLAC_BALANCE_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.FLAC_FAST_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.FLAC_MAXIMUM_COMPRESS_LEVEL;
@@ -16,26 +13,14 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.Bitmap;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 
-import androidx.core.graphics.ColorUtils;
-import androidx.palette.graphics.Palette;
-
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.ui.compose.MainScaffoldState;
-import coil3.BitmapImage;
-import coil3.Image;
-import coil3.SingletonImageLoader;
-import coil3.request.ImageRequest;
-import coil3.target.Target;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.QueueManager;
 import apincer.music.core.utils.PlayerNameUtils;
@@ -49,24 +34,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AutoCompleteTextView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.ActionMode;
-import androidx.appcompat.widget.SearchView;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -80,7 +58,6 @@ import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,8 +67,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import androidx.core.graphics.Insets;
-import android.view.ViewGroup.MarginLayoutParams;
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MediaServerManager;
 import apincer.android.mmate.service.MusicMateServiceImpl;
@@ -171,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
     private AutoCloseable playbackStateSubscription = null;
+    private final androidx.lifecycle.Observer<apincer.music.core.server.spi.MediaServerHub.ServerStatus> serverStatusObserver = this::updateMediaServerState;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
@@ -184,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
             if (playbackService instanceof MusicMateServiceImpl msi) {
                 runOnUiThread(() -> {
-                    msi.getStatusLiveData().observe(MainActivity.this, MainActivity.this::updateMediaServerState);
+                    msi.getStatusLiveData().observe(MainActivity.this, serverStatusObserver);
                     updateMediaServerState(msi.getStatusLiveData().getValue());
                 });
             }
@@ -615,6 +591,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     protected void onDestroy() {
+        scrollHandler.removeCallbacksAndMessages(null);
         if (playbackStateSubscription != null) {
             try {
                 playbackStateSubscription.close();
@@ -1034,6 +1011,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onDockNextClick() {
         onDockNextClicked();
+    }
+
+    @Override
+    public void onDockLongClick() {
+        onAudioHubTrackClicked();
     }
 
     @Override

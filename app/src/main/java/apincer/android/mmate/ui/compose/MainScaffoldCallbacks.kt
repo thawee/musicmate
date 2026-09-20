@@ -16,6 +16,7 @@ interface MainScaffoldCallbacks {
     fun onFolderEnqueueClick(track: Track)
     fun onDockPlayPauseClick()
     fun onDockNextClick()
+    fun onDockLongClick() { onAudioHubTrackClick() }
     fun onSelectPlaybackTargetClick()
     fun onPlayerTargetSelected(target: PlaybackTarget)
     fun onRescanTargets()

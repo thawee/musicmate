@@ -390,3 +390,26 @@ To prevent hardware DAC FIFO buffer acquisition stalls on renderers (e.g. HiBy R
 * When the transport elapsed position reaches track duration (`position >= duration`) or when a `STOPPED` GENA event arrives, `stopPolling()` is called and `isUserInitiatedStop = true;` is latched immediately before notifying `playbackCallback.onPlaybackCompleted()`.
 * Guarantees that recurring polling ticks and duplicate renderer GENA packets cannot trigger double track skips.
 
+---
+
+## 12 — Physical Interface Prioritization, VPN Filtering & Controlled Session Isolation
+
+> Added in 2026.09 (`NetworkUtils`, `MusicMateServiceImpl`, `BaseServer`, `MediaServerHubImpl`).
+
+### Physical LAN Interface Prioritization & VPN Filtering (`NetworkUtils.java`)
+* **Physical-First Discovery:** `NetworkUtils.getIpAddress()` prioritizes physical Wi-Fi (`wlan*`), Hotspot (`ap*`, `swlan*`), and Ethernet (`eth*`) interfaces.
+* **Virtual/VPN Tunnel Rejection:** Automatically filters out virtual network interfaces (`tun*`, `tap*`, `wg*`, `p2p*`, `dummy*`, `ipsec*`). This prevents the media server from binding its advertise URLs to unreachable virtual VPN subnets (e.g. WireGuard/Tailscale/OpenVPN), ensuring local DLNA/UPnP hardware renderers can reliably connect and stream audio.
+
+### Active Controlled Session Isolation (`MusicMateServiceImpl.java`, `BaseServer.java`)
+* **Passive HTTP Pre-Fetch Protection:** When a DLNA DMR pre-fetches the upcoming track via HTTP GET (triggered by renderer pre-buffering or host cache pre-warming), `onAccessMediaTrack()` and `BaseServer.notifyPlayback()` inspect `isControllable(activePlayer)`.
+* **State Preservation:** Passive GET requests are safely serviced with audio data but guarded against hijacking `currentTrackFlow` or prematurely resetting fallback timers, ensuring consecutive tracks play seamlessly to the end without truncation.
+
+### Spurious GENA STOPPED Verification (`MediaServerHubImpl.java`)
+* **Track Completion Guard:** Some DLNA renderers fire premature `STOPPED` GENA events during initial buffer underruns or transient Wi-Fi drops.
+* **Position Verification:** `MediaServerHubImpl` cross-references effective position against the authoritative database track duration (`currentPlayingTrack.getAudioDuration()`). Only events occurring near track completion ($\ge 90\%$ or within 5 seconds of the end) trigger `onPlaybackCompleted()`, while premature events are ignored to maintain continuous playback.
+
+### Bluetooth Disconnect Isolation (`MusicMateServiceImpl.java`)
+* **Local-Only Auto-Pause:** `BroadcastReceiver` handlers for `ACTION_AUDIO_BECOMING_NOISY` and Bluetooth `ACTION_ACL_DISCONNECTED` are strictly gated behind `isLocalTarget()`.
+* **Remote Stream Continuity:** Disconnecting a smartwatch, automotive hands-free system, or secondary Bluetooth accessory does not interrupt or pause active DLNA Wi-Fi streaming to external Hi-Fi receivers.
+
+

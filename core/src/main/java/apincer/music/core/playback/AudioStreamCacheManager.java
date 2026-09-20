@@ -121,7 +121,9 @@ public class AudioStreamCacheManager {
 
     /**
      * Legacy getter preserved for backward compatibility. Streaming now streams directly from FileChannel.
+     * @deprecated Preloading now warms the OS page cache directly; byte buffer is not kept in heap memory.
      */
+    @Deprecated
     public byte[] getPreloadedHead(String path) {
         return null;
     }

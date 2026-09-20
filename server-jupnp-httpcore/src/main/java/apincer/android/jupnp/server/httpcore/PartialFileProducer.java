@@ -60,45 +60,51 @@ public class PartialFileProducer implements AsyncEntityProducer {
 
     @Override
     public void produce(DataStreamChannel channel) throws IOException {
-        long remainingInRequest = length - bytesProduced;
-        if (remainingInRequest <= 0) {
-            channel.endStream();
-            releaseResources();
-            return;
-        }
-
-        if (raf == null) {
-            raf = new RandomAccessFile(file, "r");
-            fileChannel = raf.getChannel();
-            fileChannel.position(start + bytesProduced);
-            buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-        }
-
-        buffer.clear();
-        if (remainingInRequest < BUFFER_SIZE) {
-            buffer.limit((int) remainingInRequest);
-        }
-
-        int read = fileChannel.read(buffer);
-        if (read > 0) {
-            buffer.flip();
-            int written = channel.write(buffer);
-            if (written > 0) {
-                bytesProduced += written;
+        try {
+            long remainingInRequest = length - bytesProduced;
+            if (remainingInRequest <= 0) {
+                channel.endStream();
+                releaseResources();
+                return;
             }
 
-            // If we didn't write the whole buffer, rewind file position for unwritten part
-            if (buffer.hasRemaining()) {
-                fileChannel.position(fileChannel.position() - buffer.remaining());
+            if (raf == null) {
+                raf = new RandomAccessFile(file, "r");
+                fileChannel = raf.getChannel();
+                fileChannel.position(start + bytesProduced);
+                buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
             }
 
-            if (bytesProduced >= length) {
+            buffer.clear();
+            if (remainingInRequest < BUFFER_SIZE) {
+                buffer.limit((int) remainingInRequest);
+            }
+
+            int read = fileChannel.read(buffer);
+            if (read > 0) {
+                buffer.flip();
+                int written = channel.write(buffer);
+                if (written > 0) {
+                    bytesProduced += written;
+                }
+
+                // If we didn't write the whole buffer, rewind file position for unwritten part
+                if (buffer.hasRemaining()) {
+                    fileChannel.position(fileChannel.position() - buffer.remaining());
+                }
+
+                if (bytesProduced >= length) {
+                    channel.endStream();
+                    releaseResources();
+                }
+            } else {
+                // EOF or no progress (read <= 0); terminate cleanly to prevent spin loops
                 channel.endStream();
                 releaseResources();
             }
-        } else if (read == -1) {
-            channel.endStream();
+        } catch (IOException | RuntimeException e) {
             releaseResources();
+            throw e;
         }
     }
 
@@ -121,12 +127,19 @@ public class PartialFileProducer implements AsyncEntityProducer {
     @Override
     public void releaseResources() {
         try {
-            if (raf != null) {
-                raf.close();
-                raf = null;
+            if (fileChannel != null) {
+                try {
+                    fileChannel.close();
+                } catch (IOException ignore) {}
                 fileChannel = null;
             }
+            if (raf != null) {
+                try {
+                    raf.close();
+                } catch (IOException ignore) {}
+                raf = null;
+            }
             buffer = null; // Help GC
-        } catch (IOException ignore) {}
+        } catch (Exception ignore) {}
     }
 }
