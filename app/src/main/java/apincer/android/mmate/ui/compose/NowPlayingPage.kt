@@ -288,34 +288,19 @@ fun NowPlayingPage(
                             .wrapContentHeight(unbounded = true)
                             .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 8.dp)
                     ) {
-                        // Title & Info Action Button
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = track?.title ?: "Music Mate Ready",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 12.dp)
-                                    .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
-                                    .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
-                                    .clickable { onTrackClicked() }
-                            )
-
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_round_info_24),
-                                contentDescription = "Audio Anatomy Specs",
-                                tint = Color.White.copy(alpha = 0.9f),
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable { flipped = !flipped }
-                            )
-                        }
+                        // Title
+                        Text(
+                            text = track?.title ?: "Music Mate Ready",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
+                                .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
+                                .clickable { onTrackClicked() }
+                        )
 
                         // Artist Subtitle
                         Text(

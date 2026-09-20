@@ -59,3 +59,10 @@ Perform an exhaustive "staff-engineer" level code review across all recently com
   ./gradlew testDebugUnitTest --rerun-tasks
   ```
 - **Result:** **BUILD SUCCESSFUL in 43s**, 235 tasks executed cleanly, 0 compilation errors, 0 test failures.
+
+---
+
+# UI Streamlining: Remove Redundant Info Icon
+- [x] Remove redundant `Icon` (`ic_round_info_24`) beside track title in `NowPlayingPage.kt`
+- [x] Expand track title to `.fillMaxWidth()` without artificial padding
+- [x] Verify test suite and compilation
