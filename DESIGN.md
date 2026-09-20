@@ -352,11 +352,11 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
   - Long-press `[💾 Save]` ➔ Executes **Save & Close** (commits metadata and returns to track list).
 
 ### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet` in Jetpack Compose)
-Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport**:
+Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport** powered by the **Fluid Audiophile Glass Pill** switcher:
 
-1. **`[ Playback ]` Tab (`NowPlayingPage.kt`):** Edge-to-edge album artwork, bottom overlay title, expanded streaming tier quality badge (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`), interactive output target selector pill, glowing seekbar, full transport controls, and interactive 3D Y-axis flip card revealing the **Audio Anatomy** spec sheet (with gold `ic_round_info_24` badge, Codec, Resolution, Bitrate, Duration, Dynamic Range, Audio Channels, File Size, and Track #/Year/Genre in compact scrollable rows).
-2. **`[ Queue ]` Tab (`QueuePage.kt`):** Dedicated full-height list of upcoming tracks, total remaining duration header (`X min total`), drag-to-reorder handles, and swipe-to-remove. The tab label shows a live count (`Queue (12)`).
-3. **`[ Server ]` Tab (`MediaServerPage.kt`):** Jetpack Compose Media Server management featuring a top Hero Status Card (live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop power action button), 1-tap WebUI actions, tap-to-enlarge high-contrast QR code modal, and segmented engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) with dynamic architecture descriptions.
+1. **`[ Playback ]` Tab (`NowPlayingPage.kt`):** Edge-to-edge album artwork, streamlined full-width bottom overlay title marquee, expanded streaming tier quality badge (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`), interactive output target selector pill, glowing seekbar, full transport controls, and interactive full-surface 3D Y-axis flip card revealing the **Audio Anatomy** spec sheet (with gold `ic_round_info_24` title badge, Codec, Resolution, Bitrate, Duration, Dynamic Range, Audio Channels, File Size, and Track #/Year/Genre in compact scrollable rows).
+2. **`[ Queue ]` Tab (`QueuePage.kt`):** Dedicated full-height list of upcoming tracks, total remaining duration header (`X min total`), drag-to-reorder handles, and swipe-to-remove. The tab label displays an Apple-style monospace count badge chip (`[ 12 ]`).
+3. **`[ Server ]` Tab (`MediaServerPage.kt`):** Jetpack Compose Media Server management featuring a top Hero Status Card (live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop power action button), 1-tap WebUI actions, tap-to-enlarge high-contrast QR code modal, and segmented engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) with dynamic architecture descriptions. The tab label features an authentic hardware emerald jewel LED diode (`Color(0xFF00E676)`) active indicator.
 
 ### D. Contextual Navigation
 - **Queue Tab row tap:** Immediately **plays the tapped track** — the queue is a playback surface, not a navigation surface.
@@ -424,11 +424,11 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 
 ---
 
-### C. Music Center Bottom Sheets (`AudioHubBottomSheet`)
+### C. Music Center Bottom Sheets (`AudioHubBottomSheet` / `AudioHubSheet.kt`)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ [ Playback ]        [ Queue (12) ]       [ Server 🟢 ]  │
+│ [ Playback ]        [ Queue  12 ]        [ Server ● ]   │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │          Fixed 65%-Height Viewport Content              │
@@ -436,9 +436,16 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 └─────────────────────────────────────────────────────────┘
 ```
 
-- **Top Edge Geometry:** `24dp` top corner radius.
-- **Viewport Sizing:** The sheet opens fully expanded at a **fixed 65% of screen height** (clamped between min/max bounds), with `12dp` side margins — a single predictable size for all three tabs rather than per-tab expansion modes.
-- **Sticky Session State:** Selected tab position (`Playback`, `Queue`, or `Server`) remains sticky when closing and reopening the Music Center during a session (`AudioHubBottomSheet.sLastSelectedTab`).
+- **Top Edge Geometry:** `24dp` top corner radius (`RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)`).
+- **Viewport Sizing:** The sheet opens fully expanded at a **fixed 65% of screen height** (clamped between 420dp and 680dp), a single predictable size across all three tabs.
+- **Fluid Audiophile Glass Pill Switcher:** Modernized 3-tab segmented navigation featuring real-time 1:1 finger-tracking motion physics bound directly to `(pagerState.currentPage.toFloat() + pagerState.currentPageOffsetFraction).coerceIn(0f, 2f)` inside `BoxWithConstraints`.
+  - **Deep Obsidian Glassmorphism:** Outer container in dark obsidian glass (`Color(0xFF161616)`) with a precision hairline border (`0.75dp, Color(0x24FFFFFF)`).
+  - **Sliding Indicator Pill:** Elevated sliding capsule with champagne gold vertical ambient gradient (`Color(0x38FFD700)` top highlight to `Color(0x1CFFD700)` base) and metallic gold hairline rim (`Color(0x66FFD700)`).
+  - **Micro-Badges & Status LED:**
+    - **Playback:** Crisp typography with champagne gold active state and muted titanium inactive state.
+    - **Queue:** Monospace count pill chip (`[ 12 ]`) dynamically reflecting queue size without crude string parentheses.
+    - **Server:** Dedicated emerald jewel LED diode (`Color(0xFF00E676)`) replacing raw `🟢` unicode emoji.
+- **Sticky Session State:** Selected tab position (`Playback`, `Queue`, or `Server`) remains sticky when closing and reopening the Music Center during a session (`MainScaffoldState.get().audioHubInitialTab`).
 
 ---
 
@@ -729,6 +736,19 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
      - Expand `[⛶]` icon button and long-press gesture on `FloatingMiniPlayerDock` in `MainScaffold.kt`.
      - Expand `[⛶]` icon button in `AudioHubSheet.kt` header.
 - **Consequences:** Provides a luxury desktop/rack listening console with configurable display wakefulness that stays responsive without disrupting ongoing playback or DLNA sessions.
+
+### ADR-024: Fluid Audiophile Glass Pill Tab Switcher & Full-Surface Card Flip
+- **Status:** Accepted
+- **Date:** 2026-09-20
+- **Context:**
+  1. The segmented tab switcher in `AudioHubSheet.kt` utilized static in-place background toggling without sliding motion physics. When users swiped between pages in the `HorizontalPager`, the tab indicator remained frozen until page settlement, breaking direct manipulation principles.
+  2. Tab titles relied on raw unicode emojis (`Server 🟢`) and parentheses (`Queue (12)`), causing inconsistent font rendering across Android OEM skins and creating visual clutter.
+  3. On the Now Playing card in `NowPlayingPage.kt`, an explicit info icon beside the track title duplicated the existing card tap gesture (`flipped = !flipped`) and compressed the horizontal space available for long track titles.
+- **Decision:**
+  1. **Fluid Motion Physics:** Bound sliding indicator pill offset directly to `(pagerState.currentPage.toFloat() + pagerState.currentPageOffsetFraction).coerceIn(0f, 2f)` inside `BoxWithConstraints` in `AudioHubSheet.kt`. The indicator glides 1:1 with user finger drag and animates seamlessly on tap.
+  2. **Obsidian Glassmorphism & Status Micro-Components:** Styled the switcher rail in deep obsidian (`Color(0xFF161616)`) with hairline metallic borders. Built dedicated Compose micro-components: an authentic hardware emerald jewel LED diode (`Color(0xFF00E676)`) for active media servers and a monospace count pill badge chip (`[ 12 ]`) for queue items.
+  3. **Streamlined Now Playing Card Title Row:** Removed the redundant info icon from the track title row in `NowPlayingPage.kt`, granting long titles full width while retaining full-surface 3D card flip gestures (`flipped = !flipped`) to access the Audio Anatomy technical spec sheet.
+- **Consequences:** Elevates the Music Center navigation to modern luxury hi-fi standards, eliminates crude string/emoji hacks, provides 120Hz fluid gesture responsiveness, and maximizes title readability.
 
 ---
 
