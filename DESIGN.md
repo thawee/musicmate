@@ -1,6 +1,6 @@
 # MusicMate UI/UX Design System & Architectural Principles
 
-> **Last Updated:** 2026-09-10 · **Owner:** @thawee
+> **Last Updated:** 2026-09-20 · **Owner:** @thawee
 >
 > **Scope:** This document is authoritative for UI/UX, gestures, menus, theming, and modal surfaces. For playback engine internals see `PLAYBACK_ARCHITECTURE.md`; for the web interface see `WEBUI.md`; for the WebSocket protocol see `WEBSOCKET_API.md`.
 
@@ -749,6 +749,38 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
   2. **Obsidian Glassmorphism & Status Micro-Components:** Styled the switcher rail in deep obsidian (`Color(0xFF161616)`) with hairline metallic borders. Built dedicated Compose micro-components: an authentic hardware emerald jewel LED diode (`Color(0xFF00E676)`) for active media servers and a monospace count pill badge chip (`[ 12 ]`) for queue items.
   3. **Streamlined Now Playing Card Title Row:** Removed the redundant info icon from the track title row in `NowPlayingPage.kt`, granting long titles full width while retaining full-surface 3D card flip gestures (`flipped = !flipped`) to access the Audio Anatomy technical spec sheet.
 - **Consequences:** Elevates the Music Center navigation to modern luxury hi-fi standards, eliminates crude string/emoji hacks, provides 120Hz fluid gesture responsiveness, and maximizes title readability.
+
+### ADR-025: Tag Editor & Auxiliary Dialog Modernization to Obsidian Glass Design System
+- **Status:** Accepted
+- **Date:** 2026-09-20
+- **Context:**
+  1. `TagsActivity` relied on legacy XML `TabLayout` with static tab indicators, harsh 1dp vertical hairline dividers between bottom action buttons, and squared button styling.
+  2. Auxiliary dialogs—including Online Tag Search & Match, Operation & Save Progress, Audio Spectrum Lossless Verifier, and Trash Confirmation—used 2014-era Android View layouts (e.g. `ListView`, fixed 256dp/164dp nested frame boxes, hardcoded green spinners, low-contrast text builders).
+  3. Obsolete storage visualization layouts and unused helper methods lingered in `UIUtils.java`.
+- **Decision:**
+  1. **Fluid Audiophile Glass Pill Tab Switcher (`TagsTabPillSwitcher.kt`):**
+     - Replaced legacy `TabLayout` in `activity_tags.xml` with a `ComposeView` host (`tags_tab_pill_container`).
+     - Built `TagsTabPillSwitcher` featuring a sliding glass pill indicator with 1:1 `ViewPager2` drag tracking via `pagerPosition + pagerOffsetFraction`.
+     - Styled with an obsidian glass base (`Color(0xFF141416)`), subtle champagne gold glow gradient (`Color(0x33FFD700)`), metallic hairline border (`0.75dp` `Color(0x24FFFFFF)`), and tactile haptic feedback on tab selection.
+     - Provided zero-boilerplate Java interop via `TagsTabPillBridge.setup(composeView, viewPager)`.
+  2. **Modernized Action Dock (`activity_tags.xml`):**
+     - Removed obsolete 1dp vertical hairline dividers (`divider_1` through `divider_3`).
+     - Styled bottom dock buttons as rounded pills (`app:cornerRadius="20dp"`) with comfortable spacing and clear visual hierarchy.
+  3. **Compose Online Tag Search & Match Dialogs (`SearchMatchDialog.kt`):**
+     - Replaced legacy `ListView` and XML cards with pure Jetpack Compose sheets: `SearchQueryDialog` and `SearchResultsDialog`.
+     - Features `LazyColumn` for high-performance scrolling, Coil 3 asynchronous cover art loading, match quality chips, and metadata difference highlighting.
+     - Wired into `TagsActivity.java` via `DialogInterop.kt` helpers (`showSearchQueryDialog`, `showSearchResultsDialog`), deleting `SearchResultAdapter` and obsolete XML layouts (`view_action_search_query_dialog.xml`, `view_action_search_results_dialog.xml`, `view_list_item_search_result.xml`).
+  4. **Obsidian Glass Progress Modal (`animated_progress_dialog_layout.xml`):**
+     - Modernized progress modal into a floating obsidian glass card (`bg_dialog_dark_blur`) with rounded geometry and clean typography.
+     - Replaced hardcoded green spinner with `CircularProgressIndicator` tinted with `@color/colorGold`. Deleted legacy `progress_dialog_layout.xml`.
+  5. **Lossless Verifier Studio Inspector (`view_action_spectrum.xml`):**
+     - Upgraded layout to a studio inspector with a two-column telemetry glass card (Format details vs. Analytics details), champagne gold verdict badge, and integrated progress spinner.
+  6. **Obsidian Glass Trash Confirmation Sheet (`view_action_trash_bottom_sheet_dialog.xml`):**
+     - Modernized into an obsidian glass bottom sheet with a red tonal warning container, delete icon, and pill-shaped action buttons.
+  7. **Dead Code & Resource Pruning:**
+     - Removed unused storage calculation methods from `UIUtils.java` (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`).
+     - Deleted obsolete layout files: `view_storage_space.xml` and `view_storage_space_estimated.xml`.
+- **Consequences:** Unifies all remaining auxiliary flows and the Tag Editor under the flagship Obsidian-Glass Design System, guaranteeing 120Hz gesture response, high contrast, clean typography, and zero legacy View adapter overhead.
 
 ---
 

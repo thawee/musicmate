@@ -110,13 +110,14 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 
 ## 3. Editing Tags & Technical Details (TagsActivity)
 
-Selecting a song from the list opens the **Tags Editor**. The interface contains a collapsing cover art panel at the top and two main tabs at the bottom.
+Selecting a song from the list opens the **Tags Editor**. The interface features a collapsing cover art panel at the top, an **Audiophile Fluid Glass Pill** switcher (`[ Song Info | Tech Info ]`) with 1:1 real-time drag tracking and tactile haptics, and two main tabs:
 
 ### Tab A: Song Info (Metadata Editor)
 This tab allows you to edit standard fields including:
 * **Text Inputs:** Title, Artist, Album, Album Artist, Track number, Year, Genre, Style, Origin, Mood, and Publisher.
 * **Bulk Editing:** If you select multiple files from the main list, you can edit shared attributes simultaneously. Divergent values are marked with a `[Multi Values]` placeholder.
 * **Action Menu Options (Editor Mode):**
+  * 🔍 **Search & Match Tags:** Connects to MusicBrainz online database via a modernized Compose dialog to look up accurate track metadata and release artwork with 1-tap apply.
   * ✨ **Reformat (Auto-Awesome):** Automatically formats tags to match standard title casing and clean up artist list separator styles.
   * 📝 **Read Tag Preview:** Reads tags directly from the underlying file structure to preview proposed updates.
   * 💾 **Save Changes:** Persists modifications to both the local database and the file's ID3/FLAC metadata blocks.

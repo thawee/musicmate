@@ -5,8 +5,11 @@ import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import apincer.android.mmate.R
 import apincer.android.mmate.ui.viewmodel.TagsViewModel
 import apincer.music.core.model.Track
+import apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 
@@ -301,5 +304,61 @@ object DialogInterop {
                 }
             }
         }
+    }
+
+    @JvmStatic
+    fun showSearchQueryDialog(
+        context: Context,
+        initialTitle: String,
+        initialArtist: String,
+        onSearch: BiConsumer<String, String>
+    ) {
+        val dialog = android.app.Dialog(context, R.style.AlertDialogTheme)
+        val composeView = ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MusicMateTheme {
+                    SearchQueryContent(
+                        initialTitle = initialTitle,
+                        initialArtist = initialArtist,
+                        onDismissRequest = { dialog.dismiss() },
+                        onSearch = { t, a ->
+                            dialog.dismiss()
+                            onSearch.accept(t, a)
+                        }
+                    )
+                }
+            }
+        }
+        dialog.setContentView(composeView)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    @JvmStatic
+    fun showSearchResultsDialog(
+        context: Context,
+        results: List<MusicBrainzSearchResult>,
+        onSelect: Consumer<MusicBrainzSearchResult>
+    ) {
+        val dialog = android.app.Dialog(context, R.style.AlertDialogTheme)
+        val composeView = ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MusicMateTheme {
+                    SearchResultsContent(
+                        results = results,
+                        onDismissRequest = { dialog.dismiss() },
+                        onSelect = { res ->
+                            dialog.dismiss()
+                            onSelect.accept(res)
+                        }
+                    )
+                }
+            }
+        }
+        dialog.setContentView(composeView)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.show()
     }
 }

@@ -57,8 +57,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced static segmented buttons with real-time 1:1 finger-tracking sliding indicator pill in deep obsidian glass and champagne gold gradient.
   - Replaced raw string emojis (`Server 🟢`) with an authentic hardware emerald jewel LED status diode.
   - Replaced raw parenthesis count text (`Queue (X)`) with a dedicated monospace count badge chip.
+- **Tag Editor Fluid Glass Pill Tab Switcher (`TagsTabPillSwitcher.kt`, `activity_tags.xml`, `TagsActivity.java`)**:
+  - Replaced legacy XML `TabLayout` with a Jetpack Compose fluid sliding glass pill indicator (`[ Song Info | Tech Info ]`) with 1:1 `ViewPager2` drag tracking, champagne gold gradient glow, metallic hairline border, and haptic feedback via `TagsTabPillBridge`.
+- **Online Tag Search & Match Compose Dialogs (`SearchMatchDialog.kt`, `DialogInterop.kt`, `TagsActivity.java`)**:
+  - Migrated online tag search query and candidate match selection from legacy `ListView` and XML layouts to pure Compose dialogs with `LazyColumn`, Coil 3 cover art loading, match percentage chips, and metadata difference highlighting.
+- **Tag Editor Action Dock Modernization (`activity_tags.xml`)**:
+  - Removed 1dp hairline vertical dividers between bottom dock actions and styled all buttons as rounded pills (`20dp` radius).
+- **Save & Batch Operation Progress Modal (`animated_progress_dialog_layout.xml`)**:
+  - Upgraded progress dialog to an obsidian glass card (`bg_dialog_dark_blur`) with `CircularProgressIndicator` tinted in champagne gold (`@color/colorGold`).
+- **Lossless Verifier & Audio Spectrum Dialog (`view_action_spectrum.xml`)**:
+  - Modernized into an obsidian glass studio inspector with a two-column telemetry card (Format details vs. Analytics details) and champagne gold verdict badge.
+- **Trash Confirmation Sheet (`view_action_trash_bottom_sheet_dialog.xml`)**:
+  - Upgraded to an obsidian glass bottom sheet with a red tonal warning container, delete icon, and pill buttons.
 - **Dependency Upgrades (`gradle/libs.versions.toml`)**:
   - Upgraded Android Gradle Plugin to `9.4.1`, Room to `2.8.5`, Media3 Session to `1.11.1`, Jetpack Compose BOM to `2026.09.00`, and Netty Codec HTTP to `4.2.18.Final`.
+
+### Removed
+- **Dead Code & Obsolete XML Layouts (`UIUtils.java`, `progress_dialog_layout.xml`, `view_action_search_query_dialog.xml`, `view_action_search_results_dialog.xml`, `view_list_item_search_result.xml`, `view_storage_space.xml`, `view_storage_space_estimated.xml`)**:
+  - Deleted legacy View adapters (`SearchResultAdapter`), dead storage visualization methods (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`), and 6 obsolete XML layout files.
 
 ### Fixed
 - **DLNA Premature Completion on Renderer Buffering Stalls (`MediaServerHubImpl.java`)**:

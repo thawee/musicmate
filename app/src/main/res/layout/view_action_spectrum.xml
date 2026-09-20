@@ -10,6 +10,7 @@
     android:outlineSpotShadowColor="@color/black"
     android:outlineAmbientShadowColor="@color/black"
     android:layout_margin="12dp">
+
     <!-- Drag handle -->
     <View
         android:layout_width="40dp"
@@ -20,6 +21,7 @@
         android:background="@drawable/shape_dot_indicator"
         android:backgroundTint="#55FFFFFF" />
 
+    <!-- Top Bar: Header Title + Status Spinner + Close Button -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,6 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/analysis_progress_spinner"
             android:layout_centerVertical="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
@@ -40,7 +43,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_round_audio_file_24"
-                app:tint="@color/white" />
+                app:tint="@color/colorGold" />
 
             <TextView
                 android:id="@+id/title"
@@ -54,175 +57,197 @@
                 android:letterSpacing="-0.02" />
         </LinearLayout>
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/analysis_progress_spinner"
-            style="?android:attr/progressBarStyleSmall"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_toStartOf="@id/btn_close"
             android:layout_centerVertical="true"
             android:layout_marginEnd="12dp"
+            app:indicatorSize="18dp"
+            app:trackThickness="2.5dp"
+            app:indicatorColor="@color/colorGold"
+            app:trackColor="#26FFFFFF"
+            android:indeterminate="true"
             android:visibility="gone"
             tools:visibility="visible" />
 
         <ImageView
             android:id="@+id/btn_close"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="12dp"
+            android:padding="10dp"
             android:src="@drawable/round_close_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Close"
             app:tint="@color/grey400" />
     </RelativeLayout>
 
+    <!-- Main Content Body -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="@dimen/dimen_2_dp"
-        android:paddingStart="@dimen/dimen_8_dp"
-        android:paddingEnd="@dimen/dimen_8_dp"
-        android:paddingBottom="@dimen/dimen_8_dp">
+        android:paddingHorizontal="14dp"
+        android:paddingBottom="14dp">
 
+        <!-- Filename Capsule -->
         <TextView
             android:id="@+id/filename"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/grey400"
-            android:layout_gravity="center"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="start"
-            android:padding="@dimen/dimen_4_dp"
-            tools:text="14 - ขอบใจที่หาเจอ.flac" />
-        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="@dimen/dimen_2_dp"
-            android:weightSum="2"
-            android:padding="@dimen/dimen_4_dp">
+            android:textColor="#CCFFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:ellipsize="middle"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/shape_dot_indicator"
+            android:backgroundTint="#14FFFFFF"
+            tools:text="14 - ขอบใจที่หาเจอ.flac" />
+
+        <!-- Two-Column Telemetry Glass Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#12FFFFFF"
+            app:strokeWidth="0.75dp"
+            app:strokeColor="#24FFFFFF">
+
             <LinearLayout
-                android:layout_weight="1"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                tools:ignore="UselessParent">
-                <TextView
-                    android:id="@+id/format_labels"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/grey400"
-                    android:alpha="0.7"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:maxLines="5"
-                    android:ellipsize="start"
-                    android:layout_marginBottom="8dp"
-                    android:paddingEnd="@dimen/dimen_8_dp"
-                    tools:text="FORMAT" />
-                <TextView
-                    android:id="@+id/format_values"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:alpha="0.7"
-                    android:textSize="12sp"
-                    android:maxLines="5"
-                    android:gravity="end"
-                    android:layout_marginBottom="8dp"
-                    tools:text="-" />
+                android:baselineAligned="false"
+                android:weightSum="2"
+                android:padding="10dp">
 
-            </LinearLayout>
-            <LinearLayout
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                tools:ignore="UselessParent">
-                <TextView
-                    android:id="@+id/analytics_labels"
-                    android:layout_width="wrap_content"
+                <!-- Column 1: Format Details -->
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/grey400"
-                    android:alpha="0.7"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:maxLines="6"
-                    android:ellipsize="start"
-                    android:layout_marginBottom="8dp"
-                    android:paddingEnd="@dimen/dimen_8_dp"
-                    tools:text="ANALYTICS"
-                    tools:ignore="RtlSymmetry" />
-                <TextView
-                    android:id="@+id/analytics_values"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:alpha="0.7"
-                    android:textSize="12sp"
-                    android:maxLines="6"
-                    android:gravity="end"
-                    android:layout_marginBottom="8dp"
-                    tools:text="-" />
+                    android:orientation="horizontal">
 
+                    <TextView
+                        android:id="@+id/format_labels"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#80FFFFFF"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:lineSpacingExtra="3dp"
+                        android:paddingEnd="6dp"
+                        tools:text="FORMAT\nType:\nSample Rate:\nBit Depth:\nSize:" />
+
+                    <TextView
+                        android:id="@+id/format_values"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:textSize="11.5sp"
+                        android:lineSpacingExtra="3dp"
+                        android:gravity="end"
+                        tools:text="FLAC\n96.0 kHz\n24 bits\n45.2 MB" />
+                </LinearLayout>
+
+                <!-- Subtle Vertical Separator -->
+                <View
+                    android:layout_width="0.75dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="#1AFFFFFF" />
+
+                <!-- Column 2: Analytics Details -->
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/analytics_labels"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#80FFFFFF"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:lineSpacingExtra="3dp"
+                        android:paddingEnd="6dp"
+                        tools:text="ANALYTICS\nNyquist:\nCutoff:\nDR:\nPeak:\nRMS:" />
+
+                    <TextView
+                        android:id="@+id/analytics_values"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:textSize="11.5sp"
+                        android:lineSpacingExtra="3dp"
+                        android:gravity="end"
+                        tools:text="48.0 kHz\n46.2 kHz\n11.4 dB\n-0.2 dB\n-14.5 dB" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Quality Score / Verdict Badge -->
         <TextView
             android:id="@+id/quality_score"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_gravity="center"
-            android:textColor="@color/grey200"
-            android:textSize="11sp"
-            android:maxLines="2"
-            android:textStyle="italic"
-            tools:text="Verified Lossless" />
-
-        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_4_dp"
-            app:cardCornerRadius="8dp"
-            app:cardBackgroundColor="#1A1A1A"
-            android:layout_marginBottom="@dimen/dimen_4_dp">
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:paddingVertical="5dp"
+            android:paddingHorizontal="12dp"
+            android:textColor="@color/colorGold"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/shape_dot_indicator"
+            android:backgroundTint="#24FFD700"
+            tools:text="Verified Lossless Studio Master (24-bit/96kHz)" />
+
+        <!-- Spectrogram Image Surface -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#0D0D10"
+            app:strokeWidth="0.75dp"
+            app:strokeColor="#26FFFFFF">
 
             <apincer.android.mmate.ui.view.AspectRatioPhotoView
                 android:id="@+id/spectrum_view"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:scaleType="fitXY" />
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
+        <!-- Bottom Actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="end"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="10dp">
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_ok"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/ok"
-                android:backgroundTint="@color/colorPrimary"
-                android:textColor="@color/colorOnPrimary" />
+                android:paddingHorizontal="20dp"
+                app:cornerRadius="20dp"
+                app:backgroundTint="#33FFD700"
+                android:textColor="@color/colorGold" />
         </LinearLayout>
     </LinearLayout>
-    <!--
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_2_dp"
-        android:background="@color/grays_charcoal"
-        android:layout_marginStart="@dimen/dimen_24_dp"
-        android:layout_marginEnd="@dimen/dimen_24_dp"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginBottom="@dimen/dimen_8_dp"/>
-        -->
 </LinearLayout>

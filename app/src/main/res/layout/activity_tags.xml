@@ -131,15 +131,11 @@
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabLayout"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/tags_tab_pill_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/shape_bottom_frosted_panel"
-            app:tabIndicatorColor="?attr/colorPrimary"
-            app:tabSelectedTextColor="?attr/colorPrimary"
-            app:tabTextColor="#80FFFFFF"
-            app:tabTextAppearance="@style/TextAppearance.Material3.TitleSmall"/>
+            android:background="@drawable/shape_bottom_frosted_panel"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -190,14 +186,10 @@
                     android:layout_height="wrap_content"
                     android:minWidth="0dp"
                     android:paddingHorizontal="12dp"
+                    android:layout_marginHorizontal="4dp"
                     android:text="@string/button_delete"
-                    android:textColor="@color/colorError" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="20dp"
-                    android:layout_marginHorizontal="10dp"
-                    android:background="@color/colorDividerSubtle" />
+                    android:textColor="@color/colorError"
+                    app:cornerRadius="20dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_organize"
@@ -206,15 +198,10 @@
                     android:layout_height="wrap_content"
                     android:minWidth="0dp"
                     android:paddingHorizontal="16dp"
+                    android:layout_marginHorizontal="4dp"
                     android:text="@string/button_organize"
                     android:textColor="@color/colorPrimary"
                     app:cornerRadius="20dp" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="20dp"
-                    android:layout_marginHorizontal="10dp"
-                    android:background="@color/colorDividerSubtle" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_more"
@@ -223,8 +210,10 @@
                     android:layout_height="wrap_content"
                     android:minWidth="0dp"
                     android:paddingHorizontal="12dp"
+                    android:layout_marginHorizontal="4dp"
                     android:text="@string/button_more"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface"
+                    app:cornerRadius="20dp" />
             </LinearLayout>
 
             <!-- Row 2: Fragment / Context Dependent Actions -->
@@ -248,18 +237,14 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="12dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/button_edit_song_info"
                         android:textColor="?attr/colorOnSurface"
                         android:contentDescription="Open editor"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/ic_round_edit_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="20dp"
-                        android:layout_marginHorizontal="6dp"
-                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/action_preview_save"
@@ -268,6 +253,7 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="16dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_save"
                         android:textColor="@color/colorPrimary"
                         android:contentDescription="Save changes"
@@ -294,17 +280,13 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_format"
                         android:contentDescription="Format tags"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/round_auto_awesome_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="20dp"
-                        android:layout_marginHorizontal="6dp"
-                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/action_read_tag"
@@ -313,17 +295,13 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_read"
                         android:contentDescription="Read tags from file"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/ic_file_rename_outline_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="20dp"
-                        android:layout_marginHorizontal="6dp"
-                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/action_save"
@@ -332,6 +310,7 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="14dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_save"
                         android:contentDescription="Save changes"
                         android:textColor="@color/colorPrimary"
@@ -358,17 +337,13 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_reload"
                         android:contentDescription="Reload from file"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/round_restore_page_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="20dp"
-                        android:layout_marginHorizontal="6dp"
-                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_extract_coverart"
@@ -377,17 +352,13 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_extract_art"
                         android:contentDescription="Extract cover art"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/ic_round_image_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="20dp"
-                        android:layout_marginHorizontal="6dp"
-                        android:background="@color/colorDividerSubtle" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_remove_coverart"
@@ -396,8 +367,10 @@
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
+                        android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_remove_art"
                         android:contentDescription="Remove cover art"
+                        app:cornerRadius="20dp"
                         app:icon="@drawable/ic_round_hide_image_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />

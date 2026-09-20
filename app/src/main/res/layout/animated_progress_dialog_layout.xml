@@ -5,55 +5,55 @@
     android:layout_height="match_parent"
     android:layout_gravity="center">
 
+    <!-- 🌌 Obsidian Glass Progress Card -->
     <LinearLayout
-        android:layout_width="@dimen/dimen_256_dp"
+        android:layout_width="260dp"
         android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:background="@drawable/rounded_progress_dialog_background">
+        android:paddingTop="28dp"
+        android:paddingBottom="20dp"
+        android:paddingHorizontal="24dp"
+        android:background="@drawable/bg_dialog_dark_blur"
+        android:elevation="16dp">
 
-    <LinearLayout
-        android:layout_width="@dimen/dimen_164_dp"
-        android:layout_height="@dimen/dimen_164_dp"
-        android:gravity="center"
-        android:padding="@dimen/dimen_12_dp"
-        android:orientation="vertical"
-        android:background="@drawable/rounded_progress_dialog_background_level1">
         <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/rounded_progress_dialog_background_level2"
-            app:indicatorColor="@color/material_color_green_400"
-            app:trackColor="@color/white"
-            app:indicatorSize="96dp"
-            app:trackThickness="12dp"
-            app:trackCornerRadius="12dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:indicatorColor="@color/colorGold"
+            app:trackColor="#26FFFFFF"
+            app:indicatorSize="56dp"
+            app:trackThickness="4dp"
+            app:trackCornerRadius="4dp"
             android:indeterminate="true" />
-    </LinearLayout>
 
-    <TextView
-        android:id="@+id/progress_label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:maxLines="2"
-        android:ellipsize="middle"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="12sp"
-        android:text="" />
+        <TextView
+            android:id="@+id/progress_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:maxLines="3"
+            android:ellipsize="middle"
+            android:textColor="@color/white"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="13sp"
+            android:text="" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_cancel_progress"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Cancel" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel_progress"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="16dp"
+            android:text="@string/cancel"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="20dp" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

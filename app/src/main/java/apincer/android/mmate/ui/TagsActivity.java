@@ -56,8 +56,6 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.File;
 import java.util.List;
@@ -130,7 +128,7 @@ public class TagsActivity extends AppCompatActivity {
     private TagsViewModel viewModel;
 
     private ImageView coverArtView;
-    private TabLayout tabLayout;
+    private androidx.compose.ui.platform.ComposeView tabLayout;
    // private Toolbar toolbar;
     private AppBarLayout appBarLayout;
     //private BottomAppBar bottomAppBar;
@@ -337,7 +335,7 @@ public class TagsActivity extends AppCompatActivity {
             return insets;
         });
 
-        tabLayout = findViewById(R.id.tabLayout);
+        tabLayout = findViewById(R.id.tags_tab_pill_container);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
         adapter.addNewTab(new TagsEditorFragment(), "Song Info");
@@ -361,8 +359,9 @@ public class TagsActivity extends AppCompatActivity {
             }
         });
 
-        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
-        tabLayoutMediator.attach();
+        if (tabLayout != null) {
+            apincer.android.mmate.ui.compose.TagsTabPillBridge.setup(tabLayout, viewPager);
+        }
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
     }
@@ -692,41 +691,14 @@ public class TagsActivity extends AppCompatActivity {
         }
         
         Track item = items.get(0);
-        
-        // Show a custom glassy input dialog to let the user confirm or refine the title and artist query
-        View dialogView = getLayoutInflater().inflate(R.layout.view_action_search_query_dialog, null);
-        com.google.android.material.textfield.TextInputEditText titleInput = dialogView.findViewById(R.id.input_search_title);
-        com.google.android.material.textfield.TextInputEditText artistInput = dialogView.findViewById(R.id.input_search_artist);
-        View btnSearch = dialogView.findViewById(R.id.button_search);
-        View btnClose = dialogView.findViewById(R.id.btn_close_search_dialog);
-
-        titleInput.setText(item.getTitle());
-        artistInput.setText(item.getArtist());
-
-        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setView(dialogView)
-                .create();
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        btnSearch.setOnClickListener(v -> {
-            String qTitle = titleInput.getText() != null ? titleInput.getText().toString().trim() : "";
-            String qArtist = artistInput.getText() != null ? artistInput.getText().toString().trim() : "";
-            dialog.dismiss();
-            performSearchAndMatch(item, qTitle, qArtist);
-        });
-
-        View btnCancel = dialogView.findViewById(R.id.button_cancel);
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dialog.dismiss());
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(v -> dialog.dismiss());
-        }
-        dialog.show();
+        String initialTitle = item.getTitle() != null ? item.getTitle() : "";
+        String initialArtist = item.getArtist() != null ? item.getArtist() : "";
+        apincer.android.mmate.ui.compose.DialogInterop.showSearchQueryDialog(
+                this,
+                initialTitle,
+                initialArtist,
+                (qTitle, qArtist) -> performSearchAndMatch(item, qTitle, qArtist)
+        );
     }
     
     private void performSearchAndMatch(Track item, String title, String artist) {
@@ -751,85 +723,13 @@ public class TagsActivity extends AppCompatActivity {
             return null;
         });
     }
-    
-    private class SearchResultAdapter extends android.widget.ArrayAdapter<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> {
-        public SearchResultAdapter(android.content.Context context, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
-            super(context, 0, results);
-        }
 
-        @Override
-        public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
-            if (convertView == null) {
-                convertView = android.view.LayoutInflater.from(getContext()).inflate(R.layout.view_list_item_search_result, parent, false);
-            }
-
-            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult result = getItem(position);
-
-            android.widget.TextView titleView = convertView.findViewById(R.id.search_result_title);
-            android.widget.TextView artistView = convertView.findViewById(R.id.search_result_artist);
-            android.widget.TextView albumView = convertView.findViewById(R.id.search_result_album);
-            android.widget.ImageView coverView = convertView.findViewById(R.id.search_result_cover);
-
-            titleView.setText(result.title);
-            artistView.setText(result.artist);
-
-            StringBuilder albumText = new StringBuilder();
-            if (result.album != null && !result.album.isEmpty()) {
-                albumText.append(result.album);
-            }
-            if (result.year != null && !result.year.isEmpty()) {
-                if (albumText.length() > 0) albumText.append(" ");
-                albumText.append("(").append(result.year).append(")");
-            }
-            albumView.setText(albumText.toString());
-
-            if (result.releaseId != null && !result.releaseId.isEmpty()) {
-                String coverUrl = "https://coverartarchive.org/release/" + result.releaseId + "/front-250";
-                
-                coil3.request.ImageRequest imageRequest = new coil3.request.ImageRequest.Builder(getContext())
-                        .data(coverUrl)
-                        .target(new coil3.target.ImageViewTarget(coverView))
-                        .build();
-                coil3.SingletonImageLoader.get(getContext()).enqueue(imageRequest);
-            } else {
-                coverView.setImageDrawable(null);
-            }
-
-            return convertView;
-        }
-    }
-    
     private void showSearchResultsDialog(Track item, List<apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult> results) {
-        View dialogView = getLayoutInflater().inflate(R.layout.view_action_search_results_dialog, null);
-        android.widget.ListView listView = dialogView.findViewById(R.id.search_results_list);
-        View btnClose = dialogView.findViewById(R.id.btn_close_results_dialog);
-
-        SearchResultAdapter adapter = new SearchResultAdapter(this, results);
-        listView.setAdapter(adapter);
-
-        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setView(dialogView)
-                .create();
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected = results.get(position);
-            dialog.dismiss();
-            applySelectedSearchResult(item, selected);
-        });
-
-        View btnCancel = dialogView.findViewById(R.id.button_cancel);
-
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dialog.dismiss());
-        }
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(v -> dialog.dismiss());
-        }
-        dialog.show();
+        apincer.android.mmate.ui.compose.DialogInterop.showSearchResultsDialog(
+                this,
+                results,
+                selected -> applySelectedSearchResult(item, selected)
+        );
     }
     
     private void applySelectedSearchResult(Track item, apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected) {

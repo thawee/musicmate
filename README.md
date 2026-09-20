@@ -46,6 +46,7 @@
 
 ### 📂 Library Management & Fast Touch Workflows
 *   **Split-Tap List Navigation:** Tapping track details initiates instant playback, while tapping album artwork opens the 1-tap metadata tag editor (`TagsActivity`).
+*   **Obsidian-Glass Tag Studio (`TagsActivity`):** Fluid Audiophile Glass Pill switcher for seamless 1:1 finger tracking between Song Info and Technical Info, online tag matching via MusicBrainz in pure Jetpack Compose dialogs with Coil 3 cover art loading, and lossless spectrum analysis.
 *   **Collection Quick Actions:** Direct **Play** and **Add to Queue** action icons on artist, genre, and folder cards.
 *   **High-Performance Indexing:** Parallel metadata parsing powered by `jaudiotagger` and Google's `Room` database.
 

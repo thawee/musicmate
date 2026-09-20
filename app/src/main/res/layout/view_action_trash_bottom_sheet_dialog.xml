@@ -11,8 +11,8 @@
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:layout_margin="12dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="20dp"
     android:paddingHorizontal="20dp">
 
     <!-- Drag handle -->
@@ -20,7 +20,7 @@
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/shape_dot_indicator"
         android:backgroundTint="#55FFFFFF" />
 
@@ -28,7 +28,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="18dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -38,6 +38,13 @@
             android:layout_centerVertical="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/rounded_delete_24"
+                android:layout_marginEnd="10dp"
+                app:tint="@color/colorError" />
 
             <TextView
                 android:id="@+id/bottom_sheet_title"
@@ -52,11 +59,11 @@
 
         <ImageView
             android:id="@+id/btn_close_trash_sheet"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="12dp"
+            android:padding="10dp"
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="Close"
@@ -65,13 +72,15 @@
             app:tint="?attr/colorOnSurfaceVariant" />
     </RelativeLayout>
 
-    <!-- Single Prominent Primary Action Button -->
+    <!-- Single Prominent Primary Action Button (Red Warning Capsule) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_move_to_trash"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingVertical="12dp"
         android:text="@string/move_to_trash"
+        app:cornerRadius="20dp"
         app:icon="@drawable/rounded_delete_24"
         app:iconGravity="textStart"
         app:backgroundTint="?attr/colorErrorContainer"
@@ -85,7 +94,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Cancel"
+        android:paddingVertical="10dp"
+        app:cornerRadius="20dp"
+        android:text="@string/cancel"
         android:textColor="?attr/colorOnSurfaceVariant"/>
 </LinearLayout>
-
