@@ -433,4 +433,11 @@
   - Local playback engines (ExoPlayer) handle transitions via native callbacks (`Player.Listener`), while external music apps manage their own native audio loops. Allowing fallback timers to fire on local or external players causes unintended double-skips and audio interruptions.
 - **Dynamic MediaController Re-acquisition**:
   - In `AndroidPlayerController`, if an external player target is selected but `mediaController` is null (e.g. initial binding or player launched externally), transport methods must lazily attempt `ensureMediaController()` before dispatching commands, preventing dropped transport actions.
+- **Bottom Sheet Viewport Ergonomics & Item Density vs. Fullscreen Expansion**:
+  - When managing high-density content (like an upcoming playback queue) within a companion bottom sheet, expanding the sheet to 100% or introducing a 2-stage expandable state (`skipPartiallyExpanded = false`) creates severe UX and technical drawbacks:
+    - On tall displays (20:9+), 100% height pushes the top navigation tabs and target pickers out of the natural one-handed thumb sweep zone ($y = 0$).
+    - In Compose `ModalBottomSheet`, 2-stage partially-expanded sheets with embedded scrollable lists (`LazyColumn`, `verticalScroll`) trigger notorious gesture fighting between sheet drag detection and list scroll physics.
+    - Fixing sheet height at 65% (HUD model) preserves spatial anchoring (dimmed library backdrop, 1-tap dismiss) and keeps controls reachable with one hand.
+    - Rather than expanding the sheet container, optimize item density internally: reducing row padding (`vertical = 7dp, horizontal = 14dp`) and adjusting typography line-heights yields clean ~50dp item heights (exceeding Material 3 48dp minimum touch bounds) and increases visible capacity by ~40% (displaying 6–7 tracks simultaneously) with zero gesture collision.
+
 
