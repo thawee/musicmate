@@ -32,8 +32,10 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -310,11 +312,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
 
         PlaybackTarget playingPlayer = null;
+        Set<String> addedPackages = new HashSet<>();
 
         // Add external media session targets
         if (controllers != null) {
             String selfPackage = getPackageName();
             for (MediaController controller : controllers) {
+                if (controller == null) continue;
                 String packageName = controller.getPackageName();
                 if (selfPackage != null && selfPackage.equalsIgnoreCase(packageName)) {
                     continue; // Skip self — MusicMate is already registered as the primary local player target
@@ -322,6 +326,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
                 if (player != null) {
                     addLocalPlaybackTarget(player, false);
+                    addedPackages.add(packageName);
                     android.media.session.PlaybackState state = controller.getPlaybackState();
                     if (state != null && state.getState() == android.media.session.PlaybackState.STATE_PLAYING) {
                         playingPlayer = player;
@@ -330,9 +335,20 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
         }
 
+        // Add installed external music players even if not currently playing
+        for (String pkg : ExternalAndroidPlayer.SUPPORTED_PLAYERS) {
+            if (!addedPackages.contains(pkg) && ExternalAndroidPlayer.Factory.isPackageInstalled(getApplicationContext(), pkg)) {
+                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), pkg);
+                if (player != null) {
+                    addLocalPlaybackTarget(player, false);
+                    addedPackages.add(pkg);
+                }
+            }
+        }
+
         // If an external player is playing or if no player is selected, auto-select!
         if (playingPlayer != null) {
-            switchPlayer(playingPlayer, true);
+            switchPlayer(playingPlayer, false);
         } else if (!currentPlayerFlow.getValue().isPresent()) {
             String lastPlayerId = apincer.music.core.Settings.getLastPlayerTargetId(getApplicationContext());
             if (lastPlayerId != null && !lastPlayerId.isEmpty()) {
@@ -426,11 +442,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 // initial with external player
                 updateAvailableExternalPlayers(controllers);
                 mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
-            } catch (SecurityException e) {
-                Log.e(TAG, "Missing notification listener permission despite check", e);
+            } catch (Throwable e) {
+                Log.e(TAG, "Failed to query active media sessions", e);
+                updateAvailableExternalPlayers(null);
             }
         } else {
             Log.w(TAG, "Notification listener permission not granted.");
+            updateAvailableExternalPlayers(null);
         }
 
         // Load queue from database
@@ -639,8 +657,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
                 androidPlayer.play(song);
-                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
-                    currentTrackFlow.setValue(Optional.of(song));
+                currentTrackFlow.setValue(Optional.ofNullable(song));
+                if (song != null) {
                     apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
                     state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
                     state.currentTrack = song;
@@ -661,22 +679,22 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalSkipToNextOnDMRPlayer(playbackTarget);
-            } else {
-                // external player
-                if (!androidPlayer.skipToNext()) {
-                    // Fallback to manual play next for LOCAL_TARGET_ID
-                    Track current = getNowPlayingSong();
-                    if (current != null) {
-                        queueManager.setCurrentTrack(current);
-                    }
-                    Track nextSong = queueManager.getNextTrack();
-                    if (nextSong != null) {
-                        queueManager.setPlaybackTrack(nextSong);
-                        playSong(nextSong);
-                    } else {
-                        stopPlaying();
-                    }
+            } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                // Local ExoPlayer: advance MusicMate's queue
+                Track current = getNowPlayingSong();
+                if (current != null) {
+                    queueManager.setCurrentTrack(current);
                 }
+                Track nextSong = queueManager.getNextTrack();
+                if (nextSong != null) {
+                    queueManager.setPlaybackTrack(nextSong);
+                    playSong(nextSong);
+                } else {
+                    stopPlaying();
+                }
+            } else {
+                // External music app: MediaSession IPC event
+                androidPlayer.skipToNext();
             }
         });
     }
@@ -701,20 +719,20 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalPreviousOnDMRPlayer(playbackTarget);
-            } else {
-                // external player
-                if (!androidPlayer.skipToPrevious()) {
-                    // Fallback to manual play previous for LOCAL_TARGET_ID
-                    Track current = getNowPlayingSong();
-                    if (current != null) {
-                        queueManager.setCurrentTrack(current);
-                    }
-                    Track prevSong = queueManager.getPreviousTrack();
-                    if (prevSong != null) {
-                        queueManager.setPlaybackTrack(prevSong);
-                        playSong(prevSong);
-                    }
+            } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                // Local ExoPlayer: advance MusicMate's queue backwards
+                Track current = getNowPlayingSong();
+                if (current != null) {
+                    queueManager.setCurrentTrack(current);
                 }
+                Track prevSong = queueManager.getPreviousTrack();
+                if (prevSong != null) {
+                    queueManager.setPlaybackTrack(prevSong);
+                    playSong(prevSong);
+                }
+            } else {
+                // External music app: MediaSession IPC event
+                androidPlayer.skipToPrevious();
             }
         });
     }
@@ -918,7 +936,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     long durationMs = (long) (currentTrack.getAudioDuration() * 1000.0);
                     targetPos = Math.min(targetPos, durationMs);
                 }
-                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(currentTarget.getTargetId())) {
+                if (currentTarget instanceof ExternalAndroidPlayer || !currentTarget.isStreaming()) {
                     androidPlayer.seekTo(targetPos);
                 } else {
                     mediaHub.playerSeek(currentTarget.getTargetId(), targetPos);
@@ -1025,7 +1043,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         if (expectedNext == null) {
             Log.w(TAG, "Fallback: No next track (queue ended), stopping playback");
-            internalStopOnDMRPlayer(player);
+            if (player != null && player.isStreaming()) {
+                internalStopOnDMRPlayer(player);
+            } else {
+                stopPlaying();
+            }
             return;
         }
 
@@ -1037,7 +1059,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         Log.w(TAG, "Fallback: Forcing next → " + expectedNext.getTitle());
         queueManager.setPlaybackTrack(expectedNext);
-        internalPlayOnDMRPlayer(player, expectedNext);
+        if (player != null && player.isStreaming() && isControllable(player)) {
+            internalPlayOnDMRPlayer(player, expectedNext);
+        } else {
+            playSong(expectedNext);
+        }
     }
 
     @Override
@@ -1052,6 +1078,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void refreshPlayerDiscovery() {
+        refreshExternalPlayersSafe();
         if (mediaHub != null) {
             mediaHub.refreshDiscovery();
         }
@@ -1403,6 +1430,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void scheduleFallback(Track song) {
+        PlaybackTarget activePlayer = getActivePlayer();
+        if (activePlayer == null || !activePlayer.isStreaming() || !isControllable(activePlayer)) {
+            return; // Safety fallback timer is strictly for controllable DLNA/DMR streaming renderers
+        }
+
         if (nextTrackTask != null && !nextTrackTask.isDone()) {
             nextTrackTask.cancel(false);
         }

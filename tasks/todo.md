@@ -1,56 +1,59 @@
-# Tag Editor & Auxiliary Dialog Modernization to Obsidian Glass System
+# External Android Music Player Companion Controller Architecture Plan
 
-## Status: 🟢 Complete
+## Status: 🟢 Completed
 
 ### Objectives
-Modernize `TagsActivity` and remaining auxiliary dialog surfaces into the flagship Obsidian Glass Design System, replace legacy View adapters with pure Jetpack Compose sheets, eliminate dead code/layouts, update documentation and changelog, and commit code.
+Transition MusicMate's external Android music app integration (Poweramp, UAPP, Neutron, HiBy Music, etc.) to a true **Companion Controller / MediaSession IPC** architecture. Eliminate track-by-track URL pushes, window/focus theft, background activity restrictions, and audio engine interruptions, while retaining one-time explicit handoff when a user taps a song to play in an external app.
 
 ---
 
 ### Master Checklist
 
-- [x] **Phase 1: Tag Editor Tab Switcher & Action Dock Modernization**
-  - [x] Create `TagsTabPillSwitcher.kt` with fluid sliding pill indicator, 1:1 `ViewPager2` drag tracking, champagne gold glow, and tactile haptics
-  - [x] Implement `TagsTabPillBridge` for zero-boilerplate Java interop with `ViewPager2`
-  - [x] Replace legacy XML `TabLayout` in `activity_tags.xml` with `ComposeView` (`tags_tab_pill_container`)
-  - [x] Modernize action dock buttons into rounded pills (`20dp` corner radius) and remove obsolete 1dp vertical dividers
+- [x] **Phase 1: MediaSession IPC Event Routing (`AndroidPlayerController.java`)**
+  - [x] Remove track-end heuristic `playbackCallback.onPlaybackCompleted()` in `mediaCallback.onPlaybackStateChanged()` to prevent external app track ends from triggering unwanted URL pushes
+  - [x] Update transport controls (`skipToNext`, `skipToPrevious`, `pause`, `resume`, `seekTo`, `stopPlaying`) to re-acquire `mediaController` if null when targeting external apps
 
-- [x] **Phase 2: Auxiliary Dialogs & Compose Migration**
-  - [x] Implement pure Compose `SearchMatchDialog.kt` (`SearchQueryDialog` and `SearchResultsDialog`) with Coil 3 image loading and `LazyColumn`
-  - [x] Expose Compose dialog helpers in `DialogInterop.kt` (`showSearchQueryDialog`, `showSearchResultsDialog`)
-  - [x] Integrate Compose dialogs into `TagsActivity.java` and delete `SearchResultAdapter`
-  - [x] Modernize `animated_progress_dialog_layout.xml` to an obsidian glass card with champagne gold `CircularProgressIndicator`
-  - [x] Modernize `view_action_spectrum.xml` into a studio inspector layout with two-column telemetry cards and verdict badge
-  - [x] Modernize `view_action_trash_bottom_sheet_dialog.xml` into an obsidian glass bottom sheet with red tonal container and pill buttons
+- [x] **Phase 2: Queue & Transport Orchestration (`MusicMateServiceImpl.java`)**
+  - [x] Update `skipToNextInQueue()`: route external players to `androidPlayer.skipToNext()` (MediaSession IPC) instead of advancing MusicMate's queue and firing `ACTION_VIEW`
+  - [x] Update `skipToPrevious()`: route external players to `androidPlayer.skipToPrevious()` (MediaSession IPC)
+  - [x] Guard `scheduleFallback()`: restrict fallback timers strictly to controllable DLNA/DMR streaming players (`activePlayer.isStreaming() && isControllable(activePlayer)`), bypassing Local ExoPlayer and external apps
 
-- [x] **Phase 3: Dead Code & Obsolete Resource Pruning**
-  - [x] Remove unused storage visualization methods from `UIUtils.java` (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`)
-  - [x] Delete obsolete XML layouts: `progress_dialog_layout.xml`, `view_action_search_query_dialog.xml`, `view_action_search_results_dialog.xml`, `view_list_item_search_result.xml`, `view_storage_space.xml`, `view_storage_space_estimated.xml`
+- [x] **Phase 3: Verification & Documentation**
+  - [x] Run `./gradlew compileDebugSources testDebugUnitTest`
+  - [x] Document architectural patterns and lessons learned in `tasks/lessons.md`
+  - [x] Complete `tasks/todo.md` review section
 
-- [x] **Phase 4: Documentation & Changelog**
-  - [x] Document ADR-025 in `DESIGN.md` and update Last Updated date
-  - [x] Update `CHANGELOG.md` under version `[3.19.6]` with comprehensive details under `### Changed` and `### Removed`
-  - [x] Update `README.md` to highlight the Obsidian-Glass Tag Studio
-  - [x] Update `USER_GUIDE.md` section 3 with Fluid Glass Pill switcher and MusicBrainz online search dialog details
-  - [x] Document lessons in `tasks/lessons.md`
+- [x] **Phase 4: Design Doc Expansion - Dual-Mode Network Streaming Architecture (`DESIGN.md`)**
+  - [x] Add Section 4.D detailing Dual-Mode Network Streaming (Mode A: DMS + DMC vs. Mode B: DMS Only with External Controller)
+  - [x] Detail UPnP `ContentDirectory` hierarchy (`AlbumsBrowser`, `ArtistsBrowser`, `GenresBrowser`, `CollectionsBrowser`, `SourcesBrowser`)
+  - [x] Detail RFC 7233 byte-range clamping and embedded NIO HTTP streaming engine
+  - [x] Detail passive stream observation and non-collision guard (`onAccessMediaTrack`)
+  - [x] Renumber Player Picker to Section 4.E
+  - [x] Update ADR-026 to explicitly cross-reference dual streaming modes and collision guards
 
-- [x] **Phase 5: Verification & Git Commit**
-  - [x] Verify compilation and unit tests: `./gradlew compileDebugSources testDebugUnitTest` (BUILD SUCCESSFUL, 235 tasks, 0 failures)
-  - [x] Stage and commit all changes with a conventional commit message
+- [x] **Phase 5: Decouple UI/UX Design System into dedicated `UI.md`**
+  - [x] Create `UI.md` containing UI Philosophy, Gestures, Menu Architecture, Obsidian-Glass System, Color Tokens, Layouts, Docks, Dialogs, Touch/a11y, and UI ADRs
+  - [x] Refocus `DESIGN.md` as the Technical & System Architecture reference (System topology, Playback Domains, Audio Engine, UPnP/DLNA Streaming, System ADRs, Non-Goals, and UI cross-references)
+  - [x] Verify cross-links, formatting, and file consistency
+  - [x] Update `tasks/todo.md` with completion and review notes
 
 ---
 
 ## Review & Verification
 
-### Deliverables Summary
-1. **[TagsTabPillSwitcher.kt](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/TagsTabPillSwitcher.kt)**: Audiophile Fluid Glass Pill tab switcher tracking `ViewPager2` scroll offset in real-time.
-2. **[SearchMatchDialog.kt](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/SearchMatchDialog.kt)**: Pure Compose search query and online MusicBrainz match selection dialogs.
-3. **[DialogInterop.kt](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/DialogInterop.kt)**: Clean Java-Compose dialog interop bridges.
-4. **[TagsActivity.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/TagsActivity.java)**: Tag Editor wired to Compose pill switcher and Compose dialogs; obsolete adapter removed.
-5. **[UIUtils.java](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/utils/UIUtils.java)**: Pruned 192 lines of dead storage calculation code.
-6. **Auxiliary XML Layouts**: Modernized progress, spectrum, and trash dialogs; pruned 6 obsolete XML layout files.
-7. **Documentation**: Updated [CHANGELOG.md](file:///Users/thawee.p/Workspaces/github/musicmate/CHANGELOG.md), [DESIGN.md](file:///Users/thawee.p/Workspaces/github/musicmate/DESIGN.md), [README.md](file:///Users/thawee.p/Workspaces/github/musicmate/README.md), [USER_GUIDE.md](file:///Users/thawee.p/Workspaces/github/musicmate/USER_GUIDE.md), and [tasks/lessons.md](file:///Users/thawee.p/Workspaces/github/musicmate/tasks/lessons.md).
+### Verification Summary
+- Executed `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL** across 235 tasks with 0 errors.
+- Decoupled UI/UX design specifications from system architecture:
+  - Created [`UI.md`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md) (716 lines) as the authoritative UI/UX Design System & Human Interface Guidelines.
+  - Refocused [`DESIGN.md`](file:///Users/thawee.p/Workspaces/github/musicmate/DESIGN.md) (359 lines) as the Technical & System Architecture Specification.
+  - Updated documentation links in [`README.md`](file:///Users/thawee.p/Workspaces/github/musicmate/README.md) and [`tasks/lessons.md`](file:///Users/thawee.p/Workspaces/github/musicmate/tasks/lessons.md).
 
-### Verification
-- **Gradle Build & Unit Tests:** `./gradlew compileDebugSources testDebugUnitTest`
-  - Result: **BUILD SUCCESSFUL in 12s**, 235 actionable tasks executed cleanly, 0 errors, 0 test failures.
+### Architectural Improvements Delivered
+1. **Zero UI/Focus Theft**: External music apps are never re-launched with `ACTION_VIEW` when songs change in the background. Transport skip events use standard Binder IPC (`MediaController.getTransportControls().skipToNext()`).
+2. **Audio Engine & DAC Integrity**: External audiophile players maintain their hardware USB DAC locks without stream interruption, sample rate re-negotiation, or DAC clicks/pops.
+3. **Target-Isolated Fallback Timers**: Guarded `scheduleFallback()` to run only for controllable DLNA/UPnP renderers, preventing unwanted track-skip timers from interrupting local ExoPlayer or external Android music player sessions.
+4. **Resilient Dynamic Controller Binding**: Added `ensureMediaController()` across all transport commands (`pause`, `resume`, `seekTo`, `skipToNext`, `skipToPrevious`, `stopPlaying`) to dynamically re-bind active `MediaController` instances if dropped or lazily initialized.
+5. **Dual-Mode Streaming Documentation**: Fully documented UPnP AV / DLNA topology across Mode A (Integrated DMS + DMC) and Mode B (Standalone DMS with third-party DMCs like BubbleUPnP, mconnect, WiiM, Audirvana), the `ContentDirectory` browser tree, and `onAccessMediaTrack()` collision guards.
+6. **Modular Documentation Decoupling**: Successfully separated UI design tokens, layout hierarchies, and interaction models (`UI.md`) from system topology, audio pipelines, streaming protocols, and backend ADRs (`DESIGN.md`), with comprehensive bi-directional cross-references.
+
+

@@ -5,6 +5,28 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.7] - 2026-09-21
+
+### Added
+- **External Music Player Companion Controller Architecture (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`, `ExternalAndroidPlayer.java`, `MusicFileProvider.java`)**:
+  - **MediaSession Binder IPC Handoff:** Transitioned external music player integration (Poweramp, USB Audio Player PRO, Neutron, HiBy Music, Foobar2000) from track-by-track `ACTION_VIEW` URL pushes to resilient Android `MediaSession` Binder IPC (`MediaController.getTransportControls()`).
+  - **Eliminated Window/Focus Theft & DAC Lock Resets:** Eliminated background track-end heuristics that repeatedly popped external player windows to the foreground, wiped external playlists, or interrupted direct USB DAC hardware locks (preventing DAC relay clicks/pops).
+  - **Resilient Dynamic Controller Binding:** Added `ensureMediaController()` across all transport controls (`skipToNext`, `skipToPrevious`, `pause`, `resume`, `seekTo`, `stopPlaying`) to dynamically re-bind dropped or lazily initialized `MediaController` instances.
+  - **Target-Scoped Safety Timers:** Gated `scheduleFallback()` gapless transition timers to run strictly on controllable DLNA/UPnP streaming renderers (`activePlayer.isStreaming() && isControllable(activePlayer)`), bypassing Local ExoPlayer and external Android music apps.
+  - **ContentProvider OpenableColumns & MIME Robustness (`MusicFileProvider.java`):** Fixed `query()` to handle `projection == null` using standard `OpenableColumns` (`_display_name`, `_size`, `_data`) without throwing `UnsupportedOperationException`, and updated `getType()` to delegate to `MimeTypeUtils` for accurate audiophile MIME types (`.flac`, `.dsf`, `.dff`, `.ape`, `.wv`).
+  - **Semantic Player Iconography (`MainActivity.java`):** Updated player picker dialog to render the music note vector icon (`rounded_music_note_24`) for external player apps, visually distinguishing local apps from remote Wi-Fi streamers.
+- **Dual-Mode Network Streaming Architecture (`DESIGN.md` §2.D, ADR-026)**:
+  - **Mode A (Integrated DMS + DMC):** Fully documented MusicMate as simultaneous Media Server and Control Point pushing audio via UPnP AVTransport (`SetAVTransportURI` / `SetNextAVTransportURI`) to remote renderers with target-scoped safety timers.
+  - **Mode B (Standalone DMS Only):** Documented standalone media server operation allowing external audiophile controllers (BubbleUPnP, mconnect, WiiM Home, Audirvana) to browse the virtual `ContentDirectory` hierarchy (`LibraryBrowser`, `AlbumsBrowser`, `ArtistsBrowser`, `GenresBrowser`, `CollectionsBrowser`, `SourcesBrowser`) and stream via RFC 7233 byte-range HTTP.
+  - **Passive Stream Observation & Active DMR Collision Guard:** Documented `onAccessMediaTrack()` collision guard suppressing incoming external stream access notifications during active DMR playback while passively displaying metadata when idle.
+- **Decoupled UI/UX Design System (`UI.md`, `DESIGN.md`, `README.md`)**:
+  - **Created `UI.md` (716 lines):** Established an authoritative reference for the Obsidian-Glass Design System, OLED color tokens, tactile gestures (Dual Persona "Listener vs. Curator"), decoupled menu architectures, layout geometries (`CardView 20dp` floating dock, 65% bottom sheet height, 2-row tag command dock), 48dp minimum touch targets, and 19 UI Architectural Decision Records (ADR-001 through ADR-025).
+  - **Refocused `DESIGN.md` (359 lines):** Restructured into a dedicated Technical & System Architecture Specification covering module topology, multi-target playback routing, 32-bit Float PCM, bit-perfect USB DAC discovery, dual-mode streaming, metadata engines, and 7 backend/system ADRs (ADR-007 through ADR-026).
+  - **Documentation Cross-Indexing:** Updated `README.md` and `tasks/lessons.md` with bi-directional documentation links and ADR cross-reference tables.
+
+### Changed
+- **Bumped version to `3.19.7` (versionCode `135`) in `app/build.gradle`**.
+
 ## [3.19.6] - 2026-09-20
 
 ### Added

@@ -1364,6 +1364,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     iconRes = R.drawable.ic_round_bluetooth_audio_24;
                 } else if ("local".equalsIgnoreCase(target.getTargetId())) {
                     iconRes = R.drawable.round_sd_storage_24;
+                } else if (AudioOutputHelper.isExternalAppTarget(target)) {
+                    iconRes = R.drawable.rounded_music_note_24;
                 }
 
                 String subtitle = "";

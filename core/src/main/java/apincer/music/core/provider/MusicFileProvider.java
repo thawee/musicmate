@@ -80,61 +80,45 @@ public final class MusicFileProvider extends ContentProvider {
 
         public String getType(@NonNull Uri uri) {
             File a = getFileForUri(uri);
-            int lastIndexOf = a.getName().lastIndexOf(46);
-            if (lastIndexOf >= 0) {
-                String mimeTypeFromExtension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(a.getName().substring(lastIndexOf + 1));
-                if (mimeTypeFromExtension != null) {
-                    return mimeTypeFromExtension;
-                }
-            }
-            return "application/octet-stream";
+            return apincer.music.core.utils.MimeTypeUtils.getMimeTypeFromPath(a.getPath());
         }
 
         public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
             throw new UnsupportedOperationException("No support inserts");
         }
 
-        public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
-            try {
-                return ParcelFileDescriptor.open(getFileForUri(uri), b(str));
-            } catch (FileNotFoundException ignore) {
+        public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) throws FileNotFoundException {
+            File file = getFileForUri(uri);
+            if (!file.exists()) {
+                throw new FileNotFoundException("File not found: " + uri);
             }
-            return null;
+            return ParcelFileDescriptor.open(file, b(str));
         }
 
         public Cursor query(@NonNull Uri uri, String[] strArr, String str, String[] strArr2, String str2) {
             File a = getFileForUri(uri);
-            if(strArr ==null) {
-                throw new UnsupportedOperationException("Query operation is not supported currently.");
+            String[] cols = (strArr != null && strArr.length > 0)
+                    ? strArr
+                    : new String[]{"_display_name", "_size", "_data"};
+
+            Object[] values = new Object[cols.length];
+            for (int i = 0; i < cols.length; i++) {
+                String col = cols[i];
+                if ("_display_name".equals(col)) {
+                    values[i] = a.getName();
+                } else if ("_size".equals(col)) {
+                    values[i] = a.length();
+                } else if ("_data".equals(col)) {
+                    values[i] = a.getAbsolutePath();
+                } else if ("mime_type".equalsIgnoreCase(col)) {
+                    values[i] = getType(uri);
+                } else {
+                    values[i] = null;
+                }
             }
 
-            String[] strArr3 = new String[strArr.length];
-            Object[] objArr = new Object[strArr.length];
-            int i = 0;
-            for (Object obj : strArr) {
-                int i2=i;
-                String str3 = "_display_name";
-                if (str3.equals(obj)) {
-                    strArr3[i] = str3;
-                    i2 = i + 1;
-                    objArr[i] = a.getName();
-                } else if("_size".equals(obj)){
-                    str3 = "_size";
-                    strArr3[i] = str3;
-                    i2 = i + 1;
-                    objArr[i] = a.length();
-                } else if("_data".equals(obj)){
-                    str3 = "_data";
-                    strArr3[i] = str3;
-                    i2 = i + 1;
-                    objArr[i] = a.getAbsolutePath();
-                }
-                i = i2;
-            }
-            String[] a2 = copyArray(strArr3, i);
-            Object[] a3 = copyArray(objArr, i);
-            MatrixCursor matrixCursor = new MatrixCursor(a2, 1);
-            matrixCursor.addRow(a3);
+            MatrixCursor matrixCursor = new MatrixCursor(cols, 1);
+            matrixCursor.addRow(values);
             return matrixCursor;
         }
 

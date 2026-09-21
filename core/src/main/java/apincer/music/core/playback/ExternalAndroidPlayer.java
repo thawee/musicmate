@@ -26,6 +26,9 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
     public static final String UAPP_PACK_NAME = "com.extreamsd.usbaudioplayerpro";
     public static final String FOOBAR2000_PACK_NAME="com.foobar2000.foobar2000";
     public static final String POWERAMP_PACK_NAME = "com.maxmpz.audioplayer";
+    public static final String SONY_MUSIC_PACK_NAME = "com.sonyericson.music";
+    public static final String EDDICT_PLAYER_PACK_NAME = "com.shanling.eddictplayer";
+    public static final String ASPECT_PLAYER_PACK_NAME = "com.andrewkhandr.aspect";
 
     /**
      * Poweramp package name
@@ -44,7 +47,10 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
             NEUTRON_MUSIC_PACK_NAME,
             UAPP_PACK_NAME,
             POWERAMP_PACK_NAME,
-            FOOBAR2000_PACK_NAME
+            FOOBAR2000_PACK_NAME,
+            SONY_MUSIC_PACK_NAME,
+            EDDICT_PLAYER_PACK_NAME,
+            ASPECT_PLAYER_PACK_NAME
             // Add new player packages here
     ));
 
@@ -63,14 +69,23 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
 
     //@Override
     public boolean play(Track track) {
-        if(!SUPPORTED_PLAYERS.contains(targetId)) return false;
-
-        Uri musicUri = Uri.parse(track.getPath());
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(musicUri, "audio/*");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-        return true;
+        if (track == null || track.getPath() == null) return false;
+        try {
+            Uri musicUri = apincer.music.core.provider.MusicFileProvider.getUriForFile(track.getPath());
+            String mimeType = apincer.music.core.utils.MimeTypeUtils.getMimeTypeFromPath(track.getPath());
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(musicUri, mimeType);
+            if (!LOCAL_TARGET_ID.equals(targetId)) {
+                intent.setPackage(targetId);
+                context.grantUriPermission(targetId, musicUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            android.util.Log.e("ExternalAndroidPlayer", "Failed to play track in " + targetId, e);
+            return false;
+        }
     }
 
     public boolean isStreaming() {
@@ -114,7 +129,7 @@ public class ExternalAndroidPlayer implements PlaybackTarget {
                 return null; // Self app is handled by createLocalTarget
             }
 
-            if (ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName) || isPackageInstalled(context, packageName)) {
+            if (isPackageInstalled(context, packageName)) {
                 String playerName = getAppName(context, packageName);
                 String playerVersion = getAppVersionName(context, packageName);
                 String playerDescription = (playerVersion != null && !playerVersion.trim().isEmpty() && !"N/A".equalsIgnoreCase(playerVersion)) ? playerVersion : null;

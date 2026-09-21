@@ -12,8 +12,8 @@
 *   🖥️ **[Web UI & Server Architecture](WEBUI.md)** - Deep dive into the remote interface and pluggable HTTP engines.
 *   🎼 **[Music Quality Guide](MUSIC_QUALITY_GUIDE.md)** - A reference for understanding Bit Depth and Dynamic Range.
 *   🛠️ **[Contributing Guide](CONTRIBUTING.md)** - Developer setup, build instructions, and architecture overview.
-*   📡 **[Network Resilience](NETWORK_RESILIENCE.md)** - WiFi loss recovery and hotspot mode support.
-*   🎨 **[UI/UX Design Principles & ADRs](DESIGN.md)** - Interaction model, gesture rules, menu architecture, and UX decision records.
+*   🏗️ **[System Architecture & Design](DESIGN.md)** - Technical topology, audio engine pipelines, multi-target playback routing, and system ADRs.
+*   🎨 **[UI/UX Design System & Guidelines](UI.md)** - Interaction models, gestures, menus, Obsidian-Glass theming, and UI decision records.
 *   📜 **[Changelog](CHANGELOG.md)** - Detailed history of changes and release updates.
 
 ---
