@@ -37,6 +37,13 @@ Transition MusicMate's external Android music app integration (Poweramp, UAPP, N
   - [x] Verify cross-links, formatting, and file consistency
   - [x] Update `tasks/todo.md` with completion and review notes
 
+- [x] **Phase 6: Optimize QueuePage list item padding and layout density**
+  - [x] Adjust `QueueItem` vertical padding (`vertical = 7.dp, horizontal = 14.dp`) to achieve clean ~50dp item height (Material 3 standard)
+  - [x] Optimize text line heights (`fontSize = 13.5.sp` title, `11.5.sp` artist) for compact elegance without truncation
+  - [x] Adjust reorder drag threshold (`threshold = 52f`) to match the new item height
+  - [x] Tighten toolbar padding in `QueuePage.kt` (`vertical = 4.dp`)
+  - [x] Verify build and tests
+
 ---
 
 ## Review & Verification
@@ -55,5 +62,6 @@ Transition MusicMate's external Android music app integration (Poweramp, UAPP, N
 4. **Resilient Dynamic Controller Binding**: Added `ensureMediaController()` across all transport commands (`pause`, `resume`, `seekTo`, `skipToNext`, `skipToPrevious`, `stopPlaying`) to dynamically re-bind active `MediaController` instances if dropped or lazily initialized.
 5. **Dual-Mode Streaming Documentation**: Fully documented UPnP AV / DLNA topology across Mode A (Integrated DMS + DMC) and Mode B (Standalone DMS with third-party DMCs like BubbleUPnP, mconnect, WiiM, Audirvana), the `ContentDirectory` browser tree, and `onAccessMediaTrack()` collision guards.
 6. **Modular Documentation Decoupling**: Successfully separated UI design tokens, layout hierarchies, and interaction models (`UI.md`) from system topology, audio pipelines, streaming protocols, and backend ADRs (`DESIGN.md`), with comprehensive bi-directional cross-references.
+7. **Queue Density Optimization**: Streamlined `QueuePage.kt` item height to ~50dp (via `7dp` vertical padding, compact line heights, and 40dp action icons), increasing visible track capacity in the 65% sheet by ~40% (from 4–5 items to 6–7 items) while strictly preserving Material 3 minimum 48dp touch accessibility.
 
 

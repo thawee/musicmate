@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Documentation Cross-Indexing:** Updated `README.md` and `tasks/lessons.md` with bi-directional documentation links and ADR cross-reference tables.
 
 ### Changed
+- **Queue Layout Density Optimization (`QueuePage.kt`, `UI.md`)**: Streamlined upcoming queue list item height to ~50dp (via 7dp vertical padding, compact 13.5sp/11.5sp line heights, 40dp action icons, and 52f reorder drag threshold), increasing visible track capacity in the 65% height sheet by ~40% (displaying 6–7 tracks simultaneously) while preserving Material 3 48dp minimum touch bounds.
 - **Bumped version to `3.19.7` (versionCode `135`) in `app/build.gradle`**.
 
 ## [3.19.6] - 2026-09-20

@@ -62,13 +62,13 @@ fun QueuePage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 6.dp)
+            .padding(top = 2.dp)
     ) {
         // Toolbar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -76,7 +76,7 @@ fun QueuePage(
                 Text(
                     text = "Upcoming Queue",
                     color = Color.White,
-                    fontSize = 14.sp,
+                    fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -86,18 +86,20 @@ fun QueuePage(
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onJumpToPlaying, modifier = Modifier.size(48.dp)) {
+                IconButton(onClick = onJumpToPlaying, modifier = Modifier.size(40.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_center_focus_strong_black_24dp),
                         contentDescription = "Jump to Now Playing",
-                        tint = Color(0xFFFFB300)
+                        tint = Color(0xFFFFB300),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                IconButton(onClick = onClearQueue, modifier = Modifier.size(48.dp)) {
+                IconButton(onClick = onClearQueue, modifier = Modifier.size(40.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_delete_24),
                         contentDescription = "Clear Queue",
-                        tint = Color(0xFF9E9E9E)
+                        tint = Color(0xFF9E9E9E),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -243,29 +245,32 @@ fun QueueItem(
             .fillMaxWidth()
             .background(if (isPlaying) Color(0x22FFD700) else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(vertical = 7.dp, horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = if (isPlaying) "▶" else "${index + 1}",
-            color = if (isPlaying) Color(0xFFFFD700) else Color.DarkGray,
-            fontSize = 12.sp,
+            color = if (isPlaying) Color(0xFFFFD700) else Color(0xFF757575),
+            fontSize = 11.5.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(28.dp)
+            modifier = Modifier.width(26.dp)
         )
         
-        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
             Text(
                 text = track.title ?: "Unknown Title",
                 color = if (isPlaying) Color(0xFFFFD700) else Color.White,
-                fontSize = 14.sp,
+                fontSize = 13.5.sp,
+                lineHeight = 17.sp,
+                fontWeight = if (isPlaying) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = artist,
                 color = Color(0xFF9E9E9E),
-                fontSize = 12.sp,
+                fontSize = 11.5.sp,
+                lineHeight = 15.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -276,7 +281,7 @@ fun QueueItem(
                 text = durationStr,
                 color = Color(0xFF757575),
                 fontSize = 11.sp,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 6.dp)
             )
         }
 
@@ -297,7 +302,7 @@ fun QueueItem(
                         onVerticalDrag = { change, dragAmount ->
                             change.consume()
                             dragAccumulatedY += dragAmount
-                            val threshold = 68f
+                            val threshold = 52f
                             if (dragAccumulatedY > threshold && index < totalCount - 1) {
                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                                 onMoveTrack?.invoke(index, index + 1)
