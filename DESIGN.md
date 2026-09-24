@@ -1,6 +1,6 @@
 # MusicMate Technical & System Architecture Specification
 
-> **Last Updated:** 2026-09-21 · **Owner:** @thawee
+> **Last Updated:** 2026-09-24 · **Owner:** @thawee
 >
 > **Scope:** This document is the authoritative specification for MusicMate's system topology, multi-target playback routing, audio engine pipelines, UPnP/DLNA streaming architecture, metadata tagging, Room DB persistence, and system Architectural Decision Records (ADRs).
 >
@@ -320,6 +320,17 @@ MusicMate houses a comprehensive audio tagging subsystem designed to protect fil
      - Documented hardware routing priority (`USB DAC (4) > Bluetooth A2DP (3) > Wired Headphones (1) > Speaker (0)`).
      - Standardized Android 14+ `AudioMixerAttributes` bit-perfect USB sink detection.
 - **Consequences:** Eliminates foreground window theft, guarantees 100% background reliability with screen off, preserves audiophile USB DAC hardware locks and gapless playback, prevents queue collisions, and establishes a robust, extensible multi-target playback architecture.
+
+### ADR-029: Stable Library Identity, Safe Reconciliation & Bounded Paging
+- **Status:** Accepted
+- **Date:** 2026-09-24
+- **Context:** Full library rescans previously risked replacing database identities that queues and other references rely on. A disconnected removable volume could also look like an empty library and trigger destructive pruning. Large library queries needed bounded result sets without allowing late responses from an older search to replace newer results. File move/import and conversion flows also needed explicit collision-safe destinations.
+- **Decision:**
+  1. Preserve each track's database ID during metadata refresh and full rescans. Reconcile rather than wholesale-delete records so persisted queue references remain valid.
+  2. Prune a missing track only when its parent directory is available and readable and confirms the file is absent. Treat unavailable storage as unknown; retain its records and queue entries.
+  3. Load library results in pages of 500. Cancel or reject responses from obsolete query generations, and expose loading and retry states as pages are requested.
+  4. Never overwrite an existing destination during move or import. Select a unique conversion output path and persist that actual path; commit the database path before attempting ancillary copies.
+- **Consequences:** Rescans preserve identity and playback continuity, transient storage loss cannot erase library state, large libraries load incrementally with consistent search results, and file operations avoid silent replacement or path divergence.
 
 ---
 

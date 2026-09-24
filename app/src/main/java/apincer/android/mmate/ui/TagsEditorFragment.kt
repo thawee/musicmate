@@ -40,7 +40,7 @@ class TagsEditorFragment : Fragment() {
     private val tagsActivity: TagsActivity
         get() = activity as TagsActivity
 
-    private val editorState = TagsEditorState()
+    private val editorState get() = tagsActivity.viewModel.editorState
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,7 +70,9 @@ class TagsEditorFragment : Fragment() {
 
                     TagsEditorPage(
                         track = track,
+                        tracks = editItems,
                         state = editorState,
+                        onApplyFilenamePattern = { pattern -> applyFilenamePattern(pattern) },
                         albumArtistOptions = albumArtistOptions,
                         artistOptions = artistOptions,
                         genreOptions = genreOptions,
@@ -206,6 +208,7 @@ class TagsEditorFragment : Fragment() {
     }
 
     fun initEditorInputs() {
+        if (editorState.isAnyModified() || tagsActivity.viewModel.draftsDirty) return
         val editItems = tagsActivity.getEditItems()
         populateEditorInputs(editItems)
     }
@@ -231,7 +234,7 @@ class TagsEditorFragment : Fragment() {
     }
 
     fun isModified(): Boolean {
-        return editorState.isAnyModified()
+        return editorState.isAnyModified() || tagsActivity.viewModel.draftsDirty
     }
 
     private fun checkMultiValues(items: List<Track>, baseValue: String?, getter: (Track) -> String?): String {
@@ -239,14 +242,14 @@ class TagsEditorFragment : Fragment() {
         
         for (item in items) {
             if (baseValue != getter(item)) {
-                return " - " // Multi-values marker
+                return TagsEditorState.MULTI_VALUES_MARKER
             }
         }
         return baseValue ?: ""
     }
     
     private fun isMultiValuesMarker(text: String): Boolean {
-        return text == " - "
+        return TagsEditorState.isMultiValues(text)
     }
 
     fun doSaveMediaItem() {
@@ -254,44 +257,48 @@ class TagsEditorFragment : Fragment() {
     }
 
     fun doSaveMediaItem(onComplete: Runnable?) {
-        tagsActivity.startProgressBar()
-        val itemsToSave = ArrayList(tagsActivity.editItems ?: emptyList())
-        val totalItems = itemsToSave.size
-        val successCount = AtomicInteger(0)
-        val failureCount = AtomicInteger(0)
-        val completedCount = AtomicInteger(0)
-
+        val host = tagsActivity
+        val model = host.viewModel
+        host.startProgressBar()
         requireActivity().currentFocus?.clearFocus()
-
-        CompletableFuture.runAsync {
-            for (item in itemsToSave) {
-                buildPendingTags(item)
+        val drafts = ArrayList(host.editItems ?: emptyList())
+        // Read Compose state on Main, and give background writers independent copies.
+        drafts.forEach { buildPendingTags(it) }
+        val itemsToSave = drafts.map { it.copy() }
+        CompletableFuture.supplyAsync({
+            var success = 0
+            val failed = mutableListOf<String>()
+            itemsToSave.forEachIndexed { index, tag ->
+                val saved = try { fileRepos.setMusicTag(tag) } catch (e: Exception) {
+                    Log.e("TagsEditorFragment", "Save failed for ${tag.path}", e)
+                    false
+                }
+                if (saved) success++ else failed.add(java.io.File(tag.path).name)
+                host.runOnUiThread { host.updateProgressBar("${index + 1}/${itemsToSave.size}") }
             }
-        }.thenCompose {
-            CompletableFuture.runAsync({
-                for (tag in itemsToSave) {
-                    try {
-                        val status = fileRepos.setMusicTag(tag)
-                        if (status) successCount.incrementAndGet() else failureCount.incrementAndGet()
-                    } catch (e: Exception) {
-                        failureCount.incrementAndGet()
-                        Log.e("TagsEditorFragment", "doSaveMediaItem error for ${tag.path}", e)
+            Pair(success, failed)
+        }, MusicMateExecutors.getExecutorService()).whenComplete { result, exception ->
+            host.runOnUiThread {
+                val success = result?.first ?: 0
+                val failures = result?.second ?: itemsToSave.map { java.io.File(it.path).name }
+                val allSaved = model.recordSaveResult(success, if (exception != null) itemsToSave.size else failures.size)
+                if (success > 0) host.setSaved(true)
+                host.setDirty(!allSaved)
+                if (!host.isDestroyed) {
+                    host.stopProgressBar()
+                    if (allSaved) {
+                        host.refreshDisplayTag()
+                        Toast.makeText(host, "Saved $success item(s)", Toast.LENGTH_SHORT).show()
+                        onComplete?.run()
+                    } else {
+                        com.google.android.material.dialog.MaterialAlertDialogBuilder(host)
+                            .setTitle("Some tags weren’t saved")
+                            .setMessage("Saved $success of ${itemsToSave.size}. Your edits are retained.\n\n" + failures.joinToString("\n"))
+                            .setPositiveButton("Retry") { _, _ -> doSaveMediaItem(onComplete) }
+                            .setNegativeButton("Keep editing", null)
+                            .show()
                     }
-                    val current = completedCount.incrementAndGet()
-                    tagsActivity.updateProgressBar("$current/$totalItems")
                 }
-            }, MusicMateExecutors.getExecutorService())
-        }.thenAccept {
-            tagsActivity.refreshDisplayTag()
-        }.whenComplete { _, exception ->
-            tagsActivity.runOnUiThread {
-                tagsActivity.stopProgressBar()
-                if (exception == null) {
-                    Toast.makeText(context, "Saved ${successCount.get()} item(s)", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Failed: ${exception.message}", Toast.LENGTH_SHORT).show()
-                }
-                onComplete?.run()
             }
         }
     }
@@ -299,33 +306,72 @@ class TagsEditorFragment : Fragment() {
     private fun buildPendingTags(tagUpdate: Track) {
         val multi = (tagsActivity.editItems?.size ?: 0) > 1
 
-        if (!multi || editorState.titleModified) tagUpdate.title = buildTag(editorState.title, tagUpdate.title)
-        if (!multi || editorState.trackModified) tagUpdate.track = buildTag(editorState.track, tagUpdate.track)
-        if (!multi || editorState.albumModified) tagUpdate.album = buildTag(editorState.album, tagUpdate.album)
-        if (!multi || editorState.artistModified) tagUpdate.artist = buildTag(editorState.artist, tagUpdate.artist)
-        if (!multi || editorState.albumArtistModified) tagUpdate.albumArtist = buildTag(editorState.albumArtist, tagUpdate.albumArtist)
-        if (!multi || editorState.genreModified) tagUpdate.genre = buildTag(editorState.genre, tagUpdate.genre)
-        if (!multi || editorState.moodModified) tagUpdate.mood = buildTag(editorState.mood, tagUpdate.mood)
-        if (!multi || editorState.styleModified) tagUpdate.style = buildTag(editorState.style, tagUpdate.style)
-        if (!multi || editorState.originModified) tagUpdate.origin = buildTag(editorState.origin, tagUpdate.origin)
-        if (!multi || editorState.publisherModified) tagUpdate.publisher = buildTag(editorState.publisher, tagUpdate.publisher)
-        if (!multi || editorState.yearModified) tagUpdate.year = buildTag(editorState.year, tagUpdate.year)
+        if (!multi || editorState.titleModified) tagUpdate.title = buildTag(editorState.title, tagUpdate.title, editorState.titleModified, multi)
+        if (!multi || editorState.trackModified) tagUpdate.track = buildTag(editorState.track, tagUpdate.track, editorState.trackModified, multi)
+        if (!multi || editorState.albumModified) tagUpdate.album = buildTag(editorState.album, tagUpdate.album, editorState.albumModified, multi)
+        if (!multi || editorState.artistModified) tagUpdate.artist = buildTag(editorState.artist, tagUpdate.artist, editorState.artistModified, multi)
+        if (!multi || editorState.albumArtistModified) tagUpdate.albumArtist = buildTag(editorState.albumArtist, tagUpdate.albumArtist, editorState.albumArtistModified, multi)
+        if (!multi || editorState.genreModified) tagUpdate.genre = buildTag(editorState.genre, tagUpdate.genre, editorState.genreModified, multi)
+        if (!multi || editorState.moodModified) tagUpdate.mood = buildTag(editorState.mood, tagUpdate.mood, editorState.moodModified, multi)
+        if (!multi || editorState.styleModified) tagUpdate.style = buildTag(editorState.style, tagUpdate.style, editorState.styleModified, multi)
+        if (!multi || editorState.originModified) tagUpdate.origin = buildTag(editorState.origin, tagUpdate.origin, editorState.originModified, multi)
+        if (!multi || editorState.publisherModified) tagUpdate.publisher = buildTag(editorState.publisher, tagUpdate.publisher, editorState.publisherModified, multi)
+        if (!multi || editorState.yearModified) tagUpdate.year = buildTag(editorState.year, tagUpdate.year, editorState.yearModified, multi)
     }
 
-    private fun buildTag(newVal: String, oldVal: String?): String {
-        val text = StringUtils.trimToEmpty(newVal)
-        if (text.isEmpty() || text == " - ") return ""
-        if (isMultiValuesMarker(text)) return oldVal ?: ""
-        return text
+    private fun buildTag(newVal: String, oldVal: String?, isModified: Boolean = true, multi: Boolean = false): String {
+        return TagsEditorState.valueForSave(newVal, oldVal, isModified, multi)
     }
 
     fun doShowReadTagsPreview() {
-        Toast.makeText(context, "Tags from Filename to be implemented in Compose", Toast.LENGTH_SHORT).show()
+        editorState.showFilenameParserSheet = true
+    }
+
+    fun applyFilenamePattern(pattern: String) {
+        val items = ArrayList(tagsActivity.editItems ?: emptyList())
+        if (items.isEmpty()) return
+
+        items.forEach { buildPendingTags(it) }
+        var matchedCount = 0
+        var titleExtracted = false
+        var artistExtracted = false
+        var albumExtracted = false
+        var albumArtistExtracted = false
+        var trackExtracted = false
+        var yearExtracted = false
+        for (track in items) {
+            val parsed = apincer.android.mmate.utils.FilenameTagParser.parse(track.path, pattern)
+            if (parsed != null && !parsed.isEmpty) {
+                matchedCount++
+                if (!parsed.title.isNullOrBlank()) { track.title = parsed.title; titleExtracted = true }
+                if (!parsed.artist.isNullOrBlank()) { track.artist = parsed.artist; artistExtracted = true }
+                if (!parsed.album.isNullOrBlank()) { track.album = parsed.album; albumExtracted = true }
+                if (!parsed.albumArtist.isNullOrBlank()) { track.albumArtist = parsed.albumArtist; albumArtistExtracted = true }
+                if (!parsed.track.isNullOrBlank()) { track.track = parsed.track; trackExtracted = true }
+                if (!parsed.year.isNullOrBlank()) { track.year = parsed.year; yearExtracted = true }
+            }
+        }
+
+        if (matchedCount > 0) {
+            populateEditorInputs(items)
+            editorState.titleModified = titleExtracted
+            editorState.artistModified = artistExtracted
+            editorState.albumModified = albumExtracted
+            editorState.albumArtistModified = albumArtistExtracted
+            editorState.trackModified = trackExtracted
+            editorState.yearModified = yearExtracted
+            tagsActivity.setDirty(true)
+            tagsActivity.refreshDisplayTag()
+            Toast.makeText(context, "Extracted tags for $matchedCount track(s)", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "No matching tags extracted from filename(s)", Toast.LENGTH_SHORT).show()
+        }
     }
 
         fun doFormatTags() {
         tagsActivity.startProgressBar()
         val itemsToProcess = ArrayList(tagsActivity.editItems ?: emptyList())
+        itemsToProcess.forEach { buildPendingTags(it) }
         CompletableFuture.supplyAsync {
             var totalFormatted = 0
             var thaiFixedCount = 0
@@ -374,6 +420,8 @@ class TagsEditorFragment : Fragment() {
         }.thenAccept { (total, thaiFixed) ->
             // thenAccept runs on ForkJoinPool — must switch to UI thread for Toast and UI updates
             tagsActivity.runOnUiThread {
+                populateEditorInputs(itemsToProcess)
+                tagsActivity.setDirty(true)
                 tagsActivity.refreshDisplayTag()
                 tagsActivity.stopProgressBar()
                 var msg = "Reformatted $total track(s)"

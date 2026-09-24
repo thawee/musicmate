@@ -26,8 +26,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.animation.ValueAnimator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -87,6 +90,7 @@ import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.utils.ThaiEncodingUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
@@ -106,12 +110,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.widget.TooltipCompat;
 import com.google.android.material.button.MaterialButton;
-import android.net.Uri;
-import android.view.HapticFeedbackConstants;
 
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.repository.FileRepository;
-import apincer.music.core.provider.MusicFileProvider;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -129,12 +130,9 @@ public class TagsActivity extends AppCompatActivity {
 
     private ImageView coverArtView;
     private androidx.compose.ui.platform.ComposeView tabLayout;
-   // private Toolbar toolbar;
     private AppBarLayout appBarLayout;
-    //private BottomAppBar bottomAppBar;
 
     private TextView titleView;
-    private TextView artistView ;
     private TextView encInfo;
     private androidx.compose.ui.platform.ComposeView tagsHeaderBadges;
 
@@ -154,6 +152,21 @@ public class TagsActivity extends AppCompatActivity {
 
     public void setDirty(boolean dirty) {
         this.isDirty = dirty;
+        if (viewModel != null) viewModel.setDraftsDirty(dirty);
+        updateSaveButtonStates();
+    }
+
+    private void updateSaveButtonStates() {
+        MaterialButton previewSave = findViewById(R.id.action_preview_save);
+        MaterialButton editorSave = findViewById(R.id.action_save);
+        // Keep Save always visible (More... menu can dirty state without opening the
+        // editor), but mute it when there is nothing to commit so users get clear feedback.
+        if (previewSave != null) {
+            previewSave.setAlpha(isDirty ? 1f : 0.45f);
+        }
+        if (editorSave != null) {
+            editorSave.setAlpha(isDirty ? 1f : 0.45f);
+        }
     }
 
     private PlaybackService playbackService;
@@ -246,8 +259,13 @@ public class TagsActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
 
+        if (savedInstanceState != null && viewModel.getEditItemsFlow().getValue().isEmpty()) {
+            viewModel.restoreDraftState(savedInstanceState.getBundle("tagDrafts"));
+            isDirty = viewModel.getDraftsDirty();
+            isSaved = savedInstanceState.getBoolean("tagsSaved");
+        }
         long[] tagIds = getIntent().getLongArrayExtra("MUSIC_TAG_IDS");
-        if (tagIds != null && tagIds.length > 0) {
+        if (tagIds != null && tagIds.length > 0 && viewModel.getEditItemsFlow().getValue().isEmpty()) {
             loadMusicTagsFromDb(tagIds);
         }
 
@@ -258,14 +276,34 @@ public class TagsActivity extends AppCompatActivity {
         if (coverArtView != null) {
             coverArtView.setOnClickListener(v -> doShowCoverArtActions());
         }
-        CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
-        
-        // Set dynamic height for the collapsing header
-        int height = UIUtils.getScreenHeight(this);
-        toolBarLayout.getLayoutParams().height = (int) (height * 0.85); // 85% of screen height for a better balance
-        
+        // Status-bar insets are already applied to the AppBar; only a small visual gap
+        // is needed here (replaces the old hardcoded 52dp that double-counted insets).
+        View btnChangeCover = findViewById(R.id.btn_change_cover_art);
+        if (btnChangeCover != null) {
+            btnChangeCover.setOnClickListener(v -> {
+                performHapticClick(v);
+                doShowCoverArtActions();
+            });
+        }
+        View btnBack = findViewById(R.id.btn_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                performHapticClick(v);
+                getOnBackPressedDispatcher().onBackPressed();
+            });
+        }
+        View btnPlayPreview = findViewById(R.id.btn_play_preview);
+        if (btnPlayPreview != null) {
+            btnPlayPreview.setOnClickListener(v -> {
+                performHapticClick(v);
+                doPlaySong();
+            });
+        }
         setupTitlePanelViews();
-        setupActionButtons(0);
+
+        // Resolve tab pill before the first setupActionButtons so preview mode can hide it.
+        tabLayout = findViewById(R.id.tags_tab_pill_container);
+        setupActionButtons(previewState ? 0 : 1);
 
         // Handle Navigation Bar Insets for Bottom Capsule
         View bottomNav = findViewById(R.id.bottom_navigation_container);
@@ -306,6 +344,13 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putBundle("tagDrafts", viewModel.saveDraftState());
+        outState.putBoolean("tagsSaved", isSaved);
+        super.onSaveInstanceState(outState);
+    }
+
     private void loadMusicTagsFromDb(long[] ids) {
         if (ids == null || ids.length == 0) {
                          return;
@@ -329,10 +374,14 @@ public class TagsActivity extends AppCompatActivity {
         appBarLayout = findViewById(R.id.appbar);
        // bottomAppBar = findViewById(R.id.bottom_app_bar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
-        ViewCompat.setOnApplyWindowInsetsListener(viewPager, (v, insets) -> {
-            androidx.core.graphics.Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), (int)dpToPx(this, 160) + systemBars.bottom);
-            return insets;
+        View bottomDock = findViewById(R.id.bottom_navigation_container);
+        bottomDock.addOnLayoutChangeListener((dock, left, top, right, bottom,
+                                             oldLeft, oldTop, oldRight, oldBottom) -> {
+            MarginLayoutParams params = (MarginLayoutParams) viewPager.getLayoutParams();
+            if (params.bottomMargin != dock.getHeight()) {
+                params.bottomMargin = dock.getHeight();
+                viewPager.setLayoutParams(params);
+            }
         });
 
         tabLayout = findViewById(R.id.tags_tab_pill_container);
@@ -346,9 +395,9 @@ public class TagsActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 activeFragment = adapter.fragments.get(position);
-                if(previewState) {
+                if (previewState) {
                     setupActionButtons(0);
-                }else {
+                } else {
                     setupActionButtons(1);
                 }
             }
@@ -371,7 +420,6 @@ public class TagsActivity extends AppCompatActivity {
     private void setupTitlePanelViews() {
         mBlurBackground = findViewById(R.id.main_background_blur);
         titleView = findViewById(R.id.panel_title);
-        artistView = findViewById(R.id.panel_artist);
         tagsHeaderBadges = findViewById(R.id.tags_header_badges);
     }
     private void performHapticClick(View v) {
@@ -388,6 +436,11 @@ public class TagsActivity extends AppCompatActivity {
 
     private void setupActionButtons(int mode) {
         currentEditMode = mode;
+        boolean preview = mode == 0;
+        ViewPager2 viewPager = findViewById(R.id.viewpager);
+        viewPager.setVisibility(preview ? GONE : VISIBLE);
+        CollapsingToolbarLayout header = findViewById(R.id.toolbar_layout);
+        animateHeaderHeight(header, (int) (UIUtils.getScreenHeight(this) * (preview ? 0.85 : 0.72)));
         android.widget.LinearLayout previewToggleGroup = findViewById(R.id.preview_action_group);
         android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
         android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
@@ -426,20 +479,22 @@ public class TagsActivity extends AppCompatActivity {
             doShowMoreActions(v);
         });
 
+        if (tabLayout != null) {
+            tabLayout.setVisibility(mode == 0 ? GONE : VISIBLE);
+        }
+
+        updateSaveButtonStates();
+
         if(mode == 0) {
             previewToggleGroup.setVisibility(VISIBLE);
             editorToggleGroup.setVisibility(GONE);
             techToggleGroup.setVisibility(GONE);
-            if (tabLayout != null) {
-                tabLayout.setVisibility(GONE);
-            }
             actionEditor.setOnClickListener(v -> {
                 performHapticClick(v);
-                if (tabLayout != null) {
-                    tabLayout.setVisibility(VISIBLE);
-                }
-                appBarLayout.setExpanded(false, true);
+                previewState = false;
+                viewPager.setCurrentItem(0, false);
                 setupActionButtons(1);
+                appBarLayout.setExpanded(false, true);
             });
 
             MaterialButton btnPreviewSave = findViewById(R.id.action_preview_save);
@@ -461,9 +516,6 @@ public class TagsActivity extends AppCompatActivity {
                 });
             }
         } else if (mode == 1) {
-            if (tabLayout != null) {
-                tabLayout.setVisibility(VISIBLE);
-            }
             if (activeFragment instanceof TagsEditorFragment fragment) {
                 // editor
                 previewToggleGroup.setVisibility(GONE);
@@ -549,16 +601,7 @@ public class TagsActivity extends AppCompatActivity {
 
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_play_now) {
-                doPlaySong();
-                return true;
-            } else if (itemId == R.id.action_add_to_queue) {
-                doAddToQueue();
-                return true;
-            } else if (itemId == R.id.action_auto_tag) {
-                doAutoTag();
-                return true;
-            } else if (itemId == R.id.action_search_match_tags) {
+            if (itemId == R.id.action_search_match_tags) {
                 doSearchAndMatchTags();
                 return true;
             } else if (itemId == R.id.action_smart_clean_format) {
@@ -573,11 +616,8 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_web_search) {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
                 return true;
-            } else if (itemId == R.id.action_share) {
-                doShareAudioFile();
-                return true;
             }
-            return false; // Return false if the item click is not handled
+            return false;
         });
 
         // Optional: Set a dismiss listener
@@ -960,7 +1000,7 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         redisplayTag();
-        isDirty = true;
+        setDirty(true);
         Toast.makeText(this, "Cleaned tag noise on " + cleaned + " track(s)", Toast.LENGTH_SHORT).show();
     }
 
@@ -996,7 +1036,7 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         redisplayTag();
-        isDirty = true;
+        setDirty(true);
         Toast.makeText(this, "Formatted Title Case on " + formatted + " track(s)", Toast.LENGTH_SHORT).show();
     }
 
@@ -1070,16 +1110,18 @@ public class TagsActivity extends AppCompatActivity {
             final int failedCount = failed;
             runOnUiThread(() -> {
                 stopProgressBar();
-                isDirty = false;
+                boolean allSaved = viewModel.recordSaveResult(successCount, failedCount);
+                if (successCount > 0) setSaved(true);
+                setDirty(!allSaved);
                 redisplayTag();
                 if (failedCount == 0) {
                     Toast.makeText(this, "Saved " + successCount + " item(s)", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "Saved " + successCount + " item(s), " + failedCount + " failed", Toast.LENGTH_SHORT).show();
                 }
-                if (onComplete != null) onComplete.run();
+                if (allSaved && onComplete != null) onComplete.run();
             });
-        }, Executors.newSingleThreadExecutor());
+        }, MusicMateExecutors.getExecutorService());
     }
 
     private void doSaveAndFinishDirectly() {
@@ -1154,7 +1196,7 @@ public class TagsActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (isDestroyed() || isFinishing()) return;
                 redisplayTag();
-                isDirty = true;
+                setDirty(true);
                 stopProgressBar();
                 Toast.makeText(this, "⚡ " + msg, Toast.LENGTH_SHORT).show();
             });
@@ -1166,36 +1208,6 @@ public class TagsActivity extends AppCompatActivity {
             });
             return null;
         });
-    }
-
-    private void doShareAudioFile() {
-        List<Track> items = getEditItems();
-        if (items.isEmpty()) return;
-
-        try {
-            if (items.size() == 1) {
-                Track track = items.get(0);
-                Uri fileUri = MusicFileProvider.getUriForFile(track.getPath());
-                Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.setType("audio/*");
-                shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(shareIntent, "Share Audio File"));
-            } else {
-                java.util.ArrayList<Uri> uriList = new java.util.ArrayList<>();
-                for (Track t : items) {
-                    uriList.add(MusicFileProvider.getUriForFile(t.getPath()));
-                }
-                Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
-                shareIntent.setType("audio/*");
-                shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriList);
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(shareIntent, "Share " + items.size() + " Audio Files"));
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, "doShareAudioFile", ex);
-            Toast.makeText(this, "Cannot share audio file: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     public void doExtractEmbedCoverart() {
@@ -1298,7 +1310,7 @@ public class TagsActivity extends AppCompatActivity {
             }
         }).thenAccept(v -> {
             runOnUiThread(() -> {
-                isDirty = true;
+                setDirty(true);
                 redisplayTag();
                 Track current = viewModel.displayTag.getValue();
                 if (current != null) {
@@ -1531,27 +1543,12 @@ public class TagsActivity extends AppCompatActivity {
     protected void updateTitlePanel(Track currentDisplayTag) {
         if (currentDisplayTag == null) {
             if (titleView != null) titleView.setText("");
-            if (artistView != null) artistView.setText("");
             return;
         }
 
         String title = trim(currentDisplayTag.getTitle(), " - ");
         if (titleView != null) {
             titleView.setText(title.isEmpty() ? "Unknown Title" : title);
-        }
-
-        String artist = trim(currentDisplayTag.getArtist(), " - ");
-        String album = trim(currentDisplayTag.getAlbum(), " - ");
-        if (artistView != null) {
-            if (artist.isEmpty() && album.isEmpty()) {
-                artistView.setText("");
-            } else if (album.isEmpty() || album.startsWith("[")) {
-                artistView.setText(artist);
-            } else if (artist.isEmpty()) {
-                artistView.setText(album);
-            } else {
-                artistView.setText(artist + " • " + album);
-            }
         }
 
         // load coverArt & blur background
@@ -1745,7 +1742,7 @@ public class TagsActivity extends AppCompatActivity {
                         }else {
                             stopProgressBar();
                             setSaved(true);
-                            viewModel.refreshDisplayTag();
+                            viewModel.reloadPersistedTags();
                         }
                     }
                 });
@@ -1767,7 +1764,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void refreshDisplayTag() {
-        viewModel.refreshDisplayTag();
+        runOnUiThread(() -> viewModel.refreshDisplayTag());
     }
 
     public void redisplayTag() {
@@ -1792,7 +1789,7 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
-            boolean hasUnsavedEdits = isDirty;
+            boolean hasUnsavedEdits = isDirty || viewModel.getDraftsDirty() || viewModel.getEditorState().isAnyModified();
             // Always check the editor fragment for modifications, regardless of which tab is active.
             // Previously this only checked activeFragment, which missed edits when on the Tech Info tab.
             if (!hasUnsavedEdits) {
@@ -1817,11 +1814,30 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    private ValueAnimator headerHeightAnimator;
+
+    private void animateHeaderHeight(CollapsingToolbarLayout header, int targetHeight) {
+        ViewGroup.LayoutParams lp = header.getLayoutParams();
+        if (lp.height == targetHeight) return;
+        if (headerHeightAnimator != null) headerHeightAnimator.cancel();
+        int startHeight = lp.height > 0 ? lp.height : targetHeight;
+        headerHeightAnimator = ValueAnimator.ofInt(startHeight, targetHeight);
+        headerHeightAnimator.setDuration(220);
+        headerHeightAnimator.setInterpolator(new DecelerateInterpolator());
+        headerHeightAnimator.addUpdateListener(animation -> {
+            lp.height = (int) animation.getAnimatedValue();
+            header.setLayoutParams(lp);
+        });
+        headerHeightAnimator.start();
+    }
+
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
         double prevScrollOffset = -1;
-        // Track state to avoid redundant updates
-        private boolean wasFullyExpanded = true;
-        private boolean wasFullyCollapsed = false;
+        // Hysteresis thresholds: enter edit after most of the header has scrolled away,
+        // return to preview once the header is less than half expanded again. This
+        // prevents the tab pill from riding down into the fixed bottom dock mid-drag.
+        private static final double ENTER_EDIT_RATIO = 0.72;
+        private static final double EXIT_EDIT_RATIO = 0.40;
 
         @Override
         public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
@@ -1831,39 +1847,23 @@ public class TagsActivity extends AppCompatActivity {
             int totalRange = appBarLayout.getTotalScrollRange();
             if (totalRange <= 0) return;
             double scrollRatio = (double) vScrollOffset / totalRange;
+            prevScrollOffset = vScrollOffset;
 
             // Scale cover art
             double scale = (1 - (scrollRatio * 0.2));
             coverArtView.setScaleX((float) scale);
             coverArtView.setScaleY((float) scale);
 
-            // Fully expanded state
-            boolean isFullyExpanded = verticalOffset == 0;
-            if (isFullyExpanded && !wasFullyExpanded) {
-                // State change: fully EXPANDED
-                wasFullyExpanded = true;
-                wasFullyCollapsed = false;
-                previewState = true;
-                if (currentEditMode == 0) {
-                    setupActionButtons(0);
-                }
-                if (tabLayout != null && currentEditMode == 0) {
-                    tabLayout.setVisibility(View.GONE);
-                }
-                viewModel.refreshDisplayTag();
-            }
-            // Fully collapsed state
-            else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange() && !wasFullyCollapsed) {
-                // State change: fully COLLAPSED
-                wasFullyCollapsed = true;
-                wasFullyExpanded = false;
+            // Mode transitions with hysteresis (previously only at exact extremes, which
+            // left an intermediate band where tabs could sit under the action dock).
+            if (previewState && scrollRatio >= ENTER_EDIT_RATIO) {
                 previewState = false;
-                if (tabLayout != null) {
-                    tabLayout.setVisibility(View.VISIBLE);
-                }
                 setupActionButtons(1);
-            } else if (!isFullyExpanded && tabLayout != null && tabLayout.getVisibility() != View.VISIBLE) {
-                tabLayout.setVisibility(View.VISIBLE);
+                viewModel.refreshDisplayTag();
+            } else if (!previewState && scrollRatio <= EXIT_EDIT_RATIO) {
+                previewState = true;
+                setupActionButtons(0);
+                viewModel.refreshDisplayTag();
             }
         }
     }
@@ -1873,6 +1873,7 @@ public class TagsActivity extends AppCompatActivity {
         if (saved) {
             this.isDirty = false;
         }
+        updateSaveButtonStates();
     }
 
     @Override

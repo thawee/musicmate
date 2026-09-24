@@ -34,6 +34,8 @@ class MainScaffoldState {
     // Track list, selection & scrolling state
     val tracks = mutableStateListOf<Track>()
     val selectedTracks = mutableStateListOf<Track>()
+    var hasMoreMusic = mutableStateOf(false)
+    var musicLoadError = mutableStateOf<String?>(null)
     var isRefreshing = mutableStateOf(false)
     var scrollToIndex = mutableIntStateOf(-1)
 

@@ -30,7 +30,24 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+configurations {
+    httpcoreOriginal
+}
+
+def patchHttpCore = tasks.register("patchHttpCore", Jar) {
+    archiveFileName.set("httpcore5-android.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("patched-libs"))
+    from(configurations.httpcoreOriginal.elements.map { files ->
+        files.collect { zipTree(it.asFile) }
+    }) {
+        exclude "org/apache/hc/core5/util/ReflectionUtils.class"
+        exclude "org/apache/hc/core5/reactor/SingleCoreIOReactor*.class"
+    }
+}
+
 dependencies {
+    httpcoreOriginal libs.apache.httpcore
+
     implementation project(':core')
     implementation project(':server-jupnp')
     implementation project(':library:library')
@@ -40,8 +57,10 @@ dependencies {
 
     implementation libs.jupnp.android
     implementation libs.jupnp.support
-    implementation libs.apache.httpcore
-    implementation libs.apache.http2core
+    api files(patchHttpCore)
+    api(libs.apache.http2core) {
+        exclude group: 'org.apache.httpcomponents.core5', module: 'httpcore5'
+    }
 
     implementation libs.kotlin.coroutines.core
     implementation libs.dagger.hilt.android

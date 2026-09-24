@@ -1,11 +1,48 @@
 package org.apache.hc.core5.util;
 
-import java.lang.reflect.Method;
-
 import org.apache.hc.core5.annotation.Internal;
+import java.lang.reflect.Method;
+import java.net.Socket;
 
+/**
+ * Android-safe replacement for Apache HttpCore 5 ReflectionUtils.
+ * Avoids direct static linking to jdk.net.Sockets and jdk.net.ExtendedSocketOptions,
+ * which are blocked hidden APIs on modern Android (TargetSdk 35+, ART core-platform blocked)
+ * and trigger fatal NoSuchMethodError during class initialization.
+ */
 @Internal
+@SuppressWarnings("Since15")
 public final class ReflectionUtils {
+    private static final boolean SUPPORTS_KEEPALIVE_OPTIONS;
+
+    static {
+        boolean supported = false;
+        boolean isAndroid = false;
+        try {
+            Class.forName("android.os.Build");
+            isAndroid = true;
+        } catch (Throwable ignored) {
+        }
+
+        if (!isAndroid) {
+            try {
+                // On standard JVM, check dynamically via reflection rather than static linking.
+                Class<?> socketsClass = Class.forName("jdk.net.Sockets");
+                Class<?> extendedOptionsClass = Class.forName("jdk.net.ExtendedSocketOptions");
+                Method supportedOptionsMethod = socketsClass.getMethod("supportedOptions", Class.class);
+                java.util.Set<?> options = (java.util.Set<?>) supportedOptionsMethod.invoke(null, Socket.class);
+                if (options != null) {
+                    Object keepIdle = extendedOptionsClass.getField("TCP_KEEPIDLE").get(null);
+                    Object keepInterval = extendedOptionsClass.getField("TCP_KEEPINTERVAL").get(null);
+                    Object keepCount = extendedOptionsClass.getField("TCP_KEEPCOUNT").get(null);
+                    supported = options.contains(keepIdle) && options.contains(keepInterval) && options.contains(keepCount);
+                }
+            } catch (Throwable ignored) {
+                supported = false;
+            }
+        }
+        SUPPORTS_KEEPALIVE_OPTIONS = supported;
+    }
 
     public static void callSetter(final Object object, final String setterName, final Class<?> type, final Object value) {
         try {
@@ -21,10 +58,6 @@ public final class ReflectionUtils {
         return callGetter(object, getterName, null, null, resultType);
     }
 
-    /**
-     * @param <T> The return type.
-     * @since 5.3
-     */
     public static <T> T callGetter(final Object object, final String getterName, final Object arg, final Class<?> argType, final Class<T> resultType) {
         try {
             final Class<?> clazz = object.getClass();
@@ -63,8 +96,6 @@ public final class ReflectionUtils {
     }
 
     public static boolean supportsKeepAliveOptions() {
-        // hacked to run on android
-        return false;
+        return SUPPORTS_KEEPALIVE_OPTIONS;
     }
-
 }

@@ -1,6 +1,6 @@
 # MusicMate UI/UX Design System & Human Interface Guidelines
 
-> **Last Updated:** 2026-09-21 · **Owner:** @thawee
+> **Last Updated:** 2026-09-24 · **Owner:** @thawee
 >
 > **Scope:** This document is the authoritative specification for MusicMate's UI/UX design tokens, interaction models, gesture mappings, menus, theming, modal surfaces, and Jetpack Compose component architectures. For backend system architecture, audio engine internals, and multi-target playback routing, see [`DESIGN.md`](file:///Users/thawee.p/Workspaces/github/musicmate/DESIGN.md) and [`PLAYBACK_ARCHITECTURE.md`](file:///Users/thawee.p/Workspaces/github/musicmate/PLAYBACK_ARCHITECTURE.md).
 
@@ -193,22 +193,49 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  🔊  Local Player (Phone Speaker)                ✓       │ ┐
-│  📻  HiBy R3 (192.168.1.50 • DLNA Renderer)              │ │ Group 0:
-│  🎵  Poweramp (v935 • External App)                      │ ┘ Targets
-│  ─────────────────────────────────────────────────────────│ ← API 28+ Divider
-│  🔄  Rescan for DLNA players                             │ ┐ Group 1:
-│  🔵  Bluetooth / System Output…                          │ ┘ Utilities
+│  Audio Output Picker                                   ✕  │
+│  ───────────────────────────────────────────────────────  │
+│  NETWORK STREAMERS                                        │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ 📻 HiBy R3                                    ✓     │  │ ← Gold active card
+│  │    192.168.1.50 • DLNA Renderer                     │  │
+│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ 📻 WiiM Pro                                         │  │
+│  │    192.168.1.45 • DLNA Renderer                     │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                           │
+│  THIS DEVICE                                              │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ 🔊 Phone Speaker (or 🎛️ FiiO KA13 / 🎧 Bluetooth)   │  │
+│  │    Internal Speaker / USB Bit-Perfect / LDAC        │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                           │
+│  INSTALLED MUSIC APPS                                     │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ [🎨 Poweramp Icon] Poweramp                         │  │ ← Native App Icon
+│  │                    v935 • External Player           │  │   (Squircle 6dp)
+│  │ [🎨 UAPP Icon]     USB Audio Player PRO             │  │
+│  │                    v6.1 • External Player           │  │
+│  └─────────────────────────────────────────────────────┘  │
+│  ───────────────────────────────────────────────────────  │
+│  🔄  Rescan for DLNA players                              │ ┐ Group 1:
+│  🔵  Bluetooth / System Output…                           │ ┘ Utilities
 └───────────────────────────────────────────────────────────┘
 ```
 
+- **Categorized Three-Tier Hierarchy:**
+  - **`NETWORK STREAMERS`:** DLNA/UPnP network renderers (e.g. HiBy R3, WiiM Pro, Eversolo) placed first for instant casting access.
+  - **`THIS DEVICE`:** The local phone audio output, dynamically displaying the actual hardware device (Phone Speaker `ic_round_speaker_24`, USB DAC bit-perfect `ic_baseline_usb_24`, or Bluetooth audio `ic_round_bluetooth_audio_24`).
+  - **`INSTALLED MUSIC APPS`:** External media players (Poweramp, UAPP, Spotify, Neutron, etc.) placed in a dedicated section.
+- **Authentic App Icons:** External music apps render their real native application icon via `packageManager.getApplicationIcon()` with smooth squircle clipping (`RoundedCornerShape(6.dp)`), displayed without color tinting to preserve brand identity. Fallback to `rounded_music_note_24` if uninstalled.
+- **Priority Within Categories:** Each category sorts the active/selected target (`isSelected`) to the top with an Amber/Gold border (`0x80FFD700`) and checkmark (`✓`), followed by remaining devices sorted alphabetically.
+- **Dynamic Local Device Telemetry:** Local player replaces generic labels and SD card icons with live hardware detection: `"Phone Speaker"` with `"Internal Speaker"`, `"FiiO KA13"` with `"USB Bit-Perfect Output"`, or `"WH-1000XM5"` with `"Bluetooth • LDAC"`.
 - **Zero-Latency Auto-Discovery:** On opening the popup, `refreshPlayerDiscovery()` triggers both DLNA M-SEARCH and an installed package scan (`isPackageInstalled` against `SUPPORTED_PLAYERS`), populating targets immediately without requiring an explicit manual tap.
-- **Semantic Iconography:** External Android music player apps render the music note icon (`R.drawable.rounded_music_note_24` or native app icon) rather than the network DLNA Cast icon (`rounded_music_cast_24`), preventing user confusion between local apps and remote Wi-Fi streamers.
-- **Visual Group Separation:** Targets (Group 0) and Utilities (Group 1) are visually divided via `setGroupDividerEnabled(true)` (Android P+ / API 28+).
 - **Ordering by Proximity to Effect:**
   - **Rescan** is placed directly below the player target list because its action directly modifies the list above it.
   - **Bluetooth / System Output…** is placed at the bottom because selecting it navigates away from the app into Android System Settings / Output Panel.
-- **Informative Empty State:** When no remote renderers are found, displays a disabled `"Scanning for players…"` placeholder item rather than an interactive/confusing error item.
+- **Informative Empty State:** When no remote renderers are found, displays a disabled `"Scanning for audio output devices…"` placeholder item rather than an interactive/confusing error item.
 
 ---
 
@@ -307,7 +334,7 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 - **Geometry:** `MaterialCardView` with `20dp` corner radius, `12dp` horizontal / `8dp` bottom margins so the dock floats cleanly above the list edge with insets margin (`systemBars.bottom + 8dp`).
 - **Layout Architecture (Left-to-Right Hierarchy):**
   - **Far Left:** Mini Album Artwork thumbnail (`bar_album_art`, 44dp × 44dp), serving as the primary visual anchor for the playing track (tap opens Music Center).
-  - **Center:** Docked Playback Bar with marquee scrolling track title (`bar_track_title`), target output player subtitle (`bar_target_subtitle`), and Play/Pause & Next transport controls.
+  - **Center:** Docked Playback Bar with marquee scrolling track title (`bar_track_title`), target output player subtitle (`bar_target_subtitle`), and Play/Pause & Next transport controls. Fullscreen Studio Console is available through the Audio Hub header rather than a separate dock icon.
   - **Far Right:** Collections / Navigation Menu button (`navigation_collections`, 48dp × 48dp), positioned on the right edge in the primary reach zone for effortless one-handed thumb navigation.
 - **Idle State:** Displays idle audio icon, app title ("MusicMate"), and target player prompt.
 - **Playing State:** Dynamically embeds live album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
@@ -316,27 +343,37 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
   - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
 
 ### B. Tag Activity Accessible 2-Row Bottom Action Dock (`shape_bottom_frosted_panel`)
+- **Preview viewport:** The expanded cover header uses 85% of usable screen height. Both the Song Info / Tech Info switcher and editor pages are hidden, leaving only cover artwork, badges, and the bottom action dock. Opening the editor reveals the tabs and pages, reduces the header to 72% (animated over ~220ms), and sizes the scrollable page above the measured action dock, including its navigation-bar inset.
+- **Preview ↔ Edit scroll hysteresis (`TagsActivity.OffSetChangeListener`):** Mode transitions use ratio thresholds rather than exact extremes so the tab pill cannot ride into the fixed dock mid-drag:
+  - Enter edit mode when `scrollRatio >= 0.72` (header mostly scrolled away).
+  - Return to preview when `scrollRatio <= 0.40` (header less than half expanded again).
+  - The band between 0.40 and 0.72 holds the current mode (hysteresis).
 - **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins), pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge with dynamic system navigation bar insets applied as bottom padding.
 - **2-Tier Functional Architecture:**
   - **Row 1 (Static Global File Tier):** Permanent file operations (`[Delete]` in subtle error tone, `[⭐ Organize]` in primary Gold tonal pill, `[More... ⋯]`). Consistently accessible across Preview, Song Info, and Tech Info tabs.
   - **Row 2 (Dynamic Active Fragment Tier):** Contextual workflows populated based on the active viewport:
-    - *Preview Mode:* `[✏️ Edit Song Info]` | `[💾 Save]` (Gold tonal pill). Always exposes an immediate Save button in preview mode so users can commit edits made via the "More..." power menu without switching tabs.
+    - *Preview Mode:* `[✏️ Edit Song Info]` | `[💾 Save]` (Gold tonal pill). Always exposes an immediate Save button in preview mode so users can commit edits made via the "More..." power menu without switching tabs. Save mutes to 45% alpha when `isDirty` is false; it stays visible so power-menu edits remain committable without entering the editor.
     - *Song Info Editor Tab:* `[✨ Format]` | `[📄 From File]` | `[💾 Save]` (Gold tonal pill).
     - *Tech Info Tab:* `[🔄 Reload]` | `[🖼️ Extract]` | `[🗑️ Remove Art]`.
 - **Unified Immersive Hero Cover Art Layout (`activity_tags.xml`):**
   - **Clean Cover Artwork Viewport:** Full 1:1 aspect ratio album artwork (`AspectRatioPhotoView`) free of top scrims or distracting visual clutter, keeping 90%+ of the album art 100% visible.
+  - **Cover Overlay Affordances (frosted `#80000000` pills):**
+    - `[◀]` **Back** (`btn_back`, top-start): Triggers `onBackPressedDispatcher` (unsaved-changes dialog still applies).
+    - `[▶]` **Play** (`btn_play_preview`, top-start below Back): Starts playback of the displayed track via `doPlaySong()`.
+    - `[🖼 Change Cover]` (`btn_change_cover_art`, top-end): Opens the cover-art action sheet (search / pick / extract / remove). Top margin is `16dp`; status-bar insets are already applied to the AppBar (replaces a hardcoded `52dp` that double-counted the inset).
   - **Cinematic Bottom Gradient Scrim (`shape_bottom_cover_scrim`):** Groups the atomic Track Identity at the base of the artwork:
     - **Title (`panel_title`):** Prominent bold 18sp white title text with clean ellipsis protection (`maxLines = 2`).
-    - **Subtitle (`panel_artist`):** Clean 13.5sp `#DDDDDD` subtitle formatted dynamically as `{Artist} • {Album}` (or single fallback if one is missing).
-  - **Eliminated Redundancy:** Completely removed the legacy split `[ Artist | Album ]` two-column box and top title scrim, unifying visual parity with the Now Playing playback viewport.
+  - **Eliminated Redundancy:** Completely removed the legacy split `[ Artist | Album ]` two-column box, the top title scrim, and the duplicate `panel_artist` subtitle overlay, so the cover shows only the track title; discography exploration stays on the Compose provenance capsules. Unifies visual parity with the Now Playing playback viewport.
 - **Unified 4-Tier Audiophile Header Hierarchy (`TagPreviewHeader` in Compose):**
-  1. **Tier 1 — Quality Tier & Visual Badges:** Expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) identical to the Now Playing playback sheet, paired with `ResolutionBadge` (`[16/44.1]`, `[24/96]`, `[DSD64]`), `DynamicRangeMeter` (`[DR 11]`), star rating, and New status badge.
-  2. **Tier 2 — 2-Line Studio Provenance Capsules:** Frosted obsidian discovery micro-capsules with live track counts and haptic ripples:
-     - **Row 1 (Music Discography):** `[ 👤 {Artist} • N ❯ ]` (Gold `#FFD700`) & `[ 💿 {Album} • N ❯ ]` (Teal `#80CBC4`) with flex width and ellipsis protection.
-     - **Row 2 (Storage Location):** `[ 📁 {Folder} • N ❯ ]` (Slate Blue `#90CAF9`) centered underneath.
-     - *In-Place Discography Sheet (`RelatedTracksSheet.kt`):* Tapping any capsule opens an in-place frosted modal sheet with live track list, audiophile badges, 1-tap playback, `[ ▶ Play All ]`, and `[ ➕ Queue All ]` without closing the tag editor.
-  3. **Tier 3 — Musical Taxonomy & Character Chips:** Positioned cleanly below provenance to establish a natural narrative (Fidelity ➔ Provenance ➔ Taxonomy), featuring semantic emoji glyphs: `[ 🎸 Genre ]`, `[ 🎭 Mood ]`, `[ 🎨 Style ]`, and `[ 🌏 Origin ]`.
-  4. **Tier 4 — Grounding Technical Telemetry Footer Strip:** Positioned at the very base of the header card with dedicated top breathing space (`7.dp`), rendering a monospace specs baseline: `FLAC • 24/96 • 4608 kbps • Stereo • 05:54 • 198 MB`.
+  - The badge strip (`tags_header_badges`) is constrained directly under `cover_art_container` (not pinned to the header bottom), so fidelity → taxonomy → provenance read as one stack with no empty blur band on tall screens.
+  1. **Tier 1 — Quality Tier & Visual Badges:** Expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) identical to the Now Playing playback sheet, paired with `ResolutionBadge` (`[16/44.1]`, `[24/96]`, `[DSD64]`), `DynamicRangeMeter` (`[DR 11]`), star rating, and New status badge. All micro-capsules use `CircleShape` for a consistent pill language.
+  2. **Tier 2 — Interactive Musical Taxonomy Micro-Chips (`TaxonomyChipsRow`):** Positioned directly below the audio badges, establishing a natural narrative (Fidelity ➔ Musical Taxonomy ➔ Library Provenance). Renders compact frosted obsidian micro-pills with zero vertical space penalty when unpopulated:
+     - `[ 🏷️ {Genre} › ]`: Acoustic Teal (`#80CBC4`), interactive 1-tap exploration sliding up `RelatedTracksSheet` filtered by `Constants.FILTER_TYPE_GENRE`.
+     - `[ 🎭 {Mood} ]`: Twilight Lavender (`#CE93D8`), contextual character tag (strictly hidden if blank).
+     - `[ 🎨 {Style} ]`: Cornflower Blue (`#90CAF9`), subgenre/aesthetic classification (strictly hidden if blank).
+  3. **Tier 3 — Fluid Discography Capsules (`StudioProvenanceSection`):** Compact frosted obsidian micro-capsules (`#D9101010`, `6dp` radius, `0.75dp` border) surfacing live library counts and direct in-place discovery via `RelatedTracksSheet`:
+     - **Row 1 (Music Discography):** `[ 👤 {Artist} • {N} ❯ ]` (Gold `#FFD700`) & `[ 💿 {Album} • {N} ❯ ]` (Acoustic Teal `#80CBC4`) side-by-side with equal flex width and ellipsis protection.
+     - **Row 2 (Storage Location):** `[ 📁 {Folder} • {N} ❯ ]` (Slate Blue `#90CAF9`) centered underneath.
 - **Micro-Labels & Icon Styling:** Row 2 buttons feature compact, scannable text labels alongside Material vector icons (`minWidth="0dp"`, `10dp`–`16dp` horizontal touch padding) to eliminate icon-only ambiguity.
 - **Tactile Micro-Haptics & Tooltips:**
   - `performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)` on all button clicks and `HapticFeedbackConstants.LONG_PRESS` on long presses.
@@ -490,12 +527,13 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 
 ### ADR-009: Song Detail / Tag Editor (`TagsActivity`) Viewport Hierarchy & Metadata Deduplication
 - **Status:** Accepted
-- **Date:** 2026-08-14
+- **Date:** 2026-08-14 (updated 2026-09-24)
 - **Context:** In `TagsActivity`, when the `AppBarLayout` header was fully expanded in Preview mode (`mode == 0`), the `TabLayout` (`Song Info` / `Tech Info`) was pushed to the bottom of the screen, colliding directly with the floating bottom action capsule (`Delete` | `Organize` | `More...` / `Edit Song Info`). Additionally, when a track's `Album Artist` matched its `Artist`, the artist string was printed twice in succession (`Artist` and `Album Artist` above `Genre`), and song title overlays on album art lacked sufficient contrast on light covers.
 - **Decision:**
-  1. **Dynamic Tab Lifecycle:** In Preview mode with the header expanded, `tabLayout` is hidden (`GONE`). When the user taps `Edit Song Info` or scrolls to collapse the header, `tabLayout` smoothly transitions to the top of the viewport under the action bar.
-  2. **Metadata Deduplication:** `Album Artist` is displayed in `genreView` only if it exists and differs from the primary `Artist` (e.g. `Various Artists` compilations). If identical, it is suppressed to display `Artist | Album` followed cleanly by `❖ Genre ❖`.
-  3. **High-Contrast Top Scrim:** Enhanced `shape_background_main_header.xml` with a dark top-down vignette gradient (`#CC0A0A0A` $\rightarrow$ `#00000000`) for high text legibility across all album artwork brightness levels.
+  1. **Dynamic Tab Lifecycle:** In Preview mode with the header expanded, `tabLayout` is hidden (`GONE`). When the user taps `Edit Song Info` or scrolls to collapse the header, `tabLayout` smoothly transitions to the top of the viewport under the action bar. The tab pill reference is resolved *before* the first `setupActionButtons` call so the initial preview frame cannot leak tabs (a null-`tabLayout` race previously left them visible until the next scroll/edit event).
+  2. **Scroll Hysteresis Mode Switch:** Preview ↔ edit transitions fire at `scrollRatio >= 0.72` (enter edit) and `scrollRatio <= 0.40` (return to preview) instead of only at exact fully-expanded / fully-collapsed offsets, eliminating the intermediate band where tabs sat under the fixed action dock.
+  3. **Metadata Deduplication:** `Album Artist` is displayed in `genreView` only if it exists and differs from the primary `Artist` (e.g. `Various Artists` compilations). If identical, it is suppressed to display `Artist | Album` followed cleanly by `❖ Genre ❖`.
+  4. **High-Contrast Top Scrim:** Enhanced `shape_background_main_header.xml` with a dark top-down vignette gradient (`#CC0A0A0A` $\rightarrow$ `#00000000`) for high text legibility across all album artwork brightness levels.
 - **Consequences:** Eliminates visual clipping and tab bleed-through in preview mode, removes redundant text repetition, and elevates the visual presentation of song details.
 
 ### ADR-011: Floating Bottom Dock Layout Hierarchy & Music Center Compose Architecture
@@ -653,8 +691,8 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
        - Master volume fader bar with volume down/up icons.
        - "Up Next" queue preview capsule.
   4. **Direct Entry Points:**
-     - Expand `[⛶]` icon button and long-press gesture on `FloatingMiniPlayerDock` in `MainScaffold.kt`.
-     - Expand `[⛶]` icon button in `AudioHubSheet.kt` header.
+     - Tap the floating dock's artwork or title to open the Audio Hub, then use the expand `[⛶]` icon button in its header.
+- **Entry-point update (2026-09-24):** Removed the dock's dedicated fullscreen icon to leave more width for track details and transport controls. The Audio Hub header remains the fullscreen entry point.
 - **Consequences:** Provides a luxury desktop/rack listening console with configurable display wakefulness that stays responsive without disrupting ongoing playback or DLNA sessions.
 
 ### ADR-024: Fluid Audiophile Glass Pill Tab Switcher & Full-Surface Card Flip
@@ -701,6 +739,53 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
      - Removed unused storage calculation methods from `UIUtils.java` (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`).
      - Deleted obsolete layout files: `view_storage_space.xml` and `view_storage_space_estimated.xml`.
 - **Consequences:** Unifies all remaining auxiliary flows and the Tag Editor under the flagship Obsidian-Glass Design System, guaranteeing 120Hz gesture response, high contrast, clean typography, and zero legacy View adapter overhead.
+
+### ADR-027: Tag Preview Taxonomy Micro-Chips & In-Place Genre Exploration
+- **Status:** Accepted
+- **Date:** 2026-09-21
+- **Context:**
+  1. On the `TagsActivity` preview viewport, `Genre`, `Mood`, and `Style` were previously hidden entirely inside the editor fragment (`TagsEditorPage.kt`), forcing users to tap *"Edit Song Info"* and scroll down just to discover a track's musical classification.
+  2. While `Genre` is populated on ~85%+ of audio tracks, `Mood` and `Style` exhibit high sparsity (~20–30%). Static rows with placeholder dashes create vertical clutter, push action docks off-screen, and compromise visual elegance.
+- **Decision:**
+  1. **Taxonomy Micro-Chips Flow (`TaxonomyChipsRow` in `AudioBadges.kt`):**
+     - Embed compact frosted glass micro-pills (`height ≈ 22dp`, `typography 9.5sp monospace`, `widthIn(max = 160.dp)`) directly between `TagHeaderBadges` and `StudioProvenanceSection`.
+     - Layout wrapped and centered cleanly using `FlowRow` (`horizontalArrangement = Arrangement.spacedBy(5.dp)`, `verticalArrangement = Arrangement.spacedBy(4.dp)`).
+  2. **Strict Zero-Clutter Conditional Rendering:**
+     - Blank, whitespace, `UNKNOWN`, `NONE`, or `"-"` values are stripped. If all three tags are empty, the row consumes **0dp height** (no layout jumps or blank placeholders).
+  3. **Color Tokens & Semantic Micro-Icons:**
+     - **Genre:** Acoustic Teal (`#80CBC4` border/tint) with `🏷️` glyph.
+     - **Mood:** Twilight Lavender (`#CE93D8` border/tint) with `🎭` glyph.
+     - **Style:** Cornflower Blue (`#90CAF9` border/tint) with `🎨` glyph.
+  4. **1-Tap In-Place Genre Exploration:**
+     - Tapping the `Genre` chip invokes `onOpenRelated(Constants.FILTER_TYPE_GENRE, genre, "Genre: $genre")` with tactile haptic feedback (`HapticFeedbackType.TextHandleMove`), sliding up `RelatedTracksSheet` to view, play, or queue all library tracks sharing that genre.
+### ADR-028: Tag Editor Overhaul: Contextual Tabs, Filename Pattern Parser, Batch Editing Safety & Compact Command Dock
+- **Status:** Accepted
+- **Date:** 2026-09-24
+- **Context:**
+  1. Showing the Song Info / Tech Info switcher and editor fields in the expanded artwork preview crowded the cover and placed fields behind the fixed action dock. The preview already has a clear "Edit Song Info" entry point to the detail workspace.
+  2. The `[📄 From File]` (`action_read_tag`) bottom action displayed an unimplemented stub Toast.
+  3. The fixed 2-row bottom command bar occupied ~160dp plus 72dp Compose bottom spacer, causing severe viewport compression and IME keyboard occlusion when editing form fields.
+  4. In batch multi-track editing, mixed values displayed literal `" - "` text inside input fields, creating ambiguity and risking data loss if saved without modification.
+  5. The album art header lacked an edit affordance badge, obscuring cover art search, extraction, and gallery pick flows.
+- **Decision:**
+  1. **Preview and Detail Separation:** Hide both `TagsTabPillSwitcher` and the editor `ViewPager2` in the expanded cover preview. Reveal them in the detail workspace entered through "Edit Song Info"; the button opens Song Info first, with Tech Info one tab away. Returning to the fully expanded cover restores the uncluttered preview.
+  2. **Filename Tag Parser Sheet (`TagsFromFilenameSheet.kt`):** Built a Compose modal bottom sheet with pattern presets (`%track% - %title%`, `%artist% - %title%`, `%track% - %artist% - %title%`, etc.), interactive token builder chips, live preview across selected tracks, and safe application across single or batch track selections via `FilenameTagParser.kt`.
+  3. **Compact Bottom Command Bar & Editor Viewport:** Compacted vertical padding and button heights in `activity_tags.xml` (reducing bar height from ~140dp to ~88dp), sized the editor page above the measured command dock and navigation inset, and eliminated redundant `72dp` spacers in Compose editor and tech pages.
+  4. **Batch Editing Safeguards & Mixed-Value UX:**
+     - Replaced literal `" - "` text with clean placeholder `"< Multiple Values >"`, golden `• Mixed` badge, and helper text *"Leave blank to preserve individual track values"*.
+     - Refactored `buildTag()` in `TagsEditorFragment.kt` to ensure un-modified mixed fields safely retain `oldVal`.
+  5. **Cover Art Edit Affordance & Diagnostics Export:**
+     - Added a frosted `[ Change Cover ]` tonal button overlay on the album art thumbnail.
+     - Added a 1-tap "Copy Diagnostics" action in `TagsTechnicalPage.kt` exporting comprehensive audio telemetry (format specs, ReplayGain, cover art dimensions, reflection field dump, FFmpeg diagnostics) to the system clipboard.
+  6. **Recoverable Editor State:** Keep unsaved tag edits through metadata refreshes and configuration recreation. Failed writes remain visible as drafts with an actionable error instead of discarding user input.
+  7. **Partial Batch Edits:** Blank fields in batch operations mean “leave each track's current value unchanged”; users can update only selected metadata fields without replacing the rest.
+  8. **Uncluttered Cover Scrim Title & Interactive Provenance Discovery:**
+     - Purged duplicate `panel_artist` TextView from `title_container` overlay in `activity_tags.xml`. The cover art scrim features the track title prominently without text repetition, leaving artist and album discography exploration to the interactive, haptic-enabled Compose `StudioProvenanceSection` (`ProvenanceCapsule`) chips below.
+  9. **Compose Dialog Lifecycle Interop (`DialogInterop.kt`):**
+     - Auxiliary Compose dialogs (`SearchQueryContent`, `SearchResultsContent`) require valid `LifecycleOwner` and `SavedStateRegistryOwner` providers on the window decor view. Standardized on `androidx.activity.ComponentDialog(context, R.style.AlertDialogTheme)` with explicit `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` propagation to guarantee zero parent recomposer resolution crashes.
+  10. **Target Picker Icon Caching (`PlayerPickerDialog.kt`):**
+      - Backed third-party music app icon bitmaps with an in-memory `LruCache(32)` to eliminate `PackageManager` query latency and bitmap reallocation during audio routing selection.
+- **Consequences:** Transforms the Tag Editor into an intuitive, high-efficiency metadata workshop with reduced keyboard occlusion, reliable batch editing safety, recoverable drafts, crash-free auxiliary Compose dialogs, and full tag-from-filename automation.
 
 ---
 

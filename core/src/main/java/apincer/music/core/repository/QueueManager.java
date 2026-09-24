@@ -328,29 +328,13 @@ public class QueueManager {
             List<Track> songs = dbHelper.getPlayingQueue();
             queueList.clear();
             indexMap.clear();
-            boolean hadInvalid = false;
             for (int i = 0; i < songs.size(); i++) {
                 Track track = songs.get(i);
                 if (track == null) continue;
-                // Skip tracks whose files have been deleted by other apps
-                String path = track.getPath();
-                if (path == null || path.isEmpty() || !new java.io.File(path).exists()) {
-                    Log.w(TAG, "loadPlayingQueue: skipping missing file: " + path);
-                    hadInvalid = true;
-                    continue;
-                }
+                // An unmounted volume must not erase the persisted queue.
                 if (!indexMap.containsKey(track.getId())) {
                     queueList.add(track);
                     indexMap.put(track.getId(), queueList.size() - 1);
-                }
-            }
-
-            // Persist the cleaned queue so stale IDs are removed from storage
-            if (hadInvalid) {
-                try {
-                    dbHelper.savePlayingQueue(queueList);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to persist cleaned playing queue", e);
                 }
             }
 

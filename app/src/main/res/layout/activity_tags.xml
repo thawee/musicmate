@@ -47,15 +47,16 @@
                 android:layout_height="wrap_content"
                 app:layout_collapseMode="parallax"
                 android:background="@color/transparent">
-                
+
                 <RelativeLayout
                     android:id="@+id/cover_art_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constrainedHeight="true">
-                    
+
                     <FrameLayout
+                        android:id="@+id/cover_art_frame"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
@@ -67,6 +68,71 @@
                             app:heightRatio="1"
                             app:widthRatio="1"/>
 
+                        <!-- Back affordance -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_back"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_gravity="top|start"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginStart="16dp"
+                            android:padding="0dp"
+                            android:minWidth="0dp"
+                            android:contentDescription="@string/btn_back_cd"
+                            app:backgroundTint="#80000000"
+                            app:strokeColor="#40FFFFFF"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="18dp"
+                            app:icon="@drawable/ic_baseline_arrow_back_24"
+                            app:iconTint="@android:color/white"
+                            app:iconPadding="0dp"
+                            app:iconSize="18dp" />
+
+                        <!-- Play affordance -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_play_preview"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_gravity="top|start"
+                            android:layout_marginTop="60dp"
+                            android:layout_marginStart="16dp"
+                            android:padding="0dp"
+                            android:minWidth="0dp"
+                            android:contentDescription="@string/btn_play_cd"
+                            app:backgroundTint="#80000000"
+                            app:strokeColor="#40FFFFFF"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="18dp"
+                            app:icon="@drawable/ic_round_play_arrow_24"
+                            app:iconTint="@android:color/white"
+                            app:iconPadding="0dp"
+                            app:iconSize="18dp" />
+
+                        <!-- 🎨 Frosted Cover Art Edit Badge -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_change_cover_art"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="0dp"
+                            android:text="@string/btn_edit_cover"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/white"
+                            app:backgroundTint="#80000000"
+                            app:strokeColor="#40FFFFFF"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="18dp"
+                            app:icon="@drawable/ic_round_image_24"
+                            app:iconTint="@android:color/white"
+                            app:iconPadding="4dp"
+                            app:iconSize="16dp" />
+
                     </FrameLayout>
 
                     <!-- 🔲 Single Unified Bottom Gradient Scrim Over Cover Art -->
@@ -74,7 +140,7 @@
                         android:id="@+id/title_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_alignBottom="@id/panel_cover_art"
+                        android:layout_alignBottom="@id/cover_art_frame"
                         android:background="@drawable/shape_bottom_cover_scrim"
                         android:orientation="vertical"
                         android:gravity="center_horizontal"
@@ -95,39 +161,22 @@
                             android:textColor="@android:color/white"
                             android:textStyle="bold"
                             android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/panel_artist"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:gravity="center"
-                            android:maxLines="1"
-                            android:ellipsize="end"
-                            android:fontFamily="@font/noto_sans_thai_regular"
-                            android:textColor="#DDDDDD"
-                            android:textSize="13.5sp" />
                     </LinearLayout>
                 </RelativeLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_marginBottom="8dp"
-                android:orientation="vertical"
-                android:paddingBottom="0dp">
-
+                <!-- Badges sit directly under the cover to eliminate the dead zone -->
                 <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/tags_header_badges"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
                     android:paddingHorizontal="12dp"
-                    android:paddingVertical="4dp" />
-            </LinearLayout>
+                    android:paddingTop="10dp"
+                    android:paddingBottom="4dp"
+                    app:layout_constraintTop_toBottomOf="@id/cover_art_container"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
@@ -143,8 +192,6 @@
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="160dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_marginBottom="0dp" />
 
@@ -166,9 +213,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="10dp"
+            android:paddingTop="6dp"
             android:paddingHorizontal="14dp"
-            android:paddingBottom="10dp"
+            android:paddingBottom="6dp"
             android:background="@drawable/shape_bottom_frosted_panel">
 
             <!-- Row 1: Global / File Related Menus -->
@@ -183,44 +230,44 @@
                     android:id="@+id/button_delete"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:minWidth="0dp"
                     android:paddingHorizontal="12dp"
                     android:layout_marginHorizontal="4dp"
                     android:text="@string/button_delete"
                     android:textColor="@color/colorError"
-                    app:cornerRadius="20dp" />
+                    app:cornerRadius="18dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_organize"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:minWidth="0dp"
                     android:paddingHorizontal="16dp"
                     android:layout_marginHorizontal="4dp"
                     android:text="@string/button_organize"
                     android:textColor="@color/colorPrimary"
-                    app:cornerRadius="20dp" />
+                    app:cornerRadius="18dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_more"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:minWidth="0dp"
                     android:paddingHorizontal="12dp"
                     android:layout_marginHorizontal="4dp"
                     android:text="@string/button_more"
                     android:textColor="?attr/colorOnSurface"
-                    app:cornerRadius="20dp" />
+                    app:cornerRadius="18dp" />
             </LinearLayout>
 
             <!-- Row 2: Fragment / Context Dependent Actions -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="4dp">
 
                 <!-- 1. Preview Mode Actions -->
                 <LinearLayout
@@ -234,14 +281,14 @@
                         android:id="@+id/action_editor"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="12dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/button_edit_song_info"
                         android:textColor="?attr/colorOnSurface"
                         android:contentDescription="Open editor"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_round_edit_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
@@ -250,14 +297,14 @@
                         android:id="@+id/action_preview_save"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="16dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_save"
                         android:textColor="@color/colorPrimary"
                         android:contentDescription="Save changes"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_round_save_24"
                         app:iconTint="@color/colorPrimary"
                         app:iconPadding="4dp"
@@ -277,13 +324,13 @@
                         android:id="@+id/action_reformat"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_format"
                         android:contentDescription="Format tags"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/round_auto_awesome_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
@@ -292,13 +339,13 @@
                         android:id="@+id/action_read_tag"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_read"
                         android:contentDescription="Read tags from file"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_file_rename_outline_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
@@ -307,14 +354,14 @@
                         android:id="@+id/action_save"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="14dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_save"
                         android:contentDescription="Save changes"
                         android:textColor="@color/colorPrimary"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_round_save_24"
                         app:iconTint="@color/colorPrimary"
                         app:iconPadding="4dp"
@@ -334,13 +381,13 @@
                         android:id="@+id/btn_reload_tag"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_reload"
                         android:contentDescription="Reload from file"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/round_restore_page_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
@@ -349,13 +396,13 @@
                         android:id="@+id/btn_extract_coverart"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_extract_art"
                         android:contentDescription="Extract cover art"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_round_image_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />
@@ -364,13 +411,13 @@
                         android:id="@+id/btn_remove_coverart"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_remove_art"
                         android:contentDescription="Remove cover art"
-                        app:cornerRadius="20dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_round_hide_image_24"
                         app:iconPadding="4dp"
                         app:iconSize="18dp" />

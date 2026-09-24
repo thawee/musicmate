@@ -459,6 +459,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // When DB aggregate stats arrive, refresh the subtitle with accurate totals
         viewModel.searchStats.observe(this, this::updateHeaderPanel);
 
+        viewModel.hasMoreItems.observe(this, more -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getHasMoreMusic().setValue(Boolean.TRUE.equals(more)));
+        viewModel.loadError.observe(this, error -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getMusicLoadError().setValue(error));
         viewModel.musicItemsLoading.observe(this, isLoading -> runOnUiThread(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
@@ -1345,47 +1347,102 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice =
                 apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, playbackService.getNowPlayingSong());
 
-        List<apincer.android.mmate.ui.compose.PlayerTargetItem> items = new java.util.ArrayList<>();
+        List<apincer.android.mmate.ui.compose.PlayerTargetItem> streamerItems = new java.util.ArrayList<>();
+        List<apincer.android.mmate.ui.compose.PlayerTargetItem> localItems = new java.util.ArrayList<>();
+        List<apincer.android.mmate.ui.compose.PlayerTargetItem> appItems = new java.util.ArrayList<>();
+
         if (renderers != null && !renderers.isEmpty()) {
             for (apincer.music.core.playback.spi.PlaybackTarget target : renderers) {
                 boolean isSelected = current != null && current.getTargetId().equals(target.getTargetId());
-                String baseLabel = apincer.music.core.utils.PlayerNameUtils.getDropdownPlayerLabel(target);
 
                 if (target instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
-                    if (audioOutputDevice != null && audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty() && !"Phone Speaker".equalsIgnoreCase(audioOutputDevice.getName())) {
-                        baseLabel = audioOutputDevice.getCompactLabel();
+                    // 1. Local Device Target (This Device)
+                    String title = "Phone Speaker";
+                    int iconRes = R.drawable.ic_round_speaker_24;
+                    String subtitle = "Internal Speaker";
+
+                    if (audioOutputDevice != null) {
+                        if (audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty()) {
+                            title = audioOutputDevice.getName();
+                        }
+                        if (audioOutputDevice.isBitPerfect()) {
+                            subtitle = "USB Bit-Perfect Output";
+                            iconRes = R.drawable.ic_baseline_usb_24;
+                        } else if (audioOutputDevice.isBluetooth()) {
+                            String codec = audioOutputDevice.getCodec();
+                            subtitle = (codec != null && !codec.isEmpty()) ? "Bluetooth • " + codec : "Bluetooth Audio";
+                            iconRes = R.drawable.ic_round_bluetooth_audio_24;
+                        } else if (audioOutputDevice.getResId() != 0) {
+                            iconRes = audioOutputDevice.getResId();
+                            subtitle = "Direct Hardware Output";
+                        }
                     }
-                }
 
-                int iconRes = R.drawable.rounded_music_cast_24;
-                if (target.isStreaming()) {
-                    iconRes = R.drawable.rounded_music_cast_24;
-                } else if (target.getTargetId() != null && (target.getTargetId().toLowerCase().contains("bt") || target.getTargetId().toLowerCase().contains("bluetooth"))) {
-                    iconRes = R.drawable.ic_round_bluetooth_audio_24;
-                } else if ("local".equalsIgnoreCase(target.getTargetId())) {
-                    iconRes = R.drawable.round_sd_storage_24;
+                    localItems.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(
+                            target,
+                            title,
+                            subtitle,
+                            iconRes,
+                            isSelected,
+                            false,
+                            null,
+                            apincer.android.mmate.ui.compose.PlayerCategory.THIS_DEVICE
+                    ));
                 } else if (AudioOutputHelper.isExternalAppTarget(target)) {
-                    iconRes = R.drawable.rounded_music_note_24;
-                }
+                    // 2. External Music App Target
+                    String title = target.getDisplayName();
+                    String vStr = apincer.music.core.utils.PlayerNameUtils.formatAppVersion(target.getDescription());
+                    String subtitle = !vStr.isEmpty() ? vStr + " • External Player" : "External Music App";
+                    int iconRes = R.drawable.rounded_music_note_24;
 
-                String subtitle = "";
-                if (target.getDescription() != null) {
-                    subtitle = target.getDescription();
-                } else if ("local".equalsIgnoreCase(target.getTargetId()) && audioOutputDevice != null) {
-                    subtitle = audioOutputDevice.getName();
-                }
+                    appItems.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(
+                            target,
+                            title,
+                            subtitle,
+                            iconRes,
+                            isSelected,
+                            false,
+                            target.getTargetId(), // Package name for real app icon
+                            apincer.android.mmate.ui.compose.PlayerCategory.MUSIC_APP
+                    ));
+                } else {
+                    // 3. Network Streamer (DLNA / UPnP)
+                    String title = target.getDisplayName();
+                    String ip = apincer.music.core.utils.NetworkUtils.extractIpAddress(target.getDescription());
+                    String subtitle;
+                    if (!ip.isEmpty()) {
+                        subtitle = ip + " • DLNA Renderer";
+                    } else if (target.getDescription() != null && !target.getDescription().isEmpty()) {
+                        subtitle = target.getDescription() + " • DLNA Renderer";
+                    } else {
+                        subtitle = "DLNA Network Renderer";
+                    }
+                    int iconRes = R.drawable.rounded_music_cast_24;
 
-                items.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(
-                        target,
-                        baseLabel,
-                        subtitle,
-                        iconRes,
-                        isSelected,
-                        target.isStreaming()
-                ));
+                    streamerItems.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(
+                            target,
+                            title,
+                            subtitle,
+                            iconRes,
+                            isSelected,
+                            target.isStreaming(),
+                            null,
+                            apincer.android.mmate.ui.compose.PlayerCategory.NETWORK_STREAMER
+                    ));
+                }
             }
         }
-        MainScaffoldState.setPlayerTargets(items);
+
+        // Sort items: Streamers first, then Local Device, then Music Apps
+        streamerItems.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+        appItems.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+
+        List<apincer.android.mmate.ui.compose.PlayerTargetItem> allItems = new java.util.ArrayList<>();
+        allItems.addAll(streamerItems);
+        allItems.addAll(localItems);
+        allItems.addAll(appItems);
+
+        MainScaffoldState.setPlayerTargets(allItems);
     }
 
 
@@ -1927,6 +1984,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             viewModel.playCollection(tag, playbackService, true);
             android.widget.Toast.makeText(this, "Collection added to queue", android.widget.Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void onLoadMoreMusic() {
+        viewModel.loadMoreMusicItems();
     }
 
     public void onListRefresh() {

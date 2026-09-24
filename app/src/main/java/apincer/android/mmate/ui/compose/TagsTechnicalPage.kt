@@ -1,31 +1,43 @@
 package apincer.android.mmate.ui.compose
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import apincer.android.mmate.R
 import apincer.music.core.codec.FFMPegReader
 import apincer.music.core.codec.TagReader
 import apincer.music.core.model.Track
@@ -121,6 +133,38 @@ fun TagsTechnicalPage(
             .verticalScroll(scrollState)
             .padding(8.dp)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Button(
+                onClick = {
+                    copyDiagnostics(context, track, techData, musicMatePath)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0x33FFD700),
+                    contentColor = Color(0xFFFFD700)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_round_content_copy_24),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Copy Diagnostics",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         TechCard(title = "METADATA HEALTH AUDITOR") {
             MetadataHealthCard(track = track, coverArtInfo = techData.coverArtInfo)
         }
@@ -154,8 +198,37 @@ fun TagsTechnicalPage(
             )
         }
 
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
+}
+
+private fun copyDiagnostics(context: Context, track: Track, techData: TechData, musicMatePath: String) {
+    val sb = StringBuilder()
+    sb.appendLine("## Audio File Diagnostics")
+    sb.appendLine("- Title: ${track.title}")
+    sb.appendLine("- Artist: ${track.artist}")
+    sb.appendLine("- Album: ${track.album}")
+    sb.appendLine("- Path: ${track.path}")
+    sb.appendLine("- MusicMate Path: $musicMatePath")
+    sb.appendLine("- Format: ${track.fileType?.uppercase()} ${track.audioBitsDepth}-bit / ${track.audioSampleRate} Hz (${track.audioBitRate} kbps)")
+    if (techData.coverArtInfo.exists) {
+        sb.appendLine("- Cover Art: ${techData.coverArtInfo.width}×${techData.coverArtInfo.height} px (${techData.coverArtInfo.sizeKb} KB, ${techData.coverArtInfo.mimeType})")
+    }
+    if (techData.replayGainInfo != null) {
+        sb.appendLine("- ReplayGain Track: ${techData.replayGainInfo.trackGainDb} dB (Peak: ${techData.replayGainInfo.trackPeak})")
+    }
+    sb.appendLine()
+    sb.appendLine("### Embedded Tags")
+    techData.parsedFields.forEach { f ->
+        sb.appendLine("${f.name}: ${f.currentVal}")
+    }
+    sb.appendLine()
+    sb.appendLine("### FFmpeg Diagnostics")
+    sb.appendLine(techData.ffmpegInfo)
+
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+    clipboard?.setPrimaryClip(ClipData.newPlainText("MusicMate Audio Diagnostics", sb.toString()))
+    Toast.makeText(context, "Diagnostics copied to clipboard", Toast.LENGTH_SHORT).show()
 }
 
 @Composable

@@ -383,6 +383,8 @@
     <string name="button_organize">Organize</string>
     <string name="button_more">More&#8230;</string>
     <string name="button_edit_song_info">Edit Song Info</string>
+    <string name="btn_back_cd">Back</string>
+    <string name="btn_play_cd">Play preview</string>
     <string name="btn_format">Format</string>
     <string name="btn_read">From File</string>
     <string name="btn_save">Save</string>
@@ -460,6 +462,7 @@
     <string name="menu_search_cover_art">Search Album Art Online</string>
     <string name="menu_pick_cover_art">Choose Cover Art from Gallery</string>
     <string name="menu_view_cover_art">View Fullscreen Cover Art</string>
+    <string name="btn_edit_cover">Change Cover</string>
     <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 
     <!-- New Indicator -->

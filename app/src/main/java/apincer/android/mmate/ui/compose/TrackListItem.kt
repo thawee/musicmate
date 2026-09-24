@@ -34,6 +34,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -83,7 +86,8 @@ fun TrackListItem(
             .clip(RoundedCornerShape(12.dp))
             .background(bgOverlay)
             .then(if (borderStroke != null) Modifier.border(borderStroke, RoundedCornerShape(12.dp)) else Modifier)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .semantics { selected = isSelected }
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick)
     ) {
         Row(
             modifier = Modifier
@@ -107,7 +111,7 @@ fun TrackListItem(
             ) {
                 coil3.compose.AsyncImage(
                     model = CoverartFetcher.builder(LocalContext.current, track).data(track).build(),
-                    contentDescription = "Album Art",
+                    contentDescription = "Play ${track.title}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )

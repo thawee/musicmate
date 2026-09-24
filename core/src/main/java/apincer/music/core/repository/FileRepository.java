@@ -429,7 +429,7 @@ public class FileRepository {
             if(forceRead || tagRepos.isOutdated(tags.get(0), lastModified)) {
                 // Read minimal tag data first
                 Track basicTag = TagReader.readBasicTag(context, mediaPath);
-                if(tags != null && !tags.isEmpty()) {
+                if(basicTag != null && tags != null && !tags.isEmpty()) {
                     // maintain id
                     basicTag.setId(tags.get(0).getId());
                 }
@@ -599,23 +599,24 @@ public class FileRepository {
                 return true;
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
-                copyRelatedFiles(new File(tag.getPath()), new File(newPath));
-                cleanCacheCover(tag);
-
-                File file = new File(tag.getPath());
-                cleanMediaDirectory(file.getParentFile());
+                File originalFile = new File(tag.getPath());
                 tag.setPath(newPath);
                 tag.setIsManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
                 tag.setFileLastModified(new File(newPath).lastModified());
-
-                String coverart = extractEmbedCoverArt(tag);
-                if (!isEmpty(coverart)) {
-                    tag.setAlbumArtFilename(coverart);
-                }
-
+                // Commit the new audio path before best-effort artwork/sidecar work.
                 tagRepos.saveTag(tag);
+                try {
+                    copyRelatedFiles(originalFile, new File(newPath));
+                    cleanCacheCover(tag);
+                    cleanMediaDirectory(originalFile.getParentFile());
+                    String coverart = extractEmbedCoverArt(tag);
+                    if (!isEmpty(coverart)) tag.setAlbumArtFilename(coverart);
+                    tagRepos.saveTag(tag);
+                } catch (Exception ancillaryFailure) {
+                    Log.w(TAG, "Audio was imported but related artwork could not be moved", ancillaryFailure);
+                }
                 return true;
             }
         return false;

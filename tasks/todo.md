@@ -1,67 +1,91 @@
-# External Android Music Player Companion Controller Architecture Plan
+# Statusline Overhaul: Single-Line HUD with Remaining Quota
 
-## Status: 🟢 Completed
+## Status: 🟢 Completed & Hardened
 
 ### Objectives
-Transition MusicMate's external Android music app integration (Poweramp, UAPP, Neutron, HiBy Music, etc.) to a true **Companion Controller / MediaSession IPC** architecture. Eliminate track-by-track URL pushes, window/focus theft, background activity restrictions, and audio engine interruptions, while retaining one-time explicit handoff when a user taps a song to play in an external app.
+1. **Compact Single-Line Statusline:**
+   - Migrate quota display from a second line to the primary line directly following `Google AI Pro` (plan tier) separated by `│`, eliminating vertical clutter and the newline.
+2. **Quota Metrics Format Update:**
+   - Switch from used percentages to remaining percentages (`% left`).
+   - Format each quota section as `<reset_time> <percentage>% left` (e.g., `4h31m 100% left` and `6d4h 93% left`).
+   - Remove wide horizontal progress bars to keep single-line width within standard terminal boundaries (~100 chars).
+3. **Color Inversion for Remaining Quota:**
+   - Implement `color_for_remaining_pct()` so high quota (>60%) displays green, moderate (36-60%) yellow, low (16-35%) orange, and critical (<=15%) red.
+   - Retain `color_for_pct()` for used metrics like context window usage (`ctx_pct`).
+4. **Performance & Reliability Hardening:**
+   - Single-invocation `jq` execution for all JSON data extraction and arithmetic.
+   - Full ISO 8601 timezone offset parsing (`+07:00`, `-05:00`, `.123Z`, raw epoch).
+   - Stale/elapsed countdown handling (suppresses stale negative timers when quota already reset).
+   - Strict zero-stderr failsafe exit on invalid/empty JSON inputs.
 
 ---
 
 ### Master Checklist
 
-- [x] **Phase 1: MediaSession IPC Event Routing (`AndroidPlayerController.java`)**
-  - [x] Remove track-end heuristic `playbackCallback.onPlaybackCompleted()` in `mediaCallback.onPlaybackStateChanged()` to prevent external app track ends from triggering unwanted URL pushes
-  - [x] Update transport controls (`skipToNext`, `skipToPrevious`, `pause`, `resume`, `seekTo`, `stopPlaying`) to re-acquire `mediaController` if null when targeting external apps
+- [x] **Phase 1: Statusline Script Refactor (`~/.gemini/statusline.sh`)**
+  - [x] Backup current script to `~/.gemini/statusline.sh.bak3`
+  - [x] Update jq extraction to calculate remaining percentages (`% left`) from `remaining_fraction`, `remaining_percentage`, or `used_percentage`
+  - [x] Add `color_for_remaining_pct()` function with appropriate color bands
+  - [x] Format 5h quota as `${c_muted}${q5h_rel}${reset} ${q5h_color}${q5h_pct}% left${reset}`
+  - [x] Format weekly quota as `${c_muted}${qwk_rel}${reset} ${qwk_color}${qwk_pct}% left${reset}`
+  - [x] Append quotas directly to `line1` after `plan_tier` separated by `${sep}` without newline
+  - [x] Remove `line2` multiline output
 
-- [x] **Phase 2: Queue & Transport Orchestration (`MusicMateServiceImpl.java`)**
-  - [x] Update `skipToNextInQueue()`: route external players to `androidPlayer.skipToNext()` (MediaSession IPC) instead of advancing MusicMate's queue and firing `ACTION_VIEW`
-  - [x] Update `skipToPrevious()`: route external players to `androidPlayer.skipToPrevious()` (MediaSession IPC)
-  - [x] Guard `scheduleFallback()`: restrict fallback timers strictly to controllable DLNA/DMR streaming players (`activePlayer.isStreaming() && isControllable(activePlayer)`), bypassing Local ExoPlayer and external apps
+- [x] **Phase 2: Comprehensive Test Suite & Verification**
+  - [x] Test with user image scenario: Gemini 3.8 Flash, 22% context, `musicmate (master*)`, `Google AI Pro`, 5h quota (4h31m, 100% left), 7d quota (6d4h, 93% left)
+  - [x] Test with Claude Code rate_limits payload
+  - [x] Test with edge cases (empty JSON, missing quota, detached HEAD, missing plan tier)
+  - [x] Verify ANSI 24-bit TrueColor sequences across remaining quota gradient (100% -> green, 70% -> green, 50% -> yellow, 25% -> orange, 5% -> red)
 
-- [x] **Phase 3: Verification & Documentation**
-  - [x] Run `./gradlew compileDebugSources testDebugUnitTest`
-  - [x] Document architectural patterns and lessons learned in `tasks/lessons.md`
-  - [x] Complete `tasks/todo.md` review section
-
-- [x] **Phase 4: Design Doc Expansion - Dual-Mode Network Streaming Architecture (`DESIGN.md`)**
-  - [x] Add Section 4.D detailing Dual-Mode Network Streaming (Mode A: DMS + DMC vs. Mode B: DMS Only with External Controller)
-  - [x] Detail UPnP `ContentDirectory` hierarchy (`AlbumsBrowser`, `ArtistsBrowser`, `GenresBrowser`, `CollectionsBrowser`, `SourcesBrowser`)
-  - [x] Detail RFC 7233 byte-range clamping and embedded NIO HTTP streaming engine
-  - [x] Detail passive stream observation and non-collision guard (`onAccessMediaTrack`)
-  - [x] Renumber Player Picker to Section 4.E
-  - [x] Update ADR-026 to explicitly cross-reference dual streaming modes and collision guards
-
-- [x] **Phase 5: Decouple UI/UX Design System into dedicated `UI.md`**
-  - [x] Create `UI.md` containing UI Philosophy, Gestures, Menu Architecture, Obsidian-Glass System, Color Tokens, Layouts, Docks, Dialogs, Touch/a11y, and UI ADRs
-  - [x] Refocus `DESIGN.md` as the Technical & System Architecture reference (System topology, Playback Domains, Audio Engine, UPnP/DLNA Streaming, System ADRs, Non-Goals, and UI cross-references)
-  - [x] Verify cross-links, formatting, and file consistency
-  - [x] Update `tasks/todo.md` with completion and review notes
-
-- [x] **Phase 6: Optimize QueuePage list item padding and layout density**
-  - [x] Adjust `QueueItem` vertical padding (`vertical = 7.dp, horizontal = 14.dp`) to achieve clean ~50dp item height (Material 3 standard)
-  - [x] Optimize text line heights (`fontSize = 13.5.sp` title, `11.5.sp` artist) for compact elegance without truncation
-  - [x] Adjust reorder drag threshold (`threshold = 52f`) to match the new item height
-  - [x] Tighten toolbar padding in `QueuePage.kt` (`vertical = 4.dp`)
-  - [x] Verify build and tests
+- [x] **Phase 3: Stability Hardening & Edge-Case Audit**
+  - [x] RFC3339 / ISO 8601 parser in `jq` supporting UTC `Z`, subseconds, and timezone offsets (`+07:00`, `-05:00`)
+  - [x] Prevent stale countdowns: when reset timestamp is in the past (>60s elapsed), suppress countdown and show pure `% left`
+  - [x] Remove newline from empty/corrupt fallback (`printf "agy"`) to ensure clean TUI rendering
 
 ---
 
 ## Review & Verification
 
 ### Verification Summary
-- Executed `./gradlew compileDebugSources testDebugUnitTest`: **BUILD SUCCESSFUL** across 235 tasks with 0 errors.
-- Decoupled UI/UX design specifications from system architecture:
-  - Created [`UI.md`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md) (716 lines) as the authoritative UI/UX Design System & Human Interface Guidelines.
-  - Refocused [`DESIGN.md`](file:///Users/thawee.p/Workspaces/github/musicmate/DESIGN.md) (359 lines) as the Technical & System Architecture Specification.
-  - Updated documentation links in [`README.md`](file:///Users/thawee.p/Workspaces/github/musicmate/README.md) and [`tasks/lessons.md`](file:///Users/thawee.p/Workspaces/github/musicmate/tasks/lessons.md).
+1. **Single-Line Rendering Verification:**
+   - Contiguous single-line HUD:
+     `Gemini 3.8 Flash (High) │ 󰍛 22% │ musicmate (master*) │ Google AI Pro │ 4h31m 100% left │ 6d4h 93% left`
+   - Verified no extra newlines or trailing newline breaks in terminal TUIs.
+2. **Quota Calculations & Formatting:**
+   - Evaluated `remaining_fraction` (1.0 -> `100% left`, 0.93 -> `93% left`).
+   - Verified fallback for Claude Code `used_percentage` (`100 - used_percentage`).
+   - Relative reset times (`calc_relative_time`) accurately format hours/minutes (`4h31m`) and days/hours (`6d4h`).
+3. **Adaptive Color Grading:**
+   - Tested 5 quota levels: 100% (green), 70% (green), 50% (yellow), 25% (orange), 5% (red).
+   - Time string is styled in `c_muted` matching the Tokyo Night theme hierarchy.
+4. **Resilience & Fallbacks:**
+   - Tested 5 corrupt/null input variations: zero stderr bytes, clean exits with code 0.
+   - Tested non-git directories and detached HEAD states.
 
-### Architectural Improvements Delivered
-1. **Zero UI/Focus Theft**: External music apps are never re-launched with `ACTION_VIEW` when songs change in the background. Transport skip events use standard Binder IPC (`MediaController.getTransportControls().skipToNext()`).
-2. **Audio Engine & DAC Integrity**: External audiophile players maintain their hardware USB DAC locks without stream interruption, sample rate re-negotiation, or DAC clicks/pops.
-3. **Target-Isolated Fallback Timers**: Guarded `scheduleFallback()` to run only for controllable DLNA/UPnP renderers, preventing unwanted track-skip timers from interrupting local ExoPlayer or external Android music player sessions.
-4. **Resilient Dynamic Controller Binding**: Added `ensureMediaController()` across all transport commands (`pause`, `resume`, `seekTo`, `skipToNext`, `skipToPrevious`, `stopPlaying`) to dynamically re-bind active `MediaController` instances if dropped or lazily initialized.
-5. **Dual-Mode Streaming Documentation**: Fully documented UPnP AV / DLNA topology across Mode A (Integrated DMS + DMC) and Mode B (Standalone DMS with third-party DMCs like BubbleUPnP, mconnect, WiiM, Audirvana), the `ContentDirectory` browser tree, and `onAccessMediaTrack()` collision guards.
-6. **Modular Documentation Decoupling**: Successfully separated UI design tokens, layout hierarchies, and interaction models (`UI.md`) from system topology, audio pipelines, streaming protocols, and backend ADRs (`DESIGN.md`), with comprehensive bi-directional cross-references.
-7. **Queue Density Optimization**: Streamlined `QueuePage.kt` item height to ~50dp (via `7dp` vertical padding, compact line heights, and 40dp action icons), increasing visible track capacity in the 65% sheet by ~40% (from 4–5 items to 6–7 items) while strictly preserving Material 3 minimum 48dp touch accessibility.
+---
 
+# Tag Activity Preview Refinement & Dialog Lifecycle Hardening
+
+## Status: 🟢 Completed & Verified
+
+### Objectives
+1. **Tag Preview Screen UX:**
+   - Eliminate duplicated artist and album overlay text (`panel_artist`) on cover art scrim.
+   - Retain prominent song title overlay while delegating discography navigation to interactive Compose [`StudioProvenanceSection`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AudioBadges.kt).
+2. **Compose Dialog Lifecycle Resolution:**
+   - Fix fatal `IllegalStateException: ViewTreeLifecycleOwner not found from androidx.compose.ui.platform.ComposeView` when launching Search & Match dialogs.
+   - Standardize on `ComponentDialog` with explicit ViewTree owner bindings.
+3. **Menu & Performance Hygiene:**
+   - Purge obsolete commented-out actions in `tag_more_actions_menu.xml` and `TagsActivity.java`.
+   - Add in-memory `LruCache` for third-party music app icons in `PlayerPickerDialog.kt`.
+
+### Checklist
+- [x] Remove `panel_artist` from `activity_tags.xml` and `TagsActivity.java`
+- [x] Migrate `showSearchQueryDialog` and `showSearchResultsDialog` to `ComponentDialog`
+- [x] Bind `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, `ViewTreeViewModelStoreOwner`
+- [x] Clean up `tag_more_actions_menu.xml` and `TagsActivity.doShowMoreActions()`
+- [x] Implement `appIconCache` in `PlayerPickerDialog.kt`
+- [x] Record pattern in `tasks/lessons.md`
+- [x] Update `UI.md` and `CHANGELOG.md`
+- [x] Run unit tests and deploy debug build to physical device (`RFCY21CLTDY`)
 

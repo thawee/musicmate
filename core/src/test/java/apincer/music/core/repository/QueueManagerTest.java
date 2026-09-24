@@ -6,17 +6,24 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.lang.reflect.Proxy;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.model.AudioTag;
 import apincer.music.core.repository.spi.DbHelper;
 
 public class QueueManagerTest {
+
+    @Rule
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private QueueManager queueManager;
     private List<Track> savedQueue;
@@ -80,6 +87,22 @@ public class QueueManagerTest {
     @Test
     public void getRandomTrack_emptyQueue_returnsNull() {
         assertNull(queueManager.getRandomTrack());
+    }
+
+    @Test
+    public void loadPlayingQueue_temporarilyUnavailableStorage_preservesQueueAndPersistence() {
+        AudioTag track = new AudioTag();
+        track.setId(42L);
+        track.setUniqueKey("removable-track");
+        track.setPath(new File(temporaryFolder.getRoot(), "unmounted-volume/album/song.flac").getPath());
+        savedQueue.add(track);
+
+        queueManager.loadPlayingQueue(true);
+
+        assertEquals(1, queueManager.getQueueSize());
+        assertEquals(42L, queueManager.getSongs().get(0).getId());
+        assertEquals(1, savedQueue.size());
+        assertEquals(42L, savedQueue.get(0).getId());
     }
 
     @Test

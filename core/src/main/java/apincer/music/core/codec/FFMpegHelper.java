@@ -161,20 +161,19 @@ public class FFMpegHelper {
      * @param context    The Android {@link Context} used for file system operations.
      * @param srcPath    The absolute file path of the source audio file to convert.
      * @param targetPath The absolute file path where the converted file should be saved.
-     * If this file already exists, a suffix ("_001") will be appended.
+     * If occupied, an unused numbered destination is selected.
      * @param cLevel     The desired compression level. Primarily used for FLAC (0-12).
      * An invalid value will result in a default (e.g., 5 for FLAC).
      * @param bitDept    The desired output bit depth (16, 24, or 32). This is only
      * applied to formats that support it (FLAC, ALAC, AIFF).
-     * @return {@code true} if the conversion was successful and the file was moved
-     * to {@code targetPath}, {@code false} otherwise (e.g., FFmpeg failure,
+     * @return the actual output path on success, {@code null} otherwise (e.g., FFmpeg failure,
      * cancellation, or file I/O error).
      */
-    public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
+    public static String convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
         return convert(context, srcPath, targetPath, cLevel, bitDept, 0);
     }
 
-    public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept, int sampleRate) {
+    public static String convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept, int sampleRate) {
         String options = "";
 
         if(bitDept ==1) {
@@ -236,14 +235,23 @@ public class FFMpegHelper {
             }
         } else {
             Log.e(TAG, "Unsupported target format: " + targetPath);
-            return false;
+            return null;
         }
 
         Log.i(TAG, "Converting: " + srcPath);
 
         String ext = FileUtils.getExtension(srcPath);
 
-        String tmpTarget = srcPath.replace("." + ext, "_NEWFMT." + targetExt);
+        String tmpTarget;
+        try {
+            File temporaryOutput = File.createTempFile("musicmate-convert-", "." + targetExt,
+                    new File(targetPath).getAbsoluteFile().getParentFile());
+            tmpTarget = temporaryOutput.getAbsolutePath();
+            if (!temporaryOutput.delete()) throw new java.io.IOException("Cannot prepare conversion output");
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Cannot create conversion output", e);
+            return null;
+        }
 
         String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
         Log.i(TAG, "Converting with cmd: " + cmd);
@@ -257,23 +265,16 @@ public class FFMpegHelper {
             // A failed (but not cancelled) session would have been treated as a success.
             if (ReturnCode.isSuccess(session.getReturnCode())) {
                 Log.i(TAG, "Conversion successful: " + srcPath);
-                File targetFile = new File(targetPath);
-                if (targetFile.exists()) {
-                    // Consider a better way to handle existing files
-                    // This logic is risky, e.g., "song.v1.mp3" -> "song_001.v1.mp3"
-                    targetPath = targetPath.replaceFirst("\\.(?=[^\\.]+$)", "_001.");
-                }
-
-                return FileSystem.move(context, tmpTarget, targetPath);
+                return FileSystem.moveToAvailablePath(tmpTarget, targetPath);
             } else {
                 // Conversion failed or was cancelled
                 Log.e(TAG, String.format("Conversion failed. RC: %s. Logs:\n%s",
                         session.getReturnCode(), session.getAllLogsAsString()));
-                return false;
+                return null;
             }
         } catch (Exception e) {
             Log.e(TAG, "FFmpeg execution threw an exception", e);
-            return false;
+            return null;
         } finally {
             // Always clean up the temp *source* file
            // FileSystem.delete(tmpPath);

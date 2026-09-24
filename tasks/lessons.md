@@ -22,6 +22,29 @@
   - In WebUI mini-player bars, nested interactive elements (e.g. cover art `<img>` inside a container `<div id="footer-track-info">`) will trigger handlers twice in quick succession unless `e.stopPropagation()` is applied or event handling is consolidated onto the parent container.
   - When accessing playback state objects (`currentPlaybackState`, `currentTrack`) on user-initiated click actions (e.g., clicking cover art or expand buttons before the first status push from WebSocket), always use defensive null-checks (`state = currentPlaybackState || {}`, `(state && state.elapsed) || 0`) to prevent unhandled `TypeError: Cannot read properties of null` exceptions.
 
+- **HttpCore 5 & Android Hidden API Linking (`jdk.net.Sockets.supportedOptions` / `NoSuchMethodError` / `ExtendedSocketOptions`)**:
+  - Apache HttpCore 5.4.0+ (`ReflectionUtils.<clinit>`) directly invokes `jdk.net.Sockets.supportedOptions(Socket.class)` and references `ExtendedSocketOptions.TCP_KEEP*` fields during static class initialization.
+  - On Android (specifically targeting SDK 35+, e.g. SDK 37 on modern ART), `jdk.net.Sockets` and `ExtendedSocketOptions` are core-platform blocked hidden APIs (`api=blocked, domain=core-platform`). Android ART denies linking at runtime with `NoSuchMethodError: No static method supportedOptions(Class) Set in jdk.net.Sockets`.
+  - Merely adding an overriding Java source file in a library module (`src/main/java/org/apache/hc/core5/util/ReflectionUtils.java`) is insufficient in multidex builds because AGP/D8 converts external JARs into separate DEX files (e.g. `classes31.dex`), keeping the original unpatched class in the APK. When caller classes from that JAR (`SingleCoreIOReactor`) execute, ART resolves the unpatched class from the same DEX, leading to fatal crashes.
+  - **ART Class Verifier Linking of Blocked Hidden API Fields (`ExtendedSocketOptions.TCP_KEEP*`)**: Even when code is guarded by a runtime boolean check (e.g. `if (supportsKeepAliveOptions())`), ART's class verifier statically resolves all symbolic field references (`getstatic ExtendedSocketOptions.TCP_KEEPIDLE`) in `SingleCoreIOReactor.prepareSocket()` during class loading. When blocked, ART logs `hiddenapi: Accessing hidden field ... linking: denied`.
+  - **Resolution Pattern**:
+    1. Exclude both `org/apache/hc/core5/util/ReflectionUtils.class` and `org/apache/hc/core5/reactor/SingleCoreIOReactor*.class` from the external dependency JAR using Gradle `patchHttpCore` task (`Jar` with `exclude`).
+    2. Provide an Android-safe `ReflectionUtils.java` in module sources that detects Android (`Class.forName("android.os.Build")`) and safely returns `false` for `supportsKeepAliveOptions()` without touching `jdk.net.Sockets`.
+    3. Provide an Android-safe `SingleCoreIOReactor.java` in module sources omitting the dead `ExtendedSocketOptions` references.
+    4. This completely purges `jdk.net.Sockets` and `ExtendedSocketOptions` references from all APK DEX files, eliminating both the crash and all hidden API linking error logs.
+
+- **Audio Output Target Iconography & Categorical Ordering**:
+  - In multi-target audio routing pickers (DLNA streamers + local DAC/speaker + external Android music apps), never dump heterogeneous targets into a flat unsorted list with generic monochrome music note icons.
+  - Software music apps have instantly recognizable brand logos; rendering real native application icons (via `packageManager.getApplicationIcon()`) with squircle clipping (`RoundedCornerShape(6.dp)`) without color tinting elevates UX and perceived polish.
+  - Local device targets must dynamically reflect physical hardware (Phone Speaker `ic_round_speaker_24`, USB DAC bit-perfect `ic_baseline_usb_24`, or Bluetooth `ic_round_bluetooth_audio_24`), rather than misleading generic icons like SD storage.
+  - Structuring the picker into 3 distinct functional tiers (`NETWORK STREAMERS` ➔ `THIS DEVICE` ➔ `INSTALLED MUSIC APPS`) with the selected target sorted to the top of its section prevents DLNA renderers from being buried beneath idle installed apps.
+
+- **Tag Editor Navigation Ergonomics, Mixed-Value Batch Safeguards & Viewport Hygiene**:
+  - *Never hide primary tab navigation in Preview Mode:* Setting tab containers to `GONE` in preview modes prevents users from discovering secondary viewports (e.g. "Tech Info" diagnostics). Keeping pill switchers permanently visible eliminates jarring pop-in layout shifts during scrolling and makes all tabs instantly accessible.
+  - *Mixed-Value Form Placeholders over Raw Text:* In batch multi-item editors, never populate text fields with raw literal markers like `" - "`. It forces users to delete characters before typing and risks saving hyphens or wiping metadata if untouched. Use empty string values with explicit placeholders `"< Multiple Values >"`, golden `• Mixed` badges, and supportive guidance text.
+  - *Touch-Safe Tag Building:* Guard `buildTag()` by requiring `isModified == true` before writing changes. If untouched, always preserve individual item values (`return oldVal`).
+  - *Double Padding Anti-Pattern with Soft Keyboards (IME):* When an Activity viewpager adds fixed bottom padding (e.g. 160dp) to avoid a command dock, nested Compose pages adding another `Spacer(72.dp)` consume over 250dp of vertical space. When the soft keyboard opens, the visible form viewport is squashed. Compact the bottom dock, match viewpager padding to the exact dock height (~96dp + systemBars.bottom), and reduce Compose bottom spacers to ~16dp so `Modifier.imePadding()` has ample room to display focused inputs.
+
 ## Actionable Rules for Future Changes
 - Always ask/confirm if the app is designed to run headlessly or casting-only before suggesting standard local playback components (like `MediaSession`).
 - Confirm the target screen/view (Native vs. WebUI) when implementing UI enhancement requests.
@@ -438,6 +461,9 @@
     - On tall displays (20:9+), 100% height pushes the top navigation tabs and target pickers out of the natural one-handed thumb sweep zone ($y = 0$).
     - In Compose `ModalBottomSheet`, 2-stage partially-expanded sheets with embedded scrollable lists (`LazyColumn`, `verticalScroll`) trigger notorious gesture fighting between sheet drag detection and list scroll physics.
     - Fixing sheet height at 65% (HUD model) preserves spatial anchoring (dimmed library backdrop, 1-tap dismiss) and keeps controls reachable with one hand.
-    - Rather than expanding the sheet container, optimize item density internally: reducing row padding (`vertical = 7dp, horizontal = 14dp`) and adjusting typography line-heights yields clean ~50dp item heights (exceeding Material 3 48dp minimum touch bounds) and increases visible capacity by ~40% (displaying 6–7 tracks simultaneously) with zero gesture collision.
-
-
+- **Jetpack Compose inside Dialogs & ViewTreeLifecycleOwner Crash**:
+  - Never use framework `android.app.Dialog` to host a Jetpack `ComposeView` (`setContentView(composeView)`). Framework `android.app.Dialog` does not implement `LifecycleOwner` or attach `ViewTreeLifecycleOwner`, `ViewTreeViewModelStoreOwner`, or `ViewTreeSavedStateRegistryOwner` to its window decor view.
+  - When the dialog window attaches, Compose attempts to create a `WindowRecomposer` or resolve `ViewTreeLifecycleOwner` (especially with `ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed`), causing an immediate fatal `IllegalStateException: ViewTreeLifecycleOwner not found from androidx.compose.ui.platform.ComposeView`.
+  - **Resolution Pattern**:
+    1. Use `androidx.activity.ComponentDialog(context, themeResId)`. `ComponentDialog` natively implements `LifecycleOwner`, `SavedStateRegistryOwner`, and `OnBackPressedDispatcherOwner`, and installs them on `window.decorView`.
+    2. Additionally attach `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` directly to both `dialog.window.decorView` and `composeView` before `show()`, ensuring compositions resolve parents without relying on ambient activity trees.

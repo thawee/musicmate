@@ -49,8 +49,10 @@ import apincer.music.core.model.Track
 @Composable
 fun TagsEditorPage(
     track: Track?,
+    tracks: List<Track> = emptyList(),
     state: TagsEditorState,
     onScanLibrary: () -> Unit = {},
+    onApplyFilenamePattern: (String) -> Unit = {},
     albumArtistOptions: List<String> = emptyList(),
     artistOptions: List<String> = emptyList(),
     genreOptions: List<String> = emptyList(),
@@ -61,6 +63,20 @@ fun TagsEditorPage(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+
+    if (state.showFilenameParserSheet && track != null) {
+        val tracksList = remember(track, tracks) {
+            if (tracks.isNotEmpty()) tracks else listOf(track)
+        }
+        TagsFromFilenameSheet(
+            tracks = tracksList,
+            onDismiss = { state.showFilenameParserSheet = false },
+            onApply = { pattern ->
+                state.showFilenameParserSheet = false
+                onApplyFilenamePattern(pattern)
+            }
+        )
+    }
 
     if (track == null) {
         Column(
@@ -209,7 +225,7 @@ fun TagsEditorPage(
             )
         }
 
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -221,21 +237,39 @@ fun EditorTextField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
+    val isMulti = TagsEditorState.isMultiValues(value)
+    val displayValue = if (isMulti) "" else value
+
     OutlinedTextField(
-        value = value,
-        onValueChange = { input ->
-            val cleaned = if (value == " - " && input != " - ") {
-                input.replace(" - ", "").trimStart()
-            } else {
-                input
+        value = displayValue,
+        onValueChange = onValueChange,
+        label = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(label)
+                if (isMulti) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "• Mixed",
+                        color = Color(0xFFFFD700),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-            onValueChange(cleaned)
         },
-        label = { Text(label) },
-        placeholder = { if (value == " - ") Text("Multiple values", color = Color.Gray) },
+        placeholder = {
+            if (isMulti) {
+                Text("Multiple values (type to overwrite)", color = Color.Gray, fontSize = 12.sp)
+            }
+        },
+        supportingText = {
+            if (isMulti) {
+                Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp)
+            }
+        },
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(bottom = 8.dp),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
     )
@@ -251,12 +285,14 @@ fun EditorDropdownField(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val filteredOptions = remember(value, options) {
-        val trimmed = value.trim()
+    val isMulti = TagsEditorState.isMultiValues(value)
+    val displayValue = if (isMulti) "" else value
+
+    val filteredOptions = remember(displayValue, options) {
+        val trimmed = displayValue.trim()
         if (trimmed.isEmpty() || trimmed == "-") {
             options.take(60)
         } else {
-            // Prioritize items that start with the query, followed by items containing the query
             val startsWith = mutableListOf<String>()
             val contains = mutableListOf<String>()
             for (opt in options) {
@@ -276,20 +312,35 @@ fun EditorDropdownField(
         onExpandedChange = { expanded = it },
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp)
+            .padding(bottom = 8.dp)
     ) {
         OutlinedTextField(
-            value = value,
-            onValueChange = { input ->
-                val cleaned = if (value == " - " && input != " - ") {
-                    input.replace(" - ", "").trimStart()
-                } else {
-                    input
+            value = displayValue,
+            onValueChange = onValueChange,
+            label = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(label)
+                    if (isMulti) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "• Mixed",
+                            color = Color(0xFFFFD700),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
-                onValueChange(cleaned)
             },
-            label = { Text(label) },
-            placeholder = { if (value == " - ") Text("Multiple values", color = Color.Gray) },
+            placeholder = {
+                if (isMulti) {
+                    Text("Multiple values (type to overwrite)", color = Color.Gray, fontSize = 12.sp)
+                }
+            },
+            supportingText = {
+                if (isMulti) {
+                    Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp)
+                }
+            },
             trailingIcon = {
                 if (options.isNotEmpty()) {
                     androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)

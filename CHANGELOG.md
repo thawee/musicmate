@@ -5,6 +5,39 @@ All notable changes to the **MusicMate** project will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Tag preview cover affordances (`activity_tags.xml`, `TagsActivity.java`):** Added a frosted back button (`btn_back`) and play button (`btn_play_preview`) on the album art so users can leave the screen or start playback without relying on system gestures or the "More..." menu.
+
+### Changed
+- **Mini-player dock:** Removed the fullscreen shortcut to give track details and playback controls more room. Fullscreen Studio Console remains available from the Audio Hub header.
+- **Tag preview:** Hid both the Song Info / Tech Info switcher and editor fields in the expanded cover preview; they appear when the detail editor opens.
+- **Tag preview typography & hierarchy:** Removed duplicate artist/album text overlay from the cover art scrim; title is featured cleanly while discography exploration is handled by the interactive Compose provenance capsules below.
+- **Tag menu hygiene:** Cleaned up obsolete commented-out action groups in the Tag Activity overflow menu.
+- **Tag preview header layout (`activity_tags.xml`):** Moved the audiophile badge strip (`tags_header_badges`) from the bottom of the collapsing header to directly under the cover art, eliminating the large empty blur band on tall aspect ratios.
+- **Tag preview mode transition (`TagsActivity.java`):** Header height (85% preview / 72% edit) now animates over 220ms with a decelerate interpolator instead of snapping.
+- **Change Cover placement:** Replaced the hardcoded `52dp` top margin with `16dp`; status-bar insets are already applied to the AppBar, so the old value double-counted the inset.
+- **Quality badge shape (`AudioBadges.kt`):** Unified `QualityBadge` to `CircleShape` so it matches `ResolutionBadge`, `DynamicRangeMeter`, and taxonomy chips (was a rounded rectangle in expanded mode).
+- **Save dirty feedback (`TagsActivity.java`):** Save buttons mute to 45% alpha when there are no unsaved changes; all dirty-state writes go through `setDirty()` so the UI stays in sync. Save remains always visible (More... menu can dirty state without opening the editor).
+
+### Fixed
+- **Tag preview tab bleed-through (`TagsActivity.java`):** The Song Info / Tech Info pill switcher could appear in the expanded cover preview because `setupActionButtons(0)` ran before `tabLayout` was resolved. The tab pill is now looked up before the first mode application so preview mode reliably hides it.
+- **Tag preview tab/action-dock collision (`TagsActivity.java`):** Mode switches (preview vs edit) previously only fired at exact fully-expanded / fully-collapsed offsets, leaving an intermediate scroll band where the tab pill rode under the fixed bottom dock. Switches now use hysteresis (`ENTER_EDIT_RATIO = 0.72`, `EXIT_EDIT_RATIO = 0.40`).
+- **Compose dialog lifecycle crash:** Replaced framework `android.app.Dialog` with `androidx.activity.ComponentDialog` and explicitly attached `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` in `DialogInterop.kt` (`showSearchQueryDialog`, `showSearchResultsDialog`), eliminating the `IllegalStateException` on attach.
+- **Player picker icon caching:** Added in-memory `LruCache` for external music app icon bitmaps in `PlayerPickerDialog.kt` to eliminate GC churn and repeated `PackageManager` lookups during target selection.
+- **Tag detail layout:** Sized the editor above the measured action dock, allowing fields to scroll clear of the actions.
+- **Library and file safety:** Full rescans retain stable track IDs and queue references; unavailable removable storage no longer causes records to be pruned. Move/import operations avoid overwriting existing files, and conversions save to their resolved output path.
+- **Library browsing:** Added 500-track paging and stale-search protection so large libraries load incrementally and older query results cannot replace current results.
+- **Tag editing:** Unsaved changes survive refresh and recreation, failed writes keep drafts available, and blank batch fields preserve each track's existing value. Filename parsing and cover-art actions are accessible from the editor.
+- **Remote and streaming responses:** Escape metadata rendered in the web remote, return an empty response for commands without payloads, and report unsatisfiable byte ranges correctly.
+- **Release build:** Corrected release assembly and packaging issues, including duplicate module resources and optional R8 warning suppression.
+
+### Documentation
+- Updated [`DESIGN.md`](DESIGN.md) with ADR-029 for stable library identity, safe storage reconciliation, bounded paging, and collision-safe file operations.
+- Updated [`UI.md`](UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title scrim decluttering, and Compose dialog lifecycle interop.
+- Updated [`UI.md`](UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover back/play affordances, and Save dirty-state feedback.
+
 ## [3.19.7] - 2026-09-21
 
 ### Added

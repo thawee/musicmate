@@ -60,6 +60,53 @@ class TagsViewModel(
         }
     }
 
+    val editorState = apincer.android.mmate.ui.compose.TagsEditorState()
+    var draftsDirty = false
+
+    private var restoredDrafts: android.os.Bundle? = null
+
+    fun recordSaveResult(successCount: Int, failureCount: Int): Boolean {
+        val allSaved = successCount > 0 && failureCount == 0
+        if (allSaved) {
+            editorState.resetModified()
+            draftsDirty = false
+        }
+        return allSaved
+    }
+
+    fun saveDraftState(): android.os.Bundle = android.os.Bundle().apply {
+        putBoolean("dirty", draftsDirty)
+        putBundle("editor", android.os.Bundle().apply {
+            editorState.snapshot().forEach { (key, value) -> putString(key, value) }
+        })
+        putBundle("tracks", android.os.Bundle().apply {
+            _editItemsFlow.value.forEach { track ->
+                putBundle(track.id.toString(), android.os.Bundle().apply {
+                    putString("title", track.title)
+                    putString("artist", track.artist)
+                    putString("album", track.album)
+                    putString("albumArtist", track.albumArtist)
+                    putString("track", track.track)
+                    putString("year", track.year)
+                    putString("genre", track.genre)
+                    putString("style", track.style)
+                    putString("mood", track.mood)
+                    putString("origin", track.origin)
+                    putString("publisher", track.publisher)
+                })
+            }
+        })
+    }
+
+    fun restoreDraftState(state: android.os.Bundle?) {
+        if (state == null) return
+        draftsDirty = state.getBoolean("dirty")
+        state.getBundle("editor")?.let { bundle ->
+            editorState.restore(bundle.keySet().associateWith { bundle.getString(it).orEmpty() })
+        }
+        restoredDrafts = state.getBundle("tracks")
+    }
+
     // --- Core Data ---
     private val _editItems = MutableLiveData<List<Track>>(emptyList())
     @JvmField
@@ -95,6 +142,22 @@ class TagsViewModel(
 
     fun processAudioTagEditEvent(items: List<Track>?) {
         val safeItems = items ?: emptyList()
+        safeItems.forEach { track ->
+            restoredDrafts?.getBundle(track.id.toString())?.let { draft ->
+                track.title = draft.getString("title")
+                track.artist = draft.getString("artist")
+                track.album = draft.getString("album")
+                track.albumArtist = draft.getString("albumArtist")
+                track.track = draft.getString("track")
+                track.year = draft.getString("year")
+                track.genre = draft.getString("genre")
+                track.style = draft.getString("style")
+                track.mood = draft.getString("mood")
+                track.origin = draft.getString("origin")
+                track.publisher = draft.getString("publisher")
+            }
+        }
+        restoredDrafts = null
         setEditItems(safeItems)
         redisplayTag(safeItems)
     }
@@ -131,7 +194,12 @@ class TagsViewModel(
         setDisplayTag(newDisplayTag)
     }
 
+    /** Refresh presentation without replacing editable values with database values. */
     fun refreshDisplayTag() {
+        redisplayTag(_editItemsFlow.value)
+    }
+
+    fun reloadPersistedTags() {
         val items = _editItems.value
         if (items.isNullOrEmpty()) return
 

@@ -27,17 +27,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build All Release APKs
-        run: ./gradlew assembleNioRelease assembleJettyRelease assembleNettyRelease assembleUndertowRelease assembleHttpcoreRelease
+        run: ./gradlew assembleRelease
 
       - name: Upload APKs to Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            app/build/outputs/apk/nio/release/*.apk
-            app/build/outputs/apk/jetty/release/*.apk
-            app/build/outputs/apk/netty/release/*.apk
-            app/build/outputs/apk/undertow/release/*.apk
-            app/build/outputs/apk/httpcore/release/*.apk
+          files: app/build/outputs/apk/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

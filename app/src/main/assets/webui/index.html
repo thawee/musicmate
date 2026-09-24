@@ -703,7 +703,7 @@
                  sendMessage({ command: 'getTrackDetails', trackId: trackData.trackId });
                  return;
             }
-            ui.infoArt.src = trackData.artUrl || 'assets/no_cover.png';
+            ui.infoArt.src = safeImageUrl(trackData.artUrl || 'assets/no_cover.png');
             ui.infoTitle.textContent = trackData.title;
             ui.infoArtist.textContent = trackData.artist || 'Unknown Artist';
             ui.infoAlbum.textContent = trackData.album ? `from the album "${trackData.album}"` : '';
@@ -896,7 +896,7 @@
                     updateRendererCheckmarks();
 
                     if (!ui.nowPlayingScreen.classList.contains('hidden')) {
-                        ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${data.name}`;
+                        ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${escapeHtml(data.name)}`;
                     }
                     break;
                 case 'updateQueue':
@@ -906,7 +906,7 @@
                     break;
                 case 'trackInfoResult':
                     ui.infoLoadingSpinner.classList.add('hidden');
-                    if (data.info && data.info.highResArtUrl) ui.nowPlayingArt.src = data.info.highResArtUrl;
+                    if (data.info && data.info.highResArtUrl) ui.nowPlayingArt.src = safeImageUrl(data.info.highResArtUrl);
                     renderTrackInfo(data.info);
                     break;
                 case 'trackDetailsResult':
@@ -915,6 +915,22 @@
                 case 'statsUpdate':
                     updateStats(data.stats);
                     break;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function safeImageUrl(value) {
+            const url = String(value ?? '');
+            try {
+                const parsed = new URL(url, window.location.href);
+                return ['http:', 'https:'].includes(parsed.protocol) ? escapeHtml(url) : 'assets/no_cover.png';
+            } catch (_) {
+                return 'assets/no_cover.png';
             }
         }
 
@@ -948,10 +964,10 @@
                 const listItem = document.createElement('li');
                 listItem.className = 'flex items-center';
                 if (!isLastPart) {
-                    listItem.innerHTML = `<a href="#" class="hover:text-black dark:hover:text-white" data-type="folder" data-path="${currentPath}">${part}</a> <span class="mx-2" aria-hidden="true">/</span>`;
+                    listItem.innerHTML = `<a href="#" class="hover:text-black dark:hover:text-white" data-type="folder" data-path="${escapeHtml(currentPath)}">${escapeHtml(part)}</a> <span class="mx-2" aria-hidden="true">/</span>`;
                 } else {
                     const count = items.length > 0 ? ` <span class="ml-2 text-gray-500 dark:text-gray-400">(${new Intl.NumberFormat().format(items.length)})</span>` : '';
-                    listItem.innerHTML = `<span class="text-black dark:text-white font-medium" aria-current="page">${part}</span>${count}`;
+                    listItem.innerHTML = `<span class="text-black dark:text-white font-medium" aria-current="page">${escapeHtml(part)}</span>${count}`;
                 }
                 breadcrumbList.appendChild(listItem);
             });
@@ -962,23 +978,23 @@
         function updateAlbumGrid(items) {
             ui.albumGrid.innerHTML = items.map(item => {
                 if (item.type === 'folder') {
-                    return `<div class="relative group text-center cursor-pointer" data-type="folder" data-id="${item.trackId}" data-path="${item.path}">
+                    return `<div class="relative group text-center cursor-pointer" data-type="folder" data-id="${escapeHtml(item.trackId)}" data-path="${escapeHtml(item.path)}">
                                 <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md flex items-center justify-center border border-transparent group-hover:border-blue-500 transition">
                                     <i class="bi bi-folder2-open text-6xl text-gray-400 dark:text-gray-500"></i>
                                 </div>
-                                <div class="mt-2"><h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${item.name}</h5></div>
+                                <div class="mt-2"><h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${escapeHtml(item.name)}</h5></div>
                             </div>`;
                 }
                 const actionBtns = `<div class="absolute top-1.5 right-1.5 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div class="song-info-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-blue-500" data-id="${item.trackId}" title="Song Info"><i class="bi bi-info-lg"></i></div>
-                    <div class="add-to-queue-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-green-500" data-id="${item.trackId}" title="Add to Queue"><i class="bi bi-plus-lg"></i></div>
+                    <div class="song-info-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-blue-500" data-id="${escapeHtml(item.trackId)}" title="Song Info"><i class="bi bi-info-lg"></i></div>
+                    <div class="add-to-queue-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-green-500" data-id="${escapeHtml(item.trackId)}" title="Add to Queue"><i class="bi bi-plus-lg"></i></div>
                 </div>`;
-                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${item.trackId}">
+                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${escapeHtml(item.trackId)}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
-                        <img src="${item.artUrl}" loading="lazy" class="w-full h-full object-cover" alt="${item.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
+                        <img src="${safeImageUrl(item.artUrl)}" loading="lazy" class="w-full h-full object-cover" alt="${escapeHtml(item.title)}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
                     <div class="mt-2 w-full px-1"><div class="flex items-baseline justify-center space-x-2">
-                        <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${item.title}</h5>
+                        <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${escapeHtml(item.title)}</h5>
                         <div class="flex-shrink-0">${getQualityBadge(item)}</div>
                     </div></div>
                     ${actionBtns}
@@ -990,12 +1006,12 @@
             const songListHeader = document.querySelector('#library-list-view thead tr');
             if(songListHeader) songListHeader.innerHTML = `<th scope="col" class="px-6 py-3">Name</th><th scope="col" class="px-6 py-3">Artist</th><th scope="col" class="px-6 py-3">Album</th><th scope="col" class="px-6 py-3 text-right"><i class="bi bi-clock"></i></th><th scope="col" class="px-6 py-3 text-center">Actions</th>`;
             ui.songList.innerHTML = items.map(item => {
-                if (item.type === 'folder') return `<tr class="item-row cursor-pointer" data-type="folder" data-id="${item.trackId}" data-path="${item.path}"><td class="px-6 py-3 font-medium text-black dark:text-white"><i class="bi bi-folder-fill mr-3 text-blue-500 dark:text-blue-400"></i>${item.name}</td><td></td><td></td><td></td><td></td></tr>`;
-                return `<tr class="item-row cursor-pointer" data-type="song" data-id="${item.trackId}">
-                    <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${item.title}</span>${getQualityBadge(item)}</div></td>
-                    <td class="px-6 py-3">${item.artist || ''}</td><td class="px-6 py-3">${item.album || ''}</td>
+                if (item.type === 'folder') return `<tr class="item-row cursor-pointer" data-type="folder" data-id="${escapeHtml(item.trackId)}" data-path="${escapeHtml(item.path)}"><td class="px-6 py-3 font-medium text-black dark:text-white"><i class="bi bi-folder-fill mr-3 text-blue-500 dark:text-blue-400"></i>${escapeHtml(item.name)}</td><td></td><td></td><td></td><td></td></tr>`;
+                return `<tr class="item-row cursor-pointer" data-type="song" data-id="${escapeHtml(item.trackId)}">
+                    <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${escapeHtml(item.title)}</span>${getQualityBadge(item)}</div></td>
+                    <td class="px-6 py-3">${escapeHtml(item.artist || '')}</td><td class="px-6 py-3">${escapeHtml(item.album || '')}</td>
                     <td class="px-6 py-3 text-right font-mono">${formatTime(item.duration)}</td>
-                    <td class="px-6 py-3 text-center"><i class="song-info-btn bi bi-info-circle-fill text-lg text-gray-500 hover:text-blue-500 cursor-pointer" data-id="${item.trackId}" title="Song Info"></i></td>
+                    <td class="px-6 py-3 text-center"><i class="song-info-btn bi bi-info-circle-fill text-lg text-gray-500 hover:text-blue-500 cursor-pointer" data-id="${escapeHtml(item.trackId)}" title="Song Info"></i></td>
                 </tr>`;
             }).join('');
         }
@@ -1008,14 +1024,14 @@
             }
             ui.queueGrid.innerHTML = queue.map(song => {
                 const actionBtns = `<div class="absolute top-1.5 right-1.5 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div class="delete-queue-item-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-red-500" data-id="${song.trackId}" title="Remove from Queue"><i class="bi bi-trash"></i></div>
+                    <div class="delete-queue-item-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-red-500" data-id="${escapeHtml(song.trackId)}" title="Remove from Queue"><i class="bi bi-trash"></i></div>
                 </div>`;
-                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${song.trackId}">
+                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${escapeHtml(song.trackId)}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
-                        <img src="${song.artUrl}" loading="lazy" class="w-full h-full object-cover" alt="${song.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
+                        <img src="${safeImageUrl(song.artUrl)}" loading="lazy" class="w-full h-full object-cover" alt="${escapeHtml(song.title)}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
                     <div class="mt-2 w-full px-1"><div class="flex items-baseline justify-center space-x-2">
-                        <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${song.title}</h5>
+                        <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${escapeHtml(song.title)}</h5>
                         <div class="flex-shrink-0">${getQualityBadge(song)}</div>
                     </div></div>
                     ${actionBtns}
@@ -1031,11 +1047,11 @@
                 return;
             }
             ui.queueListBody.innerHTML = queue.map((song, index) =>
-                `<tr class="item-row cursor-pointer" data-id="${song.trackId}" data-type="song">
+                `<tr class="item-row cursor-pointer" data-id="${escapeHtml(song.trackId)}" data-type="song">
                     <td class="px-6 py-3 text-gray-500 dark:text-gray-400">${index + 1}</td>
-                    <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${song.title}</span>${getQualityBadge(song)}</div></td>
-                    <td class="px-6 py-3">${song.artist}</td><td class="px-6 py-3">${song.album}</td>
-                    <td class="px-6 py-3 text-right"><i class="bi bi-trash-fill text-gray-500 hover:text-red-500 cursor-pointer delete-queue-item-btn" data-id="${song.trackId}"></i></td>
+                    <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${escapeHtml(song.title)}</span>${getQualityBadge(song)}</div></td>
+                    <td class="px-6 py-3">${escapeHtml(song.artist)}</td><td class="px-6 py-3">${escapeHtml(song.album)}</td>
+                    <td class="px-6 py-3 text-right"><i class="bi bi-trash-fill text-gray-500 hover:text-red-500 cursor-pointer delete-queue-item-btn" data-id="${escapeHtml(song.trackId)}"></i></td>
                 </tr>`
             ).join('');
         }
@@ -1057,8 +1073,8 @@
         }
         function updateRendererList(renderers) {
             ui.rendererDropdownList.innerHTML = renderers.map(r =>
-                `<a href="#" class="flex justify-between items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-udn="${r.targetId}" data-name="${r.name}">
-                    <span>${r.name}</span>
+                `<a href="#" class="flex justify-between items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-udn="${escapeHtml(r.targetId)}" data-name="${escapeHtml(r.name)}">
+                    <span>${escapeHtml(r.name)}</span>
                 </a>`
             ).join('');
         }
@@ -1135,10 +1151,10 @@
         function renderTrackInfo(info) {
             if (!info) { ui.infoContentArea.innerHTML = `<p class="text-gray-500">No information found for this track.</p>`; return; }
             let html = '';
-            if (info.artistBio) { html += `<div class="mb-6">${info.artistBio}</div>`; } else { html += `<p class="text-gray-500 mb-6">No artist biography found.</p>`; }
+            if (info.artistBio) { html += `<div class="mb-6">${escapeHtml(info.artistBio)}</div>`; } else { html += `<p class="text-gray-500 mb-6">No artist biography found.</p>`; }
             if (info.genres && info.genres.length > 0) {
                 html += `<h3 class="text-lg font-semibold text-black dark:text-white mb-2">Genres</h3><div class="flex flex-wrap gap-2">`;
-                info.genres.forEach(genre => { html += `<span class="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">${genre}</span>`; });
+                info.genres.forEach(genre => { html += `<span class="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">${escapeHtml(genre)}</span>`; });
                 html += '</div>';
             }
             ui.infoContentArea.innerHTML = html;
@@ -1212,12 +1228,12 @@
         function getQualityBadgeHtml(track) {
             if (!track || !track.quality) return '';
             const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
-            if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${track.quality}</span>`;
-            if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${track.quality}</span>`;
-            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${track.quality}</span>`;
-            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-900">${track.quality}</span>`;
-            if (track.quality.startsWith('CD')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${track.quality}</span>`;
-            return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${track.quality}</span>`;
+            if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${escapeHtml(track.quality)}</span>`;
+            if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${escapeHtml(track.quality)}</span>`;
+            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${escapeHtml(track.quality)}</span>`;
+            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-900">${escapeHtml(track.quality)}</span>`;
+            if (track.quality.startsWith('CD')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${escapeHtml(track.quality)}</span>`;
+            return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${escapeHtml(track.quality)}</span>`;
         }
 
         // NEW HELPER: Returns just the DRS badge (e.g., [icon] DR12)
@@ -1326,8 +1342,8 @@
         function updateNowPlayingScreenUI(track, state, progress) {
             if (!track) return;
             ui.nowPlayingTitle.textContent = track.title;
-            ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
-            ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
+            ui.nowPlayingArt.src = safeImageUrl(track.artUrl || 'assets/no_cover.png');
+            ui.nowPlayingBg.style.backgroundImage = `url("${safeImageUrl(track.artUrl || 'assets/no_cover.png')}")`;
 
             // --- Feature #1 (Detailed Audio Quality with Separators) ---
 
@@ -1362,13 +1378,13 @@
             // --- 4. Check for and show the NEW specific badges ---
             if (track.format) {
                 // Format Badge
-                ui.badgeFormat.innerHTML = track.format;
+                ui.badgeFormat.textContent = track.format;
                 ui.badgeFormat.style.display = 'inline-block';
                 lastBadgeShown = ui.badgeFormat; // This is the last visible badge
 
                 // Sample Rate Badge
                 if (track.sampleRate) {
-                    ui.badgeSampleRate.innerHTML = track.sampleRate;
+                    ui.badgeSampleRate.textContent = track.sampleRate;
                     ui.badgeSampleRate.style.display = 'inline-block';
                     // Show separator between format and sampleRate
                     ui.sepFormatRate.style.display = 'inline-block';
@@ -1379,7 +1395,7 @@
 
                 // Bit Depth Badge
                 if (track.bitDepth) {
-                    ui.badgeBitDepth.innerHTML = track.bitDepth;
+                    ui.badgeBitDepth.textContent = track.bitDepth;
                     ui.badgeBitDepth.style.display = 'inline-block';
 
                     // Show the correct preceding separator
@@ -1486,7 +1502,7 @@
             // It re-uses the name already stored in the footer
             if (ui.nowPlayingRenderer) {
                 const rendererName = (ui.footerRendererName && ui.footerRendererName.textContent) ? ui.footerRendererName.textContent : 'Local Playback';
-                ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${rendererName}`;
+                ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${escapeHtml(rendererName)}`;
             }
 
             // Sync modal playback controls
@@ -1541,10 +1557,10 @@
                 const hasBio = metadata.info.artistBio && !metadata.info.artistBio.includes("No artist biography found");
                 const hasAlbum = metadata.info.albumBio && !metadata.info.albumBio.includes("No album information found");
                 if (hasBio) {
-                    bioHtml += `<h4 class="font-semibold text-white mb-2">${currentTrack.artist}</h4><p class="text-gray-300 leading-relaxed">${metadata.info.artistBio}</p>`;
+                    bioHtml += `<h4 class="font-semibold text-white mb-2">${escapeHtml(currentTrack.artist)}</h4><p class="text-gray-300 leading-relaxed">${escapeHtml(metadata.info.artistBio)}</p>`;
                 }
                 if (hasAlbum) {
-                     bioHtml += `<h4 class="font-semibold text-white mt-4 mb-2">${currentTrack.album}</h4><p class="text-gray-300 leading-relaxed">${metadata.info.albumBio}</p>`;
+                     bioHtml += `<h4 class="font-semibold text-white mt-4 mb-2">${escapeHtml(currentTrack.album)}</h4><p class="text-gray-300 leading-relaxed">${escapeHtml(metadata.info.albumBio)}</p>`;
                 }
                 if (!hasBio && !hasAlbum) {
                     // Render rich audiophile technical details card
@@ -1552,7 +1568,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Format & Tier</span>
-                            <span class="text-white font-semibold text-sm">${currentTrack.format || 'FLAC'} ${currentTrack.quality ? '<span class="text-amber-400 font-normal text-xs">• ' + currentTrack.quality + '</span>' : ''}</span>
+                            <span class="text-white font-semibold text-sm">${escapeHtml(currentTrack.format || 'FLAC')} ${currentTrack.quality ? '<span class="text-amber-400 font-normal text-xs">• ' + escapeHtml(currentTrack.quality) + '</span>' : ''}</span>
                         </div>
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Resolution</span>
@@ -1574,17 +1590,17 @@
                         ${currentTrack.track ? `
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Track Number</span>
-                            <span class="text-white font-semibold text-sm">#${currentTrack.track} ${currentTrack.disc ? '• Disc ' + currentTrack.disc : ''}</span>
+                            <span class="text-white font-semibold text-sm">#${escapeHtml(currentTrack.track)} ${currentTrack.disc ? '• Disc ' + escapeHtml(currentTrack.disc) : ''}</span>
                         </div>` : ''}
                         ${currentTrack.year ? `
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Release Year</span>
-                            <span class="text-white font-semibold text-sm">${currentTrack.year}</span>
+                            <span class="text-white font-semibold text-sm">${escapeHtml(currentTrack.year)}</span>
                         </div>` : ''}
                         ${currentTrack.path ? `
                         <div class="col-span-2 sm:col-span-4 p-2 rounded-lg bg-black/20 border border-white/5 truncate">
                             <span class="text-gray-400 block font-medium text-[11px]">Source File</span>
-                            <span class="text-gray-300 font-mono text-[11px] truncate block" title="${currentTrack.path}">${currentTrack.path}</span>
+                            <span class="text-gray-300 font-mono text-[11px] truncate block" title="${escapeHtml(currentTrack.path)}">${escapeHtml(currentTrack.path)}</span>
                         </div>` : ''}
                     </div>`;
                 }

@@ -8,6 +8,7 @@ interface MainScaffoldCallbacks {
     fun onSearchQueryChange(query: String)
     fun onSearchBackClick()
     fun onListRefresh()
+    fun onLoadMoreMusic()
     fun onTrackClick(track: Track, position: Int)
     fun onTrackLongClick(track: Track, position: Int)
     fun onTrackMenuClick(track: Track, position: Int)

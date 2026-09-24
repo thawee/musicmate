@@ -37,16 +37,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import apincer.android.mmate.R
 import apincer.music.core.playback.spi.PlaybackTarget
 
-data class PlayerTargetItem(
+enum class PlayerCategory {
+    NETWORK_STREAMER,
+    THIS_DEVICE,
+    MUSIC_APP
+}
+
+data class PlayerTargetItem @JvmOverloads constructor(
     val target: PlaybackTarget,
     val title: String,
     val subtitle: String = "",
     val iconResId: Int = R.drawable.rounded_music_cast_24,
     val isSelected: Boolean = false,
-    val isStreaming: Boolean = false
+    val isStreaming: Boolean = false,
+    val appPackageName: String? = null,
+    val category: PlayerCategory = PlayerCategory.THIS_DEVICE
 )
 
 @Composable
@@ -74,6 +89,19 @@ fun PlayerPickerDialog(
         animationSpec = tween(180),
         label = "player_dialog_alpha"
     )
+
+    val streamers = remember(targets) {
+        targets.filter { it.category == PlayerCategory.NETWORK_STREAMER }
+            .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
+    }
+    val localOutputs = remember(targets) {
+        targets.filter { it.category == PlayerCategory.THIS_DEVICE }
+            .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
+    }
+    val musicApps = remember(targets) {
+        targets.filter { it.category == PlayerCategory.MUSIC_APP }
+            .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
+    }
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -140,67 +168,38 @@ fun PlayerPickerDialog(
                     modifier = Modifier.padding(vertical = 12.dp)
                 )
 
-                // Group 0: Player Target Items
+                // Categorized Player Target Items
                 if (targets.isNotEmpty()) {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 280.dp),
+                            .heightIn(max = 380.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(targets) { item ->
-                            val cardBg = if (item.isSelected) Color(0x2BFFD700) else Color(0x14FFFFFF)
-                            val cardBorder = if (item.isSelected) Color(0x80FFD700) else Color(0x22FFFFFF)
-                            val iconTint = if (item.isSelected) Color(0xFFFFD700) else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
+                        if (streamers.isNotEmpty()) {
+                            item(key = "hdr_streamers") {
+                                CategoryHeader("NETWORK STREAMERS")
+                            }
+                            items(streamers, key = { "streamer_" + it.target.targetId }) { item ->
+                                PlayerTargetRow(item = item, onTargetSelected = onTargetSelected)
+                            }
+                        }
 
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(cardBg)
-                                    .border(0.75.dp, cardBorder, RoundedCornerShape(14.dp))
-                                    .clickable { onTargetSelected(item.target) }
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = item.iconResId),
-                                    contentDescription = null,
-                                    tint = iconTint,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
+                        if (localOutputs.isNotEmpty()) {
+                            item(key = "hdr_local") {
+                                CategoryHeader("THIS DEVICE")
+                            }
+                            items(localOutputs, key = { "local_" + it.target.targetId }) { item ->
+                                PlayerTargetRow(item = item, onTargetSelected = onTargetSelected)
+                            }
+                        }
 
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.title,
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = if (item.isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    if (item.subtitle.isNotEmpty()) {
-                                        Text(
-                                            text = item.subtitle,
-                                            color = if (item.isSelected) Color(0xFFFFD700).copy(alpha = 0.85f) else Color(0x99FFFFFF),
-                                            fontSize = 11.5.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                if (item.isSelected) {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "✓",
-                                        color = Color(0xFFFFD700),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                        if (musicApps.isNotEmpty()) {
+                            item(key = "hdr_apps") {
+                                CategoryHeader("INSTALLED MUSIC APPS")
+                            }
+                            items(musicApps, key = { "app_" + it.target.targetId }) { item ->
+                                PlayerTargetRow(item = item, onTargetSelected = onTargetSelected)
                             }
                         }
                     }
@@ -306,4 +305,134 @@ fun PlayerPickerDialog(
             }
         }
     }
+}
+
+@Composable
+private fun CategoryHeader(title: String) {
+    Text(
+        text = title,
+        color = Color(0x88FFFFFF),
+        fontSize = 10.5.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 2.dp)
+    )
+}
+
+@Composable
+private fun PlayerTargetRow(
+    item: PlayerTargetItem,
+    onTargetSelected: (PlaybackTarget) -> Unit
+) {
+    val cardBg = if (item.isSelected) Color(0x2BFFD700) else Color(0x14FFFFFF)
+    val cardBorder = if (item.isSelected) Color(0x80FFD700) else Color(0x22FFFFFF)
+    val iconTint = if (item.isSelected) Color(0xFFFFD700) else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(0.75.dp, cardBorder, RoundedCornerShape(14.dp))
+            .clickable { onTargetSelected(item.target) }
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlayerTargetIcon(
+            item = item,
+            iconTint = iconTint,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = if (item.isSelected) FontWeight.Bold else FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (item.subtitle.isNotEmpty()) {
+                Text(
+                    text = item.subtitle,
+                    color = if (item.isSelected) Color(0xFFFFD700).copy(alpha = 0.85f) else Color(0x99FFFFFF),
+                    fontSize = 11.5.sp,
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        if (item.isSelected) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "✓",
+                color = Color(0xFFFFD700),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+private val appIconCache = android.util.LruCache<String, androidx.compose.ui.graphics.ImageBitmap>(32)
+
+@Composable
+private fun PlayerTargetIcon(
+    item: PlayerTargetItem,
+    iconTint: Color,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val appIconBitmap = remember(item.appPackageName) {
+        val pkg = item.appPackageName
+        if (!pkg.isNullOrEmpty()) {
+            appIconCache.get(pkg) ?: run {
+                try {
+                    val pm = context.packageManager
+                    val drawable = pm.getApplicationIcon(pkg)
+                    val bmp = drawableToBitmap(drawable, 72, 72).asImageBitmap()
+                    appIconCache.put(pkg, bmp)
+                    bmp
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    if (appIconBitmap != null) {
+        Image(
+            bitmap = appIconBitmap,
+            contentDescription = item.title,
+            modifier = modifier
+                .size(24.dp)
+                .clip(RoundedCornerShape(6.dp))
+        )
+    } else {
+        Icon(
+            painter = painterResource(id = item.iconResId),
+            contentDescription = null,
+            tint = iconTint,
+            modifier = modifier.size(24.dp)
+        )
+    }
+}
+
+private fun drawableToBitmap(drawable: Drawable, width: Int, height: Int): Bitmap {
+    if (drawable is BitmapDrawable && drawable.bitmap != null) {
+        return drawable.bitmap
+    }
+    val w = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else width
+    val h = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else height
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
 }

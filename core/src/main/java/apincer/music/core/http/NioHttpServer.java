@@ -1900,9 +1900,10 @@ public class NioHttpServer implements Runnable {
                             : this.fileSize - 1;
                 }
 
-                return parsedStart >= 0 &&
-                        parsedStart <= parsedEnd &&
-                        parsedStart < fileSize;
+                // Syntax is valid even when the requested start is past EOF; the caller
+                // must return 416 for that unsatisfiable range instead of serving the whole file.
+                return parsedStart >= 0 && (parsedStart >= fileSize ||
+                        (parsedEnd >= 0 && parsedStart <= parsedEnd));
 
             } catch (Exception e) {
                 return false;

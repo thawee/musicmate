@@ -436,6 +436,9 @@ fun MainScaffold(
                         scrollToIndex = state.scrollToIndex.intValue,
                         onScrollComplete = { state.scrollToIndex.intValue = -1 },
                         onRefresh = { callbacks?.onListRefresh() },
+                        hasMoreItems = state.hasMoreMusic.value,
+                        loadError = state.musicLoadError.value,
+                        onLoadMore = { callbacks?.onLoadMoreMusic() },
                         onTrackClick = { track, index ->
                             callbacks?.onTrackClick(track, index)
                         },
@@ -481,9 +484,6 @@ fun MainScaffold(
                     },
                     onOpenDrawer = {
                         coroutineScope.launch { drawerState.open() }
-                    },
-                    onOpenFullscreen = {
-                        state.showFullscreenConsole.value = true
                     },
                     onScrollToPlaying = {
                         callbacks?.onDockLongClick()
@@ -653,7 +653,7 @@ private fun TopSearchBar(
                         Box(modifier = Modifier.weight(1f)) {
                             if (query.isEmpty()) {
                                 Text(
-                                    text = "Search songs, artists, genres…",
+                                    text = "Search songs, artists…",
                                     color = Color(0x77FFFFFF),
                                     fontSize = 13.sp
                                 )
@@ -791,7 +791,6 @@ private fun FloatingMiniPlayerDock(
     onPreviousClick: () -> Unit = {},
     onOpenAudioHub: () -> Unit,
     onOpenDrawer: () -> Unit,
-    onOpenFullscreen: () -> Unit = {},
     onScrollToPlaying: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -982,19 +981,6 @@ private fun FloatingMiniPlayerDock(
                         contentDescription = "Next",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                // Expand Fullscreen Studio Console Button
-                IconButton(
-                    onClick = onOpenFullscreen,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.rounded_fullscreen_24),
-                        contentDescription = "Fullscreen Studio Console",
-                        tint = Color.White.copy(alpha = 0.85f),
-                        modifier = Modifier.size(20.dp)
                     )
                 }
 

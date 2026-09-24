@@ -400,7 +400,7 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
-    public void cleanInvalidTag() throws Exception {
+    public synchronized void cleanInvalidTag() throws Exception {
         final int PAGE_SIZE = 500;
         int offset = 0;
         boolean queueDirty = false;
@@ -410,7 +410,7 @@ public class RoomDbHelper implements DbHelper {
             List<TrackEntity> toDelete = new ArrayList<>();
             for (TrackEntity track : page) {
                 String path = track.getPath();
-                if (path == null || path.isEmpty() || !new java.io.File(path).exists()) {
+                if (apincer.music.core.provider.FileSystem.isConfirmedMissingFile(path)) {
                     Log.d("RoomDbHelper", "cleanInvalidTag: removing missing file from DB: " + path);
                     toDelete.add(track);
                     if (cachedQueueIds.remove(track.getId())) {

@@ -69,7 +69,6 @@ public class ScanAudioFileWorker extends Worker {
 
             if (isFullScan) {
                 // do full scan
-                tagRepos.purgeDatabase();
                 repos.cleanCacheCovers();
             }else {
                 // Only clean database on not full scan
@@ -88,7 +87,12 @@ public class ScanAudioFileWorker extends Worker {
             }
 
             // Then process in batches
-            processedFiles = processPaths(allPaths);
+            processedFiles = processPaths(allPaths, isFullScan);
+
+            if (isFullScan && !isStopped()) {
+                // The catalogue was refreshed in place; prune only files missing from readable parents.
+                tagRepos.cleanInvalidTags();
+            }
 
             if (isStopped()) {
                 return Result.failure();
@@ -136,7 +140,7 @@ public class ScanAudioFileWorker extends Worker {
         }
     }
 
-    private int processPaths(List<Path> paths) {
+    private int processPaths(List<Path> paths, boolean forceRead) {
         final int totalFiles = paths.size();
         final java.util.concurrent.atomic.AtomicInteger processedCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
@@ -154,7 +158,7 @@ public class ScanAudioFileWorker extends Worker {
             for (Path path : batch) {
                 MusicMateExecutors.scan(() -> {
                     try {
-                        repos.scanMusicFile(path.toFile(), false);
+                        repos.scanMusicFile(path.toFile(), forceRead);
                     } finally {
                         int current = processedCount.incrementAndGet();
                         // Throttle progress updates to reduce Binder IPC overhead (every ~1% or 50 files)

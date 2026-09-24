@@ -110,7 +110,7 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 
 ## 3. Editing Tags & Technical Details (TagsActivity)
 
-Selecting a song from the list opens the **Tags Editor**. The interface features a collapsing cover art panel at the top, an **Audiophile Fluid Glass Pill** switcher (`[ Song Info | Tech Info ]`) with 1:1 real-time drag tracking and tactile haptics, and two main tabs:
+Selecting a song from the list opens the **Tags Editor**. The interface features a collapsing cover art panel at the top with frosted overlay buttons — **Back** (top-left), **Play** (below Back), and **Change Cover** (top-right) — an **Audiophile Fluid Glass Pill** switcher (`[ Song Info | Tech Info ]`) with 1:1 real-time drag tracking and tactile haptics, and two main tabs. In the expanded preview, quality badges sit directly under the artwork; scrolling down (or tapping **Edit Song Info**) opens the detail workspace. **Save** dims when there are no unsaved changes.
 
 ### Tab A: Song Info (Metadata Editor)
 This tab allows you to edit standard fields including:

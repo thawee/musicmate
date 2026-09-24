@@ -179,7 +179,7 @@ public class FileOperationTask {
                     String targetPath = filePath + "." + targetExt;
                     int bitDepth = tag.getAudioBitsDepth();
 
-                    boolean success = FFMpegHelper.convert(
+                    String outputPath = FFMpegHelper.convert(
                             context,
                             srcPath,
                             targetPath,
@@ -189,7 +189,8 @@ public class FileOperationTask {
 
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
-                    if (success) {
+                    if (outputPath != null) {
+                        targetPath = outputPath;
                         // Re-scan the new file
                         fileRepos.scanMusicFile(new File(targetPath), true);
 

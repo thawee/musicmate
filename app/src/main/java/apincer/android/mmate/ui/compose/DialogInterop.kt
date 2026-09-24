@@ -2,10 +2,15 @@ package apincer.android.mmate.ui.compose
 
 import android.content.Context
 import android.view.View
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import apincer.android.mmate.R
 import apincer.android.mmate.ui.viewmodel.TagsViewModel
 import apincer.music.core.model.Track
@@ -313,9 +318,15 @@ object DialogInterop {
         initialArtist: String,
         onSearch: BiConsumer<String, String>
     ) {
-        val dialog = android.app.Dialog(context, R.style.AlertDialogTheme)
+        val dialog = ComponentDialog(context, R.style.AlertDialogTheme)
+        val vmOwner = (context as? ViewModelStoreOwner)
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewTreeLifecycleOwner(dialog)
+            setViewTreeSavedStateRegistryOwner(dialog)
+            if (vmOwner != null) {
+                setViewTreeViewModelStoreOwner(vmOwner)
+            }
             setContent {
                 MusicMateTheme {
                     SearchQueryContent(
@@ -331,7 +342,14 @@ object DialogInterop {
             }
         }
         dialog.setContentView(composeView)
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.let { window ->
+            window.decorView.setViewTreeLifecycleOwner(dialog)
+            window.decorView.setViewTreeSavedStateRegistryOwner(dialog)
+            if (vmOwner != null) {
+                window.decorView.setViewTreeViewModelStoreOwner(vmOwner)
+            }
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        }
         dialog.show()
     }
 
@@ -341,9 +359,15 @@ object DialogInterop {
         results: List<MusicBrainzSearchResult>,
         onSelect: Consumer<MusicBrainzSearchResult>
     ) {
-        val dialog = android.app.Dialog(context, R.style.AlertDialogTheme)
+        val dialog = ComponentDialog(context, R.style.AlertDialogTheme)
+        val vmOwner = (context as? ViewModelStoreOwner)
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewTreeLifecycleOwner(dialog)
+            setViewTreeSavedStateRegistryOwner(dialog)
+            if (vmOwner != null) {
+                setViewTreeViewModelStoreOwner(vmOwner)
+            }
             setContent {
                 MusicMateTheme {
                     SearchResultsContent(
@@ -358,7 +382,14 @@ object DialogInterop {
             }
         }
         dialog.setContentView(composeView)
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.let { window ->
+            window.decorView.setViewTreeLifecycleOwner(dialog)
+            window.decorView.setViewTreeSavedStateRegistryOwner(dialog)
+            if (vmOwner != null) {
+                window.decorView.setViewTreeViewModelStoreOwner(vmOwner)
+            }
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        }
         dialog.show()
     }
 }

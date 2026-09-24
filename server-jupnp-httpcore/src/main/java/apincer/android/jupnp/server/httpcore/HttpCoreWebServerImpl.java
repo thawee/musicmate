@@ -456,6 +456,10 @@ public class HttpCoreWebServerImpl extends BaseServer implements WebServer {
                             rb.addHeader(HttpHeaders.SERVER, getServerSignature());
                             rb.setEntity(jsonResponse, ContentType.APPLICATION_JSON);
                             responseTrigger.submitResponse(rb.build(), context);
+                        } else {
+                            final AsyncResponseBuilder accepted = AsyncResponseBuilder.create(HttpStatus.SC_NO_CONTENT);
+                            accepted.addHeader(HttpHeaders.SERVER, getServerSignature());
+                            responseTrigger.submitResponse(accepted.build(), context);
                         }
                     }
                     return;

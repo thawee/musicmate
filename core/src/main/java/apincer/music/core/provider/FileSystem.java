@@ -283,13 +283,47 @@ public class FileSystem {
         }
 
         try {
-            Files.move(file.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(file.toPath(), newFile.toPath());
           //  System.out.println("Moved file: " + file.getName());
             success = true;
         } catch (IOException e) {
             Log.e(TAG, "move", e);
         }
         return success;
+    }
+
+    /** A missing volume/directory is unavailable, not evidence of file deletion. */
+    public static boolean isConfirmedMissingFile(String path) {
+        if (path == null || path.isEmpty()) return false;
+        File file = new File(path);
+        if (file.exists()) return false;
+        File parent = file.getAbsoluteFile().getParentFile();
+        if (parent == null || !parent.isDirectory() || !parent.canRead()) return false;
+        String[] entries = parent.list();
+        if (entries == null) return false;
+        for (String entry : entries) {
+            if (entry.equals(file.getName())) return false;
+        }
+        return true;
+    }
+
+    /** Moves completed output without replacing any existing recording. */
+    public static String moveToAvailablePath(String source, String target) throws IOException {
+        File requested = new File(target);
+        String name = requested.getName();
+        int dot = name.lastIndexOf('.');
+        String base = dot > 0 ? name.substring(0, dot) : name;
+        String extension = dot > 0 ? name.substring(dot) : "";
+        for (int suffix = 0; ; suffix++) {
+            File candidate = suffix == 0 ? requested : new File(requested.getParentFile(),
+                    base + String.format(java.util.Locale.ROOT, "_%03d", suffix) + extension);
+            try {
+                Files.move(new File(source).toPath(), candidate.toPath());
+                return candidate.getPath();
+            } catch (java.nio.file.FileAlreadyExistsException collision) {
+                // Another conversion may have claimed this name; try the next suffix.
+            }
+        }
     }
 
     public static boolean delete(final String file) {

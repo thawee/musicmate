@@ -20,3 +20,7 @@
   public static *** w(...);
   public static *** e(...);
 }
+# Netty references these optional JDK/JVM logging APIs for non-Android runtimes.
+-dontwarn jdk.jfr.**
+-dontwarn org.apache.log4j.**
+-dontwarn org.apache.logging.log4j.**

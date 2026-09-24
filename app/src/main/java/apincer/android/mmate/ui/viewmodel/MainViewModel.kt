@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import apincer.android.mmate.ui.compose.MainScaffoldState
@@ -58,181 +59,131 @@ class MainViewModel(
     private val _searchStatsFlow = MutableStateFlow<SearchResultStats?>(null)
     val searchStatsFlow: StateFlow<SearchResultStats?> = _searchStatsFlow.asStateFlow()
 
+    @JvmField
+    val hasMoreItems = MutableLiveData(false)
+    @JvmField
+    val loadError = MutableLiveData<String?>(null)
     private var currentCriteria: SearchCriteria? = null
     private var currentPage = 0
     private var isLastPage = false
+    private var requestGeneration = 0L
+    private var loadJob: kotlinx.coroutines.Job? = null
 
     companion object {
         private const val PAGE_SIZE = 500L
     }
 
-    fun loadMusicItems() {
-        loadMusicItems(currentCriteria)
+    private fun snapshot(criteria: SearchCriteria?): SearchCriteria? = criteria?.let {
+        SearchCriteria(it.type, it.keyword).apply {
+            filterType = it.filterType
+            filterText = it.filterText
+            isSearchMode = it.isSearchMode
+            searchText = it.searchText
+        }
     }
 
+    private fun setLoading(loading: Boolean) {
+        _musicItemsLoading.value = loading
+        _musicItemsLoadingFlow.value = loading
+    }
+
+    fun loadMusicItems() = loadMusicItems(currentCriteria)
+
     fun loadMusicItems(criteria: SearchCriteria?) {
-        currentCriteria = criteria
+        currentCriteria = snapshot(criteria)
         currentPage = 0
         isLastPage = false
-        _musicItemsLoading.value = true
-        _musicItemsLoadingFlow.value = true
-
-        viewModelScope.launch(ioDispatcher) {
-            try {
-                val stats = repos.getSearchStats(criteria)
-                val items: List<Track> = repos.findMusic(criteria, 0L, PAGE_SIZE) ?: emptyList()
-
-                withContext(Dispatchers.Main) {
-                    _searchStats.value = stats
-                    _searchStatsFlow.value = stats
-
-                    _musicItems.value = items
-                    _musicItemsFlow.value = items
-
-                    if (items.size < PAGE_SIZE) {
-                        isLastPage = true
-                    } else {
-                        currentPage = 1
-                    }
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    _musicItems.value = emptyList()
-                    _musicItemsFlow.value = emptyList()
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
-                }
-            }
-        }
+        hasMoreItems.value = false
+        loadPage(replace = true, limit = PAGE_SIZE)
     }
 
     fun loadMoreMusicItems() {
         if (_musicItemsLoading.value == true || isLastPage) return
-
-        _musicItemsLoading.value = true
-        _musicItemsLoadingFlow.value = true
-
-        viewModelScope.launch(ioDispatcher) {
-            try {
-                val items: List<Track> = repos.findMusic(currentCriteria, currentPage * PAGE_SIZE, PAGE_SIZE) ?: emptyList()
-                withContext(Dispatchers.Main) {
-                    if (items.isNotEmpty()) {
-                        val currentItems = ArrayList(_musicItems.value ?: emptyList())
-                        currentItems.addAll(items)
-                        _musicItems.value = currentItems
-                        _musicItemsFlow.value = currentItems
-                        currentPage++
-                        if (items.size < PAGE_SIZE) {
-                            isLastPage = true
-                        }
-                    } else {
-                        isLastPage = true
-                    }
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
-                }
-            }
-        }
+        loadPage(replace = currentPage == 0, limit = PAGE_SIZE)
     }
 
     fun reloadMusicItems() {
-        val criteria = currentCriteria ?: return
-        _musicItemsLoading.value = true
-        _musicItemsLoadingFlow.value = true
-        val limit = maxOf(1L, currentPage.toLong()) * PAGE_SIZE
+        if (currentCriteria == null) return
+        loadPage(replace = true, limit = maxOf(1L, currentPage.toLong()) * PAGE_SIZE)
+    }
 
-        viewModelScope.launch(ioDispatcher) {
+    private fun loadPage(replace: Boolean, limit: Long) {
+        val generation = ++requestGeneration
+        loadJob?.cancel()
+        val criteria = snapshot(currentCriteria)
+        val offset = if (replace) 0L else currentPage * PAGE_SIZE
+        val previousItems = if (replace) emptyList() else _musicItemsFlow.value
+        setLoading(true)
+        loadError.value = null
+        loadJob = viewModelScope.launch(ioDispatcher) {
             try {
-                val stats = repos.getSearchStats(criteria)
-                val items: List<Track> = repos.findMusic(criteria, 0L, limit) ?: emptyList()
-
+                val stats = if (replace) repos.getSearchStats(criteria) else null
+                val items = repos.findMusic(criteria, offset, limit) ?: emptyList()
                 withContext(Dispatchers.Main) {
-                    _searchStats.value = stats
-                    _searchStatsFlow.value = stats
-
-                    _musicItems.value = items
-                    _musicItemsFlow.value = items
-
-                    if (items.isEmpty()) {
-                        currentPage = 0
-                        isLastPage = true
-                    } else {
-                        currentPage = Math.ceil(items.size.toDouble() / PAGE_SIZE).toInt()
-                        if (items.size < limit || (items.size.toLong() % PAGE_SIZE != 0L)) {
-                            isLastPage = true
-                        }
+                    if (generation != requestGeneration) return@withContext
+                    if (replace && stats != null) {
+                        _searchStats.value = stats
+                        _searchStatsFlow.value = stats
                     }
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
+                    val result = if (replace) items else previousItems + items
+                    _musicItems.value = result
+                    _musicItemsFlow.value = result
+                    currentPage = ((offset + items.size + PAGE_SIZE - 1) / PAGE_SIZE).toInt()
+                    isLastPage = items.size < limit
+                    hasMoreItems.value = !isLastPage
+                    setLoading(false)
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
+                    if (generation != requestGeneration) return@withContext
+                    loadError.value = "Couldn't load music. Try again."
+                    setLoading(false)
                 }
             }
         }
     }
 
     fun loadUntilFound(target: Track?, onLoaded: Runnable?) {
-        if (target == null) {
+        if (target == null || _musicItemsFlow.value.contains(target) || isLastPage) {
             onLoaded?.run()
             return
         }
-
-        val currentList = _musicItems.value
-        if (currentList != null && currentList.contains(target)) {
-            onLoaded?.run()
-            return
-        }
-
-        if (isLastPage) {
-            onLoaded?.run()
-            return
-        }
-
-        _musicItemsLoading.value = true
-        _musicItemsLoadingFlow.value = true
-
-        viewModelScope.launch(ioDispatcher) {
+        val generation = ++requestGeneration
+        loadJob?.cancel()
+        val criteria = snapshot(currentCriteria)
+        val current = ArrayList(_musicItemsFlow.value)
+        var page = currentPage
+        setLoading(true)
+        loadError.value = null
+        loadJob = viewModelScope.launch(ioDispatcher) {
             try {
-                var found = false
-                val current = ArrayList(_musicItems.value ?: emptyList())
-
-                while (!found && !isLastPage) {
-                    val items: List<Track> = repos.findMusic(currentCriteria, currentPage * PAGE_SIZE, PAGE_SIZE) ?: emptyList()
-                    if (items.isEmpty()) {
-                        isLastPage = true
-                        break
-                    }
+                var lastPage = false
+                while (!current.contains(target) && !lastPage) {
+                    kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                    val items = repos.findMusic(criteria, page * PAGE_SIZE, PAGE_SIZE) ?: emptyList()
                     current.addAll(items)
-                    currentPage++
-                    if (items.size < PAGE_SIZE) {
-                        isLastPage = true
-                    }
-                    if (items.contains(target)) {
-                        found = true
-                    }
+                    page++
+                    lastPage = items.size < PAGE_SIZE
                 }
-
                 withContext(Dispatchers.Main) {
+                    if (generation != requestGeneration) return@withContext
+                    currentPage = page
+                    isLastPage = lastPage
+                    hasMoreItems.value = !lastPage
                     _musicItems.value = current
                     _musicItemsFlow.value = current
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
+                    setLoading(false)
                     onLoaded?.run()
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _musicItemsLoading.value = false
-                    _musicItemsLoadingFlow.value = false
+                    if (generation != requestGeneration) return@withContext
+                    loadError.value = "Couldn't load music. Try again."
+                    setLoading(false)
                     onLoaded?.run()
                 }
             }

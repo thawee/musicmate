@@ -89,14 +89,13 @@ class TagsTechnicalFragment : Fragment() {
         tagsActivity.startProgressBar()
         CompletableFuture.runAsync {
             tagsActivity.editItems.forEach { tag ->
-                tagRepos.removeTag(tag)
                 fileRepos.scanMusicFile(File(tag.path), true)
             }
         }.thenAccept {
-            tagsActivity.refreshDisplayTag()
+            tagsActivity.viewModel.reloadPersistedTags()
             tagsActivity.stopProgressBar()
         }.exceptionally {
-            tagsActivity.refreshDisplayTag()
+            tagsActivity.viewModel.reloadPersistedTags()
             tagsActivity.stopProgressBar()
             null
         }

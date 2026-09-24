@@ -38,6 +38,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +61,9 @@ fun MusicListScreen(
     nowPlayingTrack: Track?,
     isPlaying: Boolean,
     isRefreshing: Boolean,
+    hasMoreItems: Boolean = false,
+    loadError: String? = null,
+    onLoadMore: () -> Unit = {},
     scrollToIndex: Int = -1,
     onScrollComplete: () -> Unit = {},
     onRefresh: () -> Unit,
@@ -155,14 +160,14 @@ fun MusicListScreen(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
-                        text = "No Music Found",
+                        text = if (loadError != null) "Couldn’t load music" else "No Music Found",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Your library is currently empty or filtered.\nScan folders or refresh to load tracks.",
+                        text = loadError ?: "Your library is currently empty or filtered.\nScan folders or refresh to load tracks.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFAAAAAA),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -192,6 +197,15 @@ fun MusicListScreen(
             }
         } else {
             val listState = rememberLazyListState()
+            LaunchedEffect(listState, tracks.size, hasMoreItems, isRefreshing, loadError) {
+                if (hasMoreItems && !isRefreshing && loadError == null) {
+                    snapshotFlow {
+                        (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1) >= tracks.size - 10
+                    }.distinctUntilChanged().collect { nearEnd ->
+                        if (nearEnd) onLoadMore()
+                    }
+                }
+            }
 
             // Trigger scroll when scrollToIndex changes
             LaunchedEffect(scrollToIndex) {
@@ -249,6 +263,15 @@ fun MusicListScreen(
                                 onMenuClick = { onTrackMenuClick(track, index) },
                                 onQuickPlayClick = { onTrackQuickPlayClick(track) }
                             )
+                        }
+                    }
+                    item(key = "pagination-status") {
+                        if (loadError != null) {
+                            androidx.compose.material3.TextButton(onClick = onLoadMore) {
+                                Text("$loadError Tap to retry")
+                            }
+                        } else if (isRefreshing) {
+                            Text("Loading music…", modifier = Modifier.padding(16.dp))
                         }
                     }
                 }
