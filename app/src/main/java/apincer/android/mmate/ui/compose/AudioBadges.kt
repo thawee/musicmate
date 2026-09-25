@@ -435,10 +435,8 @@ fun TaxonomyChipsRow(
     }
 
     val genre = cleanTag(track.genre)
-    val mood = cleanTag(track.mood)
-    val style = cleanTag(track.style)
 
-    if (genre.isEmpty() && mood.isEmpty() && style.isEmpty()) return
+    if (genre.isEmpty()) return
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -458,20 +456,6 @@ fun TaxonomyChipsRow(
                     onClick = onOpenRelated?.let { callback ->
                         { callback(Constants.FILTER_TYPE_GENRE, genre, "Genre: $genre") }
                     }
-                )
-            }
-            if (mood.isNotEmpty()) {
-                TaxonomyChip(
-                    label = mood,
-                    icon = "🎭",
-                    accentColor = Color(0xFFCE93D8)
-                )
-            }
-            if (style.isNotEmpty()) {
-                TaxonomyChip(
-                    label = style,
-                    icon = "🎨",
-                    accentColor = Color(0xFF90CAF9)
                 )
             }
         }
@@ -605,14 +589,10 @@ fun StudioProvenanceSection(
             }
         }
 
-        // Row 2: Location (Folder - only if distinct from album and artist)
-        val isFolderRedundant = hasFolder && (
-            provenance.folderName.equals(provenance.album, ignoreCase = true) ||
-            provenance.folderName.equals(provenance.artist, ignoreCase = true)
-        )
-        if (hasFolder && !isFolderRedundant) {
+        // Row 2: Location
+        if (hasFolder) {
             val fName = provenance.folderName.ifBlank { "Folder" }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,

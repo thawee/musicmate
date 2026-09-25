@@ -21,6 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,11 +43,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -1037,6 +1047,27 @@ private fun StudioHiFiScrubber(
         modifier = modifier
             .fillMaxWidth()
             .height(36.dp)
+            .semantics {
+                progressBarRangeInfo = ProgressBarRangeInfo(activeFraction.coerceIn(0f, 1f), 0f..1f)
+                setProgress { value ->
+                    currentDragChange(value.coerceIn(0f, 1f))
+                    currentDragEnd()
+                    true
+                }
+            }
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) false
+                else when (event.key) {
+                    Key.DirectionLeft, Key.DirectionRight -> {
+                        val step = if (event.key == Key.DirectionRight) 0.05f else -0.05f
+                        currentDragChange((activeFraction + step).coerceIn(0f, 1f))
+                        currentDragEnd()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            .focusable()
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
                     val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
@@ -1163,6 +1194,25 @@ private fun StudioLinearVolumeFader(
             modifier = Modifier
                 .weight(1f)
                 .height(20.dp)
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(currentVol.coerceIn(0f, 1f), 0f..1f)
+                    setProgress { value ->
+                        currentVolumeChanged(value.coerceIn(0f, 1f))
+                        true
+                    }
+                }
+                .onKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) false
+                    else when (event.key) {
+                        Key.DirectionLeft, Key.DirectionRight -> {
+                            val step = if (event.key == Key.DirectionRight) 0.05f else -0.05f
+                            currentVolumeChanged((currentVol + step).coerceIn(0f, 1f))
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                .focusable()
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
                         val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)

@@ -53,6 +53,7 @@ fun AudioHubSheet(
     onQueueTrackMoved: (Int, Int) -> Unit = { _, _ -> },
     onQueueClear: () -> Unit,
     onQueueJumpToPlaying: () -> Unit,
+    onQueueBrowseLibrary: () -> Unit,
     // Callbacks for MediaServerPage
     onEngineChanged: (String) -> Unit,
     onStartServerClicked: () -> Unit,
@@ -372,6 +373,7 @@ fun AudioHubSheet(
                             onTrackRemoved = onQueueTrackRemoved,
                             onClearQueue = onQueueClear,
                             onJumpToPlaying = onQueueJumpToPlaying,
+                            onBrowseLibrary = onQueueBrowseLibrary,
                             onMoveTrack = onQueueTrackMoved
                         )
                         2 -> MediaServerPage(

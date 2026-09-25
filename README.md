@@ -24,7 +24,7 @@
 *   **Dedicated 3-Tab Architecture (`AudioHubBottomSheet`):** Consolidated master bottom sheet with 3 full-height segmented tabs (**`Playback`**, **`Queue`**, and **`Server`**) for instant 1-tap switching between Now Playing artwork, full-height Queue management, and Media Server status.
 *   **Audio Route Path Telemetry:** Live 3-stage audiophile flow visualization (`Source File` ➔ `Transport Route` ➔ `Target Output`), displaying real-time sample rates, bit depth, transport mode (`MusicMate Server` vs `Local`), and bit-perfect flags.
 *   **Target Player Selector:** Fast top-anchored output target picker for seamless 1-tap renderer switching between local Android apps, DLNA/UPnP streamers, and web browser clients.
-*   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation.
+*   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation. Its artwork and title open Music Center by touch or screen-reader action.
 
 ### 📶 Bluetooth Audio Playback Suite
 *   **Live Bluetooth Codec & Device Telemetry:** Detects active Bluetooth A2DP & BLE codecs (**LDAC**, **aptX**, **AAC**, **SBC**) and displays the exact Bluetooth device product name (e.g. `Sony WH-1000XM5`, `Bose QC45`) in the Audio Route Path.
@@ -43,12 +43,14 @@
 *   **HTTP/1.1 Optimization:** Range request support for efficient seeking; ETag caching for reduced bandwidth (99%+ savings on cache hits).
 *   **WebSocket Real-Time Control:** RFC 6455 compliant WebSocket server for live UI updates and player status synchronization.
 *   **Rich Metadata:** Serves extensive metadata including Album Art, Artist, Genre, and technical details.
+*   **Explicit Server Control:** Stopping the server stays in effect across main-screen recreation and reopening until you tap Start again; choosing a streaming target can start it when needed.
 
 ### 📂 Library Management & Fast Touch Workflows
-*   **Split-Tap List Navigation:** Tapping track details initiates instant playback, while tapping album artwork opens the 1-tap metadata tag editor (`TagsActivity`).
+*   **Split-Tap List Navigation:** Tapping a song row opens its metadata tag editor (`TagsActivity`); tapping album artwork quick-plays the track when a player is available.
 *   **Obsidian-Glass Tag Studio (`TagsActivity`):** Fluid Audiophile Glass Pill switcher for seamless 1:1 finger tracking between Song Info and Technical Info, online tag matching via MusicBrainz in pure Jetpack Compose dialogs with Coil 3 cover art loading, and lossless spectrum analysis.
 *   **Collection Quick Actions:** Direct **Play** and **Add to Queue** action icons on artist, genre, and folder cards.
 *   **High-Performance Indexing:** Parallel metadata parsing powered by `jaudiotagger` and Google's `Room` database.
+*   **Paged Collections & Recoverable Edits:** Large folders and playlists scroll without repeating items. Online tag matches become unsaved drafts until you Save; Back warns before discarding them.
 
 ---
 

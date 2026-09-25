@@ -65,6 +65,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -149,7 +153,7 @@ fun MainScaffold(
                                     letterSpacing = (-0.4).sp
                                 )
                                 Text(
-                                    text = "v3.19.2 • Hi-Res Edition",
+                                    text = "v3.19.8 • Hi-Res Edition",
                                     color = drawerGold.copy(alpha = 0.85f),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
@@ -414,6 +418,7 @@ fun MainScaffold(
                         callbacks?.onSearchBackClick()
                     },
                     statsText = state.headerStatsText.value,
+                    isPlaylistOverview = state.isPlaylistOverview.value,
                     isScanning = state.isScanning.value,
                     scanProgressText = state.scanProgressText.value,
                     isCastActive = isDlnaCast,
@@ -518,6 +523,10 @@ fun MainScaffold(
             onQueueTrackMoved = { from, to -> callbacks?.onAudioHubQueueTrackMoved(from, to) },
             onQueueClear = { callbacks?.onAudioHubQueueClear() },
             onQueueJumpToPlaying = { callbacks?.onAudioHubQueueJumpToPlaying() },
+            onQueueBrowseLibrary = {
+                state.showAudioHubSheet.value = false
+                callbacks?.onNavigationItemClick(R.id.menu_library_all_songs)
+            },
             onEngineChanged = { engine -> callbacks?.onEngineChanged(engine) },
             onStartServerClicked = { callbacks?.onStartServerClicked() },
             onStopServerClicked = { callbacks?.onStopServerClicked() },
@@ -589,6 +598,7 @@ private fun TopSearchBar(
     isBackVisible: Boolean,
     onBackClick: () -> Unit,
     statsText: String,
+    isPlaylistOverview: Boolean,
     isScanning: Boolean,
     scanProgressText: String,
     isCastActive: Boolean = false,
@@ -692,7 +702,7 @@ private fun TopSearchBar(
                 Spacer(modifier = Modifier.width(6.dp))
 
                 // New Smart Playlist action when browsing playlists
-                if (statsText.contains("Playlist", ignoreCase = true)) {
+                if (isPlaylistOverview) {
                     IconButton(
                         onClick = onAddPlaylistClick,
                         modifier = Modifier.size(40.dp)
@@ -819,6 +829,10 @@ private fun FloatingMiniPlayerDock(
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF2A2A2A))
+                        .semantics {
+                            role = Role.Button
+                            onClick("Open Music Center") { currentOpenAudioHub(); true }
+                        }
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onTap = { currentOpenAudioHub() },
@@ -858,6 +872,10 @@ private fun FloatingMiniPlayerDock(
                 Column(
                     modifier = Modifier
                         .weight(1f)
+                        .semantics {
+                            role = Role.Button
+                            onClick("Open Music Center") { currentOpenAudioHub(); true }
+                        }
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onTap = { currentOpenAudioHub() },

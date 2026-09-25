@@ -58,6 +58,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -206,6 +210,13 @@ fun NowPlayingPage(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f) // Takes all available vertical space in the 65% sheet!
+                .semantics {
+                    role = Role.Button
+                    onClick(if (flipped) "Show album artwork" else "Show audio details") {
+                        flipped = !flipped
+                        true
+                    }
+                }
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onDoubleTap = { onPlayPause() },

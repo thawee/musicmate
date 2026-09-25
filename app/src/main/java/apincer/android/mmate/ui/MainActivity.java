@@ -368,7 +368,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onCreate(savedInstanceState);
 
         // Start the server here, where we are guaranteed to be in the foreground!
-        mediaServerManager.startServer();
+        if (getPreferences(MODE_PRIVATE).getBoolean("media_server_auto_start", true)) {
+            mediaServerManager.startServer();
+        }
         mediaServerManager.getServerStatus().observe(this, this::updateMediaServerState);
         updateMediaServerState(mediaServerManager.getServerStatus().getValue());
 
@@ -583,6 +585,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
 
         apincer.android.mmate.ui.compose.MainScaffoldState.updateHeaderStats(statText);
+        apincer.android.mmate.ui.compose.MainScaffoldState.updatePlaylistOverview(
+                SearchCriteria.TYPE.PLAYLIST.equals(type) && isEmpty(currentCriteria.getKeyword()));
         apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(!SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
     }
 
@@ -631,6 +635,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         currentCriteria.setType(type);
         currentCriteria.setKeyword(keyword);
+        currentCriteria.setFilterType(null);
+        currentCriteria.setFilterText(null);
         syncActiveDrawerItem();
         viewModel.loadMusicItems(currentCriteria);
     }
@@ -909,6 +915,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     public void onAudioHubStartServer() {
+        getPreferences(MODE_PRIVATE).edit().putBoolean("media_server_auto_start", true).apply();
         mediaServerManager.startServer();
         if (playbackService instanceof MusicMateServiceImpl msi) {
             msi.startServers();
@@ -924,6 +931,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     public void onAudioHubStopServer() {
+        getPreferences(MODE_PRIVATE).edit().putBoolean("media_server_auto_start", false).apply();
         mediaServerManager.stopServer();
         if (playbackService instanceof MusicMateServiceImpl msi) {
             msi.stopServers();

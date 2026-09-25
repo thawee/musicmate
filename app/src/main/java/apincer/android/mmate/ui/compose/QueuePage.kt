@@ -56,7 +56,7 @@ fun QueuePage(
     onTrackRemoved: (Track, Int) -> Unit,
     onClearQueue: () -> Unit,
     onJumpToPlaying: () -> Unit,
-    onBrowseLibrary: () -> Unit = {},
+    onBrowseLibrary: () -> Unit,
     onMoveTrack: (Int, Int) -> Unit = { _, _ -> }
 ) {
     Column(

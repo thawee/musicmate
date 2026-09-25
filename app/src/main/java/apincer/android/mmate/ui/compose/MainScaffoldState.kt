@@ -10,6 +10,7 @@ class MainScaffoldState {
     var searchQuery = mutableStateOf("")
     var isBackVisible = mutableStateOf(false)
     var headerStatsText = mutableStateOf("")
+    var isPlaylistOverview = mutableStateOf(false)
     var isScanning = mutableStateOf(false)
     var scanProgressText = mutableStateOf("")
 
@@ -49,6 +50,11 @@ class MainScaffoldState {
 
         @JvmStatic
         fun get(): MainScaffoldState = instance
+
+        @JvmStatic
+        fun updatePlaylistOverview(visible: Boolean) {
+            instance.isPlaylistOverview.value = visible
+        }
 
         @JvmStatic
         fun setTracks(tracks: List<Track>) {

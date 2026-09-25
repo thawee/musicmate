@@ -156,6 +156,7 @@ public class MediaServerManager {
 
     public void stopServer() {
         Log.d(TAG, "Requesting to stop MediaServerService");
+        toStartServer = false;
         if(isBound && service != null) {
             service.stopServers();
         }else {

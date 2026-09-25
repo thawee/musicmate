@@ -104,13 +104,15 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
   - **1-Tap System Audio Output Switcher:** Accessible directly from the target player picker popup (`Bluetooth / System Output...`), launching the native Android Media Output panel to quickly pair or switch Bluetooth devices.
   - **Auto-Pause on Disconnect:** Automatically pauses local audio playback when headphones, Bluetooth DACs, or car receivers disconnect (`ACTION_AUDIO_BECOMING_NOISY`), preventing accidental loudspeaker blaring.
 * **High-Performance Pagination:** To prevent application lag and save memory, songs are loaded in chunks of **500 items**. As you scroll to the bottom, the next page loads automatically.
+* **Collections & Filters:** In the Playlists overview, tap **New Smart Playlist** even if you have not created a playlist yet. Opening another library category clears an earlier related-track filter; use Back on a filtered list to remove the filter without changing categories.
+* **Music Center & Accessibility:** Tap the mini-player artwork or track title to open Music Center. From an empty Queue, **Browse Library** closes the sheet and opens All Songs. TalkBack exposes actions to open Music Center and flip Now Playing between cover art and audio details; the Studio Console seek and volume rails support accessibility adjustments and Left/Right keyboard keys.
 * **Scroll Memory & State Context:** When you click on a song to view or edit tags and then return to the main list, the app intelligently remembers your precise scroll position, even if you are scrolled past 500+ items.
 
 ---
 
 ## 3. Editing Tags & Technical Details (TagsActivity)
 
-Selecting a song from the list opens the **Tags Editor**. The interface features a collapsing cover art panel at the top with frosted overlay buttons — **Back** (top-left), **Play** (below Back), and **Change Cover** (top-right) — an **Audiophile Fluid Glass Pill** switcher (`[ Song Info | Tech Info ]`) with 1:1 real-time drag tracking and tactile haptics, and two main tabs. In the expanded preview, quality badges sit directly under the artwork; scrolling down (or tapping **Edit Song Info**) opens the detail workspace. **Save** dims when there are no unsaved changes.
+Selecting a song from the list opens the **Tags Editor**. The expanded preview has **Back** (top-left) and an icon-only **Change Cover** control (top-right), with the title on a separate surface below the artwork, followed by quality badges, a Genre chip when available, and artist/album/folder provenance. There is no separate Play button on the cover. Scrolling down (or tapping **Edit Song Info**) opens the detail workspace with the **Song Info / Tech Info** switcher. **Save** dims when there are no unsaved changes.
 
 ### Tab A: Song Info (Metadata Editor)
 This tab allows you to edit standard fields including:
@@ -118,6 +120,7 @@ This tab allows you to edit standard fields including:
 * **Bulk Editing:** If you select multiple files from the main list, you can edit shared attributes simultaneously. Divergent values are marked with a `[Multi Values]` placeholder.
 * **Action Menu Options (Editor Mode):**
   * 🔍 **Search & Match Tags:** Connects to MusicBrainz online database via a modernized Compose dialog to look up accurate track metadata and release artwork with 1-tap apply.
+  * **Unsaved matches:** Applying a match or auto-tag result changes the draft; tap **Save** to persist it. Back asks for confirmation before discarding unsaved changes.
   * ✨ **Reformat (Auto-Awesome):** Automatically formats tags to match standard title casing and clean up artist list separator styles.
   * 📝 **Read Tag Preview:** Reads tags directly from the underlying file structure to preview proposed updates.
   * 💾 **Save Changes:** Persists modifications to both the local database and the file's ID3/FLAC metadata blocks.
@@ -140,6 +143,7 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
 1. Click the **Media Server** icon in the bottom menu.
 2. A bottom sheet displays the current server status (Running / Offline), configuration details (URL, active connections), and currently active playback player.
 3. Tap **Start / Stop** to toggle the server or tap **Select Player** to switch between active targets.
+   - **Stop persists:** After you tap Stop, reopening or recreating the main screen does not restart the server. Tap Start to enable automatic startup again; choosing a streaming target can intentionally start the server for playback.
 4. **Standardized Player Target Displays:**
    - **DLNA Renderers:** Displays device friendly name and IP address (e.g. `HiBy R3 (192.168.1.50 • DLNA Renderer)`).
    - **Web Streaming:** Displays stream client IP and protocol details (e.g. `Web Streaming (192.168.1.100 • Web Streaming)`).
@@ -165,5 +169,5 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
 ## 5. Best Practices & Tips
 
 * **Smart Casing:** Use the **Reformat** button in the editor tab to clean up punctuation or inconsistent spacing in artist lists instantly.
-* **Navigating Back:** To discard changes safely, simply press the system **Back** key or navigation swipe gesture to immediately return to the main screen. If you have edited metadata, remember to click **Save (💾)** to persist your edits before leaving.
+* **Navigating Back:** Press the system **Back** key or navigation swipe gesture to leave the editor. If you have unsaved metadata changes, including a Search & Match or auto-tag result, confirm Discard or choose Cancel and **Save (💾)** first.
 * **Scroll-Friendly Editing:** You can safely edit files located deep down in your list. When you save and return, the list will refresh its values but maintain your scroll context exactly where you left off.

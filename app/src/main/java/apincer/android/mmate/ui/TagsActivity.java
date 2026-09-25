@@ -292,13 +292,6 @@ public class TagsActivity extends AppCompatActivity {
                 getOnBackPressedDispatcher().onBackPressed();
             });
         }
-        View btnPlayPreview = findViewById(R.id.btn_play_preview);
-        if (btnPlayPreview != null) {
-            btnPlayPreview.setOnClickListener(v -> {
-                performHapticClick(v);
-                doPlaySong();
-            });
-        }
         setupTitlePanelViews();
 
         // Resolve tab pill before the first setupActionButtons so preview mode can hide it.
@@ -440,7 +433,7 @@ public class TagsActivity extends AppCompatActivity {
         ViewPager2 viewPager = findViewById(R.id.viewpager);
         viewPager.setVisibility(preview ? GONE : VISIBLE);
         CollapsingToolbarLayout header = findViewById(R.id.toolbar_layout);
-        animateHeaderHeight(header, (int) (UIUtils.getScreenHeight(this) * (preview ? 0.85 : 0.72)));
+        animateHeaderHeight(header, (int) (UIUtils.getScreenHeight(this) * (preview ? 0.82 : 0.72)));
         android.widget.LinearLayout previewToggleGroup = findViewById(R.id.preview_action_group);
         android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
         android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
@@ -700,6 +693,7 @@ public class TagsActivity extends AppCompatActivity {
         }).thenAccept(fixed -> {
             runOnUiThread(() -> {
                 if (isDestroyed() || isFinishing()) return;
+                if (fixed > 0) setDirty(true);
                 redisplayTag();
                 stopProgressBar();
                 if (fixed > 0) {
@@ -817,6 +811,7 @@ public class TagsActivity extends AppCompatActivity {
         }).thenAccept(changed -> {
             runOnUiThread(() -> {
                 if (isDestroyed() || isFinishing()) return;
+                if (changed) setDirty(true);
                 redisplayTag();
                 stopProgressBar();
                 if (changed) {

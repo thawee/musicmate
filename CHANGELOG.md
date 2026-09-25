@@ -7,21 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.19.8] - 2026-09-25
+
 ### Added
-- **Tag preview cover affordances (`activity_tags.xml`, `TagsActivity.java`):** Added a frosted back button (`btn_back`) and play button (`btn_play_preview`) on the album art so users can leave the screen or start playback without relying on system gestures or the "More..." menu.
+- **Tag preview cover affordances (`activity_tags.xml`, `TagsActivity.java`):** Kept the cover back button and made Change Cover a 48dp icon button; removed the redundant cover play button.
 
 ### Changed
 - **Mini-player dock:** Removed the fullscreen shortcut to give track details and playback controls more room. Fullscreen Studio Console remains available from the Audio Hub header.
 - **Tag preview:** Hid both the Song Info / Tech Info switcher and editor fields in the expanded cover preview; they appear when the detail editor opens.
-- **Tag preview typography & hierarchy:** Removed duplicate artist/album text overlay from the cover art scrim; title is featured cleanly while discography exploration is handled by the interactive Compose provenance capsules below.
+- **Tag preview typography & hierarchy:** Removed duplicate artist/album text and placed the title below the cover art; discography exploration remains in the interactive Compose provenance capsules.
 - **Tag menu hygiene:** Cleaned up obsolete commented-out action groups in the Tag Activity overflow menu.
-- **Tag preview header layout (`activity_tags.xml`):** Moved the audiophile badge strip (`tags_header_badges`) from the bottom of the collapsing header to directly under the cover art, eliminating the large empty blur band on tall aspect ratios.
-- **Tag preview mode transition (`TagsActivity.java`):** Header height (85% preview / 72% edit) now animates over 220ms with a decelerate interpolator instead of snapping.
+- **Tag preview header layout (`activity_tags.xml`):** Moved the title into its own surface below the cover art and placed the audiophile badge strip directly under the cover, eliminating the empty blur band on tall aspect ratios.
+- **Tag preview mode transition (`TagsActivity.java`):** Header height (82% preview / 72% edit) now animates over 220ms with a decelerate interpolator instead of snapping.
+- **Preview taxonomy and provenance (`AudioBadges.kt`):** Show genre alone in the compact taxonomy row; keep the folder location visible in the provenance section even when its name matches the artist or album.
 - **Change Cover placement:** Replaced the hardcoded `52dp` top margin with `16dp`; status-bar insets are already applied to the AppBar, so the old value double-counted the inset.
 - **Quality badge shape (`AudioBadges.kt`):** Unified `QualityBadge` to `CircleShape` so it matches `ResolutionBadge`, `DynamicRangeMeter`, and taxonomy chips (was a rounded rectangle in expanded mode).
 - **Save dirty feedback (`TagsActivity.java`):** Save buttons mute to 45% alpha when there are no unsaved changes; all dirty-state writes go through `setDirty()` so the UI stays in sync. Save remains always visible (More... menu can dirty state without opening the editor).
+- **Version:** Bumped Android `versionCode` to `136` and `versionName` to `3.19.8-<build date>`; the drawer label now reads `v3.19.8`.
 
 ### Fixed
+- **Tag editing:** Search & Match and auto-tag now mark successfully applied metadata as unsaved so Back prompts before discarding it.
+- **Large collections:** Folder, playlist, album-filtered, and other full-result queries now honor the requested 500-track page rather than appending the same tracks again on scroll.
+- **Library navigation:** Switching categories clears an earlier related-track filter; an empty Playlists category still exposes New Smart Playlist.
+- **Empty queue:** Browse Library now closes Music Center and opens All Songs instead of doing nothing.
+- **Accessibility:** Mini-player and Now Playing detail gestures expose labeled screen-reader actions; Studio Console scrubber and volume fader expose adjustable semantics and keyboard arrow controls.
+- **Media server:** An explicit Stop remains in effect when the main activity is recreated or reopened, until Start is chosen; pending starts are cancelled on Stop.
 - **Tag preview tab bleed-through (`TagsActivity.java`):** The Song Info / Tech Info pill switcher could appear in the expanded cover preview because `setupActionButtons(0)` ran before `tabLayout` was resolved. The tab pill is now looked up before the first mode application so preview mode reliably hides it.
 - **Tag preview tab/action-dock collision (`TagsActivity.java`):** Mode switches (preview vs edit) previously only fired at exact fully-expanded / fully-collapsed offsets, leaving an intermediate scroll band where the tab pill rode under the fixed bottom dock. Switches now use hysteresis (`ENTER_EDIT_RATIO = 0.72`, `EXIT_EDIT_RATIO = 0.40`).
 - **Compose dialog lifecycle crash:** Replaced framework `android.app.Dialog` with `androidx.activity.ComponentDialog` and explicitly attached `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` in `DialogInterop.kt` (`showSearchQueryDialog`, `showSearchResultsDialog`), eliminating the `IllegalStateException` on attach.
@@ -34,9 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Release build:** Corrected release assembly and packaging issues, including duplicate module resources and optional R8 warning suppression.
 
 ### Documentation
+- Updated `USER_GUIDE.md`, `README.md`, and `UI.md` for the current preview controls, collection/queue navigation, accessibility paths, and server start/stop behavior. The debug build and core/app unit tests pass; on-device UI verification is pending. Existing unrelated lint errors remain.
 - Updated [`DESIGN.md`](DESIGN.md) with ADR-029 for stable library identity, safe storage reconciliation, bounded paging, and collision-safe file operations.
-- Updated [`UI.md`](UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title scrim decluttering, and Compose dialog lifecycle interop.
-- Updated [`UI.md`](UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover back/play affordances, and Save dirty-state feedback.
+- Updated [`UI.md`](UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title separation, and Compose dialog lifecycle interop.
+- Updated [`UI.md`](UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover Back/Change Cover controls, and Save dirty-state feedback.
 
 ## [3.19.7] - 2026-09-21
 

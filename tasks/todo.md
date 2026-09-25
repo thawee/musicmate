@@ -89,3 +89,46 @@
 - [x] Update `UI.md` and `CHANGELOG.md`
 - [x] Run unit tests and deploy debug build to physical device (`RFCY21CLTDY`)
 
+---
+
+# Whole-App Functional and UI/UX Audit
+
+## Objective
+- Review the Android app end to end for reproducible functional defects and user-facing usability/accessibility issues without changing application code or overwriting existing work.
+
+## Checklist
+- [x] Map app entry points, primary flows, test coverage, and available verification environment.
+- [x] Inspect representative user flows and UI resources for concrete issues; distinguish confirmed defects from hypotheses.
+- [x] Run feasible build/tests; device UI testing was not performed because the connected device was in another app and the required interaction reference was inaccessible.
+- [x] Report prioritized findings with file/line evidence, impact, reproduction steps, and verification limitations.
+
+---
+
+# Fix Whole-App Audit Findings
+
+## Objective
+- Fix all seven findings from the whole-app audit while preserving pre-existing edits in TagsActivity.java, AudioBadges.kt and activity_tags.xml.
+
+## Ordered implementation and verification
+- [x] Recheck affected code and existing tests; establish baseline of pre-existing changes.
+- [x] Fix lost Search & Match and auto-tag draft warning; focused build/tests pass (activity flow needs device verification).
+- [x] Fix non-paginated folders/playlists (and other full-list queries) duplicating on scroll; pagination regression test and focused build pass.
+- [x] Fix empty-playlist creation affordance and stale navigation filters; build/tests pass, runtime UI check pending.
+- [x] Wire empty queue Browse Library action through both hosts; build/tests pass, runtime UI check pending.
+- [x] Add semantic activation to mini-player and Now Playing flip, and adjustable/keyboard controls to Studio Console seek/volume; build/tests pass, accessibility device check pending.
+- [x] Persist the user's media-server stopped intent across activity recreation and cancel pending starts; app tests and debug build pass.
+- [x] Run full core/app unit tests and debug build; review diff and report that device/visual verification was not performed and app lint still has 22 unrelated pre-existing errors.
+
+---
+
+# Document, Version, and Commit Audit Fixes
+
+## Objective
+- Update user/developer documentation and release notes to reflect the completed fixes and existing preview edits, bump the Android patch version, then commit the complete working tree requested by the user.
+
+## Checklist
+- [x] Reconcile current documentation and release conventions with the complete diff, including earlier uncommitted preview work.
+- [x] Update relevant user/UI documentation and changelog with accurate behavior and verification caveats.
+- [x] Bump patch version and versionCode; update stale displayed version in the drawer.
+- [x] Verify Gradle tests/build, documentation consistency, staged scope, and diff hygiene (lint has known unrelated failures; device UI not run).
+- [x] Commit all intended source/documentation changes; confirm clean working tree and report commit ID.

@@ -113,7 +113,8 @@ object DialogInterop {
         onTrackClicked: java.util.function.Consumer<Track>,
         onTrackRemoved: BiConsumer<Track, Int>,
         onClearQueue: Runnable,
-        onJumpToPlaying: Runnable
+        onJumpToPlaying: Runnable,
+        onBrowseLibrary: Runnable
     ): View {
         return ComposeView(context).apply {
             layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
@@ -124,7 +125,8 @@ object DialogInterop {
                     onTrackClicked = { onTrackClicked.accept(it) },
                     onTrackRemoved = { t, i -> onTrackRemoved.accept(t, i) },
                     onClearQueue = { onClearQueue.run() },
-                    onJumpToPlaying = { onJumpToPlaying.run() }
+                    onJumpToPlaying = { onJumpToPlaying.run() },
+                    onBrowseLibrary = { onBrowseLibrary.run() }
                 )
             }
             }
@@ -214,6 +216,7 @@ object DialogInterop {
         onQueueTrackRemoved: BiConsumer<Track, Int>,
         onQueueClear: Runnable,
         onQueueJumpToPlaying: Runnable,
+        onQueueBrowseLibrary: Runnable,
         onEngineChanged: java.util.function.Consumer<String>,
         onStartServerClicked: Runnable,
         onStopServerClicked: Runnable,
@@ -249,6 +252,7 @@ object DialogInterop {
                         onQueueTrackRemoved = { track, index -> onQueueTrackRemoved.accept(track, index) },
                         onQueueClear = { onQueueClear.run() },
                         onQueueJumpToPlaying = { onQueueJumpToPlaying.run() },
+                        onQueueBrowseLibrary = { onQueueBrowseLibrary.run() },
                         onEngineChanged = { onEngineChanged.accept(it) },
                         onStartServerClicked = { onStartServerClicked.run() },
                         onStopServerClicked = { onStopServerClicked.run() },
