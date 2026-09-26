@@ -138,4 +138,10 @@ public interface DbHelper {
     default boolean getShuffleMode() { return false; }
     default void saveRepeatMode(String mode) {}
     default String getRepeatMode() { return "OFF"; }
+
+    default String getSmartQueueState() { return ""; }
+    default void saveSmartQueueState(String state) { }
+    default void recordListeningEvent(apincer.music.core.playback.ListeningHistoryTracker.Event event) { }
+    default List<Track> findUnplayed() { return java.util.Collections.emptyList(); }
+    default List<Track> findRediscover(long cutoffMs) { return java.util.Collections.emptyList(); }
 }

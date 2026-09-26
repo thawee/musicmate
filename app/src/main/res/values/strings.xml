@@ -424,6 +424,15 @@
 
     <!-- Preview -->
     <string name="preview_artist_label">Artist</string>
+    <string name="preview_folder_label">Folder</string>
+    <string name="dock_save_state_clean">No unsaved changes</string>
+    <string name="dock_save_state_dirty">Unsaved changes available</string>
+    <string name="dock_save_state_saving">Saving changes</string>
+    <string name="dock_save_state_saved">Changes saved</string>
+    <plurals name="preview_track_count">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
     <string name="preview_album_label">Album</string>
     <string name="preview_genre_label">Genre</string>
 

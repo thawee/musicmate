@@ -8,6 +8,12 @@
 
 ## 1. Core Product Philosophy & Design Principles
 
+### Smart queue source control
+- Shared `QueuePage` exposes Manual, New (unorganized), and Downloads sources through a labeled source menu, with auto-fill state, refresh/error feedback, and caught-up/empty guidance.
+- Source changes append to the current list; they do not start playback. Manual freezes the list. Existing clear confirmation also ends auto-fill.
+- The playback service refreshes sources on a dedicated 15-second worker; the visible queue synchronizes snapshots once per second while composed. Source selection runs database work on IO.
+- `QueueManager` owns source/anchor/exclusion persistence via Room queue preferences. Query results are revision-checked before applying to avoid races with clear/replacement/source switching. Shuffle/repeat stay off in smart mode; the playback controls explain how to switch back to Manual.
+
 MusicMate is fundamentally a **music library organization and tag management application**, integrated with high-fidelity local & network playback capabilities (DLNA/UPnP, Bluetooth, native Android player integrations).
 
 ### Design Principles:
@@ -40,6 +46,14 @@ MusicMate adapts to two distinct audiophile personas via a configurable **Intera
 | **Tap `⋮`** | Row More Button | Open **Single-Track Context Menu** | Open **Single-Track Context Menu** |
 
 > **User Switching:** Configured in `Settings` ➔ `INTERACTION MODE` via an instant segmented switcher `[ 🎧 Listener Mode | 🏷 Curator Mode ]`. Default is `Listener Mode` for casual music enjoyment, with 1-tap switching to `Curator Mode` for collection management sessions.
+
+### Predictable Actions & Recovery
+- **Quick Play scope:** Replaces the queue with all playable tracks in the current query, starting at the selected track. Scrolling/pagination does not change playback scope. A failed lookup leaves the existing queue intact and reports the failure.
+- **Search Back:** Removes an active filter first while keeping the query visible; the next Back clears search. Switching drawer categories clears both the visible query and search criteria.
+- **Artwork drafts:** Picking an image previews an unsaved draft. Save atomically replaces the album artwork; Discard before Save leaves the original untouched. Failed saves keep the draft available for retry.
+- **Folder drafts:** Add/remove operations stay local to Discover Music Folders until Scan (or Start in the Full Rescan confirmation). Cancel does not save folder changes.
+- **Empty states:** No indexed music offers **Choose folders / Scan**; no matches offers **Clear search and filters**; an empty collection offers **Browse all songs**; loading failures offer **Retry**.
+- **Queue clearing:** The shared queue page asks for confirmation before clearing a nonempty queue. Cancel leaves it intact; the clear button is disabled for an empty queue.
 
 ### Now Playing Cover Art Overlay & Playing Indicators
 - **Scoped Dynamic Visibility:** Cover art dark overlays (`shape_now_playing_cover_overlay.xml`) are hidden (`GONE`) for all non-playing tracks, leaving library artwork clean, bright, and un-obscured. Overlays are scoped strictly to the currently playing song (`tag.equals(playbackService.getNowPlayingSong())`).
@@ -342,12 +356,24 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
   - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §7C).
   - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
 
-### B. Tag Activity Accessible 2-Row Bottom Action Dock (`shape_bottom_frosted_panel`)
-- **Preview viewport:** The expanded cover header uses 82% of usable screen height. Both the Song Info / Tech Info switcher and editor pages are hidden, leaving cover artwork, a title surface, badges, and the bottom action dock. Opening the editor reveals the tabs and pages, reduces the header to 72% (animated over ~220ms), and sizes the scrollable page above the measured action dock, including its navigation-bar inset.
-- **Preview ↔ Edit scroll hysteresis (`TagsActivity.OffSetChangeListener`):** Mode transitions use ratio thresholds rather than exact extremes so the tab pill cannot ride into the fixed dock mid-drag:
-  - Enter edit mode when `scrollRatio >= 0.72` (header mostly scrolled away).
-  - Return to preview when `scrollRatio <= 0.40` (header less than half expanded again).
-  - The band between 0.40 and 0.72 holds the current mode (hysteresis).
+### B. Tag Activity Studio Command Dock (`shape_studio_command_dock`)
+
+- **Identity:** An opaque charcoal console surface (`#1E2226`) with 24dp rounded top corners, a subtle hairline top border, and 16dp side padding. The underlying page matches the preview background at the rounded corners; the dock extends into the navigation inset.
+- **Row 1 (Console Utilities):** Delete, Organize, and More share equal thirds with minimum 48dp height and quiet separators. Each centered icon-label pair uses a 20dp vector icon and 13sp text. Delete uses muted coral (`#D69A9A`); Organize and More share neutral text/icon coloring (`#BCC5CF`).
+- **Row 2 (65/35 Split):** Graphite Edit Song Info retains white text and a blue icon; Save reserves 30dp trailing padding for its status indicator. Both center their icon-label pairs, use 14dp corners, and grow above their 52dp minimum height when text wraps.
+- **Save Status Indicator (recording-desk language):**
+  - No changes: graphite button, muted label and icon, unlit indicator ring.
+  - Unsaved changes: amber (`#FFB300`) button with dark label/icon and a lit amber indicator.
+  - Saving: small progress indicator replaces the ring while the write is in flight.
+  - Saved: a brief checkmark confirmation, then the indicator returns to the correct idle or dirty state.
+  - Both activity and editor-fragment saves finish feedback on success/failure. Refresh callbacks preserve success briefly; activity destruction removes the delayed reset. While saving, the preview Save button is disabled to prevent duplicate taps.
+  - State is conveyed by color, icon, `contentDescription`, and `ViewCompat.setStateDescription`, so it is not color-only.
+- **Interaction:** Brief console-style press compression to `0.97` over 100ms, released over 150ms, paired with the existing haptic feedback. No looping glow or pulse. Long-press shortcuts are preserved.
+- **Legacy panel:** `shape_bottom_frosted_panel` remains for the tab pill; the action dock now uses the new console surface.
+
+#### Legacy reference: former 2-Row Bottom Action Dock (`shape_bottom_frosted_panel`)
+- **Preview viewport:** Cover, title, and metadata use a content-sized `NestedScrollView` above the measured action dock. The weighted content area accounts for the dock and navigation-bar inset without overlaying or clipping metadata. Both the Song Info / Tech Info switcher and editor pages are hidden in preview. The preview and editor share the same cover panel, reparented on mode changes.
+- **Preview ↔ Edit:** Tap Edit Song Info to reveal the tabs and editor, whose collapsing header uses 72% of screen height. Expanding the editor header back to `scrollRatio <= 0.40` returns to preview; collapsing or initial layout callbacks do not trigger that return. Preview scrolling stays in preview so all metadata remains reachable.
 - **Geometry:** Edge-to-edge true bottom anchor (`0dp` corner radius, `0dp` margins), pinned flush to the window bottom (`bottomMargin = 0`), extending the frosted obsidian background (`shape_bottom_frosted_panel`) to the physical screen edge with dynamic system navigation bar insets applied as bottom padding.
 - **2-Tier Functional Architecture:**
   - **Row 1 (Static Global File Tier):** Permanent file operations (`[Delete]` in subtle error tone, `[⭐ Organize]` in primary Gold tonal pill, `[More... ⋯]`). Consistently accessible across Preview, Song Info, and Tech Info tabs.
@@ -356,21 +382,19 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
     - *Song Info Editor Tab:* `[✨ Format]` | `[📄 From File]` | `[💾 Save]` (Gold tonal pill).
     - *Tech Info Tab:* `[🔄 Reload]` | `[🖼️ Extract]` | `[🗑️ Remove Art]`.
 - **Unified Immersive Hero Cover Art Layout (`activity_tags.xml`):**
-  - **Clean Cover Artwork Viewport:** Full 1:1 aspect ratio album artwork (`AspectRatioPhotoView`) free of top scrims or distracting visual clutter, keeping 90%+ of the album art 100% visible.
-  - **Cover Overlay Affordances (theme surface icon buttons):**
+   - **Compact Cover Artwork Viewport:** Centered 1:1 artwork (`AspectRatioPhotoView`) fitted without cropping. Preview size is 38% of the inset-adjusted content viewport height, clamped to 180–280dp and bounded by available width minus 32dp. This is about 240dp on the reference phone. Cover controls remain anchored to the screen edges; editor mode restores full-width artwork. Smaller windows and larger text retain scrolling.
+   - **Cover Overlay Affordances:** Matched borderless 48dp dark-surface buttons with centered 24dp white icons and 16dp outer spacing.
     - `[◀]` **Back** (`btn_back`, top-start): Triggers `onBackPressedDispatcher` (unsaved-changes dialog still applies).
-    - `[🖼]` **Change Cover** (`btn_change_cover_art`, top-end): A 48dp icon button opens the cover-art action sheet (search / pick / extract / remove). Top margin is `16dp`; status-bar insets are already applied to the AppBar. The separate Play overlay has been removed.
-  - **Title surface below artwork:** `panel_title` uses bold 18sp theme text with clean ellipsis protection (`maxLines = 2`) on its own surface below the image, rather than a gradient overlay.
-  - **Eliminated Redundancy:** Removed the legacy split `[ Artist | Album ]` box and duplicate `panel_artist` subtitle. Discography exploration stays on the Compose provenance capsules.
+     - `[🖼]` **Change Cover** (`btn_change_cover_art`, top-end): Opens the cover-art action sheet (search / pick / extract / remove). Status-bar insets apply to the preview scroll viewport or editor AppBar.
+   - **Title surface below artwork:** `panel_title` uses bold 18sp white text with two-line ellipsis protection. Title and metadata share the uniform dark preview surface with 16dp content margins and compact vertical spacing.
+   - **Eliminated Redundancy:** Removed the legacy split `[ Artist | Album ]` box and duplicate `panel_artist` subtitle. Discography exploration uses labeled Compose metadata rows.
 - **Unified 4-Tier Audiophile Header Hierarchy (`TagPreviewHeader` in Compose):**
   - The badge strip (`tags_header_badges`) is constrained directly under `cover_art_container` (not pinned to the header bottom), so fidelity → taxonomy → provenance read as one stack with no empty blur band on tall screens.
   1. **Tier 1 — Quality Tier & Visual Badges:** Expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) identical to the Now Playing playback sheet, paired with `ResolutionBadge` (`[16/44.1]`, `[24/96]`, `[DSD64]`), `DynamicRangeMeter` (`[DR 11]`), star rating, and New status badge. All micro-capsules use `CircleShape` for a consistent pill language.
-  2. **Tier 2 — Interactive Musical Taxonomy Micro-Chips (`TaxonomyChipsRow`):** Positioned directly below the audio badges, establishing a natural narrative (Fidelity ➔ Musical Taxonomy ➔ Library Provenance). Renders compact frosted obsidian micro-pills with zero vertical space penalty when unpopulated:
-     - `[ 🏷️ {Genre} › ]`: Acoustic Teal (`#80CBC4`), interactive 1-tap exploration sliding up `RelatedTracksSheet` filtered by `Constants.FILTER_TYPE_GENRE`.
+   2. **Tier 2 — Interactive Genre Control (`PreviewGenreChip`):** A borderless text-style control with a 48dp touch target shares the audio badges' wrapping flow. The preview dynamic-range meter uses a brighter color for legibility.
+      - `[label icon | Genre: {Genre} | chevron]`: Blue (`#90CAF9`) with a 48dp minimum touch target; opens `RelatedTracksSheet` filtered by `Constants.FILTER_TYPE_GENRE`.
      - Mood and Style remain editable in Song Info but are no longer repeated in the compact preview row.
-  3. **Tier 3 — Fluid Discography Capsules (`StudioProvenanceSection`):** Compact frosted obsidian micro-capsules (`#D9101010`, `6dp` radius, `0.75dp` border) surfacing live library counts and direct in-place discovery via `RelatedTracksSheet`:
-     - **Row 1 (Music Discography):** `[ 👤 {Artist} • {N} ❯ ]` (Gold `#FFD700`) & `[ 💿 {Album} • {N} ❯ ]` (Acoustic Teal `#80CBC4`) side-by-side with equal flex width and ellipsis protection.
-     - **Row 2 (Storage Location):** `[ 📁 {Folder} • {N} ❯ ]` (Slate Blue `#90CAF9`) centered underneath.
+   3. **Tier 3 — Grouped Metadata Panel (`StudioProvenanceSection`):** One rounded surface contains full-width Artist, Album, and Folder rows separated by subtle inset dividers. Rows have 56dp minimum height, natural growth for larger text, two-line value support, and explicit localized “1 track” / “N tracks” counts. Consistent vector icons, blue accents (`#90CAF9`), and trailing chevrons provide direct discovery via `RelatedTracksSheet`. Field labels distinguish album and folder even when their names match.
 - **Micro-Labels & Icon Styling:** Row 2 buttons feature compact, scannable text labels alongside Material vector icons (`minWidth="0dp"`, `10dp`–`16dp` horizontal touch padding) to eliminate icon-only ambiguity.
 - **Tactile Micro-Haptics & Tooltips:**
   - `performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)` on all button clicks and `HapticFeedbackConstants.LONG_PRESS` on long presses.

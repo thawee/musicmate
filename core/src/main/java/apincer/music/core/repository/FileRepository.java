@@ -162,7 +162,8 @@ public class FileRepository {
             File cover = null;
             String albumArtFilename = music.getAlbumArtFilename();
             if (!isEmpty(albumArtFilename) && !DEFAULT_COVERART.equals(albumArtFilename)) {
-                File cachedCover = new File(cacheDir, albumArtFilename);
+                File selectedCover = new File(albumArtFilename);
+                File cachedCover = selectedCover.isAbsolute() ? selectedCover : new File(cacheDir, albumArtFilename);
                 if (cachedCover.exists()) {
                     cover = cachedCover;
                 }
@@ -227,7 +228,8 @@ public class FileRepository {
 
     public File getCoverArtByAlbumartFilename(String albumArtFilename) {
             File dir = getCoverartDir(context);
-            File cover = new File(dir, albumArtFilename);
+            File selectedCover = new File(albumArtFilename);
+            File cover = selectedCover.isAbsolute() ? selectedCover : new File(dir, albumArtFilename);
             if(!cover.exists()) {
                 // try to get folder cover art
                 Track song = tagRepos.getByAlbumArtFilename(albumArtFilename);

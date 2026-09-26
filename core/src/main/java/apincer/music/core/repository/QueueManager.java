@@ -68,9 +68,119 @@ public class QueueManager {
      */
     private final List<Integer> shuffleOrder = new ArrayList<>();
 
+    public enum Source { MANUAL, NEW, DOWNLOADS, UNPLAYED, REDISCOVER }
+    private Source source = Source.MANUAL;
+    private final java.util.Set<Long> sessionIds = new java.util.HashSet<>();
+    private long sourceRevision;
+    private boolean autoFilling;
+    private boolean sourceExhausted;
+    private static final int SMART_LOOKAHEAD = 20;
+
+    public synchronized Source getSource() { return source; }
+    public synchronized boolean isSmartQueueCaughtUp() {
+        return source != Source.MANUAL && sourceExhausted && currentIndex >= queueList.size() - 1;
+    }
+
+    /** Switching to Manual freezes the current list. Smart sources never replace it. */
+    public synchronized void setSource(Source selected) {
+        if (selected == null || selected == source) return;
+        source = selected;
+        sourceExhausted = false;
+        sourceRevision++;
+        for (Track track : queueList) sessionIds.add(track.getId());
+        if (source != Source.MANUAL) {
+            setShuffle(false);
+            setRepeatMode(RepeatMode.OFF);
+        }
+        persistSmartState();
+    }
+
+    /** Called on a worker, never on the audio/UI thread. Queries are outside the lock. */
+    public boolean refreshSmartQueue() {
+        Source requested;
+        long revision;
+        int requestedSlots;
+        java.util.Set<Long> excluded;
+        synchronized (this) {
+            requested = source;
+            revision = sourceRevision;
+            if (requested == Source.MANUAL || remainingSmartSlots() == 0) return false;
+            requestedSlots = remainingSmartSlots();
+            excluded = new java.util.HashSet<>(sessionIds);
+            excluded.addAll(indexMap.keySet());
+        }
+        List<Track> candidates = switch (requested) {
+            case NEW -> dbHelper.findRecentlyAdded(0, 0);
+            case UNPLAYED -> dbHelper.findUnplayed();
+            case REDISCOVER -> dbHelper.findRediscover(System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(30));
+            default -> dbHelper.findMySongs();
+        };
+        if (candidates == null) return false;
+        List<Track> available = new ArrayList<>();
+        for (Track track : candidates) {
+            if (track == null || track.isContainer() || track.getPath() == null) continue;
+            if (excluded.contains(track.getId())) continue;
+            if (requested == Source.DOWNLOADS && !apincer.music.core.utils.TagUtils.isOnDownloadDir(track)) continue;
+            if (new java.io.File(track.getPath()).isFile()) available.add(track);
+            if (available.size() >= requestedSlots) break;
+        }
+        synchronized (this) {
+            if (source != requested || sourceRevision != revision) return false;
+            sourceExhausted = available.size() < requestedSlots;
+            int slots = remainingSmartSlots();
+            List<Track> additions = new ArrayList<>();
+            for (Track track : available) {
+                if (slots == 0) break;
+                if (sessionIds.add(track.getId()) && !indexMap.containsKey(track.getId())) {
+                    additions.add(track);
+                    slots--;
+                }
+            }
+            if (additions.isEmpty()) return false;
+            autoFilling = true;
+            try { enqueuePlayingQueue(additions); }
+            finally { autoFilling = false; }
+            persistSmartState();
+            return true;
+        }
+    }
+
+    private int remainingSmartSlots() {
+        return Math.max(0, SMART_LOOKAHEAD - Math.max(0, queueList.size() - Math.max(currentIndex, 0) - 1));
+    }
+
+    private void persistSmartState() {
+        Track current = getCurrentTrack();
+        StringBuilder state = new StringBuilder(source.name()).append('|')
+                .append(current == null ? -1 : current.getId()).append('|');
+        for (Long id : sessionIds) state.append(id).append(',');
+        dbHelper.saveSmartQueueState(state.toString());
+    }
+
+    private void restoreSmartState() {
+        String state = dbHelper.getSmartQueueState();
+        if (state == null || state.isEmpty()) return;
+        try {
+            String[] parts = state.split("\\|", -1);
+            source = Source.valueOf(parts[0]);
+            Integer anchor = indexMap.get(Long.parseLong(parts[1]));
+            if (anchor != null) currentIndex = playbackIndex = anchor;
+            sessionIds.clear();
+            for (String id : parts[2].split(",")) if (!id.isEmpty()) sessionIds.add(Long.parseLong(id));
+            for (Track track : queueList) sessionIds.add(track.getId());
+            if (source != Source.MANUAL) { isShuffle = false; repeatMode = RepeatMode.OFF; }
+        } catch (RuntimeException e) {
+            source = Source.MANUAL;
+            sessionIds.clear();
+            Log.w(TAG, "Ignoring invalid smart queue state", e);
+        }
+    }
+
     public synchronized void setPlayingQueue(List<Track> songs) {
         if (songs == null || songs.isEmpty()) return;
-        
+        source = Source.MANUAL;
+        sourceRevision++;
+        sessionIds.clear();
         queueList.clear();
         
         // Use a Set to prevent duplicates efficiently
@@ -95,10 +205,15 @@ public class QueueManager {
         }
         
         updateShuffleOrder();
+        persistSmartState();
     }
 
     public synchronized void enqueuePlayingQueue(List<Track> songs) {
         if (songs == null || songs.isEmpty()) return;
+        if (source != Source.MANUAL && !autoFilling) {
+            for (int i = songs.size() - 1; i >= 0; i--) addPlayNext(songs.get(i));
+            return;
+        }
         
         java.util.Set<Long> existingIds = new java.util.HashSet<>();
         for (Track existing : queueList) {
@@ -114,6 +229,7 @@ public class QueueManager {
         }
         
         if (!modified) return;
+        if (source != Source.MANUAL) for (Track track : queueList) sessionIds.add(track.getId());
         
         if (currentIndex == -1) {
             currentIndex = 0;
@@ -129,6 +245,7 @@ public class QueueManager {
         }
         
         updateShuffleOrder();
+        persistSmartState();
     }
 
     public synchronized void addPlayingQueue(long trackId) {
@@ -140,6 +257,10 @@ public class QueueManager {
 
     public synchronized void addPlayingQueue(Track song) {
         if (song == null) return;
+        if (source != Source.MANUAL) {
+            addPlayNext(song);
+            return;
+        }
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -183,7 +304,8 @@ public class QueueManager {
     }
 
     public synchronized void addPlayNext(Track song) {
-        if (song == null) return;
+        if (song == null || song.isContainer()) return;
+        sessionIds.add(song.getId());
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -226,6 +348,7 @@ public class QueueManager {
             Log.e(TAG, "Failed to persist playing queue", e);
         }
         updateShuffleOrder();
+        persistSmartState();
     }
 
     public synchronized boolean containsTrack(long trackId) {
@@ -346,6 +469,7 @@ public class QueueManager {
                 playbackIndex = -1;
             }
 
+            restoreSmartState();
             updateShuffleOrder();
             Log.d(TAG, "Loaded queue from DB. Size: " + queueList.size() + ", Shuffle: " + isShuffle + ", Repeat: " + repeatMode);
         } catch (Exception e) {
@@ -394,6 +518,8 @@ public class QueueManager {
         }
         playbackIndex = idx;
         currentIndex = idx;
+        sessionIds.add(track.getId());
+        persistSmartState();
 
         if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
             updateShuffleOrder();
@@ -420,6 +546,11 @@ public class QueueManager {
         }
 
         int nextIndex = getNextIndex(baseIndex);
+        while (nextIndex != -1 && source != Source.MANUAL
+                && (queueList.get(nextIndex).getPath() == null
+                || !new java.io.File(queueList.get(nextIndex).getPath()).isFile())) {
+            nextIndex = getNextIndex(nextIndex);
+        }
         if (nextIndex != -1) {
             return queueList.get(nextIndex);
         }
@@ -552,6 +683,7 @@ public class QueueManager {
      * @param enabled true to enable shuffle, false to disable
      */
     public synchronized void setShuffle(boolean enabled) {
+        if (source != Source.MANUAL && enabled) return;
         if (this.isShuffle == enabled) return;
         this.isShuffle = enabled;
         dbHelper.saveShuffleMode(enabled);
@@ -572,6 +704,7 @@ public class QueueManager {
      * @param mode The new repeat mode (OFF, ONE, ALL)
      */
     public synchronized void setRepeatMode(RepeatMode mode) {
+        if (source != Source.MANUAL && mode != RepeatMode.OFF) return;
         if (this.repeatMode == mode) return;
         this.repeatMode = mode;
         dbHelper.saveRepeatMode(mode != null ? mode.name() : RepeatMode.OFF.name());
@@ -616,6 +749,7 @@ public class QueueManager {
 
     public synchronized void removeTrack(int position) {
         if (position < 0 || position >= queueList.size()) return;
+        sessionIds.add(queueList.get(position).getId());
         queueList.remove(position);
         rebuildIndexMap();
 
@@ -635,6 +769,7 @@ public class QueueManager {
 
         dbHelper.savePlayingQueue(queueList);
         updateShuffleOrder();
+        persistSmartState();
     }
 
     public synchronized boolean removeTrackById(long id) {
@@ -657,6 +792,9 @@ public class QueueManager {
     }
 
     public synchronized void emptyPlayingQueue() {
+        source = Source.MANUAL;
+        sourceRevision++;
+        sessionIds.clear();
         dbHelper.emptyPlayingQueue();
         queueList.clear();
         indexMap.clear();
@@ -664,5 +802,6 @@ public class QueueManager {
         shuffleIndexMap.clear();
         currentIndex = -1;
         playbackIndex = -1;
+        persistSmartState();
     }
 }

@@ -36,6 +36,21 @@ public class RoomDbHelper implements DbHelper {
     private final MusicRoomDatabase database;
     private final TrackDao trackDao;
 
+    @Override
+    public void recordListeningEvent(apincer.music.core.playback.ListeningHistoryTracker.Event event) {
+        database.listeningHistoryDao().record(event);
+    }
+
+    @Override
+    public List<Track> findUnplayed() {
+        return new ArrayList<>(database.listeningHistoryDao().findUnplayed());
+    }
+
+    @Override
+    public List<Track> findRediscover(long cutoffMs) {
+        return new ArrayList<>(database.listeningHistoryDao().findRediscover(cutoffMs));
+    }
+
     public RoomDbHelper(MusicRoomDatabase database) {
         this(database, null);
     }
@@ -770,10 +785,21 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
+    public String getSmartQueueState() {
+        return context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .getString("smart_queue_state", "");
+    }
+
+    @Override
+    public void saveSmartQueueState(String state) {
+        context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
+                .edit().putString("smart_queue_state", state).apply();
+    }
+
+    @Override
     public String getRepeatMode() {
         if (context == null) return "OFF";
         return context.getSharedPreferences(PREF_QUEUE_NAME, Context.MODE_PRIVATE)
                 .getString(PREF_KEY_REPEAT, "OFF");
     }
 }
-

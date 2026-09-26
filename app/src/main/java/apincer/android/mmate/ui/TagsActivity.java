@@ -11,6 +11,9 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -156,17 +159,111 @@ public class TagsActivity extends AppCompatActivity {
         updateSaveButtonStates();
     }
 
-    private void updateSaveButtonStates() {
-        MaterialButton previewSave = findViewById(R.id.action_preview_save);
-        MaterialButton editorSave = findViewById(R.id.action_save);
-        // Keep Save always visible (More... menu can dirty state without opening the
-        // editor), but mute it when there is nothing to commit so users get clear feedback.
-        if (previewSave != null) {
-            previewSave.setAlpha(isDirty ? 1f : 0.45f);
+    // Studio Command Dock save states.
+    private static final int SAVE_IDLE = 0;
+    private static final int SAVE_DIRTY = 1;
+    private static final int SAVE_IN_PROGRESS = 2;
+    private static final int SAVE_CONFIRMED = 3;
+
+    private static final int DOCK_AMBER = 0xFFFFB300;
+    private static final int DOCK_GRAPHITE = 0xFF2A2F35;
+    private static final int DOCK_AMBER_ON = 0xFF1A1D21;
+    private static final int DOCK_ON_GRAPHITE = 0xFFEEEEEE;
+    private static final int DOCK_MUTED = 0xFFBCC5CF;
+
+    private int saveVisualState = SAVE_IDLE;
+    private final Handler saveIndicatorHandler = new Handler(Looper.getMainLooper());
+    private final Runnable saveConfirmReset = () -> {
+        if (saveVisualState == SAVE_CONFIRMED) {
+            saveVisualState = isDirty ? SAVE_DIRTY : SAVE_IDLE;
+            applySaveVisualState();
         }
+    };
+
+    private void updateSaveButtonStates() {
+        MaterialButton editorSave = findViewById(R.id.action_save);
         if (editorSave != null) {
             editorSave.setAlpha(isDirty ? 1f : 0.45f);
         }
+        if (saveVisualState == SAVE_IN_PROGRESS) return;
+        if (saveVisualState == SAVE_CONFIRMED && !isDirty) {
+            applySaveVisualState();
+            return;
+        }
+        saveVisualState = isDirty ? SAVE_DIRTY : SAVE_IDLE;
+        applySaveVisualState();
+    }
+
+    private void applySaveVisualState() {
+        MaterialButton previewSave = findViewById(R.id.action_preview_save);
+        View indicator = findViewById(R.id.save_state_indicator);
+        View progress = findViewById(R.id.save_progress_indicator);
+        if (previewSave == null || indicator == null || progress == null) return;
+
+        // Amber styling and the lit indicator always mean "not idle".
+        boolean amber = saveVisualState != SAVE_IDLE;
+        previewSave.setBackgroundTintList(ColorStateList.valueOf(amber ? DOCK_AMBER : DOCK_GRAPHITE));
+        previewSave.setTextColor(amber ? DOCK_AMBER_ON : DOCK_MUTED);
+        previewSave.setIconTint(ColorStateList.valueOf(amber ? DOCK_AMBER_ON : DOCK_MUTED));
+        int stateLabel = switch (saveVisualState) {
+            case SAVE_IN_PROGRESS -> R.string.dock_save_state_saving;
+            case SAVE_CONFIRMED -> R.string.dock_save_state_saved;
+            case SAVE_DIRTY -> R.string.dock_save_state_dirty;
+            default -> R.string.dock_save_state_clean;
+        };
+        previewSave.setContentDescription(getString(R.string.btn_save));
+
+        boolean saving = saveVisualState == SAVE_IN_PROGRESS;
+        previewSave.setEnabled(!saving);
+        progress.setVisibility(saving ? View.VISIBLE : View.GONE);
+        indicator.setVisibility(saving || saveVisualState == SAVE_CONFIRMED ? View.INVISIBLE : View.VISIBLE);
+        if (saveVisualState == SAVE_CONFIRMED) {
+            previewSave.setIconResource(R.drawable.ic_check_24);
+        } else {
+            previewSave.setIconResource(R.drawable.ic_round_save_24);
+        }
+        indicator.setBackgroundResource(
+                amber && !saving ? R.drawable.shape_dock_indicator_lit : R.drawable.shape_dock_indicator);
+        ViewCompat.setStateDescription(previewSave,
+                getString(stateLabel));
+    }
+
+    public void setSaveInProgress(boolean inProgress) {
+        saveIndicatorHandler.removeCallbacks(saveConfirmReset);
+        saveVisualState = inProgress ? SAVE_IN_PROGRESS : (isDirty ? SAVE_DIRTY : SAVE_IDLE);
+        applySaveVisualState();
+    }
+
+    public void completeSaveFeedback(boolean success) {
+        if (isDestroyed()) return;
+        setSaveInProgress(false);
+        if (success) flashSaveConfirmation();
+    }
+
+    private void flashSaveConfirmation() {
+        saveIndicatorHandler.removeCallbacks(saveConfirmReset);
+        saveVisualState = SAVE_CONFIRMED;
+        applySaveVisualState();
+        saveIndicatorHandler.postDelayed(saveConfirmReset, 1600L);
+    }
+
+    /** Brief console-style press compression; pairs with existing haptics. */
+    private void applyDockPressFeedback(View target) {
+        if (target == null) return;
+        target.setOnTouchListener((v, event) -> {
+            switch (event.getActionMasked()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(100).start();
+                    break;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(150).start();
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        });
     }
 
     private PlaybackService playbackService;
@@ -256,6 +353,13 @@ public class TagsActivity extends AppCompatActivity {
             v.setPadding(v.getPaddingLeft(), systemBars.top, v.getPaddingRight(), v.getPaddingBottom());
             return insets;
         });
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.preview_scroll), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            return insets;
+        });
+        findViewById(R.id.preview_scroll).addOnLayoutChangeListener(
+                (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> updatePreviewCoverSize());
 
         viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
 
@@ -330,6 +434,7 @@ public class TagsActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        saveIndicatorHandler.removeCallbacks(saveConfirmReset);
         super.onDestroy();
         databaseExecutor.shutdown();
         if(isPlaybackServiceBound) {
@@ -367,15 +472,7 @@ public class TagsActivity extends AppCompatActivity {
         appBarLayout = findViewById(R.id.appbar);
        // bottomAppBar = findViewById(R.id.bottom_app_bar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
-        View bottomDock = findViewById(R.id.bottom_navigation_container);
-        bottomDock.addOnLayoutChangeListener((dock, left, top, right, bottom,
-                                             oldLeft, oldTop, oldRight, oldBottom) -> {
-            MarginLayoutParams params = (MarginLayoutParams) viewPager.getLayoutParams();
-            if (params.bottomMargin != dock.getHeight()) {
-                params.bottomMargin = dock.getHeight();
-                viewPager.setLayoutParams(params);
-            }
-        });
+        // The weighted content container is measured above the dock, including its insets.
 
         tabLayout = findViewById(R.id.tags_tab_pill_container);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
@@ -433,7 +530,30 @@ public class TagsActivity extends AppCompatActivity {
         ViewPager2 viewPager = findViewById(R.id.viewpager);
         viewPager.setVisibility(preview ? GONE : VISIBLE);
         CollapsingToolbarLayout header = findViewById(R.id.toolbar_layout);
-        animateHeaderHeight(header, (int) (UIUtils.getScreenHeight(this) * (preview ? 0.82 : 0.72)));
+        androidx.core.widget.NestedScrollView previewScroll = findViewById(R.id.preview_scroll);
+        View coverPanel = findViewById(R.id.panel_cover_art_layout);
+        ViewGroup targetParent = preview ? previewScroll : header;
+        if (coverPanel.getParent() != targetParent) {
+            ((ViewGroup) coverPanel.getParent()).removeView(coverPanel);
+            if (preview) {
+                previewScroll.addView(coverPanel, new android.widget.FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            } else {
+                CollapsingToolbarLayout.LayoutParams params = new CollapsingToolbarLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.setCollapseMode(CollapsingToolbarLayout.LayoutParams.COLLAPSE_MODE_PARALLAX);
+                header.addView(coverPanel, params);
+            }
+        }
+        previewScroll.setVisibility(preview ? VISIBLE : GONE);
+        appBarLayout.setVisibility(preview ? GONE : VISIBLE);
+        updatePreviewCoverSize();
+        if (preview) {
+            coverArtView.setScaleX(1f);
+            coverArtView.setScaleY(1f);
+        } else {
+            animateHeaderHeight(header, (int) (UIUtils.getScreenHeight(this) * 0.72));
+        }
         android.widget.LinearLayout previewToggleGroup = findViewById(R.id.preview_action_group);
         android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
         android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
@@ -458,6 +578,11 @@ public class TagsActivity extends AppCompatActivity {
             btnDelete.setText(R.string.button_delete);
             btnOrganize.setText(R.string.button_organize);
         }
+
+        for (View dockButton : new View[]{btnDelete, btnOrganize, btnMore, actionEditor}) {
+            applyDockPressFeedback(dockButton);
+        }
+        applyDockPressFeedback(findViewById(R.id.action_preview_save));
 
         btnDelete.setOnClickListener(v -> {
             performHapticClick(v);
@@ -1068,6 +1193,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void doSaveMediaItemsDirectly(@Nullable Runnable onComplete) {
+        if (saveVisualState == SAVE_IN_PROGRESS) return;
         if (activeFragment instanceof TagsEditorFragment fragment) {
             if (onComplete != null) {
                 fragment.doSaveMediaItem(onComplete);
@@ -1083,14 +1209,27 @@ public class TagsActivity extends AppCompatActivity {
             return;
         }
 
+        setSaveInProgress(true);
         startProgressBar();
         int totalItems = items.size();
         CompletableFuture.runAsync(() -> {
             int success = 0;
             int failed = 0;
             int count = 0;
+            try {
+                viewModel.commitArtwork();
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    stopProgressBar();
+                    setDirty(true);
+                    setSaveInProgress(false);
+                    Toast.makeText(this, "Couldn't save cover art. Your edits are retained. Try Save again.", Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
             for (Track tag : items) {
                 try {
+                    viewModel.applyArtworkToTrack(tag);
                     boolean status = fileRepos != null && fileRepos.setMusicTag(tag);
                     if (status) success++; else failed++;
                 } catch (Exception e) {
@@ -1108,6 +1247,7 @@ public class TagsActivity extends AppCompatActivity {
                 boolean allSaved = viewModel.recordSaveResult(successCount, failedCount);
                 if (successCount > 0) setSaved(true);
                 setDirty(!allSaved);
+                completeSaveFeedback(allSaved && successCount > 0);
                 redisplayTag();
                 if (failedCount == 0) {
                     Toast.makeText(this, "Saved " + successCount + " item(s)", Toast.LENGTH_SHORT).show();
@@ -1276,32 +1416,19 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void applySelectedCoverArt(android.net.Uri uri) {
+        Track display = viewModel.displayTag.getValue();
+        if (display == null || display.getPath() == null) return;
+        File parentDir = new File(display.getPath()).getParentFile();
+        if (parentDir == null) return;
         startProgressBar();
         CompletableFuture.runAsync(() -> {
             try {
-                Track display = viewModel.displayTag.getValue();
-                if (display == null && !getEditItems().isEmpty()) {
-                    display = getEditItems().get(0);
-                }
-                if (display != null) {
-                    File parentDir = new File(display.getPath()).getParentFile();
-                    if (parentDir != null) {
-                        File targetCover = new File(parentDir, "Cover.jpg");
-                        try (InputStream in = getContentResolver().openInputStream(uri);
-                             OutputStream out = new FileOutputStream(targetCover)) {
-                            byte[] buffer = new byte[8192];
-                            int read;
-                            while ((read = in.read(buffer)) != -1) {
-                                out.write(buffer, 0, read);
-                            }
-                        }
-                        for (Track item : getEditItems()) {
-                            item.setAlbumArtFilename(targetCover.getAbsolutePath());
-                        }
-                    }
+                try (InputStream in = getContentResolver().openInputStream(uri)) {
+                    if (in == null) throw new java.io.IOException("Cannot open selected image");
+                    viewModel.stageArtwork(getCacheDir(), new File(parentDir, "Cover.jpg"), in);
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error applying selected cover art", e);
+                throw new java.util.concurrent.CompletionException(e);
             }
         }).thenAccept(v -> {
             runOnUiThread(() -> {
@@ -1312,10 +1439,13 @@ public class TagsActivity extends AppCompatActivity {
                     loadImages(current);
                 }
                 stopProgressBar();
-                Toast.makeText(this, "Cover art updated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Cover art selected. Tap Save to apply.", Toast.LENGTH_SHORT).show();
             });
         }).exceptionally(ex -> {
-            runOnUiThread(this::stopProgressBar);
+            runOnUiThread(() -> {
+                stopProgressBar();
+                Toast.makeText(this, "Couldn't load cover art. Please choose another image.", Toast.LENGTH_LONG).show();
+            });
             return null;
         });
     }
@@ -1606,7 +1736,7 @@ public class TagsActivity extends AppCompatActivity {
         // Cover art with higher priority
         ImageRequest coverRequest = CoverartFetcher.builder(getApplicationContext(), displayTag)
                 .size(Size.ORIGINAL)
-                .data(displayTag)
+                .data(viewModel.getPendingArtworkFile() != null ? viewModel.getPendingArtworkFile() : displayTag)
                 .target(new Target() {
                     @Override
                     public void onStart(@Nullable Image placeholder) {}
@@ -1642,7 +1772,8 @@ public class TagsActivity extends AppCompatActivity {
                     @Override
                     public void onError(@Nullable Image errorDrawable) {}
                 })
-                .memoryCachePolicy(CachePolicy.ENABLED)
+                .memoryCachePolicy(CachePolicy.DISABLED)
+                .diskCachePolicy(CachePolicy.DISABLED)
                // .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();
 
@@ -1809,6 +1940,29 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    private void updatePreviewCoverSize() {
+        if (coverArtView == null) return;
+        View viewport = findViewById(R.id.preview_scroll);
+        android.widget.FrameLayout.LayoutParams params =
+                (android.widget.FrameLayout.LayoutParams) coverArtView.getLayoutParams();
+        int width = ViewGroup.LayoutParams.MATCH_PARENT;
+        int topMargin = 0;
+        if (currentEditMode == 0) {
+            int availableWidth = viewport.getWidth() - viewport.getPaddingLeft() - viewport.getPaddingRight();
+            int availableHeight = viewport.getHeight() - viewport.getPaddingTop() - viewport.getPaddingBottom();
+            if (availableWidth <= 0 || availableHeight <= 0) return;
+            int preferred = Math.max((int) dpToPx(this, 180),
+                    Math.min((int) dpToPx(this, 280), Math.round(availableHeight * 0.38f)));
+            width = Math.min(preferred, Math.max(1, availableWidth - (int) dpToPx(this, 32)));
+            topMargin = (int) dpToPx(this, 16);
+        }
+        if (params.width != width || params.topMargin != topMargin) {
+            params.width = width;
+            params.topMargin = topMargin;
+            coverArtView.setLayoutParams(params);
+        }
+    }
+
     private ValueAnimator headerHeightAnimator;
 
     private void animateHeaderHeight(CollapsingToolbarLayout header, int targetHeight) {
@@ -1836,12 +1990,14 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+            if (appBarLayout.getVisibility() != VISIBLE) return;
             double vScrollOffset = Math.abs(verticalOffset);
             // Only continue if there's an actual change
             if(vScrollOffset == prevScrollOffset) return;
             int totalRange = appBarLayout.getTotalScrollRange();
             if (totalRange <= 0) return;
             double scrollRatio = (double) vScrollOffset / totalRange;
+            boolean expanding = prevScrollOffset >= 0 && vScrollOffset < prevScrollOffset;
             prevScrollOffset = vScrollOffset;
 
             // Scale cover art
@@ -1855,7 +2011,7 @@ public class TagsActivity extends AppCompatActivity {
                 previewState = false;
                 setupActionButtons(1);
                 viewModel.refreshDisplayTag();
-            } else if (!previewState && scrollRatio <= EXIT_EDIT_RATIO) {
+            } else if (!previewState && expanding && scrollRatio <= EXIT_EDIT_RATIO) {
                 previewState = true;
                 setupActionButtons(0);
                 viewModel.refreshDisplayTag();

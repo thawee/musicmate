@@ -128,9 +128,27 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
+    private final ScheduledExecutorService smartQueueWorker =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:SmartQueue"));
     private ScheduledFuture<?> preloadTask;
     private ScheduledFuture<?> dmrStartupTimeoutTask;
     private ScheduledFuture<?> trackStartTask;
+
+    private volatile boolean acceptingHistory = true;
+    private final java.util.concurrent.ExecutorService historyWriter = Executors.newSingleThreadExecutor(
+            r -> new Thread(r, "MM:ListeningHistory"));
+    private final apincer.music.core.playback.ListeningHistoryTracker historyTracker =
+            new apincer.music.core.playback.ListeningHistoryTracker(event -> {
+                if (!acceptingHistory) return;
+                try {
+                    historyWriter.execute(() -> {
+                        try { tagRepos.getDbHelper().recordListeningEvent(event); }
+                        catch (Exception e) { Log.e(TAG, "Unable to persist listening history", e); }
+                    });
+                } catch (java.util.concurrent.RejectedExecutionException ignored) {
+                    // Service teardown won the race with a final callback.
+                }
+            });
 
     private volatile long lastPreloadedTrackId = -1;
     private volatile long lastPlaybackTrackId = -1;
@@ -168,6 +186,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         @Override
         public void onPlaybackCompleted() {
             skipToNextInQueue();
+        }
+
+        @Override
+        public void onNaturalTrackEnd() {
+            if (acceptingHistory) historyTracker.naturalEnd(android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
         }
 
         @Override
@@ -454,6 +477,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // Load queue from database
         if(queueManager != null) {
             playingQueueFlow.setValue(queueManager.getSongs());
+            smartQueueWorker.scheduleWithFixedDelay(() -> {
+                try {
+                    if (queueManager.refreshSmartQueue()) {
+                        playingQueueFlow.setValue(new java.util.ArrayList<>(queueManager.getSongs()));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Smart queue refresh failed; keeping current queue", e);
+                }
+            }, 0, 15, TimeUnit.SECONDS);
         }
 
         // Init WebUI assets in background to avoid blocking UI thread during service creation
@@ -569,6 +601,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
         public void onDestroy() {
+        historyTracker.end(false);
+        acceptingHistory = false;
+        historyWriter.shutdown(); // Drain accepted events; never discard a completed listen.
         if (mediaLibrarySession != null) {
             mediaLibrarySession.release();
             mediaLibrarySession = null;
@@ -587,6 +622,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         // 2. Shut down the scheduler
         scheduler.shutdownNow();
+        smartQueueWorker.shutdownNow();
 
         // 3. Remove LiveData observer
         if (statusObserver != null) {
@@ -644,6 +680,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void playSong(Track song) {
+        playSong(song, true);
+    }
+
+    private void playSong(Track song, boolean newInstance) {
+        if (song != null && newInstance) historyTracker.end(true);
         if (song != null) {
             if (!queueManager.containsTrack(song.getId())) {
                 queueManager.addPlayingQueue(song.getId());
@@ -670,6 +711,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void skipToNextInQueue() {
+        historyTracker.end(true);
         if (sleepTimerEndOfTrack) {
             sleepTimerEndOfTrack = false;
             sleepTimerEndTimeMs = 0;
@@ -716,6 +758,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void skipToPrevious() {
+        historyTracker.end(true);
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalPreviousOnDMRPlayer(playbackTarget);
@@ -751,6 +794,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void pausePlayer() {
+        historyTracker.suspend();
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 InternalPauseDMRPlayer(playbackTarget);
@@ -831,6 +875,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void stopPlaying() {
+        historyTracker.end(false);
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalStopOnDMRPlayer(playbackTarget);
@@ -927,6 +972,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void seekTo(long positionMs) {
+        historyTracker.seek();
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget != null) {
             try {
@@ -1125,6 +1171,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
 
             // 2. Deactivate current player IF DIFFERENT
+            if (!isSameTarget) historyTracker.suspend();
             currentPlayerFlow.getValue().ifPresent(oldTarget -> {
                 if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
                     deactivatePlayer(oldTarget);
@@ -1133,12 +1180,19 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
             apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), resolvedTarget.getTargetId());
 
+            // Publish the destination before activation: handoff playback and seek route
+            // through currentPlayerFlow, as do callbacks from the newly active player.
+            if (controlled || resolvedTarget.isStreaming()) {
+                this.controlledPlayerTargetId = resolvedTarget.getTargetId();
+            }
+            currentPlayerFlow.setValue(Optional.of(resolvedTarget));
+
             // 3. Activate the new player
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
                 // Register callback to ensure we are listening to this session
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
                 if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
-                    playSong(activeTrack);
+                    playSong(activeTrack, false);
                     if (currentPositionMs > 1000) {
                         seekTo(currentPositionMs);
                     }
@@ -1152,11 +1206,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 }
             }
 
-            if (controlled || resolvedTarget.isStreaming()) {
-                this.controlledPlayerTargetId = resolvedTarget.getTargetId();
-            }
-
-            currentPlayerFlow.setValue(Optional.of(resolvedTarget));
             Track active = getNowPlayingSong();
             updateNotification(getApplicationContext(), active, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs(), isPlaying());
         }
@@ -1553,6 +1602,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
+        observeListeningState(state);
         playbackStateFlow.setValue(state);
         apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
         // Only manually update notification if NOT using the local Media3 ExoPlayer
@@ -1570,8 +1620,26 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             // setValue() calls with the same object instance, even if fields changed.
             apincer.music.core.playback.PlaybackState updated = state.copy();
             updated.currentPositionSecond = elapsedTimeMS;
+            observeListeningState(updated);
+            if (acceptingHistory && updated.currentTrack != null && elapsedTimeMS >= 0) {
+                historyTracker.onPosition(updated.currentTrack.getId(), elapsedTimeMS * 1000L,
+                        android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
+            }
             playbackStateFlow.setValue(updated);
         }
+    }
+
+    private void observeListeningState(apincer.music.core.playback.PlaybackState state) {
+        if (!acceptingHistory) return;
+        if (state == null || state.currentTrack == null || state.currentState == null) {
+            historyTracker.suspend();
+            return;
+        }
+        double duration = state.durationSecond > 0 ? state.durationSecond : state.currentTrack.getAudioDuration();
+        long durationMs = Double.isFinite(duration) && duration > 0 ? (long) (duration * 1000) : 0;
+        historyTracker.onState(state.currentTrack.getId(), durationMs,
+                state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING,
+                android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
     }
 
     @Override

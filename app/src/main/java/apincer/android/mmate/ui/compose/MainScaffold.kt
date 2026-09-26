@@ -413,7 +413,6 @@ fun MainScaffold(
                     },
                     isBackVisible = state.isBackVisible.value || state.searchQuery.value.isNotEmpty(),
                     onBackClick = {
-                        state.searchQuery.value = ""
                         focusManager.clearFocus()
                         callbacks?.onSearchBackClick()
                     },
@@ -443,6 +442,11 @@ fun MainScaffold(
                         onRefresh = { callbacks?.onListRefresh() },
                         hasMoreItems = state.hasMoreMusic.value,
                         loadError = state.musicLoadError.value,
+                        libraryEmpty = state.libraryEmpty.value,
+                        hasActiveFilters = state.hasActiveMusicFilters.value,
+                        onDiscoverMusic = { callbacks?.onDiscoverMusicFolders() },
+                        onClearFilters = { callbacks?.onClearMusicFilters() },
+                        onBrowseAllMusic = { callbacks?.onBrowseAllMusic() },
                         onLoadMore = { callbacks?.onLoadMoreMusic() },
                         onTrackClick = { track, index ->
                             callbacks?.onTrackClick(track, index)

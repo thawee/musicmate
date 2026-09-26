@@ -27,6 +27,13 @@ public class QueueManagerTest {
 
     private QueueManager queueManager;
     private List<Track> savedQueue;
+    private final List<Track> smartCandidates = new ArrayList<>();
+    private String smartState = "";
+    private TagRepository repository;
+    private Runnable queryHook;
+    private final List<Track> unplayedCandidates = new ArrayList<>();
+    private final List<Track> rediscoverCandidates = new ArrayList<>();
+    private long rediscoverCutoff;
 
     private Track createDummyTrack(long id, String title) {
         return (Track) Proxy.newProxyInstance(
@@ -54,6 +61,17 @@ public class QueueManagerTest {
                 new Class<?>[]{DbHelper.class},
                 (proxy, method, args) -> {
                     String methodName = method.getName();
+                    if ("findUnplayed".equals(methodName)) return new ArrayList<>(unplayedCandidates);
+                    if ("findRediscover".equals(methodName)) {
+                        rediscoverCutoff = (long) args[0];
+                        return new ArrayList<>(rediscoverCandidates);
+                    }
+                    if ("getSmartQueueState".equals(methodName)) return smartState;
+                    if ("saveSmartQueueState".equals(methodName)) { smartState = (String) args[0]; return null; }
+                    if ("findMySongs".equals(methodName) || "findRecentlyAdded".equals(methodName)) {
+                        if (queryHook != null) queryHook.run();
+                        return new ArrayList<>(smartCandidates);
+                    }
                     if ("getPlayingQueue".equals(methodName)) {
                         return savedQueue;
                     } else if ("savePlayingQueue".equals(methodName)) {
@@ -82,6 +100,138 @@ public class QueueManagerTest {
 
         TagRepository dummyTagRepos = new TagRepository(null, dummyDbHelper);
         queueManager = new QueueManager(dummyTagRepos);
+        repository = dummyTagRepos;
+    }
+
+    private Track playable(long id) throws Exception {
+        AudioTag track = new AudioTag();
+        track.setId(id);
+        track.setPath(temporaryFolder.newFile("song-" + id + ".flac").getPath());
+        track.setUniqueKey("song-" + id);
+        return track;
+    }
+
+    @Test
+    public void unplayedUsesHistoryQueryAndPersistsSource() throws Exception {
+        smartCandidates.add(playable(1));
+        unplayedCandidates.add(playable(2));
+        queueManager.setSource(QueueManager.Source.UNPLAYED);
+        queueManager.refreshSmartQueue();
+        assertEquals(2, queueManager.getCurrentTrack().getId());
+        assertEquals(QueueManager.Source.UNPLAYED, new QueueManager(repository).getSource());
+    }
+
+    @Test
+    public void rediscoverUsesThirtyDayCutoffAndRetainsOldestFirstOrder() throws Exception {
+        rediscoverCandidates.add(playable(5));
+        rediscoverCandidates.add(playable(3));
+        long before = System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(30);
+        queueManager.setSource(QueueManager.Source.REDISCOVER);
+        queueManager.refreshSmartQueue();
+        long after = System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(30);
+        assertTrue(rediscoverCutoff >= before && rediscoverCutoff <= after);
+        assertEquals(5, queueManager.getCurrentTrack().getId());
+        assertEquals(3, queueManager.getNextTrack().getId());
+        queueManager.emptyPlayingQueue();
+        // Queue clearing must not clear listening-history eligibility.
+        queueManager.setSource(QueueManager.Source.REDISCOVER);
+        queueManager.refreshSmartQueue();
+        assertEquals(2, queueManager.getQueueSize());
+    }
+
+    @Test
+    public void smartQueue_boundsRefillAndAppendsNewCandidates() throws Exception {
+        for (int i = 1; i <= 30; i++) smartCandidates.add(playable(i));
+        queueManager.setSource(QueueManager.Source.NEW);
+        queueManager.refreshSmartQueue();
+        assertEquals(20, queueManager.getQueueSize());
+        queueManager.setPlaybackTrack(smartCandidates.get(18));
+        long stableNext = queueManager.getNextTrack().getId();
+        queueManager.refreshSmartQueue();
+        assertEquals(30, queueManager.getQueueSize());
+        assertEquals(stableNext, queueManager.getNextTrack().getId());
+        queueManager.setPlaybackTrack(smartCandidates.get(29));
+        queueManager.refreshSmartQueue();
+        assertTrue(queueManager.isSmartQueueCaughtUp());
+        smartCandidates.add(playable(31));
+        queueManager.refreshSmartQueue();
+        assertEquals(31, queueManager.getNextTrack().getId());
+    }
+
+    @Test
+    public void smartQueue_clearDuringLookupCannotRepopulateQueue() throws Exception {
+        smartCandidates.add(playable(1));
+        queueManager.setSource(QueueManager.Source.NEW);
+        queryHook = () -> queueManager.emptyPlayingQueue();
+        queueManager.refreshSmartQueue();
+        assertEquals(0, queueManager.getQueueSize());
+        assertEquals(QueueManager.Source.MANUAL, queueManager.getSource());
+    }
+
+    @Test
+    public void smartQueue_downloadPredicateAndMissingFilesAreRespected() throws Exception {
+        Track download = playable(1);
+        AudioTag managedPath = new AudioTag();
+        managedPath.setId(2);
+        File music = temporaryFolder.newFolder("Music");
+        File file = new File(music, "album.flac");
+        assertTrue(file.createNewFile());
+        managedPath.setPath(file.getPath());
+        smartCandidates.add(managedPath); smartCandidates.add(download);
+        queueManager.setSource(QueueManager.Source.DOWNLOADS);
+        queueManager.refreshSmartQueue();
+        assertEquals(1, queueManager.getQueueSize());
+        assertEquals(1, queueManager.getCurrentTrack().getId());
+        Track gone = playable(3), available = playable(4);
+        queueManager.enqueuePlayingQueue(java.util.Arrays.asList(gone, available));
+        assertTrue(new File(gone.getPath()).delete());
+        assertEquals(4, queueManager.getNextTrack().getId());
+    }
+
+    @Test
+    public void smartQueue_preservesNextAndPrioritizesManualChoice() throws Exception {
+        Track current = playable(1), next = playable(2), suggestion = playable(3), chosen = playable(4);
+        queueManager.setPlayingQueue(java.util.Arrays.asList(current, next));
+        queueManager.setSource(QueueManager.Source.NEW);
+        smartCandidates.add(suggestion);
+        queueManager.refreshSmartQueue();
+        assertEquals(2, queueManager.getNextTrack().getId());
+        queueManager.addPlayingQueue(chosen);
+        assertEquals(4, queueManager.getNextTrack().getId());
+        assertEquals(1, queueManager.getCurrentTrack().getId());
+    }
+
+    @Test
+    public void smartQueue_removedSuggestionsDoNotReturnAfterRestart() throws Exception {
+        Track first = playable(1), second = playable(2);
+        smartCandidates.add(first); smartCandidates.add(second);
+        queueManager.setSource(QueueManager.Source.DOWNLOADS);
+        queueManager.refreshSmartQueue();
+        queueManager.setPlaybackTrack(first);
+        queueManager.removeTrackById(2);
+        QueueManager restored = new QueueManager(repository);
+        restored.refreshSmartQueue();
+        assertEquals(QueueManager.Source.DOWNLOADS, restored.getSource());
+        assertEquals(1, restored.getQueueSize());
+        assertNull(restored.getNextTrack());
+    }
+
+    @Test
+    public void smartQueue_restoresAnchorAndManualFreezesRefill() throws Exception {
+        Track first = playable(1), second = playable(2);
+        smartCandidates.add(first); smartCandidates.add(second);
+        queueManager.setSource(QueueManager.Source.NEW);
+        queueManager.refreshSmartQueue();
+        queueManager.setPlaybackTrack(second);
+        QueueManager restored = new QueueManager(repository);
+        assertEquals(2, restored.getCurrentTrack().getId());
+        assertNull(restored.getNextTrack());
+        restored.setSource(QueueManager.Source.MANUAL);
+        smartCandidates.add(playable(3));
+        restored.refreshSmartQueue();
+        assertEquals(2, restored.getQueueSize());
+        restored.emptyPlayingQueue();
+        assertEquals(QueueManager.Source.MANUAL, new QueueManager(repository).getSource());
     }
 
     @Test

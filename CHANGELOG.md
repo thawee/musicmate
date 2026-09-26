@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Smart Queue sources:** Select Manual, New (existing unorganized category), Downloads (all tracks matching the existing download classifier), Unplayed Discoveries (tracks with zero recorded completed listens), or Rediscover (previously completed tracks unplayed for >= 30 days, oldest first). Background auto-fill appends suggestions without replacing current playback; manual additions take priority. Source, queue anchor, and session exclusions persist across restarts. Manual freezes the list; Clear ends the session. Includes loading/error and caught-up messaging.
+- **Listening history & playback accounting:** Durable history storage (`listening_history` table) with non-destructive Room migration (1 → 2). Tracks completed listens (≥ 90% actual playtime, excluding paused periods and seek jumps), distinct skips, and session idempotence without inflating counts from jitter or renderer transitions. Dedicated single-thread worker safely drains events during service destruction.
+
+### Fixed
+- **Tag preview launch crash:** The Studio Command Dock passed a color value to `setIconTintResource`, which expects a resource ID and crashed `TagsActivity` on open. Icon tinting now uses a `ColorStateList`.
+- **Tag preview layout:** Scroll the complete cover and metadata above the action dock, eliminating fixed-height clipping. Match and center the 48dp cover controls; retain all five bottom actions.
+- **Playback output switching:** Select the new playback destination before sending handoff playback and seek commands.
+- **Cover-art editing:** Image selections remain unsaved drafts until Save. Discard preserves the original image, failed copies report an error, and atomic replacement keeps existing artwork intact if saving fails. Saved selections resolve directly instead of falling back to an older cached image.
+- **Quick Play:** Build the replacement queue from the complete current query, including tracks beyond the loaded page; report lookup failures without clearing the existing queue.
+- **Search navigation:** Keep the visible query consistent with active search criteria when changing categories or stepping back through filters.
+- **Music folders:** Keep additions and removals in the same draft and persist only when a scan is confirmed. The folder dialog now uses a lifecycle-aware Compose host.
+
+### Changed
+- **Preview polish:** Quieter cover controls, a text-style genre control, lighter metadata dividers, and neutral utilities put focus on artwork and Edit/Save. Dock icon-label pairs are centered; Save reserves space for its status indicator, and buttons can grow with text size.
+- **Studio Command Dock (tag preview):** Replaced the frosted action bar with a charcoal console surface using 24dp top corners, hairline separators between evenly spaced utility actions, and a 65/35 split between a graphite Edit control and an amber Save control. Save now signals idle, unsaved, saving, and saved states through an indicator, progress spinner, and checkmark, announced via accessibility state descriptions. All five actions are retained with press feedback and existing long-press shortcuts.
+- **Compact tag preview:** Center and size artwork to the available preview viewport (up to 280dp), combine genre with wrapping audio badges, and group artist/album/folder into one divided panel. A continuous title/details surface and reduced spacing expose more metadata on the first screen while preserving scrolling and all five bottom actions.
+- **Preview metadata:** Use labeled artist, album, and folder rows with explicit track counts, consistent vector icons and blue navigation accents. Wrap audio badges on narrow screens and brighten the preview dynamic-range meter on a uniform dark surface.
+- **Library recovery:** Empty-library, no-results, empty-collection, and load-error screens offer Choose folders / Scan, Clear search and filters, Browse all songs, and Retry respectively.
+- **Queue clearing:** Require confirmation before removing a nonempty queue in both Music Center hosts.
+
+### Verification
+- App/core/server unit tests: 117 passed (50 core, 51 app, 16 server), plus 3 SQLite migration/query tests; debug APK assembled. Lint remains blocked by 22 pre-existing errors. Device playback and visual journey verification remain pending.
+
 ## [3.19.8] - 2026-09-25
 
 ### Added
@@ -26,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version:** Bumped Android `versionCode` to `136` and `versionName` to `3.19.8-<build date>`; the drawer label now reads `v3.19.8`.
 
 ### Fixed
+- **Save feedback:** Finish the preview indicator on editor-delegated success/failure, retain the brief success checkmark across refreshes, announce saving/saved distinctly, and cancel delayed feedback on activity destruction.
 - **Tag editing:** Search & Match and auto-tag now mark successfully applied metadata as unsaved so Back prompts before discarding it.
 - **Large collections:** Folder, playlist, album-filtered, and other full-result queries now honor the requested 500-track page rather than appending the same tracks again on scroll.
 - **Library navigation:** Switching categories clears an earlier related-track filter; an empty Playlists category still exposes New Smart Playlist.

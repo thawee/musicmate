@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -329,40 +336,38 @@ fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun TagHeaderBadges(track: Track?, modifier: Modifier = Modifier) {
+fun TagHeaderBadges(
+    track: Track?,
+    modifier: Modifier = Modifier,
+    trailingContent: @Composable () -> Unit = {}
+) {
     if (track == null) return
-    Row(
+    FlowRow(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        itemVerticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         QualityBadge(track = track, expanded = true)
-        Spacer(modifier = Modifier.width(6.dp))
         ResolutionBadge(track = track)
-        Spacer(modifier = Modifier.width(6.dp))
-        DynamicRangeMeter(track = track)
-        Spacer(modifier = Modifier.width(6.dp))
+        DynamicRangeMeter(track = track, highContrast = true)
         RatingBadge(track = track, mode = "mini")
-        Spacer(modifier = Modifier.width(6.dp))
         NewBadge(track = track)
+        trailingContent()
     }
 }
 
 @Composable
 fun TaxonomyChip(
     label: String,
-    icon: String,
+    icon: Int,
     accentColor: Color,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
     val haptic = LocalHapticFeedback.current
-    val bgBase = Color(0xD9141414)
-    val bgTint = accentColor.copy(alpha = 0.10f)
-    val borderColor = accentColor.copy(alpha = 0.28f)
-
     val clickableMod = if (onClick != null) {
-        Modifier.clickable {
+        Modifier.clickable(role = Role.Button) {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
         }
@@ -373,10 +378,8 @@ fun TaxonomyChip(
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .background(bgBase)
-            .background(bgTint)
-            .border(0.5.dp, borderColor, CircleShape)
             .then(clickableMod)
+            .heightIn(min = 48.dp)
             .padding(horizontal = 9.dp, vertical = 3.5.dp)
             .semantics {
                 contentDescription = if (onClick != null) "$label. Tap to explore related tracks." else label
@@ -386,16 +389,17 @@ fun TaxonomyChip(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = icon,
-                fontSize = 10.sp,
-                maxLines = 1
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = label,
                 color = Color(0xFFEEEEEE),
-                fontSize = 10.5.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 0.2.sp,
                 maxLines = 1,
@@ -405,12 +409,11 @@ fun TaxonomyChip(
             )
             if (onClick != null) {
                 Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    text = "›",
-                    color = accentColor.copy(alpha = 0.8f),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_right),
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -418,7 +421,7 @@ fun TaxonomyChip(
 }
 
 @Composable
-fun TaxonomyChipsRow(
+private fun PreviewGenreChip(
     track: Track?,
     onOpenRelated: ((filterType: String, filterKeyword: String, title: String) -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -438,33 +441,21 @@ fun TaxonomyChipsRow(
 
     if (genre.isEmpty()) return
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(4.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (genre.isNotEmpty()) {
-                TaxonomyChip(
-                    label = genre,
-                    icon = "🏷️",
-                    accentColor = Color(0xFF80CBC4),
-                    onClick = onOpenRelated?.let { callback ->
-                        { callback(Constants.FILTER_TYPE_GENRE, genre, "Genre: $genre") }
-                    }
-                )
-            }
+    TaxonomyChip(
+        label = "${stringResource(R.string.preview_genre_label)}: $genre",
+        icon = R.drawable.rounded_label_24,
+        accentColor = Color(0xFF90CAF9),
+        modifier = modifier,
+        onClick = onOpenRelated?.let { callback ->
+            { callback(Constants.FILTER_TYPE_GENRE, genre, "Genre: $genre") }
         }
-    }
+    )
 }
 
 @Composable
-fun ProvenanceCapsule(
-    icon: String,
+private fun ProvenanceRow(
+    icon: Int,
+    fieldLabel: String,
     label: String,
     count: Int,
     accentColor: Color,
@@ -472,66 +463,57 @@ fun ProvenanceCapsule(
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val bgBase = Color(0xD9141414)
-    val bgTint = accentColor.copy(alpha = 0.10f)
-    val borderColor = accentColor.copy(alpha = 0.28f)
 
     Box(
         modifier = modifier
-            .clip(CircleShape)
-            .background(bgBase)
-            .background(bgTint)
-            .border(0.5.dp, borderColor, CircleShape)
-            .clickable {
+            .fillMaxWidth()
+            .clickable(role = Role.Button) {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             }
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-            .semantics {
-                contentDescription = if (count > 0) "$label. $count tracks available in library." else label
-            },
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = icon,
-                fontSize = 10.sp,
-                maxLines = 1
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                color = Color(0xFFEEEEEE),
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.2.sp,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-            if (count > 0) {
-                Spacer(modifier = Modifier.width(3.5.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = fieldLabel, color = Color(0xFFBCC5CF), fontSize = 12.sp)
                 Text(
-                    text = "• $count",
-                    color = accentColor.copy(alpha = 0.9f),
-                    fontSize = 9.5.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
+                    text = label,
+                    color = Color(0xFFEEEEEE),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (count > 0) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = pluralStringResource(R.plurals.preview_track_count, count, count),
+                    color = Color(0xFFBCC5CF),
+                    fontSize = 12.sp,
                     maxLines = 1,
                     softWrap = false
                 )
             }
-            Spacer(modifier = Modifier.width(3.dp))
-            Text(
-                text = "❯",
-                color = accentColor.copy(alpha = 0.65f),
-                fontSize = 9.5.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(20.dp)
             )
         }
     }
@@ -550,37 +532,37 @@ fun StudioProvenanceSection(
     if (!hasArtist && !hasAlbum && !hasFolder) return
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF20262B)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Row 1: Music Discography (Artist & Album in fluid natural flow)
+        // Consistent full-width rows keep labels and navigation affordances aligned.
         if (hasArtist || hasAlbum) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 if (hasArtist) {
-                    ProvenanceCapsule(
-                        icon = "👤",
+                    ProvenanceRow(
+                        icon = R.drawable.ic_artist_black_24dp,
+                        fieldLabel = stringResource(R.string.preview_artist_label),
                         label = provenance.artist,
                         count = provenance.artistCount,
-                        accentColor = Color(0xFFFFD700),
-                        modifier = Modifier.widthIn(max = 200.dp),
+                        accentColor = Color(0xFF90CAF9),
                         onClick = {
                             onOpenRelated(Constants.FILTER_TYPE_ARTIST, provenance.artist, "More by ${provenance.artist}")
                         }
                     )
                 }
                 if (hasAlbum) {
-                    ProvenanceCapsule(
-                        icon = "💿",
+                    if (hasArtist) ProvenanceDivider()
+                    ProvenanceRow(
+                        icon = R.drawable.ic_album_black_24dp,
+                        fieldLabel = stringResource(R.string.preview_album_label),
                         label = provenance.album,
                         count = provenance.albumCount,
-                        accentColor = Color(0xFF80CBC4),
-                        modifier = Modifier.widthIn(max = 200.dp),
+                        accentColor = Color(0xFF90CAF9),
                         onClick = {
                             onOpenRelated(Constants.FILTER_TYPE_ALBUM, provenance.album, "Album: ${provenance.album}")
                         }
@@ -589,21 +571,21 @@ fun StudioProvenanceSection(
             }
         }
 
-        // Row 2: Location
+        // Location is labeled separately even when it shares the album name.
         if (hasFolder) {
             val fName = provenance.folderName.ifBlank { "Folder" }
-            Spacer(modifier = Modifier.height(10.dp))
+            if (hasArtist || hasAlbum) ProvenanceDivider()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProvenanceCapsule(
-                    icon = "📁",
+                ProvenanceRow(
+                    icon = R.drawable.rounded_folder_24,
+                    fieldLabel = stringResource(R.string.preview_folder_label),
                     label = fName,
                     count = provenance.folderCount,
                     accentColor = Color(0xFF90CAF9),
-                    modifier = Modifier.widthIn(max = 240.dp),
                     onClick = {
                         onOpenRelated(Constants.FILTER_TYPE_PATH, provenance.folderPath, "Folder: $fName")
                     }
@@ -611,6 +593,15 @@ fun StudioProvenanceSection(
             }
         }
     }
+}
+
+@Composable
+private fun ProvenanceDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 44.dp, end = 12.dp),
+        thickness = 0.5.dp,
+        color = Color(0xFF354049)
+    )
 }
 
 @Composable
@@ -720,12 +711,11 @@ fun TagPreviewHeader(
             }
             Spacer(modifier = Modifier.height(6.dp))
         }
-        TagHeaderBadges(track = track)
-        TaxonomyChipsRow(
-            track = track,
-            onOpenRelated = onOpenRelated
-        )
+        TagHeaderBadges(track = track, modifier = Modifier.fillMaxWidth()) {
+            PreviewGenreChip(track = track, onOpenRelated = onOpenRelated)
+        }
         if (provenance != null && onOpenRelated != null) {
+            Spacer(modifier = Modifier.height(8.dp))
             StudioProvenanceSection(
                 provenance = provenance,
                 onOpenRelated = onOpenRelated

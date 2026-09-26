@@ -37,6 +37,8 @@ class MainScaffoldState {
     val selectedTracks = mutableStateListOf<Track>()
     var hasMoreMusic = mutableStateOf(false)
     var musicLoadError = mutableStateOf<String?>(null)
+    var libraryEmpty = mutableStateOf(false)
+    var hasActiveMusicFilters = mutableStateOf(false)
     var isRefreshing = mutableStateOf(false)
     var scrollToIndex = mutableIntStateOf(-1)
 

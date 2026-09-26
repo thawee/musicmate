@@ -63,6 +63,10 @@ class MainViewModel(
     val hasMoreItems = MutableLiveData(false)
     @JvmField
     val loadError = MutableLiveData<String?>(null)
+    @JvmField
+    val playbackError = MutableLiveData<String?>(null)
+    @JvmField
+    val libraryEmpty = MutableLiveData(false)
     private var currentCriteria: SearchCriteria? = null
     private var currentPage = 0
     private var isLastPage = false
@@ -118,9 +122,11 @@ class MainViewModel(
         loadJob = viewModelScope.launch(ioDispatcher) {
             try {
                 val stats = if (replace) repos.getSearchStats(criteria) else null
+                val emptyLibrary = if (replace) repos.totalSongs == 0L else null
                 val items = repos.findMusic(criteria, offset, limit) ?: emptyList()
                 withContext(Dispatchers.Main) {
                     if (generation != requestGeneration) return@withContext
+                    if (emptyLibrary != null) libraryEmpty.value = emptyLibrary
                     if (replace && stats != null) {
                         _searchStats.value = stats
                         _searchStatsFlow.value = stats
@@ -258,19 +264,24 @@ class MainViewModel(
         }
     }
 
-    fun playTrackList(items: List<Track>?, startTrack: Track?, playbackService: PlaybackService?) {
-        if (items.isNullOrEmpty() || playbackService == null) return
+    fun playCurrentResults(startTrack: Track?, playbackService: PlaybackService?) {
+        if (playbackService == null) return
+        val criteria = snapshot(currentCriteria) ?: return
+        playbackError.value = null
 
         viewModelScope.launch(ioDispatcher) {
             try {
-                // Filter out container items
-                val songsToPlay = items.filter { !it.isContainer }
-                if (songsToPlay.isEmpty()) return@launch
+                val songsToPlay = (repos.findMusic(criteria, 0L, Long.MAX_VALUE) ?: emptyList())
+                    .filter { !it.isContainer }
+                if (songsToPlay.isEmpty()) throw IllegalStateException("No playable results")
+                val targetTrack = startTrack?.let { selected ->
+                    songsToPlay.firstOrNull { it.id == selected.id }
+                        ?: throw IllegalStateException("Selected track is no longer in the library")
+                } ?: songsToPlay[0]
 
                 val queue = playbackService.queueManager
                 queue.setPlayingQueue(songsToPlay)
 
-                val targetTrack = startTrack ?: songsToPlay[0]
                 withContext(Dispatchers.Main) {
                     playbackService.playSong(targetTrack)
                 }
@@ -283,8 +294,12 @@ class MainViewModel(
                 withContext(Dispatchers.Main) {
                     MainScaffoldState.updateQueue(ArrayList(allQueueSongs), playingKey, totalDurationStr)
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
-                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    playbackError.value = "Couldn't start playback. Please try again."
+                }
             }
         }
     }

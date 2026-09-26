@@ -1,3 +1,89 @@
+# Listening History and Discovery Sources
+
+## Status: 🟢 Implemented & Verified (Device Review Pending)
+
+- [x] Add durable history storage separate from queue state, with a non-destructive database migration (`listening_history` table, `MIGRATION_1_2`, RoomDbHelper, tested with SQLite script).
+- [x] Implement playback accounting with regression tests for pauses, seeks, duplicate events, same-track handoffs/repeats, completion and skips (`ListeningHistoryTracker`, 8 core unit tests).
+- [x] Wire service playback events and add Unplayed/Rediscover sources using the approved 90%/30-day defaults (`MusicMateServiceImpl`, `QueueManager`, `QueuePage.kt`).
+- [x] Run core/app tests and debug build, update documentation, and record device verification limitations (117 unit tests pass across all modules, debug APK built, `USER_GUIDE.md` and `CHANGELOG.md` updated).
+
+### Verification & Results
+- **Unit Tests:** 117 tests pass (50 core, 51 app, 16 server), plus 3 Python SQLite migration/query tests.
+- **Build:** `./gradlew assembleDebug` succeeds cleanly (`app/build/outputs/apk/debug/app-debug.apk`).
+- **Device Limitations:** Physical device playback telemetry, UI interaction, and audio transitions remain unverified in runtime environment due to device access constraints.
+
+---
+
+# Smart Queue Implementation
+
+- [x] Implement persisted Manual/New/Downloads source state and bounded refill with session exclusions and manual priority.
+- [x] Integrate background refresh and shared source selector in queue UI, with accurate category descriptions and empty states.
+- [x] Add six queue regressions for stable next tracks/manual priority, removal suppression after restart, anchor restoration/manual freeze, bounded refill/new candidates, clear-during-query races, and Downloads/missing files. All 40 core and 51 app tests pass; debug APK built; diff check clean.
+- Detailed approved definitions: `tasks/smart-queue-plan.md`.
+- Device playback, source-menu rendering, and process-restart journeys remain unverified because device-tool instruction access was blocked earlier in this session.
+
+---
+
+# Preview Simplification and Save Feedback
+
+- [x] Quiet genre, cover controls, metadata borders, and utility colors; center button content and reserve indicator space while keeping five actions.
+- [x] Connect saving/success/failure feedback to both save paths and clear delayed feedback on destruction. Source review complete; device interactions remain unverified.
+- [x] Build debug APK, run app tests, inspect resources/diff, and document visual verification limits. Debug assembly succeeds; 51 app tests pass; diff clean. XML checks confirm all five centered actions. Updated UI/changelog. New rendering, large-font behavior, and interactive save outcomes still require device verification; device-tool instruction access remains blocked in this session.
+
+---
+
+# Studio Command Dock — Implemented; Device Review Pending
+
+## Objective
+- Redesign the five tag-preview actions into one console-like control surface without removing any action.
+
+## Checklist
+- [x] Charcoal dock surface with 24dp top corners, hairline top border, and 16dp side padding.
+- [x] Evenly spaced utility row with vector icons, 48dp targets, hairline separators, and neutral styling; removed Organize's filled pill.
+- [x] 65/35 split between graphite Edit Song Info and Save, both 52dp with 14dp corners.
+- [x] Save indicator covering clean, unsaved, saving, and saved states with accessibility state descriptions.
+- [x] Brief press compression plus existing haptics; long-press shortcuts preserved.
+- [x] Build, app tests, and diff checks pass; all five action IDs retained.
+
+## Verification limit
+- Device visual and interactive review remains pending; device-tool instruction access was denied earlier in this session.
+
+---
+
+# Compact Tag Preview — Implemented; Device Review Pending
+
+## Objective
+- Improve first-screen density after the user confirmed folder scrolling works. Detailed plan: `tasks/plan.md`.
+
+## Checklist
+- [x] Review the proposed compact layout with the user. Approved: “do it”.
+- [x] Compact the centered square artwork and title using available viewport space. Java/resources compile; source checked for restoring full-width editor artwork. Device transition verification pending.
+- [x] Group genre/audio badges and consolidate labeled metadata rows. Compose compilation passes; navigation callbacks preserved and source reviewed.
+- [ ] Compare against the reference screenshot; target all metadata visible at default font on that phone.
+- [x] Build, run app tests, check diff, and update UI/release documentation. Debug assembly and app tests passed; diff clean. Source review covers 48dp controls, 56dp metadata rows, wrapping, and viewport bounds; runtime responsive/accessibility checks remain pending.
+
+## Verification limit
+- The same-device screenshot comparison and interactive preview/editor checks remain pending because device-tool instruction access was denied earlier in this session. Do not treat the first-screen fit target as visually verified.
+
+---
+
+# Preview Screen Visual Fixes
+
+## Objective
+- Resolve screenshot review findings while preserving all five bottom actions and existing editing work.
+
+## Plan and verification
+- [x] Replace fixed preview header sizing with scrollable content bounded above the measured action dock; match and center artwork controls. Java/resource compilation passed.
+- [x] Align labeled metadata rows, clarify track counts, unify vector icons/accent colors, and improve badge contrast and wrapping. Debug assembly and app unit tests passed.
+- [x] Build debug APK, run app unit tests, inspect diff, and verify rendering on an available device if access permits. Debug assembly and 51 app tests pass; `git diff --check` passes. XML comparison confirms all five bottom action definitions are unchanged. Device rendering remains unverified because access to the required device-interaction reference was denied.
+
+## Result
+- Preview scrolls independently above the dock; editor return-to-preview requires an actual expanding gesture. Removed the obsolete pager dock margin to avoid double-reserving footer space.
+- Matching 48dp artwork controls, labeled metadata rows, localized track counts, consistent navigation icons/colors, wrapping badges, and brighter preview DR colors implemented.
+- Updated UI documentation and Unreleased notes. APK: `app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
 # Statusline Overhaul: Single-Line HUD with Remaining Quota
 
 ## Status: 🟢 Completed & Hardened
@@ -132,3 +218,49 @@
 - [x] Bump patch version and versionCode; update stale displayed version in the drawer.
 - [x] Verify Gradle tests/build, documentation consistency, staged scope, and diff hygiene (lint has known unrelated failures; device UI not run).
 - [x] Commit all intended source/documentation changes; confirm clean working tree and report commit ID.
+
+---
+
+# Usage and Functional UX Review
+
+## Objective
+- Review current primary user journeys for usability and functional gaps, rechecking the latest implementation rather than repeating resolved audit findings.
+
+## Checklist
+- [x] Inspect navigation, discovery, playback, queue, and library-editing flows with source evidence.
+- [x] Verify high-impact findings against call sites; source review only, no builds, tests, or device interaction performed.
+- [x] Deliver prioritized findings with user impact and actionable recommendations.
+
+## Review summary
+- Found playback handoff ordering, immediate artwork writes despite Discard, loaded-page queue scope, search state divergence, and folder draft persistence defects.
+- Identified ineffective empty-library recovery and queue-clear recovery friction.
+- Rechecked current implementation rather than repeating previously resolved audit findings. Runtime playback and visual/accessibility checks remain unverified.
+
+---
+
+# Improve Usage and Functional UX
+
+## Objective
+- Resolve the seven reviewed issues with predictable playback, recoverable editing, and actionable library states.
+
+## Implementation and verification
+- [x] Correct playback target handoff ordering; app unit tests/compilation pass (physical handoff still needs device verification).
+- [x] Stage selected artwork until Save, preserve originals on failure, and retain drafts for retry; four file-persistence tests and TagsViewModel tests pass.
+- [x] Resolve the full active query for Quick Play; 1,003-track regression fails before fix and passes after fix, with MainViewModel suite passing.
+- [x] Synchronize visible search with navigation and Back behavior; app compilation/tests pass.
+- [x] Keep folder additions/removals in one draft until scan confirmation; app compilation/tests pass.
+- [x] Offer context-specific empty-library, no-results, and error recovery actions; test distinguishes no matches from no indexed music.
+- [x] Make queue clearing explicitly confirmed in the shared QueuePage used by both hosts.
+- [x] Run app/core tests and debug build, check lint/diff, and document verification limits.
+
+## Verification refinements
+- Verify artwork also resolves after Save (including previously cached artwork); preserve the selected file path in saved metadata.
+- Bind the folder dialog to a lifecycle-aware host so the new discovery action can safely display Compose content.
+- Device interaction references are permission-blocked; device/visual journeys cannot be verified in this session.
+
+## Results
+- 51 app and 34 core tests pass (85 total), including eight new regression cases covering artwork persistence/retry, complete-result playback, failed playback lookup, and empty-library classification.
+- Debug APK assembled at `app/build/outputs/apk/debug/app-debug.apk`.
+- Lint reports 22 pre-existing errors in unchanged service/audio declarations (MissingSuperCall and Media3 opt-in), plus warnings/hints; no lint errors in added behavior.
+- `git diff --check` passes. Updated `UI.md` and Unreleased changelog to document the new interactions.
+- Device playback handoff, dialog rendering, and touch/accessibility journeys remain unverified.

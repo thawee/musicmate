@@ -26,4 +26,7 @@ public abstract class PlaybackCallback {
 
     public void onPlaybackCompleted() {
     }
+
+    /** Confirmed natural end (including gapless transitions); does not request queue advancement. */
+    public void onNaturalTrackEnd() { }
 }

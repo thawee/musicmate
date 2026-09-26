@@ -64,10 +64,41 @@ class TagsViewModel(
     var draftsDirty = false
 
     private var restoredDrafts: android.os.Bundle? = null
+    private var artworkDraft: ArtworkDraft? = null
+
+    val pendingArtworkFile: java.io.File? get() = artworkDraft?.file
+
+    @Throws(java.io.IOException::class)
+    fun stageArtwork(cacheDirectory: java.io.File, target: java.io.File, input: java.io.InputStream) {
+        val replacement = ArtworkDraft.stage(cacheDirectory, target, input)
+        artworkDraft?.discard()
+        artworkDraft = replacement
+    }
+
+    @Throws(java.io.IOException::class)
+    fun commitArtwork() {
+        artworkDraft?.commit()
+    }
+
+    fun applyArtworkToTrack(track: Track) {
+        artworkDraft?.let { draft ->
+            if (track.path != null && java.io.File(track.path).parentFile == draft.target.parentFile) {
+                track.albumArtFilename = draft.target.absolutePath
+            }
+        }
+    }
+
+    override fun onCleared() {
+        artworkDraft?.discard()
+        super.onCleared()
+    }
 
     fun recordSaveResult(successCount: Int, failureCount: Int): Boolean {
         val allSaved = successCount > 0 && failureCount == 0
         if (allSaved) {
+            _editItemsFlow.value.forEach(::applyArtworkToTrack)
+            artworkDraft?.discard()
+            artworkDraft = null
             editorState.resetModified()
             draftsDirty = false
         }
@@ -75,6 +106,10 @@ class TagsViewModel(
     }
 
     fun saveDraftState(): android.os.Bundle = android.os.Bundle().apply {
+        artworkDraft?.let {
+            putString("artworkDraft", it.file.absolutePath)
+            putString("artworkTarget", it.target.absolutePath)
+        }
         putBoolean("dirty", draftsDirty)
         putBundle("editor", android.os.Bundle().apply {
             editorState.snapshot().forEach { (key, value) -> putString(key, value) }
@@ -100,6 +135,11 @@ class TagsViewModel(
 
     fun restoreDraftState(state: android.os.Bundle?) {
         if (state == null) return
+        val artworkPath = state.getString("artworkDraft")
+        val artworkTarget = state.getString("artworkTarget")
+        if (artworkPath != null && artworkTarget != null) {
+            artworkDraft = ArtworkDraft(java.io.File(artworkPath), java.io.File(artworkTarget))
+        }
         draftsDirty = state.getBoolean("dirty")
         state.getBundle("editor")?.let { bundle ->
             editorState.restore(bundle.keySet().associateWith { bundle.getString(it).orEmpty() })

@@ -178,6 +178,9 @@ public class AndroidPlayerController {
                 public void onPlaybackStateChanged(int playbackState) {
                     if (playbackState == Player.STATE_ENDED) {
                         if (playbackCallback != null) {
+                            if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+                                playbackCallback.onNaturalTrackEnd();
+                            }
                             playbackCallback.onPlaybackCompleted();
                         }
                     }
@@ -187,6 +190,9 @@ public class AndroidPlayerController {
                     if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                         Log.d(TAG, "ExoPlayer: Gapless automatic track transition occurred");
                         if (playbackCallback != null) {
+                            if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
+                                playbackCallback.onNaturalTrackEnd();
+                            }
                             if (nextTrack != null) {
                                 Track transitioningTrack = nextTrack;
                                 nextTrack = null;

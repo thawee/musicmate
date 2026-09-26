@@ -176,6 +176,62 @@ class MainViewModelTest {
         assertFalse(viewModel.musicItemsLoadingFlow.value)
     }
 
+    @Test
+    fun quickPlayQueuesAllResultsEvenWhenOnlyFirstPageIsLoaded() = runTest(testDispatcher) {
+        val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY).apply { searchFor("Artist") }
+        val allTracks = tracks(1, 1003)
+        every { tagRepository.findMusic(criteria, 0L, 500L) } returns allTracks.take(500)
+        every { tagRepository.findMusic(criteria, 0L, Long.MAX_VALUE) } returns allTracks
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        val service = mockk<apincer.music.core.playback.spi.PlaybackService>(relaxed = true)
+        val queue = mockk<apincer.music.core.repository.QueueManager>(relaxed = true)
+        var queued: List<Track> = emptyList()
+        every { service.queueManager } returns queue
+        every { queue.setPlayingQueue(any()) } answers { queued = firstArg(); Unit }
+        every { queue.songs } answers { queued }
+
+        viewModel.playCurrentResults(allTracks[20], service)
+        advanceUntilIdle()
+
+        assertEquals(allTracks, queued)
+        verify { service.playSong(allTracks[20]) }
+        assertEquals(500, viewModel.musicItems.value!!.size)
+    }
+
+    @Test
+    fun failedQuickPlayLookupLeavesExistingQueueUntouchedAndReportsError() = runTest(testDispatcher) {
+        val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY)
+        every { tagRepository.findMusic(criteria, 0L, 500L) } returns tracks(1, 2)
+        every { tagRepository.findMusic(criteria, 0L, Long.MAX_VALUE) } throws IllegalStateException("Database unavailable")
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        val service = mockk<apincer.music.core.playback.spi.PlaybackService>(relaxed = true)
+
+        viewModel.playCurrentResults(viewModel.musicItems.value!![0], service)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { service.queueManager }
+        verify(exactly = 0) { service.playSong(any()) }
+        assertEquals("Couldn't start playback. Please try again.", viewModel.playbackError.value)
+    }
+
+    @Test
+    fun zeroSearchResultsAreNotMistakenForAnEmptyLibrary() = runTest(testDispatcher) {
+        val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY).apply { searchFor("No match") }
+        every { tagRepository.findMusic(criteria, any(), any()) } returns emptyList()
+        every { tagRepository.totalSongs } returns 100L
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        assertTrue(viewModel.musicItems.value!!.isEmpty())
+        assertEquals(false, viewModel.libraryEmpty.value)
+
+        every { tagRepository.totalSongs } returns 0L
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        assertEquals(true, viewModel.libraryEmpty.value)
+    }
+
     private fun tracks(firstId: Int, count: Int): List<Track> =
         (firstId until firstId + count).map { id ->
             AudioTag().apply {

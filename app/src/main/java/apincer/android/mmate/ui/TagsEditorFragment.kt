@@ -265,10 +265,13 @@ class TagsEditorFragment : Fragment() {
         // Read Compose state on Main, and give background writers independent copies.
         drafts.forEach { buildPendingTags(it) }
         val itemsToSave = drafts.map { it.copy() }
+        host.setSaveInProgress(true)
         CompletableFuture.supplyAsync({
+            model.commitArtwork()
             var success = 0
             val failed = mutableListOf<String>()
             itemsToSave.forEachIndexed { index, tag ->
+                model.applyArtworkToTrack(tag)
                 val saved = try { fileRepos.setMusicTag(tag) } catch (e: Exception) {
                     Log.e("TagsEditorFragment", "Save failed for ${tag.path}", e)
                     false
@@ -284,6 +287,7 @@ class TagsEditorFragment : Fragment() {
                 val allSaved = model.recordSaveResult(success, if (exception != null) itemsToSave.size else failures.size)
                 if (success > 0) host.setSaved(true)
                 host.setDirty(!allSaved)
+                host.completeSaveFeedback(allSaved && success > 0)
                 if (!host.isDestroyed) {
                     host.stopProgressBar()
                     if (allSaved) {

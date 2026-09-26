@@ -357,7 +357,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             String totalDurationStr = totalSec > 0 ? apincer.music.core.utils.StringUtils.formatDuration(totalSec, true) : "";
 
             List<Track> queueCopy = songs != null ? new ArrayList<>(songs) : Collections.emptyList();
-            runOnUiThread(() -> apincer.android.mmate.ui.compose.MainScaffoldState.updateQueue(queueCopy, playingKey, totalDurationStr));
+            runOnUiThread(() -> {
+                apincer.android.mmate.ui.compose.MainScaffoldState.get().getQueueState().setManager(qm);
+                apincer.android.mmate.ui.compose.MainScaffoldState.updateQueue(queueCopy, playingKey, totalDurationStr);
+            });
         }
     }
 
@@ -426,6 +429,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         syncActiveDrawerItem();
 
         // Observe ViewModel LiveData
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery(
+                currentCriteria.isSearchMode() ? StringUtils.trimToEmpty(currentCriteria.getSearchText()) : "");
         setupObserveViewModel();
 
         // load music items
@@ -463,6 +468,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         viewModel.hasMoreItems.observe(this, more -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getHasMoreMusic().setValue(Boolean.TRUE.equals(more)));
         viewModel.loadError.observe(this, error -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getMusicLoadError().setValue(error));
+        viewModel.libraryEmpty.observe(this, empty -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getLibraryEmpty().setValue(Boolean.TRUE.equals(empty)));
+        viewModel.playbackError.observe(this, error -> {
+            if (error != null) {
+                android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_LONG).show();
+                viewModel.playbackError.setValue(null);
+            }
+        });
         viewModel.musicItemsLoading.observe(this, isLoading -> runOnUiThread(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
@@ -541,6 +553,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         boolean isTopLevelCategoryDir = isEmpty(currentCriteria.getKeyword())
                 && !SearchCriteria.TYPE.LIBRARY.equals(type);
         boolean hasActiveFilter = (!(currentCriteria.getFilterType() == null || currentCriteria.getFilterType().isEmpty()));
+        apincer.android.mmate.ui.compose.MainScaffoldState.get().getHasActiveMusicFilters().setValue(
+                hasActiveFilter || currentCriteria.isSearchMode());
         int count = (isTopLevelCategoryDir || hasActiveFilter) ? apincer.android.mmate.ui.compose.ListInterop.getTracks().size()
                 : ((stats != null) ? stats.getTotalCount() : apincer.android.mmate.ui.compose.ListInterop.getTracks().size());
         long totalSize = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum() : ((stats != null) ? stats.getTotalSize() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum());
@@ -587,7 +601,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         apincer.android.mmate.ui.compose.MainScaffoldState.updateHeaderStats(statText);
         apincer.android.mmate.ui.compose.MainScaffoldState.updatePlaylistOverview(
                 SearchCriteria.TYPE.PLAYLIST.equals(type) && isEmpty(currentCriteria.getKeyword()));
-        apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(!SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(hasActiveFilter || currentCriteria.isSearchMode()
+                || !SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
     }
 
     @Override
@@ -629,6 +644,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private void doHideSearch() {
         currentCriteria.resetSearch();
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
         viewModel.loadMusicItems(currentCriteria);
     }
 
@@ -667,8 +683,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         if (currentCriteria != null && currentCriteria.isSearchMode()) {
             doHideSearch();
-            apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
-            viewModel.loadMusicItems(currentCriteria);
             return;
         }
 
@@ -733,6 +747,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onAudioHubShuffleToggle() {
         if (playbackService != null) {
+            if (explainSmartQueueOrder()) return;
             boolean shuffle = !apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().isShuffle().getValue();
             playbackService.setShuffleMode(shuffle);
             apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().isShuffle().setValue(shuffle);
@@ -741,12 +756,19 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onAudioHubRepeatToggle() {
         if (playbackService != null) {
+            if (explainSmartQueueOrder()) return;
             int mode = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().getValue();
             int nextMode = (mode == 0) ? 1 : (mode == 1) ? 2 : 0;
             String modeStr = (nextMode == 1) ? "ALL" : (nextMode == 2) ? "ONE" : "OFF";
             playbackService.setRepeatMode(modeStr);
             apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState().getRepeatMode().setValue(nextMode);
         }
+    }
+
+    private boolean explainSmartQueueOrder() {
+        if (playbackService.getQueueManager().getSource() == apincer.music.core.repository.QueueManager.Source.MANUAL) return false;
+        android.widget.Toast.makeText(this, "Select Manual queue to enable shuffle or repeat", android.widget.Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     public void onAudioHubSeek(float progress) {
@@ -1311,7 +1333,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             int id = item.getItemId();
             List<Track> singleTrackList = Collections.singletonList(track);
             if (id == R.id.action_play_now) {
-                viewModel.playTrackList(apincer.android.mmate.ui.compose.ListInterop.getTracks(), track, playbackService);
+                viewModel.playCurrentResults(track, playbackService);
                 return true;
             } else if (id == R.id.action_play_next) {
                 playbackService.getQueueManager().addPlayNext(track);
@@ -1491,46 +1513,43 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         List<String> dirs = TagRepository.getDirectories(this);
         List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
 
-        // We need a reference to the AlertDialog so we can dismiss it from inside the Compose callbacks
-        final AlertDialog[] alertHolder = new AlertDialog[1];
+        androidx.activity.ComponentDialog foldersDialog = new androidx.activity.ComponentDialog(this, R.style.AlertDialogTheme);
+        foldersDialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
 
         View cview = apincer.android.mmate.ui.compose.DialogInterop.createMusicFoldersDialogView(
             this,
+            foldersDialog,
             dirs,
             defaultPathsSet,
             storageIds,
-            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); }, // onClose
-            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); }, // onCancel
+            foldersDialog::dismiss, // onClose
+            foldersDialog::dismiss, // onCancel
             (isDeep, updatedDirs) -> { // onScan
-                apincer.music.core.Settings.setDirectories(getApplicationContext(), updatedDirs);
                 if (isDeep) {
                     new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
                         .setTitle("Full Rescan")
                         .setMessage(getString(R.string.directories_confirm_full_scan))
                         .setPositiveButton("Start", (dialog, which) -> {
+                            apincer.music.core.Settings.setDirectories(getApplicationContext(), updatedDirs);
                             apincer.android.mmate.worker.ScanAudioFileWorker.startScan(getApplicationContext(), true);
-                            if(alertHolder[0] != null) alertHolder[0].dismiss();
+                            foldersDialog.dismiss();
                         })
                         .setNegativeButton("Cancel", null)
                         .show();
                 } else {
+                    apincer.music.core.Settings.setDirectories(getApplicationContext(), updatedDirs);
                     apincer.android.mmate.worker.ScanAudioFileWorker.startScan(getApplicationContext(), false);
-                    if(alertHolder[0] != null) alertHolder[0].dismiss();
+                    foldersDialog.dismiss();
                 }
             },
-            (sid) -> { // onAddStorage
+            (sid, onSelected) -> { // onAddStorage: return the selection to the dialog's draft
                 DialogProperties properties = new DialogProperties();
                 properties.selection_mode = DialogConfigs.SINGLE_MODE;
                 properties.selection_type = DialogConfigs.DIR_SELECT;
                 FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
                 dialog.setDialogSelectionListener(files -> {
                     if (files != null && files.length > 0) {
-                        String f = files[0];
-                        // Re-trigger the dialog with new directory
-                        dirs.add(f);
-                        if(alertHolder[0] != null) alertHolder[0].dismiss();
-                        apincer.music.core.Settings.setDirectories(getApplicationContext(), dirs); // Save immediately
-                        doScanDirectories(); // Re-open
+                        onSelected.accept(files[0]);
                     }
                 });
                 dialog.setTitle("Select a Directory");
@@ -1538,23 +1557,15 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
         );
 
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        
-        alertHolder[0] = alert;
-
-        alert.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
+        foldersDialog.setContentView(cview);
+        foldersDialog.setCanceledOnTouchOutside(false);
 
         // Make popup round corners
-        if (alert.getWindow() != null) {
-            alert.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        if (foldersDialog.getWindow() != null) {
+            foldersDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
 
-        alert.show();
+        foldersDialog.show();
     }
 
     private static void setListViewHeightBasedOnChildren(ListView listView) {
@@ -1958,7 +1969,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     public void onTrackQuickPlayClicked(apincer.music.core.model.Track tag) {
         if (tag == null) return;
         if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playTrackList(apincer.android.mmate.ui.compose.ListInterop.getTracks(), tag, playbackService);
+            viewModel.playCurrentResults(tag, playbackService);
         } else {
             android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
         }
@@ -1999,9 +2010,28 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     public void onListRefresh() {
-        apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
         viewModel.loadMusicItems();
-        apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
+    }
+
+    @Override
+    public void onDiscoverMusicFolders() {
+        doScanDirectories();
+    }
+
+    @Override
+    public void onClearMusicFilters() {
+        currentCriteria.resetSearch();
+        currentCriteria.setFilterType(null);
+        currentCriteria.setFilterText(null);
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
+        viewModel.loadMusicItems(currentCriteria);
+    }
+
+    @Override
+    public void onBrowseAllMusic() {
+        currentCriteria.resetSearch();
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
+        doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
     }
 
     public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {

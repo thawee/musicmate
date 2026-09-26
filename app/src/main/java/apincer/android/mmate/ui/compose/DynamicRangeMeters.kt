@@ -26,7 +26,8 @@ import apincer.music.core.utils.TagUtils
 fun DynamicRangeMeter(
     track: Track?,
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
+    highContrast: Boolean = false
 ) {
     if (track == null) {
         Text(
@@ -44,7 +45,10 @@ fun DynamicRangeMeter(
     val context = LocalContext.current
     val drScoreStr = TagUtils.getDynamicRangeScore(track) ?: ""
     val scoreVal = track.drScore.toInt()
-    val drsColor = Color(TagUIUtils.getDRScoreColor(context, scoreVal))
+    val scoreColor = Color(TagUIUtils.getDRScoreColor(context, scoreVal))
+    val drsColor = if (highContrast) {
+        androidx.compose.ui.graphics.lerp(scoreColor, Color.White, 0.55f)
+    } else scoreColor
 
     Row(
         modifier = modifier

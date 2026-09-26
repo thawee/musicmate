@@ -32,10 +32,10 @@ fun MusicFoldersDialog(
     onClose: () -> Unit,
     onCancel: () -> Unit,
     onScan: (Boolean, List<String>) -> Unit,
-    onAddStorage: (String) -> Unit
+    onAddStorage: (String, (String) -> Unit) -> Unit
 ) {
     var isDeepAudit by remember { mutableStateOf(false) }
-    val dirs = remember { mutableStateListOf(*initialDirectories.toTypedArray()) }
+    val dirs = remember { mutableStateListOf(*initialDirectories.distinct().toTypedArray()) }
 
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
@@ -131,7 +131,11 @@ fun MusicFoldersDialog(
                     Row {
                         storageIds.forEach { sid ->
                             Button(
-                                onClick = { onAddStorage(sid) },
+                                onClick = {
+                                    onAddStorage(sid) { directory ->
+                                        if (directory !in dirs) dirs.add(directory)
+                                    }
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0x26FFFFFF),
                                     contentColor = Color.White

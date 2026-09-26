@@ -29,6 +29,9 @@ class TagsViewModelTest {
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    val temporary = org.junit.rules.TemporaryFolder()
+
     private lateinit var repository: TagRepository
     private lateinit var viewModel: TagsViewModel
     private val testDispatcher = StandardTestDispatcher()
@@ -56,6 +59,31 @@ class TagsViewModelTest {
             TagsViewModel.MULTIPLE_EMPTY
         )
         assertEquals("Pink Floyd", result)
+    }
+
+    @Test
+    fun artworkSelectionStaysADraftAndSaveOnlyChangesTracksInItsFolder() = runTest(testDispatcher) {
+        val folder = temporary.newFolder("album")
+        val target = java.io.File(folder, "Cover.jpg").apply { writeText("original") }
+        val track = AudioTag().apply { setPath(java.io.File(folder, "song.flac").path); setAlbumArtFilename("cached.jpg") }
+        val other = AudioTag().apply { setPath("/another/album/song.flac"); setAlbumArtFilename("other.jpg") }
+        viewModel.processAudioTagEditEvent(listOf(track, other))
+        advanceUntilIdle()
+
+        viewModel.stageArtwork(temporary.root, target, "replacement".byteInputStream())
+        assertEquals("cached.jpg", track.albumArtFilename)
+        assertEquals("original", target.readText())
+
+        viewModel.commitArtwork()
+        val copyToSave = track.copy()
+        viewModel.applyArtworkToTrack(copyToSave)
+        assertEquals(target.absolutePath, copyToSave.albumArtFilename)
+        assertFalse(viewModel.recordSaveResult(1, 1))
+        assertNotNull(viewModel.pendingArtworkFile)
+        assertTrue(viewModel.recordSaveResult(2, 0))
+        assertNull(viewModel.pendingArtworkFile)
+        assertEquals(target.absolutePath, track.albumArtFilename)
+        assertEquals("other.jpg", other.albumArtFilename)
     }
 
     @Test

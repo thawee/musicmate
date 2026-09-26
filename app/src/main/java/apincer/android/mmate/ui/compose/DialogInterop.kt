@@ -22,15 +22,20 @@ object DialogInterop {
     @JvmStatic
     fun createMusicFoldersDialogView(
         context: Context,
+        dialog: ComponentDialog,
         directories: List<String>,
         defaultPaths: Set<String>,
         storageIds: List<String>,
         onClose: Runnable,
         onCancel: Runnable,
         onScan: BiConsumer<Boolean, List<String>>,
-        onAddStorage: java.util.function.Consumer<String>
+        onAddStorage: BiConsumer<String, Consumer<String>>
     ): View {
         return ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewTreeLifecycleOwner(dialog)
+            setViewTreeSavedStateRegistryOwner(dialog)
+            (context as? ViewModelStoreOwner)?.let { setViewTreeViewModelStoreOwner(it) }
             layoutParams = android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
             setContent {
                 MusicMateTheme {
@@ -41,7 +46,7 @@ object DialogInterop {
                     onClose = { onClose.run() },
                     onCancel = { onCancel.run() },
                     onScan = { isDeep, dirs -> onScan.accept(isDeep, dirs) },
-                    onAddStorage = { sid -> onAddStorage.accept(sid) }
+                    onAddStorage = { sid, onSelected -> onAddStorage.accept(sid, Consumer(onSelected)) }
                 )
             }
             }

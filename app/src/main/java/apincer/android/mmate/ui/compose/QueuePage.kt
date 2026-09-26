@@ -47,6 +47,16 @@ import apincer.android.mmate.R
 import apincer.android.mmate.utils.GestureHints
 import apincer.music.core.model.Track
 import apincer.music.core.utils.StringUtils
+import apincer.music.core.repository.QueueManager
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +69,47 @@ fun QueuePage(
     onBrowseLibrary: () -> Unit,
     onMoveTrack: (Int, Int) -> Unit = { _, _ -> }
 ) {
+    val manager = state.manager ?: MainScaffoldState.get().queueState.manager
+    var source by remember(manager) { mutableStateOf(manager?.source ?: QueueManager.Source.MANUAL) }
+    var sourceMenu by remember { mutableStateOf(false) }
+    var refreshing by remember { mutableStateOf(false) }
+    var sourceError by remember { mutableStateOf<String?>(null) }
+    var caughtUp by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(manager) {
+        if (manager == null) return@LaunchedEffect
+        while (true) {
+            source = manager.source
+            caughtUp = manager.isSmartQueueCaughtUp
+            val snapshot = manager.songs.toList()
+            if (state.tracks.map { it.id } != snapshot.map { it.id }) {
+                val seconds = snapshot.sumOf { it.audioDuration.coerceAtLeast(0.0).toLong() }
+                state.updateQueue(snapshot, state.currentPlayingKey,
+                    if (seconds > 0) StringUtils.formatDuration(seconds.toDouble(), true) else "")
+            }
+            delay(1000)
+        }
+    }
+    var confirmClear by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(state.tracks.isEmpty()) {
+        if (state.tracks.isEmpty()) confirmClear = false
+    }
+    if (confirmClear && state.tracks.isNotEmpty()) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Clear queue?") },
+            text = { Text("Remove all ${state.tracks.size} tracks from the queue? This cannot be undone.") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    confirmClear = false
+                    onClearQueue()
+                }) { Text("Clear queue") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { confirmClear = false }) { Text("Cancel") }
+            }
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,7 +145,11 @@ fun QueuePage(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                IconButton(onClick = onClearQueue, modifier = Modifier.size(40.dp)) {
+                IconButton(
+                    onClick = { confirmClear = true },
+                    enabled = state.tracks.isNotEmpty(),
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_delete_24),
                         contentDescription = "Clear Queue",
@@ -102,6 +157,71 @@ fun QueuePage(
                         modifier = Modifier.size(20.dp)
                     )
                 }
+            }
+        }
+
+        if (manager != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box {
+                    TextButton(onClick = { sourceMenu = true }, enabled = !refreshing) {
+                        Text("Source: ${when (source) {
+                            QueueManager.Source.MANUAL -> "Manual"
+                            QueueManager.Source.NEW -> "New"
+                            QueueManager.Source.DOWNLOADS -> "Downloads"
+                            QueueManager.Source.UNPLAYED -> "Unplayed Discoveries"
+                            QueueManager.Source.REDISCOVER -> "Rediscover"
+                        }} ▾")
+                    }
+                    DropdownMenu(expanded = sourceMenu, onDismissRequest = { sourceMenu = false }) {
+                        QueueManager.Source.values().forEach { choice ->
+                            DropdownMenuItem(text = { Text(when (choice) {
+                                QueueManager.Source.MANUAL -> "Manual · keep this queue"
+                                QueueManager.Source.NEW -> "New · unorganized tracks"
+                                QueueManager.Source.DOWNLOADS -> "Downloads · all downloaded tracks"
+                                QueueManager.Source.UNPLAYED -> "Unplayed Discoveries · no completed listens"
+                                QueueManager.Source.REDISCOVER -> "Rediscover · not played in 30 days"
+                            }) }, onClick = {
+                                sourceMenu = false
+                                refreshing = true
+                                sourceError = null
+                                scope.launch {
+                                    try {
+                                        withContext(Dispatchers.IO) {
+                                            manager.setSource(choice)
+                                            manager.refreshSmartQueue()
+                                        }
+                                        source = manager.source
+                                        MainScaffoldState.get().nowPlayingState.isShuffle.value = manager.isShuffle
+                                        MainScaffoldState.get().nowPlayingState.repeatMode.value = when (manager.repeatMode) {
+                                            QueueManager.RepeatMode.ALL -> 1
+                                            QueueManager.RepeatMode.ONE -> 2
+                                            else -> 0
+                                        }
+                                        state.updateTracks(manager.songs.toList())
+                                    } catch (e: kotlinx.coroutines.CancellationException) {
+                                        throw e
+                                    } catch (e: Exception) {
+                                        sourceError = "Couldn't refresh this source. Select it again to retry."
+                                    } finally { refreshing = false }
+                                }
+                            })
+                        }
+                    }
+                }
+                Text(if (refreshing) "Refreshing…" else if (source == QueueManager.Source.MANUAL) "Auto-fill off" else "Auto-fill on",
+                    color = Color(0xFFBCC5CF), fontSize = 11.sp)
+            }
+            if (source != QueueManager.Source.MANUAL || sourceError != null) {
+                Text(sourceError ?: if (caughtUp) "You're caught up. New matching tracks will be added automatically." else when (source) {
+                    QueueManager.Source.NEW -> "Unorganized tracks • library order • shuffle/repeat off"
+                    QueueManager.Source.UNPLAYED -> "No completed listen recorded by MusicMate • tracking starts now"
+                    QueueManager.Source.REDISCOVER -> "Previously completed • not played for 30 days • oldest first"
+                    else -> "Current Downloads category • library order • shuffle/repeat off"
+                }, modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
+                    color = Color(0xFFBCC5CF), fontSize = 11.sp)
             }
         }
 
@@ -141,14 +261,18 @@ fun QueuePage(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Queue is Empty",
+                    text = if (source == QueueManager.Source.MANUAL) "Queue is Empty" else "No matching tracks queued",
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Tap any song or album from the library to start streaming.",
+                    text = if (source == QueueManager.Source.MANUAL)
+                        "Tap any song or album from the library to start streaming."
+                    else if (source == QueueManager.Source.REDISCOVER)
+                        "Rediscover builds as you listen: complete a track, then leave it unheard for 30 days."
+                    else "Auto-fill checks for matching library tracks. Choose another source above or browse your library.",
                     color = Color(0xFF9E9E9E),
                     fontSize = 12.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center

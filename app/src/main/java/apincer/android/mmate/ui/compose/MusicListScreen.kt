@@ -63,6 +63,11 @@ fun MusicListScreen(
     isRefreshing: Boolean,
     hasMoreItems: Boolean = false,
     loadError: String? = null,
+    libraryEmpty: Boolean = false,
+    hasActiveFilters: Boolean = false,
+    onDiscoverMusic: () -> Unit = {},
+    onClearFilters: () -> Unit = {},
+    onBrowseAllMusic: () -> Unit = {},
     onLoadMore: () -> Unit = {},
     scrollToIndex: Int = -1,
     onScrollComplete: () -> Unit = {},
@@ -160,21 +165,35 @@ fun MusicListScreen(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
-                        text = if (loadError != null) "Couldn’t load music" else "No Music Found",
+                        text = when {
+                            loadError != null -> "Couldn’t load music"
+                            libraryEmpty -> "Add your music"
+                            hasActiveFilters -> "No matching music"
+                            else -> "No tracks here yet"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = loadError ?: "Your library is currently empty or filtered.\nScan folders or refresh to load tracks.",
+                        text = loadError ?: when {
+                            libraryEmpty -> "Choose the folders containing your music, then scan to build your library."
+                            hasActiveFilters -> "Try another search or clear your search and filters."
+                            else -> "This collection is empty. Browse your library to find music."
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFAAAAAA),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     androidx.compose.material3.OutlinedButton(
-                        onClick = onRefresh,
+                        onClick = when {
+                            loadError != null -> onRefresh
+                            libraryEmpty -> onDiscoverMusic
+                            hasActiveFilters -> onClearFilters
+                            else -> onBrowseAllMusic
+                        },
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
                         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
@@ -183,12 +202,17 @@ fun MusicListScreen(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_round_refresh_24),
-                            contentDescription = "Refresh",
+                            contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
                         Text(
-                            text = "Refresh Library",
+                            text = when {
+                                loadError != null -> "Retry"
+                                libraryEmpty -> "Choose folders / Scan"
+                                hasActiveFilters -> "Clear search and filters"
+                                else -> "Browse all songs"
+                            },
                             fontSize = 13.sp,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                         )
