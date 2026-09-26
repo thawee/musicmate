@@ -122,6 +122,17 @@ public class QueueManagerTest {
     }
 
     @Test
+    public void playlistSourceStateAndPersistence() throws Exception {
+        queueManager.setActivePlaylist("Studio Masters");
+        assertEquals(QueueManager.Source.PLAYLIST, queueManager.getSource());
+        assertEquals("Studio Masters", queueManager.getActivePlaylistName());
+
+        QueueManager restored = new QueueManager(repository);
+        assertEquals(QueueManager.Source.PLAYLIST, restored.getSource());
+        assertEquals("Studio Masters", restored.getActivePlaylistName());
+    }
+
+    @Test
     public void rediscoverUsesThirtyDayCutoffAndRetainsOldestFirstOrder() throws Exception {
         rediscoverCandidates.add(playable(5));
         rediscoverCandidates.add(playable(3));

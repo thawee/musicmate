@@ -73,10 +73,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import apincer.android.mmate.MusixMateApp
+import apincer.music.core.model.PlaylistEntry
+import apincer.music.core.model.SearchCriteria
+import java.io.File
+
 private data class SourceOption(
     val source: QueueManager.Source,
-    val title: String,
-    val subtitle: String,
+    val label: String,
     val iconRes: Int,
     val accentColor: Color
 )
@@ -94,15 +98,18 @@ fun QueuePage(
 ) {
     val manager = state.manager ?: MainScaffoldState.get().queueState.manager
     var source by remember(manager) { mutableStateOf(manager?.source ?: QueueManager.Source.MANUAL) }
+    var activePlaylistName by remember(manager) { mutableStateOf(manager?.activePlaylistName) }
     var refreshing by remember { mutableStateOf(false) }
     var sourceError by remember { mutableStateOf<String?>(null) }
     var caughtUp by remember { mutableStateOf(false) }
+    var showPlaylistPicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(manager) {
         if (manager == null) return@LaunchedEffect
         while (true) {
             source = manager.source
+            activePlaylistName = manager.activePlaylistName
             caughtUp = manager.isSmartQueueCaughtUp
             val snapshot = manager.songs.toList()
             if (state.tracks.map { it.id } != snapshot.map { it.id }) {
@@ -124,6 +131,10 @@ fun QueuePage(
 
     fun selectSource(choice: QueueManager.Source) {
         if (manager == null || refreshing) return
+        if (choice == QueueManager.Source.PLAYLIST) {
+            showPlaylistPicker = true
+            return
+        }
         refreshing = true
         sourceError = null
         scope.launch {
@@ -133,6 +144,7 @@ fun QueuePage(
                     manager.refreshSmartQueue()
                 }
                 source = manager.source
+                activePlaylistName = manager.activePlaylistName
                 MainScaffoldState.get().nowPlayingState.isShuffle.value = manager.isShuffle
                 MainScaffoldState.get().nowPlayingState.repeatMode.value = when (manager.repeatMode) {
                     QueueManager.RepeatMode.ALL -> 1
@@ -144,6 +156,100 @@ fun QueuePage(
                 throw e
             } catch (e: Exception) {
                 sourceError = "Couldn't refresh this source. Select it again to retry."
+            } finally {
+                refreshing = false
+            }
+        }
+    }
+
+    fun playPlaylist(entry: PlaylistEntry) {
+        if (manager == null || refreshing) return
+        refreshing = true
+        sourceError = null
+        scope.launch {
+            try {
+                val playableTracks = withContext(Dispatchers.IO) {
+                    val criteria = SearchCriteria(SearchCriteria.TYPE.PLAYLIST)
+                    criteria.keyword = entry.name
+                    val tagRepos = MusixMateApp.getInstance()?.tagRepository
+                    val results = tagRepos?.findPlaylist(criteria) ?: emptyList()
+                    results.filter { !it.isContainer && it.path != null && File(it.path).isFile }
+                }
+                if (playableTracks.isNotEmpty()) {
+                    withContext(Dispatchers.IO) {
+                        manager.setPlayingQueue(playableTracks)
+                    }
+                    source = manager.source
+                    state.updateTracks(manager.songs.toList())
+                    onTrackClicked(playableTracks[0])
+                } else {
+                    sourceError = "No playable audio tracks found in \"${entry.name}\"."
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                sourceError = "Error loading playlist: ${e.message}"
+            } finally {
+                refreshing = false
+            }
+        }
+    }
+
+    fun enqueuePlaylist(entry: PlaylistEntry) {
+        if (manager == null || refreshing) return
+        refreshing = true
+        sourceError = null
+        scope.launch {
+            try {
+                val playableTracks = withContext(Dispatchers.IO) {
+                    val criteria = SearchCriteria(SearchCriteria.TYPE.PLAYLIST)
+                    criteria.keyword = entry.name
+                    val tagRepos = MusixMateApp.getInstance()?.tagRepository
+                    val results = tagRepos?.findPlaylist(criteria) ?: emptyList()
+                    results.filter { !it.isContainer && it.path != null && File(it.path).isFile }
+                }
+                if (playableTracks.isNotEmpty()) {
+                    withContext(Dispatchers.IO) {
+                        manager.enqueuePlayingQueue(playableTracks)
+                    }
+                    state.updateTracks(manager.songs.toList())
+                } else {
+                    sourceError = "No playable audio tracks found in \"${entry.name}\"."
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                sourceError = "Error adding playlist: ${e.message}"
+            } finally {
+                refreshing = false
+            }
+        }
+    }
+
+    fun setPlaylistSmartSource(entry: PlaylistEntry) {
+        if (manager == null || refreshing) return
+        refreshing = true
+        sourceError = null
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    manager.setActivePlaylist(entry.name)
+                    manager.refreshSmartQueue()
+                }
+                source = manager.source
+                activePlaylistName = manager.activePlaylistName
+                caughtUp = manager.isSmartQueueCaughtUp
+                MainScaffoldState.get().nowPlayingState.isShuffle.value = manager.isShuffle
+                MainScaffoldState.get().nowPlayingState.repeatMode.value = when (manager.repeatMode) {
+                    QueueManager.RepeatMode.ALL -> 1
+                    QueueManager.RepeatMode.ONE -> 2
+                    else -> 0
+                }
+                state.updateTracks(manager.songs.toList())
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                sourceError = "Error auto-filling from playlist: ${e.message}"
             } finally {
                 refreshing = false
             }
@@ -171,6 +277,16 @@ fun QueuePage(
         }
     }
 
+    if (showPlaylistPicker) {
+        PlaylistPickerDialog(
+            activePlaylistName = activePlaylistName,
+            onDismissRequest = { showPlaylistPicker = false },
+            onPlayAll = { playPlaylist(it) },
+            onEnqueue = { enqueuePlaylist(it) },
+            onSetSmartSource = { setPlaylistSmartSource(it) }
+        )
+    }
+
     if (confirmClear && state.tracks.isNotEmpty()) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { confirmClear = false },
@@ -193,75 +309,50 @@ fun QueuePage(
             .fillMaxSize()
             .padding(top = 2.dp)
     ) {
-        // Toolbar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Upcoming Queue",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.2).sp
-                )
-                Text(
-                    text = "${state.tracks.size} tracks ${if (state.totalDurationText.isNotEmpty()) "• " + state.totalDurationText else ""}",
-                    color = Color(0xFF9E9E9E),
-                    fontSize = 11.sp
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onJumpToPlaying, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_center_focus_strong_black_24dp),
-                        contentDescription = "Jump to Now Playing",
-                        tint = Color(0xFFFFB300),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                IconButton(
-                    onClick = { confirmClear = true },
-                    enabled = state.tracks.isNotEmpty(),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.rounded_delete_24),
-                        contentDescription = "Clear Queue",
-                        tint = if (state.tracks.isNotEmpty()) Color(0xFFB0BEC5) else Color(0xFF555555),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
+        // Ultra-Compact Header Bar (Consolidated Toolbar + Status HUD)
+        CompactQueueHeader(
+            queueSize = state.tracks.size,
+            durationText = state.totalDurationText,
+            source = source,
+            activePlaylistName = activePlaylistName,
+            refreshing = refreshing,
+            caughtUp = caughtUp,
+            onJumpToPlaying = onJumpToPlaying,
+            onClearQueue = { confirmClear = true },
+            onRefreshClick = { triggerManualRefresh() },
+            onOpenPlaylistPicker = { showPlaylistPicker = true },
+            canClear = state.tracks.isNotEmpty()
+        )
 
         if (manager != null) {
-            // Live Engine HUD
-            SmartQueueEngineHud(
-                source = source,
-                refreshing = refreshing,
-                caughtUp = caughtUp,
-                queueSize = state.tracks.size,
-                onRefreshClick = { triggerManualRefresh() }
-            )
-
-            // Segmented Smart Source Capsule Deck
-            SmartSourceDeck(
+            // Ultra-Compact Single-Line Source Capsules (~28dp)
+            CompactSourceDeck(
                 selectedSource = source,
+                activePlaylistName = activePlaylistName,
                 refreshing = refreshing,
                 onSourceSelected = { selectSource(it) }
             )
 
-            // Smart Intelligence Subtitle Banner
-            SmartSourceInfoBanner(
-                source = source,
-                sourceError = sourceError,
-                caughtUp = caughtUp
-            )
+            // Transient Error Micro-Alert (only visible when error occurred)
+            if (sourceError != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0x22FF5252))
+                        .border(0.75.dp, Color(0x66FF5252), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = sourceError ?: "",
+                        color = Color(0xFFFF8A80),
+                        fontSize = 10.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
 
         // Gesture discovery hints for queue
@@ -279,7 +370,8 @@ fun QueuePage(
             QueueEmptyState(
                 source = source,
                 onBrowseLibrary = onBrowseLibrary,
-                onSelectSource = { selectSource(it) }
+                onSelectSource = { selectSource(it) },
+                onOpenPlaylistPicker = { showPlaylistPicker = true }
             )
         } else {
             val currentIdx = manager?.currentIndex ?: -1
@@ -377,12 +469,18 @@ fun QueuePage(
 }
 
 @Composable
-private fun SmartQueueEngineHud(
+private fun CompactQueueHeader(
+    queueSize: Int,
+    durationText: String,
     source: QueueManager.Source,
+    activePlaylistName: String?,
     refreshing: Boolean,
     caughtUp: Boolean,
-    queueSize: Int,
-    onRefreshClick: () -> Unit
+    onJumpToPlaying: () -> Unit,
+    onClearQueue: () -> Unit,
+    onRefreshClick: () -> Unit,
+    onOpenPlaylistPicker: () -> Unit,
+    canClear: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -396,11 +494,11 @@ private fun SmartQueueEngineHud(
         label = "pulseAlpha"
     )
 
-    val (ledColor, statusLabel) = when {
-        refreshing -> Color(0xFFFFB300) to "REPLENISHING…"
-        source == QueueManager.Source.MANUAL -> Color(0xFF78909C) to "MANUAL QUEUE"
-        caughtUp -> Color(0xFF00E676) to "ALL CAUGHT UP"
-        else -> Color(0xFF00E676) to "AUTO-FILL ACTIVE"
+    val ledColor = when {
+        refreshing -> Color(0xFFFFB300)
+        source == QueueManager.Source.MANUAL -> Color(0xFF78909C)
+        caughtUp -> Color(0xFF00E676)
+        else -> Color(0xFF00E676)
     }
 
     Row(
@@ -410,14 +508,10 @@ private fun SmartQueueEngineHud(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Status indicator pill with jewel LED
+        // Left: LED Dot + Title + Count/Duration + (Slots & Refresh)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0x14FFFFFF))
-                .border(0.75.dp, Color(0x1AFFFFFF), RoundedCornerShape(12.dp))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -429,69 +523,119 @@ private fun SmartQueueEngineHud(
                         else ledColor
                     )
             )
-            Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = statusLabel,
-                color = ledColor,
-                fontSize = 10.sp,
+                text = "Upcoming Queue",
+                color = Color.White,
+                fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = 0.4.sp
+                letterSpacing = (-0.2).sp
             )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "• $queueSize ${if (durationText.isNotEmpty()) "• $durationText" else ""}",
+                color = Color(0xFF9E9E9E),
+                fontSize = 11.sp
+            )
             if (source != QueueManager.Source.MANUAL) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x12FFFFFF))
-                        .border(0.5.dp, Color(0x1AFFFFFF), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0x14FFFFFF))
+                        .border(0.5.dp, Color(0x1AFFFFFF), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 5.dp, vertical = 1.5.dp)
                 ) {
                     Text(
-                        text = "SLOTS: ${queueSize.coerceAtMost(20)}/20",
+                        text = "${queueSize.coerceAtMost(20)}/20",
                         color = Color(0xFFB0BEC5),
-                        fontSize = 9.5.sp,
+                        fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onRefreshClick()
                     },
                     enabled = !refreshing,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_refresh_24),
-                        contentDescription = "Replenish Smart Queue",
+                        contentDescription = "Replenish",
                         tint = if (refreshing) Color(0xFFFFB300) else Color(0xFFB0BEC5),
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
+            }
+        }
+
+        // Right: Action buttons (Playlist, Focus, Clear)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            IconButton(
+                onClick = onOpenPlaylistPicker,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
+                    contentDescription = "Load Playlist",
+                    tint = Color(0xFFBA68C8),
+                    modifier = Modifier.size(19.dp)
+                )
+            }
+            IconButton(
+                onClick = onJumpToPlaying,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_center_focus_strong_black_24dp),
+                    contentDescription = "Jump to Now Playing",
+                    tint = Color(0xFFFFB300),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            IconButton(
+                onClick = onClearQueue,
+                enabled = canClear,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.rounded_delete_24),
+                    contentDescription = "Clear Queue",
+                    tint = if (canClear) Color(0xFFB0BEC5) else Color(0xFF555555),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SmartSourceDeck(
+private fun CompactSourceDeck(
     selectedSource: QueueManager.Source,
+    activePlaylistName: String?,
     refreshing: Boolean,
     onSourceSelected: (QueueManager.Source) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val sources = remember {
+    val playlistLabel = remember(activePlaylistName, selectedSource) {
+        if (selectedSource == QueueManager.Source.PLAYLIST && !activePlaylistName.isNullOrEmpty()) {
+            val truncated = if (activePlaylistName.length > 10) activePlaylistName.take(10) + "…" else activePlaylistName
+            "$truncated ▾"
+        } else {
+            "Playlist ▾"
+        }
+    }
+    val sources = remember(playlistLabel) {
         listOf(
-            SourceOption(QueueManager.Source.MANUAL, "Manual", "Static", R.drawable.ic_round_queue_music_24, Color(0xFFB0BEC5)),
-            SourceOption(QueueManager.Source.NEW, "New", "Unorganized", R.drawable.round_auto_awesome_24, Color(0xFFFFD700)),
-            SourceOption(QueueManager.Source.DOWNLOADS, "Downloads", "Device", R.drawable.ic_round_download_24, Color(0xFF00E5FF)),
-            SourceOption(QueueManager.Source.UNPLAYED, "Discover", "Unplayed", R.drawable.ic_round_explore_24, Color(0xFF00E676)),
-            SourceOption(QueueManager.Source.REDISCOVER, "Rediscover", "30d+ old", R.drawable.rounded_music_history_24, Color(0xFFFF7043))
+            SourceOption(QueueManager.Source.MANUAL, "Manual", R.drawable.ic_round_queue_music_24, Color(0xFFB0BEC5)),
+            SourceOption(QueueManager.Source.NEW, "New", R.drawable.round_auto_awesome_24, Color(0xFFFFD700)),
+            SourceOption(QueueManager.Source.DOWNLOADS, "Downloads", R.drawable.ic_round_download_24, Color(0xFF00E5FF)),
+            SourceOption(QueueManager.Source.UNPLAYED, "Discover", R.drawable.ic_round_explore_24, Color(0xFF00E676)),
+            SourceOption(QueueManager.Source.REDISCOVER, "Rediscover", R.drawable.rounded_music_history_24, Color(0xFFFF7043)),
+            SourceOption(QueueManager.Source.PLAYLIST, playlistLabel, R.drawable.ic_baseline_playlist_play_24, Color(0xFFBA68C8))
         )
     }
 
@@ -499,8 +643,8 @@ private fun SmartSourceDeck(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp, vertical = 5.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 14.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         sources.forEach { opt ->
@@ -515,86 +659,39 @@ private fun SmartSourceDeck(
                             )
                         )
                     )
-                    .border(1.dp, opt.accentColor.copy(alpha = 0.75f), RoundedCornerShape(16.dp))
+                    .border(1.dp, opt.accentColor.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
             } else {
                 Modifier
-                    .background(Color(0x14FFFFFF))
-                    .border(0.75.dp, Color(0x1AFFFFFF), RoundedCornerShape(16.dp))
+                    .background(Color(0x12FFFFFF))
+                    .border(0.5.dp, Color(0x18FFFFFF), RoundedCornerShape(12.dp))
             }
 
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .then(bgModifier)
                     .clickable(enabled = !refreshing) {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onSourceSelected(opt.source)
                     }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(id = opt.iconRes),
                     contentDescription = null,
-                    tint = if (isSelected) opt.accentColor else Color(0x88FFFFFF),
-                    modifier = Modifier.size(15.dp)
+                    tint = if (isSelected) opt.accentColor else Color(0x99FFFFFF),
+                    modifier = Modifier.size(13.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Column {
-                    Text(
-                        text = opt.title,
-                        color = if (isSelected) Color.White else Color(0xBBFFFFFF),
-                        fontSize = 11.5.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                    )
-                    Text(
-                        text = opt.subtitle,
-                        color = if (isSelected) opt.accentColor.copy(alpha = 0.9f) else Color(0x66FFFFFF),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = opt.label,
+                    color = if (isSelected) Color.White else Color(0xBBFFFFFF),
+                    fontSize = 11.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun SmartSourceInfoBanner(
-    source: QueueManager.Source,
-    sourceError: String?,
-    caughtUp: Boolean
-) {
-    val description = sourceError ?: when {
-        caughtUp -> "All matching library tracks queued. Will auto-append new matches."
-        source == QueueManager.Source.MANUAL -> "Static manual queue • Drag to reorder, swipe to remove • Shuffle & Repeat enabled"
-        source == QueueManager.Source.NEW -> "✦ Unorganized tracks in library order • Auto-refills upcoming • Manual priority preserved"
-        source == QueueManager.Source.DOWNLOADS -> "✦ Downloaded tracks (Telegram / outside /Music/) • Auto-refills upcoming • Manual priority preserved"
-        source == QueueManager.Source.UNPLAYED -> "✦ Unplayed tracks (0 completions recorded) • Auto-refills upcoming • Tracking starts now"
-        source == QueueManager.Source.REDISCOVER -> "✦ Previously completed tracks unheard for 30+ days • Oldest first • Auto-refills upcoming"
-        else -> ""
-    }
-
-    val isError = sourceError != null
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 3.dp)
-            .clip(RoundedCornerShape(9.dp))
-            .background(if (isError) Color(0x22FF5252) else Color(0x0EFFFFFF))
-            .border(
-                0.75.dp,
-                if (isError) Color(0x66FF5252) else Color(0x16FFFFFF),
-                RoundedCornerShape(9.dp)
-            )
-            .padding(horizontal = 10.dp, vertical = 5.dp)
-    ) {
-        Text(
-            text = description,
-            color = if (isError) Color(0xFFFF8A80) else Color(0xFFB0BEC5),
-            fontSize = 10.5.sp,
-            lineHeight = 14.sp
-        )
     }
 }
 
@@ -621,9 +718,11 @@ private fun getSectionHeader(
             QueueManager.Source.DOWNLOADS -> "DOWNLOADS"
             QueueManager.Source.UNPLAYED -> "DISCOVERIES"
             QueueManager.Source.REDISCOVER -> "REDISCOVER"
+            QueueManager.Source.PLAYLIST -> manager.activePlaylistName?.takeIf { it.isNotEmpty() }?.uppercase() ?: "PLAYLIST"
             else -> "SMART REFILL"
         }
-        return "✦ SMART REFILL · $label" to Color(0xFF00E676)
+        val accent = if (source == QueueManager.Source.PLAYLIST) Color(0xFFBA68C8) else Color(0xFF00E676)
+        return "✦ SMART REFILL · $label" to accent
     }
     return null
 }
@@ -733,11 +832,8 @@ fun QueueItem(
                         .background(Color(0x55000000)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_equalizer_active),
-                        contentDescription = "Playing",
-                        tint = Color(0xFFFFD700),
-                        modifier = Modifier.size(20.dp)
+                    AnimatedEqualizerBars(
+                        modifier = Modifier.size(width = 18.dp, height = 15.dp)
                     )
                 }
             }
@@ -858,7 +954,8 @@ private fun ProvenanceBadge(label: String, color: Color, bg: Color) {
 private fun QueueEmptyState(
     source: QueueManager.Source,
     onBrowseLibrary: () -> Unit,
-    onSelectSource: (QueueManager.Source) -> Unit
+    onSelectSource: (QueueManager.Source) -> Unit,
+    onOpenPlaylistPicker: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -896,7 +993,7 @@ private fun QueueEmptyState(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = if (source == QueueManager.Source.MANUAL)
-                "Tap any song or album from the library to start playback, or activate a Smart Queue source."
+                "Tap any song or album from the library to start playback, activate a Smart Queue source, or load from a playlist."
             else if (source == QueueManager.Source.REDISCOVER)
                 "Rediscover builds as you listen: complete a track, then leave it unheard for 30 days."
             else "Auto-fill checks for matching tracks in your library. Select a smart discovery mode below to start.",
@@ -911,6 +1008,17 @@ private fun QueueEmptyState(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Button(
+                onClick = onOpenPlaylistPicker,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0x22BA68C8),
+                    contentColor = Color(0xFFCE93D8)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0x55BA68C8))
+            ) {
+                Text("📋 Playlists", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
             if (source == QueueManager.Source.MANUAL) {
                 Button(
                     onClick = { onSelectSource(QueueManager.Source.UNPLAYED) },

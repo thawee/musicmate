@@ -34,12 +34,19 @@ import dagger.hilt.android.HiltAndroidApp;
 public class MusixMateApp extends Application implements coil3.SingletonImageLoader.Factory {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
+    private static MusixMateApp sInstance;
+
+    public static MusixMateApp getInstance() {
+        return sInstance;
+    }
+
     @Inject
     FileRepository fileRepos;
     @Inject
     TagRepository tagRepos;
 
     @Override public void onCreate() {
+        sInstance = this;
         super.onCreate();
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);

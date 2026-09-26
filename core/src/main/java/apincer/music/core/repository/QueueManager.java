@@ -68,8 +68,9 @@ public class QueueManager {
      */
     private final List<Integer> shuffleOrder = new ArrayList<>();
 
-    public enum Source { MANUAL, NEW, DOWNLOADS, UNPLAYED, REDISCOVER }
+    public enum Source { MANUAL, NEW, DOWNLOADS, UNPLAYED, REDISCOVER, PLAYLIST }
     private Source source = Source.MANUAL;
+    private String activePlaylistName;
     private final java.util.Set<Long> sessionIds = new java.util.HashSet<>();
     private final java.util.Set<Long> smartTrackIds = new java.util.HashSet<>();
     private long sourceRevision;
@@ -78,6 +79,20 @@ public class QueueManager {
     private static final int SMART_LOOKAHEAD = 20;
 
     public synchronized Source getSource() { return source; }
+    public synchronized String getActivePlaylistName() { return activePlaylistName; }
+
+    public synchronized void setActivePlaylist(String playlistName) {
+        if (playlistName == null || playlistName.isEmpty()) return;
+        this.activePlaylistName = playlistName;
+        this.source = Source.PLAYLIST;
+        this.sourceExhausted = false;
+        this.sourceRevision++;
+        for (Track track : queueList) sessionIds.add(track.getId());
+        setShuffle(false);
+        setRepeatMode(RepeatMode.OFF);
+        persistSmartState();
+    }
+
     public synchronized boolean isSmartSuggested(long trackId) {
         return source != Source.MANUAL && smartTrackIds.contains(trackId);
     }
@@ -88,6 +103,7 @@ public class QueueManager {
     /** Switching to Manual freezes the current list. Smart sources never replace it. */
     public synchronized void setSource(Source selected) {
         if (selected == null || selected == source) return;
+        if (selected == Source.PLAYLIST && (activePlaylistName == null || activePlaylistName.isEmpty())) return;
         source = selected;
         sourceExhausted = false;
         sourceRevision++;
@@ -107,9 +123,11 @@ public class QueueManager {
         long revision;
         int requestedSlots;
         java.util.Set<Long> excluded;
+        String playlistName;
         synchronized (this) {
             requested = source;
             revision = sourceRevision;
+            playlistName = activePlaylistName;
             if (requested == Source.MANUAL || remainingSmartSlots() == 0) return false;
             requestedSlots = remainingSmartSlots();
             excluded = new java.util.HashSet<>(sessionIds);
@@ -119,6 +137,14 @@ public class QueueManager {
             case NEW -> dbHelper.findRecentlyAdded(0, 0);
             case UNPLAYED -> dbHelper.findUnplayed();
             case REDISCOVER -> dbHelper.findRediscover(System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(30));
+            case PLAYLIST -> {
+                if (tagRepos != null && playlistName != null && !playlistName.isEmpty()) {
+                    apincer.music.core.model.SearchCriteria criteria = new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.PLAYLIST);
+                    criteria.setKeyword(playlistName);
+                    yield tagRepos.findPlaylist(criteria);
+                }
+                yield Collections.emptyList();
+            }
             default -> dbHelper.findMySongs();
         };
         if (candidates == null) return false;
@@ -161,6 +187,9 @@ public class QueueManager {
         StringBuilder state = new StringBuilder(source.name()).append('|')
                 .append(current == null ? -1 : current.getId()).append('|');
         for (Long id : sessionIds) state.append(id).append(',');
+        if (activePlaylistName != null) {
+            state.append('|').append(activePlaylistName);
+        }
         dbHelper.saveSmartQueueState(state.toString());
     }
 
@@ -175,10 +204,17 @@ public class QueueManager {
             sessionIds.clear();
             for (String id : parts[2].split(",")) if (!id.isEmpty()) sessionIds.add(Long.parseLong(id));
             for (Track track : queueList) sessionIds.add(track.getId());
+            if (parts.length > 3 && !parts[3].isEmpty()) {
+                activePlaylistName = parts[3];
+            }
+            if (source == Source.PLAYLIST && (activePlaylistName == null || activePlaylistName.isEmpty())) {
+                source = Source.MANUAL;
+            }
             if (source != Source.MANUAL) { isShuffle = false; repeatMode = RepeatMode.OFF; }
         } catch (RuntimeException e) {
             source = Source.MANUAL;
             sessionIds.clear();
+            activePlaylistName = null;
             Log.w(TAG, "Ignoring invalid smart queue state", e);
         }
     }

@@ -1,3 +1,35 @@
+# Compact Smart Queue Header & Playlist Integration
+
+## Status: 🟢 Completed & Verified
+
+### Objective
+1. **Drastically reduce vertical space footprint of Queue header:**
+   - Consolidate Toolbar (40dp) and Engine HUD (32dp) into a single 34dp header bar.
+   - Replace bulky 52dp 2-line cards with ultra-compact 28dp micro-capsule chips (`[🖐️ Manual]`, `[✨ New]`, `[📥 DL]`, `[🧭 Discover]`, `[⏳ Rediscover]`, `[📋 Playlist ▾]`).
+   - Remove the 40dp static intelligence info box (retain only transient error micro-banners).
+   - Cut total header height from ~196dp to ~60dp (~68% reduction), maximizing visible track listing inside the 65% height bottom sheet.
+2. **Support Load from Playlist:**
+   - **Pattern A (Action): Instant Load/Append to Queue:** Add `PlaylistPickerDialog` to directly replace ("Play All") or append ("+ Queue") all playable tracks of any playlist (Smart or Custom) into the queue.
+   - **Pattern B (Smart Source): Playlist as Auto-Refill Engine:** Add `QueueManager.Source.PLAYLIST` and `activePlaylistName` to continuously auto-fill up to 20 unplayed tracks matching the selected playlist.
+
+### Checklist
+- [x] **Phase 1: Ultra-Compact Queue Header Redesign (`QueuePage.kt`)**
+  - [x] Merge Top Toolbar and Engine HUD into a unified 34dp bar with title, live jewel LED dot, track count/time, inline slots badge, and compact focus/clear/playlist actions.
+  - [x] Redesign `SmartSourceDeck` into sleek single-line 28dp micro-capsules without subtitles.
+  - [x] Remove static `SmartSourceInfoBanner` container; keep only conditional error micro-alerts.
+- [x] **Phase 2: Playlist Selection & Loading Implementation**
+  - [x] Create `PlaylistPickerDialog.kt` composable to display all available playlists from `PlaylistRepository.getPlaylists()`.
+  - [x] Implement instant actions: "Play All" (replaces queue) and "Add to Queue" (appends).
+  - [x] Add `Source.PLAYLIST` and `activePlaylistName` to `QueueManager.java` for continuous smart auto-refill from a chosen playlist.
+  - [x] Connect `QueuePage.kt` Playlist chip & toolbar icon to open picker and switch active playlist.
+  - [x] Add playlist button in `QueueEmptyState`.
+- [x] **Phase 3: Verification & Polish**
+  - [x] Run unit tests (`:app:testDebugUnitTest`, `:core:test`): all 102 unit tests pass cleanly.
+  - [x] Verify build via `./gradlew assembleDebug`: clean APK generated.
+  - [x] Verified `git diff --check`: zero warnings.
+
+---
+
 # Smart Queue UI/UX Overhaul: Audiophile Console & Visual Discovery
 
 ## Status: 🟢 Completed & Hardened

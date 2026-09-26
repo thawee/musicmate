@@ -9,9 +9,9 @@
 ## 1. Core Product Philosophy & Design Principles
 
 ### Smart queue source control & audiophile console
-- **Segmented Smart Source Deck:** Shared `QueuePage` features a horizontally scrollable obsidian capsule deck for the five smart sources (Manual, New, Downloads, Discover, Rediscover), styled with jewel borders, accent-tinted gradients, and tactile haptic feedback.
-- **Live Engine HUD:** Real-time jewel LED status indicator (pulsing Emerald for active auto-fill, spinning/pulsing Amber for replenishing, Slate for manual queue), lookahead slot badge (`SLOTS: 18/20`), and manual refresh pulse icon button.
-- **Glassmorphic Intelligence Banner:** Compact rounded informational panel explaining active intelligence rules, historical limits, and caught-up state.
+- **Ultra-Compact Audiophile Header Bar (34dp):** Integrates live status jewel LED (pulsing Emerald for auto-fill, Amber for replenishing, Slate for manual), queue track count and duration, lookahead slot badge (`[18/20]`), manual refresh pulse icon button, and dedicated action triggers (Load Playlist `[📋]`, Focus Playing, and Clear Queue) into a unified, high-density row.
+- **Segmented Smart Source Micro-Capsules (28dp):** Single-line obsidian micro-capsules for six sources: Manual (`#B0BEC5`), New (`#FFD700`), Downloads (`#00E5FF`), Discover (`#00E676`), Rediscover (`#FF7043`), and dynamic Playlist (`#BA68C8`), saving over 65% vertical space compared to stacked multi-line cards.
+- **Playlist Loading & Smart Refill (`PlaylistPickerDialog`):** Dedicated modal picker for immediate playback ("Play All"), upcoming queue appending ("+ Queue"), or continuous smart auto-refill (`Source.PLAYLIST`) from any built-in (DR12+, Studio Masters Hi-Res, Pure DSD, Lossless Vault) or custom user playlist.
 - **High-Fidelity Track Items:** Each row displays a 42dp cover art thumbnail (`CoverartFetcher` + Coil `AsyncImage`), active playing gold glow border with animated equalizer overlay (`ic_equalizer_active`), audiophile `QualityBadge` (DSD, Hi-Res, 24-bit, CD quality), and track provenance micro-pills (`NOW PLAYING`, `PLAY NEXT`, `SMART`).
 - **Visual Queue Zoning:** Categorized section dividers (`NOW PLAYING`, `UP NEXT · MANUAL PRIORITY`, `✦ SMART REFILL · [SOURCE]`) provide instant clarity on track origin and sequencing.
 - **Smart Refill & Persistence:** The playback service refreshes sources on a dedicated 15-second worker; manual additions and Play Next take immediate priority over auto-fill. Manual freezes the list; Clear ends the session. Shuffle and repeat are reserved for Manual mode.

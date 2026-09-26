@@ -259,7 +259,7 @@ fun NowPlayingCoverBadge(
  * Driven by an [rememberInfiniteTransition] with staggered sinusoidal frequencies.
  */
 @Composable
-private fun AnimatedEqualizerBars(
+fun AnimatedEqualizerBars(
     modifier: Modifier = Modifier,
     barColorStart: Color = Color(0xFFFFE082), // Champagne gold highlight
     barColorEnd: Color = Color(0xFFFFB300)    // Warm amber-gold base
