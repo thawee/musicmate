@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Preview metadata:** Use labeled artist, album, and folder rows with explicit track counts, consistent vector icons and blue navigation accents. Wrap audio badges on narrow screens and brighten the preview dynamic-range meter on a uniform dark surface.
 - **Library recovery:** Empty-library, no-results, empty-collection, and load-error screens offer Choose folders / Scan, Clear search and filters, Browse all songs, and Retry respectively.
 - **Queue clearing:** Require confirmation before removing a nonempty queue in both Music Center hosts.
+- **Smart Queue console & visual discovery:** Replaced the plain dropdown with an audiophile segmented source deck (Manual, New, Downloads, Discover, Rediscover) featuring accent gradients, jewel borders, and haptics. Added a live Engine HUD with pulsing jewel status LED, lookahead slot counter, and manual replenish trigger. Track items now render 42dp squircle album art, animated playing equalizers, audiophile `QualityBadge`s, and provenance micro-pills (`NOW PLAYING`, `PLAY NEXT`, `SMART`), organized with visual queue zoning dividers.
 
 ### Verification
 - App/core/server unit tests: 117 passed (50 core, 51 app, 16 server), plus 3 SQLite migration/query tests; debug APK assembled. Lint remains blocked by 22 pre-existing errors. Device playback and visual journey verification remain pending.

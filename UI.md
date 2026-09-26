@@ -8,11 +8,13 @@
 
 ## 1. Core Product Philosophy & Design Principles
 
-### Smart queue source control
-- Shared `QueuePage` exposes Manual, New (unorganized), and Downloads sources through a labeled source menu, with auto-fill state, refresh/error feedback, and caught-up/empty guidance.
-- Source changes append to the current list; they do not start playback. Manual freezes the list. Existing clear confirmation also ends auto-fill.
-- The playback service refreshes sources on a dedicated 15-second worker; the visible queue synchronizes snapshots once per second while composed. Source selection runs database work on IO.
-- `QueueManager` owns source/anchor/exclusion persistence via Room queue preferences. Query results are revision-checked before applying to avoid races with clear/replacement/source switching. Shuffle/repeat stay off in smart mode; the playback controls explain how to switch back to Manual.
+### Smart queue source control & audiophile console
+- **Segmented Smart Source Deck:** Shared `QueuePage` features a horizontally scrollable obsidian capsule deck for the five smart sources (Manual, New, Downloads, Discover, Rediscover), styled with jewel borders, accent-tinted gradients, and tactile haptic feedback.
+- **Live Engine HUD:** Real-time jewel LED status indicator (pulsing Emerald for active auto-fill, spinning/pulsing Amber for replenishing, Slate for manual queue), lookahead slot badge (`SLOTS: 18/20`), and manual refresh pulse icon button.
+- **Glassmorphic Intelligence Banner:** Compact rounded informational panel explaining active intelligence rules, historical limits, and caught-up state.
+- **High-Fidelity Track Items:** Each row displays a 42dp cover art thumbnail (`CoverartFetcher` + Coil `AsyncImage`), active playing gold glow border with animated equalizer overlay (`ic_equalizer_active`), audiophile `QualityBadge` (DSD, Hi-Res, 24-bit, CD quality), and track provenance micro-pills (`NOW PLAYING`, `PLAY NEXT`, `SMART`).
+- **Visual Queue Zoning:** Categorized section dividers (`NOW PLAYING`, `UP NEXT · MANUAL PRIORITY`, `✦ SMART REFILL · [SOURCE]`) provide instant clarity on track origin and sequencing.
+- **Smart Refill & Persistence:** The playback service refreshes sources on a dedicated 15-second worker; manual additions and Play Next take immediate priority over auto-fill. Manual freezes the list; Clear ends the session. Shuffle and repeat are reserved for Manual mode.
 
 MusicMate is fundamentally a **music library organization and tag management application**, integrated with high-fidelity local & network playback capabilities (DLNA/UPnP, Bluetooth, native Android player integrations).
 

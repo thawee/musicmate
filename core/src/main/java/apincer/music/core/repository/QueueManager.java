@@ -71,12 +71,16 @@ public class QueueManager {
     public enum Source { MANUAL, NEW, DOWNLOADS, UNPLAYED, REDISCOVER }
     private Source source = Source.MANUAL;
     private final java.util.Set<Long> sessionIds = new java.util.HashSet<>();
+    private final java.util.Set<Long> smartTrackIds = new java.util.HashSet<>();
     private long sourceRevision;
     private boolean autoFilling;
     private boolean sourceExhausted;
     private static final int SMART_LOOKAHEAD = 20;
 
     public synchronized Source getSource() { return source; }
+    public synchronized boolean isSmartSuggested(long trackId) {
+        return source != Source.MANUAL && smartTrackIds.contains(trackId);
+    }
     public synchronized boolean isSmartQueueCaughtUp() {
         return source != Source.MANUAL && sourceExhausted && currentIndex >= queueList.size() - 1;
     }
@@ -91,6 +95,8 @@ public class QueueManager {
         if (source != Source.MANUAL) {
             setShuffle(false);
             setRepeatMode(RepeatMode.OFF);
+        } else {
+            smartTrackIds.clear();
         }
         persistSmartState();
     }
@@ -137,6 +143,7 @@ public class QueueManager {
                 }
             }
             if (additions.isEmpty()) return false;
+            for (Track track : additions) smartTrackIds.add(track.getId());
             autoFilling = true;
             try { enqueuePlayingQueue(additions); }
             finally { autoFilling = false; }
@@ -181,6 +188,7 @@ public class QueueManager {
         source = Source.MANUAL;
         sourceRevision++;
         sessionIds.clear();
+        smartTrackIds.clear();
         queueList.clear();
         
         // Use a Set to prevent duplicates efficiently
@@ -257,6 +265,7 @@ public class QueueManager {
 
     public synchronized void addPlayingQueue(Track song) {
         if (song == null) return;
+        smartTrackIds.remove(song.getId());
         if (source != Source.MANUAL) {
             addPlayNext(song);
             return;
@@ -306,6 +315,7 @@ public class QueueManager {
     public synchronized void addPlayNext(Track song) {
         if (song == null || song.isContainer()) return;
         sessionIds.add(song.getId());
+        smartTrackIds.remove(song.getId());
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -749,7 +759,11 @@ public class QueueManager {
 
     public synchronized void removeTrack(int position) {
         if (position < 0 || position >= queueList.size()) return;
-        sessionIds.add(queueList.get(position).getId());
+        Track removed = queueList.get(position);
+        if (removed != null) {
+            sessionIds.add(removed.getId());
+            smartTrackIds.remove(removed.getId());
+        }
         queueList.remove(position);
         rebuildIndexMap();
 
@@ -795,6 +809,7 @@ public class QueueManager {
         source = Source.MANUAL;
         sourceRevision++;
         sessionIds.clear();
+        smartTrackIds.clear();
         dbHelper.emptyPlayingQueue();
         queueList.clear();
         indexMap.clear();

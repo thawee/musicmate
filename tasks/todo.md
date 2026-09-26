@@ -1,3 +1,37 @@
+# Smart Queue UI/UX Overhaul: Audiophile Console & Visual Discovery
+
+## Status: 🟢 Completed & Hardened
+
+### Objective
+Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audiophile-grade smart console with tactile source switching, real-time refill HUD, cover-art thumbnails, audio fidelity badges, and clear visual queue zoning (Now Playing vs. Manual Play Next vs. Smart Refill).
+
+### Checklist
+- [x] **Phase 1: Audiophile Smart Source Deck & Engine HUD (`QueuePage.kt`)**
+  - Replaced generic Material dropdown menu with a horizontally scrollable obsidian segmented pill deck for the 5 sources (Manual, New, Downloads, Discover, Rediscover) with distinct accent colors and jewel borders.
+  - Implemented live "Engine HUD": pulsing status LED indicator (Emerald pulse for active auto-fill, Amber for refreshing, Slate for manual), slot count badge (`SLOTS: 18/20`), and manual refill button with haptic feedback.
+  - Added frosted glassmorphic intelligence banner explaining the active smart algorithm and auto-refill rules.
+- [x] **Phase 2: High-Fidelity Queue Items with Cover Art & Codec Badges**
+  - Added 42dp cover-art squircle thumbnails with Coil `AsyncImage` and dark background fallback.
+  - Added animated vector equalizer overlay and gold border/title accent for the active playing track.
+  - Integrated compact audiophile quality badge (`QualityBadge`) for Hi-Res, DSD, 24-bit, and CD quality tracks.
+  - Added subtle track provenance micro-badge (`NOW PLAYING`, `PLAY NEXT`, `SMART`) to distinguish user choices from smart auto-fill.
+- [x] **Phase 3: Visual Queue Zoning & Rich Empty State**
+  - Grouped and sectioned upcoming tracks visually with categorized dividers (`NOW PLAYING`, `UP NEXT · MANUAL PRIORITY`, `✦ SMART REFILL · [SOURCE]`).
+  - Designed an audiophile empty-state graphic with quick-start action pills (`[✨ Try Discoveries]`, `[Browse Library]`).
+  - Polished swipe-to-dismiss gesture with crimson gradient and haptic resistance.
+- [x] **Phase 4: Verification, Lint & Build**
+  - 117 unit tests passed across `:app`, `:core`, and `:server` modules; 3 Python SQLite migration tests passed.
+  - Assembled clean debug APK (`app-debug.apk`).
+  - Updated `UI.md`, `CHANGELOG.md`, and recorded UI lessons in `tasks/lessons.md`.
+
+### Verification & Results
+- **Unit Tests:** 117 tests pass (50 core, 51 app, 16 server), plus 3 Python SQLite tests.
+- **Build:** Clean debug APK assembled (`app/build/outputs/apk/debug/app-debug.apk`).
+- **Hygiene:** `git diff --check` passes with zero warnings.
+- **Device Limitations:** Physical device display and touch interaction remain pending runtime verification.
+
+---
+
 # Listening History and Discovery Sources
 
 ## Status: 🟢 Implemented & Verified (Device Review Pending)
