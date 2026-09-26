@@ -4,16 +4,23 @@ Welcome to the **MusicMate** user guide! MusicMate is a high-performance Android
 
 ## Smart Queue Sources
 
-Open **Music Center → Queue → Source** and select:
+Open **Music Center → Queue** and select from the tactile micro-capsule strip:
 - **Manual:** Keep the current list and stop automatic additions.
 - **New:** Automatically add tracks in MusicMate's existing New category (unorganized tracks, not a date-based arrival filter).
 - **Downloads:** Automatically add all tracks matching the existing Downloads classification, including tracks you have already heard. The current classifier includes paths outside `/Music/` and paths containing `/Telegram/`.
 - **Unplayed Discoveries:** Automatically add tracks with zero completed listens recorded by MusicMate (tracking begins with this update; does not infer historical listens prior to tracking).
 - **Rediscover:** Automatically add tracks that were completed previously and have not been played for at least 30 days, queued oldest-last-played first.
+- **Playlist ▾:** Select any built-in smart playlist (e.g. *Audiophile Sanctuary DR12+*, *Studio Masters Hi-Res*, *Pure DSD*, *Lossless Vault*) or custom user playlist to auto-fill unplayed matching tracks up to the 20-track lookahead buffer.
+
+### Loading Playlists into the Queue
+Tap the **`[📋]` Load Playlist** icon in the compact header bar or the **`Playlist ▾`** capsule to open the playlist picker:
+- **Play All (▶):** Replaces the current queue with all playable tracks from the chosen playlist and starts playing track 1 immediately.
+- **+ Queue (+):** Appends all tracks from the playlist to the end of the upcoming queue without interrupting the currently playing song.
+- **✦ Auto (✦):** Sets the playlist as the active smart source to continuously refill the upcoming queue.
 
 Smart sources append suggestions in library order without interrupting playback or replacing queued tracks. They check for newly indexed matches every 15 seconds while the service is running and maintain up to 20 upcoming tracks. Selecting a source also refreshes immediately; tap a track to begin playback if nothing is playing.
 
-**Play Next** and manual additions take priority over automatic suggestions. Removed or previously supplied tracks are not automatically added again in the same session, including after restarting the app. The selected source, queue, and current-track anchor are restored; this does not automatically resume playback or restore a seek position.
+**Play Next** and manual additions take priority over automatic suggestions. Removed or previously supplied tracks are not automatically added again in the same session, including after restarting the app. The selected source, active playlist, queue, and current-track anchor are restored; this does not automatically resume playback or restore a seek position.
 
 Select **Manual** to keep a queue you like and enable shuffle/repeat. Smart sources keep shuffle and repeat off for predictable, non-repeating playback. **Clear Queue** or replacing the queue from a library selection ends the smart session. Changing sources preserves the existing list and exclusions; the new source supplies subsequent additions. When there are no more suggestions, the queue shows a caught-up message instead of looping.
 
