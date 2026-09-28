@@ -1,9 +1,18 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
+import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
+import androidx.compose.material3.adaptive.navigation3.SupportingPaneSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.rememberSupportingPaneSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -14,32 +23,69 @@ import apincer.android.mmate.ui.navigation.MainRoute
 import apincer.android.mmate.ui.navigation.MusicCenterTab
 import apincer.android.mmate.ui.navigation.LibraryDestination
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 internal fun MainOverlayHost(
     navigationState: MainNavigationState,
     state: MainScaffoldState,
     callbacks: MainScaffoldCallbacks?,
+    libraryContent: @Composable () -> Unit,
 ) {
-    // Layoutlib previews do not install a navigation-event owner. Their shell fixtures render
-    // with the overlay stack closed, so there is no scene for the preview host to display.
-    if (LocalNavigationEventDispatcherOwner.current == null) return
+    // Layoutlib previews do not install a navigation-event owner, so render the root directly.
+    if (LocalNavigationEventDispatcherOwner.current == null) {
+        libraryContent()
+        return
+    }
 
-    val overlaySceneStrategy = remember { MainOverlaySceneStrategy() }
+    val useSupportingPane = UiLayoutPolicy.useMusicCenterSupportingPane(
+        LocalConfiguration.current.screenWidthDp
+    )
+    val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
+    val paneDirective = remember(windowAdaptiveInfo) {
+        calculatePaneScaffoldDirective(windowAdaptiveInfo).copy(
+            horizontalPartitionSpacerSize = 0.dp,
+            verticalPartitionSpacerSize = 0.dp,
+        )
+    }
+    val supportingPaneStrategy = rememberSupportingPaneSceneStrategy<NavKey>(
+        backNavigationBehavior = BackNavigationBehavior.PopLatest,
+        directive = paneDirective,
+    )
+    val overlaySceneStrategy = remember(useSupportingPane) {
+        MainOverlaySceneStrategy(useMusicCenterOverlay = !useSupportingPane)
+    }
     NavDisplay(
         modifier = Modifier.fillMaxSize(),
         backStack = navigationState.navBackStack,
         onBack = { navigationState.popOverlay() },
-        sceneStrategies = listOf(overlaySceneStrategy),
+        sceneStrategies = listOf(overlaySceneStrategy, supportingPaneStrategy),
         entryProvider = entryProvider<NavKey> {
-            entry<MainRoute.Library> { }
-            entry<MainRoute.MusicCenter> { route ->
-                MusicCenterOverlay(route, navigationState, state, callbacks)
+            entry<MainRoute.Library>(
+                metadata = SupportingPaneSceneStrategy.mainPane()
+            ) {
+                libraryContent()
+            }
+            entry<MainRoute.MusicCenter>(
+                metadata = SupportingPaneSceneStrategy.supportingPane()
+            ) { route ->
+                MusicCenterOverlay(
+                    route = route,
+                    navigationState = navigationState,
+                    state = state,
+                    callbacks = callbacks,
+                    renderAsSupportingPane = useSupportingPane,
+                )
             }
             entry<MainRoute.StudioConsole> {
                 StudioConsoleOverlay(navigationState, state, callbacks)
             }
         }
     )
+    BackHandler(
+        enabled = useSupportingPane && navigationState.overlayRoute is MainRoute.MusicCenter
+    ) {
+        navigationState.dismissMusicCenter()
+    }
 }
 
 @Composable
@@ -48,6 +94,7 @@ private fun MusicCenterOverlay(
     navigationState: MainNavigationState,
     state: MainScaffoldState,
     callbacks: MainScaffoldCallbacks?,
+    renderAsSupportingPane: Boolean,
 ) {
     AudioHubSheet(
         nowPlayingState = state.nowPlayingState,
@@ -93,7 +140,12 @@ private fun MusicCenterOverlay(
         onOpenFullscreen = { navigationState.openStudioConsole() },
         onTabChanged = { page ->
             navigationState.updateMusicCenterTab(MusicCenterTab.fromPage(page))
-        }
+        },
+        presentation = if (renderAsSupportingPane) {
+            MusicCenterPresentation.SUPPORTING_PANE
+        } else {
+            MusicCenterPresentation.MODAL
+        },
     )
 }
 

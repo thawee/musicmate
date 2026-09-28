@@ -152,6 +152,11 @@ fun MainScaffold(
         onDispose { MainNavigationInterop.detach(navigationState) }
     }
 
+    MainOverlayHost(
+        navigationState = navigationState,
+        state = state,
+        callbacks = callbacks,
+        libraryContent = {
     ModalNavigationDrawer(
         drawerState = drawerState,
         scrimColor = Color.Black.copy(alpha = 0.6f),
@@ -486,6 +491,7 @@ fun MainScaffold(
                     scanProgressText = state.scanProgressText.value,
                     isPlaybackTargetActive = isDlnaCast,
                     onMusicCenterClick = {
+                        focusManager.clearFocus(force = true)
                         navigationState.openMusicCenter(MusicCenterTab.NOW_PLAYING)
                     },
                     onAddPlaylistClick = { state.showCreateSmartPlaylistDialog.value = true }
@@ -560,6 +566,7 @@ fun MainScaffold(
                     onNextClick = { callbacks?.onDockNextClick() },
                     onPreviousClick = { callbacks?.onAudioHubPrevious() },
                     onOpenAudioHub = {
+                        focusManager.clearFocus(force = true)
                         navigationState.openMusicCenter(MusicCenterTab.NOW_PLAYING)
                     },
                     onOpenDrawer = {
@@ -573,11 +580,7 @@ fun MainScaffold(
         }
         }
     }
-
-    MainOverlayHost(
-        navigationState = navigationState,
-        state = state,
-        callbacks = callbacks
+        }
     )
 
     // ── Pure Compose Player Picker Modal Dialog (DESIGN.md §4 & §8A) ─────────

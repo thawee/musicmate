@@ -106,7 +106,7 @@ private fun MusicCenterPreview(
             onOpenFullscreen = {},
             showGestureHints = false,
             trackArtwork = { track -> PreviewTrackArtwork(track) },
-            renderAsModal = false
+            presentation = MusicCenterPresentation.PREVIEW
         )
     }
 }

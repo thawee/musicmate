@@ -2,6 +2,7 @@ package apincer.android.mmate.ui.navigation
 
 import apincer.android.mmate.R
 import apincer.android.mmate.ui.compose.MainScaffoldState
+import apincer.android.mmate.ui.compose.UiLayoutPolicy
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -203,5 +204,20 @@ class MainNavigationStateTest {
         } finally {
             MainNavigationInterop.detach(state)
         }
+    }
+
+    @Test
+    fun musicCenterRouteAndTabSurviveWindowClassChangesAndRestoration() {
+        val state = MainNavigationState()
+        state.openMusicCenter(MusicCenterTab.QUEUE)
+
+        assertFalse(UiLayoutPolicy.useMusicCenterSupportingPane(windowWidthDp = 839))
+        assertEquals(MainRoute.MusicCenter(MusicCenterTab.QUEUE), state.overlayRoute)
+
+        val restored = MainNavigationState.restore(state.snapshot())
+
+        assertTrue(UiLayoutPolicy.useMusicCenterSupportingPane(windowWidthDp = 840))
+        assertEquals(MainRoute.MusicCenter(MusicCenterTab.QUEUE), restored.overlayRoute)
+        assertEquals(state.backStack, restored.backStack)
     }
 }

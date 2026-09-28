@@ -105,7 +105,8 @@ class MusicCenterAccessibilityTest {
                     onEngineChanged = {}, onStartServerClicked = {},
                     onStopServerClicked = {}, onCopyUrlClicked = {},
                     onOpenUrlClicked = {}, onQrCodeClicked = {},
-                    showGestureHints = false, renderAsModal = false
+                    showGestureHints = false,
+                    presentation = MusicCenterPresentation.PREVIEW
                 )
             }
         }

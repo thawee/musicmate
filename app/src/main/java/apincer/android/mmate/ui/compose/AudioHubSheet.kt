@@ -31,6 +31,12 @@ import apincer.android.mmate.R
 import apincer.music.core.model.Track
 import kotlinx.coroutines.launch
 
+enum class MusicCenterPresentation {
+    MODAL,
+    PREVIEW,
+    SUPPORTING_PANE,
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioHubSheet(
@@ -70,7 +76,7 @@ fun AudioHubSheet(
     onTabChanged: (Int) -> Unit = {},
     showGestureHints: Boolean = true,
     trackArtwork: (@Composable (Track) -> Unit)? = null,
-    renderAsModal: Boolean = true,
+    presentation: MusicCenterPresentation = MusicCenterPresentation.MODAL,
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -98,13 +104,17 @@ fun AudioHubSheet(
     AudioHubContainer(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        renderAsModal = renderAsModal,
+        presentation = presentation,
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(sheetHeight)
+            modifier = if (presentation == MusicCenterPresentation.SUPPORTING_PANE) {
+                Modifier.fillMaxSize()
+            } else {
+                Modifier
+                    .fillMaxWidth()
+                    .height(sheetHeight)
+            }
         ) {
             // Header Row: Music Center title, Cast picker & Close button
             Row(
@@ -143,7 +153,7 @@ fun AudioHubSheet(
                     IconButton(
                         onClick = {
                             coroutineScope.launch {
-                                sheetState.hide()
+                                if (presentation == MusicCenterPresentation.MODAL) sheetState.hide()
                                 onDismissRequest()
                                 onOpenFullscreen()
                             }
@@ -160,7 +170,7 @@ fun AudioHubSheet(
                     IconButton(
                         onClick = {
                             coroutineScope.launch {
-                                sheetState.hide()
+                                if (presentation == MusicCenterPresentation.MODAL) sheetState.hide()
                                 onDismissRequest()
                             }
                         },
@@ -413,7 +423,7 @@ fun AudioHubSheet(
 private fun AudioHubContainer(
     onDismissRequest: () -> Unit,
     sheetState: SheetState,
-    renderAsModal: Boolean,
+    presentation: MusicCenterPresentation,
     modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -431,7 +441,7 @@ private fun AudioHubContainer(
         )
     }
 
-    if (renderAsModal) {
+    if (presentation == MusicCenterPresentation.MODAL) {
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
@@ -441,6 +451,16 @@ private fun AudioHubContainer(
             dragHandle = dragHandle,
             modifier = sheetModifier,
             content = content
+        )
+    } else if (presentation == MusicCenterPresentation.SUPPORTING_PANE) {
+        Surface(
+            color = Color(0xFF121212),
+            modifier = modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
+            content = {
+                Column(content = content)
+            }
         )
     } else {
         Box(

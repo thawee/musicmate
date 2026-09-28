@@ -18,14 +18,18 @@ internal data class MainOverlayScene(
     override val content: @Composable () -> Unit = { entry.Content() }
 }
 
-/** Keeps the library scene visible beneath Music Center and Studio Console routes. */
-internal class MainOverlaySceneStrategy : SceneStrategy<NavKey> {
+/** Keeps compact Music Center and Studio Console routes above their previous scenes. */
+internal class MainOverlaySceneStrategy(
+    private val useMusicCenterOverlay: Boolean = true,
+) : SceneStrategy<NavKey> {
     override fun SceneStrategyScope<NavKey>.calculateScene(
         entries: List<NavEntry<NavKey>>
     ): Scene<NavKey>? {
         val entry = entries.lastOrNull() ?: return null
         val route = entry.contentKey
-        if (route !is MainRoute.MusicCenter && route !is MainRoute.StudioConsole) return null
+        val handlesRoute = route is MainRoute.StudioConsole ||
+            (useMusicCenterOverlay && route is MainRoute.MusicCenter)
+        if (!handlesRoute) return null
         val previousEntries = entries.dropLast(1)
         return MainOverlayScene(
             key = route,
