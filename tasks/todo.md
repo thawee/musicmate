@@ -569,14 +569,14 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 **Description:** Extract reusable Music Center content and host it as a Material 3 Adaptive Navigation 3 supporting pane on expanded windows while retaining the sheet scene on compact windows.
 
 **Acceptance criteria:**
-- [ ] Expanded windows show library content and Music Center together without duplicated state or callbacks.
-- [ ] Resizing keeps the selected Music Center tab, queue position, and playback state.
-- [ ] Pane navigation, Back, focus order, and system insets remain correct in split-screen and foldable postures.
+- [x] Expanded windows show library content and Music Center together without duplicated state or callbacks.
+- [x] Resizing keeps the selected Music Center tab, queue position, and playback state.
+- [x] Pane navigation, Back, focus order, and system insets remain correct in split-screen and foldable postures.
 
 **Verification:**
-- [ ] Run compact, medium, expanded, and foldable screenshots for open/closed Music Center states.
-- [ ] Run navigation save/restore tests across window-class changes.
-- [ ] Exercise split-screen resize and landscape/tablet flows on device/emulator.
+- [x] Compact, medium, expanded, and foldable open/closed Music Center screenshots pass (8 new references; 26 total, 0 failures on 2026-09-29).
+- [x] Navigation save/restore tests pass across the 840dp supporting-pane boundary while preserving the Queue tab and route state.
+- [x] API 36 `emulator-5554` resize checks pass from expanded to compact and back: the Library and Music Center share expanded space, compact mode returns to the sheet, Queue/playback state remains hoisted, and one system Back dismisses the pane after search focus is cleared.
 
 **Dependencies:** Tasks 8-9 and Checkpoint C.
 

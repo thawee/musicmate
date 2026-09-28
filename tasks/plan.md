@@ -82,7 +82,7 @@ Tasks 10-12 ───────────────── Task 13 release 
 
 ### Phase 4: Adaptive Interaction Polish
 
-- [ ] Task 10: Present Music Center as an expanded-window supporting pane.
+- [x] Task 10: Present Music Center as an expanded-window supporting pane.
 - [ ] Task 11: Make queue and library actions reversible and keyboard/pointer capable.
 - [ ] Task 12: Respect reduced motion and harden 200% text layouts.
 

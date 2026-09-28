@@ -39,7 +39,7 @@ fun MainShellSelectionPreview() {
 }
 
 @Composable
-private fun MainLibraryPreview(state: MainScaffoldState) {
+internal fun MainLibraryPreview(state: MainScaffoldState) {
     MusicMateTheme {
         MainScaffold(
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),

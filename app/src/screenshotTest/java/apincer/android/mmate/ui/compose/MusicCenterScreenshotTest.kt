@@ -66,11 +66,12 @@ fun MusicCenterServerRunningPreview() {
 }
 
 @Composable
-private fun MusicCenterPreview(
+internal fun MusicCenterPreview(
     initialTab: Int,
     nowPlayingState: NowPlayingState = remember { UxPreviewFixtures.nowPlayingEmpty() },
     queueState: QueueState = remember { UxPreviewFixtures.emptyQueue() },
-    mediaServerState: MediaServerState = remember { UxPreviewFixtures.serverStopped() }
+    mediaServerState: MediaServerState = remember { UxPreviewFixtures.serverStopped() },
+    presentation: MusicCenterPresentation = MusicCenterPresentation.PREVIEW,
 ) {
     MusicMateTheme {
         AudioHubSheet(
@@ -106,7 +107,7 @@ private fun MusicCenterPreview(
             onOpenFullscreen = {},
             showGestureHints = false,
             trackArtwork = { track -> PreviewTrackArtwork(track) },
-            presentation = MusicCenterPresentation.PREVIEW
+            presentation = presentation
         )
     }
 }
