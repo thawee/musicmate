@@ -19,6 +19,12 @@ class UiLayoutPolicyTest {
     }
 
     @Test
+    fun `music center uses a supporting pane from 840 dp`() {
+        assertFalse(UiLayoutPolicy.useMusicCenterSupportingPane(windowWidthDp = 839))
+        assertTrue(UiLayoutPolicy.useMusicCenterSupportingPane(windowWidthDp = 840))
+    }
+
+    @Test
     fun `compact queue header hides duration below 400 dp`() {
         assertFalse(UiLayoutPolicy.showQueueDuration(windowWidthDp = 399))
         assertTrue(UiLayoutPolicy.showQueueDuration(windowWidthDp = 400))

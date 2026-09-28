@@ -12,6 +12,9 @@ object UiLayoutPolicy {
     fun useTwoColumnSettings(windowWidthDp: Int): Boolean =
         windowWidthDp >= ExpandedNavigationMinWidthDp
 
+    fun useMusicCenterSupportingPane(windowWidthDp: Int): Boolean =
+        windowWidthDp >= ExpandedNavigationMinWidthDp
+
     fun showQueueDuration(windowWidthDp: Int): Boolean =
         windowWidthDp >= 400
 
