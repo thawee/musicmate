@@ -111,14 +111,14 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 * **Unified Floating Navigation & Playback Dock (Card 20dp):**
   - **Idle State:** Displays Library icon, app title ("MusicMate"), Media Server status icon, and Menu.
   - **Playing State:** Dynamically embeds mini album art, scrolling track title, and player target subtitle (e.g. `HiBy R3 • DLNA Renderer`).
-  - **Single Tap (Title/Art):** Opens the **Now Playing & Queue Sheet** (`NowPlayingQueueSheet`).
-  - **Long Press (Title/Art):** Opens the **Audio Route Path Bottom Sheet** (`AudioHubBottomSheet`) for real-time audio pipeline diagnostics.
-* **Now Playing & Queue Sheet (`NowPlayingQueueSheet`):**
-  - Shows expanded album artwork, technical format specs (e.g. `FLAC 352.8 kHz / 24bit`), active player badge, and scrollable playing queue with current track gold highlighting.
-  - **Embedded Transport Controls:** Features full **Previous**, **Play / Pause**, and **Next** transport control buttons directly inside the Now Playing track card.
-  - **Audio Route Path Quick Access:** Includes a dedicated gold Audio Route Path icon button (`ic_baseline_audio_path_24`) in the top-right header to quickly jump to audio pipeline diagnostics.
+  - **Single Tap (Title/Art):** Opens the **Music Center** sheet (`AudioHubSheet.kt`) at the last-viewed tab.
+  - **Long Press (Title/Art):** Scrolls the main library list to the currently playing track (haptic feedback). It does not open a separate sheet.
+* **Music Center (`AudioHubSheet.kt`) — 3 Tabs:**
+  - The Music Center is a single master bottom sheet with three full-height tabs: **Playback**, **Queue**, and **Server**. Swipe between tabs or tap a tab label. The last-viewed tab is remembered for the current session. Older documentation refers to this surface as `NowPlayingQueueSheet` or `AudioHubBottomSheet` — those separate sheets were consolidated and no longer exist.
+  - **Playback Tab:** Shows expanded album artwork, technical format specs (e.g. `FLAC 352.8 kHz / 24bit`), active player badge, and an embedded transport row (**Previous**, **Play / Pause**, **Next**). Tap the artwork or card to flip between album art and the audio-anatomy spec sheet.
+  - **Queue Tab:** Scrollable playing queue with current track gold highlighting, drag-to-reorder handles, and swipe-to-remove. Includes **Play All**, **Shuffle Toggle (🔀)**, **Repeat Mode Toggle (🔁)**, **Clear Queue**, and **Stop Playback** actions.
+  - **Audio Route Path:** The real-time 3-stage pipeline telemetry (Source ➔ Transport ➔ Target) is shown on the Playback tab rather than behind a separate sheet or header icon.
   - **Tap-to-Scroll Navigation:** Tapping the track info card or any queue track row dismisses the sheet and automatically scrolls the main library list to that song's position.
-  - **Queue Controls:** Includes **Play All**, **Shuffle Toggle (🔀)**, **Repeat Mode Toggle (🔁)**, **Clear Queue**, and **Stop Playback** actions.
 * **Bottom Navigation Dock (Card Shape 16dp):**
   - **Media Server Icon:** Features live status tinting (Teal tint when DLNA server is active/running, Muted tint when offline). Tapping opens `MediaServerManagementSheet`.
 * **Bluetooth Audio Playback Suite:**
@@ -172,9 +172,10 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
    - **Android Player Apps:** Displays local app title, package/version, and app type (e.g. `Poweramp (com.maxmpz.audioplayer • Android App)`).
 5. **Runtime Server Engine Switching (App Settings):**
    - Switch web server engines dynamically under **App Settings -> Server Engine** without restarting the app:
-     * **SonicNIO (Default · Balanced / Zero-Copy):** Low CPU wake-ups with Java NIO non-blocking I/O.
-     * **CoreHTTP (Ultra-Low Memory):** Apache HttpCore engine optimized for minimal RAM footprint.
-     * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming.
+     * **CoreHTTP (Default · Ultra-Low Memory):** Apache HttpCore 5.5-beta2 engine optimized for minimal RAM footprint (~64 KB/connection). This is the default when no engine has been chosen.
+     * **SonicNIO (Balanced):** Low CPU wake-ups with Java NIO non-blocking I/O and true zero-copy `FileChannel.transferTo()` streaming.
+     * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming, with true zero-copy `DefaultFileRegion` transfer and a REST bridge alongside the WebSocket API.
+   - **Header note:** SonicNIO does not emit the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Perfect`, etc.). If a renderer or diagnostic tool relies on those headers, use CoreHTTP or Netty.
 6. **Server Port & Endpoints Reference:**
    - **Default Server Port:** `9000` (HTTP)
    - **Endpoints Table:**

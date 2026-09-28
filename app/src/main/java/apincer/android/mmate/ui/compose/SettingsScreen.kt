@@ -3,6 +3,8 @@ package apincer.android.mmate.ui.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,14 +15,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import apincer.android.mmate.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     serverEngine: String,
@@ -39,20 +45,22 @@ fun SettingsScreen(
     onReplayGainPreampChange: (Float) -> Unit = {},
     replayGainPreventClipping: Boolean = true,
     onReplayGainPreventClippingChange: (Boolean) -> Unit = {},
-    tapActionMode: String = "curate",
+    tapActionMode: String = "listen",
     onTapActionModeChange: (String) -> Unit = {},
     studioKeepScreenOn: Boolean = true,
     onStudioKeepScreenOnChange: (Boolean) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val configuration = LocalConfiguration.current
+    val useTwoColumns = UiLayoutPolicy.useTwoColumnSettings(configuration.screenWidthDp)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings Master",
+                        text = "Settings",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -74,68 +82,60 @@ fun SettingsScreen(
         },
         containerColor = Color(0xFF0A0A0A)
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── Section 1: Streaming & Server Engine ──────────────────────────
-            SettingsCard(title = "DLNA MEDIA SERVER") {
+            FlowRow(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .widthIn(max = 840.dp)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                maxItemsInEachRow = if (useTwoColumns) 2 else 1
+            ) {
+            // Put the setting that changes everyday behavior first.
+            SettingsCard(
+                title = "INTERACTION",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    text = "Streaming Engine",
+                    text = "When I tap a track",
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Select high-performance HTTP web server engine for streaming",
+                    text = if (tapActionMode == "listen")
+                        "Play it immediately. Long-press opens the tag editor."
+                    else
+                        "Open the tag editor. Tap the album art to play.",
                     color = Color(0xFF9E9E9E),
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val engines = listOf(
-                        "httpcore" to "CoreHTTP",
-                        "nio" to "SonicNIO",
-                        "netty" to "Netty"
-                    )
-                    engines.forEach { (key, label) ->
-                        val isSelected = serverEngine.equals(key, ignoreCase = true)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
-                                .border(
-                                    1.dp,
-                                    if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .clickable { onServerEngineChange(key) }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = label,
-                                color = if (isSelected) Color(0xFFFFB300) else Color.White,
-                                fontSize = 12.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    }
-                }
+                AdaptiveChoiceGroup(
+                    options = listOf(
+                        "listen" to "Play tracks",
+                        "curate" to "Edit tags"
+                    ),
+                    selected = { tapActionMode.equals(it, ignoreCase = true) },
+                    onSelect = onTapActionModeChange
+                )
             }
 
             // ── Section 2: Audiophile Playback (ReplayGain) ───────────────────
-            SettingsCard(title = "AUDIOPHILE PLAYBACK (REPLAYGAIN)") {
+            SettingsCard(
+                title = "AUDIOPHILE PLAYBACK (REPLAYGAIN)",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = "Loudness Leveling Mode",
                     color = Color.White,
@@ -150,40 +150,15 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val modes = listOf(
+                AdaptiveChoiceGroup(
+                    options = listOf(
                         "off" to "Off",
                         "track" to "Track Gain",
                         "album" to "Album Gain"
-                    )
-                    modes.forEach { (key, label) ->
-                        val isSelected = replayGainMode.equals(key, ignoreCase = true)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
-                                .border(
-                                    1.dp,
-                                    if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .clickable { onReplayGainModeChange(key) }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = label,
-                                color = if (isSelected) Color(0xFFFFB300) else Color.White,
-                                fontSize = 12.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    }
-                }
+                    ),
+                    selected = { replayGainMode.equals(it, ignoreCase = true) },
+                    onSelect = onReplayGainModeChange
+                )
 
                 if (!replayGainMode.equals("off", ignoreCase = true)) {
                     Spacer(modifier = Modifier.height(14.dp))
@@ -195,40 +170,15 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val preamps = listOf(
+                    AdaptiveChoiceGroup(
+                        options = listOf(
                             -3.0f to "-3 dB",
                             0.0f to "0 dB",
                             3.0f to "+3 dB"
-                        )
-                        preamps.forEach { (valDb, label) ->
-                            val isSelected = kotlin.math.abs(replayGainPreamp - valDb) < 0.1f
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
-                                    .border(
-                                        1.dp,
-                                        if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable { onReplayGainPreampChange(valDb) }
-                                    .padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = if (isSelected) Color(0xFFFFB300) else Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
+                        ),
+                        selected = { kotlin.math.abs(replayGainPreamp - it) < 0.1f },
+                        onSelect = onReplayGainPreampChange
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
                     SettingsSwitchRow(
@@ -240,63 +190,11 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Section: Interaction Mode (Curator vs. Listener) ──────────────
-            SettingsCard(title = "INTERACTION MODE") {
-                Text(
-                    text = "Track Tap Action",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = if (tapActionMode == "listen")
-                        "Single-tap plays song immediately. Long-press opens tag editor."
-                    else
-                        "Single-tap opens tag editor for curation. Tap album art to play.",
-                    color = Color(0xFF9E9E9E),
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val modes = listOf(
-                        "curate" to "🏷 Curator",
-                        "listen" to "🎧 Listener"
-                    )
-                    modes.forEach { (key, label) ->
-                        val isSelected = tapActionMode.equals(key, ignoreCase = true)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
-                                .border(
-                                    1.dp,
-                                    if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .clickable { onTapActionModeChange(key) }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = label,
-                                color = if (isSelected) Color(0xFFFFB300) else Color.White,
-                                fontSize = 12.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    }
-                }
-            }
-
             // ── Section 3: Library & User Interface ───────────────────────────
-            SettingsCard(title = "USER INTERFACE") {
+            SettingsCard(
+                title = "USER INTERFACE",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
                 SettingsSwitchRow(
                     title = "Display Storage Space",
                     subtitle = "Show storage usage metrics on drawer menu",
@@ -336,20 +234,131 @@ fun SettingsScreen(
                     onCheckedChange = onStudioKeepScreenOnChange
                 )
             }
+
+            SettingsCard(
+                title = "ADVANCED STREAMING",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "DLNA server engine",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Change this only when troubleshooting streaming compatibility.",
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                AdaptiveChoiceGroup(
+                    options = listOf(
+                        "httpcore" to "CoreHTTP",
+                        "nio" to "SonicNIO",
+                        "netty" to "Netty"
+                    ),
+                    selected = { serverEngine.equals(it, ignoreCase = true) },
+                    onSelect = onServerEngineChange
+                )
+            }
         }
+        }
+    }
+}
+
+@Composable
+private fun <T> AdaptiveChoiceGroup(
+    options: List<Pair<T, String>>,
+    selected: (T) -> Boolean,
+    onSelect: (T) -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val fontScale = LocalDensity.current.fontScale
+    val stackChoices = UiLayoutPolicy.stackChoiceControls(
+        windowWidthDp = configuration.screenWidthDp,
+        fontScale = fontScale
+    )
+
+    if (stackChoices) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { (value, label) ->
+                SettingsChoice(
+                    label = label,
+                    selected = selected(value),
+                    onClick = { onSelect(value) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { (value, label) ->
+                SettingsChoice(
+                    label = label,
+                    selected = selected(value),
+                    onClick = { onSelect(value) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsChoice(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = modifier
+            .defaultMinSize(minHeight = 48.dp)
+            .clip(shape)
+            .background(if (selected) Color(0x33FFB300) else Color(0xFF1F1F28))
+            .border(
+                width = 1.dp,
+                color = if (selected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                shape = shape
+            )
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = onClick
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = if (selected) Color(0xFFFFB300) else Color.White,
+            fontSize = 12.5.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+        )
     }
 }
 
 @Composable
 private fun SettingsCard(
     title: String,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color(0xFF16161E),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1FFFFFFF)),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier
@@ -379,7 +388,11 @@ private fun SettingsSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange
+            )
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -401,7 +414,8 @@ private fun SettingsSwitchRow(
         Spacer(modifier = Modifier.width(12.dp))
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
+            modifier = Modifier.defaultMinSize(minHeight = 48.dp),
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Black,
                 checkedTrackColor = Color(0xFFFFB300),
@@ -410,4 +424,24 @@ private fun SettingsSwitchRow(
             )
         )
     }
+}
+
+@Preview(name = "Settings phone", widthDp = 360, heightDp = 800, showBackground = true)
+@Preview(name = "Settings large text", widthDp = 360, heightDp = 800, fontScale = 2f, showBackground = true)
+@Preview(name = "Settings tablet", widthDp = 1000, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    SettingsScreen(
+        serverEngine = "httpcore",
+        onServerEngineChange = {},
+        showStorageSpace = true,
+        onShowStorageSpaceChange = {},
+        prefixTrackNumber = false,
+        onPrefixTrackNumberChange = {},
+        listFollowsNowPlaying = true,
+        onListFollowsNowPlayingChange = {},
+        artistAwareSimilarSongs = true,
+        onArtistAwareSimilarSongsChange = {},
+        onBackClick = {}
+    )
 }

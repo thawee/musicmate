@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import apincer.music.core.model.Track
+import apincer.android.mmate.ui.navigation.MainNavigationInterop
 
 class MainScaffoldState {
     var searchQuery = mutableStateOf("")
@@ -19,10 +20,6 @@ class MainScaffoldState {
     var outputTargetSubtitle = mutableStateOf("")
     var playbackProgress = mutableFloatStateOf(0f)
     var isFloatingDockVisible = mutableStateOf(true)
-
-    var showAudioHubSheet = mutableStateOf(false)
-    var showFullscreenConsole = mutableStateOf(false)
-    var audioHubInitialTab = mutableIntStateOf(0)
 
     // Player picker modal state
     var showPlayerPickerDialog = mutableStateOf(false)
@@ -126,18 +123,17 @@ class MainScaffoldState {
 
         @JvmStatic
         fun openAudioHub(initialTab: Int) {
-            instance.audioHubInitialTab.intValue = initialTab.coerceIn(0, 2)
-            instance.showAudioHubSheet.value = true
+            MainNavigationInterop.openMusicCenter(initialTab)
         }
 
         @JvmStatic
         fun closeAudioHub() {
-            instance.showAudioHubSheet.value = false
+            MainNavigationInterop.closeMusicCenter()
         }
 
         @JvmStatic
         fun isAudioHubOpen(): Boolean {
-            return instance.showAudioHubSheet.value
+            return MainNavigationInterop.isMusicCenterOpen()
         }
 
         @JvmStatic

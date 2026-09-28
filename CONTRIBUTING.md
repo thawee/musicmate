@@ -10,50 +10,37 @@ Thank you for your interest in contributing to Music Mate! This guide will help 
 
 ## 🏗 Project Structure
 
-Music Mate uses a modular architecture to support multiple pluggable server engines:
+Music Mate uses a modular architecture to support multiple pluggable server engines. All active engines ship in **one APK**; the engine is chosen at runtime, not at build time.
 
 *   `:app` - The main Android application module.
-*   `:core` - Shared business logic and interfaces.
-*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine (default).
-*   `:server-jupnp-httpcore` - **CoreHTTP** engine (Apache HttpCore 5).
-*   `:server-jupnp-netty` - **Netty** engine (Netty 4.2).
-*   `:server-jupnp-jetty` - Jetty 12 engine — **archived, no further updates**.
-*   `:server-jupnp-undertow` - Undertow 2.4 engine — **archived, no further updates**.
+*   `:core` - Shared business logic and interfaces (SPI: `UpnpServer`, `WebServer`, `MediaServerHub`).
+*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine.
+*   `:server-jupnp-httpcore` - **CoreHTTP** engine (Apache HttpCore 5.5-beta2) — **the default engine**.
+*   `:server-jupnp-netty` - **Netty** engine (Netty 4.2.18).
 *   `:library` - Internal UI and utility libraries.
+
+> **Note:** `server-jupnp-jetty`, `server-jupnp-undertow`, and `server-jupnp-httpcore54` still exist on disk but are **not** listed in `settings.gradle` and are **not compiled** into the app. They are archived.
 
 ## 🚀 Building the Project
 
-The project uses Gradle flavors to manage different server engine implementations. You can select a flavor in Android Studio via the **Build Variants** tab.
+There are **no Gradle flavors**. A single APK is built, and the active engine is read at runtime from the `preference_media_server_engine` preference via `CompositeWebServer`:
 
-### ✅ Actively Maintained Flavors
-
-| Flavor | Server Engine | Code Location | Notes |
+| Engine key | Server Engine | Module | Notes |
 | :--- | :--- | :--- | :--- |
-| `nio` | **SonicNIO** (Custom NIO Reactor) | `app/src/nio/` | **Default — recommended** |
-| `httpcore` | **CoreHTTP** (Apache HttpCore 5) | `app/src/httpcore/` | Ultra-low memory |
-| `netty` | **Netty 4.2** | `app/src/netty/` | High throughput |
+| `httpcore` | **CoreHTTP** (Apache HttpCore 5) | `:server-jupnp-httpcore` | **Default** — ultra-low memory |
+| `nio` | **SonicNIO** (Custom NIO Reactor) | `:server-jupnp` | Balanced, true zero-copy |
+| `netty` | **Netty 4.2** | `:server-jupnp-netty` | High throughput |
 
-### 🗄 Archived Flavors *(build and run, but no longer updated)*
-
-| Flavor | Server Engine | Notes |
-| :--- | :--- | :--- |
-| `jetty` | Jetty 12 | Archived |
-| `undertow` | Undertow 2.4 | Archived |
+Users switch engines at runtime under **App Settings → Server Engine**. To change the default, edit the fallback string in `CompositeWebServer.createEngine()` and the readers in `MainActivity` / `SettingsActivity`.
 
 ### Command Line Build
 
 ```bash
-# Build the default SonicNIO debug variant
-./gradlew assembleNioDebug
-
-# Build the CoreHTTP (low-memory) debug variant
-./gradlew assembleHttpcoreDebug
-
-# Build the Netty debug variant
-./gradlew assembleNettyDebug
-
-# Build all variants
+# Build the app (single variant — all engines included)
 ./gradlew assembleDebug
+
+# Build and install on a connected device
+./gradlew installDebug
 ```
 
 ## 🧪 Testing

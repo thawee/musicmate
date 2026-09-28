@@ -330,3 +330,330 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 - Lint reports 22 pre-existing errors in unchanged service/audio declarations (MissingSuperCall and Media3 opt-in), plus warnings/hints; no lint errors in added behavior.
 - `git diff --check` passes. Updated `UI.md` and Unreleased changelog to document the new interactions.
 - Device playback handoff, dialog rendering, and touch/accessibility journeys remain unverified.
+
+---
+
+# Main Dock Menu Safety and UX
+
+## Status
+- Tasks 1-4 implemented and source-verified; Task 5 device verification blocked by the phone lock screen. Detailed plan: [dock-menu-fix-plan.md](dock-menu-fix-plan.md).
+
+## Checklist
+- [x] Task 1: Added `LibrarySelectionModel`, which keys multi-selection by stable track identity (unique key, then container type/title, then path, then id) instead of row position, so no list replacement can retarget a batch action. Selection whose track leaves the list is dropped; reordering and re-indexing keep it. Selection also ends on library-destination change. 10 regression tests cover destination change, pagination, vanished track, same-position-different-track, reordering, re-indexing, toggle, select-all, and out-of-range input.
+- [x] Task 2: Added `MainBackPolicy` (enum-based) so an open drawer consumes Back before selection or library navigation. 3 regression tests cover the precedence order. The `DrawerInterop` open/close helpers, previously unused, are now wired to Back.
+- [x] Checkpoint A: 61 app+core tests pass with zero failures; `:app:assembleDebug` succeeds. Live device check still pending.
+- [x] Task 3: Renamed to Similar Tracks, Audio Quality, Music Folders & Scan, and Notification Access; moved all drawer copy into `R.string.nav_*` resources. Destinations and queries unchanged.
+- [x] Task 4: Drawer tiles and rows now use `Modifier.selectable` with `Role.Tab` (matching Material 3 `NavigationDrawerItem`) and a 48dp minimum height. The dock menu button was already 48dp via `IconButton`'s internal `minimumInteractiveComponentSize()`; verified against the resolved Material 3 1.4.0 source rather than assumed from the 44dp modifier.
+- [ ] Checkpoint B: Screenshot and TalkBack comparison on device — blocked, phone still locked.
+- [x] Task 5: Ran app+core tests (64 passing, 0 failures), debug build, and diff check; updated `UI.md` (new §3F drawer section) and `CHANGELOG.md`. An independent review of the first pass found selection was still positional and guarded at only one of seven list-replacing call sites; Task 1 was reworked to identity-keyed selection, which closes the gap at the data layer rather than per call site. The same review caught a double `onDestroyActionMode` invocation, now fixed by clearing the `actionMode` field before `finish()`.
+
+## Boundaries and verification limits
+- No new Clean Up/Inspect workflows, monetization, playback-engine changes, or selection-system refactor beyond what the safety fix required. The unrelated `AboutScreen.kt` edit is untouched.
+- **Not verified on a device:** live Back behavior with the drawer open, visual drawer layout, TalkBack output, large-text rendering, and before/after screenshots. Source and unit tests only. The phone stayed locked for the whole session.
+- Batch-action regression tests use fixture tracks; no destructive operation was run against the real music library.
+- **Dead code found, not removed:** `MySelectionTracker.java` now has no callers after `LibrarySelectionModel` replaced it, including its duplicate position-to-track resolution. Awaiting a decision before deletion.
+- **Deliberately unchanged:** whether the MusicMate logo alone reads as "menu" to a first-time user, and the fact that Back at a root destination with no selection re-opens the drawer (pre-existing `onSearchBackClicked` behavior, not a regression). Both need live comparison; the correctness fixes do not depend on them.
+
+---
+
+# App UX Modernization
+
+## Objective
+
+- Add measurable visual and accessibility quality gates, move the hybrid shell toward type-safe Navigation 3, use larger windows for a Music Center supporting pane, and complete interaction/device validation without changing playback or repository behavior.
+- Detailed plan: [plan.md](plan.md).
+
+## Task 1: Add the UI verification harness
+
+**Description:** Add isolated Compose screenshot testing and connected Compose accessibility testing. Resolve screenshot-plugin compatibility with AGP 9.4.1 before changing production UI.
+
+**Acceptance criteria:**
+- [x] A deterministic Compose smoke preview has record and verify Gradle tasks.
+- [x] A connected Compose test can run Accessibility Test Framework checks.
+- [x] Test-only tooling does not alter release packaging or runtime dependencies.
+
+**Verification:**
+- [x] Run screenshot verification twice with identical output (1 preview, 0 failures, 0.0% diff on 2026-09-28).
+- [x] Run the focused connected smoke test on API 36 or newer (`SM-S931B - 16`, 1 test, 0 failures).
+- [x] Run `./gradlew :app:testDebugUnitTest :core:testDebugUnitTest :app:assembleDebug` (69 app + 52 core tests, 0 failures; debug APK assembled on 2026-09-28).
+
+**Dependencies:** None.
+
+**Files likely touched:** `gradle/libs.versions.toml`, `build.gradle`, `app/build.gradle`, `gradle.properties`, `app/src/screenshotTest/java/apincer/android/mmate/ui/compose/ScreenshotSmokeTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 2: Lock the main-shell and library visual baseline
+
+**Description:** Add stable preview fixtures for the main shell and library so empty, populated, filtered, and selected states render without live services or mutable global data.
+
+**Acceptance criteria:**
+- [x] Baselines cover compact portrait, compact at 200% font scale, landscape, and expanded tablet widths.
+- [x] Empty, populated, search/no-results, and selection states use deterministic track and artwork fixtures.
+- [x] Tests do not read storage, network, playback, wall-clock, or device artwork.
+
+**Verification:**
+- [x] Run focused main/library screenshot verification twice (7 references, 0 failures, 0.0% diff).
+- [x] Review first-generation references for clipping, unstable pixels, and fixture accuracy; approved on 2026-09-28. The captured 200% metadata clipping is retained as Task 12 evidence.
+- [x] Run `./gradlew :app:testDebugUnitTest` (69 tests, 0 failures) and `:app:assembleDebug`.
+
+**Dependencies:** Task 1.
+
+**Files likely touched:** `MainScaffold.kt`, `MusicListScreen.kt`, `UxPreviewFixtures.kt`, `MainLibraryScreenshotTest.kt`.
+
+**Estimated scope:** Medium (4 files).
+
+## Task 3: Lock Music Center and Settings visual baselines
+
+**Description:** Add deterministic fixtures and screenshots for playback, empty/populated queue, media-server states, and responsive Settings layouts.
+
+**Acceptance criteria:**
+- [x] Music Center covers no-track, playing, empty queue, populated queue, server stopped, and server running states.
+- [x] Settings covers compact stacked controls and expanded two-column layout at default and 200% text.
+- [x] Dynamic meters, progress, QR data, and artwork are fixed or disabled in reference renders.
+
+**Verification:**
+- [x] Run focused Music Center and Settings screenshot verification (18 total references, 0 failures on a fresh rerender).
+- [x] Review references for stable animation, typography, and system-inset behavior (approved 2026-09-28).
+- [x] Run `./gradlew :app:assembleDebug`.
+
+**Dependencies:** Tasks 1-2.
+
+**Files likely touched:** `AudioHubSheet.kt`, `SettingsScreen.kt`, `UxPreviewFixtures.kt`, `MusicCenterScreenshotTest.kt`, `SettingsScreenshotTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint A: Baseline locked
+
+- [x] Screenshot verification runs without updating reference images.
+- [x] The accessibility smoke test runs on API 36 (`Medium_Phone` emulator, 2026-09-28).
+- [x] App unit tests and debug build pass.
+- [x] Human review confirms the baseline represents the intended current UI (approved 2026-09-28).
+
+## Task 4: Harden library and shell accessibility
+
+**Description:** Correct labels, roles, state descriptions, traversal order, and target sizes in main navigation, library, search, selection, and empty/error states.
+
+**Acceptance criteria:**
+- [x] Every actionable node has one concise accessible name and the correct role/state.
+- [x] Decorative children do not create duplicate TalkBack stops; reading order follows the visible hierarchy.
+- [x] Automated checks pass for touch target size and contrast on primary library states.
+
+**Verification:**
+- [x] Run `MainLibraryAccessibilityTest` with accessibility checks enabled (4 primary states pass on API 36).
+- [x] Run focused screenshot verification and inspect intentional diffs (18 references pass unchanged).
+- [ ] Manually traverse Library with TalkBack.
+
+**Dependencies:** Tasks 1-3.
+
+**Files likely touched:** `MainScaffold.kt`, `MusicListScreen.kt`, `TrackListItem.kt`, `strings.xml`, `MainLibraryAccessibilityTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 5: Harden Music Center accessibility
+
+**Description:** Make playback, queue, and media-server controls understandable and operable through semantics while moving touched user-facing strings into resources.
+
+**Acceptance criteria:**
+- [x] Transport, seek, volume, tabs, queue count, server status, and destructive actions announce label, value, and state once.
+- [x] Queue drag/remove actions expose accessible alternatives without requiring a gesture.
+- [x] Media-server URLs, QR actions, and engine choices have meaningful semantics and traversal order.
+
+**Verification:**
+- [x] Run a connected accessibility test across no-track, playing, queue, and server states (5 tests pass on API 36).
+- [x] Run focused screenshot verification and review resource-text diffs (18 references pass; 2 intentional Playback references updated for volume controls).
+- [ ] Manually traverse all three Music Center tabs with TalkBack.
+
+**Dependencies:** Tasks 1-3.
+
+**Files likely touched:** `AudioHubSheet.kt`, `NowPlayingPage.kt`, `QueuePage.kt`, `MediaServerPage.kt`, `strings.xml`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 6: Harden Settings and support-screen accessibility
+
+**Description:** Correct semantics and large-text behavior in Settings, permission onboarding, and About while centralizing their remaining user-facing labels.
+
+**Acceptance criteria:**
+- [x] Setting rows expose one action, their current value, and the correct switch/radio role.
+- [x] Permission explanations and recovery actions are read in a logical order.
+- [x] About links identify their destination and action without duplicate icon announcements.
+
+**Verification:**
+- [x] Run a focused connected accessibility test for Settings, Permission, and About (3 tests pass on API 36).
+- [x] Verify compact and expanded screenshots at default and 200% font scale (all 4 Settings references pass unchanged).
+- [x] Run app unit tests and the debug build.
+
+**Dependencies:** Tasks 1-3.
+
+**Files likely touched:** `SettingsScreen.kt`, `PermissionScreen.kt`, `AboutScreen.kt`, `strings.xml`, `SupportScreensAccessibilityTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint B: Accessible primary flows
+
+- [x] Automated accessibility checks pass for Tasks 4-6 (12 connected scenarios on API 36).
+- [x] Touched user-facing labels are resource-backed.
+- [x] Screenshot diffs are intentional and reviewed (18 references pass).
+- [x] App unit tests and debug build pass.
+
+## Task 7: Add the Navigation 3 route foundation
+
+**Description:** Define serializable, type-safe destinations and a saved back-stack owner while keeping the current UI and Java callback bridge in place.
+
+**Acceptance criteria:**
+- [x] Routes represent library destinations, Music Center tabs, Studio Console, Settings, About, and tag editing without resource-ID identity.
+- [x] Back-stack state restores selected destination and overlay route after recreation.
+- [x] Unit tests define root, overlay, selection, search, and exit Back precedence.
+
+**Verification:**
+- [x] Focused route serialization, save/restore, and Back-policy tests pass (8 tests, 0 failures on 2026-09-28).
+- [x] App/core unit tests and debug APK pass (128 tests, 0 failures on 2026-09-28).
+- [x] Production UI remains visually unchanged (18 screenshot references, 0 failures on 2026-09-28).
+
+**Dependencies:** Checkpoint B.
+
+**Files likely touched:** `gradle/libs.versions.toml`, `app/build.gradle`, `MainRoute.kt`, `MainNavigationState.kt`, `MainNavigationStateTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 8: Move overlay destinations to Navigation 3 scenes
+
+**Description:** Represent Music Center and Studio Console as Navigation 3 scenes, replacing boolean overlay ownership while preserving state and callbacks.
+
+**Acceptance criteria:**
+- [x] Opening and dismissing either surface pushes/pops the correct typed route.
+- [x] Music Center tab and playback state survive rotation and window resize.
+- [x] Back dismisses the visible overlay before lower-priority states according to the tested policy.
+
+**Verification:**
+- [x] Run focused overlay navigation and save/restore tests (`MainNavigationStateTest` and `FullscreenStudioConsoleTest`; included in 79 app tests, 0 failures on 2026-09-28).
+- [x] Verify compact screenshots match the approved baseline except for intentional transitions (18 references, 0 failures on 2026-09-28).
+- [x] Exercise Music Center and Studio Console open/dismiss flows on the API 36 `emulator-5554`; Queue remained selected after rotation, Studio opened in landscape, and system Back returned to the Library. The focused connected Music Center route test also passed.
+
+**Dependencies:** Task 7.
+
+**Files likely touched:** `MainScaffold.kt`, `MainScaffoldState.kt`, `AudioHubSheet.kt`, `FullscreenStudioConsole.kt`, `MainNavigationState.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 9: Move top-level destinations to Navigation 3
+
+**Description:** Make Navigation 3 the source of truth for library destinations and Back behavior while retaining `MainActivity` service and data callbacks.
+
+**Acceptance criteria:**
+- [x] Drawer/rail selection, search, filter clearing, selection mode, and Back update one route/back stack.
+- [x] Existing resource-ID callbacks are isolated in one compatibility mapping rather than stored as navigation state.
+- [x] Rotation, resize, and process recreation retain route and visible content without stale selection or search.
+
+**Verification:**
+- [x] Run route, `MainBackPolicy`, `LibrarySelectionModel`, and `MainViewModel` tests (31 focused tests; full gate: 80 app + 52 core tests, 0 failures on 2026-09-28).
+- [x] Run main/library screenshot verification across all four form factors (18 references, 0 failures, 0.0% diff on 2026-09-28).
+- [x] Exercise each top-level destination and Back path on the API 36 `emulator-5554`: all six non-root destinations exposed Back; rotation retained Genres; Back returned to All Songs; active search was cleared before root exit. The consolidated connected class passed 7 tests, including typed drawer selection and saved-state restoration.
+
+**Dependencies:** Tasks 7-8.
+
+**Files likely touched:** `MainActivity.java`, `MainScaffold.kt`, `DrawerInterop.kt`, `MainRoute.kt`, `MainNavigationStateTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint C: Navigation compatibility
+
+- [x] All existing app/core unit tests pass (80 app + 52 core, 0 failures on 2026-09-28).
+- [x] Screenshot verification shows no unintended compact-window regression (18 references, 0 failures, 0.0% diff).
+- [x] Search, selection, drawer/rail, playback callbacks, and Back precedence pass device checks on API 36.
+- [x] Route state survives rotation, resize, and process recreation (live rotation plus connected saved-state restoration coverage).
+
+## Task 10: Add the expanded Music Center supporting pane
+
+**Description:** Extract reusable Music Center content and host it as a Material 3 Adaptive Navigation 3 supporting pane on expanded windows while retaining the sheet scene on compact windows.
+
+**Acceptance criteria:**
+- [ ] Expanded windows show library content and Music Center together without duplicated state or callbacks.
+- [ ] Resizing keeps the selected Music Center tab, queue position, and playback state.
+- [ ] Pane navigation, Back, focus order, and system insets remain correct in split-screen and foldable postures.
+
+**Verification:**
+- [ ] Run compact, medium, expanded, and foldable screenshots for open/closed Music Center states.
+- [ ] Run navigation save/restore tests across window-class changes.
+- [ ] Exercise split-screen resize and landscape/tablet flows on device/emulator.
+
+**Dependencies:** Tasks 8-9 and Checkpoint C.
+
+**Files likely touched:** `MainScaffold.kt`, `AudioHubSheet.kt`, `AudioHubContent.kt`, `MusicCenterSceneStrategy.kt`, `AdaptiveMusicCenterScreenshotTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 11: Make queue and library interactions reversible and input-adaptive
+
+**Description:** Improve destructive/reorder feedback and add keyboard and pointer affordances for core library and queue actions.
+
+**Acceptance criteria:**
+- [ ] Queue swipe removal uses one clear direction, offers Undo, and restores the exact item position when undone.
+- [ ] Reorder exposes drag-handle semantics plus accessible move actions; keyboard users can move focus and activate row actions.
+- [ ] Pointer hover/focus states are visible and do not leave sticky touch hover behavior.
+
+**Verification:**
+- [ ] Run queue state tests for remove, undo, move, and playing-item identity.
+- [ ] Run connected keyboard and semantics tests for library and queue rows.
+- [ ] Exercise touch, mouse, keyboard, and TalkBack paths.
+
+**Dependencies:** Tasks 4-5 and 9.
+
+**Files likely touched:** `QueuePage.kt`, `QueueState.kt`, `MusicListScreen.kt`, `TrackListItem.kt`, `QueueInteractionStateTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 12: Respect reduced motion and 200% text
+
+**Description:** Centralize motion policy, stop nonessential infinite effects when animations are disabled, and remove remaining clipping/overlap at large font scales.
+
+**Acceptance criteria:**
+- [ ] Empty-state pulses, meters, and decorative transitions settle to a meaningful static state when system animations are disabled.
+- [ ] Primary screens remain readable and operable at 200% font scale without horizontal clipping or hidden actions.
+- [ ] Focus, state, and content survive configuration and font-scale changes.
+
+**Verification:**
+- [ ] Run motion-policy unit tests and large-text screenshot verification.
+- [ ] Run accessibility checks at 200% font scale.
+- [ ] Exercise animation scale 0x and 200% text on device/emulator.
+
+**Dependencies:** Tasks 4-6 and 10.
+
+**Files likely touched:** `UiMotionPolicy.kt`, `MusicListScreen.kt`, `NowPlayingPage.kt`, `FullscreenStudioConsole.kt`, `UiMotionPolicyTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint D: Adaptive experience
+
+- [ ] Compact, medium, expanded, foldable, and split-screen layouts preserve task continuity.
+- [ ] Core flows complete through touch, keyboard, pointer, and TalkBack.
+- [ ] No content is clipped by system bars, cutouts, IME, or pane boundaries.
+- [ ] Screenshot and accessibility suites pass without updating references.
+
+## Task 13: Run and document the release UX matrix
+
+**Description:** Complete automated and live-device validation, record evidence, and update user/developer documentation to match shipped interactions.
+
+**Acceptance criteria:**
+- [ ] The matrix covers launch/discovery, navigation/search, playback handoff, Music Center, queue edit/undo, tag editing, Settings, permissions, and media server.
+- [ ] Phone portrait/landscape, 200% text, tablet/foldable resize, TalkBack, keyboard, and pointer results are recorded.
+- [ ] Known limitations and follow-up observations are explicit; no unverified behavior is described as complete.
+
+**Verification:**
+- [ ] Run `./gradlew :core:testDebugUnitTest :app:testDebugUnitTest :app:assembleDebug`.
+- [ ] Run screenshot verification, focused connected tests, lint for changed UI files, and `git diff --check`.
+- [ ] Review generated screenshot diffs before updating any golden files.
+
+**Dependencies:** Tasks 10-12 and Checkpoint D.
+
+**Files likely touched:** `UI.md`, `USER_GUIDE.md`, `CHANGELOG.md`, `tasks/todo.md`, `tasks/ux-validation.md`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint E: Complete
+
+- [ ] All acceptance criteria above are checked with evidence.
+- [ ] Automated suites, debug build, focused lint, and diff hygiene pass.
+- [ ] Human visual review approves reference-image updates.
+- [ ] Device findings and remaining limits are documented.

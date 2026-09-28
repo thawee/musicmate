@@ -7,17 +7,14 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import apincer.android.mmate.R
+import apincer.android.mmate.ui.navigation.LibraryDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 object DrawerInterop {
     private var drawerStateInstance: DrawerState? = null
     private var coroutineScopeInstance: CoroutineScope? = null
-    private val activeItemIdState = mutableIntStateOf(R.id.menu_library_all_songs)
-
     @JvmStatic
     fun openDrawer() {
         coroutineScopeInstance?.launch {
@@ -38,14 +35,11 @@ object DrawerInterop {
     }
 
     @JvmStatic
-    fun updateActiveItem(itemId: Int) {
-        activeItemIdState.intValue = itemId
-    }
-
-    @JvmStatic
+    @JvmOverloads
     fun getComposeView(
         context: Context,
-        callbacks: MainScaffoldCallbacks? = null
+        callbacks: MainScaffoldCallbacks? = null,
+        initialLibraryDestination: LibraryDestination = LibraryDestination.ALL_SONGS,
     ): ComposeView {
         val composeView = ComposeView(context)
         composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -62,7 +56,7 @@ object DrawerInterop {
                 MainScaffold(
                     drawerState = state,
                     callbacks = callbacks,
-                    activeItemId = activeItemIdState.intValue
+                    initialLibraryDestination = initialLibraryDestination
                 )
             }
         }

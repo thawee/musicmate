@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +43,11 @@ fun MediaServerPage(
     onQrCodeClicked: () -> Unit
 ) {
     var showQrZoomDialog by remember { mutableStateOf(false) }
+    val serverStatusDescription = stringResource(
+        if (state.isServerRunning) R.string.cd_media_server_running else R.string.cd_media_server_stopped
+    )
+    val copyServerUrlDescription = stringResource(R.string.cd_copy_server_url, state.serverUrl)
+    val enlargeQrDescription = stringResource(R.string.cd_enlarge_webui_qr)
 
     Column(
         modifier = Modifier
@@ -51,7 +61,9 @@ fun MediaServerPage(
             color = Color(0xFF1B1B24),
             shape = RoundedCornerShape(16.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x22FFFFFF)),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = serverStatusDescription }
         ) {
             Row(
                 modifier = Modifier
@@ -129,7 +141,7 @@ fun MediaServerPage(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_round_power_settings_new_24),
-                            contentDescription = "Stop",
+                            contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -155,7 +167,7 @@ fun MediaServerPage(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_round_power_settings_new_24),
-                            contentDescription = "Start",
+                            contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -230,6 +242,10 @@ fun MediaServerPage(
                                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x14FFFFFF)),
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .semantics {
+                                        role = Role.Button
+                                        contentDescription = copyServerUrlDescription
+                                    }
                                     .clickable { onCopyUrlClicked() }
                             ) {
                                 Text(
@@ -307,6 +323,10 @@ fun MediaServerPage(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
+                                    .semantics {
+                                        role = Role.Button
+                                        contentDescription = enlargeQrDescription
+                                    }
                                     .clickable {
                                         showQrZoomDialog = true
                                         onQrCodeClicked()
@@ -320,7 +340,7 @@ fun MediaServerPage(
                                 ) {
                                     Image(
                                         bitmap = state.qrCodeBitmap!!.asImageBitmap(),
-                                        contentDescription = "Scan QR Code",
+                                        contentDescription = null,
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .padding(4.dp)
@@ -591,7 +611,7 @@ private fun EngineSegment(
                 else androidx.compose.foundation.BorderStroke(0.dp, Color.Transparent),
                 RoundedCornerShape(8.dp)
             )
-            .clickable { onSelect(id) }
+            .selectable(selected = isSelected, role = Role.RadioButton) { onSelect(id) }
             .padding(vertical = 8.dp, horizontal = 2.dp),
         contentAlignment = Alignment.Center
     ) {

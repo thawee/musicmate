@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -42,11 +44,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -64,8 +71,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -80,6 +91,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
+import apincer.android.mmate.ui.navigation.MainNavigationInterop
+import apincer.android.mmate.ui.navigation.MainNavigationState
+import apincer.android.mmate.ui.navigation.LibraryDestination
+import apincer.android.mmate.ui.navigation.LibraryDestinationMenuMapping
+import apincer.android.mmate.ui.navigation.MusicCenterTab
+import apincer.android.mmate.ui.navigation.rememberMainNavigationState
 import apincer.music.core.model.Track
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -99,21 +116,61 @@ fun MainScaffold(
     drawerState: DrawerState,
     callbacks: MainScaffoldCallbacks? = null,
     state: MainScaffoldState = MainScaffoldState.get(),
-    activeItemId: Int = R.id.menu_library_all_songs
+    initialLibraryDestination: LibraryDestination = LibraryDestination.ALL_SONGS,
+    navigationState: MainNavigationState = rememberMainNavigationState(initialLibraryDestination),
+    showGestureHints: Boolean = true,
+    trackArtwork: (@Composable (Track) -> Unit)? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val activeItemId = LibraryDestinationMenuMapping.toMenuItemId(
+        navigationState.selectedLibraryDestination
+    )
+    val onNavigationItemClick: (Int) -> Unit = { itemId ->
+        val libraryDestination = LibraryDestinationMenuMapping.fromMenuItemId(itemId)
+        if (libraryDestination != null) {
+            if (libraryDestination == navigationState.selectedLibraryDestination) {
+                callbacks?.onLibraryDestinationChanged(libraryDestination)
+            } else {
+                navigationState.selectLibrary(libraryDestination)
+            }
+        } else {
+            callbacks?.onNavigationItemClick(itemId)
+        }
+    }
+    var dispatchedDestination by remember { mutableStateOf(initialLibraryDestination) }
+    LaunchedEffect(navigationState.selectedLibraryDestination) {
+        val selectedDestination = navigationState.selectedLibraryDestination
+        if (selectedDestination != dispatchedDestination) {
+            dispatchedDestination = selectedDestination
+            callbacks?.onLibraryDestinationChanged(selectedDestination)
+        }
+    }
+    DisposableEffect(navigationState) {
+        MainNavigationInterop.attach(navigationState)
+        onDispose { MainNavigationInterop.detach(navigationState) }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         scrimColor = Color.Black.copy(alpha = 0.6f),
         drawerContent = {
             val haptic = LocalHapticFeedback.current
+            val drawerConfiguration = LocalConfiguration.current
+            val useStackedDrawer = UiLayoutPolicy.stackChoiceControls(
+                windowWidthDp = drawerConfiguration.screenWidthDp,
+                fontScale = LocalDensity.current.fontScale
+            )
+            val drawerWidth = if (useStackedDrawer) {
+                (drawerConfiguration.screenWidthDp * 0.92f).dp
+            } else {
+                310.dp
+            }
             // ── Dark-themed audiophile drawer sheet ────────────────────────────
             Box(
                 modifier = Modifier
-                    .width(310.dp)
+                    .width(drawerWidth)
                     .fillMaxHeight()
                     .background(
                         Brush.verticalGradient(
@@ -156,7 +213,9 @@ fun MainScaffold(
                                     text = "v3.19.8 • Hi-Res Edition",
                                     color = drawerGold.copy(alpha = 0.85f),
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -197,7 +256,7 @@ fun MainScaffold(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     // ── 2. CORE LIBRARY (2×2 Quick-Action Grid) ───────────────
-                    DrawerSectionHeader("Core Library")
+                    DrawerSectionHeader(stringResource(R.string.nav_section_core_library))
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Column(
@@ -206,55 +265,45 @@ fun MainScaffold(
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            DrawerTile(
-                                text = "All Songs",
-                                iconResId = R.drawable.rounded_library_music_24,
-                                isSelected = (activeItemId == R.id.menu_library_all_songs),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_library_all_songs)
-                                coroutineScope.launch { drawerState.close() }
-                            }
-                            DrawerTile(
-                                text = "Artists",
-                                iconResId = R.drawable.rounded_for_you_24,
-                                isSelected = (activeItemId == R.id.menu_tag_artist),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_tag_artist)
-                                coroutineScope.launch { drawerState.close() }
-                            }
-                        }
+                        val coreDestinations = listOf(
+                            Triple(R.id.menu_library_all_songs, R.drawable.rounded_library_music_24, R.string.nav_all_songs),
+                            Triple(R.id.menu_tag_artist, R.drawable.rounded_for_you_24, R.string.nav_artists),
+                            Triple(R.id.menu_tag_genre, R.drawable.rounded_style_24, R.string.nav_genres),
+                            Triple(R.id.menu_collection, R.drawable.rounded_order_play_24, R.string.nav_playlists)
+                        )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            DrawerTile(
-                                text = "Genres",
-                                iconResId = R.drawable.rounded_style_24,
-                                isSelected = (activeItemId == R.id.menu_tag_genre),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_tag_genre)
-                                coroutineScope.launch { drawerState.close() }
+                        if (useStackedDrawer) {
+                            coreDestinations.forEach { (itemId, iconResId, labelResId) ->
+                                DrawerTile(
+                                    text = stringResource(labelResId),
+                                    iconResId = iconResId,
+                                    isSelected = activeItemId == itemId,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onNavigationItemClick(itemId)
+                                    coroutineScope.launch { drawerState.close() }
+                                }
                             }
-                            DrawerTile(
-                                text = "Playlists",
-                                iconResId = R.drawable.rounded_order_play_24,
-                                isSelected = (activeItemId == R.id.menu_collection),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_collection)
-                                coroutineScope.launch { drawerState.close() }
+                        } else {
+                            coreDestinations.chunked(2).forEach { rowDestinations ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowDestinations.forEach { (itemId, iconResId, labelResId) ->
+                                        DrawerTile(
+                                            text = stringResource(labelResId),
+                                            iconResId = iconResId,
+                                            isSelected = activeItemId == itemId,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onNavigationItemClick(itemId)
+                                            coroutineScope.launch { drawerState.close() }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -262,7 +311,7 @@ fun MainScaffold(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     // ── 3. DISCOVERY & AUDIOPHILE TOOLS ───────────────────────
-                    DrawerSectionHeader("Discover & Audiophile")
+                    DrawerSectionHeader(stringResource(R.string.nav_section_discover_audiophile))
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Surface(
@@ -275,36 +324,36 @@ fun MainScaffold(
                     ) {
                         Column {
                             DrawerCardItem(
-                                text = "Sound Grade",
+                                text = stringResource(R.string.nav_audio_quality),
                                 iconResId = R.drawable.rounded_equalizer_24,
                                 isSelected = (activeItemId == R.id.menu_sound_grade),
                                 badge = "Hi-Res / DR",
                                 badgeColor = drawerGold
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_sound_grade)
+                                onNavigationItemClick(R.id.menu_sound_grade)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Discover Similar",
+                                text = stringResource(R.string.nav_similar_tracks),
                                 iconResId = R.drawable.rounded_auto_awesome_motion_24,
                                 isSelected = (activeItemId == R.id.menu_library_similar_songs)
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_library_similar_songs)
+                                onNavigationItemClick(R.id.menu_library_similar_songs)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Incoming Tracks",
+                                text = stringResource(R.string.nav_incoming_tracks),
                                 iconResId = R.drawable.rounded_add_diamond_24,
                                 isSelected = (activeItemId == R.id.menu_library_recently_added),
                                 badge = "New",
                                 badgeColor = Color(0xFF00E5FF)
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_library_recently_added)
+                                onNavigationItemClick(R.id.menu_library_recently_added)
                                 coroutineScope.launch { drawerState.close() }
                             }
                         }
@@ -313,7 +362,7 @@ fun MainScaffold(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     // ── 4. SYSTEM & PREFERENCES ───────────────────────────────
-                    DrawerSectionHeader("Settings & System")
+                    DrawerSectionHeader(stringResource(R.string.nav_section_settings_system))
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Surface(
@@ -326,68 +375,68 @@ fun MainScaffold(
                     ) {
                         Column {
                             DrawerCardItem(
-                                text = "Manage Library",
+                                text = stringResource(R.string.nav_music_folders_scan),
                                 iconResId = R.drawable.rounded_folder_managed_24,
                                 isSelected = (activeItemId == R.id.menu_directories),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_directories)
+                                onNavigationItemClick(R.id.menu_directories)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Settings",
+                                text = stringResource(R.string.nav_settings),
                                 iconResId = R.drawable.ic_round_settings_24,
                                 isSelected = (activeItemId == R.id.menu_settings),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_settings)
+                                onNavigationItemClick(R.id.menu_settings)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Storage Access",
+                                text = stringResource(R.string.nav_storage_access),
                                 iconResId = R.drawable.round_sd_storage_24,
                                 isSelected = (activeItemId == R.id.menu_files_permission),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_files_permission)
+                                onNavigationItemClick(R.id.menu_files_permission)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Notifications",
+                                text = stringResource(R.string.nav_notification_access),
                                 iconResId = R.drawable.ic_round_notification_add_24,
                                 isSelected = (activeItemId == R.id.menu_notification_access),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_notification_access)
+                                onNavigationItemClick(R.id.menu_notification_access)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "Diagnostics",
+                                text = stringResource(R.string.nav_diagnostics),
                                 iconResId = R.drawable.rounded_bug_report_24,
                                 isSelected = (activeItemId == R.id.menu_about_crash),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_about_crash)
+                                onNavigationItemClick(R.id.menu_about_crash)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = "About MusicMate",
+                                text = stringResource(R.string.nav_about_music_mate),
                                 iconResId = R.drawable.rounded_info_24,
                                 isSelected = (activeItemId == R.id.menu_about_music_mate),
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                callbacks?.onNavigationItemClick(R.id.menu_about_music_mate)
+                                onNavigationItemClick(R.id.menu_about_music_mate)
                                 coroutineScope.launch { drawerState.close() }
                             }
                         }
@@ -396,11 +445,22 @@ fun MainScaffold(
             }
         }
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF0F0F0F))
-        ) {
+        val useExpandedNavigation = UiLayoutPolicy.useExpandedNavigation(
+            LocalConfiguration.current.screenWidthDp
+        )
+        Row(modifier = Modifier.fillMaxSize()) {
+            if (useExpandedNavigation) {
+                ExpandedNavigationRail(
+                    activeItemId = activeItemId,
+                    onNavigationItemClick = onNavigationItemClick
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(Color(0xFF0F0F0F))
+            ) boxContent@ {
             Column(modifier = Modifier.fillMaxSize()) {
                 // ── Top Header Search & Stats Bar (DESIGN.md §6) ─────────────
                 val targetTitle = state.outputTargetSubtitle.value
@@ -416,12 +476,18 @@ fun MainScaffold(
                         focusManager.clearFocus()
                         callbacks?.onSearchBackClick()
                     },
+                    onMenuClick = {
+                        coroutineScope.launch { drawerState.open() }
+                    },
+                    showMenuButton = !useExpandedNavigation,
                     statsText = state.headerStatsText.value,
                     isPlaylistOverview = state.isPlaylistOverview.value,
                     isScanning = state.isScanning.value,
                     scanProgressText = state.scanProgressText.value,
-                    isCastActive = isDlnaCast,
-                    onCastClick = { callbacks?.onSelectPlaybackTargetClick() },
+                    isPlaybackTargetActive = isDlnaCast,
+                    onMusicCenterClick = {
+                        navigationState.openMusicCenter(MusicCenterTab.NOW_PLAYING)
+                    },
                     onAddPlaylistClick = { state.showCreateSmartPlaylistDialog.value = true }
                 )
 
@@ -465,14 +531,19 @@ fun MainScaffold(
                         },
                         onFolderEnqueueClick = { track ->
                             callbacks?.onFolderEnqueueClick(track)
-                        }
+                        },
+                        showGestureHints = showGestureHints,
+                        trackArtwork = trackArtwork
                     )
                 }
             }
 
             // ── Floating Mini-Player Dock (DESIGN.md §6A: 20dp radius, 12dp horizontal / 8dp bottom margins)
-            AnimatedVisibility(
-                visible = state.isFloatingDockVisible.value,
+            androidx.compose.animation.AnimatedVisibility(
+                visible = UiLayoutPolicy.showFloatingDock(
+                    isRequested = state.isFloatingDockVisible.value,
+                    hasTrack = state.nowPlayingTrack.value != null
+                ),
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
@@ -489,7 +560,7 @@ fun MainScaffold(
                     onNextClick = { callbacks?.onDockNextClick() },
                     onPreviousClick = { callbacks?.onAudioHubPrevious() },
                     onOpenAudioHub = {
-                        state.showAudioHubSheet.value = true
+                        navigationState.openMusicCenter(MusicCenterTab.NOW_PLAYING)
                     },
                     onOpenDrawer = {
                         coroutineScope.launch { drawerState.open() }
@@ -500,66 +571,14 @@ fun MainScaffold(
                 )
             }
         }
+        }
     }
 
-    // ── Pure Compose Audio Hub Modal Bottom Sheet (DESIGN.md §8C: Fixed 65% Height)
-    if (state.showAudioHubSheet.value) {
-        AudioHubSheet(
-            nowPlayingState = state.nowPlayingState,
-            queueState = state.queueState,
-            mediaServerState = state.mediaServerState,
-            initialTab = state.audioHubInitialTab.intValue,
-            onDismissRequest = { state.showAudioHubSheet.value = false },
-            onSelectTargetPlayer = { callbacks?.onSelectPlaybackTargetClick() },
-            onPlayPause = { callbacks?.onAudioHubPlayPause() },
-            onNext = { callbacks?.onAudioHubNext() },
-            onPrevious = { callbacks?.onAudioHubPrevious() },
-            onShuffleToggle = { callbacks?.onAudioHubShuffleToggle() },
-            onRepeatToggle = { callbacks?.onAudioHubRepeatToggle() },
-            onSeek = { pos -> callbacks?.onAudioHubSeek(pos) },
-            onVolumeDown = { callbacks?.onAudioHubVolumeDown() },
-            onVolumeUp = { callbacks?.onAudioHubVolumeUp() },
-            onVolumeChanged = { vol -> callbacks?.onAudioHubVolumeChanged(vol) },
-            onSleepTimerSelected = { minutes, endOfTrack -> callbacks?.onAudioHubSleepTimerSelected(minutes, endOfTrack) },
-            onTrackClicked = { callbacks?.onAudioHubTrackClick() },
-            onQueueTrackClicked = { track -> callbacks?.onAudioHubQueueTrackClick(track) },
-            onQueueTrackRemoved = { track, index -> callbacks?.onAudioHubQueueTrackRemove(track, index) },
-            onQueueTrackMoved = { from, to -> callbacks?.onAudioHubQueueTrackMoved(from, to) },
-            onQueueClear = { callbacks?.onAudioHubQueueClear() },
-            onQueueJumpToPlaying = { callbacks?.onAudioHubQueueJumpToPlaying() },
-            onQueueBrowseLibrary = {
-                state.showAudioHubSheet.value = false
-                callbacks?.onNavigationItemClick(R.id.menu_library_all_songs)
-            },
-            onEngineChanged = { engine -> callbacks?.onEngineChanged(engine) },
-            onStartServerClicked = { callbacks?.onStartServerClicked() },
-            onStopServerClicked = { callbacks?.onStopServerClicked() },
-            onCopyUrlClicked = { callbacks?.onCopyUrlClicked() },
-            onOpenUrlClicked = { callbacks?.onOpenUrlClicked() },
-            onQrCodeClicked = { callbacks?.onQrCodeClicked() },
-            onOpenFullscreen = {
-                state.showFullscreenConsole.value = true
-            }
-        )
-    }
-
-    // ── Pure Compose Fullscreen Landscape Studio Console ("Hi-Fi Desk Mode") ─
-    if (state.showFullscreenConsole.value) {
-        FullscreenStudioConsole(
-            state = state.nowPlayingState,
-            queueState = state.queueState,
-            onDismissRequest = { state.showFullscreenConsole.value = false },
-            onPlayPause = { callbacks?.onAudioHubPlayPause() },
-            onNext = { callbacks?.onAudioHubNext() },
-            onPrevious = { callbacks?.onAudioHubPrevious() },
-            onShuffleToggle = { callbacks?.onAudioHubShuffleToggle() },
-            onRepeatToggle = { callbacks?.onAudioHubRepeatToggle() },
-            onSeek = { pos -> callbacks?.onAudioHubSeek(pos) },
-            onVolumeChanged = { vol -> callbacks?.onAudioHubVolumeChanged(vol) },
-            onSelectTargetPlayer = { callbacks?.onSelectPlaybackTargetClick() },
-            onQueueTrackClicked = { track -> callbacks?.onAudioHubQueueTrackClick(track) }
-        )
-    }
+    MainOverlayHost(
+        navigationState = navigationState,
+        state = state,
+        callbacks = callbacks
+    )
 
     // ── Pure Compose Player Picker Modal Dialog (DESIGN.md §4 & §8A) ─────────
     if (state.showPlayerPickerDialog.value) {
@@ -594,6 +613,66 @@ fun MainScaffold(
     }
 }
 
+@Composable
+private fun ExpandedNavigationRail(
+    activeItemId: Int,
+    onNavigationItemClick: (Int) -> Unit
+) {
+    val largeText = LocalDensity.current.fontScale >= 1.3f
+    val destinations = listOf(
+        Triple(R.id.menu_library_all_songs, R.drawable.rounded_library_music_24, R.string.nav_all_songs),
+        Triple(R.id.menu_tag_artist, R.drawable.rounded_for_you_24, R.string.nav_artists),
+        Triple(R.id.menu_tag_genre, R.drawable.rounded_style_24, R.string.nav_genres),
+        Triple(R.id.menu_collection, R.drawable.rounded_order_play_24, R.string.nav_playlists),
+        Triple(R.id.menu_settings, R.drawable.ic_round_settings_24, R.string.nav_settings)
+    )
+
+    NavigationRail(
+        modifier = Modifier.fillMaxHeight(),
+        containerColor = drawerBg,
+        header = {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
+                contentDescription = null,
+                tint = drawerGold,
+                modifier = Modifier
+                    .padding(vertical = 18.dp)
+                    .size(28.dp)
+            )
+        }
+    ) {
+        destinations.forEach { (itemId, iconResId, labelResId) ->
+            NavigationRailItem(
+                selected = activeItemId == itemId,
+                onClick = { onNavigationItemClick(itemId) },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = iconResId),
+                        contentDescription = if (largeText) stringResource(labelResId) else null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = if (largeText) null else {
+                    {
+                        Text(
+                            text = stringResource(labelResId),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
+                colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
+                    selectedIconColor = Color.Black,
+                    selectedTextColor = drawerGold,
+                    indicatorColor = drawerGold,
+                    unselectedIconColor = drawerGray,
+                    unselectedTextColor = drawerGray
+                )
+            )
+        }
+    }
+}
+
 // ── Top Search & Stats Bar (DESIGN.md §6 & §4) ──────────────────────────────
 @Composable
 private fun TopSearchBar(
@@ -601,14 +680,17 @@ private fun TopSearchBar(
     onQueryChange: (String) -> Unit,
     isBackVisible: Boolean,
     onBackClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    showMenuButton: Boolean,
     statsText: String,
     isPlaylistOverview: Boolean,
     isScanning: Boolean,
     scanProgressText: String,
-    isCastActive: Boolean = false,
-    onCastClick: () -> Unit = {},
+    isPlaybackTargetActive: Boolean = false,
+    onMusicCenterClick: () -> Unit = {},
     onAddPlaylistClick: () -> Unit = {}
 ) {
+    val searchContentDescription = stringResource(R.string.cd_search_music)
     Surface(
         color = Color(0xEB161616),
         modifier = Modifier
@@ -623,19 +705,32 @@ private fun TopSearchBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp),
+                    .height(56.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (isBackVisible) {
                     IconButton(
                         onClick = onBackClick,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_back),
                             tint = Color.White,
                             modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                } else if (showMenuButton) {
+                    IconButton(
+                        onClick = onMenuClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_baseline_menu_open_24),
+                            contentDescription = stringResource(R.string.nav_content_description),
+                            tint = drawerGold,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
@@ -645,10 +740,10 @@ private fun TopSearchBar(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF242424))
-                        .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                        .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(24.dp))
                         .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -667,9 +762,11 @@ private fun TopSearchBar(
                         Box(modifier = Modifier.weight(1f)) {
                             if (query.isEmpty()) {
                                 Text(
-                                    text = "Search songs, artists…",
+                                    text = stringResource(R.string.search_music_hint),
                                     color = Color(0x77FFFFFF),
-                                    fontSize = 13.sp
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                             BasicTextField(
@@ -683,18 +780,22 @@ private fun TopSearchBar(
                                 ),
                                 cursorBrush = SolidColor(drawerGold),
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics {
+                                        contentDescription = searchContentDescription
+                                    }
                             )
                         }
 
                         if (query.isNotEmpty()) {
                             IconButton(
                                 onClick = { onQueryChange("") },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.round_close_24),
-                                    contentDescription = "Clear",
+                                    contentDescription = stringResource(R.string.cd_clear_search),
                                     tint = Color(0x99FFFFFF),
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -709,27 +810,27 @@ private fun TopSearchBar(
                 if (isPlaylistOverview) {
                     IconButton(
                         onClick = onAddPlaylistClick,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_playlist_add_24),
-                            contentDescription = "New Smart Playlist",
+                            contentDescription = stringResource(R.string.cd_new_smart_playlist),
                             tint = Color(0xFFFFB300),
                             modifier = Modifier.size(22.dp)
                         )
                     }
                 }
 
-                // Cast button on header right (§6 & §4)
+                // Music Center remains available before playback starts.
                 IconButton(
-                    onClick = onCastClick,
-                    modifier = Modifier.size(40.dp)
+                    onClick = onMusicCenterClick,
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.rounded_music_cast_24),
-                        contentDescription = "Output Device Picker",
-                        tint = if (isCastActive) Color(0xFFFFC107) else Color.White,
-                        modifier = Modifier.size(20.dp)
+                        painter = painterResource(id = R.drawable.ic_round_queue_music_24),
+                        contentDescription = stringResource(R.string.cd_open_music_center),
+                        tint = if (isPlaybackTargetActive) Color(0xFFFFC107) else Color.White,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -817,7 +918,7 @@ private fun FloatingMiniPlayerDock(
         color = Color(0xEB1E1E1E),
         modifier = Modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .height(76.dp)
             .border(1.2.dp, Color(0x26FFFFFF), RoundedCornerShape(20.dp))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -830,7 +931,7 @@ private fun FloatingMiniPlayerDock(
                 // Far Left: Album Art thumbnail (Click opens Audio Hub, Long-press jumps to playing song in list)
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(48.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF2A2A2A))
                         .semantics {
@@ -977,7 +1078,7 @@ private fun FloatingMiniPlayerDock(
                 // Transport Controls: Circular Tactile Play / Pause with Gold Accent Rim
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(Color(0x22FFFFFF))
                         .border(1.dp, drawerGold.copy(alpha = 0.5f), CircleShape)
@@ -996,7 +1097,7 @@ private fun FloatingMiniPlayerDock(
 
                 IconButton(
                     onClick = onNextClick,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
@@ -1009,11 +1110,11 @@ private fun FloatingMiniPlayerDock(
                 // Far Right: MusicMate Drawer Menu Button (DESIGN.md §6A: 48dp target for thumb ergonomics)
                 IconButton(
                     onClick = onOpenDrawer,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
-                        contentDescription = "MusicMate Menu",
+                        contentDescription = stringResource(R.string.nav_content_description),
                         tint = drawerGold,
                         modifier = Modifier.size(24.dp)
                     )
@@ -1065,7 +1166,12 @@ private fun DrawerTile(
         border = androidx.compose.foundation.BorderStroke(0.75.dp, borderColor),
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
+            .selectable(
+                selected = isSelected,
+                role = Role.Tab,
+                onClick = onClick
+            )
     ) {
         Row(
             modifier = Modifier
@@ -1105,12 +1211,18 @@ private fun DrawerCardItem(
     val bgColor = if (isSelected) Color(0x22FFD700) else Color.Transparent
     val contentColor = if (isSelected) drawerGold else drawerWhite
     val iconColor = if (isSelected) drawerGold else Color(0xFFBDBDBD)
+    val largeText = LocalDensity.current.fontScale >= 1.3f
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(bgColor)
-            .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
+            .selectable(
+                selected = isSelected,
+                role = Role.Tab,
+                onClick = onClick
+            )
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1126,10 +1238,12 @@ private fun DrawerCardItem(
             color = contentColor,
             fontSize = 13.5.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            maxLines = if (largeText) 2 else 1,
+            overflow = TextOverflow.Ellipsis
         )
 
-        if (badge != null) {
+        if (badge != null && !largeText) {
             Surface(
                 color = badgeColor.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(6.dp),

@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,8 +76,11 @@ fun TrackListItem(
     onLongClick: () -> Unit,
     onMenuClick: () -> Unit,
     onQuickPlayClick: () -> Unit = {},
+    artwork: (@Composable (Track) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val trackTitle = track.title?.takeIf { it.isNotBlank() } ?: "Unknown Title"
+    val quickPlayDescription = stringResource(R.string.cd_play_track, trackTitle)
     val bgOverlay = if (isSelected) Color(0x2B1E88E5) else Color.Transparent
     val borderStroke = if (isSelected) BorderStroke(1.5.dp, Color(0xFF1E88E5)) else null
 
@@ -87,7 +92,13 @@ fun TrackListItem(
             .background(bgOverlay)
             .then(if (borderStroke != null) Modifier.border(borderStroke, RoundedCornerShape(12.dp)) else Modifier)
             .semantics { selected = isSelected }
-            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick)
+            .combinedClickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.action_open_track, trackTitle),
+                onLongClickLabel = stringResource(R.string.action_edit_track, trackTitle),
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         Row(
             modifier = Modifier
@@ -107,14 +118,19 @@ fun TrackListItem(
                         color = if (isNowPlaying) colorGold.copy(alpha = 0.85f) else Color(0x1AFFFFFF),
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .clickable(onClick = onQuickPlayClick)
+                    .semantics { contentDescription = quickPlayDescription }
+                    .clickable(role = Role.Button, onClick = onQuickPlayClick)
             ) {
-                coil3.compose.AsyncImage(
-                    model = CoverartFetcher.builder(LocalContext.current, track).data(track).build(),
-                    contentDescription = "Play ${track.title}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (artwork != null) {
+                    artwork(track)
+                } else {
+                    coil3.compose.AsyncImage(
+                        model = CoverartFetcher.builder(LocalContext.current, track).data(track).build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 // New badge top-right
                 NewBadge(
@@ -144,7 +160,7 @@ fun TrackListItem(
                     .padding(end = 4.dp)
             ) {
                 Text(
-                    text = track.title ?: "Unknown Title",
+                    text = trackTitle,
                     fontWeight = FontWeight.Bold,
                     color = if (isNowPlaying) colorGold else Color.White,
                     fontSize = 14.sp,
@@ -205,11 +221,14 @@ fun TrackListItem(
                 RatingBadge(track = track, mode = "icon")
                 IconButton(
                     onClick = onMenuClick,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_more_vert_24),
-                        contentDescription = "More Options",
+                        contentDescription = stringResource(
+                            R.string.cd_more_options_for_track,
+                            trackTitle
+                        ),
                         tint = Color(0xFF888888),
                         modifier = Modifier.size(20.dp)
                     )
@@ -372,4 +391,3 @@ private fun PausedIndicatorBars(
         )
     }
 }
-

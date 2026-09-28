@@ -109,9 +109,9 @@ public class Settings {
     }
 
     public static String getTapActionMode(Context context) {
-        if (context == null) return Constants.TAP_MODE_CURATE;
+        if (context == null) return Constants.TAP_MODE_LISTEN;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(Constants.PREF_TAP_ACTION_MODE, Constants.TAP_MODE_CURATE);
+        return prefs.getString(Constants.PREF_TAP_ACTION_MODE, Constants.TAP_MODE_LISTEN);
     }
 
     public static void setTapActionMode(Context context, String mode) {

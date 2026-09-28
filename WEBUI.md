@@ -31,19 +31,22 @@ The backend follows a "Core Logic + Plugin Engine" pattern, allowing the applica
 ### Server Engines
 MusicMate supports multiple pluggable server implementations to balance performance, memory footprint, and audiophile integrity.
 
-> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are actively maintained. Jetty 12 and Undertow are archived (build only, no further updates).
+> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are actively maintained and are the only engines listed in `settings.gradle`. Jetty 12 and Undertow are archived — present on disk but not compiled into the app.
 
 | Feature | SonicNIO | CoreHTTP | Netty | Jetty 12 *(archived)* | Undertow *(archived)* |
 |:---|:---|:---|:---|:---|:---|
-| **Library** | Custom NIO | Apache HttpCore 5.4.2 | Netty 4.2.13 | Jetty 12.1.9 | Undertow 2.4.0 |
-| **Primary Use** | **Default · Balanced** | **Ultra-Low Memory** | **High Throughput** | Standard | Audiophile |
+| **Library** | Custom NIO | Apache HttpCore 5.5-beta2 | Netty 4.2.18 | Jetty 12.1.9 | Undertow 2.4.0 |
+| **Engine key** | `nio` | `httpcore` **(default)** | `netty` | — | — |
+| **Primary Use** | Balanced | **Default · Ultra-Low Memory** | **High Throughput** | Standard | Audiophile |
 | **Status** | ✅ Production | ✅ Production | ✅ Production | 🗄 Archived | 🗄 Archived |
-| **Zero-Copy** | ✅ Optimised | ✅ Full | ✅ Yes | ✅ Yes | ✅ Optimised |
-| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
-| **Memory / Conn** | **~8 KB** | **~64 KB** | 256–512 MB | 128–256 MB | 256–300 MB |
+| **In `settings.gradle`** | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` | ✅ Yes | ✅ Yes |
+| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x10 (Low Delay) | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
+| **Memory / Conn** | **~8 KB** | **~64 KB** | Watermarks 256 KB / 512 KB | 128–256 MB | 256–300 MB |
 | **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms | < 100 ms | < 50 ms |
 | **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **WebSocket** | ✅ | ✅ | ⚠️ | ✅ | ✅ |
+| **WebSocket** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **`X-Audio-*` headers** | ❌ | ✅ (incl. Bit-Perfect) | ⚠️ (no Bit-Perfect) | ✅ | ✅ |
 | **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 
 ### API & Routing
@@ -53,8 +56,8 @@ The server exposes three primary context paths:
 *   `/coverart/{key}`: Serves optimized album art images.
 
 ### Advanced Features
-*   **Waveform Generation**: Servers generate 480-point peak data on-the-fly via `MusicAnalyser` and cache results in a 10MB `LruCache`.
-*   **Audiophile Headers**: Automatic injection of `X-Audio-Sample-Rate`, `X-Audio-Bit-Perfect`, and DLNA content features.
+*   **Waveform Generation**: Servers generate 480-point peak data on-the-fly via `MusicAnalyser.generateWaveform(context, tag, 480, 0.6)` and cache results in a **256-entry** `LruCache` (bounded by entry count, not bytes, to prevent OOM), guarded by double-checked locking.
+*   **Audiophile Headers**: DLNA content features (`contentFeatures.dlna.org`, `transferMode.dlna.org`) are emitted by all engines. The `X-Audio-*` set (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`) is emitted by **CoreHTTP** and **Netty** only — SonicNIO omits it, and Netty omits `X-Audio-Bit-Perfect` specifically.
 *   **Client Profiling**: The `ProfileManager` detects the connecting client (e.g., BubbleUPnP, WiiM, Sony TV) to tune buffer sizes and header compatibility.
 
 ---

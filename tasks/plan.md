@@ -1,56 +1,132 @@
-# Plan: Compact Tag Preview
+# Implementation Plan: App UX Modernization
 
-## Objective and evidence
-- User confirmed the folder is reachable by scrolling. The remaining issue is first-screen density, not inaccessible content.
-- Aim to show artwork, title, audio badges, genre, artist, album, and folder together on the supplied portrait-phone layout at default text scale.
-- Keep the existing five bottom actions and their behavior. Preserve scrolling for smaller windows, larger text, long metadata, and batch mode.
-- Status: implemented; debug build and app tests pass. Device visual checkpoint remains pending.
+## Overview
 
-## Proposed design
-- Center the full square cover at about 240dp on the reference phone, capped at 280dp on larger windows. Derive the final size from available content width and height above the dock; never crop or distort the cover to make it fit.
-- Keep Back and Change Cover as matched 48dp screen-edge controls near the top of the artwork region, independent of the cover's narrower bounds.
-- Retain the bold title with two-line support. Use the same dark surface for title and metadata to reduce visual fragmentation.
-- Keep audio badges in a wrapping group. Place the genre chip in that same flow when space allows, retaining a 48dp touch target. It wraps naturally on narrow screens.
-- Consolidate Artist, Album, and Folder into one full-width metadata surface with subtle dividers. Rows retain the vector icon, field label, readable value, explicit track count, and chevron.
-- Target 56–64dp rows for ordinary text, 8–12dp internal spacing, and natural growth for larger fonts or long values. Reduce repeated borders and outer gaps before reducing text size.
-- Use consistent 16dp content margins. Keep color distinctions for meaningful audio/status badges and blue for metadata navigation.
+Raise MusicMate's UI from its current polished phone experience to a measurable, adaptive, and accessible Android experience. The work starts with visual and accessibility safeguards, then replaces ad hoc navigation state with Navigation 3, adds a canonical supporting-pane experience for larger windows, and finishes with reversible queue interactions plus device validation.
 
-## Ordered tasks
+The current baseline already includes a navigation rail at 840dp, responsive Settings layouts, actionable empty states, 48dp targets in recently touched flows, and guarded playback controls. The remaining gaps are the lack of screenshot and accessibility test infrastructure, hardcoded user-facing text, a hybrid Java/Compose navigation shell, modal-only Music Center presentation, incomplete keyboard/pointer behavior, and pending live TalkBack/device checks.
 
-### 1. Compact artwork and title
-**Dependencies:** None. **Scope:** Small, layout and activity.
-- Size the artwork against the measured preview viewport; maintain its square aspect and existing artwork action.
-- Anchor the two cover controls consistently and unify the title surface with the preview background.
-**Acceptance:** Full cover visible, controls at least 48dp and centered, title supports two lines, no dock overlap.
-**Likely files:** `activity_tags.xml`, `TagsActivity.java`.
-**Verification:** Build resources/Java; inspect portrait, landscape, and preview/editor round-trip.
+## Success Criteria
 
-### 2. Compact metadata grouping
-**Dependencies:** Task 1. **Scope:** Small, Compose header.
-- Combine genre and audio attributes into a wrapping group.
-- Replace individually bordered metadata cards with a single grouped surface and aligned rows.
-**Acceptance:** Labels/counts remain explicit; all rows retain their related-track navigation; large text wraps without overlapping counts or chevrons.
-**Likely files:** `AudioBadges.kt`.
-**Verification:** Compile Compose; inspect ordinary, long, missing, and batch metadata.
+- Compact portrait, compact at 200% font scale, landscape, and expanded tablet layouts have deterministic screenshot coverage for the library, Music Center, queue, and Settings.
+- Automated Compose accessibility checks pass for the primary library, playback, queue, server, and Settings flows; TalkBack order and labels are also checked on a device.
+- Navigation state survives rotation, resize, and process recreation without changing search, selection, playback, or Back behavior.
+- Compact windows keep the Music Center sheet; expanded windows can show Music Center as a supporting pane beside library content.
+- Queue removal is reversible, reordering is discoverable to touch and assistive technology users, and core actions work with keyboard and pointer input.
+- The debug build, app/core unit tests, screenshot verification, focused connected tests, and diff hygiene all pass before completion.
 
-### Checkpoint: Visual review
-- Compare against the supplied screenshot using the same track where possible.
-- At the reference phone size/default font, all three metadata rows should be visible above the dock without scrolling.
-- If that target compromises cover prominence or text readability, revise the sizing before proceeding; scrolling remains the accessibility fallback.
+## Architecture Decisions
 
-### 3. Validation and documentation
-**Dependencies:** Tasks 1–2. **Scope:** Small.
-- Run `./gradlew :app:assembleDebug :app:testDebugUnitTest` and `git diff --check`.
-- Verify five bottom actions, artwork selection, metadata navigation, scrolling, and preview/editor transitions.
-- Check 320dp-wide and reference-sized portrait windows, landscape, and increased font scale. Verify 48dp interactive targets and screen-reader labels.
-- Update `UI.md`, `CHANGELOG.md`, and task results with actual behavior and verification limits.
-- Device interaction previously blocked by access to mandatory instructions; report any continued block rather than claiming visual verification.
+- Establish tests before structural migration. Screenshot fixtures and accessibility checks provide a reviewable baseline for each later slice.
+- Add Navigation 3 through a compatibility layer around `MainActivity` and `MainScaffoldCallbacks`. This keeps playback, repository, and service behavior stable while routes and back-stack ownership move into Compose.
+- Migrate overlays first, then top-level destinations. Music Center and Studio Console are isolated route slices that prove save/restore and Back behavior before the main library navigation moves.
+- Use Material 3 Adaptive Navigation 3 scenes for the expanded Music Center supporting pane. Compact windows retain the existing sheet interaction and all widths share the same hoisted content/state.
+- Keep the track library as a dense single-column collection. The expanded supporting pane uses extra width without forcing track rows into a harder-to-scan grid.
+- Use resource-backed user text and semantic state descriptions in every touched screen. Decorative artwork and icons remain hidden from the accessibility tree where surrounding controls already provide the label.
+- Isolate the experimental Compose screenshot engine in a dedicated source set with pinned versions. Task 1 is a compatibility gate for AGP 9.4.1; implementation stops before UI migration if the Gradle tasks are unreliable.
 
-## Risks
-- Artwork can become too small when fitting every field: prioritize readable metadata and a useful cover size, allow scroll in constrained windows.
-- Shared cover panel is reparented between preview/editor: verify both directions and preserve draft artwork.
-- Genre's 48dp target can make the badge group taller: use wrapping rather than squeezing targets or shrinking text.
+## Dependency Graph
+
+```text
+Task 1 verification harness
+├── Tasks 2-3 visual baselines
+└── Tasks 4-6 accessibility/localization
+        └── Task 7 Navigation 3 route foundation
+            ├── Task 8 overlay routes
+            │   └── Task 10 adaptive Music Center pane
+            └── Task 9 top-level navigation
+                ├── Task 10 adaptive Music Center pane
+                └── Task 11 keyboard/pointer interactions
+Tasks 4-6 ────────────────┬── Task 11 queue interaction polish
+                          └── Task 12 motion and large-text hardening
+Tasks 10-12 ───────────────── Task 13 release validation
+```
+
+## Task List
+
+### Phase 1: Verification Foundation
+
+- [x] Task 1: Add Compose screenshot and connected accessibility test infrastructure.
+- [x] Task 2: Capture deterministic library and main-shell visual baselines.
+- [x] Task 3: Capture deterministic Music Center, queue, and Settings visual baselines.
+
+### Checkpoint A: Baseline Locked
+
+- [x] Screenshot verification runs without modifying reference images.
+- [x] A Compose accessibility smoke test runs on the supported emulator/device API.
+- [x] `:app:testDebugUnitTest` and `:app:assembleDebug` remain green.
+
+### Phase 2: Accessibility and Language
+
+- [ ] Task 4: Harden library and main-shell semantics.
+- [ ] Task 5: Harden Music Center, queue, and media-server semantics.
+- [x] Task 6: Harden Settings, permission, and About semantics.
+
+### Checkpoint B: Accessible Primary Flows
+
+- [x] Automated checks cover labels, target size, contrast, and traversal order in the primary flows.
+- [x] All touched user-facing strings come from Android resources.
+- [x] Baseline screenshot changes are intentional and reviewed.
+
+### Phase 3: Navigation Foundation
+
+- [x] Task 7: Add the type-safe Navigation 3 route and saved-back-stack model.
+- [x] Task 8: Move Music Center and Studio Console overlays onto Navigation 3 scenes.
+- [x] Task 9: Move top-level library destinations and Back handling onto Navigation 3.
+
+### Checkpoint C: Navigation Compatibility
+
+- [x] Search, selection, drawer/rail, playback callbacks, deep links, and Back precedence behave as before.
+- [x] Route and selected-item state survive rotation, resize, and process recreation.
+- [x] Unit, screenshot, and focused connected tests pass.
+
+### Phase 4: Adaptive Interaction Polish
+
+- [ ] Task 10: Present Music Center as an expanded-window supporting pane.
+- [ ] Task 11: Make queue and library actions reversible and keyboard/pointer capable.
+- [ ] Task 12: Respect reduced motion and harden 200% text layouts.
+
+### Checkpoint D: Adaptive Experience
+
+- [ ] Compact, medium, and expanded windows preserve task continuity while resizing.
+- [ ] Touch, keyboard, pointer, TalkBack, and large-text users can complete the core flows.
+- [ ] No content is clipped by system bars, display cutouts, IME, or pane boundaries.
+
+### Phase 5: Release Evidence
+
+- [ ] Task 13: Run the full UX matrix and publish the verified behavior and remaining limits.
+
+### Checkpoint E: Complete
+
+- [ ] All automated suites and build gates pass.
+- [ ] Reference-image diffs receive human visual approval before any golden update.
+- [ ] Device results, known limits, and follow-up observations are recorded in project documentation.
+
+## Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| AGP 9.4.1 and the experimental screenshot plugin are incompatible | High | Treat Task 1 as a stop/go gate; pin the compatible standalone plugin or document a contained AGP test-suite upgrade before touching UI code. |
+| The Java activity and global Compose singleton disagree about navigation state | High | Introduce one typed route model, retain a callback adapter during migration, and add save/restore and Back-policy tests before moving destinations. |
+| Supporting-pane work duplicates the existing bottom sheet | Medium | Extract one stateless Music Center content composable and host it in either a sheet scene or supporting pane scene. |
+| Screenshot tests become noisy because of images, animations, or time | Medium | Use fixed fixtures, fake artwork, disabled clocks, stable fonts, and deterministic window configurations. |
+| Accessibility fixes change visual density | Medium | Preserve minimum target sizes, allow wrapping/scrolling, and review the four required visual configurations at each checkpoint. |
+| Navigation migration expands beyond a focused slice | Medium | Keep each task at five files or fewer and preserve service/repository APIs throughout this plan. |
+
+## Scope Boundaries
+
+- Playback engine, media-server protocol, tag-writing behavior, and repository schema changes are outside this plan.
+- A full rewrite of `MainActivity` or all remaining XML/tag-editor surfaces is a separate migration.
+- Experimental Grid and FlexBox adoption requires a separate proposal after the stable adaptive shell is verified.
+- Visual golden files are updated only after a human reviews the generated diffs.
+
+## References
+
+- [Android Compose accessibility testing](https://developer.android.com/develop/ui/compose/accessibility/testing)
+- [Android adaptive canonical layouts](https://developer.android.com/develop/adaptive-apps/guides/canonical-layouts)
+- [Compose Preview Screenshot Testing](https://developer.android.com/studio/preview/compose-screenshot-testing)
 
 ## Approval
-- Review proposed compact layout and sizing with the user before implementation.
-- Approved by the user (“do it”). Implemented using 38% of the available preview height, clamped to 180–280dp and available width. This keeps artwork useful in short windows while allowing scroll as planned.
+
+- User approved replacing the prior plan on 2026-09-28.
+- The prior Compact Tag Preview plan is preserved at `tasks/archive/compact-tag-preview-plan.md`.

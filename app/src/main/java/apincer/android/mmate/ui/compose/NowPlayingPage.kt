@@ -58,7 +58,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -71,6 +73,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.palette.graphics.Palette
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
+import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
 import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
@@ -92,7 +95,8 @@ fun NowPlayingPage(
     onVolumeChanged: (Float) -> Unit = {},
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
-    onSelectTargetPlayer: () -> Unit = {}
+    onSelectTargetPlayer: () -> Unit = {},
+    trackArtwork: (@Composable (Track) -> Unit)? = null
 ) {
     var flipped by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
@@ -138,11 +142,21 @@ fun NowPlayingPage(
     )
 
     val track = state.track.value
+    val controlsEnabled = UiLayoutPolicy.transportControlsEnabled(track != null)
     val bitmap = state.albumArt.value
     val duration = state.durationMs.value
     val progress = state.progressMs.value
     val context = LocalContext.current
     val isPlaying = state.playbackState.value.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING
+    val playbackPositionDescription = if (duration > 0) {
+        stringResource(
+            R.string.cd_playback_position_value,
+            accessiblePlaybackTime(progress),
+            accessiblePlaybackTime(duration)
+        )
+    } else {
+        stringResource(R.string.cd_playback_position)
+    }
 
     val colorGold = Color(0xFFFFB300)
     val colorGrey400 = Color(0xFFBDBDBD)
@@ -234,14 +248,16 @@ fun NowPlayingPage(
                     if (bitmap != null) {
                         Image(
                             bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Album Art",
+                            contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
+                    } else if (track != null && trackArtwork != null) {
+                        trackArtwork(track)
                     } else if (track != null) {
                         AsyncImage(
                             model = CoverartFetcher.builder(context, track).data(track).build(),
-                            contentDescription = "Album Art",
+                            contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -301,7 +317,7 @@ fun NowPlayingPage(
                     ) {
                         // Title
                         Text(
-                            text = track?.title ?: "Music Mate Ready",
+                            text = track?.title ?: "Ready to play",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -310,7 +326,7 @@ fun NowPlayingPage(
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
                                 .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
-                                .clickable { onTrackClicked() }
+                                .clickable(enabled = track != null) { onTrackClicked() }
                         )
 
                         // Artist Subtitle
@@ -667,6 +683,7 @@ fun NowPlayingPage(
             @OptIn(ExperimentalMaterial3Api::class)
             Slider(
                 value = if (isDragging) dragPosition else (if (duration > 0) progress.toFloat() / duration.toFloat() else 0f),
+                enabled = controlsEnabled,
                 onValueChange = { pos ->
                     if (!isDragging) isDragging = true
                     dragPosition = pos
@@ -676,7 +693,10 @@ fun NowPlayingPage(
                     onSeek(dragPosition)
                     isDragging = false
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
+                    .semantics { contentDescription = playbackPositionDescription },
                 thumb = {
                     Box(
                         modifier = Modifier
@@ -728,7 +748,49 @@ fun NowPlayingPage(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            val volumePercent = (state.volume.value.coerceIn(0f, 1f) * 100).toInt()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onVolumeDown,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { contentDescription = context.getString(R.string.cd_volume_down) }
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.ic_baseline_volume_down_24),
+                        contentDescription = null,
+                        tint = colorGrey400,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+                Slider(
+                    value = state.volume.value.coerceIn(0f, 1f),
+                    onValueChange = onVolumeChanged,
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics {
+                            contentDescription = context.getString(R.string.cd_volume, volumePercent)
+                        }
+                )
+                IconButton(
+                    onClick = onVolumeUp,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { contentDescription = context.getString(R.string.cd_volume_up) }
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.ic_baseline_volume_up_24),
+                        contentDescription = null,
+                        tint = colorGrey400,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             // Transport Controls
             val isPlaying = state.playbackState.value.currentState == PlaybackState.State.PLAYING
@@ -753,32 +815,40 @@ fun NowPlayingPage(
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onShuffleToggle()
                     },
-                    modifier = Modifier.size(38.dp)
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics {
+                            contentDescription = context.getString(
+                                R.string.cd_shuffle_state,
+                                context.getString(if (state.isShuffle.value) R.string.state_on else R.string.state_off)
+                            )
+                        }
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_baseline_shuffle_24),
-                        contentDescription = "Shuffle",
+                        contentDescription = null,
                         tint = if (state.isShuffle.value) colorGold else colorGrey400,
                         modifier = Modifier.size(19.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onPrevious()
                     },
-                    modifier = Modifier.size(44.dp)
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { contentDescription = context.getString(R.string.cd_previous_track) }
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_previous_rounded),
-                        contentDescription = "Previous",
+                        contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-
                 // Play / Pause Button with tactile spring scale and refined gold/amber accent rim
                 Box(
                     modifier = Modifier
@@ -794,9 +864,13 @@ fun NowPlayingPage(
                             spotColor = Color(0x55FFB300)
                         )
                         .clip(CircleShape)
-                        .background(Color.White)
+                        .background(if (controlsEnabled) Color.White else Color(0xFF666666))
                         .border(BorderStroke(1.5.dp, Color(0xFFFFB300).copy(alpha = 0.5f)), CircleShape)
-                        .clickable {
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = context.getString(if (isPlaying) R.string.cd_pause else R.string.cd_play)
+                        }
+                        .clickable(enabled = controlsEnabled) {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                             onPlayPause()
                         },
@@ -804,54 +878,74 @@ fun NowPlayingPage(
                 ) {
                     Icon(
                         painterResource(id = if (isPlaying) R.drawable.ic_pause_rounded else R.drawable.ic_play_rounded),
-                        contentDescription = "Play/Pause",
+                        contentDescription = null,
                         tint = Color(0xFF141414),
                         modifier = Modifier.size(30.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onNext()
                     },
-                    modifier = Modifier.size(44.dp)
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { contentDescription = context.getString(R.string.cd_next_track) }
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_skip_next_rounded),
-                        contentDescription = "Next",
+                        contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onRepeatToggle()
                     },
-                    modifier = Modifier.size(38.dp)
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics {
+                            contentDescription = context.getString(
+                                when (state.repeatMode.value) {
+                                    1 -> R.string.cd_repeat_all
+                                    2 -> R.string.cd_repeat_one
+                                    else -> R.string.cd_repeat_off
+                                }
+                            )
+                        }
                 ) {
                     val repeatIcon = if (state.repeatMode.value == 2) R.drawable.ic_baseline_repeat_one_24 else R.drawable.ic_baseline_repeat_24
                     Icon(
                         painterResource(id = repeatIcon),
-                        contentDescription = "Repeat",
+                        contentDescription = null,
                         tint = if (state.repeatMode.value > 0) colorGold else colorGrey400,
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         showSleepTimerDialog = true
                     },
-                    modifier = Modifier.size(38.dp)
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics {
+                            contentDescription = if (state.isSleepTimerActive.value) {
+                                context.getString(R.string.cd_sleep_timer_remaining, state.sleepTimerText.value)
+                            } else {
+                                context.getString(R.string.cd_sleep_timer_off)
+                            }
+                        }
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_baseline_timer_24),
-                        contentDescription = "Sleep Timer",
+                        contentDescription = null,
                         tint = if (state.isSleepTimerActive.value) colorGold else colorGrey400,
                         modifier = Modifier.size(19.dp)
                     )
@@ -961,5 +1055,17 @@ fun SleepTimerDialog(
                 }
             }
         }
+    }
+}
+
+private fun accessiblePlaybackTime(milliseconds: Long): String {
+    val totalSeconds = (milliseconds.coerceAtLeast(0L) / 1000L)
+    val hours = totalSeconds / 3600L
+    val minutes = (totalSeconds % 3600L) / 60L
+    val seconds = totalSeconds % 60L
+    return if (hours > 0L) {
+        "%d:%02d:%02d".format(hours, minutes, seconds)
+    } else {
+        "%d:%02d".format(minutes, seconds)
     }
 }

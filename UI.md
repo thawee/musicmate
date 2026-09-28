@@ -131,7 +131,7 @@ Focused exclusively on **batch tag management and file operations**.
   3. 🔁 **Convert Files** (`action_encoding_file`): Batch audio re-encoding.
   4. 🗑 **Delete** (`action_delete`): Batch file deletion with confirmation.
   5. ☑ **Select All** (`action_select_all`): Select / clear selection toggle.
-- **Excluded Items:** Playback controls (`Play Now`, `Play Next`, `Add to Queue`). Batch queueing is handled within the dedicated Queue Sheet (`AudioHubBottomSheet` / `NowPlayingQueueSheet`).
+- **Excluded Items:** Playback controls (`Play Now`, `Play Next`, `Add to Queue`). Batch queueing is handled within the dedicated Queue tab of the master sheet (`AudioHubSheet.kt`).
 
 ---
 
@@ -253,6 +253,16 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
   - **Bluetooth / System Output…** is placed at the bottom because selecting it navigates away from the app into Android System Settings / Output Panel.
 - **Informative Empty State:** When no remote renderers are found, displays a disabled `"Scanning for audio output devices…"` placeholder item rather than an interactive/confusing error item.
 
+### F. Main-Screen Navigation Drawer (`MainScaffold.kt`)
+
+Opened from the MusicMate logo at the far right of the floating dock. It is a `ModalNavigationDrawer` whose content is a fixed 310dp dark sheet grouped into three sections (Core Library, Discover & Audiophile, Settings & System).
+
+- **Destination Labels Match Behavior:** Every label describes what it actually opens. `Similar Tracks` finds matching titles (optionally artist-aware) and is not a recommendation or duplicate-deletion feature. `Audio Quality` browses quality categories and does not start analysis. `Music Folders & Scan` selects indexed folders and starts scanning. `Notification Access` opens Android notification-listener settings used to integrate other players. Labels are string resources (`R.string.nav_*`) so they can be translated.
+- **Selection Ends on Destination Change:** Changing a library destination clears contextual selection, because selection refers to rows of the current list. Independently, multi-selection is keyed by track identity rather than row position, so refreshing, re-sorting, or replacing the list can never retarget Edit / Move / Convert / Delete at a track the user did not pick: selections follow their track, and selections whose track is no longer in the list are dropped. Pagination and re-indexing preserve selection correctly.
+- **Back Precedence:** An open drawer consumes system Back first, preserving selection, search, filters, and category. Only when the drawer is closed does Back end an active selection or perform library navigation (`MainBackPolicy`).
+- **Selected State Semantics:** Entries use `Modifier.selectable` with `Role.Tab`, matching Material 3 `NavigationDrawerItem`, so assistive technology announces the current destination. A minimum 48dp interaction height applies to both tiles and rows.
+- **Active Highlight Only:** External actions (Settings, Storage Access, Notification Access, Diagnostics, About) deliberately do not claim a library selection, because they do not change the library criteria.
+
 ---
 
 ## 4. Style, Theme & Color System
@@ -292,7 +302,7 @@ To give immediate visual feedback without clogging the screen with text, state c
 
 ### C. Audiophile Node Geometries & Telemetry Chips
 
-The **Audio Route Path** telemetry widget (`AudioHubBottomSheet` & Now Playing card) uses asymmetric shape drawables to visually differentiate pipeline stages:
+The **Audio Route Path** telemetry widget (`AudioHubSheet.kt` & Now Playing card) uses asymmetric shape drawables to visually differentiate pipeline stages:
 
 - **Source Node (`shape_node_source.xml`):** Asymmetric curved chip displaying audio format specs (`FLAC 24/96`, `DSD128`, `MQA`).
 - **Transport Node (`shape_node_transport.xml`):** Hexagonal / chamfered node representing pipeline routing (`SonicNIO Engine`, `Local Transport`).
@@ -355,7 +365,7 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 - **Idle State:** Displays idle audio icon, app title ("MusicMate"), and target player prompt.
 - **Playing State:** Dynamically embeds live album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
 - **Interactions:**
-  - **Single Tap (Title/Art):** Opens the 3-Tab **`AudioHubBottomSheet`** at the last-viewed tab (sticky session state, see §7C).
+  - **Single Tap (Title/Art):** Opens the 3-Tab master sheet **`AudioHubSheet.kt`** at the last-viewed tab (sticky session state, see §7C).
   - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
 
 ### B. Tag Activity Studio Command Dock (`shape_studio_command_dock`)
@@ -406,7 +416,7 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
   - Long-press `[✨ Format]` ➔ Executes the **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding repair in a single pass).
   - Long-press `[💾 Save]` ➔ Executes **Save & Close** (commits metadata and returns to track list).
 
-### C. Dedicated 3-Tab Architecture (`AudioHubBottomSheet` in Jetpack Compose)
+### C. Dedicated 3-Tab Architecture (`AudioHubSheet.kt` in Jetpack Compose)
 Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewport** powered by the **Fluid Audiophile Glass Pill** switcher:
 
 1. **`[ Playback ]` Tab (`NowPlayingPage.kt`):** Edge-to-edge album artwork, streamlined full-width bottom overlay title marquee, expanded streaming tier quality badge (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`), interactive output target selector pill, glowing seekbar, full transport controls, and interactive full-surface 3D Y-axis flip card revealing the **Audio Anatomy** spec sheet (with gold `ic_round_info_24` title badge, Codec, Resolution, Bitrate, Duration, Dynamic Range, Audio Channels, File Size, and Track #/Year/Genre in compact scrollable rows).
@@ -477,7 +487,7 @@ MusicMate standardizes all modal overlays into two formal surfaces: **Material A
 For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs embed a custom scrollable item preview (`view_action_files.xml`, `view_action_directories.xml`, `view_action_encoding_files.xml`).
 - **Design Rule:** Never present a confirmation dialog for batch file operations without displaying a preview of the affected track list and total data volume.
 
-### C. Music Center Bottom Sheets (`AudioHubBottomSheet` / `AudioHubSheet.kt`)
+### C. Music Center Bottom Sheets (`AudioHubSheet.kt`)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -533,19 +543,20 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 - **Context:** A single bottom sheet crammed transport controls, the upcoming queue, and DLNA server status into one congested scroll surface, leaving no room for the queue list or server telemetry.
 - **Decision:** Restructure into a 3-tab viewport (`Playback` / `Queue` / `Server`) sized at a fixed 65% of screen height, with sticky per-session tab selection.
 - **Consequences:** Each concern gets a dedicated viewport; queue management (reorder, swipe-remove) becomes practical; server diagnostics no longer compete with playback controls.
+- **Implementation Note:** This ADR consolidated three former sheets — `NowPlayingQueueSheet`, `SignalPathBottomSheet`, and `MediaServerManagementSheet` — all still referenced by older documents. They no longer exist in source. The current implementation is `AudioHubSheet.kt` (Compose).
 
 ### ADR-005: Unified Floating Dock
 - **Status:** Accepted
 - **Date:** 2026-08
 - **Context:** Navigation affordances and now-playing state previously occupied separate UI regions, wasting vertical space and splitting user attention between two surfaces.
-- **Decision:** A single floating `CardView` dock (20dp radius) anchors the bottom of the main screen, morphing between an idle state (logo, title, server icon, menu) and a playing state (mini art, marquee title, target player subtitle). Tap opens `AudioHubBottomSheet` at the last-viewed tab.
+- **Decision:** A single floating `CardView` dock (20dp radius) anchors the bottom of the main screen, morphing between an idle state (logo, title, server icon, menu) and a playing state (mini art, marquee title, target player subtitle). Tap opens `AudioHubSheet.kt` at the last-viewed tab.
 - **Consequences:** One persistent anchor for both navigation and playback; state morphing keeps the layout footprint constant. A long-press deep-link to route diagnostics was considered and dropped — the route widget is already one tap away on the Playback tab, and an invisible duplicate gesture added no value.
 
 ### ADR-006: Standardized Action Dialog Controls & Dual Dismiss Affordance
 - **Status:** Accepted
 - **Date:** 2026-08
 - **Context:** Action dialogs across the app had inconsistent control affordances — some lacked top-right close buttons, others missed bottom cancel buttons, and file operations left dialogs open after completion.
-- **Decision:** Standardize all modal action dialogs to provide dual dismiss affordances (top-right `✕` icon + bottom `button_cancel` text button) and primary confirmation (`button_ok`), with auto-dismiss on operation completion. The `AudioHubBottomSheet` (Music Center) retains its unique 3-tab layout design.
+- **Decision:** Standardize all modal action dialogs to provide dual dismiss affordances (top-right `✕` icon + bottom `button_cancel` text button) and primary confirmation (`button_ok`), with auto-dismiss on operation completion. The Music Center sheet (`AudioHubSheet.kt`) retains its unique 3-tab layout design.
 - **Consequences:** Consistent, predictable modal experience across all device form factors.
 
 ### ADR-009: Song Detail / Tag Editor (`TagsActivity`) Viewport Hierarchy & Metadata Deduplication
@@ -566,7 +577,7 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 - **Decision:**
   1. **Dock Layout Inversion:** Swap positions in `activity_main.xml` so Mini Album Art (`bar_album_art`) is on the far left, Play/Pause/Next in the center, and Collections/Menu (`navigation_collections`) on the far right.
   2. **Media Server Compose Redesign:** Implement `MediaServerPage.kt` with a prominent Hero Status Card containing live Wi-Fi SSID chip, status LED, Gold Start / Crimson Stop buttons, interactive QR code zoom modal dialog, and segmented engine switcher with zero label truncation.
-  3. **Direct Service Execution & Reactive Observation:** Ensure `AudioHubBottomSheet` directly invokes `msi.stopServers()` / `startServers()` and observes `MusicMateServiceImpl.getStatusLiveData()` alongside `MediaServerViewModel` to ensure instant UI reactivity.
+  3. **Direct Service Execution & Reactive Observation:** Ensure `AudioHubSheet.kt` directly invokes `msi.stopServers()` / `startServers()` and observes `MusicMateServiceImpl.getStatusLiveData()` alongside `MediaServerViewModel` to ensure instant UI reactivity.
   4. **Compact Audio Anatomy Card:** Add `ic_round_info_24` to the `AUDIO ANATOMY` header and restructure technical specs into compact horizontal rows with `verticalScroll` to eliminate vertical clipping across all aspect ratios.
 
 ### ADR-012: Flagship Audiophile Provenance Hierarchy, Tactile Micro-Haptics & Pure Compose Bottom Sheet

@@ -2,7 +2,7 @@ package apincer.android.mmate.ui.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +17,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,13 +38,16 @@ fun AboutScreen(
 ) {
     val scrollState = rememberScrollState()
     var selectedLegend by remember { mutableStateOf(Constants.LEGEND_HIRES) }
+    val shareLibraryDescription = stringResource(R.string.cd_about_share_library)
+    val openGooglePlayDescription = stringResource(R.string.cd_about_open_google_play)
+    val openGitHubDescription = stringResource(R.string.cd_about_open_github)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "About MusicMate",
+                        text = stringResource(R.string.about_musicmate_title),
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -50,7 +57,7 @@ fun AboutScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_back),
                             tint = Color.White
                         )
                     }
@@ -90,7 +97,7 @@ fun AboutScreen(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
-                            contentDescription = "MusicMate Logo",
+                            contentDescription = null,
                             tint = Color(0xFFFFB300),
                             modifier = Modifier.size(36.dp)
                         )
@@ -164,7 +171,7 @@ fun AboutScreen(
                                     appendLine("📊 Total Tracks: $totalTracks")
                                     appendLine(breakdown)
                                     appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                                    appendLine("⚡ Bit-Perfect Streaming, Crafted for the Music You Love")
+                                    appendLine("⚡ Clean up your music library, inspect audio quality, and stream your collection to your Hi-Fi.")
                                     appendLine("🔗 https://github.com/thawee/musicmate")
                                 }
                                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -180,16 +187,20 @@ fun AboutScreen(
                             ),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics {
+                                    contentDescription = shareLibraryDescription
+                                }
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_share_24),
-                                contentDescription = "Share",
+                                contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Share Library Snapshot",
+                                text = stringResource(R.string.about_share_library),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -394,11 +405,15 @@ fun AboutScreen(
                         shape = RoundedCornerShape(10.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = openGooglePlayDescription
+                            }
                     ) {
                         Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Rate on Google Play", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.about_rate_google_play), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
 
                     OutlinedButton(
@@ -409,11 +424,15 @@ fun AboutScreen(
                         shape = RoundedCornerShape(10.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = openGitHubDescription
+                            }
                     ) {
                         Icon(painterResource(id = R.drawable.ic_baseline_open_in_new_24), contentDescription = null, tint = Color(0xFF00E5FF), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("GitHub Project & Source", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.about_github_source), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -473,6 +492,7 @@ private fun TierPill(
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = 48.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
             .border(
@@ -480,7 +500,11 @@ private fun TierPill(
                 if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
                 RoundedCornerShape(8.dp)
             )
-            .clickable(onClick = onClick)
+            .selectable(
+                selected = isSelected,
+                role = Role.RadioButton,
+                onClick = onClick
+            )
             .padding(vertical = 8.dp, horizontal = 4.dp),
         contentAlignment = Alignment.Center
     ) {

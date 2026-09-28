@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import apincer.android.mmate.ui.navigation.MainNavigationState
+import apincer.android.mmate.ui.navigation.MainRoute
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -54,16 +56,14 @@ class FullscreenStudioConsoleTest {
     }
 
     @Test
-    fun testMainScaffoldStateFullscreenToggle() {
-        val state = MainScaffoldState.get()
-        state.showFullscreenConsole.value = false
-        assertFalse(state.showFullscreenConsole.value)
+    fun studioConsoleIsOwnedByNavigationStack() {
+        val state = MainNavigationState()
 
-        state.showFullscreenConsole.value = true
-        assertTrue(state.showFullscreenConsole.value)
+        state.openStudioConsole()
+        assertEquals(MainRoute.StudioConsole, state.overlayRoute)
 
-        state.showFullscreenConsole.value = false
-        assertFalse(state.showFullscreenConsole.value)
+        assertTrue(state.dismissStudioConsole())
+        assertEquals(null, state.overlayRoute)
     }
 
     @Test
@@ -111,4 +111,3 @@ class FullscreenStudioConsoleTest {
         assertEquals(androidx.compose.ui.graphics.Color(0xFF14110E), clampedBlack)
     }
 }
-

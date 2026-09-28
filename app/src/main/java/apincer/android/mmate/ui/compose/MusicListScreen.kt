@@ -78,6 +78,8 @@ fun MusicListScreen(
     onTrackQuickPlayClick: (Track) -> Unit = {},
     onFolderPlayClick: (Track) -> Unit,
     onFolderEnqueueClick: (Track) -> Unit,
+    showGestureHints: Boolean = true,
+    trackArtwork: (@Composable (Track) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val pullRefreshState = rememberPullToRefreshState()
@@ -248,13 +250,15 @@ fun MusicListScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Gesture discovery hints for new users
-                    GestureHints.GestureHintBanner(
-                        hints = listOf(
-                            GestureHints.HintType.TRACK_TAP,
-                            GestureHints.HintType.ART_TAP,
-                            GestureHints.HintType.LONG_PRESS
+                    if (showGestureHints) {
+                        GestureHints.GestureHintBanner(
+                            hints = listOf(
+                                GestureHints.HintType.TRACK_TAP,
+                                GestureHints.HintType.ART_TAP,
+                                GestureHints.HintType.LONG_PRESS
+                            )
                         )
-                    )
+                    }
 
                     LazyColumn(
                     state = listState,
@@ -285,7 +289,8 @@ fun MusicListScreen(
                                 onClick = { onTrackClick(track, index) },
                                 onLongClick = { onTrackLongClick(track, index) },
                                 onMenuClick = { onTrackMenuClick(track, index) },
-                                onQuickPlayClick = { onTrackQuickPlayClick(track) }
+                                onQuickPlayClick = { onTrackQuickPlayClick(track) },
+                                artwork = trackArtwork
                             )
                         }
                     }

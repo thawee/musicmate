@@ -1,9 +1,11 @@
 package apincer.android.mmate.ui.compose
 
+import apincer.android.mmate.ui.navigation.LibraryDestination
 import apincer.music.core.model.Track
 import apincer.music.core.playback.spi.PlaybackTarget
 
 interface MainScaffoldCallbacks {
+    fun onLibraryDestinationChanged(destination: LibraryDestination)
     fun onNavigationItemClick(itemId: Int)
     fun onSearchQueryChange(query: String)
     fun onSearchBackClick()

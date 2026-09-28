@@ -118,8 +118,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     // UI components
     private apincer.music.core.model.SearchCriteria currentCriteria = new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY);
-    private MySelectionTracker mTracker;
-    private final List<Track> selections = new ArrayList<>();
+    private LibrarySelectionModel selectionModel;
 
     private WorkInfo.State lastWorkState = null;
 
@@ -409,24 +408,23 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         // Get search criteria from intent
         SearchCriteria searchCriteria = ApplicationUtils.getSearchCriteria(getIntent());
+        if (searchCriteria != null) {
+            currentCriteria = searchCriteria;
+        }
+
+        // Initialize Java-owned data callbacks before Compose can dispatch a restored route.
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        setupSelectionTracker();
 
         // Setup back press handler
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         // Set pure Compose content view
-        setContentView(apincer.android.mmate.ui.compose.DrawerInterop.getComposeView(this, this));
-
-        // Get the ViewModel. Hilt handles all the factory creation for you.
-        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
-        // Setup Selection tracker & Action Mode
-        setupSelectionTracker();
-
-        if (searchCriteria != null) {
-            currentCriteria = searchCriteria;
-        }
-        syncActiveDrawerItem();
+        setContentView(apincer.android.mmate.ui.compose.DrawerInterop.getComposeView(
+                this,
+                this,
+                getInitialLibraryDestination()));
 
         // Observe ViewModel LiveData
         apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery(
@@ -445,21 +443,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
             runOnUiThread(() -> {
-                List<Long> selectedPositions = null;
-                if (actionMode != null && mTracker != null && mTracker.hasSelection()) {
-                    selectedPositions = new ArrayList<>();
-                    mTracker.getSelection().forEach(selectedPositions::add);
-                }
-
                 apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
+                selectionModel.setTracks(musicTags);
                 apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);
                 updateHeaderPanel(viewModel.searchStats.getValue());
-
-                if (selectedPositions != null && !selectedPositions.isEmpty() && mTracker != null) {
-                    for (Long pos : selectedPositions) {
-                        mTracker.select(pos);
-                    }
-                }
             });
         });
 
@@ -509,34 +496,21 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     private void setupSelectionTracker() {
-        mTracker = new MySelectionTracker();
-        MySelectionTracker.SelectionObserver observer = new MySelectionTracker.SelectionObserver() {
-            @Override
-            public void onSelectionChanged() {
-                int count = mTracker.getSelection().size();
-                selections.clear();
-                if (count > 0) {
-                    mTracker.getSelection().forEach(item -> {
-                        Track tag = (item.intValue() >= 0 && item.intValue() < apincer.android.mmate.ui.compose.ListInterop.getTracks().size() ? apincer.android.mmate.ui.compose.ListInterop.getTracks().get(item.intValue()) : null);
-                        if (tag != null) {
-                            selections.add(tag);
-                        }
-                    });
-                    if (actionMode == null) {
-                        actionMode = startSupportActionMode(actionModeCallback);
-                    }
-                } else if (actionMode != null) {
-                    actionMode.finish();
-                    actionMode = null;
-                }
-                if (actionMode != null) {
-                    actionMode.setTitle(count + " Selected");
-                }
-                apincer.android.mmate.ui.compose.ListInterop.updateSelectedTracks(new java.util.HashSet<>(selections));
-            }
-        };
-        mTracker.setObserver(observer);
         actionModeCallback = new ActionModeCallback();
+        selectionModel = new LibrarySelectionModel((count, selectedTracks) -> {
+            if (count > 0) {
+                if (actionMode == null) {
+                    actionMode = startSupportActionMode(actionModeCallback);
+                }
+            } else if (actionMode != null) {
+                actionMode.finish();
+                actionMode = null;
+            }
+            if (actionMode != null) {
+                actionMode.setTitle(count + " Selected");
+            }
+            apincer.android.mmate.ui.compose.ListInterop.updateSelectedTracks(new java.util.HashSet<>(selectedTracks));
+        });
     }
 
     private void doShowLeftMenus() {
@@ -653,8 +627,26 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         currentCriteria.setKeyword(keyword);
         currentCriteria.setFilterType(null);
         currentCriteria.setFilterText(null);
-        syncActiveDrawerItem();
+        endSelectionForNavigation();
         viewModel.loadMusicItems(currentCriteria);
+    }
+
+    /**
+     * Contextual selection refers to rows of the current list, so it must not survive a
+     * library-destination change. Selection is additionally keyed by track identity, so a
+     * batch action can never fall through to a track the user did not pick.
+     */
+    private void endSelectionForNavigation() {
+        // Clear the field first: finish() synchronously invokes onDestroyActionMode(), which
+        // would otherwise re-enter and finish a second time.
+        ActionMode mode = actionMode;
+        actionMode = null;
+        if (mode != null) {
+            mode.finish();
+        }
+        if (selectionModel != null) {
+            selectionModel.clear();
+        }
     }
 
     public void onSearchQueryChanged(String query) {
@@ -686,15 +678,31 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             return;
         }
 
-        if (currentCriteria != null && (isEmpty(currentCriteria.getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType()))) {
-            doShowLeftMenus();
-        } else if (currentCriteria != null && !isEmpty(currentCriteria.getKeyword()) && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
+        if (currentCriteria != null && !isEmpty(currentCriteria.getKeyword())
+                && !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())) {
             currentCriteria.setFilterText(null);
             currentCriteria.setFilterType(null);
             currentCriteria.setKeyword(null);
             apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(true);
             viewModel.loadMusicItems(currentCriteria);
+            return;
         }
+
+        if (!apincer.android.mmate.ui.navigation.MainNavigationInterop.isAtLibraryRoot()) {
+            apincer.android.mmate.ui.navigation.MainNavigationInterop.selectLibrary(
+                    apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS);
+            return;
+        }
+
+        doShowLeftMenus();
+    }
+
+    private boolean hasTransientLibraryState() {
+        if (currentCriteria == null) return false;
+        boolean hasFilter = !isEmpty(currentCriteria.getFilterType());
+        boolean hasNestedCategory = !SearchCriteria.TYPE.LIBRARY.equals(currentCriteria.getType())
+                && !isEmpty(currentCriteria.getKeyword());
+        return hasFilter || currentCriteria.isSearchMode() || hasNestedCategory;
     }
 
     public void onDockPlayPauseClicked() {
@@ -985,6 +993,28 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     // MainScaffoldCallbacks Interface Implementations
     @Override
+    public void onLibraryDestinationChanged(
+            apincer.android.mmate.ui.navigation.LibraryDestination destination) {
+        currentCriteria.resetSearch();
+        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
+        switch (destination) {
+            case ALL_SONGS -> doStartRefresh(
+                    SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
+            case RECENTLY_ADDED -> doStartRefresh(
+                    SearchCriteria.TYPE.LIBRARY, Constants.TITLE_INCOMING_SONGS);
+            case SIMILAR_TRACKS -> doStartRefresh(
+                    SearchCriteria.TYPE.LIBRARY, Constants.TITLE_DUPLICATE);
+            case AUDIO_QUALITY -> doStartRefresh(SearchCriteria.TYPE.SOUND_GRADE, null);
+            case PLAYLISTS -> {
+                PlaylistRepository.loadPlaylists(getApplicationContext());
+                doStartRefresh(SearchCriteria.TYPE.PLAYLIST, null);
+            }
+            case GENRES -> doStartRefresh(SearchCriteria.TYPE.GENRE, null);
+            case ARTISTS -> doStartRefresh(SearchCriteria.TYPE.ARTIST, null);
+        }
+    }
+
+    @Override
     public void onNavigationItemClick(int itemId) {
         handleNavigationItemClick(itemId);
     }
@@ -1151,29 +1181,28 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         onAudioHubQrCode();
     }
 
-    private void syncActiveDrawerItem() {
-        if (currentCriteria == null) return;
+    private apincer.android.mmate.ui.navigation.LibraryDestination getInitialLibraryDestination() {
+        if (currentCriteria == null) {
+            return apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS;
+        }
         SearchCriteria.TYPE type = currentCriteria.getType();
-        int activeId = R.id.menu_library_all_songs;
         if (SearchCriteria.TYPE.ARTIST.equals(type)) {
-            activeId = R.id.menu_tag_artist;
+            return apincer.android.mmate.ui.navigation.LibraryDestination.ARTISTS;
         } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
-            activeId = R.id.menu_tag_genre;
+            return apincer.android.mmate.ui.navigation.LibraryDestination.GENRES;
         } else if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
-            activeId = R.id.menu_collection;
+            return apincer.android.mmate.ui.navigation.LibraryDestination.PLAYLISTS;
         } else if (SearchCriteria.TYPE.SOUND_GRADE.equals(type)) {
-            activeId = R.id.menu_sound_grade;
+            return apincer.android.mmate.ui.navigation.LibraryDestination.AUDIO_QUALITY;
         } else if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
             String kw = currentCriteria.getKeyword();
             if (Constants.TITLE_INCOMING_SONGS.equals(kw)) {
-                activeId = R.id.menu_library_recently_added;
+                return apincer.android.mmate.ui.navigation.LibraryDestination.RECENTLY_ADDED;
             } else if (Constants.TITLE_DUPLICATE.equals(kw)) {
-                activeId = R.id.menu_library_similar_songs;
-            } else {
-                activeId = R.id.menu_library_all_songs;
+                return apincer.android.mmate.ui.navigation.LibraryDestination.SIMILAR_TRACKS;
             }
         }
-        apincer.android.mmate.ui.compose.DrawerInterop.updateActiveItem(activeId);
+        return apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS;
     }
 
     public void handleNavigationItemClick(int itemId) {
@@ -1255,46 +1284,16 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
-       /* } else if (item.getItemId() == R.id.menu_all_music) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.LIBRARY, null);
-            return true; */
-        } else if (item.getItemId() == R.id.menu_library_all_songs) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
+        }
+        apincer.android.mmate.ui.navigation.LibraryDestination libraryDestination =
+                apincer.android.mmate.ui.navigation.LibraryDestinationMenuMapping
+                        .fromMenuItemId(item.getItemId());
+        if (libraryDestination != null) {
+            apincer.android.mmate.ui.navigation.MainNavigationInterop
+                    .selectLibrary(libraryDestination);
             return true;
-        } else if (item.getItemId() == R.id.menu_library_recently_added) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_INCOMING_SONGS);
-            return true;
-        } else if (item.getItemId() == R.id.menu_library_similar_songs) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_DUPLICATE);
-            return true;
-        } else if (item.getItemId() == R.id.menu_sound_grade) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.SOUND_GRADE, null);
-            return true;
-        } else if (item.getItemId() == R.id.menu_collection) {
-            doHideSearch();
-            PlaylistRepository.loadPlaylists(getApplicationContext());
-            doStartRefresh(SearchCriteria.TYPE.PLAYLIST, null);
-            return true;
-        /*} else if (item.getItemId() == R.id.menu_groupings) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, null);
-            return true; */
-        } else if (item.getItemId() == R.id.menu_tag_genre) {
-            doHideSearch();
-            //doStartRefresh(SearchCriteria.TYPE.GENRE, viewModel.getTagRepository().getActualGenreList().get(0));
-            doStartRefresh(SearchCriteria.TYPE.GENRE, null);
-            return true;
-        } else if (item.getItemId() == R.id.menu_tag_artist) {
-            doHideSearch();
-            //doStartRefresh(SearchCriteria.TYPE.ARTIST, TagRepository.getArtistList().get(0));
-            doStartRefresh(SearchCriteria.TYPE.ARTIST, null);
-            return true;
-        } else if (item.getItemId() == R.id.menu_settings) {
+        }
+        if (item.getItemId() == R.id.menu_settings) {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
             return true;
@@ -1894,13 +1893,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 mode.finish();
                 return true;
             } else if (id == R.id.action_select_all) {
-                if (mTracker.getSelection().size() == apincer.android.mmate.ui.compose.ListInterop.getTracks().size()) {
-                    mTracker.clearSelection();
-                } else {
-                    for (int i = 0; i < apincer.android.mmate.ui.compose.ListInterop.getTracks().size(); i++) {
-                        mTracker.select((long) i);
-                    }
-                }
+                selectionModel.selectAll();
                 return true;
             }
             return false;
@@ -1908,12 +1901,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         @Override
         public void onDestroyActionMode(ActionMode mode) {
-            mTracker.clearSelection();
             actionMode = null;
+            selectionModel.clear();
         }
 
         private List<Track> getSelections() {
-            return new ArrayList<>(selections);
+            return selectionModel.getSelectedTracks();
         }
     }
 
@@ -1927,11 +1920,35 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         @Override
         public void handleOnBackPressed() {
-            if (actionMode != null) {
+            MainBackPolicy.Action action = MainBackPolicy.resolve(
+                    apincer.android.mmate.ui.compose.DrawerInterop.isDrawerOpen(),
+                    apincer.android.mmate.ui.navigation.MainNavigationInterop.isOverlayOpen(),
+                    actionMode != null,
+                    hasTransientLibraryState(),
+                    apincer.android.mmate.ui.navigation.MainNavigationInterop.isAtLibraryRoot());
+            if (action == MainBackPolicy.Action.CLOSE_DRAWER) {
+                apincer.android.mmate.ui.compose.DrawerInterop.closeDrawer();
+                return;
+            }
+            if (action == MainBackPolicy.Action.DISMISS_OVERLAY) {
+                apincer.android.mmate.ui.navigation.MainNavigationInterop.popOverlay();
+                return;
+            }
+            if (action == MainBackPolicy.Action.FINISH_SELECTION && actionMode != null) {
                 actionMode.finish();
                 return;
             }
-            onSearchBackClicked();
+            if (action == MainBackPolicy.Action.CLEAR_SEARCH) {
+                onSearchBackClicked();
+                return;
+            }
+            if (action == MainBackPolicy.Action.NAVIGATE_LIBRARY) {
+                apincer.android.mmate.ui.navigation.MainNavigationInterop.selectLibrary(
+                        apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS);
+                return;
+            }
+            setEnabled(false);
+            getOnBackPressedDispatcher().onBackPressed();
         }
     }
 
@@ -1945,12 +1962,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onTrackClicked(apincer.music.core.model.Track tag, int position) {
         if (isSelectionBlocked()) return;
-        if (mTracker != null && mTracker.hasSelection()) {
-            if (mTracker.isSelected((long) position)) {
-                mTracker.deselect((long) position);
-            } else {
-                mTracker.select((long) position);
-            }
+        if (selectionModel != null && selectionModel.hasSelection()) {
+            selectionModel.toggle(position);
             return;
         }
 
@@ -1977,8 +1990,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onTrackLongClicked(apincer.music.core.model.Track tag, int position) {
         if (isSelectionBlocked()) return;
-        if (mTracker != null && mTracker.hasSelection()) {
-            mTracker.select((long) position);
+        if (selectionModel != null && selectionModel.hasSelection()) {
+            selectionModel.select(position);
             return;
         }
         String mode = Settings.getTapActionMode(this);
@@ -1986,8 +1999,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             doShowEditActivity(java.util.Collections.singletonList(tag));
             return;
         }
-        if (mTracker != null) {
-            mTracker.select((long) position);
+        if (selectionModel != null) {
+            selectionModel.select(position);
         }
     }
 
@@ -2029,9 +2042,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     public void onBrowseAllMusic() {
-        currentCriteria.resetSearch();
-        apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
-        doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
+        if (apincer.android.mmate.ui.navigation.MainNavigationInterop.isAtLibraryRoot()) {
+            onLibraryDestinationChanged(
+                    apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS);
+        } else {
+            apincer.android.mmate.ui.navigation.MainNavigationInterop.selectLibrary(
+                    apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS);
+        }
     }
 
     public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {

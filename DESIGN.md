@@ -67,8 +67,8 @@ MusicMate's playback architecture coordinates audio delivery across three distin
 │ Domain                   │ Engine & Transport          │ Queue & Control Ownership     │
 ├──────────────────────────┼─────────────────────────────┼───────────────────────────────┤
 │ 1. Local Device          │ Internal AndroidX Media3    │ MusicMate owns queue, preloads│
-│    (Speaker / USB DAC)   │ (ExoPlayer) with 32-bit     │ gapless next tracks, and      │
-│                          │ Float PCM AudioSink         │ manages hardware audio focus. │
+│    (Speaker / USB DAC)   │ (ExoPlayer) with           │ gapless next tracks, and      │
+│                          │ auto-negotiated PCM Sink    │ manages hardware audio focus. │
 ├──────────────────────────┼─────────────────────────────┼───────────────────────────────┤
 │ 2. Network Streamer      │ Embedded HTTP Media Server  │ MusicMate streams URLs via    │
 │    (DLNA / UPnP DMR)     │ + UPnP SOAP Control Point   │ SetAVTransportURI & preloads  │
@@ -86,7 +86,7 @@ MusicMate's playback architecture coordinates audio delivery across three distin
 
 1. **Audio Engine Architecture:**
    - Driven by `ExoPlayer` configured with `C.WAKE_MODE_LOCAL`, `SeekParameters.EXACT`, and `USAGE_MEDIA` / `CONTENT_TYPE_MUSIC`.
-   - **Float 32-bit PCM (`DefaultAudioSink`):** Configured with `enableFloatOutput = true` (`ENCODING_PCM_FLOAT`), providing >1500 dB internal dynamic range to eliminate digital integer clipping prior to the Android HAL.
+   - **Auto-Negotiated PCM Output:** `AndroidPlayerController` installs a custom `DefaultRenderersFactory` that overrides `buildAudioSink` purely to inject the `AudioLevelProcessor` (VU meter) tap. It forwards ExoPlayer's own `enableFloatOutput` / `enableAudioTrackPlaybackParams` decision to `DefaultAudioSink` **unchanged** — float output is *not* forced on. Integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) is the safe default for Bluetooth A2DP (`a2dp.default.so`) and standard device mixers; forcing float PCM onto those sinks causes audible distortion and crackling. See `tasks/lessons.md` §"Never force 32-bit Float PCM".
    - **Zero-Copy Audio Telemetry:** Injects `AudioLevelProcessor` into `DefaultAudioSink`'s processor chain to non-destructively sample peak and RMS stereo levels for the real-time Analog VU meter via `AudioTelemetryManager`.
    - **ReplayGain 2.0 / EBU R128 Leveling:** Evaluates track and album gain tags before playback and attenuates `internalExoPlayer.setVolume(gain)` with an anti-clipping true-peak limiter ($scalar \times peak \le 1.0$) to prevent inter-sample clipping on external DACs.
 
@@ -155,7 +155,7 @@ MODE B: Standalone Media Server with External Controller (DMS Only)
    - **External DMC Compatibility:** Third-party audiophile control points (e.g., BubbleUPnP, mconnect Player, WiiM Home, Audirvana, Linn Kazoo, Foobar2000 UPnP) discover MusicMate automatically on the Wi-Fi network.
    - **Structured `ContentDirectory` Hierarchy:** MusicMate exposes its library through a high-performance virtual tree:
      - `LibraryBrowser`: Root virtual directory.
-     - `AlbumsBrowser`: Albums indexed by title/artist with high-resolution embedded album art URLs (`/cover/<songId>`).
+     - `AlbumsBrowser`: Albums indexed by title/artist with high-resolution embedded album art URLs (`/coverart/<albumArtFilename>`).
      - `ArtistsBrowser`: Complete artist discographies.
      - `GenresBrowser`: Genre-based indexing.
      - `CollectionsBrowser`: Curated collections, smart playlists, and custom tags.
@@ -229,7 +229,7 @@ MusicMate houses a comprehensive audio tagging subsystem designed to protect fil
 - **Context:** Output device labels were inconsistent across surfaces: Bluetooth devices used verbose parenthesis formatting (`Sony WH-1000XM5 (Bluetooth Audio)`), while DLNA renderers used bullet formatting (`HiBy R3 • 192.168.1.50`) and Android apps used versions (`Poweramp • v935`). Bluetooth devices lacked dynamic codec detection, and the signal path target badge incorrectly fell back to `DIRECT SYSTEM OUTPUT`. Furthermore, users playing 24/96 Hi-Res files over Bluetooth had no automatic way to request LDAC / aptX HD.
 - **Decision:**
   1. Adopt the compact **`{Name} • BT ({Codec})`** / **`{Name} • BT`** format for Bluetooth devices (e.g. `Sony WH-1000XM5 • BT (LDAC)`), saving horizontal space and keeping brand names visible on mobile displays.
-  2. Implement `AudioOutputHelper.getCompactLabel()` as the single source of truth for both `MainActivity` (player dropdown) and `AudioHubBottomSheet` (Playback tab header & route widget).
+  2. Implement `AudioOutputHelper.getCompactLabel()` as the single source of truth for both `MainActivity` (player dropdown) and `AudioHubSheet.kt` (Playback tab header & route widget).
   3. Implement real-time Bluetooth A2DP codec detection (`LDAC`, `aptX HD`, `aptX`, `AAC`, `LC3`, `SBC`, `Opus`, `SSC`) via reflection on `BluetoothCodecStatus`, promoting resolution to 24-bit / 96 kHz for hi-res codecs.
   4. Implement **Automatic Background Codec Optimization** (`AudioOutputHelper.autoOptimizeBluetoothCodec`): MusicMate silently requests highest codec priority (`LDAC 24/96` or `aptX HD`) upon Bluetooth connection without requiring manual dialog button presses.
   5. Tapping the Step 3 output card in the Music Center directly opens Android's native Media Output panel or Bluetooth settings with zero modal dialog friction.
@@ -304,7 +304,7 @@ MusicMate houses a comprehensive audio tagging subsystem designed to protect fil
   4. Local device playback required clear architectural separation and documentation between phone speaker routing and bit-perfect USB DAC output.
 - **Decision:**
   1. **Triple Playback Domain Architecture:**
-     - **Local Device (Internal ExoPlayer):** Primary engine with 32-bit Float PCM output (`ENCODING_PCM_FLOAT`), zero-copy stereo VU meter telemetry (`AudioLevelProcessor`), ReplayGain 2.0 leveling, and native gapless preloading.
+     - **Local Device (Internal ExoPlayer):** Primary engine with auto-negotiated PCM output (integer PCM by default; float output is not forced), zero-copy stereo VU meter telemetry (`AudioLevelProcessor`), ReplayGain 2.0 leveling, and native gapless preloading.
      - **Network Streamer (DLNA/UPnP Dual Modes):** MusicMate operates both as an integrated controller + server (Mode A: DMS + DMC with `SetNextAVTransportURI` gapless preloading and safety fallback timers) and as a standalone media server (Mode B: DMS Only browsable by external controllers like BubbleUPnP, mconnect, and WiiM via `ContentDirectory` with RFC 7233 byte-range HTTP streaming and passive `onAccessMediaTrack` collision guards).
      - **External Music Apps (Companion Controller Pattern):** MusicMate acts as a remote companion controller via Android `MediaSession` Binder IPC (`MediaController.getTransportControls()`), observing metadata and state passively.
   2. **One-Time Explicit Handoff vs. IPC Control:**
@@ -340,7 +340,7 @@ The following Architectural Decision Records govern visual design, gestures, dia
 * [`ADR-001`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-001-unconditional-single-tap-to-tag-editor): Unconditional Single-Tap to Tag Editor *(Superseded by ADR-016)*
 * [`ADR-002`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-002-decoupled-menu-definitions): Decoupled Menu Definitions
 * [`ADR-003`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-003-auto-discovery--divided-player-picker): Auto-Discovery & Divided Player Picker
-* [`ADR-004`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-004-3-tab-audiohubbottomsheet): 3-Tab AudioHubBottomSheet
+* [`ADR-004`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-004-3-tab-audiohubbottomsheet): 3-Tab AudioHubBottomSheet *(implemented today as `AudioHubSheet.kt`)*
 * [`ADR-005`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-005-unified-floating-dock): Unified Floating Dock
 * [`ADR-006`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-006-standardized-action-dialog-controls--dual-dismiss-affordance): Standardized Action Dialog Controls & Dual Dismiss Affordance
 * [`ADR-009`](file:///Users/thawee.p/Workspaces/github/musicmate/UI.md#adr-009-song-detail--tag-editor-tagsactivity-viewport-hierarchy--metadata-deduplication): Song Detail / Tag Editor (`TagsActivity`) Viewport Hierarchy & Metadata Deduplication

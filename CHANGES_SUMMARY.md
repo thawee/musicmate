@@ -85,12 +85,12 @@ cd /Users/thawee.p/Workspaces/github/musicmate
 
 ## ✅ **Production Ready**
 
-HttpCore is now officially **"Production Grade"** and ships alongside the other actively maintained engines:
-- ✅ SonicNIO (Default · Balanced/Optimized)
-- ✅ CoreHTTP (Ultra-Low Memory)
+HttpCore is now officially **"Production Grade"**, is the **default engine**, and ships alongside the other actively maintained engines:
+- ✅ **CoreHTTP (Default · Ultra-Low Memory)** — the default when no engine preference is set
+- ✅ SonicNIO (Balanced / Zero-Copy `transferTo`)
 - ✅ Netty (High Throughput / Scalability)
 
-The Jetty 12 and Undertow engines remain buildable but are **archived** (no further updates).
+The Jetty 12 and Undertow engines remain on disk but are **archived** and are no longer listed in `settings.gradle`, so they are not compiled into the app.
 
 **Best use case for HttpCore**: Ultra-low memory constrained devices where ~64 KB/connection is critical.
 

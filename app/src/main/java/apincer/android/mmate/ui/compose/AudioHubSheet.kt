@@ -3,6 +3,7 @@ package apincer.android.mmate.ui.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -18,6 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,6 +67,10 @@ fun AudioHubSheet(
     onOpenUrlClicked: () -> Unit,
     onQrCodeClicked: () -> Unit,
     onOpenFullscreen: () -> Unit = {},
+    onTabChanged: (Int) -> Unit = {},
+    showGestureHints: Boolean = true,
+    trackArtwork: (@Composable (Track) -> Unit)? = null,
+    renderAsModal: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -74,7 +83,7 @@ fun AudioHubSheet(
 
     // Save sticky tab selection
     LaunchedEffect(pagerState.currentPage) {
-        MainScaffoldState.get().audioHubInitialTab.intValue = pagerState.currentPage
+        onTabChanged(pagerState.currentPage)
     }
 
     // Dynamic Tab State
@@ -86,22 +95,11 @@ fun AudioHubSheet(
     val isDlnaCastActive = target.contains("DLNA", ignoreCase = true) || target.contains("Renderer", ignoreCase = true) || target.contains("Streamer", ignoreCase = true)
     val castIconTint = if (isDlnaCastActive) Color(0xFFFFC107) else Color.White
 
-    ModalBottomSheet(
+    AudioHubContainer(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), // DESIGN.md §8C: 24dp top corner radius
-        containerColor = Color(0xFF121212),
-        scrimColor = Color.Black.copy(alpha = 0.65f),
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .padding(top = 10.dp, bottom = 6.dp)
-                    .size(width = 40.dp, height = 4.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x4DFFFFFF))
-            )
-        },
-        modifier = modifier.fillMaxWidth()
+        renderAsModal = renderAsModal,
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier
@@ -125,7 +123,7 @@ fun AudioHubSheet(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Music Center",
+                        text = stringResource(R.string.music_center_title),
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
@@ -134,10 +132,10 @@ fun AudioHubSheet(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onSelectTargetPlayer, modifier = Modifier.size(40.dp)) {
+                    IconButton(onClick = onSelectTargetPlayer, modifier = Modifier.size(48.dp)) {
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_music_cast_24),
-                            contentDescription = "Select Player",
+                            contentDescription = stringResource(R.string.cd_select_player),
                             tint = castIconTint,
                             modifier = Modifier.size(20.dp)
                         )
@@ -150,11 +148,11 @@ fun AudioHubSheet(
                                 onOpenFullscreen()
                             }
                         },
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_fullscreen_24),
-                            contentDescription = "Studio Console Fullscreen",
+                            contentDescription = stringResource(R.string.cd_open_studio_console),
                             tint = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.size(20.dp)
                         )
@@ -166,11 +164,11 @@ fun AudioHubSheet(
                                 onDismissRequest()
                             }
                         },
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_round_keyboard_arrow_down_24),
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close_music_center),
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
@@ -183,10 +181,10 @@ fun AudioHubSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 18.dp, vertical = 4.dp)
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
                     .background(Color(0xFF161616))
-                    .border(0.75.dp, Color(0x24FFFFFF), RoundedCornerShape(20.dp))
+                    .border(0.75.dp, Color(0x24FFFFFF), RoundedCornerShape(24.dp))
                     .padding(3.dp)
             ) {
                 val tabWidth = maxWidth / 3
@@ -224,12 +222,13 @@ fun AudioHubSheet(
                 Row(modifier = Modifier.fillMaxSize()) {
                     // Tab 0: Playback
                     val isPlaybackSelected = kotlin.math.abs(pageFraction - 0f) < 0.5f
+                    val playbackLabel = stringResource(R.string.music_center_tab_playback)
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(17.dp))
-                            .clickable {
+                            .selectable(selected = isPlaybackSelected, role = Role.Tab) {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(0)
                                 }
@@ -237,7 +236,7 @@ fun AudioHubSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Playback",
+                            text = playbackLabel,
                             color = if (isPlaybackSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
                             fontSize = 12.5.sp,
                             fontWeight = if (isPlaybackSelected) FontWeight.Bold else FontWeight.Medium,
@@ -247,12 +246,20 @@ fun AudioHubSheet(
 
                     // Tab 1: Queue (with Monospace Count Pill)
                     val isQueueSelected = kotlin.math.abs(pageFraction - 1f) < 0.5f
+                    val queueLabel = if (queueCount == 1) {
+                        stringResource(R.string.music_center_tab_queue_count_one)
+                    } else if (queueCount > 1) {
+                        stringResource(R.string.music_center_tab_queue_count, queueCount)
+                    } else {
+                        stringResource(R.string.music_center_tab_queue)
+                    }
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(17.dp))
-                            .clickable {
+                            .semantics { contentDescription = queueLabel }
+                            .selectable(selected = isQueueSelected, role = Role.Tab) {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(1)
                                 }
@@ -264,7 +271,7 @@ fun AudioHubSheet(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "Queue",
+                                text = stringResource(R.string.music_center_tab_queue),
                                 color = if (isQueueSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
                                 fontSize = 12.5.sp,
                                 fontWeight = if (isQueueSelected) FontWeight.Bold else FontWeight.Medium,
@@ -294,12 +301,18 @@ fun AudioHubSheet(
 
                     // Tab 2: Server (with Emerald Jewel LED)
                     val isServerSelected = kotlin.math.abs(pageFraction - 2f) < 0.5f
+                    val serverLabel = if (isServerActive) {
+                        stringResource(R.string.music_center_tab_server_running)
+                    } else {
+                        stringResource(R.string.music_center_tab_server)
+                    }
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(17.dp))
-                            .clickable {
+                            .semantics { contentDescription = serverLabel }
+                            .selectable(selected = isServerSelected, role = Role.Tab) {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(2)
                                 }
@@ -311,7 +324,7 @@ fun AudioHubSheet(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "Server",
+                                text = stringResource(R.string.music_center_tab_server),
                                 color = if (isServerSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
                                 fontSize = 12.5.sp,
                                 fontWeight = if (isServerSelected) FontWeight.Bold else FontWeight.Medium,
@@ -365,7 +378,8 @@ fun AudioHubSheet(
                             onVolumeChanged = onVolumeChanged,
                             onSleepTimerSelected = onSleepTimerSelected,
                             onTrackClicked = onTrackClicked,
-                            onSelectTargetPlayer = onSelectTargetPlayer
+                            onSelectTargetPlayer = onSelectTargetPlayer,
+                            trackArtwork = trackArtwork
                         )
                         1 -> QueuePage(
                             state = queueState,
@@ -374,7 +388,9 @@ fun AudioHubSheet(
                             onClearQueue = onQueueClear,
                             onJumpToPlaying = onQueueJumpToPlaying,
                             onBrowseLibrary = onQueueBrowseLibrary,
-                            onMoveTrack = onQueueTrackMoved
+                            onMoveTrack = onQueueTrackMoved,
+                            showGestureHints = showGestureHints,
+                            trackArtwork = trackArtwork
                         )
                         2 -> MediaServerPage(
                             state = mediaServerState,
@@ -386,6 +402,61 @@ fun AudioHubSheet(
                             onQrCodeClicked = onQrCodeClicked
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AudioHubContainer(
+    onDismissRequest: () -> Unit,
+    sheetState: SheetState,
+    renderAsModal: Boolean,
+    modifier: Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val sheetModifier = modifier
+        .widthIn(max = 840.dp)
+        .fillMaxWidth()
+    val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    val dragHandle: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier
+                .padding(top = 10.dp, bottom = 6.dp)
+                .size(width = 40.dp, height = 4.dp)
+                .clip(CircleShape)
+                .background(Color(0x4DFFFFFF))
+        )
+    }
+
+    if (renderAsModal) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = sheetState,
+            shape = sheetShape,
+            containerColor = Color(0xFF121212),
+            scrimColor = Color.Black.copy(alpha = 0.65f),
+            dragHandle = dragHandle,
+            modifier = sheetModifier,
+            content = content
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.65f)),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                shape = sheetShape,
+                color = Color(0xFF121212),
+                modifier = sheetModifier
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    dragHandle()
+                    content()
                 }
             }
         }

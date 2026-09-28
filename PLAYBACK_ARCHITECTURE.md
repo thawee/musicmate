@@ -12,7 +12,7 @@ MusicMate implements a multi-backend **Strategy Pattern** with a central foregro
                         ┌──────────────────────────────────────────────────┐
                         │                     UI Layer                     │
                         │  ┌─────────────────┐   ┌──────────────────────┐  │
-                        │  │  MainActivity   │   │ AudioHubBottomSheet  │  │
+                        │  │  MainActivity   │   │  AudioHubSheet.kt    │  │
                         │  │  Floating Dock  │   │ 3-Tab Music Center   │  │
                         │  │  WebUI Remote   │   │ (Playing/Queue/Serv) │  │
                         │  └────────┬────────┘   └──────────┬───────────┘  │
@@ -96,7 +96,7 @@ Unified event bus bridging native ExoPlayer, third-party MediaSessions, and remo
 ### High-Resolution AudioTrack & ExoPlayer Setup
 MusicMate's internal player leverages Media3 ExoPlayer configured for hardware audio reproduction:
 
-1. **Auto-Negotiated Integer PCM:** Configured with standard `ExoPlayer.Builder(context)` to automatically negotiate bit-perfect 16-bit and 24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) with Android's Bluetooth A2DP audio HAL (`a2dp.default.so`) and connected USB DACs, completely avoiding float quantization distortion.
+1. **Auto-Negotiated Integer PCM:** Built with a custom `DefaultRenderersFactory` whose only purpose is to override `buildAudioSink` and inject `AudioLevelProcessor` (the VU-meter tap) into `DefaultAudioSink`. ExoPlayer's own `enableFloatOutput` / `enableAudioTrackPlaybackParams` arguments are forwarded **unchanged**, so the player auto-negotiates bit-perfect 16-bit and 24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) with Android's Bluetooth A2DP audio HAL (`a2dp.default.so`) and connected USB DACs, avoiding float quantization distortion. Float output is never forced — see `tasks/lessons.md` §"Never force 32-bit Float PCM".
 2. **CPU Wakelock Protection:** Configured with `setWakeMode(C.WAKE_MODE_LOCAL)` to acquire `PowerManager.PARTIAL_WAKE_LOCK` automatically during active playback, preventing Android Doze sleep pauses and buffer underruns during screen-off listening.
 3. **Hardware Disconnect Protection:** Configured with `setHandleAudioBecomingNoisy(true)` to automatically pause playback when headphones, USB DACs, or Bluetooth devices are disconnected.
 4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing across 24-bit/96kHz+ FLAC and DSD files.
@@ -152,7 +152,7 @@ MusicMate enforces strict single-instance uniqueness across the playing queue:
 
 ## 6. Now Playing UI & Audiophile Telemetry
 
-*Path:* `app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java`
+*Path:* `app/src/main/java/apincer/android/mmate/ui/compose/AudioHubSheet.kt` (the former `AudioHubBottomSheet.java` was migrated to Compose and renamed)
 
 ### 1-Line Audio Signal Path Telemetry
 Displays live, full-width audio route information directly on the Now Playing screen:
@@ -288,7 +288,7 @@ MusicMate embeds high-performance HTTP servers (Apache HttpCore 5 and Netty) opt
 | `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
 | `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, ReplayGain volume leveling, and CPU wakelocks. |
 | `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
-| `:app` | [`AudioHubBottomSheet.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/view/AudioHubBottomSheet.java) | 3-tab Music Center container hosting Compose viewports. |
+| `:app` | [`AudioHubSheet.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AudioHubSheet.kt) | 3-tab Music Center container hosting Compose viewports. |
 | `:app` | [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) | Jetpack Compose Now Playing UI, 3D flip Audio Anatomy card with dual-mode telemetry switcher. |
 | `:app` | [`AnalogVUMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AnalogVUMeter.kt) | Pure Compose Canvas ballistic VU meter with dual stereo dials, 3 audiophile themes, and live PCM input. |
 | `:app` | [`ReelToReelTapeDeck.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/ReelToReelTapeDeck.kt) | Pure Compose Canvas vintage reel-to-reel tape deck with differential angular physics and tape counter. |

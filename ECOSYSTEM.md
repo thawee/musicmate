@@ -14,7 +14,7 @@ This is the heart of the system, running as a background service inside the Musi
 -   **Web Server (HTTP Server):**
     -   **Purpose:** Control.
     -   **Function:** Serves a modern web application that acts as the **MusicMate Remote**.
-    -   **Technology:** Pluggable HTTP engine — **SonicNIO** (default), **CoreHTTP** (Apache HttpCore 5), or **Netty 4.2** — selected at compile time via Gradle flavors.
+    -   **Technology:** Pluggable HTTP engine — **CoreHTTP** (Apache HttpCore 5, default), **SonicNIO**, or **Netty 4.2** — selected at **runtime** via the Server Engine setting (not at compile time; there are no Gradle flavors).
 
 #### 2. The Players (The "Endpoints" / DMRs)
 -   These can be any standard DLNA Digital Media Renderer on the network.

@@ -21,7 +21,7 @@
 ## 🚀 Key Features
 
 ### 🎛️ Music Center & Playback Hub
-*   **Dedicated 3-Tab Architecture (`AudioHubBottomSheet`):** Consolidated master bottom sheet with 3 full-height segmented tabs (**`Playback`**, **`Queue`**, and **`Server`**) for instant 1-tap switching between Now Playing artwork, full-height Queue management, and Media Server status.
+*   **Dedicated 3-Tab Architecture (`AudioHubSheet.kt`):** Consolidated master bottom sheet with 3 full-height segmented tabs (**`Playback`**, **`Queue`**, and **`Server`**) for instant 1-tap switching between Now Playing artwork, full-height Queue management, and Media Server status.
 *   **Audio Route Path Telemetry:** Live 3-stage audiophile flow visualization (`Source File` ➔ `Transport Route` ➔ `Target Output`), displaying real-time sample rates, bit depth, transport mode (`MusicMate Server` vs `Local`), and bit-perfect flags.
 *   **Target Player Selector:** Fast top-anchored output target picker for seamless 1-tap renderer switching between local Android apps, DLNA/UPnP streamers, and web browser clients.
 *   **Unified Floating Dock:** Streamlined 20dp radius floating bar combining mini-player marquee playback controls with main library navigation. Its artwork and title open Music Center by touch or screen-reader action.
@@ -82,50 +82,73 @@ Music Mate follows a modular Clean Architecture, implementing a full DLNA stack 
 
 ## 📐 Technical Architecture & Implementation
 
-Music Mate employs a sophisticated **pluggable architecture** that decouples business logic from the network transport, allowing runtime or compile-time selection of the optimal HTTP engine.
+Music Mate employs a sophisticated **pluggable architecture** that decouples business logic from the network transport, allowing runtime selection of the optimal HTTP engine.
 
 ### The Pluggable Server Engine
 
-All engines implement the same `UpnpServer` interface and share consistent behavior:
-- **Dynamic ETags** for efficient caching (SHA-256 hash of file content and size).
-- **Audiophile Headers** (`X-Audio-Sample-Rate`, `X-Audio-Bit-Perfect`, etc.) for renderer metadata.
+A single APK ships all engines. `CompositeWebServer` reflects the engine named in `Constants.PREF_SERVER_ENGINE` (`preference_media_server_engine`) and delegates `initServer` / `stopServer` / `restartServer` to it, so engines can be hot-swapped at runtime without restarting the app.
+
+All engines extend `BaseServer` and implement the `WebServer` SPI (`core/.../server/spi/WebServer.java`), inheriting shared behavior from `BaseServer`:
+- **Dynamic ETags** for efficient caching (SHA-256 of `path + length + lastModified`, truncated to 16 hex chars plus the hex file length).
 - **HTTP/1.1 Compliance** with Range request support, conditional validation, and Keep-Alive optimization.
-- **Zero-Copy Streaming** using `FileChannel.transferTo()` for maximum throughput.
+- **Audiophile Headers** for renderer metadata — see the per-engine table below, as coverage differs by engine.
 
 > **Maintenance policy:** Three engines are actively developed and receive all future improvements.
 > The remaining engines are archived — they build and work, but will not receive new features or bug fixes.
+
+> **Default engine:** `httpcore` (CoreHTTP). Every code path that reads the preference — `CompositeWebServer`, `MainActivity`, `SettingsActivity` — defaults to `"httpcore"` when the preference is unset.
 
 ---
 
 ### ✅ Actively Maintained Engines
 
-#### 🚀 SonicNIO (`server-jupnp` / flavor `nio`) — *Default · Balanced*
-*   **Status:** **Production Grade — Default recommended build.**
-*   **Architecture:** Custom-built, zero-dependency Reactor-pattern NIO engine optimised for Android.
-*   **Strengths:** Minimalist Direct ByteBuffer pooling (< 20 ms GC pauses), adaptive 64 KB chunking, intelligent LruCache for ETags and client profiles.
+All three are listed in `settings.gradle` and built into the shipping APK.
 
-#### ✅ CoreHTTP (`server-jupnp-httpcore` / flavor `httpcore`) — *Ultra-Low Memory*
-*   **Status:** **Production Grade — Best for memory-constrained devices.**
+#### ✅ CoreHTTP (`server-jupnp-httpcore` / engine key `httpcore`) — *Default · Ultra-Low Memory*
+*   **Status:** **Production Grade — this is the default engine.**
+*   **Architecture:** Apache HttpCore 5.5-beta2 (`H2ServerBootstrap`), 2 IO threads. Android compatibility requires shadowed `org.apache.hc.core5.util.ReflectionUtils` and `SingleCoreIOReactor` classes (the `patchHttpCore` Gradle task excludes the stock versions from `httpcore5-android.jar`).
 *   **Strengths:**
     *   ✅ Full WebSocket support (RFC 6455)
-    *   ✅ Zero-copy streaming via `FileChannel.transferTo()`
-    *   ✅ ~64 KB/connection memory footprint (95 % reduction vs. 256 MB)
+    *   ✅ ~64 KB/connection memory footprint via pooled direct `ByteBuffer`s (`MAX_BUFFER_POOL = 2× cores`)
     *   ✅ < 30 ms GC pauses with buffer pooling
-    *   ✅ DSCP `0x18` Low Delay QoS tagging
+    *   ✅ `X-Audio-*` audiophile headers including `X-Audio-Bit-Perfect`
+    *   ✅ `setTrafficClass(0x10)` (DSCP Low Delay)
+*   **Streaming:** 64 KB direct-buffer reads in `PartialFileProducer` (see note below).
 
-#### ✅ Netty (`server-jupnp-netty` / flavor `netty`) — *High Throughput*
+#### 🚀 SonicNIO (`server-jupnp` / engine key `nio`) — *Balanced*
+*   **Status:** **Production Grade.**
+*   **Architecture:** Custom-built, zero-dependency Reactor-pattern NIO engine optimised for Android (`NioHttpServer`, single selector + worker pool).
+*   **Strengths:** Minimalist Direct ByteBuffer pooling (< 20 ms GC pauses), 256 KB streaming chunks, intelligent LruCache for ETags and client profiles, `IP_TOS = 0x18` (DSCP Low Delay | High Throughput), 512 KB `SO_SNDBUF`.
+*   **Header coverage note:** SonicNIO emits the DLNA `transferMode.dlna.org` and `contentFeatures.dlna.org` headers but **not** the `X-Audio-*` set. Renderers relying on `X-Audio-Sample-Rate` / `X-Audio-Bit-Perfect` should use CoreHTTP or Netty.
+
+#### ✅ Netty (`server-jupnp-netty` / engine key `netty`) — *High Throughput*
 *   **Status:** **Production Grade — Best for high-concurrency / scalability.**
-*   **Strengths:** Optimised 256 KB/512 KB watermarks, `0x18` DSCP tagging for low-jitter transport, Netty 4.2 event-loop model.
+*   **Strengths:** Netty 4.2.18 event-loop model (1 boss / 2 worker + a 4-thread logic executor), zero-copy `DefaultFileRegion` (with `ChunkedFile` fallback), 256 KB low / 512 KB high write-buffer watermarks, `IP_TOS = 0x18` low-jitter transport, and a Netty-only REST bridge accepting the same JSON commands as the WebSocket API.
+*   **Header coverage note:** Netty emits `X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, and `X-Audio-Format`, but **not** `X-Audio-Bit-Perfect`.
 
 ---
 
-### 🗄 Archived Engines *(build but not updated)*
+### ⚠️ Note on the "Zero-Copy" Claim
 
-#### Jetty 12 (`server-jupnp-jetty` / flavor `jetty`)
+Only two engines actually use `FileChannel.transferTo()` / OS-level file-region transfer:
+
+| Engine | Actual streaming path |
+|:---|:---|
+| **SonicNIO** | ✅ `FileChannel.transferTo()` — true zero-copy, 256 KB chunks |
+| **Netty** | ✅ `DefaultFileRegion` — true zero-copy (`ChunkedFile` when TLS is in play) |
+| **CoreHTTP** | ⚠️ **Not** zero-copy. `PartialFileProducer` reads the file into a 64 KB direct `ByteBuffer`, then writes it to the channel, rewinding the file position on partial writes. This is deliberate and still efficient, but its own Javadoc ("Zero-copy file streaming via FileChannel.transferTo()") is inaccurate. |
+
+---
+
+### 🗄 Archived Engines *(not built — excluded from `settings.gradle`)*
+
+The following engine modules remain on disk but are **not** included in `settings.gradle` and are therefore not compiled into the app.
+
+#### Jetty 12 (`server-jupnp-jetty`)
 *   **Status:** **Archived — no further updates.**
 *   Previously noted for HTTP/2, WebSocket and industrial-grade Range request handling.
 
-#### Undertow 2.4 (`server-jupnp-undertow` / flavor `undertow`)
+#### Undertow 2.4 (`server-jupnp-undertow`)
 *   **Status:** **Archived — no further updates.**
 *   Previously the highest-throughput option; enterprise-grade async I/O with DSCP QoS.
 
@@ -137,22 +160,25 @@ All engines implement the same `UpnpServer` interface and share consistent behav
 
 | Feature | SonicNIO | CoreHTTP | Netty |
 |:---|:---|:---|:---|
-| **Recommended Use** | Default / Balanced | Ultra-Low Memory | High Throughput |
-| **Zero-Copy** | ✅ Optimised | ✅ Full | ✅ Yes |
-| **Network Priority (DSCP)** | ✅ 0x18 | ✅ 0x18 | ✅ 0x18 |
-| **Memory footprint** | **~8 KB / conn** | **~64 KB / conn** | 256–512 MB |
+| **Engine key** | `nio` | `httpcore` **(default)** | `netty` |
+| **Recommended Use** | Balanced | Default / Ultra-Low Memory | High Throughput |
+| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` |
+| **Network Priority (DSCP)** | ✅ `0x18` | ✅ `0x10` (Low Delay) | ✅ `0x18` |
+| **Memory footprint** | **~8 KB / conn** | **~64 KB / conn** | Pooled, watermarks 256 KB / 512 KB |
 | **GC Pause Duration** | **< 20 ms** | **< 30 ms** | < 150 ms |
 | **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket RFC 6455** | ✅ | ✅ | ⚠️ |
+| **WebSocket RFC 6455** | ✅ | ✅ | ✅ |
+| **`X-Audio-*` headers** | ❌ | ✅ (incl. Bit-Perfect) | ⚠️ (no Bit-Perfect) |
 | **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 | **Actively Maintained** | ✅ | ✅ | ✅ |
 
-### Archived (reference only)
+### Archived (reference only — not built)
 
 | Feature | Jetty 12 | Undertow 2.4 |
 |:---|:---|:---|
 | **Status** | 🗄 Archived | 🗄 Archived |
-| **Zero-Copy** | ✅ Yes | ✅ Optimised |
+| **In `settings.gradle`** | ❌ | ❌ |
+| **Zero-Copy** | ✅ Yes | ✅ Yes |
 | **Memory footprint** | 128–256 MB | 256–300 MB |
 
 ---
@@ -163,9 +189,9 @@ All engines implement the same `UpnpServer` interface and share consistent behav
 *   **Async/Reactive:** RxJava 3
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
 *   **Database:** Room (Google Jetpack)
-*   **Active Engines:** Apache HttpCore 5.4.2 (CoreHTTP), Netty 4.2, **Custom SonicNIO Reactor**
-*   **Archived Engines:** Jetty 12, Undertow 2.4 *(build only — no further updates)*
-*   **Library:** jUPnP (fork of Cling), JAudiotagger, FFmpeg
+*   **Active Engines:** Apache HttpCore 5.5-beta2 (CoreHTTP, default), Netty 4.2.18, **Custom SonicNIO Reactor**
+*   **Archived Engines:** Jetty 12, Undertow 2.4 *(on disk only — excluded from `settings.gradle`)*
+*   **Library:** jUPnP 3.0.5 (fork of Cling), JAudiotagger, FFmpeg
 
 ---
 

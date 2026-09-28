@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +28,7 @@ fun PermissionScreen(
     onGrantPermissionsClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val grantPermissionsDescription = stringResource(R.string.cd_grant_required_permissions)
 
     Surface(
         color = Color(0xFF0A0A0E),
@@ -66,7 +70,7 @@ fun PermissionScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Permissions Required",
+                    text = stringResource(R.string.permission_title),
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
@@ -76,7 +80,7 @@ fun PermissionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "MusicMate needs local storage and audio permissions to index and tag your audiophile collection.",
+                    text = stringResource(R.string.permission_intro),
                     color = Color(0xFFAAAAAA),
                     fontSize = 13.5.sp,
                     textAlign = TextAlign.Center,
@@ -89,18 +93,18 @@ fun PermissionScreen(
                 // Permission Cards
                 PermissionItem(
                     iconRes = R.drawable.ic_round_audio_file_24,
-                    title = "Access Audio Media",
-                    requiredText = "Required",
-                    desc = "Read lossless and high-resolution music files on your device."
+                    title = stringResource(R.string.permission_audio_title),
+                    requiredText = stringResource(R.string.permission_required),
+                    desc = stringResource(R.string.permission_audio_description)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 PermissionItem(
                     iconRes = R.drawable.round_sd_storage_24,
-                    title = "Full Storage Access",
-                    requiredText = "Required",
-                    desc = "Manage tags, organize directories, and write lossless cover art."
+                    title = stringResource(R.string.permission_storage_title),
+                    requiredText = stringResource(R.string.permission_required),
+                    desc = stringResource(R.string.permission_storage_description)
                 )
             }
 
@@ -116,9 +120,12 @@ fun PermissionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
+                    .semantics {
+                        contentDescription = grantPermissionsDescription
+                    }
             ) {
                 Text(
-                    text = "Grant Permissions",
+                    text = stringResource(R.string.permission_grant),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )

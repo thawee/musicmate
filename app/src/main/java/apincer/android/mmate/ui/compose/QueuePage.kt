@@ -15,6 +15,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,8 +54,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -94,7 +101,9 @@ fun QueuePage(
     onClearQueue: () -> Unit,
     onJumpToPlaying: () -> Unit,
     onBrowseLibrary: () -> Unit,
-    onMoveTrack: (Int, Int) -> Unit = { _, _ -> }
+    onMoveTrack: (Int, Int) -> Unit = { _, _ -> },
+    showGestureHints: Boolean = true,
+    trackArtwork: (@Composable (Track) -> Unit)? = null
 ) {
     val manager = state.manager ?: MainScaffoldState.get().queueState.manager
     var source by remember(manager) { mutableStateOf(manager?.source ?: QueueManager.Source.MANUAL) }
@@ -356,7 +365,7 @@ fun QueuePage(
         }
 
         // Gesture discovery hints for queue
-        if (state.tracks.isNotEmpty()) {
+        if (showGestureHints && state.tracks.isNotEmpty()) {
             GestureHints.GestureHintBanner(
                 hints = listOf(
                     GestureHints.HintType.SWIPE_QUEUE,
@@ -454,7 +463,9 @@ fun QueuePage(
                                 isSmart = isSmart,
                                 isNext = isNext,
                                 onClick = { onTrackClicked(track) },
+                                onRemove = { onTrackRemoved(track, index) },
                                 totalCount = state.tracks.size,
+                                artwork = trackArtwork,
                                 onMoveTrack = { from, to ->
                                     state.moveTrack(from, to)
                                     onMoveTrack(from, to)
@@ -483,6 +494,7 @@ private fun CompactQueueHeader(
     canClear: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
+    val showDuration = UiLayoutPolicy.showQueueDuration(LocalConfiguration.current.screenWidthDp)
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.35f,
@@ -510,6 +522,7 @@ private fun CompactQueueHeader(
     ) {
         // Left: LED Dot + Title + Count/Duration + (Slots & Refresh)
         Row(
+            modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -531,9 +544,10 @@ private fun CompactQueueHeader(
                 letterSpacing = (-0.2).sp
             )
             Text(
-                text = "• $queueSize ${if (durationText.isNotEmpty()) "• $durationText" else ""}",
+                text = "• $queueSize ${if (showDuration && durationText.isNotEmpty()) "• $durationText" else ""}",
                 color = Color(0xFF9E9E9E),
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1
             )
             if (source != QueueManager.Source.MANUAL) {
                 Box(
@@ -557,7 +571,7 @@ private fun CompactQueueHeader(
                         onRefreshClick()
                     },
                     enabled = !refreshing,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_refresh_24),
@@ -576,7 +590,7 @@ private fun CompactQueueHeader(
         ) {
             IconButton(
                 onClick = onOpenPlaylistPicker,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
@@ -587,7 +601,7 @@ private fun CompactQueueHeader(
             }
             IconButton(
                 onClick = onJumpToPlaying,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_center_focus_strong_black_24dp),
@@ -599,7 +613,7 @@ private fun CompactQueueHeader(
             IconButton(
                 onClick = onClearQueue,
                 enabled = canClear,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.rounded_delete_24),
@@ -768,13 +782,19 @@ fun QueueItem(
     isSmart: Boolean = false,
     isNext: Boolean = false,
     onClick: () -> Unit,
+    onRemove: () -> Unit = {},
     totalCount: Int = 0,
+    artwork: (@Composable (Track) -> Unit)? = null,
     onMoveTrack: ((Int, Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val artist = track.artist?.takeIf { it.isNotEmpty() } ?: track.album ?: "Unknown Artist"
     val durationStr = if (track.audioDuration > 0) StringUtils.formatDuration(track.audioDuration, false) else ""
+    val trackTitle = track.title?.takeIf { it.isNotBlank() } ?: "Unknown Title"
+    val removeLabel = stringResource(R.string.action_remove_queue_track, trackTitle)
+    val moveUpLabel = stringResource(R.string.action_move_queue_track_up, trackTitle)
+    val moveDownLabel = stringResource(R.string.action_move_queue_track_down, trackTitle)
 
     val rowBg = if (isPlaying) Color(0x22FFD700) else Color.Transparent
     val borderModifier = if (isPlaying) {
@@ -788,6 +808,26 @@ fun QueueItem(
             .clip(RoundedCornerShape(10.dp))
             .background(rowBg)
             .then(borderModifier)
+            .semantics {
+                customActions = buildList {
+                    add(CustomAccessibilityAction(removeLabel) {
+                        onRemove()
+                        true
+                    })
+                    if (index > 0 && onMoveTrack != null) {
+                        add(CustomAccessibilityAction(moveUpLabel) {
+                            onMoveTrack(index, index - 1)
+                            true
+                        })
+                    }
+                    if (index < totalCount - 1 && onMoveTrack != null) {
+                        add(CustomAccessibilityAction(moveDownLabel) {
+                            onMoveTrack(index, index + 1)
+                            true
+                        })
+                    }
+                }
+            }
             .clickable(onClick = onClick)
             .padding(vertical = 5.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -819,12 +859,16 @@ fun QueueItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = CoverartFetcher.builder(context, track).data(track).build(),
-                contentDescription = track.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (artwork != null) {
+                artwork(track)
+            } else {
+                AsyncImage(
+                    model = CoverartFetcher.builder(context, track).data(track).build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             if (isPlaying) {
                 Box(
                     modifier = Modifier
@@ -848,7 +892,7 @@ fun QueueItem(
                 .padding(end = 6.dp)
         ) {
             Text(
-                text = track.title ?: "Unknown Title",
+                text = trackTitle,
                 color = if (isPlaying) Color(0xFFFFD700) else Color.White,
                 fontSize = 13.sp,
                 lineHeight = 16.sp,
@@ -900,11 +944,11 @@ fun QueueItem(
         var dragAccumulatedY by remember { mutableStateOf(0f) }
         Icon(
             painter = painterResource(id = R.drawable.rounded_drag_indicator_24),
-            contentDescription = "Drag to reorder",
+            contentDescription = null,
             tint = Color(0xFF757575),
             modifier = Modifier
-                .size(32.dp)
-                .padding(4.dp)
+                .size(48.dp)
+                .padding(12.dp)
                 .pointerInput(index, totalCount) {
                     detectVerticalDragGestures(
                         onDragStart = { dragAccumulatedY = 0f },
@@ -1004,44 +1048,124 @@ private fun QueueEmptyState(
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        QueueEmptyActions(
+            source = source,
+            onBrowseLibrary = onBrowseLibrary,
+            onSelectDiscoveries = { onSelectSource(QueueManager.Source.UNPLAYED) },
+            onOpenPlaylistPicker = onOpenPlaylistPicker
+        )
+    }
+}
+
+@Composable
+private fun QueueEmptyActions(
+    source: QueueManager.Source,
+    onBrowseLibrary: () -> Unit,
+    onSelectDiscoveries: () -> Unit,
+    onOpenPlaylistPicker: () -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val fontScale = LocalDensity.current.fontScale
+    val stackActions = UiLayoutPolicy.stackChoiceControls(
+        windowWidthDp = configuration.screenWidthDp,
+        fontScale = fontScale
+    )
+
+    if (stackActions) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            QueueEmptyActionButton(
+                label = "Playlists",
                 onClick = onOpenPlaylistPicker,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0x22BA68C8),
-                    contentColor = Color(0xFFCE93D8)
-                ),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color(0x55BA68C8))
-            ) {
-                Text("📋 Playlists", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
+                containerColor = Color(0x22BA68C8),
+                contentColor = Color(0xFFCE93D8),
+                borderColor = Color(0x55BA68C8),
+                modifier = Modifier.fillMaxWidth()
+            )
             if (source == QueueManager.Source.MANUAL) {
-                Button(
-                    onClick = { onSelectSource(QueueManager.Source.UNPLAYED) },
-                    colors = ButtonDefaults.buttonColors(
+                QueueEmptyActionButton(
+                    label = "Try Discoveries",
+                    onClick = onSelectDiscoveries,
+                    containerColor = Color(0x2200E676),
+                    contentColor = Color(0xFF00E676),
+                    borderColor = Color(0x5500E676),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            QueueEmptyActionButton(
+                label = "Browse Library",
+                onClick = onBrowseLibrary,
+                containerColor = Color(0xFFFFB300),
+                contentColor = Color.Black,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                QueueEmptyActionButton(
+                    label = "Playlists",
+                    onClick = onOpenPlaylistPicker,
+                    containerColor = Color(0x22BA68C8),
+                    contentColor = Color(0xFFCE93D8),
+                    borderColor = Color(0x55BA68C8),
+                    modifier = Modifier.weight(1f)
+                )
+                if (source == QueueManager.Source.MANUAL) {
+                    QueueEmptyActionButton(
+                        label = "Try Discoveries",
+                        onClick = onSelectDiscoveries,
                         containerColor = Color(0x2200E676),
-                        contentColor = Color(0xFF00E676)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0x5500E676))
-                ) {
-                    Text("✨ Try Discoveries", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        contentColor = Color(0xFF00E676),
+                        borderColor = Color(0x5500E676),
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
-            Button(
+            QueueEmptyActionButton(
+                label = "Browse Library",
                 onClick = onBrowseLibrary,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFB300),
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Browse Library", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
+                containerColor = Color(0xFFFFB300),
+                contentColor = Color.Black,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
+    }
+}
+
+@Composable
+private fun QueueEmptyActionButton(
+    label: String,
+    onClick: () -> Unit,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    borderColor: Color? = null
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = 48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        shape = RoundedCornerShape(12.dp),
+        border = borderColor?.let { BorderStroke(1.dp, it) }
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
     }
 }
