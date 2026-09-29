@@ -182,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
             updateVolumeState();
             syncQueueState();
+            refreshSystemAccessState();
         }
 
         @Override
@@ -415,6 +416,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Initialize Java-owned data callbacks before Compose can dispatch a restored route.
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         setupSelectionTracker();
+        refreshSystemAccessState();
 
         // Setup back press handler
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
@@ -582,6 +584,17 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     protected void onResume() {
         super.onResume();
+        refreshSystemAccessState();
+    }
+
+    private void refreshSystemAccessState() {
+        boolean hasStorageAccess = PermissionUtils.checkFullStorageAccessPermissions(this);
+        boolean hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this);
+        MainScaffoldState.updateSystemAccess(hasStorageAccess, hasExternalPlayerAccess);
+        if (isPlaybackServiceBound && playbackService != null) {
+            playbackService.refreshPlayerDiscovery();
+            updatePlayerPickerState();
+        }
     }
 
     @Override
@@ -1112,6 +1125,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
+    public void onEnableExternalPlayerAccess() {
+        startActivity(PermissionActivity.createIntent(
+                this,
+                apincer.android.mmate.ui.compose.SystemAccessCapability.EXTERNAL_PLAYERS));
+    }
+
+    @Override
     public void onAudioHubSleepTimerSelected(long minutes, boolean endOfTrack) {
         if (playbackService != null) {
             playbackService.setSleepTimer(minutes, endOfTrack);
@@ -1298,12 +1318,14 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             startActivity(intent);
             return true;
         } else if (item.getItemId() == R.id.menu_files_permission) {
-            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            startActivity(intent);
+            startActivity(PermissionActivity.createIntent(
+                    this,
+                    apincer.android.mmate.ui.compose.SystemAccessCapability.STORAGE));
             return true;
         } else if (item.getItemId() == R.id.menu_notification_access) {
-            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            startActivity(intent);
+            startActivity(PermissionActivity.createIntent(
+                    this,
+                    apincer.android.mmate.ui.compose.SystemAccessCapability.EXTERNAL_PLAYERS));
             return true;
         } else if (item.getItemId() == R.id.menu_about_music_mate) {
             doShowAboutApp();
@@ -1502,8 +1524,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @SuppressLint("SetTextI18n")
     private void doScanDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
-            Intent intent = new Intent(MainActivity.this, PermissionActivity.class);
-            startActivity(intent);
+            startActivity(PermissionActivity.createIntent(
+                    this,
+                    apincer.android.mmate.ui.compose.SystemAccessCapability.STORAGE));
             return;
         }
 

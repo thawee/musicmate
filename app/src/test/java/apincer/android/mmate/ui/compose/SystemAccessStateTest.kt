@@ -34,4 +34,24 @@ class SystemAccessStateTest {
 
         assertEquals(SystemAccessSummary.READY, state.summary)
     }
+
+    @Test
+    fun `listener registration follows access transitions idempotently`() {
+        assertEquals(
+            ExternalPlayerListenerAction.REGISTER,
+            ExternalPlayerAccessPolicy.nextAction(isRegistered = false, hasAccess = true)
+        )
+        assertEquals(
+            ExternalPlayerListenerAction.NONE,
+            ExternalPlayerAccessPolicy.nextAction(isRegistered = true, hasAccess = true)
+        )
+        assertEquals(
+            ExternalPlayerListenerAction.UNREGISTER,
+            ExternalPlayerAccessPolicy.nextAction(isRegistered = true, hasAccess = false)
+        )
+        assertEquals(
+            ExternalPlayerListenerAction.NONE,
+            ExternalPlayerAccessPolicy.nextAction(isRegistered = false, hasAccess = false)
+        )
+    }
 }

@@ -588,6 +588,7 @@ fun MainScaffold(
         PlayerPickerDialog(
             targets = state.playerTargets,
             isScanning = state.isPlayerScanning.value,
+            hasExternalPlayerAccess = state.systemAccess.value.hasExternalPlayerAccess,
             onDismissRequest = { state.showPlayerPickerDialog.value = false },
             onTargetSelected = { target ->
                 callbacks?.onPlayerTargetSelected(target)
@@ -596,6 +597,10 @@ fun MainScaffold(
             onRescanClick = { callbacks?.onRescanTargets() },
             onBluetoothOutputClick = {
                 callbacks?.onOpenSystemAudioOutput()
+                state.showPlayerPickerDialog.value = false
+            },
+            onExternalPlayerAccessClick = {
+                callbacks?.onEnableExternalPlayerAccess()
                 state.showPlayerPickerDialog.value = false
             }
         )

@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,10 +69,12 @@ data class PlayerTargetItem @JvmOverloads constructor(
 fun PlayerPickerDialog(
     targets: List<PlayerTargetItem>,
     isScanning: Boolean,
+    hasExternalPlayerAccess: Boolean,
     onDismissRequest: () -> Unit,
     onTargetSelected: (PlaybackTarget) -> Unit,
     onRescanClick: () -> Unit,
-    onBluetoothOutputClick: () -> Unit
+    onBluetoothOutputClick: () -> Unit,
+    onExternalPlayerAccessClick: () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
@@ -216,6 +219,34 @@ fun PlayerPickerDialog(
                             color = Color(0x99FFFFFF),
                             fontSize = 13.sp
                         )
+                    }
+                }
+
+                if (!hasExternalPlayerAccess) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = Color(0x1AFFB300),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x55FFB300)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onExternalPlayerAccessClick)
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+                            Text(
+                                text = stringResource(R.string.permission_external_player_title),
+                                color = Color(0xFFFFD54F),
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.player_picker_external_access_hint),
+                                color = Color(0xBBFFFFFF),
+                                fontSize = 11.5.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
                     }
                 }
 

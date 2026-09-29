@@ -45,6 +45,8 @@ import javax.inject.Inject;
 
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.PermissionUtils;
+import apincer.android.mmate.ui.compose.ExternalPlayerAccessPolicy;
+import apincer.android.mmate.ui.compose.ExternalPlayerListenerAction;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.AudioStreamCacheManager;
 import apincer.music.core.playback.ExternalAndroidPlayer;
@@ -284,21 +286,49 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                // Log.d(TAG, "Active sessions changed: " + controllers.size());
                 updateAvailableExternalPlayers(controllers);
             };
+    private boolean activeSessionsListenerRegistered = false;
 
     public MusicMateServiceImpl( ) {
     }
 
     private void refreshExternalPlayersSafe() {
-        List<MediaController> controllers = null;
-        if (mediaSessionManager != null && PermissionUtils.isNotificationListenerEnabled(this)) {
-            try {
-                ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
-                controllers = mediaSessionManager.getActiveSessions(notificationListener);
-            } catch (Throwable t) {
-                Log.w(TAG, "Failed to get active media sessions: " + t.getMessage());
-            }
+        syncExternalPlayerAccess();
+    }
+
+    private void syncExternalPlayerAccess() {
+        if (mediaSessionManager == null) {
+            updateAvailableExternalPlayers(null);
+            return;
         }
-        updateAvailableExternalPlayers(controllers);
+
+        boolean hasAccess = PermissionUtils.isNotificationListenerEnabled(this);
+        ExternalPlayerListenerAction action = ExternalPlayerAccessPolicy.nextAction(
+                activeSessionsListenerRegistered,
+                hasAccess);
+        ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
+
+        try {
+            if (action == ExternalPlayerListenerAction.REGISTER) {
+                mediaSessionManager.addOnActiveSessionsChangedListener(
+                        sessionChangeListener,
+                        notificationListener);
+                activeSessionsListenerRegistered = true;
+            } else if (action == ExternalPlayerListenerAction.UNREGISTER) {
+                mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
+                activeSessionsListenerRegistered = false;
+            }
+
+            List<MediaController> controllers = hasAccess
+                    ? mediaSessionManager.getActiveSessions(notificationListener)
+                    : null;
+            updateAvailableExternalPlayers(controllers);
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to synchronize external player access", t);
+            if (!hasAccess) {
+                activeSessionsListenerRegistered = false;
+            }
+            updateAvailableExternalPlayers(null);
+        }
     }
 
     private PlaybackTarget getActivePlayer() {
@@ -458,21 +488,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             notificationProvider.setSmallIcon(R.drawable.ic_notification_default);
             setMediaNotificationProvider(notificationProvider);
         }
-        ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
-        if (PermissionUtils.isNotificationListenerEnabled(this)) {
-            try {
-                List<MediaController> controllers = mediaSessionManager.getActiveSessions(notificationListener);
-                // initial with external player
-                updateAvailableExternalPlayers(controllers);
-                mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
-            } catch (Throwable e) {
-                Log.e(TAG, "Failed to query active media sessions", e);
-                updateAvailableExternalPlayers(null);
-            }
-        } else {
-            Log.w(TAG, "Notification listener permission not granted.");
-            updateAvailableExternalPlayers(null);
-        }
+        syncExternalPlayerAccess();
 
         // Load queue from database
         if(queueManager != null) {
@@ -646,8 +662,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         AudioOutputHelper.cleanupBluetooth(getApplicationContext());
 
-        if (mediaSessionManager != null) {
+        if (mediaSessionManager != null && activeSessionsListenerRegistered) {
             mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
+            activeSessionsListenerRegistered = false;
         }
         if (androidPlayer != null) {
             androidPlayer.release();

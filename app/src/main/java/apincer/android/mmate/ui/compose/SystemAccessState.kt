@@ -12,6 +12,22 @@ enum class SystemAccessCapability {
     EXTERNAL_PLAYERS
 }
 
+enum class ExternalPlayerListenerAction {
+    REGISTER,
+    UNREGISTER,
+    NONE
+}
+
+object ExternalPlayerAccessPolicy {
+    @JvmStatic
+    fun nextAction(isRegistered: Boolean, hasAccess: Boolean): ExternalPlayerListenerAction =
+        when {
+            hasAccess && !isRegistered -> ExternalPlayerListenerAction.REGISTER
+            !hasAccess && isRegistered -> ExternalPlayerListenerAction.UNREGISTER
+            else -> ExternalPlayerListenerAction.NONE
+        }
+}
+
 data class SystemAccessState(
     val hasFullStorageAccess: Boolean = false,
     val hasExternalPlayerAccess: Boolean = false

@@ -27,6 +27,7 @@ interface MainScaffoldCallbacks {
     fun onPlayerTargetSelected(target: PlaybackTarget)
     fun onRescanTargets()
     fun onOpenSystemAudioOutput()
+    fun onEnableExternalPlayerAccess()
     fun onAudioHubPlayPause()
     fun onAudioHubNext()
     fun onAudioHubPrevious()

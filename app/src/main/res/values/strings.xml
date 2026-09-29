@@ -551,6 +551,7 @@
     <string name="action_open_storage_settings">Open storage settings</string>
     <string name="action_enable_external_player_access">Enable external player access</string>
     <string name="system_access_settings_unavailable">Android settings are unavailable on this device.</string>
+    <string name="player_picker_external_access_hint">Optional: enable access to discover and control playback from installed music apps.</string>
     <string name="about_musicmate_title">About MusicMate</string>
     <string name="about_share_library">Share Library Snapshot</string>
     <string name="about_rate_google_play">Rate on Google Play</string>
