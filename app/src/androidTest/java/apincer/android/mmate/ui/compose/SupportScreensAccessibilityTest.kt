@@ -52,13 +52,24 @@ class SupportScreensAccessibilityTest {
     @Test
     fun permission_explainsRequirementsAndNamesRecoveryAction() {
         composeRule.setContent {
-            MusicMateTheme { PermissionScreen(onGrantPermissionsClick = {}) }
+            MusicMateTheme {
+                PermissionScreen(
+                    systemAccess = SystemAccessState(
+                        hasFullStorageAccess = false,
+                        hasExternalPlayerAccess = false
+                    ),
+                    focusedCapability = SystemAccessCapability.STORAGE,
+                    onStorageAccessClick = {},
+                    onExternalPlayerAccessClick = {}
+                )
+            }
         }
 
-        composeRule.onNodeWithText("Permissions Required").assertExists()
-        composeRule.onNodeWithText("Access Audio Media").assertExists()
+        composeRule.onNodeWithText("System Access").assertExists()
         composeRule.onNodeWithText("Full Storage Access").assertExists()
-        composeRule.onNodeWithContentDescription("Grant required permissions").assertHasClickAction()
+        composeRule.onNodeWithText("External Player Access").assertExists()
+        composeRule.onNodeWithText("Open storage settings").assertHasClickAction()
+        composeRule.onNodeWithText("Enable external player access").assertHasClickAction()
         runAccessibilityChecks()
     }
 

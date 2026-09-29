@@ -17,12 +17,6 @@ import apincer.android.mmate.service.MediaNotificationListener;
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
 
-    public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.READ_MEDIA_AUDIO};
-
     public static boolean isNotificationListenerEnabled(Context context) {
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         ComponentName listener = new ComponentName(context, MediaNotificationListener.class);

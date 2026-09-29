@@ -6,6 +6,12 @@ enum class SystemAccessSummary {
     READY
 }
 
+enum class SystemAccessCapability {
+    NONE,
+    STORAGE,
+    EXTERNAL_PLAYERS
+}
+
 data class SystemAccessState(
     val hasFullStorageAccess: Boolean = false,
     val hasExternalPlayerAccess: Boolean = false

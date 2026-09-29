@@ -25,10 +25,12 @@ import apincer.android.mmate.R
 
 @Composable
 fun PermissionScreen(
-    onGrantPermissionsClick: () -> Unit
+    systemAccess: SystemAccessState,
+    focusedCapability: SystemAccessCapability = SystemAccessCapability.NONE,
+    onStorageAccessClick: () -> Unit,
+    onExternalPlayerAccessClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val grantPermissionsDescription = stringResource(R.string.cd_grant_required_permissions)
 
     Surface(
         color = Color(0xFF0A0A0E),
@@ -42,7 +44,7 @@ fun PermissionScreen(
                 .verticalScroll(scrollState)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Top
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,7 +72,7 @@ fun PermissionScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = stringResource(R.string.permission_title),
+                    text = stringResource(R.string.system_access_title),
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
@@ -80,7 +82,7 @@ fun PermissionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = stringResource(R.string.permission_intro),
+                    text = stringResource(R.string.system_access_intro),
                     color = Color(0xFFAAAAAA),
                     fontSize = 13.5.sp,
                     textAlign = TextAlign.Center,
@@ -92,42 +94,27 @@ fun PermissionScreen(
 
                 // Permission Cards
                 PermissionItem(
-                    iconRes = R.drawable.ic_round_audio_file_24,
-                    title = stringResource(R.string.permission_audio_title),
-                    requiredText = stringResource(R.string.permission_required),
-                    desc = stringResource(R.string.permission_audio_description)
+                    iconRes = R.drawable.round_sd_storage_24,
+                    title = stringResource(R.string.permission_storage_title),
+                    requirementText = stringResource(R.string.permission_required),
+                    desc = stringResource(R.string.permission_storage_description),
+                    granted = systemAccess.hasFullStorageAccess,
+                    actionText = stringResource(R.string.action_open_storage_settings),
+                    focused = focusedCapability == SystemAccessCapability.STORAGE,
+                    onClick = onStorageAccessClick
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 PermissionItem(
-                    iconRes = R.drawable.round_sd_storage_24,
-                    title = stringResource(R.string.permission_storage_title),
-                    requiredText = stringResource(R.string.permission_required),
-                    desc = stringResource(R.string.permission_storage_description)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = onGrantPermissionsClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFB300),
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .semantics {
-                        contentDescription = grantPermissionsDescription
-                    }
-            ) {
-                Text(
-                    text = stringResource(R.string.permission_grant),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    iconRes = R.drawable.ic_round_notification_add_24,
+                    title = stringResource(R.string.permission_external_player_title),
+                    requirementText = stringResource(R.string.permission_optional),
+                    desc = stringResource(R.string.permission_external_player_description),
+                    granted = systemAccess.hasExternalPlayerAccess,
+                    actionText = stringResource(R.string.action_enable_external_player_access),
+                    focused = focusedCapability == SystemAccessCapability.EXTERNAL_PLAYERS,
+                    onClick = onExternalPlayerAccessClick
                 )
             }
         }
@@ -138,13 +125,20 @@ fun PermissionScreen(
 private fun PermissionItem(
     iconRes: Int,
     title: String,
-    requiredText: String,
-    desc: String
+    requirementText: String,
+    desc: String,
+    granted: Boolean,
+    actionText: String,
+    focused: Boolean,
+    onClick: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = Color(0xFF16161F),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(
+            if (focused) 1.5.dp else 1.dp,
+            if (focused) Color(0xFFFFB300) else Color(0x1AFFFFFF)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -177,11 +171,26 @@ private fun PermissionItem(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = requiredText,
-                        color = Color(0xFFFFB300),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
+                    AssistChip(
+                        onClick = {},
+                        enabled = false,
+                        label = {
+                            Text(
+                                text = if (granted) {
+                                    stringResource(R.string.permission_granted)
+                                } else {
+                                    requirementText
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            disabledLabelColor = if (granted) Color(0xFF63D890) else Color(0xFFFFB300),
+                            disabledContainerColor = Color.Transparent
+                        ),
+                        border = null,
+                        modifier = Modifier.heightIn(min = 24.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(3.dp))
@@ -191,6 +200,17 @@ private fun PermissionItem(
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+                TextButton(
+                    onClick = onClick,
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = actionText,
+                        color = Color(0xFFFFB300),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }

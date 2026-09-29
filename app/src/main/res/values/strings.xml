@@ -542,6 +542,15 @@
     <string name="permission_required">Required</string>
     <string name="permission_grant">Grant Permissions</string>
     <string name="cd_grant_required_permissions">Grant required permissions</string>
+    <string name="system_access_title">System Access</string>
+    <string name="system_access_intro">MusicMate checks access automatically. Open Android settings only when you want to enable or change a capability.</string>
+    <string name="permission_external_player_title">External Player Access</string>
+    <string name="permission_external_player_description">Discover and control active playback from other music apps. Local playback and network streamers work without it.</string>
+    <string name="permission_optional">Optional</string>
+    <string name="permission_granted">Granted</string>
+    <string name="action_open_storage_settings">Open storage settings</string>
+    <string name="action_enable_external_player_access">Enable external player access</string>
+    <string name="system_access_settings_unavailable">Android settings are unavailable on this device.</string>
     <string name="about_musicmate_title">About MusicMate</string>
     <string name="about_share_library">Share Library Snapshot</string>
     <string name="about_rate_google_play">Rate on Google Play</string>
