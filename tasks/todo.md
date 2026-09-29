@@ -631,7 +631,97 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 - [ ] No content is clipped by system bars, cutouts, IME, or pane boundaries.
 - [ ] Screenshot and accessibility suites pass without updating references.
 
-## Task 13: Run and document the release UX matrix
+## Task 13: Add the system-access state foundation
+
+**Description:** Define one authoritative, side-effect-free model for MusicMate's full-storage and external-player access. Replace package-wide notification-listener parsing with the public component-specific API and expose state that UI hosts can refresh without triggering a prompt or Settings intent.
+
+**Acceptance criteria:**
+- [x] Storage state is derived from `Environment.isExternalStorageManager()` and external-player state from `NotificationManager.isNotificationListenerAccessGranted()` using `MediaNotificationListener`'s explicit `ComponentName`.
+- [x] Capability checks never launch UI, mutate permission state, or conflate notification-listener access with `POST_NOTIFICATIONS`.
+- [x] The main Compose state can represent granted, denied, and optional/required presentation without retaining an `Activity` context.
+
+**Verification:**
+- [x] Run focused unit tests for all capability-state combinations and the drawer summary mapping.
+- [x] Run existing permission/service unit tests and `:app:assembleDebug`.
+- [x] Run `git diff --check`.
+
+**Dependencies:** Task 6.
+
+**Files likely touched:** `PermissionUtils.java`, `SystemAccessState.kt`, `MainScaffoldState.kt`, `SystemAccessStateTest.kt`.
+
+**Estimated scope:** Medium (4 files).
+
+## Task 14: Build the status-driven System Access screen
+
+**Description:** Refactor the current all-or-nothing permission onboarding into a lifecycle-aware System Access screen with separate storage-management and external-player rows, clear required/optional copy, current status, rationale, and explicit user-triggered actions.
+
+**Acceptance criteria:**
+- [x] The screen refreshes both statuses in `onResume`, shows storage as required for scan/tag/file operations, and shows external-player access as optional.
+- [x] Storage opens the app-specific all-files-access page with a guarded general-page fallback; external-player access opens the listener detail page when supported with a guarded general-page fallback.
+- [x] The mixed `PERMISSIONS_ALL` request and its `any { granted }` success condition are removed; unrelated Bluetooth, internet, and obsolete storage permissions are not requested by this flow.
+
+**Verification:**
+- [ ] Run focused activity/UI tests for denied, partially granted, fully granted, cancel, and return-from-Settings states.
+- [ ] Run permission-screen screenshot and accessibility checks at default and 200% text.
+- [x] Run `:app:testDebugUnitTest :app:assembleDebug`.
+
+**Dependencies:** Task 13.
+
+**Files likely touched:** `PermissionActivity.kt`, `PermissionScreen.kt`, `PermissionUtils.java`, `strings.xml`, `SupportScreensAccessibilityTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 15: Add contextual recovery and live external-player refresh
+
+**Description:** Connect access recovery to the features that need it. Folder setup requests storage only after the user starts that operation, while the player picker explains optional external-player integration and can open the focused access screen. Make service-side listener registration idempotently synchronize after grants or revocations.
+
+**Acceptance criteria:**
+- [x] App launch and resume silently validate state but never automatically display a permission prompt or open Settings.
+- [x] A denied folder scan opens System Access focused on storage; the player picker remains usable for local/DLNA targets and exposes an optional external-player enable action.
+- [x] Returning after a listener grant registers active-session monitoring and refreshes player targets immediately; revocation unregisters/clears external targets without requiring an app or service restart.
+
+**Verification:**
+- [x] Run unit tests for feature-gating and idempotent listener register/unregister transitions.
+- [ ] Run connected tests for grant, deny/cancel, revoke, activity recreation, and service-already-running scenarios.
+- [ ] Manually verify folder setup and player discovery on API 36 or newer.
+
+**Dependencies:** Tasks 13-14.
+
+**Files likely touched:** `MainActivity.java`, `PlayerPickerDialog.kt`, `MusicMateServiceImpl.java`, `MediaNotificationListener.java`, `SystemAccessIntegrationTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Task 16: Consolidate and polish the drawer access destination
+
+**Description:** Replace the two raw Settings shortcuts with one System Access drawer destination that reports a concise current summary and opens the status-driven screen, while preserving drawer selection and Back behavior.
+
+**Acceptance criteria:**
+- [x] The drawer contains one `System Access` row instead of separate Storage Access and Notification Access rows, with a truthful `Ready`, `Storage needed`, or `Optional access off` summary.
+- [x] Copy says `External Player Access`, never implying that listener access controls MusicMate's own notifications; status and action semantics are announced once by TalkBack.
+- [x] Drawer state updates after returning from Settings and survives rotation/resize without marking the external activity as a selected library destination.
+
+**Verification:**
+- [x] Run drawer navigation, Back-policy, semantics, and capability-summary tests.
+- [ ] Run compact, expanded, and 200% text screenshot verification; obtain human approval before updating references.
+- [ ] Exercise grant/revoke and drawer reopen behavior on API 36 or newer.
+
+**Dependencies:** Tasks 13-15.
+
+**Files likely touched:** `MainActivity.java`, `MainScaffold.kt`, `menu_ids.xml`, `strings.xml`, `MainLibraryAccessibilityTest.kt`.
+
+**Estimated scope:** Medium (5 files).
+
+## Checkpoint E: Contextual system access
+
+- [x] Launch/resume validation has no automatic prompt or Settings redirect.
+- [x] Storage and external-player access have independent, cancellable, contextual recovery paths.
+- [ ] Grant and revocation state appears immediately in the screen and drawer.
+- [ ] External-player discovery begins or stops correctly without restarting MusicMate.
+- [ ] Unit, connected, accessibility, screenshot, build, and diff checks pass.
+
+**Evidence (2026-09-29):** Focused state-policy unit tests, debug assembly, screenshot verification, and permission/drawer Compose tests passed on Android 16 (`SM-S931B`). Live special-access grant/revoke journeys were not performed. The full core test gate is blocked by the unrelated untracked `FileRepositoryCoverArtTest.java`, which references two missing methods; project lint remains red on its existing 33-error baseline.
+
+## Task 17: Run and document the release UX matrix
 
 **Description:** Complete automated and live-device validation, record evidence, and update user/developer documentation to match shipped interactions.
 
@@ -645,13 +735,13 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 - [ ] Run screenshot verification, focused connected tests, lint for changed UI files, and `git diff --check`.
 - [ ] Review generated screenshot diffs before updating any golden files.
 
-**Dependencies:** Tasks 10-12 and Checkpoint D.
+**Dependencies:** Tasks 10-16 and Checkpoints D-E.
 
 **Files likely touched:** `UI.md`, `USER_GUIDE.md`, `CHANGELOG.md`, `tasks/todo.md`, `tasks/ux-validation.md`.
 
 **Estimated scope:** Medium (5 files).
 
-## Checkpoint E: Complete
+## Checkpoint F: Complete
 
 - [ ] All acceptance criteria above are checked with evidence.
 - [ ] Automated suites, debug build, focused lint, and diff hygiene pass.

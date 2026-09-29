@@ -40,11 +40,11 @@ Select **Manual** to keep a queue you like and enable shuffle/repeat. Smart sour
 
 ## 1. Getting Started & Permissions
 
-To manage your music files directly, MusicMate requires specific permissions depending on your Android version:
-* **All Files Access Permission:** Required on Android 11 (API 30) and higher to modify ID3 tags, rename files, and organize music folders.
-* **Notification Listener Access:** Required to integrate with system audio playbacks and display lock screen media controls.
+To manage your music files directly, MusicMate uses two independent Android special-access settings:
+* **Full Storage Access:** Required to scan direct file paths, modify tags, rename files, and organize music folders.
+* **External Player Access:** Optional. It lets MusicMate discover and control playback sessions from supported music apps; it does not control whether MusicMate may post its own notifications.
 
-When you first open the app, the **Permission Screen** will guide you through granting these settings if they are missing.
+MusicMate checks these settings silently when the app starts or resumes. It does not open Android Settings automatically. Choose **System Access** from the MusicMate menu, start a folder scan, or use the optional action in the player picker when you want to enable missing access. Returning from Settings updates the status immediately.
 
 ---
 

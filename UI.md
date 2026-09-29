@@ -200,7 +200,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 
 2. **Right Slide Menu — App Control & Diagnostics (`menu_music_mate.xml`):**
    - **System Management Group:** Manage Library Folders, App Settings.
-   - **System Permissions Group:** Storage Access status, Notification Access status.
+   - **System Access Group:** One status-aware System Access destination reports `Ready`, `Storage needed`, or `Optional access off`, then explains full-storage and external-player access separately.
    - **System Diagnostics & Info:** Crash Diagnostics, About MusicMate.
 
 ---
@@ -257,11 +257,12 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 
 Opened from the MusicMate logo at the far right of the floating dock. It is a `ModalNavigationDrawer` whose content is a fixed 310dp dark sheet grouped into three sections (Core Library, Discover & Audiophile, Settings & System).
 
-- **Destination Labels Match Behavior:** Every label describes what it actually opens. `Similar Tracks` finds matching titles (optionally artist-aware) and is not a recommendation or duplicate-deletion feature. `Audio Quality` browses quality categories and does not start analysis. `Music Folders & Scan` selects indexed folders and starts scanning. `Notification Access` opens Android notification-listener settings used to integrate other players. Labels are string resources (`R.string.nav_*`) so they can be translated.
+- **Destination Labels Match Behavior:** Every label describes what it actually opens. `Similar Tracks` finds matching titles (optionally artist-aware) and is not a recommendation or duplicate-deletion feature. `Audio Quality` browses quality categories and does not start analysis. `Music Folders & Scan` selects indexed folders and starts scanning. `System Access` opens a status screen where full-storage access is identified as required for file management and external-player access is identified as optional. Labels are string resources (`R.string.nav_*`) so they can be translated.
+- **Contextual Access Recovery:** Launch and resume only refresh capability state. MusicMate opens Android Settings solely after a user action: folder scanning focuses the required storage row, while the player picker offers an optional external-player integration row. Returning from Settings refreshes the screen, drawer summary, and active playback service without an app restart.
 - **Selection Ends on Destination Change:** Changing a library destination clears contextual selection, because selection refers to rows of the current list. Independently, multi-selection is keyed by track identity rather than row position, so refreshing, re-sorting, or replacing the list can never retarget Edit / Move / Convert / Delete at a track the user did not pick: selections follow their track, and selections whose track is no longer in the list are dropped. Pagination and re-indexing preserve selection correctly.
 - **Back Precedence:** An open drawer consumes system Back first, preserving selection, search, filters, and category. Only when the drawer is closed does Back end an active selection or perform library navigation (`MainBackPolicy`).
 - **Selected State Semantics:** Entries use `Modifier.selectable` with `Role.Tab`, matching Material 3 `NavigationDrawerItem`, so assistive technology announces the current destination. A minimum 48dp interaction height applies to both tiles and rows.
-- **Active Highlight Only:** External actions (Settings, Storage Access, Notification Access, Diagnostics, About) deliberately do not claim a library selection, because they do not change the library criteria.
+- **Active Highlight Only:** External actions (Settings, System Access, Diagnostics, About) deliberately do not claim a library selection, because they do not change the library criteria.
 
 ---
 
