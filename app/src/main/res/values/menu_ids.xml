@@ -9,8 +9,7 @@
     <item name="menu_sound_grade" type="id" />
     <item name="menu_directories" type="id" />
     <item name="menu_settings" type="id" />
-    <item name="menu_files_permission" type="id" />
-    <item name="menu_notification_access" type="id" />
+    <item name="menu_system_access" type="id" />
     <item name="menu_about_crash" type="id" />
     <item name="menu_about_music_mate" type="id" />
 </resources>

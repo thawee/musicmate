@@ -106,7 +106,7 @@
     <string name="welcome_text">Manage Your Music Files Your Way and Enjoy Listening!</string>
     <string name="changelog_text">2.0.1 - update to androidx</string>
 
-    <string name="app_permission">Storage Access</string>
+    <string name="app_permission">System Access</string>
 
     <string name="preferences_sub_others">Others</string>
     <string name="search_view_query_input_hint">Search</string>
@@ -579,8 +579,10 @@
     <string name="nav_incoming_tracks">Incoming Tracks</string>
     <string name="nav_music_folders_scan">Music Folders &amp; Scan</string>
     <string name="nav_settings">Settings</string>
-    <string name="nav_storage_access">Storage Access</string>
-    <string name="nav_notification_access">Notification Access</string>
+    <string name="nav_system_access">System Access</string>
+    <string name="system_access_summary_storage_needed">Storage needed</string>
+    <string name="system_access_summary_optional_off">Optional access off</string>
+    <string name="system_access_summary_ready">Ready</string>
     <string name="nav_diagnostics">Diagnostics</string>
     <string name="nav_about_music_mate">About MusicMate</string>
     <string name="nav_section_core_library">Core Library</string>

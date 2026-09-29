@@ -1317,15 +1317,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        } else if (item.getItemId() == R.id.menu_files_permission) {
+        } else if (item.getItemId() == R.id.menu_system_access) {
             startActivity(PermissionActivity.createIntent(
                     this,
-                    apincer.android.mmate.ui.compose.SystemAccessCapability.STORAGE));
-            return true;
-        } else if (item.getItemId() == R.id.menu_notification_access) {
-            startActivity(PermissionActivity.createIntent(
-                    this,
-                    apincer.android.mmate.ui.compose.SystemAccessCapability.EXTERNAL_PLAYERS));
+                    apincer.android.mmate.ui.compose.SystemAccessCapability.NONE));
             return true;
         } else if (item.getItemId() == R.id.menu_about_music_mate) {
             doShowAboutApp();

@@ -80,6 +80,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -370,6 +371,18 @@ fun MainScaffold(
                     DrawerSectionHeader(stringResource(R.string.nav_section_settings_system))
                     Spacer(modifier = Modifier.height(6.dp))
 
+                    val systemAccess = state.systemAccess.value
+                    val accessSummary = when (systemAccess.summary) {
+                        SystemAccessSummary.STORAGE_NEEDED -> stringResource(R.string.system_access_summary_storage_needed)
+                        SystemAccessSummary.OPTIONAL_ACCESS_OFF -> stringResource(R.string.system_access_summary_optional_off)
+                        SystemAccessSummary.READY -> stringResource(R.string.system_access_summary_ready)
+                    }
+                    val accessSummaryColor = when (systemAccess.summary) {
+                        SystemAccessSummary.STORAGE_NEEDED -> Color(0xFFFFB300)
+                        SystemAccessSummary.OPTIONAL_ACCESS_OFF -> Color(0xFF90A4AE)
+                        SystemAccessSummary.READY -> Color(0xFF63D890)
+                    }
+
                     Surface(
                         color = Color(0x12FFFFFF),
                         shape = RoundedCornerShape(14.dp),
@@ -402,24 +415,15 @@ fun MainScaffold(
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
                             DrawerCardItem(
-                                text = stringResource(R.string.nav_storage_access),
+                                text = stringResource(R.string.nav_system_access),
                                 iconResId = R.drawable.round_sd_storage_24,
-                                isSelected = (activeItemId == R.id.menu_files_permission),
+                                isSelected = false,
+                                badge = accessSummary,
+                                badgeColor = accessSummaryColor,
                                 showChevron = true
                             ) {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onNavigationItemClick(R.id.menu_files_permission)
-                                coroutineScope.launch { drawerState.close() }
-                            }
-                            HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
-                            DrawerCardItem(
-                                text = stringResource(R.string.nav_notification_access),
-                                iconResId = R.drawable.ic_round_notification_add_24,
-                                isSelected = (activeItemId == R.id.menu_notification_access),
-                                showChevron = true
-                            ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onNavigationItemClick(R.id.menu_notification_access)
+                                onNavigationItemClick(R.id.menu_system_access)
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
@@ -1226,6 +1230,9 @@ private fun DrawerCardItem(
             .fillMaxWidth()
             .background(bgColor)
             .heightIn(min = 48.dp)
+            .semantics {
+                if (badge != null) stateDescription = badge
+            }
             .selectable(
                 selected = isSelected,
                 role = Role.Tab,
@@ -1241,15 +1248,24 @@ private fun DrawerCardItem(
             modifier = Modifier.size(19.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            color = contentColor,
-            fontSize = 13.5.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.weight(1f),
-            maxLines = if (largeText) 2 else 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = text,
+                color = contentColor,
+                fontSize = 13.5.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = if (largeText) 2 else 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (badge != null && largeText) {
+                Text(
+                    text = badge,
+                    color = badgeColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
 
         if (badge != null && !largeText) {
             Surface(

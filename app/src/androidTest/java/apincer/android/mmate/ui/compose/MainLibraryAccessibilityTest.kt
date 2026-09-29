@@ -168,6 +168,35 @@ class MainLibraryAccessibilityTest {
     }
 
     @Test
+    fun drawer_showsOneSystemAccessDestinationWithCurrentSummary() {
+        composeRule.setContent {
+            val state = remember {
+                MainScaffoldState().apply {
+                    libraryEmpty.value = true
+                    isFloatingDockVisible.value = false
+                    systemAccess.value = SystemAccessState(
+                        hasFullStorageAccess = false,
+                        hasExternalPlayerAccess = false
+                    )
+                }
+            }
+            MusicMateTheme {
+                MainScaffold(
+                    drawerState = rememberDrawerState(DrawerValue.Closed),
+                    state = state,
+                    showGestureHints = false
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("MusicMate Menu").performClick()
+        composeRule.onNodeWithText("System Access").assertExists()
+        composeRule.onNodeWithText("Storage needed").assertExists()
+        composeRule.onNodeWithText("Storage Access").assertDoesNotExist()
+        composeRule.onNodeWithText("Notification Access").assertDoesNotExist()
+    }
+
+    @Test
     fun mainShell_opensAndDismissesMusicCenterThroughNavigationRoute() {
         composeRule.setContent {
             val state = remember {
