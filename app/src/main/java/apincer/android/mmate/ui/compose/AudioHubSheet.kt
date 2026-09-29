@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import android.view.Window
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -27,6 +30,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogWindowProvider
 import apincer.android.mmate.R
 import apincer.music.core.model.Track
 import kotlinx.coroutines.launch
@@ -36,6 +40,8 @@ enum class MusicCenterPresentation {
     PREVIEW,
     SUPPORTING_PANE,
 }
+
+private val MusicCenterScrimColor = Color.Black.copy(alpha = 0.32f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -447,10 +453,13 @@ private fun AudioHubContainer(
             sheetState = sheetState,
             shape = sheetShape,
             containerColor = Color(0xFF121212),
-            scrimColor = Color.Black.copy(alpha = 0.65f),
+            scrimColor = MusicCenterScrimColor,
             dragHandle = dragHandle,
             modifier = sheetModifier,
-            content = content
+            content = {
+                DisablePlatformWindowDimming()
+                content()
+            }
         )
     } else if (presentation == MusicCenterPresentation.SUPPORTING_PANE) {
         Surface(
@@ -466,7 +475,7 @@ private fun AudioHubContainer(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.65f)),
+                .background(MusicCenterScrimColor),
             contentAlignment = Alignment.BottomCenter
         ) {
             Surface(
@@ -481,4 +490,20 @@ private fun AudioHubContainer(
             }
         }
     }
+}
+
+@Composable
+private fun DisablePlatformWindowDimming() {
+    val view = LocalView.current
+    val dialogWindow = (view as? DialogWindowProvider)?.window
+        ?: (view.parent as? DialogWindowProvider)?.window
+
+    SideEffect {
+        dialogWindow?.let(::disablePlatformWindowDimming)
+    }
+}
+
+internal fun disablePlatformWindowDimming(window: Window) {
+    window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+    window.setDimAmount(0f)
 }

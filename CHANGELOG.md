@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.20.1] - 2026-09-29
+
+### Fixed
+- **Music Center backdrop:** Disabled the platform dialog window's additional dim layer and retained one consistent 32% Compose scrim, keeping the song library visibly dimmed behind Music Center while blocking background interaction.
+- **Smart Queue capacity layout:** Moved the `20/20` capacity indicator and replenish action from the crowded summary header to the selected Smart Queue source, preventing the capacity text from wrapping vertically on compact phones.
+
+### Changed
+- **Version:** Bumped Android `versionCode` to `138` and `versionName` to `3.20.1-<build date>`; the drawer label now reads `v3.20.1`.
+
+### Verification
+- App unit tests and debug APK assembly passed. The patched debug build was installed on a Samsung Android 16 device; final visual confirmation requires reopening Music Center after unlocking the device.
+
 ## [3.20.0] - 2026-09-29
 
 ### Added

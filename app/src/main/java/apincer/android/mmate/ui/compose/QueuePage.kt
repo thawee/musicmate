@@ -328,7 +328,6 @@ fun QueuePage(
             caughtUp = caughtUp,
             onJumpToPlaying = onJumpToPlaying,
             onClearQueue = { confirmClear = true },
-            onRefreshClick = { triggerManualRefresh() },
             onOpenPlaylistPicker = { showPlaylistPicker = true },
             canClear = state.tracks.isNotEmpty()
         )
@@ -337,8 +336,10 @@ fun QueuePage(
             // Ultra-Compact Single-Line Source Capsules (~28dp)
             CompactSourceDeck(
                 selectedSource = source,
+                queueSize = state.tracks.size,
                 activePlaylistName = activePlaylistName,
                 refreshing = refreshing,
+                onRefreshClick = { triggerManualRefresh() },
                 onSourceSelected = { selectSource(it) }
             )
 
@@ -489,11 +490,9 @@ private fun CompactQueueHeader(
     caughtUp: Boolean,
     onJumpToPlaying: () -> Unit,
     onClearQueue: () -> Unit,
-    onRefreshClick: () -> Unit,
     onOpenPlaylistPicker: () -> Unit,
     canClear: Boolean
 ) {
-    val haptic = LocalHapticFeedback.current
     val showDuration = UiLayoutPolicy.showQueueDuration(LocalConfiguration.current.screenWidthDp)
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
@@ -520,7 +519,7 @@ private fun CompactQueueHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left: LED Dot + Title + Count/Duration + (Slots & Refresh)
+        // Left: LED Dot + Title + Count/Duration
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -547,40 +546,10 @@ private fun CompactQueueHeader(
                 text = "• $queueSize ${if (showDuration && durationText.isNotEmpty()) "• $durationText" else ""}",
                 color = Color(0xFF9E9E9E),
                 fontSize = 11.sp,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
-            if (source != QueueManager.Source.MANUAL) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0x14FFFFFF))
-                        .border(0.5.dp, Color(0x1AFFFFFF), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 5.dp, vertical = 1.5.dp)
-                ) {
-                    Text(
-                        text = "${queueSize.coerceAtMost(20)}/20",
-                        color = Color(0xFFB0BEC5),
-                        fontSize = 9.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onRefreshClick()
-                    },
-                    enabled = !refreshing,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_baseline_refresh_24),
-                        contentDescription = "Replenish",
-                        tint = if (refreshing) Color(0xFFFFB300) else Color(0xFFB0BEC5),
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-            }
         }
 
         // Right: Action buttons (Playlist, Focus, Clear)
@@ -629,8 +598,10 @@ private fun CompactQueueHeader(
 @Composable
 private fun CompactSourceDeck(
     selectedSource: QueueManager.Source,
+    queueSize: Int,
     activePlaylistName: String?,
     refreshing: Boolean,
+    onRefreshClick: () -> Unit,
     onSourceSelected: (QueueManager.Source) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -663,6 +634,12 @@ private fun CompactSourceDeck(
     ) {
         sources.forEach { opt ->
             val isSelected = opt.source == selectedSource
+            val isSelectedSmartSource = isSelected && opt.source != QueueManager.Source.MANUAL
+            val label = if (isSelectedSmartSource) {
+                UiLayoutPolicy.smartQueueSourceLabel(opt.label, queueSize)
+            } else {
+                opt.label
+            }
             val bgModifier = if (isSelected) {
                 Modifier
                     .background(
@@ -699,11 +676,30 @@ private fun CompactSourceDeck(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = opt.label,
+                    text = label,
                     color = if (isSelected) Color.White else Color(0xBBFFFFFF),
                     fontSize = 11.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 1,
+                    softWrap = false
                 )
+            }
+            if (isSelectedSmartSource) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onRefreshClick()
+                    },
+                    enabled = !refreshing,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_refresh_24),
+                        contentDescription = "Replenish",
+                        tint = if (refreshing) Color(0xFFFFB300) else Color(0xFFB0BEC5),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui.compose
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,6 +29,12 @@ class UiLayoutPolicyTest {
     fun `compact queue header hides duration below 400 dp`() {
         assertFalse(UiLayoutPolicy.showQueueDuration(windowWidthDp = 399))
         assertTrue(UiLayoutPolicy.showQueueDuration(windowWidthDp = 400))
+    }
+
+    @Test
+    fun `smart queue capacity is included in the source label`() {
+        assertEquals("New · 20/20", UiLayoutPolicy.smartQueueSourceLabel("New", 21))
+        assertEquals("Discover · 7/20", UiLayoutPolicy.smartQueueSourceLabel("Discover", 7))
     }
 
     @Test

@@ -18,6 +18,9 @@ object UiLayoutPolicy {
     fun showQueueDuration(windowWidthDp: Int): Boolean =
         windowWidthDp >= 400
 
+    fun smartQueueSourceLabel(sourceLabel: String, queueSize: Int, capacity: Int = 20): String =
+        "$sourceLabel · ${queueSize.coerceIn(0, capacity)}/$capacity"
+
     fun stackChoiceControls(windowWidthDp: Int, fontScale: Float): Boolean =
         windowWidthDp <= StackedChoicesMaxWidthDp || fontScale >= LargeTextScale
 
