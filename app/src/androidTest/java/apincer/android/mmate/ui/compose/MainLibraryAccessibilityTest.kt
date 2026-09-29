@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -190,8 +193,8 @@ class MainLibraryAccessibilityTest {
         }
 
         composeRule.onNodeWithContentDescription("MusicMate Menu").performClick()
-        composeRule.onNodeWithText("System Access").assertExists()
-        composeRule.onNodeWithText("Storage needed").assertExists()
+        composeRule.onNodeWithText("System Access")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Storage needed"))
         composeRule.onNodeWithText("Storage Access").assertDoesNotExist()
         composeRule.onNodeWithText("Notification Access").assertDoesNotExist()
     }

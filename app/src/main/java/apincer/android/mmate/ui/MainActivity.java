@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
             updateVolumeState();
             syncQueueState();
-            refreshSystemAccessState();
+            refreshSystemAccessState(true);
         }
 
         @Override
@@ -416,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Initialize Java-owned data callbacks before Compose can dispatch a restored route.
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         setupSelectionTracker();
-        refreshSystemAccessState();
+        refreshSystemAccessState(false);
 
         // Setup back press handler
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
@@ -584,14 +584,19 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     protected void onResume() {
         super.onResume();
-        refreshSystemAccessState();
+        refreshSystemAccessState(false);
     }
 
-    private void refreshSystemAccessState() {
+    private void refreshSystemAccessState(boolean forcePlayerRefresh) {
+        boolean previouslyHadExternalPlayerAccess = MainScaffoldState.get()
+                .getSystemAccess().getValue().getHasExternalPlayerAccess();
         boolean hasStorageAccess = PermissionUtils.checkFullStorageAccessPermissions(this);
         boolean hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this);
         MainScaffoldState.updateSystemAccess(hasStorageAccess, hasExternalPlayerAccess);
-        if (isPlaybackServiceBound && playbackService != null) {
+        boolean externalPlayerAccessChanged =
+                previouslyHadExternalPlayerAccess != hasExternalPlayerAccess;
+        if (isPlaybackServiceBound && playbackService != null
+                && (forcePlayerRefresh || externalPlayerAccessChanged)) {
             playbackService.refreshPlayerDiscovery();
             updatePlayerPickerState();
         }
