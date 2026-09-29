@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.20.0] - 2026-09-29
+
 ### Added
 - **Contextual System Access:** Added one status-driven screen for required full-storage access and optional external-player access. Capability state refreshes silently on launch/resume, folder scans focus storage recovery only when needed, and the player picker remains usable while offering optional external-player integration.
 - **Playlist loading & smart auto-refill (`PlaylistPickerDialog`):** Direct playback replacement ("Play All"), upcoming queue appending ("+ Queue"), or continuous smart auto-refill (`Source.PLAYLIST`) from any built-in (Audiophile Sanctuary DR12+, Studio Masters Hi-Res, Pure DSD, Lossless Vault) or custom user playlist.
