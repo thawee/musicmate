@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Verification
 - 94 app unit tests pass, including 11 badge tests; debug APK assembly succeeds. Eight MQA previews render and were visually inspected, including 200% text. The debug APK installed and launched on a connected phone; a real MQA Studio track preview confirmed the corrected badge and encoded-rate accessibility description. New screenshot references and the remaining live-player matrix are pending.
 
+## [3.20.2] - 2026-09-30
+
+### Improved
+- **Cover Art Pipeline (ADR-030)**: Replaced FFmpeg embedded cover extraction with Android's native hardware-accelerated `MediaMetadataRetriever` for instantaneous, low-power extraction.
+- **Lazy Cover Art Trigger**: Wired lazy extraction into Coil's UI pipeline (`FileRepository.getCoverArt()`) ensuring missing embedded artworks actually trigger extraction instead of silently falling back to defaults.
+
 ## [3.20.1] - 2026-09-29
 
 ### Fixed

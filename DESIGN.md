@@ -340,6 +340,17 @@ Library metadata rows and full-screen specification chips wrap when space is lim
   4. Never overwrite an existing destination during move or import. Select a unique conversion output path and persist that actual path; commit the database path before attempting ancillary copies.
 - **Consequences:** Rescans preserve identity and playback continuity, transient storage loss cannot erase library state, large libraries load incrementally with consistent search results, and file operations avoid silent replacement or path divergence.
 
+
+### ADR-030: Native Embedded Cover Art Extraction Pipeline
+- **Status:** Accepted
+- **Date:** 2026-09-30
+- **Context:** The app previously relied on `FFMpegHelper` to extract embedded cover art. This spawned a separate FFmpeg process, incurring massive latency and battery drain. Furthermore, lazy extraction was not properly wired into the Coil fallback chain, causing embedded art to silently fail to display if a folder lacked a `cover.jpg` file. Lastly, unmanaged tracks extracted into identical, duplicated caches.
+- **Decision:**
+  1. Replace FFmpeg image extraction with native Android `MediaMetadataRetriever`. It provides instantaneous, hardware-accelerated extraction directly to byte arrays, skipping expensive process creation.
+  2. Implement an active lazy-loading trap in `FileRepository.getCoverArt()`. If Coil requests a missing cache file and the track specifies an embedded hex path, actively trigger the `MediaMetadataRetriever` extraction synchronously before returning the resolved file to Coil.
+  3. For "Managed" library files, extract to the parent directory as `Cover.jpg`. For "Unmanaged" files (e.g., Downloads folder), maintain the exact file-path hashing to prevent diverse singles from overwriting each other's artwork in shared directories.
+- **Consequences:** Cover art loads instantaneously without CPU spikes. Embedded art always displays correctly in the UI. Storage waste is eliminated for managed albums, while unmanaged tracks safely preserve their distinct artwork in chaotic folders.
+
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records
