@@ -51,36 +51,8 @@ import apincer.music.core.utils.TagUtils
 @Composable
 fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean = false) {
     if (track == null) return
-    val label = if (expanded) {
-        when {
-            TagUtils.isDSD(track) -> "DSD AUDIO"
-            TagUtils.isMQA(track) -> if (TagUtils.isMQAStudio(track)) "MQA STUDIO" else "MQA MASTER"
-            TagUtils.isHiRes(track) -> "HI-RES LOSSLESS"
-            TagUtils.isPCM24Bits(track) -> "24-BIT STUDIO"
-            TagUtils.isLossless(track) -> "CD QUALITY"
-            TagUtils.isLossy(track) -> "STANDARD QUALITY"
-            else -> {
-                val raw = track.qualityInd ?: TagUtils.getQualityIndicator(track)
-                if (raw.isEmpty() || raw == "-") "CD QUALITY" else raw.uppercase()
-            }
-        }
-    } else {
-        var raw = track.qualityInd ?: ""
-        if (raw.isEmpty() || raw == "-") {
-            raw = TagUtils.getQualityIndicator(track)
-        }
-        if (raw.isEmpty()) "-"
-        else if (raw.startsWith("MQA")) "MQA"
-        else raw
-    }
-
-    val accentColor = when {
-        TagUtils.isDSD(track) -> Color(0xFF00E5FF)
-        TagUtils.isHiRes(track) || TagUtils.isPCM24Bits(track) -> Color(0xFFFFD700)
-        TagUtils.isMQA(track) -> Color(0xFFE040FB)
-        TagUtils.isLossless(track) -> Color(0xFF64B5F6)
-        else -> Color(0xFF9E9E9E)
-    }
+    val label = AudioPresentation.qualityLabel(track, expanded)
+    val accentColor = AudioPresentation.accent(track)
 
     val bgBase = Color(0xD9101010)
     val bgTint = accentColor.copy(alpha = if (expanded) 0.12f else 0.08f)
@@ -127,31 +99,8 @@ fun QualityBadge(track: Track?, modifier: Modifier = Modifier, expanded: Boolean
 
 @Composable
 fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier, expanded: Boolean = false) {
-    val raw = labelStr ?: "-"
-    val label = if (expanded) {
-        when {
-            raw.contains("DSD", ignoreCase = true) -> "DSD AUDIO"
-            raw.contains("MQA", ignoreCase = true) -> "MQA MASTER"
-            raw.contains("Hi-Res", ignoreCase = true) || raw.contains("HI-RES", ignoreCase = true) -> "HI-RES LOSSLESS"
-            raw.contains("24-BIT", ignoreCase = true) || raw.contains("Studio", ignoreCase = true) -> "24-BIT STUDIO"
-            raw.contains("CD", ignoreCase = true) || raw.contains("Lossless", ignoreCase = true) -> "CD QUALITY"
-            raw.contains("Standard", ignoreCase = true) || raw.contains("Lossy", ignoreCase = true) -> "STANDARD QUALITY"
-            raw.isNotEmpty() && raw != "-" -> raw.uppercase()
-            else -> "CD QUALITY"
-        }
-    } else {
-        if (raw.isEmpty()) "-"
-        else if (raw.startsWith("MQA")) "MQA"
-        else raw
-    }
-
-    val accentColor = when {
-        label.contains("DSD", ignoreCase = true) -> Color(0xFF00E5FF)
-        label.contains("Hi-Res", ignoreCase = true) || label.contains("Studio", ignoreCase = true) || label.contains("HR", ignoreCase = true) || label.contains("24-BIT", ignoreCase = true) -> Color(0xFFFFD700)
-        label.contains("MQA", ignoreCase = true) -> Color(0xFFE040FB)
-        label.contains("CD", ignoreCase = true) || label.contains("Lossless", ignoreCase = true) -> Color(0xFF64B5F6)
-        else -> Color(0xFF9E9E9E)
-    }
+    val label = AudioPresentation.qualityLabel(labelStr, expanded)
+    val accentColor = AudioPresentation.accent(labelStr)
 
     val bgBase = Color(0xD9141414)
     val bgTint = accentColor.copy(alpha = if (expanded) 0.12f else 0.08f)
@@ -199,25 +148,7 @@ fun QualityBadge(labelStr: String?, modifier: Modifier = Modifier, expanded: Boo
 @Composable
 fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
     if (track == null) return
-    val resText = when {
-        TagUtils.isDSD(track) -> {
-            val dsdRate = track.audioSampleRate
-            if (dsdRate >= 22579200) "DSD512"
-            else if (dsdRate >= 11289600) "DSD256"
-            else if (dsdRate >= 5644800) "DSD128"
-            else "DSD64"
-        }
-        track.audioBitsDepth > 0 && track.audioSampleRate > 0 -> {
-            val bit = track.audioBitsDepth
-            val sr = (track.audioSampleRate / 1000.0)
-            val srFormatted = if (sr % 1.0 == 0.0) "${sr.toInt()}" else "$sr"
-            "$bit/$srFormatted"
-        }
-        track.audioBitRate > 0 -> {
-            "${(track.audioBitRate / 1000)}k"
-        }
-        else -> ""
-    }
+    val resText = AudioPresentation.compactResolution(track)
 
     if (resText.isEmpty()) return
 
@@ -227,7 +158,7 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
             .background(Color(0xD9141414))
             .border(0.5.dp, Color(0x33FFFFFF), CircleShape)
             .padding(horizontal = 6.dp, vertical = 2.dp)
-            .semantics { contentDescription = "Resolution: $resText" },
+            .semantics { contentDescription = "Resolution: ${AudioPresentation.resolutionDescription(track)}" },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -243,45 +174,7 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
     }
 }
 
-fun getUnifiedBadgeText(track: Track?): String {
-    if (track == null) return "-"
-
-    val qualityLabel = when {
-        TagUtils.isDSD(track) -> "DSD"
-        TagUtils.isHiRes(track) -> "HI-RES"
-        TagUtils.isPCM24Bits(track) -> "24-BIT"
-        TagUtils.isMQA(track) -> "MQA"
-        TagUtils.isLossless(track) -> "CD"
-        else -> ""
-    }
-
-    val resText = when {
-        TagUtils.isDSD(track) -> {
-            val dsdRate = track.audioSampleRate
-            if (dsdRate >= 22579200) "512"
-            else if (dsdRate >= 11289600) "256"
-            else if (dsdRate >= 5644800) "128"
-            else "64"
-        }
-        track.audioBitsDepth > 0 && track.audioSampleRate > 0 -> {
-            val bit = track.audioBitsDepth
-            val sr = (track.audioSampleRate / 1000.0)
-            val srFormatted = if (sr % 1.0 == 0.0) "${sr.toInt()}" else "$sr"
-            "$bit/$srFormatted"
-        }
-        track.audioBitRate > 0 -> {
-            "${(track.audioBitRate / 1000)}k"
-        }
-        else -> ""
-    }
-
-    return when {
-        qualityLabel.isNotEmpty() && resText.isNotEmpty() -> "$qualityLabel $resText"
-        qualityLabel.isNotEmpty() -> qualityLabel
-        resText.isNotEmpty() -> resText
-        else -> "-"
-    }
-}
+fun getUnifiedBadgeText(track: Track?): String = AudioPresentation.unifiedBadgeText(track)
 
 @Composable
 fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
@@ -289,13 +182,7 @@ fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
 
     val text = getUnifiedBadgeText(track)
 
-    val accentColor = when {
-        TagUtils.isDSD(track) -> Color(0xFF00E5FF)
-        TagUtils.isHiRes(track) || TagUtils.isPCM24Bits(track) -> Color(0xFFFFD700)
-        TagUtils.isMQA(track) -> Color(0xFFE040FB)
-        TagUtils.isLossless(track) -> Color(0xFF64B5F6)
-        else -> Color(0xFF9E9E9E)
-    }
+    val accentColor = AudioPresentation.accent(track)
 
     val bgBase = Color(0xD9141414)
     val bgTint = accentColor.copy(alpha = 0.08f)
@@ -308,7 +195,7 @@ fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
             .background(bgTint)
             .border(0.5.dp, borderColor, CircleShape)
             .padding(horizontal = 6.dp, vertical = 2.dp)
-            .semantics { contentDescription = "Audio quality and resolution: $text" },
+            .semantics { contentDescription = "Audio quality: ${AudioPresentation.qualityLabel(track, true)}; ${AudioPresentation.resolutionDescription(track)}" },
         contentAlignment = Alignment.Center
     ) {
         Row(

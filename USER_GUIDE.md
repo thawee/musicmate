@@ -128,6 +128,8 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 * **High-Performance Pagination:** To prevent application lag and save memory, songs are loaded in chunks of **500 items**. As you scroll to the bottom, the next page loads automatically.
 * **Collections & Filters:** In the Playlists overview, tap **New Smart Playlist** even if you have not created a playlist yet. Opening another library category clears an earlier related-track filter; use Back on a filtered list to remove the filter without changing categories.
 * **Music Center & Accessibility:** Tap the mini-player artwork or track title to open Music Center. From an empty Queue, **Browse Library** closes the sheet and opens All Songs. TalkBack exposes actions to open Music Center and flip Now Playing between cover art and audio details; the Studio Console seek and volume rails support accessibility adjustments and Left/Right keyboard keys.
+
+* **MQA tracks:** Compact song rows show `MQA` with the encoded file resolution. Expanded badges and the Studio Console distinguish `MQA MASTER` from `MQA STUDIO`, using a magenta accent. Audio details show the encoded resolution and, when available, a separately labeled original sample rate. TalkBack includes that original rate in badge descriptions. The original rate comes from file metadata; it does not confirm the decoder or DAC's current output rate.
 * **Scroll Memory & State Context:** When you click on a song to view or edit tags and then return to the main list, the app intelligently remembers your precise scroll position, even if you are scrolled past 500+ items.
 
 ---

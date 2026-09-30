@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.ui.graphics.Color
 import apincer.music.core.model.Track
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,7 +15,8 @@ class VUMeterAndBadgeTest {
         sampleRate: Long = 44100,
         bitRate: Long = 0,
         fileType: String = "FLAC",
-        qualityInd: String = ""
+        qualityInd: String = "",
+        originalRate: Long = 0
     ): Track {
         return Proxy.newProxyInstance(
             Track::class.java.classLoader,
@@ -27,6 +29,7 @@ class VUMeterAndBadgeTest {
                 "getAudioBitRate" -> bitRate
                 "getFileType" -> fileType
                 "getQualityInd" -> qualityInd
+                "getMqaSampleRate" -> originalRate
                 "getTitle" -> "Sample Track"
                 "getArtist" -> "Sample Artist"
                 "getPath" -> "/storage/emulated/0/Music/sample.$fileType"
@@ -83,7 +86,7 @@ class VUMeterAndBadgeTest {
             fileType = "DSF"
         )
         val badgeText = getUnifiedBadgeText(track)
-        assertEquals("DSD 64", badgeText)
+        assertEquals("DSD64", badgeText)
     }
 
     @Test
@@ -97,6 +100,79 @@ class VUMeterAndBadgeTest {
         )
         val badgeText = getUnifiedBadgeText(track)
         assertEquals("320k", badgeText)
+    }
+
+    @Test
+    fun mqaIdentitySurvivesGenericPcmTiers() {
+        for (quality in listOf("MQA", "MQA Studio")) {
+            for ((bits, rate) in listOf(16 to 44100L, 24 to 44100L, 24 to 96000L)) {
+                val track = createMockTrack(bitDepth = bits, sampleRate = rate, qualityInd = quality)
+                val resolution = if (rate == 96000L) "96" else "44.1"
+                assertEquals("$quality at $bits/$rate", "MQA $bits/$resolution", getUnifiedBadgeText(track))
+                val expanded = if (quality == "MQA Studio") "MQA STUDIO" else "MQA MASTER"
+                assertEquals(expanded, AudioPresentation.qualityLabel(track, true))
+                assertEquals("MQA", AudioPresentation.qualityLabel(track, false))
+                assertEquals(Color(0xFFE040FB), AudioPresentation.accent(track))
+            }
+        }
+    }
+
+    @Test
+    fun mqaFallbackLabelsPreserveStudioIdentityAndAccent() {
+        assertEquals("MQA STUDIO", AudioPresentation.qualityLabel("MQA Studio", true))
+        assertEquals("MQA MASTER", AudioPresentation.qualityLabel("MQA", true))
+        assertEquals("MQA", AudioPresentation.qualityLabel("MQA STUDIO", false))
+        assertEquals(Color(0xFFE040FB), AudioPresentation.accent("MQA STUDIO"))
+        assertEquals(Color(0xFF64B5F6), AudioPresentation.accent(null as String?))
+        assertEquals(Color(0xFFFFD700), AudioPresentation.accent("HR"))
+    }
+
+    @Test
+    fun originalMqaRateIsLabeledAndDoesNotReplaceEncodedRate() {
+        for (quality in listOf("MQA", "MQA Studio")) {
+            for (originalRate in listOf(0L, 44100L, 88200L, 192000L)) {
+                val track = createMockTrack(bitDepth = 24, qualityInd = quality, originalRate = originalRate)
+                assertEquals("MQA 24/44.1", getUnifiedBadgeText(track))
+                assertEquals("24/44.1", AudioPresentation.compactResolution(track))
+                val original = when (originalRate) {
+                    44100L -> "44.1 kHz"
+                    88200L -> "88.2 kHz"
+                    192000L -> "192 kHz"
+                    else -> ""
+                }
+                assertEquals(original, AudioPresentation.originalRate(track))
+                assertEquals(
+                    "Encoded: 24-bit / 44.1 kHz" + if (original.isEmpty()) "" else "; Original: $original",
+                    AudioPresentation.resolutionDescription(track)
+                )
+            }
+        }
+    }
+
+    @Test
+    fun originalRateRequiresMqaAndValidMetadata() {
+        assertEquals("", AudioPresentation.originalRate(createMockTrack(originalRate = 192000)))
+        assertEquals("", AudioPresentation.originalRate(createMockTrack(qualityInd = "MQA", originalRate = -1)))
+        assertEquals("", AudioPresentation.originalRate(null))
+        assertEquals("", AudioPresentation.encodedResolution(null))
+        assertEquals("-", AudioPresentation.qualityLabel(null as Track?, true))
+        val incomplete = createMockTrack(bitDepth = 0, sampleRate = 0, bitRate = 320000, qualityInd = "MQA")
+        assertEquals("MQA 320k", getUnifiedBadgeText(incomplete))
+        assertEquals("320k", AudioPresentation.resolutionDescription(incomplete))
+    }
+
+    @Test
+    fun genericQualityAndDsdPrecedenceArePreserved() {
+        val pcm = createMockTrack(bitDepth = 24)
+        assertEquals("24-BIT 24/44.1", getUnifiedBadgeText(pcm))
+        assertEquals("24-BIT STUDIO", AudioPresentation.qualityLabel(pcm, true))
+        assertEquals(Color(0xFFFFD700), AudioPresentation.accent(pcm))
+        val dsd = createMockTrack(bitDepth = 1, sampleRate = 5644800, qualityInd = "MQA Studio")
+        assertEquals("DSD128", getUnifiedBadgeText(dsd))
+        assertEquals("DSD AUDIO", AudioPresentation.qualityLabel(dsd, true))
+        assertEquals("DSD128", AudioPresentation.encodedResolution(dsd))
+        val unknownQuality = createMockTrack(qualityInd = "-")
+        assertEquals("CD", AudioPresentation.qualityLabel(unknownQuality, false))
     }
 
     @Test

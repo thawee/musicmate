@@ -269,16 +269,13 @@
         blue   - MQA Studio
     -->
     <!--
-    <color name="resolution_dsd">#009688</color>
-    <color name="resolution_lossless">#FFC107</color>
+        <color name="resolution_lossless">#FFC107</color>
     <color name="resolution_lossy">@color/grey400</color>
     <color name="resolution_hires">#FF9800</color>
 
     <color name="resolution_pcm_44_48">#FFFF00</color>
     <color name="resolution_pcm_96">#FFFFFF</color>
-    <color name="resolution_dsd_64_128">#00FFFF</color>
-    <color name="resolution_dsd_256">#FF0000</color>
-    <color name="resolution_mqa">#4CAF50</color>
+            <color name="resolution_mqa">#4CAF50</color>
     <color name="resolution_mqa_studio">#2196F3</color>
     -->
 
@@ -293,10 +290,7 @@
     <!-- Dark-mode Optimized -->
     <color name="resolution_pcm_44_48">#4FC3F7</color>   <!-- Light blue -->
     <color name="resolution_pcm_96">#81D4FA</color>     <!-- Softer blue -->
-    <color name="resolution_dsd_64_128">#9575CD</color>  <!-- Soft purple -->
-    <color name="resolution_dsd_256">#7E57C2</color>    <!-- Deeper purple -->
-    <color name="resolution_dsd">#B39DDB</color>        <!-- General DSD -->
-    <color name="resolution_mqa">#66BB6A</color>         <!-- Soft green -->
+                <color name="resolution_mqa">#66BB6A</color>         <!-- Soft green -->
     <color name="resolution_mqa_studio">#42A5F5</color>  <!-- Blue-green -->
     <color name="resolution_lossless">#FFCA28</color>   <!-- Soft amber -->
     <color name="resolution_hires">#FFB300</color>      <!-- Gold (hi-res) -->
@@ -308,8 +302,7 @@
     <color name="quality_unknown">#9E9E9E</color>     <!-- Neutral grey -->
     <color name="quality_unknown_black">#424242</color> <!-- Soft dark -->
 
-    <color name="file_format_dsd">#ffb300</color>
-    <color name="file_format_lossless">#ffecb3</color>
+        <color name="file_format_lossless">#ffecb3</color>
     <color name="file_format_lossy">@color/grey400</color>
 
     <color name="text_badge">#ffe0e0e0</color>     <!-- Neutral grey -->
@@ -345,8 +338,7 @@
     <color name="sample_rate_88_96">#ffb300</color>
     <color name="sample_rate_176_192">#ffa000</color>
     <color name="sample_rate_352_384">#f28316</color>
-    <color name="sample_rate_dsd64_dsd256">#f28316</color>
-    -->
+        -->
 
     <!-- Common colors -->
 
@@ -391,8 +383,7 @@
     <color name="mqa_master">#4CAF50</color>
     <color name="mqa_studio">#2196F3</color>
     <color name="mqa_cd">#ffeeeeee</color>
-    <color name="dsd_256">#2196F3</color>
-
+    
     <!--
     https://m3.material.io/theme-builder#/custom
     from  Material Theme Builder
@@ -572,9 +563,7 @@
     <color name="drdb_background">#36454F</color>
 
     <!--
-    <color name="quality_dsd_text">#d8b4fe</color>
-    <color name="quality_dsd_background">#6b21a8</color>
-    <color name="quality_cd_text">#93c5fd</color>
+            <color name="quality_cd_text">#93c5fd</color>
     <color name="quality_cd_background">#1d4ed8</color>
     <color name="quality_cd_ext_text">#93c5fd</color>
     <color name="quality_cd_ext_background">#1d4ed8</color>
@@ -587,8 +576,8 @@
     <color name="quality_lc_text">#d1d5db</color>
     <color name="quality_lc_background">#374151</color>
     -->
-    <color name="quality_dsd_text">#E9D5FF</color>
-    <color name="quality_dsd_background">#6B21A8</color>
+    <color name="quality_dsd_text">#00E5FF</color> <!-- Cyan -->
+    <color name="quality_dsd_background">#1A00E5FF</color> <!-- Cyan 10% -->
 
     <color name="quality_cd_text">#BFDBFE</color>
     <color name="quality_cd_background">#1E3A8A</color>

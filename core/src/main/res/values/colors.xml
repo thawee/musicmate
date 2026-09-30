@@ -27,4 +27,14 @@
     <color name="mm_label_lossless_bg">#1A009688</color>
     <color name="mm_label_lossy_bg">#1A607D8B</color>
 
+
+    <!-- Tiered Badges -->
+    <color name="badge_dsd_text">#00E5FF</color> <!-- Cyan -->
+    <color name="badge_dsd_bg">#1A00E5FF</color>
+    <color name="badge_mqa_text">#E040FB</color> <!-- Purple -->
+    <color name="badge_mqa_bg">#1AE040FB</color>
+    <color name="badge_hires_text">#FFD700</color> <!-- Gold -->
+    <color name="badge_hires_bg">#1AFFD700</color>
+    <color name="badge_cd_text">#64B5F6</color> <!-- Blue -->
+    <color name="badge_cd_bg">#1A64B5F6</color>
 </resources>

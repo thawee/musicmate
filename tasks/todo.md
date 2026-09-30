@@ -1,6 +1,73 @@
-# Compact Smart Queue Header & Playlist Integration
+# MQA display fixes
+
+## Documentation and commit follow-up
+
+- [ ] Update DESIGN.md, UI.md, and CHANGELOG.md to describe the implemented MQA behavior.
+- [ ] Stage only MQA changes and verify the staged source snapshot builds and passes app tests.
+- [ ] Commit the MQA fix and documentation; preserve unrelated working-tree changes.
+
+Plan and verification: `tasks/mqa-display-fix-plan.md`. Implemented; 94 app tests and debug build pass. Eight previews visually inspected; screenshot references and remaining live-device matrix pending.
+
+- [x] Add MQA/MQA Studio regression cases.
+- [x] Share native quality labels and colors; prioritize MQA over generic PCM tiers.
+- [x] Show encoded and original sample rates in player details and badge accessibility descriptions.
+- [x] Verify compact/wide layouts, focused and app tests, debug build, screenshots, and scoped diffs.
+- [x] Update UI/user documentation and record runtime verification limits.
+
+# Full-Height Music Center (Eliminate Empty Black Gap Above Sheet)
 
 ## Status: 🟢 Completed & Verified
+
+### Objective
+Expand Music Center (`AudioHubSheet.kt`) to full height (filling available vertical space ~95-100% like Spotify and Apple Music), eliminating the empty black backdrop above the previous 65% clamped sheet.
+
+### Checklist
+- [x] **Task 1: Update `AudioHubSheet.kt` to Full Height**
+  - [x] Remove hardcoded `sheetHeight = screenHeightDp * 0.65f` clamping.
+  - [x] Set root content Column to `Modifier.fillMaxSize()`.
+  - [x] Ensure `Box` container in `AudioHubContainer` uses `fillMaxSize()` for MODAL and PREVIEW presentations.
+- [x] **Task 2: Verify Layout Behavior across Tabs**
+  - [x] `NowPlayingPage.kt`: Verify album art flip container and controls expand gracefully with `.weight(1f)` without clipping.
+  - [x] `QueuePage.kt`: Verify queue list takes full height without clipping.
+  - [x] `MediaServerPage.kt`: Verify scrollable cards display properly with expanded space.
+- [x] **Task 3: Unit Tests, Screenshots & Regression Testing**
+  - [x] Run `./gradlew :app:testDebugUnitTest :core:testDebugUnitTest`: All tests pass cleanly.
+  - [x] Run `./gradlew assembleDebug`: Clean debug APK assembled (`app/build/outputs/apk/debug/app-debug.apk`).
+  - [x] Check git diff hygiene (`git diff --check` passes with 0 warnings).
+
+---
+
+# Fix Music Center Play & Next Controls (Items 1 to 4)
+
+## Status: 🟢 Completed & Verified
+
+### Objective
+Resolve the 4 identified issues in Music Center -> Playback screen and underlying playback control architecture:
+1. Permit playback start from Play & Next in `NowPlayingPage.kt` via `canStartPlayback` and `UiLayoutPolicy.playControlsEnabled`.
+2. Dim Next and Previous button icons when disabled (`Color(0x66FFFFFF)` vs `Color.White`).
+3. Differentiate user-initiated skips from natural looping on `RepeatMode.ONE` in `QueueManager.java` and `MusicMateServiceImpl.java`.
+4. Prioritize queue order (`getCurrentTrack()` / `getNextTrack()`) over random selection when starting playback from the queue in `MainActivity.java`.
+
+### Checklist
+- [x] **Task 1: Permit Playback Start in `NowPlayingPage.kt` & `UiLayoutPolicy.kt`**
+  - [x] Add `playControlsEnabled` to `UiLayoutPolicy.kt` and tests in `UiLayoutPolicyTest.kt`.
+  - [x] Support `canStartPlayback` parameter in `NowPlayingPage.kt` and wire it in `AudioHubSheet.kt`.
+- [x] **Task 2: Correct Disabled Icon Tint for Next and Previous in `NowPlayingPage.kt`**
+  - [x] Apply `if (playControlsEnabled) Color.White else Color(0x66FFFFFF)` to Next icon.
+  - [x] Apply `if (controlsEnabled) Color.White else Color(0x66FFFFFF)` to Previous icon.
+- [x] **Task 3: Differentiate User Skip from Natural Loop on `RepeatMode.ONE`**
+  - [x] Overload `QueueManager.getNextTrack(boolean forceSkip)` to bypass `RepeatMode.ONE` on user skip.
+  - [x] Call `getNextTrack(true)` for explicit skip actions in `MusicMateServiceImpl.java`, while keeping `getNextTrack(false)` for natural completion.
+  - [x] Add regression tests in `QueueManagerTest.java`.
+- [x] **Task 4: Preserve Queue Order on Initial Playback in `MainActivity.java`**
+  - [x] In `onDockPlayPauseClicked()`, query `qm.getCurrentTrack()` or `qm.getNextTrack()` when shuffle is off, falling back to random only when shuffle is on or no track is found.
+- [x] **Task 5: Verification & Polish**
+  - [x] Run `:core:testDebugUnitTest` and `:app:testDebugUnitTest`: all unit tests pass cleanly.
+  - [x] Check git diff hygiene: `git diff --check` passes with zero warnings.
+
+---
+
+# Compact Smart Queue Header & Playlist Integration
 
 ### Objective
 1. **Drastically reduce vertical space footprint of Queue header:**
@@ -747,3 +814,30 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 - [ ] Automated suites, debug build, focused lint, and diff hygiene pass.
 - [ ] Human visual review approves reference-image updates.
 - [ ] Device findings and remaining limits are documented.
+# App functionality and interface review (2026-09-30)
+
+- [x] Inspect current functionality, UI flows, pending changes, and differences against main.
+- [x] Run relevant automated checks and inspect available device/runtime evidence.
+- [x] Record confirmed defects, usability findings, and verification limits in tasks/app-review-2026-09-30.md.
+
+Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail for 21/26 previews; lint reports 33 errors. Five fresh previews inspected visually. No connected device; live interaction checks remain outstanding in the report.
+# MQA display review (2026-09-30)
+
+- [x] Trace MQA detection and native/Web UI display paths.
+- [x] Verify display inconsistencies against source, relevant tests, and available runtime evidence.
+- [x] Report confirmed findings with file references and verification limits in tasks/mqa-display-review-2026-09-30.md. Six focused tests passed; no device connected.
+
+## Task 18: Unify DSD Audio Badge Styling (Cyan)
+
+**Description:** Unify the DSD color styling across the app. Currently, the legacy XML views (using `TagUtils.java` and `BadgeView`) misclassify DSD as either Gold (`quality_hd`) or generic grey (`mm_label_lossless`), while the modern Compose UI uses a distinct Cyan (`#00E5FF`). We will adopt Cyan as the single source of truth, update `TagUtils.java` to support tiered badge colors, and clean up duplicate XML color definitions.
+
+**Acceptance criteria:**
+- [x] Define definitive Cyan color tokens for DSD (`badge_dsd_text`, `badge_dsd_bg`) in `colors.xml`.
+- [x] Clean up abandoned/duplicate `resolution_dsd` and `quality_dsd` colors in `colors.xml`.
+- [x] Upgrade `TagUtils.getCodecColor()` and `TagUtils.getCodecBgColor()` to return specific tiered colors (Cyan for DSD, Purple for MQA, Gold for Hi-Res, Blue for CD) instead of a binary lossy/lossless check.
+- [x] Fix `TagUtils.getResolutionColor()` to return the Cyan DSD color.
+- [x] Ensure `TagUtils.formatCodec()` formats DSD compactly (e.g., "DSD64") rather than just the file extension.
+
+**Verification:**
+- [x] Run `app` unit tests to ensure `TagUtils` logic isn't broken.
+- [x] Run `:app:assembleDebug` to verify no AAPT color resource linking errors.

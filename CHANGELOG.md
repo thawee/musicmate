@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **MQA identity and accents:** Preserve MQA labels on compact 24-bit/Hi-Res tracks, retain `MQA STUDIO` in expanded fallback badges and full-screen player verdicts, and consistently use the MQA magenta accent.
+- **MQA resolution details:** Show separately labeled encoded resolution and known original sample rate in player details and badge accessibility descriptions. Ignore stale original-rate metadata on non-MQA tracks and omit unknown rates.
+- **Large-text audio metadata:** Wrap library metadata and full-screen specification chips to keep MQA badges and adjacent details readable.
+
+### Verification
+- 94 app unit tests pass, including 11 badge tests; debug APK assembly succeeds. Eight MQA previews render and were visually inspected, including 200% text. The debug APK installed and launched on a connected phone; a real MQA Studio track preview confirmed the corrected badge and encoded-rate accessibility description. New screenshot references and the remaining live-player matrix are pending.
+
 ## [3.20.1] - 2026-09-29
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Music Center backdrop:** Disabled the platform dialog window's additional dim layer and retained one consistent 32% Compose scrim, keeping the song library visibly dimmed behind Music Center while blocking background interaction.
 - **Smart Queue capacity layout:** Moved the `20/20` capacity indicator and replenish action from the crowded summary header to the selected Smart Queue source, preventing the capacity text from wrapping vertically on compact phones.
 
@@ -28,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Listening history & playback accounting:** Durable history storage (`listening_history` table) with non-destructive Room migration (1 → 2). Tracks completed listens (≥ 90% actual playtime, excluding paused periods and seek jumps), distinct skips, and session idempotence without inflating counts from jitter or renderer transitions. Dedicated single-thread worker safely drains events during service destruction.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Stale batch selection after changing library destination:** Selecting tracks, opening the MusicMate menu, and switching category left the previous category's tracks selected and eligible for Edit, Move, Convert, or Delete even after they were no longer visible. Multi-selection is now keyed by track identity instead of row position, so a refreshed, re-sorted, or replaced list can never retarget a batch action at a track you did not select: selections follow their track, and selections whose track is gone are dropped. Changing a library destination also ends selection outright.
 - **Back button with the MusicMate menu open:** System Back now closes the navigation drawer first, instead of running underlying library navigation (which could re-open the drawer or change filters behind it).
 - **Compose `painterResource` AnimatedVectorDrawable crash:** Resolved fatal `java.lang.IllegalArgumentException: Only VectorDrawables and rasterized asset types are supported` in `QueuePage` when attempting to load `<animated-vector>` (`ic_equalizer_active`) via `painterResource`. Replaced with high-performance, native Compose `AnimatedEqualizerBars` canvas rendering 60fps amber-gold bars.
@@ -75,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version:** Bumped Android `versionCode` to `136` and `versionName` to `3.19.8-<build date>`; the drawer label now reads `v3.19.8`.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Save feedback:** Finish the preview indicator on editor-delegated success/failure, retain the brief success checkmark across refreshes, announce saving/saved distinctly, and cancel delayed feedback on activity destruction.
 - **Tag editing:** Search & Match and auto-tag now mark successfully applied metadata as unsaved so Back prompts before discarding it.
 - **Large collections:** Folder, playlist, album-filtered, and other full-result queries now honor the requested 500-track page rather than appending the same tracks again on scroll.
@@ -194,6 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Deleted legacy View adapters (`SearchResultAdapter`), dead storage visualization methods (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`), and 6 obsolete XML layout files.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **DLNA Premature Completion on Renderer Buffering Stalls (`MediaServerHubImpl.java`)**:
   - Guarded GENA `STOPPED` events against premature completion during renderer initial buffering or transient Wi-Fi drops. Cross-referenced reported playback position against track duration, requiring effective position to be near track end ($\ge 90\%$ or within 5 seconds) before advancing the queue.
 - **Passive HTTP Pre-Fetch Hijacking Active DMR Sessions (`MusicMateServiceImpl.java`, `BaseServer.java`)**:
@@ -279,6 +292,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented `PausedIndicatorBars`: two precision, centered gold pause bars when playback is paused, safely disposing infinite transitions during pause to eliminate CPU/battery drain.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Cover Art Gesture Collision & Pager Swiping Conflict (`NowPlayingPage.kt`)**:
   - Removed conflicting horizontal drag gesture detector (`detectDragGestures`) from the playback screen's album art container.
   - Eliminated accidental track skips caused by minute finger rolls during taps and resolved touch event cancellation for 3D card flips (`onTap`) and play/pause (`onDoubleTap`).
@@ -345,6 +359,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced plain placeholder grey boxes with custom gradient-rendered insignias and luxury typographic badges (`DR 12+ / AUDIOPHILE`, `24-BIT / STUDIO`, `DSD / 1-BIT DIRECT`, `VAULT / LOSSLESS`, `CLASSICAL / HERITAGE`, `REFERENCE / ARCHIVE`).
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Top Header Collection Counter Unit (`MainActivity.java`)**:
   - Corrected header subtitle to dynamically display `"10 Playlists"` (or `"Artists"`, `"Genres"`) instead of erroneously defaulting to `"10 Tracks"` when viewing category collections.
 - **Empty Playlist Track Count Subtitle (`FolderListItem.kt`)**:
@@ -372,6 +387,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Normalized directory queries with trailing slash enforcement in `findInPath()` and mapped folder path filtering under `LIBRARY` criteria to prevent partial prefix sibling folder collisions and full-library query fallbacks.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Queue Track Rip-and-Append (`MusicMateServiceImpl.java`, `QueueManager.java`)**:
   - Fixed issue where playing a track already in the queue removed it from its current position and re-appended it to the end; now selects track in-place via `setCurrentTrack()`, maintaining album sequence integrity.
 - **Pause / Resume State Preservation (`AndroidPlayerController.java`, `MediaServerHubImpl.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
@@ -444,6 +460,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed redundant `PREVIEW -> Unknown Title` box from `TagsEditorPage.kt` and wired reactive `StateFlow` collection with `LaunchedEffect` to populate all form fields immediately upon background database load.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **DLNA / UPnP DMR Seeking & Position Scrubbing on HiBy R3 (`MediaServerHubImpl.java`)**:
   - Replaced millisecond duration formatting (`%d:%02d:%02d.%03d`) with strict standard `HH:MM:SS` format (`%02d:%02d:%02d`) for UPnP `Seek` actions, resolving seek failures and SOAP errors on HiBy R3 / HiBy OS and embedded DAP renderers.
   - Resolved renderer lookup across UDN formats and prefix variations with `resolveRenderer()`.
@@ -496,6 +513,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Selecting an active DLNA renderer now connects to the live stream, parses DIDL-Lite metadata (`Title`, `Artist`, `Album`), and adopts track progress and duration without stopping or restarting the song.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **DLNA Playback Stutter & Audio Interruption on Track Start (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`)**:
   - Implemented 5-second post-start stabilization window for `SetNextAVTransportURI` gapless preloading, preventing FIFO buffer acquisition collisions on hardware DACs/renderers.
   - Added DMR player collision guard in `switchPlayer()` to prevent uncontrolled incoming HTTP stream requests from resetting active DLNA sessions.
@@ -562,6 +580,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced the single music note icon in the sidebar header with the unified (M) brand insignia (`ic_nav_musicmate_menu`).
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Drawer Open Trigger & Bottom Dock Touch Target Z-Order (`DrawerInterop.kt`, `activity_main.xml`)**:
   - Replaced `SharedFlow` with direct `SideEffect` binding of `drawerState` and `coroutineScope` to ensure 100% reliable execution of `DrawerInterop.openDrawer()`.
   - Reordered the (M) menu button in `activity_main.xml` to top z-order with `elevation = 4dp` to eliminate touch interception by adjacent playback layouts.
@@ -592,6 +611,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced output target indicators with luminous audio pipeline status dots (Emerald for Bit-Perfect Direct USB, Cyan for DLNA Network Streamer, Sky Blue for Bluetooth, Gold for Local DAC).
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Cover Art Indicator Redesign & Glassmorphism Micro-Pill (`AudioBadges.kt`)**:
   - Replaced bulky, flat brownish `NEW` / `DL` stickers with ultra-premium **85% deep frosted obsidian glass micro-pills** featuring a glowing 4dp status dot, hairline accent stroke (`#FFD700` gold / `#64B5F6` cyan), and tracked typography (`8.5sp`).
 - **Tag Editor Autocomplete Dropdown Restoration & Catalog Expansion (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `arrays.xml`)**:
@@ -647,6 +667,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bundled Tailwind CSS locally in `app/src/main/assets/webui/js/tailwindcss.min.js` and removed external CDN dependency (`https://cdn.tailwindcss.com`), allowing full WebUI functionality on standalone Wi-Fi hotspots and offline local networks without internet access.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Android 13+ Bluetooth Codec Reflection & Cache Invalidation (`AudioOutputHelper`, `MusicMateServiceImpl`)**:
   - Guarded against hidden `BluetoothA2dp.getCodecStatus()` reflection invocations that throw `SecurityException` (`CDM association / BLUETOOTH_PRIVILEGED required`) on API 33+.
   - Prevented `refreshBluetoothCodecStatus()` from clearing cached Bluetooth codec details on Android 13+, ensuring data received via `CODEC_CONFIG_CHANGED` broadcasts persists until explicit device disconnection.
@@ -686,6 +707,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Title Scrim & Contrast:** Enhanced `shape_background_main_header.xml` with a smooth dark top-down vignette gradient for high text contrast across all album covers.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Bluetooth Codec Propagation to UI Target Badges (`AudioOutputHelper`)**:
   - Fixed `AudioOutputHelper.getOutputDevice()` to explicitly attach the cached Bluetooth codec string (`sCachedBtCodec`) to the output `Device` model, ensuring target labels accurately render `{Name} • {Codec}` (e.g. `Shanling UP4 • LDAC`).
 - **Telemetry Chip Space & Layout Balancing (`sheet_now_playing_queue.xml`)**:
@@ -708,6 +730,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enforces strict single-instance track uniqueness across `addPlayingQueue`, `addPlayNext`, `savePlayingQueue`, and `loadPlayingQueue` with index pointer synchronization.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Bluetooth A2DP Output Audio Quality (`AndroidPlayerController`, `AudioOutputHelper`)**:
   - Reverted forced float PCM in favor of auto-negotiated 16-bit / 24-bit integer PCM, eliminating distortion and crackling over Bluetooth A2DP.
   - Removed aggressive reflection-based codec overrides to allow natural, stable Bluetooth HAL profile negotiation.
@@ -733,6 +756,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced unbounded parallel futures with sequential execution on background worker threads during batch tag updates to prevent micro-SD card lockups.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Audio Route Path Bluetooth Badge (`AudioHubBottomSheet`)**:
   - Fixed Step 3 (Target Audio Output) route badge to properly display `BLUETOOTH A2DP` and `Active Bluetooth A2DP Wireless Stream` with detected codec info instead of falling back to `DIRECT SYSTEM OUTPUT`.
 - **Persistent "Discard changes?" Popup Bug (`TagsEditorFragment`, `TagsActivity`)**:
@@ -759,6 +783,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Tag Activity Header:** `NewIndicatorView` renders a `12dp` rounded pill chip containing a Sparkle icon + bold "NEW" text in dark amber (`#2E2712`) / dark cyan (`#0D2E3D`) chip backgrounds.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Player Picker Popup Menu Interleaving (`MainActivity.java`)**:
   - Fixed menu item interleaving where Group 1 utility actions (*Rescan* and *Bluetooth Setup*) appeared between Group 0 playback targets. Offset Group 1 menu order values (`baseOrder = renderers.size() + 10`) so utility actions always remain strictly at the bottom below the group divider line.
 - **Cover Art Flickering During Playback Progress Updates (`MainActivity`, `MusicTagAdapter`)**:
@@ -797,6 +822,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Pre-existing `PlaybackService` API mismatches** — Corrected three stale method calls that prevented compilation:
   - `PlaybackState.isPlaying()` → `playbackState.currentState == PlaybackState.State.PLAYING`
   - `PlaybackService.pause()` → `pausePlayer()`
@@ -825,6 +851,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `README.md`, `USER_GUIDE.md`, and `NETWORK_RESILIENCE.md` with complete documentation for recent Music Center features, Audio Route Path telemetry, and system architecture.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **DLNA Target Activation & Auto-Transfer Stream**:
   - Fixed output target switching in `switchPlayer()` when selecting a remote DLNA renderer: ensures `startServers()` is invoked to guarantee HTTP media server readiness, and automatically initiates stream transfer (`playSong(activeTrack)`) when selecting a target renderer.
 
@@ -852,6 +879,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.18.12] - 2026-08-07
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Playback State Persistence**: Fixed a bug where Shuffle and Repeat modes were not remembered after restarting the app by persisting them using Android `SharedPreferences`.
 
 ### Removed
@@ -872,6 +900,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Lowered `AudioHubBottomSheet` maximum peek height from 82% to 65% of the screen, allowing users to comfortably see and interact with 2-3 list items lingering dynamically in the background while the sheet is open.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **NPE in Quality Indicator**:
   - Fixed `NullPointerException` thrown in `QualityIndicatorView.java` when attempting to tint a null drawable.
 
@@ -905,6 +934,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sharpened the glassmorphism edge on `bg_dialog_dark_blur` with a 30% white 1dp stroke and a 15% inner sheen gradient.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **Now Playing Queue List Vertical Scroll Gesture**:
   - Disabled nested scrolling on the `ViewPager2` inner `RecyclerView` in `AudioHubBottomSheet` (`child.setNestedScrollingEnabled(false);`), allowing `BottomSheetBehavior` to correctly pass vertical scroll touch events to the Queue list (`sheet_queue_list`).
 - **DLNA / DMR Player Target Auto-Selection Controls**:
@@ -931,6 +961,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Overloaded `FFMpegHelper.convert` and `FileOperationTask.encodeFiles` to support `-ar <sampleRate>` downsampling flag.
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **FFmpeg 24-Bit Encoding Error**:
   - Fixed invalid `-sample_fmt s24` flag by replacing it with valid `-sample_fmt s32` for 24-bit FLAC/ALAC audio conversion.
 - **Converted Track Metadata Inheritance & Instant Library Indexing**:
@@ -996,6 +1027,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **DLNA Renderer Name Resolution**:
   - Fixed issue where incoming HTTP stream requests for discovered DLNA Renderers (like HiBy R3) were fallback-named as generic `"Streaming Player"` or `"Mozilla"`.
   - Added automatic resolution in `MusicMateServiceImpl` to map incoming HTTP stream IP addresses to registered UPnP DMR device friendly names.

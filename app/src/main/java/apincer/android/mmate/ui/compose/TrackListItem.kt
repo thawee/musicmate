@@ -16,6 +16,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -190,19 +192,19 @@ fun TrackListItem(
                 val screenWidthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
                 val isCompact = screenWidthDp < 390
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                FlowRow(
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     if (isCompact) {
                         UnifiedAudioBadge(track = track)
-                        Spacer(modifier = Modifier.width(4.dp))
                         DynamicRangeMeter(track = track, compact = true)
                     } else {
                         QualityBadge(track = track)
-                        Spacer(modifier = Modifier.width(4.dp))
                         ResolutionBadge(track = track)
-                        Spacer(modifier = Modifier.width(5.dp))
                         DynamicRangeMeter(track = track, compact = false)
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = StringUtils.formatDuration(track.audioDuration, false),
                         color = Color(0xFF888888),

@@ -15,6 +15,27 @@ import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
 
 internal object UxPreviewFixtures {
+    fun mqaTrack(studio: Boolean): Track = (track(
+        id = if (studio) 202 else 201,
+        title = if (studio) "Studio MQA reference" else "MQA reference",
+        artist = "Reference Artist",
+        album = "MQA Display Tests",
+        encoding = "FLAC",
+        sampleRate = 44_100,
+        bitDepth = 24,
+        durationSeconds = 300.0
+    ) as AudioTag).apply {
+        setQualityInd(if (studio) "MQA Studio" else "MQA")
+        setMqaSampleRate(192_000)
+    }
+
+    fun mqaPlaying(): NowPlayingState = nowPlayingPlaying().apply {
+        track.value = mqaTrack(studio = true)
+        specsVerdict.value = AudioPresentation.qualityLabel(track.value, true)
+        specsFormat.value = "FLAC"
+        signalPathSteps.clear()
+    }
+
     val tracks: List<Track>
         get() = listOf(
             track(

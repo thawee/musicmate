@@ -1,6 +1,6 @@
 # MusicMate UI/UX Design System & Human Interface Guidelines
 
-> **Last Updated:** 2026-09-25 · **Owner:** @thawee
+> **Last Updated:** 2026-09-30 · **Owner:** @thawee
 >
 > **Scope:** This document is the authoritative specification for MusicMate's UI/UX design tokens, interaction models, gesture mappings, menus, theming, modal surfaces, and Jetpack Compose component architectures. For backend system architecture, audio engine internals, and multi-target playback routing, see [`DESIGN.md`](file:///Users/thawee.p/Workspaces/github/musicmate/DESIGN.md) and [`PLAYBACK_ARCHITECTURE.md`](file:///Users/thawee.p/Workspaces/github/musicmate/PLAYBACK_ARCHITECTURE.md).
 
@@ -319,7 +319,9 @@ File metadata badges use frosted obsidian glass micro-capsules (`Color(0xD910101
 - **Quality Tier (`QualityBadge`):**
   - **DSD / 1-Bit Direct:** Luminous Cyan LED dot (`#00E5FF`)
   - **Hi-Res Audio (24-bit / ≥48kHz):** Luminous Gold LED dot (`#FFD700`)
-  - **MQA Studio / Master:** Luminous Violet LED dot (`#E040FB`)
+  - **MQA Studio / Master:** Luminous Violet LED dot (`#E040FB`). MQA takes precedence over generic Hi-Res and 24-bit tiers for both labels and accents, including compact rows and the full-screen verdict. Expanded badges retain `MQA STUDIO` versus `MQA MASTER`; compact badges use `MQA` and the encoded file resolution.
+  - **MQA resolution details:** Now Playing anatomy and the Studio Console label the encoded file resolution and known original sample rate separately (for example, `Encoded: 24-bit / 44.1 kHz`, `Original: 192 kHz`). Badge accessibility descriptions include both. The original rate is file metadata and does not indicate active unfolding or DAC output; unavailable original rates are omitted.
+  - **MQA layout:** Below 390dp, the combined badge retains `MQA 24/44.1`; wider rows show separate quality and resolution badges. Library metadata and Studio Console specification chips wrap instead of clipping at large text sizes. Audio-anatomy details remain scrollable.
   - **CD Quality Lossless (16/44.1):** Luminous Sky Blue LED dot (`#64B5F6`)
   - **Standard Lossy (MP3/AAC):** Neutral Steel Grey LED dot (`#9E9E9E`)
   - *Expanded Mode:* In Now Playing hero cards, renders full audiophile grade tokens (`[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● CD QUALITY]`, `[● DSD AUDIO]`, `[● MQA MASTER]`).

@@ -232,18 +232,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 nps.getDurationMs().setValue((long) (song.getAudioDuration() * 1000.0));
                 nps.getProgressMs().setValue(playbackState != null ? playbackState.currentPositionSecond * 1000L : 0L);
 
-                // Quality verdict
-                String verdict;
-                if (apincer.music.core.utils.TagUtils.isLossy(song)) {
-                    verdict = "STANDARD QUALITY";
-                } else if (song.getAudioBitsDepth() >= 24 && song.getAudioSampleRate() > 48000) {
-                    verdict = "HI-RES STUDIO MASTER";
-                } else if (song.getAudioBitsDepth() >= 24) {
-                    verdict = "24-BIT STUDIO QUALITY";
-                } else {
-                    verdict = "CD Quality";
-                }
-                nps.getSpecsVerdict().setValue(verdict);
+                nps.getSpecsVerdict().setValue(
+                        apincer.android.mmate.ui.compose.AudioPresentation.qualityLabel(song, true));
 
                 String fmtCodec = apincer.music.core.utils.TagUtils.formatCodec(song);
                 String fmtRes = apincer.music.core.utils.TagUtils.formatResolution(song.getAudioBitsDepth(), song.getAudioSampleRate(), song.getMqaSampleRate());

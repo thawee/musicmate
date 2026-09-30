@@ -53,18 +53,14 @@ public class TagUtils {
 
     @Deprecated
     public static int getResolutionColor(Context context, Track tag) {
-        // DSD - DSD
-        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
-        // Lossless - >= 24 bits and >= 48 kHz
-        // High Quality - compress
         if(isDSD(tag)) {
-            return context.getColor(R.color.quality_hd);
-        }else if(isHiRes(tag)) {
-            return context.getColor(R.color.quality_hd);
-        }else if(isPCM24Bits(tag)) {
-            return context.getColor(R.color.quality_h24bits);
-        }else if(isLossless(tag) || isMQA(tag)){
-            return context.getColor(R.color.quality_sd);
+            return context.getColor(R.color.badge_dsd_text);
+        }else if(isMQA(tag)) {
+            return context.getColor(R.color.badge_mqa_text);
+        }else if(isHiRes(tag) || isPCM24Bits(tag)) {
+            return context.getColor(R.color.badge_hires_text);
+        }else if(isLossless(tag)){
+            return context.getColor(R.color.badge_cd_text);
         }else {
             return context.getColor(R.color.quality_unknown);
         }
@@ -220,11 +216,17 @@ public class TagUtils {
     }
 
     public static int getCodecColor(Context context, Track tag) {
-        if(isLossy(tag)) {
+        if(isDSD(tag)) {
+            return context.getColor(R.color.badge_dsd_text);
+        } else if(isMQA(tag)) {
+            return context.getColor(R.color.badge_mqa_text);
+        } else if(isHiRes(tag) || isPCM24Bits(tag)) {
+            return context.getColor(R.color.badge_hires_text);
+        } else if(isLossless(tag)) {
+            return context.getColor(R.color.badge_cd_text);
+        } else {
             return context.getColor(R.color.mm_label_lossy);
         }
-
-        return context.getColor(R.color.mm_label_lossless);
     }
 
     public static String getEncodingTypeShort(@UnknownNullability Track tag) {
@@ -361,11 +363,17 @@ public class TagUtils {
     }
 
     public static int getCodecBgColor(Context mContext, @NotNull Track tag) {
-            if(isLossy(tag)) {
-                return mContext.getColor(R.color.mm_label_lossy_bg);
-            }
-
-            return mContext.getColor(R.color.mm_label_lossless_bg);
+        if(isDSD(tag)) {
+            return mContext.getColor(R.color.badge_dsd_bg);
+        } else if(isMQA(tag)) {
+            return mContext.getColor(R.color.badge_mqa_bg);
+        } else if(isHiRes(tag) || isPCM24Bits(tag)) {
+            return mContext.getColor(R.color.badge_hires_bg);
+        } else if(isLossless(tag)) {
+            return mContext.getColor(R.color.badge_cd_bg);
+        } else {
+            return mContext.getColor(R.color.mm_label_lossy_bg);
+        }
     }
 
     public static String formatResolution(int bitPerSampling, long samplingRate, long altSamplingRate) {
@@ -380,7 +388,15 @@ public class TagUtils {
     }
 
     public static String formatCodec(@NotNull Track tag) {
-         String codec = tag.getAudioEncoding();
-         return trimToEmpty(codec).toUpperCase();
+        if(isDSD(tag)) {
+            long sampleRate = tag.getAudioSampleRate();
+            int multiplier = 64;
+            if(sampleRate >= 22579200) multiplier = 512;
+            else if(sampleRate >= 11289600) multiplier = 256;
+            else if(sampleRate >= 5644800) multiplier = 128;
+            return "DSD" + multiplier;
+        }
+        String codec = tag.getAudioEncoding();
+        return trimToEmpty(codec).toUpperCase();
     }
 }

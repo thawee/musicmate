@@ -126,9 +126,9 @@ public class TagUIUtils {
         }else if(isHiRes(tag)) {
             return context.getColor(R.color.resolution_pcm_96);
         } else if(isDSD64(tag)) {
-                return context.getColor(R.color.resolution_dsd_64_128);
+                return context.getColor(R.color.badge_dsd_text);
         } else if(isDSD256(tag)) {
-                return context.getColor(R.color.resolution_dsd_256);
+                return context.getColor(R.color.badge_dsd_text);
         }else {
             // 44.1 - 48
             return context.getColor(R.color.resolution_pcm_44_48);
@@ -151,7 +151,7 @@ public class TagUIUtils {
         }else if(isMQA(tag)){
             return context.getColor(R.color.resolution_mqa);
         }else if(isDSD64(tag) || isDSD256(tag)) {
-            return context.getColor(R.color.resolution_dsd);
+            return context.getColor(R.color.badge_dsd_text);
         } else if(isLossless(tag) || isHiRes(tag)) {
             return context.getColor(R.color.resolution_pcm_96);
         }else {

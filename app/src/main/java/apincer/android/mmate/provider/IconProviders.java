@@ -453,9 +453,9 @@ public class IconProviders {
             long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());
             samplingRate = String.valueOf(dsdRate);
            /* if(dsdRate < 256) {
-                labelColor = context.getColor(R.color.resolution_dsd_64_128);
+                labelColor = context.getColor(R.color.badge_dsd_text);
             }else {
-                labelColor = context.getColor(R.color.resolution_dsd_256);
+                labelColor = context.getColor(R.color.badge_dsd_text);
             } */
         }else if(isMQA(tag)) {
             label = "MQA";
@@ -607,9 +607,9 @@ public class IconProviders {
             long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());
             samplingRate = String.valueOf(dsdRate);
             if(dsdRate < 256) {
-                labelColor = context.getColor(R.color.resolution_dsd_64_128);
+                labelColor = context.getColor(R.color.badge_dsd_text);
             }else {
-                labelColor = context.getColor(R.color.resolution_dsd_256);
+                labelColor = context.getColor(R.color.badge_dsd_text);
             }
         }else if(isMQA(tag)) {
             label = "MQA";

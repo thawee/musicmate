@@ -1,6 +1,6 @@
 # MusicMate Technical & System Architecture Specification
 
-> **Last Updated:** 2026-09-24 · **Owner:** @thawee
+> **Last Updated:** 2026-09-30 · **Owner:** @thawee
 >
 > **Scope:** This document is the authoritative specification for MusicMate's system topology, multi-target playback routing, audio engine pipelines, UPnP/DLNA streaming architecture, metadata tagging, Room DB persistence, and system Architectural Decision Records (ADRs).
 >
@@ -191,6 +191,14 @@ MusicMate houses a comprehensive audio tagging subsystem designed to protect fil
    - **Title Casing & Junk Noise Stripping:** Strips common rip artifacts (e.g., `[FLAC 24-96]`, `www.sitename.com`, track numbers prefixed in titles) and standardizes capitalization.
 
 ---
+
+### Native MQA metadata presentation
+
+`AudioPresentation` in the app UI layer centralizes native quality labels, accents, and resolution formatting. It reuses `TagUtils` predicates, recognizing DSD first, then MQA Studio/MQA before generic Hi-Res and 24-bit PCM tiers. `AudioBadges`, the MainActivity Now Playing state, and the full-screen Studio Console share this policy; the string fallback also preserves Studio identity.
+
+Compact badges show `MQA` and the encoded file resolution. Expanded badges and player verdicts distinguish `MQA MASTER` and `MQA STUDIO`, both using the configured magenta accent. Player technical details and badge accessibility descriptions label the encoded resolution and known `mqaSampleRate` separately. Unknown original rates are omitted, and stale original-rate metadata on non-MQA tracks is ignored. Original-rate metadata does not describe the active decoder or DAC output.
+
+Library metadata rows and full-screen specification chips wrap when space is limited. The change affects presentation only: metadata detection, persistence, playback decoding, and Web API serialization retain their existing contracts.
 
 ## 4. Data Layer, Storage & Persistence
 

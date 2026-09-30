@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import apincer.music.core.utils.TagUtils
+
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.view.WindowManager
@@ -661,26 +663,30 @@ fun FullscreenStudioConsole(
                     }
 
                     // Row 3: Technical Specs Diagnostics Strip with Leading Quality Verdict Badge
-                    val verdictText = state.specsVerdict.value.ifEmpty { "HI-RES AUDIO" }
+                    val verdictText = if (track != null) AudioPresentation.qualityLabel(track, true)
+                    else AudioPresentation.qualityLabel(state.specsVerdict.value, true)
                     val codecStr = track?.audioEncoding?.uppercase()?.ifEmpty { null } ?: state.specsFormat.value.split("•").firstOrNull()?.trim() ?: "PCM"
-                    val sampleRateStr = if (track?.audioSampleRate != null && track.audioSampleRate > 0) "${track.audioSampleRate / 1000.0} kHz" else ""
-                    val bitDepthStr = if (track?.audioBitsDepth != null && track.audioBitsDepth > 0) "${track.audioBitsDepth}-bit" else ""
-                    val resStr = listOf(bitDepthStr, sampleRateStr).filter { it.isNotEmpty() }.joinToString(" ")
+                    val encodedResolution = AudioPresentation.encodedResolution(track)
+                    val resStr = if (track != null && TagUtils.isMQA(track) && encodedResolution.isNotEmpty()) {
+                        "Encoded: $encodedResolution"
+                    } else encodedResolution
+                    val originalRate = AudioPresentation.originalRate(track)
                     val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
                     val rgStr = state.specsReplayGain.value
 
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         StudioSpecChip(
                             text = verdictText,
                             isHighlighted = true,
-                            highlightColor = colorGold
+                            highlightColor = if (track != null) AudioPresentation.accent(track) else AudioPresentation.accent(state.specsVerdict.value)
                         )
                         StudioSpecChip(codecStr)
                         if (resStr.isNotEmpty()) StudioSpecChip(resStr)
+                        if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
                         if (drStr.isNotEmpty()) StudioSpecChip(drStr)
                         if (rgStr.isNotEmpty()) StudioSpecChip(rgStr)
                     }

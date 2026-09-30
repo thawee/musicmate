@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.layout.FlowRow
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -96,9 +98,10 @@ fun NowPlayingPage(
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
     onSelectTargetPlayer: () -> Unit = {},
-    trackArtwork: (@Composable (Track) -> Unit)? = null
+    trackArtwork: (@Composable (Track) -> Unit)? = null,
+    showAudioDetailsInitially: Boolean = false
 ) {
-    var flipped by remember { mutableStateOf(false) }
+    var flipped by remember { mutableStateOf(showAudioDetailsInitially) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (flipped) 180f else 0f,
@@ -494,9 +497,11 @@ fun NowPlayingPage(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         val codecStr = track?.audioEncoding?.uppercase()?.ifEmpty { null } ?: state.specsFormat.value.split("•").firstOrNull()?.trim() ?: "UNKNOWN"
-                        val sampleRateStr = if (track?.audioSampleRate != null && track.audioSampleRate > 0) "${track.audioSampleRate / 1000.0} kHz" else ""
-                        val bitDepthStr = if (track?.audioBitsDepth != null && track.audioBitsDepth > 0) "${track.audioBitsDepth}-bit" else ""
-                        val resolutionStr = if (bitDepthStr.isNotEmpty() || sampleRateStr.isNotEmpty()) "$bitDepthStr $sampleRateStr".trim() else state.specsFormat.value
+                        val encodedResolution = AudioPresentation.encodedResolution(track)
+                        val resolutionStr = if (track != null && TagUtils.isMQA(track) && encodedResolution.isNotEmpty()) {
+                            "Encoded: $encodedResolution"
+                        } else encodedResolution.ifEmpty { state.specsFormat.value }
+                        val originalRate = AudioPresentation.originalRate(track)
                         val bitrateStr = if (track?.audioBitRate != null && track.audioBitRate > 0) "${track.audioBitRate / 1000} kbps" else state.specsBitrate.value.ifEmpty { "" }
                         val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
                         val fileSizeStr = state.specsFileSize.value.ifEmpty { "" }
@@ -532,13 +537,24 @@ fun NowPlayingPage(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        if (originalRate.isNotEmpty()) {
+                            Text(
+                                text = "Original: $originalRate",
+                                color = Color(0xFFEEEEEE),
+                                fontSize = 13.5.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+
                         // Row 1: Resolution & Bitrate
                         val hasResolution = resolutionStr.isNotEmpty() && resolutionStr != "-"
                         val hasBitrate = bitrateStr.isNotEmpty() && bitrateStr != "-"
                         if (hasResolution || hasBitrate) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                            FlowRow(
+                                itemVerticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 if (hasResolution) {
                                     Text(
@@ -553,7 +569,7 @@ fun NowPlayingPage(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 if (hasBitrate) {
                                     Text(
-                                        text = if (hasResolution) " • $bitrateStr" else bitrateStr,
+                                        text = bitrateStr,
                                         color = Color(0xFFBDBDBD),
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Medium,
