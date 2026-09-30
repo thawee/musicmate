@@ -436,7 +436,7 @@ fun StudioProvenanceSection(
                         fieldLabel = stringResource(R.string.preview_artist_label),
                         label = provenance.artist,
                         count = provenance.artistCount,
-                        accentColor = Color(0xFF90CAF9),
+                        accentColor = Color(0xFFFFD700), // Gold accented
                         onClick = {
                             onOpenRelated(Constants.FILTER_TYPE_ARTIST, provenance.artist, "More by ${provenance.artist}")
                         }
@@ -449,7 +449,7 @@ fun StudioProvenanceSection(
                         fieldLabel = stringResource(R.string.preview_album_label),
                         label = provenance.album,
                         count = provenance.albumCount,
-                        accentColor = Color(0xFF90CAF9),
+                        accentColor = Color(0xFF80CBC4), // Acoustic Teal accented
                         onClick = {
                             onOpenRelated(Constants.FILTER_TYPE_ALBUM, provenance.album, "Album: ${provenance.album}")
                         }
@@ -472,7 +472,7 @@ fun StudioProvenanceSection(
                     fieldLabel = stringResource(R.string.preview_folder_label),
                     label = fName,
                     count = provenance.folderCount,
-                    accentColor = Color(0xFF90CAF9),
+                    accentColor = Color(0xFF90CAF9), // Slate Blue accented
                     onClick = {
                         onOpenRelated(Constants.FILTER_TYPE_PATH, provenance.folderPath, "Folder: $fName")
                     }

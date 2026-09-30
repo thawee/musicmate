@@ -74,7 +74,7 @@ fun MusicListScreen(
     onRefresh: () -> Unit,
     onTrackClick: (Track, Int) -> Unit,
     onTrackLongClick: (Track, Int) -> Unit,
-    onTrackMenuClick: (Track, Int) -> Unit,
+    onTrackMenuAction: (Track, Int, Int) -> Unit,
     onTrackQuickPlayClick: (Track) -> Unit = {},
     onFolderPlayClick: (Track) -> Unit,
     onFolderEnqueueClick: (Track) -> Unit,
@@ -288,7 +288,7 @@ fun MusicListScreen(
                                 isPlaying = isPlaying,
                                 onClick = { onTrackClick(track, index) },
                                 onLongClick = { onTrackLongClick(track, index) },
-                                onMenuClick = { onTrackMenuClick(track, index) },
+                                onMenuAction = { actionId -> onTrackMenuAction(track, index, actionId) },
                                 onQuickPlayClick = { onTrackQuickPlayClick(track) },
                                 artwork = trackArtwork
                             )

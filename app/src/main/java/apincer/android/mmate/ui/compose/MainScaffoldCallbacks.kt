@@ -16,7 +16,7 @@ interface MainScaffoldCallbacks {
     fun onLoadMoreMusic()
     fun onTrackClick(track: Track, position: Int)
     fun onTrackLongClick(track: Track, position: Int)
-    fun onTrackMenuClick(track: Track, position: Int)
+    fun onTrackMenuAction(track: Track, position: Int, actionId: Int)
     fun onTrackQuickPlayClick(track: Track)
     fun onFolderPlayClick(track: Track)
     fun onFolderEnqueueClick(track: Track)

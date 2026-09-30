@@ -86,6 +86,7 @@ typealias TelemetryWidgetMode = StudioVisualizerMode
 @Composable
 fun NowPlayingPage(
     state: NowPlayingState,
+    canStartPlayback: Boolean = false,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -145,7 +146,9 @@ fun NowPlayingPage(
     )
 
     val track = state.track.value
-    val controlsEnabled = UiLayoutPolicy.transportControlsEnabled(track != null)
+    val hasTrack = track != null
+    val playControlsEnabled = UiLayoutPolicy.playControlsEnabled(hasTrack, canStartPlayback)
+    val controlsEnabled = UiLayoutPolicy.transportControlsEnabled(hasTrack)
     val bitmap = state.albumArt.value
     val duration = state.durationMs.value
     val progress = state.progressMs.value
@@ -861,7 +864,7 @@ fun NowPlayingPage(
                     Icon(
                         painterResource(id = R.drawable.ic_skip_previous_rounded),
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = if (controlsEnabled) Color.White else Color(0x66FFFFFF),
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -880,13 +883,13 @@ fun NowPlayingPage(
                             spotColor = Color(0x55FFB300)
                         )
                         .clip(CircleShape)
-                        .background(if (controlsEnabled) Color.White else Color(0xFF666666))
+                        .background(if (playControlsEnabled) Color.White else Color(0xFF666666))
                         .border(BorderStroke(1.5.dp, Color(0xFFFFB300).copy(alpha = 0.5f)), CircleShape)
                         .semantics {
                             role = Role.Button
                             contentDescription = context.getString(if (isPlaying) R.string.cd_pause else R.string.cd_play)
                         }
-                        .clickable(enabled = controlsEnabled) {
+                        .clickable(enabled = playControlsEnabled) {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                             onPlayPause()
                         },
@@ -905,7 +908,7 @@ fun NowPlayingPage(
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onNext()
                     },
-                    enabled = controlsEnabled,
+                    enabled = playControlsEnabled,
                     modifier = Modifier
                         .size(48.dp)
                         .semantics { contentDescription = context.getString(R.string.cd_next_track) }
@@ -913,7 +916,7 @@ fun NowPlayingPage(
                     Icon(
                         painterResource(id = R.drawable.ic_skip_next_rounded),
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = if (playControlsEnabled) Color.White else Color(0x66FFFFFF),
                         modifier = Modifier.size(26.dp)
                     )
                 }

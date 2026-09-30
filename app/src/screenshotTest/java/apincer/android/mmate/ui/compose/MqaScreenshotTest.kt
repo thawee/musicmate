@@ -26,7 +26,7 @@ fun MqaBadgesPreview() {
                 val track = remember(studio) { UxPreviewFixtures.mqaTrack(studio) }
                 TrackListItem(
                     track = track, isSelected = false, isNowPlaying = false, isPlaying = false,
-                    onClick = {}, onLongClick = {}, onMenuClick = {},
+                    onClick = {}, onLongClick = {}, onMenuAction = {},
                     artwork = { PreviewTrackArtwork(it) }
                 )
                 QualityBadge(track, expanded = true)

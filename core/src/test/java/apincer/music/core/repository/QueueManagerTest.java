@@ -428,4 +428,27 @@ public class QueueManagerTest {
         assertEquals(2, queueManager.getQueueSize());
         assertEquals(t1.getId(), queueManager.getCurrentTrack().getId());
     }
+
+    @Test
+    public void getNextTrack_repeatModeOne_loopsOnNaturalEnd_advancesOnUserSkip() {
+        Track t1 = createDummyTrack(1L, "Track 1");
+        Track t2 = createDummyTrack(2L, "Track 2");
+        List<Track> list = new ArrayList<>();
+        list.add(t1);
+        list.add(t2);
+        queueManager.savePlayingQueue(list);
+        queueManager.setCurrentTrack(t1);
+        queueManager.setRepeatMode(QueueManager.RepeatMode.ONE);
+
+        // Natural completion / gapless preloading loops current track
+        Track naturalNext = queueManager.getNextTrack(false);
+        assertNotNull(naturalNext);
+        assertEquals(1L, naturalNext.getId());
+        assertEquals(1L, queueManager.getNextTrack().getId());
+
+        // Explicit user skip advances past Repeat One to the next track
+        Track userSkipNext = queueManager.getNextTrack(true);
+        assertNotNull(userSkipNext);
+        assertEquals(2L, userSkipNext.getId());
+    }
 }

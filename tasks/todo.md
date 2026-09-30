@@ -841,3 +841,9 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 **Verification:**
 - [x] Run `app` unit tests to ensure `TagUtils` logic isn't broken.
 - [x] Run `:app:assembleDebug` to verify no AAPT color resource linking errors.
+
+## Cover Art Architecture Fixes
+- [ ] Phase 1: Implement `MediaMetadataRetriever` in `FileRepository` to replace `FFMpegHelper` for embedded cover extraction.
+- [ ] Phase 2: Fix Lazy Extraction bug in `FileRepository.getCoverArt()` so embedded art is properly extracted and returned to Coil when missing.
+- [ ] Phase 3: Leave unmanaged file hashing as `MD5(file path)` to support heterogeneous folders (e.g., Downloads).
+- [ ] Phase 4: Refactor `CoverartFetcher` to use native Coil `AssetImageSource` instead of copying the default cover to the disk cache.

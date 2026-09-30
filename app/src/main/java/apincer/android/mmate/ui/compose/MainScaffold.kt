@@ -531,8 +531,8 @@ fun MainScaffold(
                         onTrackLongClick = { track, index ->
                             callbacks?.onTrackLongClick(track, index)
                         },
-                        onTrackMenuClick = { track, index ->
-                            callbacks?.onTrackMenuClick(track, index)
+                        onTrackMenuAction = { track, index, actionId ->
+                            callbacks?.onTrackMenuAction(track, index, actionId)
                         },
                         onTrackQuickPlayClick = { track ->
                             callbacks?.onTrackQuickPlayClick(track)
@@ -573,9 +573,6 @@ fun MainScaffold(
                     onOpenAudioHub = {
                         focusManager.clearFocus(force = true)
                         navigationState.openMusicCenter(MusicCenterTab.NOW_PLAYING)
-                    },
-                    onOpenDrawer = {
-                        coroutineScope.launch { drawerState.open() }
                     },
                     onScrollToPlaying = {
                         callbacks?.onDockLongClick()
@@ -740,7 +737,7 @@ private fun TopSearchBar(
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_baseline_menu_open_24),
+                            painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                             contentDescription = stringResource(R.string.nav_content_description),
                             tint = drawerGold,
                             modifier = Modifier.size(24.dp)
@@ -834,17 +831,49 @@ private fun TopSearchBar(
                     }
                 }
 
-                // Music Center remains available before playback starts.
-                IconButton(
-                    onClick = onMusicCenterClick,
-                    modifier = Modifier.size(48.dp)
+                // Premium Music Center Action Button
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onMusicCenterClick),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_round_queue_music_24),
-                        contentDescription = stringResource(R.string.cd_open_music_center),
-                        tint = if (isPlaybackTargetActive) Color(0xFFFFC107) else Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color(0xFF383838), Color(0xFF1A1A1A))
+                                )
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (isPlaybackTargetActive) drawerGold.copy(alpha = 0.6f) else Color(0x33FFFFFF),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.rounded_equalizer_24),
+                            contentDescription = stringResource(R.string.cd_open_music_center),
+                            tint = if (isPlaybackTargetActive) drawerGold else Color(0xE5FFFFFF),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    if (isPlaybackTargetActive) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 6.dp, end = 6.dp)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(drawerGold)
+                                .border(1.5.dp, Color(0xFF1A1A1A), CircleShape)
+                        )
+                    }
                 }
             }
 
@@ -918,7 +947,6 @@ private fun FloatingMiniPlayerDock(
     onNextClick: () -> Unit,
     onPreviousClick: () -> Unit = {},
     onOpenAudioHub: () -> Unit,
-    onOpenDrawer: () -> Unit,
     onScrollToPlaying: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -1116,19 +1144,6 @@ private fun FloatingMiniPlayerDock(
                         painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
                         contentDescription = "Next",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                // Far Right: MusicMate Drawer Menu Button (DESIGN.md §6A: 48dp target for thumb ergonomics)
-                IconButton(
-                    onClick = onOpenDrawer,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
-                        contentDescription = stringResource(R.string.nav_content_description),
-                        tint = drawerGold,
                         modifier = Modifier.size(24.dp)
                     )
                 }

@@ -171,46 +171,69 @@ public class FileRepository {
             if (cover == null) {
                 cover = getFolderCoverArt(music.getPath());
             }
+            
+            // Phase 2: Lazy extraction trigger
+            if ((cover == null || !cover.exists()) && !isEmpty(albumArtFilename) && !DEFAULT_COVERART.equals(albumArtFilename)) {
+                extractEmbedCoverArt(context, music);
+                
+                // Re-evaluate after potential extraction
+                if (isManagedInLibrary(context, music)) {
+                    cover = getFolderCoverArt(music.getPath());
+                } else {
+                    File selectedCover = new File(albumArtFilename);
+                    File cachedCover = selectedCover.isAbsolute() ? selectedCover : new File(cacheDir, albumArtFilename);
+                    if (cachedCover.exists()) {
+                        cover = cachedCover;
+                    }
+                }
+            }
+            
             return cover;
         }
     }
 
    //also save albumArtName
-    private String extractEmbedCoverArt(Track tag) {
+    private static String extractEmbedCoverArt(Context context, Track tag) {
         try {
-            //CacheDir/Covers/HEX.EXT
-            //Music/xxx/Cover.EXT
-            File dir =  getCoverartDir(getContext());
+            File dir = getCoverartDir(context);
             String path = tag.getPath();
-            String coverartName = tag.getAlbumArtFilename();
-           // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", by:  "+coverartName);
-            if(isEmpty(coverartName) || DEFAULT_COVERART.equals(coverartName)) {
-                if (isManagedInLibrary(tag)) {
-                    File pathFile = new File(path);
-                    File parentDir = pathFile.getParentFile();
-                    if (parentDir == null) return null;
-                    pathFile = new File(parentDir, "Cover.jpg");
-                   // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
-                    FFMpegHelper.extractCoverArt(path, pathFile, null);
-                    return StringUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
-                } else {
-                    String coverFilename = StringUtils.md5Hex(path);
-                    File pathFile = new File(dir, coverFilename + ".jpg");
+            File pathFile;
+            String hexName;
 
-                    FileUtils.createParentDirs(pathFile);
-                   // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
-                    FFMpegHelper.extractCoverArt(path, pathFile, null);
-                    return pathFile.getName(); // hex for individual file
+            if (isManagedInLibrary(context, tag)) {
+                File parentDir = new File(path).getParentFile();
+                if (parentDir == null) return null;
+                pathFile = new File(parentDir, "Cover.jpg");
+                hexName = apincer.music.core.utils.StringUtils.md5Hex(parentDir.getAbsolutePath());
+            } else {
+                hexName = apincer.music.core.utils.StringUtils.md5Hex(path);
+                pathFile = new File(dir, hexName + ".jpg");
+                apincer.android.utils.FileUtils.createParentDirs(pathFile);
+            }
+
+            if (!pathFile.exists()) {
+                try (android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever()) {
+                    retriever.setDataSource(path);
+                    byte[] art = retriever.getEmbeddedPicture();
+                    if (art != null) {
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(pathFile)) {
+                            fos.write(art);
+                        }
+                    } else {
+                        return null; // No embedded art found
+                    }
                 }
             }
+            
+            return isManagedInLibrary(context, tag) ? hexName : pathFile.getName();
         } catch (Exception e) {
-            Log.d(TAG,"extractCoverArt:", e);
+            android.util.Log.e(TAG, "extractCoverArt:", e);
         }
-        return DEFAULT_COVERART;
+        return null;
     }
 
-    public boolean isManagedInLibrary(Track tag) {
-        String path = buildCollectionPath(tag, true);
+    public static boolean isManagedInLibrary(Context context, Track tag) {
+        String path = buildCollectionPath(context, tag, true);
         return StringUtils.compare(path, tag.getPath());
     }
 
@@ -240,10 +263,10 @@ public class FileRepository {
                     }
                     
                     // Lazy extract since it wasn't found
-                    extractEmbedCoverArt(song);
+                    extractEmbedCoverArt(getContext(), song);
                     
                     // Check again after extraction
-                    if (isManagedInLibrary(song)) {
+                    if (isManagedInLibrary(getContext(), song)) {
                         folderCover = getFolderCoverArt(song.getPath());
                         if (folderCover != null && folderCover.exists()) {
                             return folderCover;
@@ -396,7 +419,7 @@ public class FileRepository {
             return false;
         } */
 
-        item.setIsManaged(isManagedInLibrary(item));
+        item.setIsManaged(isManagedInLibrary(getContext(), item));
 
         if (TagWriter.isSupportedFileFormat(item.getPath())) {
             boolean written = TagWriter.writeTagToFile(getContext(), item);
@@ -438,7 +461,7 @@ public class FileRepository {
 
                 if(basicTag != null) {
                     // Save basic tag immediately
-                    basicTag.setIsManaged(isManagedInLibrary(basicTag));
+                    basicTag.setIsManaged(isManagedInLibrary(getContext(), basicTag));
                     saveCoverartToCache(basicTag); // must call before save tag, update albumArtName
                    // basicTag.setOriginTag(null);
                     tagRepos.saveTag(basicTag);
@@ -463,7 +486,7 @@ public class FileRepository {
                 basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }else {
                 // if no folder album art, just set filename for lazy extraction later
-                if (isManagedInLibrary(basicTag)) {
+                if (isManagedInLibrary(getContext(), basicTag)) {
                     String albumArtName = StringUtils.md5Hex(parentPath);
                     basicTag.setAlbumArtFilename(albumArtName);
                 } else {
@@ -477,10 +500,10 @@ public class FileRepository {
     }
 
     private String buildCollectionPath(Track metadata) {
-        return buildCollectionPath(metadata, true);
+        return buildCollectionPath(getContext(), metadata, true);
     }
 
-    public String buildCollectionPath(@NotNull Track metadata, boolean includeStorageDir) {
+    public static String buildCollectionPath(Context context, @org.jetbrains.annotations.NotNull Track metadata, boolean includeStorageDir) {
         // hierarchy directory
         // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc.)
         // 2. hires, lossless, mqa, etc.
@@ -563,7 +586,7 @@ public class FileRepository {
 
             String newPath = sanitizedPath.toString() + "." + ext;
             if(includeStorageDir) {
-                return DocumentFileCompat.buildAbsolutePath(getContext(), PRIMARY, newPath);
+                return DocumentFileCompat.buildAbsolutePath(context, PRIMARY, newPath);
             }else {
                 return newPath;
             }
@@ -613,7 +636,7 @@ public class FileRepository {
                     copyRelatedFiles(originalFile, new File(newPath));
                     cleanCacheCover(tag);
                     cleanMediaDirectory(originalFile.getParentFile());
-                    String coverart = extractEmbedCoverArt(tag);
+                    String coverart = extractEmbedCoverArt(getContext(), tag);
                     if (!isEmpty(coverart)) tag.setAlbumArtFilename(coverart);
                     tagRepos.saveTag(tag);
                 } catch (Exception ancillaryFailure) {

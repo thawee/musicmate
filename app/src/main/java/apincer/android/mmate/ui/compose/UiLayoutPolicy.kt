@@ -26,6 +26,9 @@ object UiLayoutPolicy {
 
     fun transportControlsEnabled(hasTrack: Boolean): Boolean = hasTrack
 
+    fun playControlsEnabled(hasTrack: Boolean, canStartPlayback: Boolean = false): Boolean =
+        hasTrack || canStartPlayback
+
     fun showFloatingDock(isRequested: Boolean, hasTrack: Boolean): Boolean =
         isRequested && hasTrack
 }

@@ -574,11 +574,23 @@ public class QueueManager {
 
     /**
      * Identifies the next logical track based on current {@link RepeatMode} and shuffle state.
-     * This is primarily used for pre-loading the next URI for gapless UPnP playback.
+     * This is primarily used for pre-loading the next URI for gapless UPnP playback and natural completion.
      *
      * @return The next {@link Track}, or {@code null} if the end of the queue is reached.
      */
     public synchronized Track getNextTrack() {
+        return getNextTrack(false);
+    }
+
+    /**
+     * Identifies the next track in the queue.
+     * When {@code forceSkip} is true (such as when the user explicitly triggers Next/Skip),
+     * this advances to the next track even if {@link RepeatMode#ONE} is active.
+     *
+     * @param forceSkip {@code true} to advance to the next track regardless of RepeatMode.ONE.
+     * @return The next {@link Track}, or {@code null} if the end of the queue is reached.
+     */
+    public synchronized Track getNextTrack(boolean forceSkip) {
         if (queueList.isEmpty()) return null;
 
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
@@ -587,7 +599,7 @@ public class QueueManager {
             currentIndex = 0;
         }
 
-        if (repeatMode == RepeatMode.ONE && baseIndex != -1) {
+        if (!forceSkip && repeatMode == RepeatMode.ONE && baseIndex != -1) {
             return queueList.get(baseIndex);
         }
 

@@ -71,7 +71,7 @@ fun TagsTechnicalPage(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     
-    val musicMatePath = fileRepos.buildCollectionPath(track, true)
+    val musicMatePath = FileRepository.buildCollectionPath(context, track, true)
     
     // Read tags asynchronously on IO thread to prevent UI frame drops
     val techData by androidx.compose.runtime.produceState(

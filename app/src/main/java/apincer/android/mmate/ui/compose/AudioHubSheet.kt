@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -86,9 +85,6 @@ fun AudioHubSheet(
     modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val configuration = LocalConfiguration.current
-    // DESIGN.md §8C & ADR-004: Sheet opens fully expanded at fixed 65% of screen height
-    val sheetHeight = (configuration.screenHeightDp.dp * 0.65f).coerceIn(420.dp, 680.dp)
 
     val pagerState = rememberPagerState(initialPage = initialTab.coerceIn(0, 2)) { 3 }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -114,13 +110,7 @@ fun AudioHubSheet(
         modifier = modifier
     ) {
         Column(
-            modifier = if (presentation == MusicCenterPresentation.SUPPORTING_PANE) {
-                Modifier.fillMaxSize()
-            } else {
-                Modifier
-                    .fillMaxWidth()
-                    .height(sheetHeight)
-            }
+            modifier = Modifier.fillMaxSize()
         ) {
             // Header Row: Music Center title, Cast picker & Close button
             Row(
@@ -383,6 +373,7 @@ fun AudioHubSheet(
                     when (page) {
                         0 -> NowPlayingPage(
                             state = nowPlayingState,
+                            canStartPlayback = true,
                             onPlayPause = onPlayPause,
                             onNext = onNext,
                             onPrevious = onPrevious,
@@ -452,21 +443,27 @@ private fun AudioHubContainer(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
             shape = sheetShape,
-            containerColor = Color(0xFF121212),
+            containerColor = Color.Transparent,
             scrimColor = MusicCenterScrimColor,
             dragHandle = dragHandle,
             modifier = sheetModifier,
             content = {
                 DisablePlatformWindowDimming()
-                content()
+                val bottomSheetScope = this
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(listOf(Color(0xFF282B30), Color(0xFF121212))))) {
+                    bottomSheetScope.content()
+                }
             }
         )
     } else if (presentation == MusicCenterPresentation.SUPPORTING_PANE) {
         Surface(
-            color = Color(0xFF121212),
+            color = Color.Transparent,
             modifier = modifier
                 .fillMaxSize()
-                .safeDrawingPadding(),
+                .safeDrawingPadding()
+                .background(Brush.verticalGradient(listOf(Color(0xFF282B30), Color(0xFF121212)))),
             content = {
                 Column(content = content)
             }
@@ -481,9 +478,12 @@ private fun AudioHubContainer(
             Surface(
                 shape = sheetShape,
                 color = Color(0xFF121212),
-                modifier = sheetModifier
+                modifier = sheetModifier.fillMaxSize()
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     dragHandle()
                     content()
                 }

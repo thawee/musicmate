@@ -56,6 +56,14 @@ class UiLayoutPolicyTest {
     }
 
     @Test
+    fun `play controls are enabled when a track is selected or playback can start`() {
+        assertFalse(UiLayoutPolicy.playControlsEnabled(hasTrack = false, canStartPlayback = false))
+        assertTrue(UiLayoutPolicy.playControlsEnabled(hasTrack = true, canStartPlayback = false))
+        assertTrue(UiLayoutPolicy.playControlsEnabled(hasTrack = false, canStartPlayback = true))
+        assertTrue(UiLayoutPolicy.playControlsEnabled(hasTrack = true, canStartPlayback = true))
+    }
+
+    @Test
     fun `floating dock requires both visibility request and selected track`() {
         assertFalse(UiLayoutPolicy.showFloatingDock(isRequested = false, hasTrack = false))
         assertFalse(UiLayoutPolicy.showFloatingDock(isRequested = true, hasTrack = false))

@@ -726,9 +726,20 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 } else {
                     QueueManager qm = playbackService.getQueueManager();
                     if (qm != null) {
-                        Track randomTrack = qm.getRandomTrack();
-                        if (randomTrack != null) {
-                            playbackService.playSong(randomTrack);
+                        Track startTrack = null;
+                        if (!qm.isShuffle()) {
+                            startTrack = qm.getCurrentTrack();
+                            if (startTrack == null) {
+                                startTrack = qm.getNextTrack();
+                            }
+                        }
+                        if (startTrack == null) {
+                            startTrack = qm.getRandomTrack();
+                        }
+                        if (startTrack != null) {
+                            playbackService.playSong(startTrack);
+                        } else {
+                            viewModel.playCurrentResults(null, playbackService);
                         }
                     }
                 }
@@ -738,7 +749,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onDockNextClicked() {
         if (playbackService != null) {
-            playbackService.skipToNextInQueue();
+            if (playbackService.getNowPlayingSong() == null) {
+                onDockPlayPauseClicked();
+            } else {
+                playbackService.skipToNextInQueue();
+            }
         }
     }
 
@@ -754,7 +769,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     public void onAudioHubNext() {
-        if (playbackService != null) playbackService.skipToNextInQueue();
+        if (playbackService != null) {
+            if (playbackService.getNowPlayingSong() == null) {
+                onDockPlayPauseClicked();
+            } else {
+                playbackService.skipToNextInQueue();
+            }
+        }
     }
 
     public void onAudioHubPrevious() {
@@ -1048,8 +1069,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
-    public void onTrackMenuClick(Track track, int position) {
-        onTrackMenuClicked(track, position);
+    public void onTrackMenuAction(apincer.music.core.model.Track tag, int position, int actionId) {
+        if (tag != null) {
+            handleTrackMenuAction(tag, actionId);
+        }
     }
 
     @Override
@@ -1332,48 +1355,35 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         return super.onOptionsItemSelected(item);
     }
 
-    public void showTrackPopupMenu(View anchorView, Track track) {
-        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchorView, android.view.Gravity.END);
-        popup.getMenuInflater().inflate(R.menu.menu_track_popup, popup.getMenu());
-
-        // Show/hide playback group based on whether a player device is active
-        boolean playerActive = isPlaybackServiceBound && playbackService != null;
-        popup.getMenu().setGroupVisible(R.id.group_playback, playerActive);
-
-        popup.setOnMenuItemClickListener(item -> {
-            int id = item.getItemId();
-            List<Track> singleTrackList = Collections.singletonList(track);
-            if (id == R.id.action_play_now) {
-                viewModel.playCurrentResults(track, playbackService);
-                return true;
-            } else if (id == R.id.action_play_next) {
+    public void handleTrackMenuAction(Track track, int actionId) {
+        List<Track> singleTrackList = Collections.singletonList(track);
+        if (actionId == R.id.action_play_now) {
+            viewModel.playCurrentResults(track, playbackService);
+        } else if (actionId == R.id.action_play_next) {
+            if (isPlaybackServiceBound && playbackService != null) {
                 playbackService.getQueueManager().addPlayNext(track);
                 syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Playing next", android.widget.Toast.LENGTH_SHORT).show();
-                return true;
-            } else if (id == R.id.action_add_queue) {
+            }
+        } else if (actionId == R.id.action_add_queue) {
+            if (isPlaybackServiceBound && playbackService != null) {
                 playbackService.getQueueManager().addPlayingQueue(track);
                 syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Added to queue", android.widget.Toast.LENGTH_SHORT).show();
-                return true;
-            } else if (id == R.id.action_encoding_file) {
-                doEncodeAudioFiles(singleTrackList);
-                return true;
-            } else if (id == R.id.action_open_with) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                android.net.Uri uri = MusicFileProvider.getUriForFile(track.getPath());
-                intent.setDataAndType(uri, "audio/*");
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    startActivity(Intent.createChooser(intent, "Open with"));
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to start external player activity", e);
-                }
-                return true;
             }
-            return false;
-        });
-        popup.show();
+        } else if (actionId == R.id.action_encoding_file) {
+            doEncodeAudioFiles(singleTrackList);
+        } else if (actionId == R.id.action_open_with) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            android.net.Uri uri = MusicFileProvider.getUriForFile(track.getPath());
+            intent.setDataAndType(uri, "audio/*");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(Intent.createChooser(intent, "Open with"));
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to start external player activity", e);
+            }
+        }
     }
 
     public void showPlayerPickerPopup(View anchorView) {
@@ -2061,12 +2071,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         } else {
             apincer.android.mmate.ui.navigation.MainNavigationInterop.selectLibrary(
                     apincer.android.mmate.ui.navigation.LibraryDestination.ALL_SONGS);
-        }
-    }
-
-    public void onTrackMenuClicked(apincer.music.core.model.Track tag, int position) {
-        if (tag != null) {
-            showTrackPopupMenu(getWindow().getDecorView(), tag);
         }
     }
 }

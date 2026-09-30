@@ -744,7 +744,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 if (current != null) {
                     queueManager.setCurrentTrack(current);
                 }
-                Track nextSong = queueManager.getNextTrack();
+                Track nextSong = queueManager.getNextTrack(true);
                 if (nextSong != null) {
                     queueManager.setPlaybackTrack(nextSong);
                     playSong(nextSong);
@@ -763,7 +763,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         if (current != null) {
             queueManager.setCurrentTrack(current);
         }
-        Track song = queueManager.getNextTrack();
+        Track song = queueManager.getNextTrack(true);
         if (song != null) {
             queueManager.setPlaybackTrack(song);
             internalPlayOnDMRPlayer(playbackTarget, song);

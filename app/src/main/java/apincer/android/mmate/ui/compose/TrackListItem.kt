@@ -34,6 +34,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -76,7 +81,7 @@ fun TrackListItem(
     isPlaying: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    onMenuClick: () -> Unit,
+    onMenuAction: (Int) -> Unit,
     onQuickPlayClick: () -> Unit = {},
     artwork: (@Composable (Track) -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -221,19 +226,68 @@ fun TrackListItem(
             // ── Rating badge top-right (matches XML position) ────────────────
             Column(horizontalAlignment = Alignment.End) {
                 RatingBadge(track = track, mode = "icon")
-                IconButton(
-                    onClick = onMenuClick,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.rounded_more_vert_24),
-                        contentDescription = stringResource(
-                            R.string.cd_more_options_for_track,
-                            trackTitle
-                        ),
-                        tint = Color(0xFF888888),
-                        modifier = Modifier.size(20.dp)
-                    )
+                var showMenu by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.rounded_more_vert_24),
+                            contentDescription = stringResource(
+                                R.string.cd_more_options_for_track,
+                                trackTitle
+                            ),
+                            tint = Color(0xFF888888),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier
+                            .background(Color(0xFF242424))
+                            .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(8.dp))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Play Now", color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_baseline_play_arrow_24), contentDescription = null, tint = Color.White)
+                            },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_play_now)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Play Next", color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_baseline_playlist_play_24), contentDescription = null, tint = Color.White)
+                            },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_play_next)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Add to Queue", color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_baseline_queue_music_24), contentDescription = null, tint = Color.White)
+                            },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_add_queue)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Open in External App", color = Color.White, fontSize = 15.sp) },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_open_with)
+                            }
+                        )
+                    }
                 }
             }
         }
