@@ -153,6 +153,21 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             });
 
     private volatile long lastPreloadedTrackId = -1;
+
+    /** Track left paused when the user switched to a target that has nothing loaded yet. */
+    private static final class PendingResume {
+        final String targetId;
+        final Track track;
+        final long positionMs;
+
+        PendingResume(String targetId, Track track, long positionMs) {
+            this.targetId = targetId;
+            this.track = track;
+            this.positionMs = positionMs;
+        }
+    }
+
+    private volatile PendingResume pendingResume;
     private final java.util.concurrent.atomic.AtomicBoolean preloadRecheckPending = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile long lastPlaybackTrackId = -1;
 
@@ -712,6 +727,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void playSong(Track song, boolean newInstance) {
+        pendingResume = null;
         if (song != null && newInstance) historyTracker.end(true);
         if (song != null) {
             if (!queueManager.containsTrack(song.getId())) {
@@ -867,6 +883,21 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void resumePlayer() {
+        PendingResume pending = pendingResume;
+        PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        if (pending != null && target != null && pending.targetId.equals(target.getTargetId())) {
+            Log.i(TAG, "Resume after target switch: starting " + pending.track.getTitle()
+                    + " at " + pending.positionMs + "ms on " + target.getDisplayName());
+            if (isControllable(target)) {
+                pendingResume = null;
+                queueManager.setPlaybackTrack(pending.track);
+                internalPlayOnDMRPlayer(target, pending.track, pending.positionMs);
+            } else {
+                playSong(pending.track, false);
+                if (pending.positionMs > 1000) seekTo(pending.positionMs);
+            }
+            return;
+        }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 try {
@@ -973,6 +1004,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     // ==================== Streaming Player Management ====================
 
     private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song) {
+        internalPlayOnDMRPlayer(player, song, 0);
+    }
+
+    private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song, long positionMs) {
         if (song == null) return;
 
         // Cancel any existing gapless task first
@@ -980,7 +1015,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         // 1. Start playback
         try {
-            mediaHub.playerPlaySong(player.getTargetId(), song);
+            mediaHub.playerPlaySong(player.getTargetId(), song, positionMs);
         } catch (Exception e) {
             Log.w(TAG, "Failed to play on DMR: " + player.getDisplayName(), e);
             return;
@@ -990,7 +1025,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
         state.currentTrack = song;
-        state.currentPositionSecond = 0;
+        state.currentPositionSecond = positionMs / 1000;
 
         onPlaybackStateChanged(state);
 
@@ -1256,6 +1291,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 } else {
                     mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
                 }
+            }
+
+            if (!isSameTarget) {
+                // Paused handoff: the new target has nothing loaded, so Play must start the track there
+                pendingResume = (controlled && activeTrack != null && !wasPlaying)
+                        ? new PendingResume(resolvedTarget.getTargetId(), activeTrack, currentPositionMs)
+                        : null;
             }
 
             Track active = getNowPlayingSong();
