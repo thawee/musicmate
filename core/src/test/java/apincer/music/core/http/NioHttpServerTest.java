@@ -19,10 +19,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Queue;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** End-to-end tests of SonicNIO over a real socket: ranges, HEAD, keep-alive and WebSocket. */
 public class NioHttpServerTest {
@@ -33,6 +39,8 @@ public class NioHttpServerTest {
     private NioHttpServer server;
     private int port;
     private byte[] content;
+    private File bigFile;
+    private final AtomicReference<String> lastPostBody = new AtomicReference<>();
 
     @Before
     public void startServer() throws Exception {
@@ -40,6 +48,8 @@ public class NioHttpServerTest {
         for (int i = 0; i < content.length; i++) content[i] = (byte) (i % 251);
         File file = temporary.newFile("track.flac");
         Files.write(file.toPath(), content);
+        bigFile = temporary.newFile("big.flac");
+        Files.write(bigFile.toPath(), new byte[8 * 1024 * 1024]);
 
         try (ServerSocket probe = new ServerSocket(0)) {
             port = probe.getLocalPort();
@@ -47,6 +57,13 @@ public class NioHttpServerTest {
         server = new NioHttpServer(port);
         server.registerHttpHandler(request -> {
             try {
+                if ("POST".equals(request.getMethod())) {
+                    lastPostBody.set(new String(request.getBody(), StandardCharsets.UTF_8));
+                    return new NioHttpServer.HttpResponse().setBody("ok".getBytes(StandardCharsets.UTF_8));
+                }
+                if (request.getPath().startsWith("/big")) {
+                    return server.createFileResponse(bigFile, request);
+                }
                 return server.createFileResponse(file, request);
             } catch (IOException e) {
                 throw new IllegalStateException(e);
@@ -183,7 +200,59 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void post_bodyArrivingAfterHeaders_reachesHandlerComplete() throws Exception {
+        // UPnP SOAP actions and GENA NOTIFY: many clients send the body in a later segment
+        String body = "<s:Envelope><s:Body>Browse</s:Body></s:Envelope>";
+        try (Socket socket = connect()) {
+            OutputStream out = socket.getOutputStream();
+            out.write(("POST /ctl HTTP/1.1\r\nHost: test\r\nContent-Length: " + body.length() + "\r\n\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            Thread.sleep(200);
+            out.write(body.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            assertEquals(200, exchange(socket, "", true).status);
+        }
+        assertEquals(body, lastPostBody.get());
+    }
+
+    @Test
+    public void post_bodyInSamePacket_isCutToContentLength() throws Exception {
+        try (Socket socket = connect()) {
+            // Bytes past Content-Length (e.g. a pipelined next request) must not leak into the body
+            assertEquals(200, exchange(socket, "POST /ctl HTTP/1.1\r\nHost: test\r\nContent-Length: 5\r\n\r\nhelloEXTRA", true).status);
+        }
+        assertEquals("hello", lastPostBody.get());
+    }
+
+    @Test
+    public void midStreamDisconnect_doesNotReturnRequestToPoolTwice() throws Exception {
+        try (Socket socket = connect()) {
+            socket.setReceiveBufferSize(4096);
+            OutputStream out = socket.getOutputStream();
+            out.write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            socket.getInputStream().read(new byte[1024]);
+            socket.setSoLinger(true, 0); // reset, as a renderer abandons a stream when seeking
+        }
+        Thread.sleep(1500);
+        assertEquals(1, maxCopiesOfOneRequestInPool());
+    }
+
     // --- helpers ---
+
+    private int maxCopiesOfOneRequestInPool() throws Exception {
+        java.lang.reflect.Field poolField = NioHttpServer.class.getDeclaredField("requestPool");
+        poolField.setAccessible(true);
+        Object pool = poolField.get(server);
+        java.lang.reflect.Field queueField = pool.getClass().getDeclaredField("pool");
+        queueField.setAccessible(true);
+        List<Object> items = new ArrayList<>((Queue<?>) queueField.get(pool));
+        IdentityHashMap<Object, Integer> counts = new IdentityHashMap<>();
+        for (Object item : items) counts.merge(item, 1, Integer::sum);
+        return counts.isEmpty() ? 0 : Collections.max(counts.values());
+    }
 
     private static String get(String range) {
         return "GET /track HTTP/1.1\r\nHost: test\r\nRange: " + range + "\r\n\r\n";

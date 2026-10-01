@@ -808,26 +808,28 @@ public class NioHttpServer implements Runnable {
 
                 // Validate content length
                 int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
-                if (contentLength > maxRequestSize) {
-                    attachment.response = new HttpResponse()
-                            .setStatus(HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large")
-                            .addHeader("Connection", "close")
-                            .setBody("Content-Length exceeds limit".getBytes());
+                if (contentLength < 0 || contentLength > maxRequestSize) {
+                    request.reset();
+                    requestPool.release(request);
+                    attachment.response = contentLength < 0
+                            ? new HttpResponse().setStatus(HTTP_BAD_REQUEST, "Bad Request")
+                                    .addHeader("Connection", "close")
+                                    .setBody("Invalid Content-Length".getBytes())
+                            : new HttpResponse().setStatus(HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large")
+                                    .addHeader("Connection", "close")
+                                    .setBody("Content-Length exceeds limit".getBytes());
                     key.interestOps(SelectionKey.OP_WRITE);
                     return;
                 }
 
-                attachment.request = request;
                 attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
 
-                if (request.getBody().length >= contentLength) {
-                    key.interestOps(0);
-                    if (workerPool == null || workerPool.isShutdown()) {
-                        closeConnection(key); // Silently close connection if server is stopping
-                        return;
-                    }
-                    workerPool.submit(() -> processRequest(key, request)); // Pass finalRequest
+                if (requestBytes.length - headerEnd >= contentLength) {
+                    // Exactly Content-Length bytes; anything after belongs to the next request
+                    request.setBody(Arrays.copyOfRange(requestBytes, headerEnd, headerEnd + contentLength));
+                    dispatch(key, attachment, request);
                 } else {
+                    attachment.request = request;
                     attachment.state = ConnectionAttachment.ParseState.READING_BODY;
                 }
             }
@@ -835,16 +837,6 @@ public class NioHttpServer implements Runnable {
         } else if (currentState == ConnectionAttachment.ParseState.READING_BODY) {
             // parse body...
             int contentLength = Integer.parseInt(attachment.request.getHeader("content-length", "0"));
-            /*if (attachment.requestData.size() - attachment.request.getHeaderEnd() >= contentLength) {
-                //byte[] fullRequestBytes = attachment.requestData.toByteArray();
-                // HttpRequest finalRequest = new HttpRequest(fullRequestBytes, attachment.request.getHeaderEnd(), ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
-
-                // We don't need to re-parse or acquire a new request here,
-                // the existing one is still valid.
-                key.interestOps(0);
-                workerPool.submit(() -> processRequest(key, attachment.request));
-            } */
-
             if (attachment.bodyReadStartTime == 0) {
                 attachment.bodyReadStartTime = System.currentTimeMillis();
             }
@@ -855,16 +847,37 @@ public class NioHttpServer implements Runnable {
                 return;
             }
 
-            if (attachment.requestData.size() - attachment.request.getHeaderEnd() >= contentLength) {
-                key.interestOps(0);
+            HttpRequest request = attachment.request;
+            int headerEnd = request.getHeaderEnd();
+            if (attachment.requestData.size() - headerEnd >= contentLength) {
+                // The body parsed with the headers was only the first segment; take it from all buffered bytes
+                byte[] allBytes = attachment.requestData.toByteArray();
+                request.setBody(Arrays.copyOfRange(allBytes, headerEnd, headerEnd + contentLength));
                 attachment.bodyReadStartTime = 0;  // Reset
-                workerPool.submit(() -> processRequest(key, attachment.request));
+                dispatch(key, attachment, request);
             }
         } else {
             // Unexpected state!
             System.err.println("Unexpected state: " + currentState);
             closeConnection(key);
         }
+    }
+
+    /**
+     * Hands a complete request to a worker. The worker owns it from here and returns it to the
+     * pool, so the attachment drops its reference; otherwise closeConnection() would release the
+     * same object again when the client disconnects mid-response.
+     */
+    private void dispatch(SelectionKey key, ConnectionAttachment attachment, HttpRequest request) {
+        attachment.request = null;
+        key.interestOps(0);
+        if (workerPool == null || workerPool.isShutdown()) {
+            request.reset();
+            requestPool.release(request);
+            closeConnection(key); // Silently close connection if server is stopping
+            return;
+        }
+        workerPool.submit(() -> processRequest(key, request));
     }
 
     private void processRequest(SelectionKey key, HttpRequest request) {
@@ -2162,6 +2175,10 @@ public class NioHttpServer implements Runnable {
 
         public byte[] getBody() {
             return body;
+        }
+
+        void setBody(byte[] body) {
+            this.body = body;
         }
 
         public int getHeaderEnd() {

@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Audio headers on every engine:** SonicNIO now sends the `X-Audio-*` headers (sample rate, bit depth, bitrate, format, Bit-Perfect) and Netty adds the missing `X-Audio-Bit-Perfect`; both use one shared helper.
 
 ### Fixed
+- **SonicNIO request bodies:** A POST body that arrives after the headers (common for UPnP SOAP actions and renderer GENA event messages) now reaches the handler complete instead of truncated or empty, and bodies are cut to `Content-Length`.
+- **SonicNIO request reuse:** A client dropping a stream mid-file (renderers do this on every seek) no longer puts the same request object back into the pool twice, which could let two connections share or wipe one request. A negative `Content-Length` now gets `400` and an oversized one no longer leaks its pooled request.
 - **HttpCore 5.5-beta3:** Updated HttpCore and commons-lang3. HttpCore's blocked Android hidden-API calls are now stripped from the upstream jar at build time (ADR-032) instead of shipping edited copies of its classes, which no longer matched beta3.
 - **Tag write failures:** Measure DR no longer saves to the library or reports Success when writing tags to the file fails, keeping the database and file in sync.
 - **Search & Match cover art:** The matched cover is staged like a picked image and replaces the folder `Cover.jpg` only on Save; Discard leaves the original untouched. Cover downloads write to a temporary file and rename, so a failed transfer never truncates an existing image.
