@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Library scans at startup:** Opening the app no longer cancels a scan that is queued or running, including a pending full rescan. A full rescan still replaces the current scan; a folder-change scan runs after it.
 - **Media server opt-in:** The media server no longer starts on first launch. It starts automatically only after you have started it yourself; Start and Stop are remembered. Existing installs that never used Start or Stop need to start it once.
 - **Scan status:** A queued or blocked scan now shows "Scan waiting to start…", and a failed scan shows a message instead of looking like a successful one.
+- **Convert keeps cover art:** Converted files keep the embedded cover. If a target format rejects the picture, the conversion is retried without it instead of failing.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.

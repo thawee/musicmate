@@ -269,34 +269,40 @@ public class FFMpegHelper {
             return null;
         }
 
-        String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
-        Log.i(TAG, "Converting with cmd: " + cmd);
+        // Keep the embedded cover: map the attached picture as-is. "?" makes it optional, and if
+        // the target muxer rejects it the conversion is retried audio-only, as before.
+        String artOptions = " -map 0:a:0 -map 0:v:0? -c:v copy -disposition:v:0 attached_pic ";
+        if (targetExt.endsWith("mp3")) artOptions += " -id3v2_version 3 ";
+        if (targetExt.endsWith("aiff")) artOptions += " -write_id3v2 1 ";
+        String withArt = artOptions + options.replace(" -vn ", " ");
 
         try {
             LogHelper.setFFMpegOff();
-            FFmpegSession session = FFmpegKit.execute(cmd);
-
-            // *** IMPORTANT FIX ***
-            // You must check for SUCCESS, not just "not cancel".
-            // A failed (but not cancelled) session would have been treated as a success.
-            if (ReturnCode.isSuccess(session.getReturnCode())) {
+            if (runConversion(srcPath, withArt, tmpTarget)
+                    || runConversion(srcPath, options, tmpTarget)) {
                 Log.i(TAG, "Conversion successful: " + srcPath);
                 return FileSystem.moveToAvailablePath(tmpTarget, targetPath);
-            } else {
-                // Conversion failed or was cancelled
-                Log.e(TAG, String.format("Conversion failed. RC: %s. Logs:\n%s",
-                        session.getReturnCode(), session.getAllLogsAsString()));
-                return null;
             }
+            return null;
         } catch (Exception e) {
             Log.e(TAG, "FFmpeg execution threw an exception", e);
             return null;
         } finally {
-            // Always clean up the temp *source* file
-           // FileSystem.delete(tmpPath);
             // Also clean up the temp *target* file in case of failure
             FileSystem.delete(tmpTarget);
         }
+    }
+
+    /** Runs one FFmpeg conversion into {@code tmpTarget}; only a successful return code counts. */
+    private static boolean runConversion(String srcPath, String options, String tmpTarget) {
+        String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
+        Log.i(TAG, "Converting with cmd: " + cmd);
+        FFmpegSession session = FFmpegKit.execute(cmd);
+        if (ReturnCode.isSuccess(session.getReturnCode())) return true;
+        Log.w(TAG, String.format("Conversion attempt failed. RC: %s. Logs:\n%s",
+                session.getReturnCode(), session.getAllLogsAsString()));
+        FileSystem.delete(tmpTarget);
+        return false;
     }
 
     public static ReplayGainResult analyzeReplayGain(String path) {
