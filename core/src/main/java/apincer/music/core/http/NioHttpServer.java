@@ -50,10 +50,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>{@link #stop()} is final and does not block; teardown releases every connection.</li>
  * </ul>
  *
- * <p><b>Supports:</b> keep-alive and {@code Connection: close}, byte ranges (suffix, open-ended,
+ * <p><b>Supports:</b> keep-alive and {@code Connection: close} (HTTP/1.0 closes unless it asks for
+ * keep-alive), pipelined requests (answered in order), {@code Expect: 100-continue}, byte ranges (suffix, open-ended,
  * clamped, 416, {@code If-Range}), ETag/304, HEAD, WebSocket (RFC 6455, 1 MB message limit), limits
- * on connections, concurrent streams (least recently active stream evicted), request size and idle
- * time. <b>Not supported:</b> TLS, HTTP/2, chunked request bodies.
+ * on connections, concurrent streams (least recently active stream evicted), request size, header
+ * read time (30 s, so slowly trickled headers are cut off) and idle time. <b>Not supported:</b> TLS, HTTP/2, chunked request bodies.
  *
  * <p>Covered end to end by {@code NioHttpServerTest}, {@code NioHttpServerFuzzTest} and
  * {@code NioHttpServerSoakTest}.
@@ -110,6 +111,10 @@ public class NioHttpServer implements Runnable {
     private int clientReadBufferSize = 8192;
     private boolean tcpNoDelay = true;
     private long keepAliveTimeout = 120_000; // 120 seconds for music streaming on poor network
+    // A client trickling header bytes resets the idle timer; this deadline bounds the whole header read
+    private long headerReadTimeout = 30_000;
+    private static final long SWEEP_INTERVAL_MS = 1000;
+    private static final byte[] CONTINUE_100 = "HTTP/1.1 100 Continue\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
     private long lastTimeoutCheck = 0;
     private int maxRequestSize = 2 * 1024 * 1024; // 2MB for requests (not file size)
     private int maxWebSocketFrameSize = 1024 * 1024; // 1MB max WebSocket frame
@@ -182,6 +187,11 @@ public class NioHttpServer implements Runnable {
 
     public void setTcpNoDelay(boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
+    }
+
+    /** Time allowed to receive a request's headers once its first byte arrives (default 30 s). */
+    public void setHeaderReadTimeout(long milliseconds) {
+        this.headerReadTimeout = milliseconds;
     }
 
     public void setKeepAliveTimeout(long milliseconds) {
@@ -367,7 +377,8 @@ public class NioHttpServer implements Runnable {
 
     private void handleIdleConnections() {
         long now = System.currentTimeMillis();
-        if (now - lastTimeoutCheck > keepAliveTimeout) {
+        // Every second, so timeouts are enforced close to their configured values
+        if (now - lastTimeoutCheck > SWEEP_INTERVAL_MS) {
             long totalRequestBufferSize = 0;
             int activeFileStreams = 0;
 
@@ -390,6 +401,18 @@ public class NioHttpServer implements Runnable {
                     // Count active file streams
                     if (attachment.response instanceof FileResponse) {
                         activeFileStreams++;
+                    }
+
+                    // Slowloris: headers (or a body) trickling in slower than their deadline
+                    if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS
+                            && attachment.requestStartTime > 0 && now - attachment.requestStartTime > headerReadTimeout) {
+                        closeConnection(key);
+                        continue;
+                    }
+                    if (attachment.state == ConnectionAttachment.ParseState.READING_BODY
+                            && attachment.bodyReadStartTime > 0 && now - attachment.bodyReadStartTime > ConnectionAttachment.BODY_READ_TIMEOUT) {
+                        closeConnection(key);
+                        continue;
                     }
 
                     long idleTimeout = (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME)
@@ -517,82 +540,80 @@ public class NioHttpServer implements Runnable {
         attachment.readBuffer.flip();
         attachment.requestData.write(attachment.readBuffer.array(), 0, attachment.readBuffer.limit());
         attachment.readBuffer.clear();
+        if (attachment.requestStartTime == 0) {
+            attachment.requestStartTime = attachment.lastActivityTime; // starts the header deadline
+        }
+        processBufferedHttp(key, attachment);
+    }
 
-        // if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
-        if (currentState == ConnectionAttachment.ParseState.READING_HEADERS) {
+    /**
+     * Parses the HTTP bytes buffered on this connection: headers, then the body. Runs after a read,
+     * and after a keep-alive response for bytes of a pipelined next request already buffered.
+     */
+    private void processBufferedHttp(SelectionKey key, ConnectionAttachment attachment) throws IOException {
+        SocketChannel clientChannel = (SocketChannel) key.channel();
+        if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
             // Scan only the bytes added since the last read; copy the buffer once the headers are complete
             int headerEnd = attachment.requestData.indexOfHeaderEnd(attachment.headerScanFrom);
             if (headerEnd == -1) {
                 attachment.headerScanFrom = Math.max(0, attachment.requestData.size() - 3);
-            } else {
-                byte[] requestBytes = attachment.requestData.toByteArray();
-                // --- Acquire and parse ---
-                HttpRequest request = new HttpRequest();
-                request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
-
-                // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
-                if (request.getHeader("transfer-encoding", "").toLowerCase().contains("chunked")) {
-                    attachment.response = new HttpResponse()
-                            .setStatus(501, "Not Implemented")
-                            .addHeader("Connection", "close")
-                            .setBody("Chunked request bodies are not supported".getBytes());
-                    key.interestOps(SelectionKey.OP_WRITE);
-                    return;
-                }
-
-                // Validate content length
-                int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
-                if (contentLength < 0 || contentLength > maxRequestSize) {
-                    attachment.response = contentLength < 0
-                            ? new HttpResponse().setStatus(HTTP_BAD_REQUEST, "Bad Request")
-                                    .addHeader("Connection", "close")
-                                    .setBody("Invalid Content-Length".getBytes())
-                            : new HttpResponse().setStatus(HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large")
-                                    .addHeader("Connection", "close")
-                                    .setBody("Content-Length exceeds limit".getBytes());
-                    key.interestOps(SelectionKey.OP_WRITE);
-                    return;
-                }
-
-                attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
-
-                if (requestBytes.length - headerEnd >= contentLength) {
-                    // Exactly Content-Length bytes; anything after belongs to the next request
-                    request.setBody(Arrays.copyOfRange(requestBytes, headerEnd, headerEnd + contentLength));
-                    dispatch(key, attachment, request);
-                } else {
-                    attachment.request = request;
-                    attachment.state = ConnectionAttachment.ParseState.READING_BODY;
-                }
+                return;
             }
-            //} else if (attachment.state == ConnectionAttachment.ParseState.READING_BODY) {
-        } else if (currentState == ConnectionAttachment.ParseState.READING_BODY) {
-            // parse body...
-            int contentLength = Integer.parseInt(attachment.request.getHeader("content-length", "0"));
-            if (attachment.bodyReadStartTime == 0) {
-                attachment.bodyReadStartTime = System.currentTimeMillis();
-            }
+            byte[] requestBytes = attachment.requestData.toByteArray();
+            HttpRequest request = new HttpRequest();
+            request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
 
-            // Check timeout
-            if (System.currentTimeMillis() - attachment.bodyReadStartTime > ConnectionAttachment.BODY_READ_TIMEOUT) {
-                closeConnection(key);
+            // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
+            if (request.getHeader("transfer-encoding", "").toLowerCase().contains("chunked")) {
+                attachment.response = new HttpResponse()
+                        .setStatus(501, "Not Implemented")
+                        .addHeader("Connection", "close")
+                        .setBody("Chunked request bodies are not supported".getBytes());
+                key.interestOps(SelectionKey.OP_WRITE);
                 return;
             }
 
-            HttpRequest request = attachment.request;
-            int headerEnd = request.getHeaderEnd();
-            if (attachment.requestData.size() - headerEnd >= contentLength) {
-                // The body parsed with the headers was only the first segment; take it from all buffered bytes
-                byte[] allBytes = attachment.requestData.toByteArray();
-                request.setBody(Arrays.copyOfRange(allBytes, headerEnd, headerEnd + contentLength));
-                attachment.bodyReadStartTime = 0;  // Reset
-                dispatch(key, attachment, request);
+            // Validate content length
+            int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
+            if (contentLength < 0 || contentLength > maxRequestSize) {
+                attachment.response = contentLength < 0
+                        ? new HttpResponse().setStatus(HTTP_BAD_REQUEST, "Bad Request")
+                                .addHeader("Connection", "close")
+                                .setBody("Invalid Content-Length".getBytes())
+                        : new HttpResponse().setStatus(HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large")
+                                .addHeader("Connection", "close")
+                                .setBody("Content-Length exceeds limit".getBytes());
+                key.interestOps(SelectionKey.OP_WRITE);
+                return;
             }
-        } else {
-            // Unexpected state!
-            System.err.println("Unexpected state: " + currentState);
-            closeConnection(key);
+
+            attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
+            attachment.request = request;
+            attachment.requestLength = headerEnd + contentLength; // bytes after this belong to the next request
+            if (requestBytes.length < attachment.requestLength) {
+                attachment.state = ConnectionAttachment.ParseState.READING_BODY;
+                attachment.bodyReadStartTime = System.currentTimeMillis();
+                // RFC 9110 §10.1.1: tell a waiting client to send the body now
+                if (requestBytes.length == headerEnd
+                        && "100-continue".equalsIgnoreCase(request.getHeader("expect", ""))) {
+                    clientChannel.write(ByteBuffer.wrap(CONTINUE_100));
+                }
+                return;
+            }
+        } else if (attachment.state != ConnectionAttachment.ParseState.READING_BODY
+                || attachment.requestData.size() < attachment.requestLength) {
+            return;
         }
+        completeRequest(key, attachment);
+    }
+
+    /** All of the request is buffered: take its body (exactly Content-Length bytes) and dispatch it. */
+    private void completeRequest(SelectionKey key, ConnectionAttachment attachment) {
+        HttpRequest request = attachment.request;
+        byte[] allBytes = attachment.requestData.toByteArray();
+        request.setBody(Arrays.copyOfRange(allBytes, request.getHeaderEnd(), attachment.requestLength));
+        attachment.bodyReadStartTime = 0;
+        dispatch(key, attachment, request);
     }
 
     /**
@@ -672,8 +693,11 @@ public class NioHttpServer implements Runnable {
                         .setBody("404 Not Found".getBytes());
             }
 
-            // The client asked to close after this response (HTTP/1.1 Connection: close)
-            if ("close".equalsIgnoreCase(request.getHeader("connection", ""))) {
+            // Close after this response if the client asked (Connection: close), or is HTTP/1.0
+            // without keep-alive (HTTP/1.0 closes by default)
+            String connectionHeader = request.getHeader("connection", "");
+            if ("close".equalsIgnoreCase(connectionHeader)
+                    || ("HTTP/1.0".equalsIgnoreCase(request.getVersion()) && !"keep-alive".equalsIgnoreCase(connectionHeader))) {
                 response.addHeader("Connection", "close");
             }
 
@@ -723,11 +747,16 @@ public class NioHttpServer implements Runnable {
 
                 closeConnection(key);
             } else {
-                // Case 3: It's a standard HTTP keep-alive connection. Reset for the next request.
-
+                // Case 3: keep-alive. Reset for the next request, keeping any pipelined bytes already read
+                byte[] pipelined = attachment.bytesAfterRequest();
                 streamingKeys.remove(key);
                 attachment.reset();
                 key.interestOps(SelectionKey.OP_READ);
+                if (pipelined.length > 0) {
+                    attachment.requestData.write(pipelined, 0, pipelined.length);
+                    attachment.requestStartTime = System.currentTimeMillis();
+                    processBufferedHttp(key, attachment);
+                }
             }
         }
     }
@@ -935,6 +964,8 @@ public class NioHttpServer implements Runnable {
         HttpResponse response;
         volatile long lastActivityTime; // read by workers choosing an eviction victim
         private long bodyReadStartTime = 0;
+        long requestStartTime = 0;   // when the current request's first byte arrived (header deadline)
+        int requestLength = 0;       // header + Content-Length bytes of the current request
         public static final long BODY_READ_TIMEOUT = 120_000; // 120 seconds for slow networks
 
         // WebSocket: the handler travels with the 101 response; the session exists after the upgrade
@@ -972,7 +1003,16 @@ public class NioHttpServer implements Runnable {
             upgradeHandler = null;
             wsUpgradeHeaderEnd = 0;
             bodyReadStartTime = 0;
+            requestStartTime = 0;
+            requestLength = 0;
             state = ParseState.READING_HEADERS;
+        }
+
+        /** Bytes already read beyond the current request: the start of a pipelined next request. */
+        byte[] bytesAfterRequest() {
+            if (requestData == null || requestLength <= 0 || requestData.size() <= requestLength) return new byte[0];
+            byte[] all = requestData.toByteArray();
+            return Arrays.copyOfRange(all, requestLength, all.length);
         }
 
         /** The 101 has been written: switch to WebSocket framing. */
@@ -1085,6 +1125,7 @@ public class NioHttpServer implements Runnable {
     public static class HttpRequest {
         private String method;
         private String path;
+        private String version;
         private String remoteHost;
         private final Map<String, String> headers = new HashMap<>(); // Reused
         private byte[] body;
@@ -1110,6 +1151,7 @@ public class NioHttpServer implements Runnable {
             }
             this.method = requestLine[0];
             this.path = requestLine[1];
+            this.version = requestLine.length > 2 ? requestLine[2] : "HTTP/1.0";
             for (int i = 1; i < headerLines.length; i++) {
                 String line = headerLines[i];
                 if (line.isEmpty()) continue;
@@ -1136,6 +1178,11 @@ public class NioHttpServer implements Runnable {
 
         public String getPath() {
             return path;
+        }
+
+        /** Protocol from the request line, e.g. "HTTP/1.1"; a request line without one is HTTP/1.0. */
+        public String getVersion() {
+            return version;
         }
 
         public String getRemoteHost() {

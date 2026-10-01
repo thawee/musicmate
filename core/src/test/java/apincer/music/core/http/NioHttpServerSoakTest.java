@@ -240,9 +240,23 @@ public class NioHttpServerSoakTest {
     }
 
     private Socket connect() throws IOException {
-        Socket socket = new Socket("127.0.0.1", port);
-        socket.setSoTimeout(10_000);
-        return socket;
+        // Thousands of short connections can exhaust the client's ephemeral ports (TIME_WAIT),
+        // especially across back-to-back runs; that is the test machine, not the server, so wait
+        for (int attempt = 0; ; attempt++) {
+            try {
+                Socket socket = new Socket("127.0.0.1", port);
+                socket.setSoTimeout(10_000);
+                return socket;
+            } catch (java.net.BindException portsExhausted) {
+                if (attempt >= 100) throw portsExhausted;
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw portsExhausted;
+                }
+            }
+        }
     }
 
     private Response exchange(Socket socket, String raw) throws IOException {

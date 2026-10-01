@@ -522,6 +522,106 @@ public class NioHttpServerTest {
         assertEquals(java.util.Arrays.asList("open", "message"), new ArrayList<>(wsEvents));
     }
 
+    @Test
+    public void expectContinue_gets100BeforeTheBody() throws Exception {
+        String body = "<s:Envelope>expect</s:Envelope>";
+        try (Socket socket = connect()) {
+            OutputStream out = socket.getOutputStream();
+            out.write(("POST /ctl HTTP/1.1\r\nHost: test\r\nExpect: 100-continue\r\nContent-Length: "
+                    + body.length() + "\r\n\r\n").getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            socket.setSoTimeout(1000); // a client waits about 1 s for 100 before sending anyway
+            Response interim = readResponseHead(socket.getInputStream());
+            assertEquals(100, interim.status);
+            socket.setSoTimeout(5000);
+            out.write(body.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            assertEquals(200, exchange(socket, "", true).status);
+        }
+        assertEquals(body, lastPostBody.get());
+    }
+
+    @Test
+    public void pipelinedRequests_areAnsweredInOrder() throws Exception {
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write((get("bytes=0-3") + get("bytes=4-7")).getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            Response first = exchange(socket, "", true);
+            Response second = exchange(socket, "", true);
+            assertArrayEquals(Arrays.copyOfRange(content, 0, 4), first.body);
+            assertArrayEquals(Arrays.copyOfRange(content, 4, 8), second.body);
+        }
+    }
+
+    @Test
+    public void http10WithoutKeepAlive_closesAfterTheResponse() throws Exception {
+        try (Socket socket = connect()) {
+            Response r = exchange(socket, "GET /track HTTP/1.0\r\nRange: bytes=0-3\r\n\r\n", true);
+            assertEquals("close", r.header("connection"));
+            assertEquals(-1, socket.getInputStream().read());
+        }
+    }
+
+    @Test
+    public void slowHeaders_areCutOffAtTheHeaderDeadline() throws Exception {
+        server.setHeaderReadTimeout(500);
+        try (Socket socket = connect()) {
+            OutputStream out = socket.getOutputStream();
+            long start = System.currentTimeMillis();
+            boolean closed = false;
+            // trickle one byte every 150 ms; each byte would reset an idle timer, not this deadline
+            for (byte b : "GET /track HTTP/1.1\r\nX-Slow: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".getBytes(StandardCharsets.ISO_8859_1)) {
+                try {
+                    out.write(b);
+                    out.flush();
+                } catch (IOException e) {
+                    closed = true;
+                    break;
+                }
+                Thread.sleep(150);
+            }
+            if (!closed) {
+                socket.setSoTimeout(3000);
+                try {
+                    closed = socket.getInputStream().read() == -1;
+                } catch (IOException reset) {
+                    closed = true;
+                }
+            }
+            assertTrue("slow client was not cut off", closed);
+            assertTrue("cut off too late", System.currentTimeMillis() - start < 6000);
+        }
+    }
+
+    @Test
+    public void stalledReader_isClosedAfterTheIdleTimeout() throws Exception {
+        server.setKeepAliveTimeout(1000);
+        try (Socket socket = connect()) {
+            socket.setReceiveBufferSize(4096);
+            socket.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            // never read: the renderer is stalled; the stream's slot must be released
+            awaitCounter("activeStreams", 1);
+            long deadline = System.currentTimeMillis() + 6000;
+            while (counter("activeStreams") != 0 && System.currentTimeMillis() < deadline) Thread.sleep(100);
+            assertEquals(0, counter("activeStreams"));
+        }
+    }
+
+    private static Response readResponseHead(InputStream in) throws IOException {
+        ByteArrayOutputStream head = new ByteArrayOutputStream();
+        int matched = 0;
+        while (matched < 4) {
+            int b = in.read();
+            if (b < 0) throw new IOException("closed before headers ended");
+            head.write(b);
+            matched = (b == "\r\n\r\n".charAt(matched)) ? matched + 1 : (b == '\r' ? 1 : 0);
+        }
+        Response r = new Response();
+        r.status = Integer.parseInt(head.toString(StandardCharsets.ISO_8859_1.name()).split(" ")[1]);
+        return r;
+    }
+
     private void upgrade(Socket socket) throws IOException {
         exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
                 + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
