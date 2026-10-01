@@ -13,8 +13,6 @@ import com.android.tools.screenshot.PreviewTest
 fun SettingsVisualBaselinePreview() {
     MusicMateTheme {
         SettingsScreen(
-            serverEngine = "nio",
-            onServerEngineChange = {},
             showStorageSpace = true,
             onShowStorageSpaceChange = {},
             prefixTrackNumber = false,

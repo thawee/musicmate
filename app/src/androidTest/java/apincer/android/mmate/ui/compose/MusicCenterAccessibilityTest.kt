@@ -102,7 +102,7 @@ class MusicCenterAccessibilityTest {
                     onTrackClicked = {}, onQueueTrackClicked = {},
                     onQueueTrackRemoved = { _, _ -> }, onQueueClear = {},
                     onQueueJumpToPlaying = {}, onQueueBrowseLibrary = {},
-                    onEngineChanged = {}, onStartServerClicked = {},
+                    onStartServerClicked = {},
                     onStopServerClicked = {}, onCopyUrlClicked = {},
                     onOpenUrlClicked = {}, onQrCodeClicked = {},
                     showGestureHints = false,
@@ -143,20 +143,18 @@ class MusicCenterAccessibilityTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun server_exposesStatusUrlQrAndEngineChoices() {
+    fun server_exposesStatusUrlAndQr() {
         val state = MediaServerState().apply {
             isServerRunning = true
             serverStatusText = "MusicMate Server"
             serverUrl = "http://192.168.1.42:9000"
             broadcastInfo = "DLNA 1.5 • Wi-Fi • Port 9000"
-            currentEngine = "nio"
-            engineDescription = "Balanced compatibility and efficiency"
             qrCodeBitmap = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
         }
         composeRule.setContent {
             MusicMateTheme {
                 MediaServerPage(
-                    state = state, onEngineChanged = {}, onStartClicked = {},
+                    state = state, onStartClicked = {},
                     onStopClicked = {}, onCopyUrlClicked = {}, onOpenUrlClicked = {},
                     onQrCodeClicked = {}
                 )
@@ -166,7 +164,6 @@ class MusicCenterAccessibilityTest {
         composeRule.onNodeWithContentDescription("Media server, running").assertExists()
         composeRule.onNodeWithContentDescription("Copy server URL, http://192.168.1.42:9000").assertExists()
         composeRule.onNodeWithContentDescription("Enlarge WebUI QR code").assertExists()
-        composeRule.onNodeWithText("SonicNIO").assertIsSelected()
         runAccessibilityChecks()
     }
 

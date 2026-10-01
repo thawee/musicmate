@@ -83,8 +83,6 @@ android {
                          'META-INF/LGPL2.1',
                          'META-INF/INDEX.LIST']
             pickFirsts += ['META-INF/DEPENDENCIES']
-            // Every Netty jar ships this file; merge them so io.netty.util.Version can report the version
-            merges += ['META-INF/io.netty.versions.properties']
         }
     }
 
@@ -187,7 +185,6 @@ dependencies {
     // UPnP & Web Server Engines
     implementation libs.jupnp.android
     implementation project(':server-jupnp')
-    implementation project(':server-jupnp-netty')
 
     // Local Submodules
     implementation project(':library:library')

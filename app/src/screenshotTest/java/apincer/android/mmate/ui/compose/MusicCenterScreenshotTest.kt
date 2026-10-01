@@ -98,7 +98,6 @@ internal fun MusicCenterPreview(
             onQueueClear = {},
             onQueueJumpToPlaying = {},
             onQueueBrowseLibrary = {},
-            onEngineChanged = {},
             onStartServerClicked = {},
             onStopServerClicked = {},
             onCopyUrlClicked = {},

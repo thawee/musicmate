@@ -86,7 +86,6 @@ object DialogInterop {
     fun createMediaServerPageView(
         context: Context,
         state: MediaServerState,
-        onEngineChanged: java.util.function.Consumer<String>,
         onStartClicked: Runnable,
         onStopClicked: Runnable,
         onCopyUrlClicked: Runnable,
@@ -99,7 +98,6 @@ object DialogInterop {
                 MusicMateTheme {
                 MediaServerPage(
                     state = state,
-                    onEngineChanged = { onEngineChanged.accept(it) },
                     onStartClicked = { onStartClicked.run() },
                     onStopClicked = { onStopClicked.run() },
                     onCopyUrlClicked = { onCopyUrlClicked.run() },
@@ -222,7 +220,6 @@ object DialogInterop {
         onQueueClear: Runnable,
         onQueueJumpToPlaying: Runnable,
         onQueueBrowseLibrary: Runnable,
-        onEngineChanged: java.util.function.Consumer<String>,
         onStartServerClicked: Runnable,
         onStopServerClicked: Runnable,
         onCopyUrlClicked: Runnable,
@@ -258,8 +255,7 @@ object DialogInterop {
                         onQueueClear = { onQueueClear.run() },
                         onQueueJumpToPlaying = { onQueueJumpToPlaying.run() },
                         onQueueBrowseLibrary = { onQueueBrowseLibrary.run() },
-                        onEngineChanged = { onEngineChanged.accept(it) },
-                        onStartServerClicked = { onStartServerClicked.run() },
+                            onStartServerClicked = { onStartServerClicked.run() },
                         onStopServerClicked = { onStopServerClicked.run() },
                         onCopyUrlClicked = { onCopyUrlClicked.run() },
                         onOpenUrlClicked = { onOpenUrlClicked.run() },

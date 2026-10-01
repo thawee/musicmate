@@ -226,12 +226,4 @@
         <item>48 kHz (48,000 Hz)</item>
         <item>44.1 kHz (44,100 Hz)</item>
     </string-array>
-    <string-array name="server_engine_entries">
-        <item>SonicNIO (Default · Balanced/Zero-Copy)</item>
-        <item>Netty (High Throughput)</item>
-    </string-array>
-    <string-array name="server_engine_values">
-        <item>nio</item>
-        <item>netty</item>
-    </string-array>
 </resources>

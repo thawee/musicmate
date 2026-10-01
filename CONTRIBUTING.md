@@ -10,29 +10,21 @@ Thank you for your interest in contributing to Music Mate! This guide will help 
 
 ## 🏗 Project Structure
 
-Music Mate uses a modular architecture to support multiple pluggable server engines. All active engines ship in **one APK**; the engine is chosen at runtime, not at build time.
+Music Mate uses a modular architecture: the UPnP layer depends only on the `WebServer` SPI in `:core`, implemented by SonicNIO in `:server-jupnp`. Everything ships in **one APK**.
 
 *   `:app` - The main Android application module.
 *   `:core` - Shared business logic and interfaces (SPI: `UpnpServer`, `WebServer`, `MediaServerHub`).
-*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine — **the default engine**.
-*   `:server-jupnp-netty` - **Netty** engine (Netty 4.2.18).
+*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO**, the streaming HTTP engine.
 *   `:library` - Internal UI and utility libraries.
 
 ## 🚀 Building the Project
 
-There are **no Gradle flavors**. A single APK is built, and the active engine is read at runtime from the `preference_media_server_engine` preference via `CompositeWebServer`:
-
-| Engine key | Server Engine | Module | Notes |
-| :--- | :--- | :--- | :--- |
-| `nio` | **SonicNIO** (Custom NIO Reactor) | `:server-jupnp` | **Default** — balanced, true zero-copy |
-| `netty` | **Netty 4.2** | `:server-jupnp-netty` | High throughput |
-
-Users switch engines at runtime under **App Settings → Server Engine**. To change the default, edit `Constants.DEFAULT_SERVER_ENGINE`; every reader uses it.
+There are **no Gradle flavors**. A single APK is built, with one streaming engine: SonicNIO (`NioWebServerImpl` in `:server-jupnp`, provided by `ServerModule`). There is no engine setting; Netty was retired in ADR-037.
 
 ### Command Line Build
 
 ```bash
-# Build the app (single variant — all engines included)
+# Build the app (single variant)
 ./gradlew assembleDebug
 
 # Build and install on a connected device
@@ -58,13 +50,11 @@ We use JUnit and AndroidX Test for verification.
 *   **DI:** We use **Dagger Hilt** for dependency injection.
 *   **Reactive:** **RxJava 3** is used for asynchronous operations.
 
-## 🐛 Debugging Server Engines
+## 🐛 Debugging the Streaming Server
 
-If you encounter issues with a specific server engine, document them in a log file within the relevant module or create a new issue.
+SonicNIO logs through `System.out`, which appears in logcat under the `System.out` tag. `NioHttpServerTest`, `NioHttpServerSoakTest` and `NioHttpServerFuzzTest` reproduce most server issues on the JVM; `tools/bench/stream-bench.sh` measures a device over the network.
 
-**Actively maintained engines** (`nio`, `netty`) receive bug fixes and new features.
-
-*Note: CoreHTTP (`httpcore`) was removed on 2026-10-01 (ADR-035); a saved `httpcore` choice is migrated to `nio` at startup.*
+*Note: CoreHTTP (ADR-035) and Netty (ADR-037) were removed on 2026-10-01; a saved engine choice from an earlier version is deleted at startup.*
 
 ---
 

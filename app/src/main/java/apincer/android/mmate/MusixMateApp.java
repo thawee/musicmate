@@ -65,7 +65,7 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         //prepare defaultAssets
         initDefaultAssets();
 
-        migrateRetiredServerEngine();
+        removeRetiredServerEnginePreference();
 
         // start music scan
         startMusicScan();
@@ -97,11 +97,11 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         }
     }
 
-    /** CoreHTTP was removed; a saved "httpcore" choice moves to the default engine (SonicNIO). */
-    private void migrateRetiredServerEngine() {
+    /** SonicNIO is the only streaming engine (ADR-037); drop the old engine choice ("httpcore", "netty"). */
+    private void removeRetiredServerEnginePreference() {
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        if ("httpcore".equalsIgnoreCase(prefs.getString(Constants.PREF_SERVER_ENGINE, null))) {
-            prefs.edit().putString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE).apply();
+        if (prefs.contains("preference_media_server_engine")) {
+            prefs.edit().remove("preference_media_server_engine").apply();
         }
     }
 

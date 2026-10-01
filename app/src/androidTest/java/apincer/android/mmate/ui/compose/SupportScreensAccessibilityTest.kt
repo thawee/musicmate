@@ -4,7 +4,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsOn
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -28,8 +27,6 @@ class SupportScreensAccessibilityTest {
         composeRule.setContent {
             MusicMateTheme {
                 SettingsScreen(
-                    serverEngine = "nio",
-                    onServerEngineChange = {},
                     showStorageSpace = true,
                     onShowStorageSpaceChange = {},
                     prefixTrackNumber = false,
@@ -44,7 +41,6 @@ class SupportScreensAccessibilityTest {
         }
 
         composeRule.onNodeWithText("Display Storage Space").assertIsOn()
-        composeRule.onNodeWithText("SonicNIO").assertIsSelected()
         runAccessibilityChecks()
     }
 

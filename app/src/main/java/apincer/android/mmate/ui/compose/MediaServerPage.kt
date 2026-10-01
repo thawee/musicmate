@@ -2,9 +2,7 @@ package apincer.android.mmate.ui.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
@@ -35,7 +32,6 @@ import apincer.android.mmate.R
 @Composable
 fun MediaServerPage(
     state: MediaServerState,
-    onEngineChanged: (String) -> Unit,
     onStartClicked: () -> Unit,
     onStopClicked: () -> Unit,
     onCopyUrlClicked: () -> Unit,
@@ -400,94 +396,9 @@ fun MediaServerPage(
                 }
             }
         }
-
-        // ── 3. STREAMING ENGINE SELECTOR ──────────────────────────────────────
-        Surface(
-            color = Color(0xFF14141A),
-            shape = RoundedCornerShape(16.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "STREAMING ENGINE",
-                        color = Color(0xFF9E9E9E),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-
-                    Text(
-                        text = "ACTIVE ARCHITECTURE",
-                        color = Color(0xFF666666),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Custom Segmented Switcher (No text truncation!)
-                Surface(
-                    color = Color(0xFF0C0C10),
-                    shape = RoundedCornerShape(10.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x14FFFFFF)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        EngineSegment(
-                            id = "nio",
-                            label = "SonicNIO",
-                            isSelected = state.currentEngine == "nio",
-                            onSelect = onEngineChanged,
-                            modifier = Modifier.weight(1f)
-                        )
-                        EngineSegment(
-                            id = "netty",
-                            label = "Netty",
-                            isSelected = state.currentEngine == "netty",
-                            onSelect = onEngineChanged,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Dynamic Engine Feature Specs
-                Surface(
-                    color = Color(0x0FFFFFFF),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = state.engineDescription,
-                        color = Color(0xFFCCCCCC),
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
-                    )
-                }
-            }
-        }
     }
 
-    // ── 4. ZOOMABLE QR CODE DIALOG ───────────────────────────────────────────
+    // ── 3. ZOOMABLE QR CODE DIALOG ───────────────────────────────────────────
     if (showQrZoomDialog && state.qrCodeBitmap != null) {
         Dialog(onDismissRequest = { showQrZoomDialog = false }) {
             Surface(
@@ -584,36 +495,5 @@ fun MediaServerPage(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EngineSegment(
-    id: String,
-    label: String,
-    isSelected: Boolean,
-    onSelect: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color(0x33FFB300) else Color.Transparent)
-            .border(
-                if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB300))
-                else androidx.compose.foundation.BorderStroke(0.dp, Color.Transparent),
-                RoundedCornerShape(8.dp)
-            )
-            .selectable(selected = isSelected, role = Role.RadioButton) { onSelect(id) }
-            .padding(vertical = 8.dp, horizontal = 2.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            color = if (isSelected) Color(0xFFFFB300) else Color(0xFF9E9E9E),
-            fontSize = 12.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            maxLines = 1
-        )
     }
 }

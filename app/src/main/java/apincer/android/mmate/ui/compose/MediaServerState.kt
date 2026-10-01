@@ -12,6 +12,4 @@ class MediaServerState {
     var serverUrl by mutableStateOf("")
     var broadcastInfo by mutableStateOf("")
     var qrCodeBitmap by mutableStateOf<Bitmap?>(null)
-    var currentEngine by mutableStateOf(apincer.music.core.Constants.DEFAULT_SERVER_ENGINE)
-    var engineDescription by mutableStateOf("")
 }

@@ -968,5 +968,14 @@ Goal: prove and improve SonicNIO with evidence; then decide whether Netty can be
 - [x] 3b. Split NioHttpServer (2,405 -> 1,165 lines): FileResponse (behind StreamSlots), WebSocketSession, NioWebSocketConnection (cross-thread requests via requestWebSocketWrite/requestClose), SerialExecutor, WebSocketHandshake, BoundedByteArrayOutputStream, FileContentTypes; accurate class Javadoc. Fixed on the way: 304 evicting a stream, onOpen after pipelined frames; removed dead metrics, resetOld, isHttpState, locks
 - [x] 4. Protocol gaps: Expect: 100-continue, pipelining (in order), HTTP/1.0 closes without keep-alive, 30 s header-read deadline (slowloris), idle sweep every 1 s. A stalled reader was already closed by the idle timeout (test added). 5 tests; 3 fail on the previous commit. Soak client retries connect on host ephemeral-port exhaustion (BindException)
 - [ ] 5. Observability: counters (streams, evictions, 429/503, bytes/s), Android Log tags, Music Center diagnostics line
-- [ ] 6. Decision gate: retire Netty if SonicNIO matches it on device and passes soak
+- [x] 6. Decision gate: Netty retired (ADR-037); see "Retire Netty and the engine selector" below
 Out of scope: HTTP/2, TLS, chunked request bodies.
+
+## Retire Netty and the engine selector (2026-10-01)
+Decision: SonicNIO matched Netty on device (step 1b); Netty never actually ran before 4bd8d78b. User chose to remove the selector too.
+- [x] Delete :server-jupnp-netty (settings.gradle, app/build.gradle, libs.versions.toml, Netty packaging/proguard rules)
+- [x] Replace CompositeWebServer with NioWebServerImpl in ServerModule; delete CompositeWebServer
+- [x] Remove engine selector: Settings (SettingsScreen, SettingsActivity, settings.xml, arrays.xml), Music Center (MediaServerPage, MediaServerState, AudioHubSheet, DialogInterop, MainOverlayHost, MainScaffoldCallbacks, MainActivity), service restart-on-engine-change listener
+- [x] Remove PREF_SERVER_ENGINE/DEFAULT_SERVER_ENGINE; migration clears the stale preference
+- [x] Update tests (accessibility, screenshot) and docs (ADR-037, README, DESIGN, UI, USER_GUIDE, WEBUI, others, CHANGELOG)
+- [x] Verify: 215 unit tests, debug build, R8 release minify, androidTest compile; on device the Server header is SonicNIO and the saved "netty" preference was deleted. Rendered previews checked for Settings and the Server tab. Screenshot validation: the same 30 previews fail on unchanged HEAD (stale baselines), so no new failures; baselines not regenerated here

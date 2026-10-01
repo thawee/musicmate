@@ -177,10 +177,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     private androidx.lifecycle.LiveData<MediaServerHub.ServerStatus> hubStatus;
     private final androidx.lifecycle.Observer<MediaServerHub.ServerStatus> hubStatusMirror = statusLiveData::setValue;
 
-    /** Restarts a running server when its engine changes, whichever screen changed it. Held strongly. */
-    private final android.content.SharedPreferences.OnSharedPreferenceChangeListener serverPrefListener = (prefs, key) -> {
-        if (Constants.PREF_SERVER_ENGINE.equals(key)) restartServersIfRunning();
-    };
     private androidx.lifecycle.Observer<MediaServerHub.ServerStatus> statusObserver;
 
     private final PlaybackCallback playbackCallback = new PlaybackCallback() {
@@ -507,8 +503,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             hubStatus = androidx.lifecycle.FlowLiveDataConversions.asLiveData(mediaHub.getStatus());
             hubStatus.observeForever(hubStatusMirror);
         }
-        androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(serverPrefListener);
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
@@ -633,17 +627,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         mediaHub.start(); // the hub reports STARTING, then RUNNING or ERROR
     }
 
-    /** Applies a server setting change; a stopped server stays stopped. */
-    public void restartServersIfRunning() {
-        MediaServerHub.ServerStatus status = statusLiveData.getValue();
-        if (status == MediaServerHub.ServerStatus.RUNNING || status == MediaServerHub.ServerStatus.CAST
-                || status == MediaServerHub.ServerStatus.STARTING) {
-            Log.i(TAG, "Server setting changed → restarting server");
-            stopServers();
-            startServers(); // the hub starts again once its stop completes
-        }
-    }
-
     public void stopServers() {
         mediaHub.stop();
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
@@ -695,8 +678,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         if (statusObserver != null) {
             getStatusLiveData().removeObserver(statusObserver);
             if (hubStatus != null) hubStatus.removeObserver(hubStatusMirror);
-            androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
-                    .unregisterOnSharedPreferenceChangeListener(serverPrefListener);
         }
 
         // 4. Cancel coroutines job

@@ -22,9 +22,6 @@ class SettingsActivity : ComponentActivity() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         setContent {
-            var serverEngine by remember {
-                mutableStateOf(prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE) ?: Constants.DEFAULT_SERVER_ENGINE)
-            }
             var showStorageSpace by remember {
                 mutableStateOf(Settings.isShowStorageSpace(this@SettingsActivity))
             }
@@ -55,12 +52,6 @@ class SettingsActivity : ComponentActivity() {
 
             MusicMateTheme {
                 SettingsScreen(
-                    serverEngine = serverEngine,
-                    onServerEngineChange = { newEngine ->
-                        serverEngine = newEngine
-                        // The service restarts a running server when this preference changes
-                        prefs.edit().putString(Constants.PREF_SERVER_ENGINE, newEngine).apply()
-                    },
                     showStorageSpace = showStorageSpace,
                     onShowStorageSpaceChange = { checked ->
                         showStorageSpace = checked

@@ -44,7 +44,6 @@ interface MainScaffoldCallbacks {
     fun onAudioHubQueueTrackMoved(fromIndex: Int, toIndex: Int)
     fun onAudioHubQueueClear()
     fun onAudioHubQueueJumpToPlaying()
-    fun onEngineChanged(engine: String)
     fun onStartServerClicked()
     fun onStopServerClicked()
     fun onCopyUrlClicked()

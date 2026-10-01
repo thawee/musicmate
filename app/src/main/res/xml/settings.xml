@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory
-        android:summary="DLNA Media Server">
-
-        <ListPreference
-            android:key="preference_media_server_engine"
-            android:title="Server Engine"
-            android:summary="Select high-performance HTTP web server engine for streaming"
-            android:entries="@array/server_engine_entries"
-            android:entryValues="@array/server_engine_values"
-            android:defaultValue="nio"
-            app:useSimpleSummaryProvider="true"/>
-    </PreferenceCategory>
-    <PreferenceCategory
         android:summary="User Interface">
         <!--
         <SwitchPreferenceCompat

@@ -137,8 +137,6 @@ internal object UxPreviewFixtures {
         serverStatusText = "Server Stopped"
         isServerRunning = false
         isNetworkAvailable = true
-        currentEngine = "nio"
-        engineDescription = "Balanced compatibility and efficiency"
     }
 
     fun serverRunning(): MediaServerState = MediaServerState().apply {
@@ -147,8 +145,6 @@ internal object UxPreviewFixtures {
         isNetworkAvailable = true
         serverUrl = "http://192.168.1.42:9000"
         broadcastInfo = "DLNA 1.5 • Wi-Fi • Port 9000"
-        currentEngine = "nio"
-        engineDescription = "Balanced compatibility and efficiency"
         qrCodeBitmap = null
     }
 

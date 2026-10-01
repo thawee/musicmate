@@ -261,7 +261,7 @@ Smart Playlists (`PlaylistEntry.TYPE_SMART`) provide real-time, rule-based music
 
 ## 10. HTTP Zero-Copy Streaming Engine & RFC 7233 Specification
 
-MusicMate embeds two HTTP servers, SonicNIO (default, `NioHttpServer`) and Netty, optimized for bit-perfect audio streaming to low-latency DAPs, network streamers, and web browsers:
+MusicMate embeds one HTTP server, SonicNIO (`NioHttpServer`), optimized for bit-perfect audio streaming to low-latency DAPs, network streamers, and web browsers:
 
 - **Zero-Copy Streaming (`NioHttpServer.FileResponse`):**
   - Streams with `FileChannel.transferTo()` in 256 KB chunks, so file data never passes through the JVM heap.

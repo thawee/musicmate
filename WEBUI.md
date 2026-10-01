@@ -1,6 +1,6 @@
 # MusicMate Web UI & Server Architecture
 
-This document provides a technical overview of the MusicMate Web interface and the multi-engine server architecture that powers it.
+This document provides a technical overview of the MusicMate Web interface and the SonicNIO server that powers it.
 
 ## 1. Web UI (Frontend)
 The Web UI is a modern, responsive Single Page Application (SPA) designed to serve as a remote control for the MusicMate ecosystem.
@@ -21,32 +21,17 @@ The Web UI is a modern, responsive Single Page Application (SPA) designed to ser
 ---
 
 ## 2. Server Architecture (Backend)
-The backend follows a "Core Logic + Plugin Engine" pattern, allowing the application to use different networking libraries while maintaining consistent behavior.
+The backend separates core logic (`BaseServer`, `WebSocketContent`) from the network transport, which is SonicNIO.
 
 ### Core Components
 *   **`BaseServer`**: The foundation class. It handles path normalization, routing, and contains the core WebSocket command logic.
 *   **`WebSocketContent`**: The command processor. It handles JSON messages (e.g., `browse`, `play`, `getTrackMetadata`) and manages the `PlaybackCallback` to broadcast state changes.
 *   **`ContentHolder`**: A DTO used to encapsulate resolved resources (File Path, MimeType, and Metadata).
 
-### Server Engines
-MusicMate supports multiple pluggable server implementations to balance performance, memory footprint, and audiophile integrity.
+### Streaming Engine
+MusicMate streams with **SonicNIO**, a custom Reactor-pattern NIO server (`NioHttpServer`, `NioWebServerImpl`): zero-copy `transferTo` in 256 KB chunks, DSCP 0x18 network priority, about 8 KB per connection, RFC 7233 ranges and RFC 6455 WebSocket. There is no engine setting.
 
-> **Maintenance policy:** SonicNIO (default) and Netty are the only engines. CoreHTTP and the unbuilt Jetty 12 and Undertow modules were removed on 2026-10-01 (ADR-035).
-
-| Feature | SonicNIO | Netty |
-|:---|:---|:---|
-| **Library** | Custom NIO | Netty 4.2.18 |
-| **Engine key** | `nio` **(default)** | `netty` |
-| **Primary Use** | Balanced | **High Throughput** |
-| **Status** | ✅ Production | ✅ Production |
-| **True Zero-Copy** | ✅ `transferTo` | ✅ `DefaultFileRegion` |
-| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
-| **Memory / Conn** | **~8 KB** | Watermarks 256 KB / 512 KB |
-| **GC Pause** | **< 20 ms** | < 150 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket** | ✅ | ✅ |
-| **`X-Audio-*` headers** | ✅ | ✅ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+> CoreHTTP and the unbuilt Jetty 12 and Undertow modules were removed on 2026-10-01 (ADR-035), and Netty the same day after on-device benchmarks showed no advantage (ADR-037).
 
 ### API & Routing
 The server exposes three primary context paths:
@@ -56,7 +41,7 @@ The server exposes three primary context paths:
 
 ### Advanced Features
 *   **Waveform Generation**: Servers generate 480-point peak data on-the-fly via `MusicAnalyser.generateWaveform(context, tag, 480, 0.6)` and cache results in a **256-entry** `LruCache` (bounded by entry count, not bytes, to prevent OOM), guarded by double-checked locking.
-*   **Audiophile Headers**: DLNA content features (`contentFeatures.dlna.org`, `transferMode.dlna.org`) are emitted by all engines. The `X-Audio-*` set (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`) is emitted by every engine; SonicNIO and Netty share `DLNAHeaderHelper.getAudioHeaders()`.
+*   **Audiophile Headers**: DLNA content features (`contentFeatures.dlna.org`, `transferMode.dlna.org`) are emitted with every stream, along with the `X-Audio-*` set (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`) from `DLNAHeaderHelper.getAudioHeaders()`.
 *   **Client Profiling**: The `ProfileManager` detects the connecting client (e.g., BubbleUPnP, WiiM, Sony TV) to tune buffer sizes and header compatibility.
 
 ---

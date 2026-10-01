@@ -21,11 +21,9 @@ public class LogHelper {
         setLogLevel("android.view.View", Level.OFF);
         setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.OFF);
         setLogLevel("org.greenrobot.eventbus.EventBus", Level.OFF);
-       // setLogLevel(" io.netty", Level.FINE);
 
         setLogLevel("apincer.android.mmate.repository.FFMPegReader", Level.SEVERE);
         setLogLevel("apincer.android.mmate.dlna.content.ContentDirectory", Level.WARNING);
-        setLogLevel("apincer.android.mmate.dlna.transport.NettyStreamServer", Level.SEVERE);
         setLogLevel("apincer.android.mmate.dlna.transport.HttpCoreStreamServer", Level.SEVERE);
         setLogLevel("apincer.android.mmate.repository.JAudioTaggerReader", Level.SEVERE);
         setLogLevel("apincer.android.mmate.provider.CoverArtProvider", Level.OFF);

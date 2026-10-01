@@ -71,7 +71,6 @@ fun AudioHubSheet(
     onQueueJumpToPlaying: () -> Unit,
     onQueueBrowseLibrary: () -> Unit,
     // Callbacks for MediaServerPage
-    onEngineChanged: (String) -> Unit,
     onStartServerClicked: () -> Unit,
     onStopServerClicked: () -> Unit,
     onCopyUrlClicked: () -> Unit,
@@ -401,7 +400,6 @@ fun AudioHubSheet(
                         )
                         2 -> MediaServerPage(
                             state = mediaServerState,
-                            onEngineChanged = onEngineChanged,
                             onStartClicked = onStartServerClicked,
                             onStopClicked = onStopServerClicked,
                             onCopyUrlClicked = onCopyUrlClicked,

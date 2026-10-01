@@ -26,7 +26,6 @@ include ':db-room'
 
 // Media Server & UPnP Engines
 include ':server-jupnp'
-include ':server-jupnp-netty'
 
 // Local Libraries & Audio Subsystems
 include ':library:library'

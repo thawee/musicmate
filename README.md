@@ -9,7 +9,7 @@
 *   🌐 **[Ecosystem Overview](ECOSYSTEM.md)** - How the Core Server, Players, and Controllers fit together.
 *   🎛️ **[Playback Architecture](PLAYBACK_ARCHITECTURE.md)** - How playback control, queue, Android app control, and DLNA control are integrated.
 *   🔌 **[WebSocket API](WEBSOCKET_API.md)** - Technical specification for real-time remote control.
-*   🖥️ **[Web UI & Server Architecture](WEBUI.md)** - Deep dive into the remote interface and pluggable HTTP engines.
+*   🖥️ **[Web UI & Server Architecture](WEBUI.md)** - Deep dive into the remote interface and the SonicNIO streaming server.
 *   🎼 **[Music Quality Guide](MUSIC_QUALITY_GUIDE.md)** - A reference for understanding Bit Depth and Dynamic Range.
 *   🛠️ **[Contributing Guide](CONTRIBUTING.md)** - Developer setup, build instructions, and architecture overview.
 *   🏗️ **[System Architecture & Design](DESIGN.md)** - Technical topology, audio engine pipelines, multi-target playback routing, and system ADRs.
@@ -82,71 +82,23 @@ Music Mate follows a modular Clean Architecture, implementing a full DLNA stack 
 
 ## 📐 Technical Architecture & Implementation
 
-Music Mate employs a sophisticated **pluggable architecture** that decouples business logic from the network transport, allowing runtime selection of the optimal HTTP engine.
+Music Mate decouples business logic from the network transport: the streaming server implements the `WebServer` SPI, and the UPnP layer only talks to that interface.
 
-### The Pluggable Server Engine
+### The Streaming Server: SonicNIO
 
-A single APK ships all engines. `CompositeWebServer` reflects the engine named in `Constants.PREF_SERVER_ENGINE` (`preference_media_server_engine`) and delegates `initServer` / `stopServer` / `restartServer` to it, so engines can be hot-swapped at runtime without restarting the app.
+The app has one streaming engine, SonicNIO (`server-jupnp`, `NioWebServerImpl` on top of `NioHttpServer`), provided to the UPnP stack by `ServerModule`. There is no engine setting. Netty was retired on 2026-10-01 after on-device benchmarks showed no advantage (ADR-037); CoreHTTP and the unbuilt Jetty 12, Undertow and HttpCore 5.4 modules were removed earlier (ADR-035).
 
-All engines extend `BaseServer` and implement the `WebServer` SPI (`core/.../server/spi/WebServer.java`), inheriting shared behavior from `BaseServer`:
+`NioWebServerImpl` extends `BaseServer`, which provides:
 - **Dynamic ETags** for efficient caching (SHA-256 of `path + length + lastModified`, truncated to 16 hex chars plus the hex file length).
 - **HTTP/1.1 Compliance** with Range request support, conditional validation, and Keep-Alive optimization.
-- **Audiophile Headers** for renderer metadata — see the per-engine table below, as coverage differs by engine.
+- **Audiophile Headers:** DLNA `transferMode.dlna.org` / `contentFeatures.dlna.org` plus the `X-Audio-*` set (sample rate, bit depth, bitrate, format, Bit-Perfect) from `DLNAHeaderHelper.getAudioHeaders()`.
 
-> **Maintenance policy:** Two engines are built and maintained: SonicNIO (default) and Netty.
-> CoreHTTP (Apache HttpCore 5.5) and the unbuilt Jetty 12, Undertow and HttpCore 5.4 modules were removed on 2026-10-01 (ADR-035).
-
-> **Default engine:** `nio` (SonicNIO), from `Constants.DEFAULT_SERVER_ENGINE`. Every code path that reads the preference (`CompositeWebServer`, `MainActivity`, `SettingsActivity`, `MediaServerState`) uses it when the preference is unset, and an unknown key also resolves to SonicNIO. A saved `httpcore` choice from earlier versions is migrated to `nio` at startup.
-
----
-
-### ✅ Actively Maintained Engines
-
-Both are listed in `settings.gradle` and built into the shipping APK.
-
-#### 🚀 SonicNIO (`server-jupnp` / engine key `nio`) — *Default · Balanced*
-*   **Status:** **Production Grade — the default engine.** Also serves UPnP control (SOAP/GENA) regardless of the selected engine.
-*   **Architecture:** Custom-built, zero-dependency Reactor-pattern NIO engine optimised for Android (`NioHttpServer`, single selector + worker pool).
-*   **Strengths:** No object pooling (plain allocations; audio never enters the heap thanks to `transferTo`), 256 KB streaming chunks, intelligent LruCache for ETags and client profiles, `IP_TOS = 0x18` (DSCP Low Delay | High Throughput), 512 KB `SO_SNDBUF`.
-*   **Headers:** DLNA `transferMode.dlna.org` / `contentFeatures.dlna.org` plus the full `X-Audio-*` set from `DLNAHeaderHelper.getAudioHeaders()`, shared with Netty.
+*   **Architecture:** Custom-built, zero-dependency Reactor-pattern NIO engine optimised for Android (`NioHttpServer`, single selector + worker pool). It also serves UPnP control (SOAP/GENA) on its own port.
+*   **Streaming path:** `FileChannel.transferTo()`, true zero-copy in 256 KB chunks; audio never enters the Java heap.
+*   **Strengths:** No object pooling (plain allocations), intelligent LruCache for ETags and client profiles, `IP_TOS = 0x18` (DSCP Low Delay | High Throughput), 512 KB `SO_SNDBUF`.
 *   **Threading:** The selector thread owns all connections; workers hand back responses and queue closes, and each WebSocket connection's messages are handled in order (ADR-036).
-*   **Tests:** `NioHttpServerTest` (36 tests) drives a real socket: full and partial GETs (suffix, open-ended, clamped, 416), invalid and multi-range requests (200), `If-Range`, HEAD, keep-alive, `Connection: close`, HTTP/1.0 close, pipelined requests, `Expect: 100-continue`, the header-read deadline, stalled readers, POST bodies split across packets, chunked bodies (501), request-pool integrity after disconnects, stream eviction, stop/teardown, and WebSocket handshake, ordering, close and oversized frames. `RateLimitingHandlerTest` covers the limit and the cover-art exemption.
-
-#### ✅ Netty (`server-jupnp-netty` / engine key `netty`) — *High Throughput*
-*   **Status:** **Production Grade — Best for high-concurrency / scalability.**
-*   **Strengths:** Netty 4.2.18 event-loop model (1 boss / 2 worker + a 4-thread logic executor), zero-copy `DefaultFileRegion` (with `ChunkedFile` fallback), 256 KB low / 512 KB high write-buffer watermarks, `IP_TOS = 0x18` low-jitter transport, and a Netty-only REST bridge accepting the same JSON commands as the WebSocket API.
-*   **Headers:** the same `X-Audio-*` set as SonicNIO, from `DLNAHeaderHelper.getAudioHeaders()`.
-
----
-
-### ⚠️ Note on the "Zero-Copy" Claim
-
-Both engines use `FileChannel.transferTo()` / OS-level file-region transfer:
-
-| Engine | Actual streaming path |
-|:---|:---|
-| **SonicNIO** | ✅ `FileChannel.transferTo()` — true zero-copy, 256 KB chunks |
-| **Netty** | ✅ `DefaultFileRegion` — true zero-copy (`ChunkedFile` when TLS is in play) |
-
----
-
-## 📊 Server Engine Comparison
-
-### Actively Maintained
-
-| Feature | SonicNIO | Netty |
-|:---|:---|:---|
-| **Engine key** | `nio` **(default)** | `netty` |
-| **Recommended Use** | Balanced | High Throughput |
-| **True Zero-Copy** | ✅ `transferTo` | ✅ `DefaultFileRegion` |
-| **Network Priority (DSCP)** | ✅ `0x18` | ✅ `0x18` |
-| **Memory footprint** | **~8 KB / conn** | Pooled, watermarks 256 KB / 512 KB |
-| **GC Pause Duration** | **< 20 ms** | < 150 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket RFC 6455** | ✅ | ✅ |
-| **`X-Audio-*` headers** | ✅ | ✅ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Actively Maintained** | ✅ | ✅ |
+*   **Tests:** `NioHttpServerTest` (37 tests) drives a real socket: full and partial GETs (suffix, open-ended, clamped, 416), invalid and multi-range requests (200), `If-Range`, HEAD, keep-alive, `Connection: close`, HTTP/1.0 close, pipelined requests, `Expect: 100-continue`, the header-read deadline, a stream outliving that deadline, stalled readers, POST bodies split across packets, chunked bodies (501), request-pool integrity after disconnects, stream eviction, stop/teardown, and WebSocket handshake, ordering, close and oversized frames. `NioHttpServerSoakTest` and `NioHttpServerFuzzTest` add load and hostile input; `RateLimitingHandlerTest` covers the limit and the cover-art exemption.
+*   **Benchmark:** `tools/bench/stream-bench.sh <phone-ip> <track-id> [label]` measures single-stream throughput, seek latency, parallel throughput and app CPU from a computer on the same network.
 
 ---
 
@@ -156,14 +108,14 @@ Both engines use `FileChannel.transferTo()` / OS-level file-region transfer:
 *   **Async/Reactive:** RxJava 3
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
 *   **Database:** Room (Google Jetpack)
-*   **Active Engines:** **Custom SonicNIO Reactor** (default), Netty 4.2.18
+*   **Streaming Engine:** **Custom SonicNIO Reactor** (JDK NIO only)
 *   **Library:** jUPnP 3.0.5 (fork of Cling), JAudiotagger, FFmpeg
 
 ---
 
 ## 🔧 Developer Notes & Android Compatibility
 
-Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). No engine currently needs a platform patch: SonicNIO uses only JDK NIO, and Netty runs on its NIO transport. CoreHTTP needed a build-time bytecode patch for blocked `jdk.net` hidden APIs (ADR-032) and was removed (ADR-035).
+Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). SonicNIO needs no platform patch because it uses only JDK NIO. CoreHTTP needed a build-time bytecode patch for blocked `jdk.net` hidden APIs (ADR-032) and was removed (ADR-035).
 
 ---
 

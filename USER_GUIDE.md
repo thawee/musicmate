@@ -172,11 +172,9 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
    - **DLNA Renderers:** Displays device friendly name and IP address (e.g. `HiBy R3 (192.168.1.50 • DLNA Renderer)`).
    - **Web Streaming:** Displays stream client IP and protocol details (e.g. `Web Streaming (192.168.1.100 • Web Streaming)`).
    - **Android Player Apps:** Displays local app title, package/version, and app type (e.g. `Poweramp (com.maxmpz.audioplayer • Android App)`).
-5. **Runtime Server Engine Switching (App Settings):**
-   - Switch web server engines dynamically under **App Settings -> Server Engine** without restarting the app:
-     * **SonicNIO (Default · Balanced):** Built-in engine with low CPU wake-ups, Java NIO non-blocking I/O and true zero-copy `FileChannel.transferTo()` streaming. This is the default when no engine has been chosen.
-     * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming, with true zero-copy `DefaultFileRegion` transfer and a REST bridge alongside the WebSocket API.
-   - **Header note:** All engines send the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`).
+5. **Streaming Engine:**
+   - MusicMate streams with its built-in **SonicNIO** engine: Java NIO non-blocking I/O with low CPU wake-ups and true zero-copy `FileChannel.transferTo()` streaming. There is no engine setting to change.
+   - **Header note:** Every stream carries the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`).
 6. **Server Port & Endpoints Reference:**
    - **Default Server Port:** `9000` (HTTP)
    - **Endpoints Table:**

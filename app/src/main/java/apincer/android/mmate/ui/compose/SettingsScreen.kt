@@ -29,8 +29,6 @@ import apincer.android.mmate.R
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    serverEngine: String,
-    onServerEngineChange: (String) -> Unit,
     showStorageSpace: Boolean,
     onShowStorageSpaceChange: (Boolean) -> Unit,
     prefixTrackNumber: Boolean,
@@ -234,35 +232,6 @@ fun SettingsScreen(
                     onCheckedChange = onStudioKeepScreenOnChange
                 )
             }
-
-            SettingsCard(
-                title = "ADVANCED STREAMING",
-                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "DLNA server engine",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Change this only when troubleshooting streaming compatibility.",
-                    color = Color(0xFF9E9E9E),
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                AdaptiveChoiceGroup(
-                    options = listOf(
-                        "nio" to "SonicNIO",
-                        "netty" to "Netty"
-                    ),
-                    selected = { serverEngine.equals(it, ignoreCase = true) },
-                    onSelect = onServerEngineChange
-                )
-            }
         }
         }
     }
@@ -431,8 +400,6 @@ private fun SettingsSwitchRow(
 @Composable
 private fun SettingsScreenPreview() {
     SettingsScreen(
-        serverEngine = "nio",
-        onServerEngineChange = {},
         showStorageSpace = true,
         onShowStorageSpaceChange = {},
         prefixTrackNumber = false,

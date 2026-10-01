@@ -3,8 +3,8 @@
 > Covers the media server engine's network-awareness layer introduced in 2026.06.
 > Related classes: `MediaServerHubImpl`, `NetworkUtils`, `MediaServerAddressFactory`, `MusicMateServiceImpl`.
 >
-> **Engine scope:** These improvements apply to the two maintained engines —
-> **SonicNIO** (`nio`, default) and **Netty** (`netty`). CoreHTTP was removed on 2026-10-01 (ADR-035).
+> **Engine scope:** These improvements apply to **SonicNIO**, the only streaming engine.
+> CoreHTTP (ADR-035) and Netty (ADR-037) were removed on 2026-10-01.
 
 ---
 
@@ -300,28 +300,21 @@ All player targets (`DMRPlayer`, `WebStreamingPlayer`, `ExternalAndroidPlayer`) 
 
 ---
 
-## 7 — Runtime Server Engine Switching & Ultra High-Res Streaming Tuning
+## 7 — Ultra High-Res Streaming Tuning
 
-> Added in 2026.08 (`CompositeWebServer`, `NioHttpServer`, `HttpCoreWebServerImpl`).
-
-### Dynamic Engine Proxy (`CompositeWebServer`)
-The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
-* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"` or `"netty"`; a legacy `"httpcore"` value is migrated to `"nio"` at startup), defaulting to **`"nio"`** (`Constants.DEFAULT_SERVER_ENGINE`) when unset; an unknown key also resolves to SonicNIO, which is constructed directly rather than through reflection.
-* Instantiates and delegates calls (`initServer`, `stopServer`, `restartServer`) to the selected engine via reflection. Any instantiation failure falls back to SonicNIO.
-* Allows hot-swapping server engines at runtime without restarting the Android application process.
-* Engine changes are applied by `MusicMateServiceImpl`, which listens for `PREF_SERVER_ENGINE` and calls `restartServersIfRunning()`; Settings and the Music Center only save the preference. A stopped server stays stopped.
+> Added in 2026.08. Runtime engine switching (`CompositeWebServer`) was removed with Netty on 2026-10-01 (ADR-037); `ServerModule` provides `NioWebServerImpl` directly.
 
 ### High-Res (352.8 kHz / DXD) Streaming Optimizations
 To support seamless high-bitrate streaming (>10 Mbps) to DAPs (e.g. HiBy R3) over Wi-Fi without buffer underruns:
-* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`); **Netty** (`NettyWebServerImpl`) leaves `SO_SNDBUF` to the OS and bounds queued data with a 256 KB–512 KB write-buffer water mark. Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
-* **Large File Streaming Chunks:** SonicNIO and Netty stream in **256 KB** payload chunks (`NioHttpServer.CHUNK_SIZE = 262144`, Netty `ChunkedFile`/watermark 256 KB–512 KB). Chunk sizes reduce application-level overhead and minimize selector iterations during high-rate (>10 Mbps) FLAC streaming.
+* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`). Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
+* **Large File Streaming Chunks:** SonicNIO streams in **256 KB** payload chunks (`NioHttpServer.CHUNK_SIZE = 262144`). Chunk sizes reduce application-level overhead and minimize selector iterations during high-rate (>10 Mbps) FLAC streaming.
 * **Socket Timeouts:** Increased `soTimeout` and `keepAliveTimeout` from 30s to **120s** to tolerate longer latency spikes and prevent premature stream disconnections.
 
 ### Zero-Copy Streaming Reality Check
-`FileChannel.transferTo()` / OS-level file-region transfer is used by **SonicNIO** (`transferTo`, 256 KB chunks) and **Netty** (`DefaultFileRegion`, with a `ChunkedFile` fallback for TLS).
+**SonicNIO** streams with `FileChannel.transferTo()` in 256 KB chunks, so audio never enters the Java heap.
 
 ### Port & HTTP Endpoint Specification
-All server engines (`SonicNIO`, `Netty`) standardize on port **`9000`** and expose the following endpoint contract:
+SonicNIO listens on port **`9000`** and expose the following endpoint contract:
 
 | Endpoint Type | Constant | Path Structure | Description |
 | :--- | :--- | :--- | :--- |

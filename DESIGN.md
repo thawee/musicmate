@@ -386,7 +386,7 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Date:** 2026-10-01
 - **Context:** Three engines served streams and the WebUI. SonicNIO (`NioHttpServer`) ships regardless: it carries UPnP control (SOAP/GENA) and is the fallback engine. CoreHTTP depended on a pre-release HttpCore (5.5-beta3), needed a build-time bytecode patch for blocked hidden APIs (ADR-032), and had the most streaming defects (4 MB / 58 s cutoff, spin-loop, descriptor leaks, backpressure). SonicNIO lacked the `X-Audio-*` headers and had no tests.
 - **Decision:** SonicNIO sends the shared `X-Audio-*` headers (`DLNAHeaderHelper.getAudioHeaders`) and is covered by `NioHttpServerTest`. It becomes the default (`Constants.DEFAULT_SERVER_ENGINE`), and `:server-jupnp-httpcore`, `patchHttpCore`, ASM and the HttpCore catalog entries are removed. A saved `httpcore` preference is migrated to `nio` at startup. Netty stays as the alternative engine.
-- **Consequences:** No third-party HTTP library is needed for the default path and no build-time patching remains. Netty is the only remaining large server dependency; it can be retired once SonicNIO has a soak record on real renderers.
+- **Consequences:** No third-party HTTP library is needed for the default path and no build-time patching remains. Netty is the only remaining large server dependency; it can be retired once SonicNIO has a soak record on real renderers. Netty was retired in ADR-037.
 
 ### ADR-036: SonicNIO Threading and Ownership Rules
 - **Status:** Accepted
@@ -400,6 +400,14 @@ Library metadata rows and full-screen specification chips wrap when space is lim
   5. **Stopping is final and non-blocking.** `stop()` sets a `stopped` flag that `run()` honours, shuts the pool down without waiting, and teardown releases every connection through `closeConnection()`.
   6. **Rate limiting skips cover art** (`/coverart/`), so a WebUI grid loads fully; streams and API calls keep the 50 requests/second limit.
 - **Consequences:** Each rule is covered by `NioHttpServerTest` (28 end-to-end socket tests) and `RateLimitingHandlerTest`. New SonicNIO code must follow these rules; in particular, workers must never close connections or touch the selector directly.
+
+### ADR-037: Retire Netty; SonicNIO Is the Only Streaming Engine
+- **Status:** Accepted (completes the plan in ADR-035)
+- **Date:** 2026-10-01
+- **Context:** ADR-035 kept Netty until SonicNIO had a record on real hardware. On-device benchmarks (Galaxy S25 as hotspot, 261 MB FLAC, `tools/bench/stream-bench.sh`) showed the two engines equal within Wi-Fi noise: single stream 8-9 MB/s each, seek time to first byte p50 28-36 ms (SonicNIO) vs 32-42 ms (Netty), four parallel streams 7.7-8.4 vs 8.4-10.0 MB/s, app CPU 5-6% vs 4%. The same work found that choosing Netty had never taken effect: the APK excluded `META-INF/io.netty.versions.properties`, Netty's constructor threw, and `CompositeWebServer` silently fell back to SonicNIO while the UI showed Netty. Every user had been running SonicNIO.
+- **Decision:** Delete `:server-jupnp-netty` and the Netty dependency. Delete `CompositeWebServer`; `ServerModule` provides `NioWebServerImpl` directly. Remove the engine choice from Settings and the Music Center Server tab, the `PREF_SERVER_ENGINE` / `DEFAULT_SERVER_ENGINE` constants and the service's restart-on-engine-change listener. At startup the app deletes a saved `preference_media_server_engine` value (`httpcore`, `netty` or `nio`).
+- **Consequences:** One engine to maintain and test, about 3.5 MB less APK, no reflection-based engine loading and no silent fallback. Netty's REST bridge is gone; the WebSocket API covers the same commands. If a second engine is ever needed, the `WebServer` SPI is the seam; reintroduce selection only with a test that fails when the selected engine is not the one running.
+
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

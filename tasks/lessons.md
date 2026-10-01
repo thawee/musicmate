@@ -496,3 +496,4 @@
 - A per-phase deadline (header read) must be disarmed when its phase ends. A state machine that stays in READING_HEADERS while a response streams turned a 30 s slowloris guard into a 30 s cap on every stream. Test every new timeout with an operation that legitimately runs past it.
 - Benchmarks must measure bytes actually received and check each transfer's exit status. stream-bench.sh assumed every parallel download completed, so streams cut at 30 s showed as 33 MB/s instead of failing.
 - A test loop that greps old result files proves nothing: delete results first and check the Gradle exit code and compile errors before reading them.
+- A fallback that catches an exception and quietly substitutes a default (CompositeWebServer falling back to SonicNIO) hid a broken Netty engine from every user while the UI said Netty. Fail visibly, or at least surface the active implementation (the Server header showed it) and test that the selected one is the one running.

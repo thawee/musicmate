@@ -1003,9 +1003,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         state.setNetworkAvailable(networkAvailable);
         state.setServerRunning(isRunning);
 
-        String engine = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
-        state.setCurrentEngine(engine);
-
         if (isRunning) {
             String url = Constants.getPresentationUrl();
             state.setServerUrl(url);
@@ -1028,17 +1025,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             state.setServerUrl("");
             state.setBroadcastInfo(networkAvailable ? "Ready to stream" : "Wi-Fi / Hotspot disconnected");
             state.setQrCodeBitmap(null);
-        }
-    }
-
-    public void onAudioHubEngineChanged(String engine) {
-        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
-        if (!engine.equals(prevEngine)) {
-            // The service restarts a running server when this preference changes;
-            // the status observer reports STARTING and then RUNNING or ERROR.
-            prefs.edit().putString(Constants.PREF_SERVER_ENGINE, engine).apply();
-            apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState().setCurrentEngine(engine);
         }
     }
 
@@ -1280,11 +1266,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onAudioHubQueueTrackRemove(Track track, int index) {
         onAudioHubQueueTrackRemoved(track, index);
-    }
-
-    @Override
-    public void onEngineChanged(String engine) {
-        onAudioHubEngineChanged(engine);
     }
 
     @Override

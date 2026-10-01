@@ -131,7 +131,6 @@ private fun MusicCenterOverlay(
                 callbacks?.onLibraryDestinationChanged(LibraryDestination.ALL_SONGS)
             }
         },
-        onEngineChanged = { engine -> callbacks?.onEngineChanged(engine) },
         onStartServerClicked = { callbacks?.onStartServerClicked() },
         onStopServerClicked = { callbacks?.onStopServerClicked() },
         onCopyUrlClicked = { callbacks?.onCopyUrlClicked() },
