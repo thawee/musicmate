@@ -135,6 +135,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
+    /** The folder picker sent the user to grant storage access; reopen it once access is granted. */
+    private boolean reopenFoldersAfterStorageGrant = false;
+    private static final String STATE_REOPEN_FOLDERS = "reopen_folders_after_storage_grant";
 
     @Inject
     FileOperationTask operationTask;
@@ -362,6 +365,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
+        }
 
         // Start the server here, where we are guaranteed to be in the foreground!
         // Opt-in: the server starts automatically only after the user has started it themselves
@@ -602,6 +608,16 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onResume();
         refreshSystemAccessState(false);
         refreshSleepTimerChip();
+        if (reopenFoldersAfterStorageGrant && PermissionUtils.checkAccessPermissions(getApplicationContext())) {
+            reopenFoldersAfterStorageGrant = false;
+            doScanDirectories();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_REOPEN_FOLDERS, reopenFoldersAfterStorageGrant);
     }
 
     @Override
@@ -1572,6 +1588,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @SuppressLint("SetTextI18n")
     private void doScanDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
+            reopenFoldersAfterStorageGrant = true;
             startActivity(PermissionActivity.createIntent(
                     this,
                     apincer.android.mmate.ui.compose.SystemAccessCapability.STORAGE));

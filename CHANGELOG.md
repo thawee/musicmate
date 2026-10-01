@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Folder Play and Queue feedback:** Playing or queueing a folder reports the real result after it finishes (number of tracks, nothing playable, or an error) instead of announcing success up front, and says when no player is connected instead of doing nothing.
 - **List scroll position:** Opening a collection now starts at the top of its list, and Back returns to where you were, instead of carrying one scroll position across all lists.
 - **Track menu:** The track ⋮ menu offers Convert Format again, and hides Play Now, Play Next and Add to Queue while no playback service is connected instead of showing actions that do nothing.
+- **Storage access for scanning:** After granting storage access from the folder picker, the app returns to the picker instead of leaving the scan request behind.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.

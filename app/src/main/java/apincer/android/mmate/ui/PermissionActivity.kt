@@ -51,7 +51,13 @@ class PermissionActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        val hadStorageAccess = systemAccess.hasFullStorageAccess
         refreshSystemAccess()
+        // Opened to grant storage for a scan: return to the folder picker as soon as it is granted
+        if (focusedCapability == SystemAccessCapability.STORAGE && !hadStorageAccess
+                && systemAccess.hasFullStorageAccess) {
+            finish()
+        }
     }
 
     private fun refreshSystemAccess() {
