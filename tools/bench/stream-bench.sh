@@ -12,7 +12,7 @@
 set -euo pipefail
 
 IP=${1:?usage: stream-bench.sh <phone-ip> <track-id> [label]}
-TRACK=${2:?track id required (see /music/<id>/ URLs in the WebUI)}
+TRACK=${2:?track id required: the <id> in a /music/<id>/file URL, e.g. from the WebUI or DLNA track info}
 LABEL=${3:-engine}
 PORT=9000
 URL="http://$IP:$PORT/music/$TRACK/file"
@@ -20,8 +20,13 @@ PKG=apincer.android.mmate
 SEEKS=20
 PARALLEL=4
 
-size=$(curl -sfI "$URL" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-length"{print $2}')
-[ -n "$size" ] || { echo "No Content-Length from $URL (is the server running?)" >&2; exit 1; }
+head=$(curl -sI "$URL" | tr -d '\r') || true
+status=$(awk 'NR==1{print $2}' <<<"$head")
+size=$(awk -F': ' 'tolower($1)=="content-length"{print $2}' <<<"$head")
+if [ "$status" != 200 ] || [ -z "$size" ]; then
+    echo "HEAD $URL returned '${status:-no response}': server not running, or no track with id $TRACK" >&2
+    exit 1
+fi
 echo "[$LABEL] $URL  size=$((size / 1048576)) MB"
 
 cpu_sampler() {

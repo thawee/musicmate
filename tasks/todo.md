@@ -960,6 +960,8 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 Goal: prove and improve SonicNIO with evidence; then decide whether Netty can be retired.
 - [x] 1a. JVM soak test (NioHttpServerSoakTest): 16 clients/8 s and 64 clients/20 s, 0 errors, counters drain to 0, no pool duplicates. Baseline on a Mac: ~700 MB/s, range TTFB p50 4.6 ms / p95 24 ms (16 clients), 18.8 / 75 ms (64 clients)
 - [ ] 1b. On-device: run tools/bench/stream-bench.sh once with SonicNIO and once with Netty on the same large track; record results here
+    - SonicNIO (2026-10-01, SM-S931B over Wi-Fi, track 2021715542, 261 MB FLAC, no adb): single 8.6 MB/s, seek TTFB p50 39 ms / p95 141 ms, parallel(4) 32.8 MB/s
+    - Netty: pending
 - [x] 2. Fuzz (NioHttpServerFuzzTest): 23 hostile requests, mutated HTTP corpus (1,500 per run; 20,000 in one hunt) and random WebSocket frames (40 per run; 1,000 in one hunt). Found and fixed one leak: a protocol error after a queued reply (PING then malformed frame) left the connection with no interest ops, never closed; it now always ends with a CLOSE frame. Regression test in NioHttpServerTest
 - [x] 3a. Remove object pools: soak before 648-728 MB/s, TTFB p50 5.0-5.7 ms / p95 13-27 ms; after 685-752 MB/s, 4.3-4.9 ms / 6.8-23 ms (Mac JVM, 3 runs each)
 - [x] 3b. Split NioHttpServer (2,405 -> 1,165 lines): FileResponse (behind StreamSlots), WebSocketSession, NioWebSocketConnection (cross-thread requests via requestWebSocketWrite/requestClose), SerialExecutor, WebSocketHandshake, BoundedByteArrayOutputStream, FileContentTypes; accurate class Javadoc. Fixed on the way: 304 evicting a stream, onOpen after pipelined frames; removed dead metrics, resetOld, isHttpState, locks
