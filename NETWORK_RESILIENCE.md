@@ -5,7 +5,6 @@
 >
 > **Engine scope:** These improvements apply to the three actively maintained engines —
 > **SonicNIO** (`nio`), **CoreHTTP** (`httpcore`), and **Netty** (`netty`).
-> The archived engines (`jetty`, `undertow`) are unaffected and will not be updated.
 
 ---
 
@@ -314,7 +313,7 @@ The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
 
 ### High-Res (352.8 kHz / DXD) Streaming Optimizations
 To support seamless high-bitrate streaming (>10 Mbps) to DAPs (e.g. HiBy R3) over Wi-Fi without buffer underruns:
-* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`), and on **Netty** via `NettyUPnpServerImpl`; **CoreHTTP** relies on its shadowed `SingleCoreIOReactor` configuration plus a 64 KB direct-buffer producer. Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
+* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`) and on **CoreHTTP** (`IOReactorConfig.setSndBufSize`, with a 64 KB direct-buffer producer); **Netty** (`NettyWebServerImpl`) leaves `SO_SNDBUF` to the OS and bounds queued data with a 256 KB–512 KB write-buffer water mark. Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
 * **Large File Streaming Chunks:** SonicNIO and Netty stream in **256 KB** payload chunks (`NioHttpServer.CHUNK_SIZE = 262144`, Netty `ChunkedFile`/watermark 256 KB–512 KB). CoreHTTP's `PartialFileProducer` uses a **64 KB** direct buffer with file-position rewind on partial writes. Chunk sizes reduce application-level overhead and minimize selector iterations during high-rate (>10 Mbps) FLAC streaming.
 * **Socket Timeouts:** Increased `soTimeout` and `keepAliveTimeout` from 30s to **120s** to tolerate longer latency spikes and prevent premature stream disconnections.
 

@@ -31,23 +31,22 @@ The backend follows a "Core Logic + Plugin Engine" pattern, allowing the applica
 ### Server Engines
 MusicMate supports multiple pluggable server implementations to balance performance, memory footprint, and audiophile integrity.
 
-> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are actively maintained and are the only engines listed in `settings.gradle`. Jetty 12 and Undertow are archived — present on disk but not compiled into the app.
+> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are the only engines; they are listed in `settings.gradle` and maintained. The unbuilt Jetty 12 and Undertow modules were removed on 2026-10-01.
 
-| Feature | SonicNIO | CoreHTTP | Netty | Jetty 12 *(archived)* | Undertow *(archived)* |
-|:---|:---|:---|:---|:---|:---|
-| **Library** | Custom NIO | Apache HttpCore 5.5-beta2 | Netty 4.2.18 | Jetty 12.1.9 | Undertow 2.4.0 |
-| **Engine key** | `nio` | `httpcore` **(default)** | `netty` | — | — |
-| **Primary Use** | Balanced | **Default · Ultra-Low Memory** | **High Throughput** | Standard | Audiophile |
-| **Status** | ✅ Production | ✅ Production | ✅ Production | 🗄 Archived | 🗄 Archived |
-| **In `settings.gradle`** | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` | ✅ Yes | ✅ Yes |
-| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x10 (Low Delay) | ✅ DSCP 0x18 | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
-| **Memory / Conn** | **~8 KB** | **~64 KB** | Watermarks 256 KB / 512 KB | 128–256 MB | 256–300 MB |
-| **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms | < 100 ms | < 50 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **WebSocket** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **`X-Audio-*` headers** | ❌ | ✅ (incl. Bit-Perfect) | ⚠️ (no Bit-Perfect) | ✅ | ✅ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Feature | SonicNIO | CoreHTTP | Netty |
+|:---|:---|:---|:---|
+| **Library** | Custom NIO | Apache HttpCore 5.5-beta3 | Netty 4.2.18 |
+| **Engine key** | `nio` | `httpcore` **(default)** | `netty` |
+| **Primary Use** | Balanced | **Default · Ultra-Low Memory** | **High Throughput** |
+| **Status** | ✅ Production | ✅ Production | ✅ Production |
+| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` |
+| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x10 (Low Delay) | ✅ DSCP 0x18 |
+| **Memory / Conn** | **~8 KB** | **~64 KB** | Watermarks 256 KB / 512 KB |
+| **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms |
+| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **WebSocket** | ✅ | ✅ | ✅ |
+| **`X-Audio-*` headers** | ❌ | ✅ (incl. Bit-Perfect) | ⚠️ (no Bit-Perfect) |
+| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 
 ### API & Routing
 The server exposes three primary context paths:

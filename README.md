@@ -93,8 +93,8 @@ All engines extend `BaseServer` and implement the `WebServer` SPI (`core/.../ser
 - **HTTP/1.1 Compliance** with Range request support, conditional validation, and Keep-Alive optimization.
 - **Audiophile Headers** for renderer metadata — see the per-engine table below, as coverage differs by engine.
 
-> **Maintenance policy:** Three engines are actively developed and receive all future improvements.
-> The remaining engines are archived — they build and work, but will not receive new features or bug fixes.
+> **Maintenance policy:** Three engines are built and maintained: SonicNIO, CoreHTTP and Netty.
+> The unbuilt Jetty 12, Undertow and HttpCore 5.4 modules were removed on 2026-10-01.
 
 > **Default engine:** `httpcore` (CoreHTTP). Every code path that reads the preference — `CompositeWebServer`, `MainActivity`, `SettingsActivity` — defaults to `"httpcore"` when the preference is unset.
 
@@ -106,7 +106,7 @@ All three are listed in `settings.gradle` and built into the shipping APK.
 
 #### ✅ CoreHTTP (`server-jupnp-httpcore` / engine key `httpcore`) — *Default · Ultra-Low Memory*
 *   **Status:** **Production Grade — this is the default engine.**
-*   **Architecture:** Apache HttpCore 5.5-beta2 (`H2ServerBootstrap`), 2 IO threads. Android compatibility requires shadowed `org.apache.hc.core5.util.ReflectionUtils` and `SingleCoreIOReactor` classes (the `patchHttpCore` Gradle task excludes the stock versions from `httpcore5-android.jar`).
+*   **Architecture:** Apache HttpCore 5.5-beta3 (`H2ServerBootstrap`), 2 IO threads. Android compatibility comes from the `patchHttpCore` Gradle task, which rewrites the stock jar's blocked `jdk.net` hidden-API calls with ASM (ADR-032); no HttpCore classes are shadowed.
 *   **Strengths:**
     *   ✅ Full WebSocket support (RFC 6455)
     *   ✅ ~64 KB/connection memory footprint via pooled direct `ByteBuffer`s (`MAX_BUFFER_POOL = 2× cores`)
@@ -140,20 +140,6 @@ Only two engines actually use `FileChannel.transferTo()` / OS-level file-region 
 
 ---
 
-### 🗄 Archived Engines *(not built — excluded from `settings.gradle`)*
-
-The following engine modules remain on disk but are **not** included in `settings.gradle` and are therefore not compiled into the app.
-
-#### Jetty 12 (`server-jupnp-jetty`)
-*   **Status:** **Archived — no further updates.**
-*   Previously noted for HTTP/2, WebSocket and industrial-grade Range request handling.
-
-#### Undertow 2.4 (`server-jupnp-undertow`)
-*   **Status:** **Archived — no further updates.**
-*   Previously the highest-throughput option; enterprise-grade async I/O with DSCP QoS.
-
----
-
 ## 📊 Server Engine Comparison
 
 ### Actively Maintained
@@ -172,15 +158,6 @@ The following engine modules remain on disk but are **not** included in `setting
 | **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 | **Actively Maintained** | ✅ | ✅ | ✅ |
 
-### Archived (reference only — not built)
-
-| Feature | Jetty 12 | Undertow 2.4 |
-|:---|:---|:---|
-| **Status** | 🗄 Archived | 🗄 Archived |
-| **In `settings.gradle`** | ❌ | ❌ |
-| **Zero-Copy** | ✅ Yes | ✅ Yes |
-| **Memory footprint** | 128–256 MB | 256–300 MB |
-
 ---
 
 ## 🛠 Tech Stack
@@ -189,21 +166,17 @@ The following engine modules remain on disk but are **not** included in `setting
 *   **Async/Reactive:** RxJava 3
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
 *   **Database:** Room (Google Jetpack)
-*   **Active Engines:** Apache HttpCore 5.5-beta2 (CoreHTTP, default), Netty 4.2.18, **Custom SonicNIO Reactor**
-*   **Archived Engines:** Jetty 12, Undertow 2.4 *(on disk only — excluded from `settings.gradle`)*
+*   **Active Engines:** Apache HttpCore 5.5-beta3 (CoreHTTP, default), Netty 4.2.18, **Custom SonicNIO Reactor**
 *   **Library:** jUPnP 3.0.5 (fork of Cling), JAudiotagger, FFmpeg
 
 ---
 
 ## 🔧 Developer Notes & Android Compatibility
 
-Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). Music Mate uses "shadowed" classes and reflection hacks to ensure platform interoperability:
+Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). Music Mate applies targeted build-time patches to ensure platform interoperability:
 
-*   **Undertow Hacks:** 
-    *   `org.jboss.logging.Logger`: Custom implementation to bypass JBoss Logging dependency issues on Android.
-    *   `org.xnio.XnioWorker`: Modified version to handle Android-specific thread and context management.
 *   **HttpCore Hacks:**
-    *   `org.apache.hc.core5.util.ReflectionUtils`: Custom implementation to handle restricted `setAccessible` calls and JRE level detection on Android ART.
+    *   `patchHttpCore` strips HttpCore's blocked `jdk.net` hidden-API calls from the upstream jar at build time (ADR-032); no HttpCore classes are vendored.
 
 ---
 
