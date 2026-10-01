@@ -919,3 +919,11 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P1-9 Service restarts a running server when PREF_SERVER_ENGINE changes; Settings and Music Center only save the preference; a stopped server stays stopped
 - [x] app/server-jupnp tests, assembleDebug (no hub/service unit-test harness)
 - [ ] Device: Stop, then toggle Wi-Fi (stays stopped); Stop right after Start; start without network (ERROR); Wi-Fi off/on while running (STOPPED then RUNNING); change engine in Settings while running and while stopped
+
+## P1-13/P1-14 Library query errors and paging (2026-10-01)
+- [x] P1-13 TagRepository.findMusic propagates query failures (removed findMusicOrEmpty/EMPTY_LIST), so the list shows "Couldn't load music" + Retry instead of "No tracks"
+- [x] P1-13 Related-tracks sheet catches the failure instead of crashing viewModelScope
+- [x] P1-14 Paged TrackDao queries end with `id ASC` (16 queries), so page order is fully determined
+- [x] P1-14 appendPage / loadUntilFound skip ids already shown (LazyColumn is keyed by track id)
+- [x] TagRepositoryQueryErrorTest (red on old code), AppendPageTest; core 68/68, app 97/97, assembleDebug
+- [ ] Device: scroll a large library while a scan runs; no crash, no duplicate rows

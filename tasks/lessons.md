@@ -481,3 +481,6 @@
   - **Resolution Pattern**:
     1. Use `androidx.activity.ComponentDialog(context, themeResId)`. `ComponentDialog` natively implements `LifecycleOwner`, `SavedStateRegistryOwner`, and `OnBackPressedDispatcherOwner`, and installs them on `window.decorView`.
     2. Additionally attach `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` directly to both `dialog.window.decorView` and `composeView` before `show()`, ensuring compositions resolve parents without relying on ambient activity trees.
+
+- **Preserve line endings when scripting edits:** Python text-mode `read()`/`write()` turns `\r\n` into `\n`, so editing a CRLF or mixed-ending file (`TagRepository.java` is `i/mixed`) rewrites every line. Check `git ls-files --eol FILE` first and edit in binary mode, keeping each line's ending. Check `git diff --stat` after every scripted edit.
+- **Splitting a file's changes across commits:** `git apply --cached --unidiff-zero` placed zero-context insertion hunks at shifted positions when other hunks were skipped. Build each intermediate file version explicitly (worktree copy minus later changes, or splice hunks by old line number bottom-up) and stage it with `git hash-object -w` + `git update-index --cacheinfo`. Then build and test every commit in a separate worktree.

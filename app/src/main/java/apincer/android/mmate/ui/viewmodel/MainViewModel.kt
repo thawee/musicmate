@@ -131,7 +131,7 @@ class MainViewModel(
                         _searchStats.value = stats
                         _searchStatsFlow.value = stats
                     }
-                    val result = if (replace) items else previousItems + items
+                    val result = if (replace) items else appendPage(previousItems, items)
                     _musicItems.value = result
                     _musicItemsFlow.value = result
                     currentPage = ((offset + items.size + PAGE_SIZE - 1) / PAGE_SIZE).toInt()
@@ -169,7 +169,8 @@ class MainViewModel(
                 while (!current.contains(target) && !lastPage) {
                     kotlinx.coroutines.currentCoroutineContext().ensureActive()
                     val items = repos.findMusic(criteria, page * PAGE_SIZE, PAGE_SIZE) ?: emptyList()
-                    current.addAll(items)
+                    val seen = current.mapTo(HashSet()) { it.id }
+                    items.filterTo(current) { seen.add(it.id) }
                     page++
                     lastPage = items.size < PAGE_SIZE
                 }
@@ -307,4 +308,13 @@ class MainViewModel(
     fun getTagRepository(): TagRepository = repos
 
     fun getFileRepository(): FileRepository = fileRepos
+}
+
+/**
+ * Appends a fetched page, skipping ids already shown. A scan can shift rows between page
+ * requests, and a repeated id would crash the LazyColumn, which is keyed by track id.
+ */
+internal fun appendPage(previous: List<Track>, page: List<Track>): List<Track> {
+    val seen = previous.mapTo(HashSet()) { it.id }
+    return previous + page.filter { seen.add(it.id) }
 }
