@@ -1643,10 +1643,25 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
     }
 
+    /** Batch dialogs close on completion, so per-file failures are summarized afterwards. */
+    private void showFileOperationFailures(String title, List<Track> failed, int total) {
+        if (failed.isEmpty() || isFinishing() || isDestroyed()) return;
+        StringBuilder names = new StringBuilder();
+        for (Track tag : failed) {
+            names.append("\n").append(new java.io.File(tag.getPath()).getName());
+        }
+        new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle(title)
+                .setMessage(failed.size() + " of " + total + " files failed:" + names)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
     private void doDeleteMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
 
         final AlertDialog[] alertHolder = new AlertDialog[1];
+        final List<Track> failed = new ArrayList<>();
         apincer.android.mmate.ui.compose.ActionFilesState state = new apincer.android.mmate.ui.compose.ActionFilesState(selections);
         
         View cview = apincer.android.mmate.ui.compose.DialogInterop.createActionFilesDialogView(
@@ -1667,6 +1682,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                                 runOnUiThread(() -> {
                                     state.updateStatus(tag, status);
                                     state.setProgress(progress);
+                                    if (FileOperationTask.isFailureStatus(status)) failed.add(tag);
                                     if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
                                         playbackService.onTrackDeleted(tag);
                                     }
@@ -1679,6 +1695,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                                     viewModel.loadMusicItems();
                                     state.setBusy(false);
                                     if(alertHolder[0] != null) alertHolder[0].dismiss();
+                                    showFileOperationFailures("Some tracks weren’t removed", failed, selections.size());
                                 });
                             }
                         });
@@ -1704,6 +1721,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (selections.isEmpty()) return;
 
         final AlertDialog[] alertHolder = new AlertDialog[1];
+        final List<Track> failed = new ArrayList<>();
         apincer.android.mmate.ui.compose.ActionFilesState state = new apincer.android.mmate.ui.compose.ActionFilesState(selections);
         
         View cview = apincer.android.mmate.ui.compose.DialogInterop.createActionFilesDialogView(
@@ -1724,6 +1742,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                                 runOnUiThread(() -> {
                                     state.updateStatus(tag, status);
                                     state.setProgress(progress);
+                                    if (FileOperationTask.isFailureStatus(status)) failed.add(tag);
                                     if ("Deleted".equalsIgnoreCase(status) && isPlaybackServiceBound && playbackService != null) {
                                         playbackService.onTrackDeleted(tag);
                                     }
@@ -1736,6 +1755,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                                     viewModel.loadMusicItems();
                                     state.setBusy(false);
                                     if(alertHolder[0] != null) alertHolder[0].dismiss();
+                                    showFileOperationFailures("Some files weren’t moved", failed, selections.size());
                                 });
                             }
                         });
@@ -1759,6 +1779,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private void doEncodeAudioFiles(List<Track> selections) {
         if (selections.isEmpty()) return;
+        final List<Track> failed = new ArrayList<>();
 
         apincer.android.mmate.ui.compose.FormatFilesState state = new apincer.android.mmate.ui.compose.FormatFilesState(selections);
         
@@ -1810,6 +1831,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                             runOnUiThread(() -> {
                                 state.getStatusMap().put(tag, status);
                                 state.getProgress().setValue(progress);
+                                if (FileOperationTask.isFailureStatus(status)) failed.add(tag);
                             });
                         }
 
@@ -1819,6 +1841,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                                 viewModel.loadMusicItems();
                                 busy = false;
                                 alert.dismiss();
+                                showFileOperationFailures("Some files weren’t converted", failed, selections.size());
                             });
                         }
                     });

@@ -20,39 +20,55 @@ public class FFMpegHelper {
 
     private static final String TAG = "FFMpegHelper";
 
-    public static void extractCoverArt(String path, File pathFile, GenerateCallback callback) {
+    /**
+     * Extracts the embedded picture to {@code pathFile}. The target is replaced only when
+     * extraction produced an image, so a file without art never clobbers an existing cover.
+     * @return true if an image was written
+     */
+    public static boolean extractCoverArt(String path, File pathFile, GenerateCallback callback) {
+        File partial = new File(pathFile.getParentFile(), ".extract-" + pathFile.getName());
         try {
             Log.d(TAG, "extractCoverArt: from:"+path+", to:"+pathFile);
             String targetPath = pathFile.getAbsolutePath();
-            String options = " -c:v copy ";
+            String options = " -an -c:v copy -f image2 ";
 
-            String cmd = " -hide_banner -nostats -y -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
+            String cmd = " -hide_banner -nostats -y -i \"" + path + "\" " + options + " \"" + partial.getAbsolutePath() + "\"";
             LogHelper.setFFMpegOff();
-            FFmpegKit.execute(cmd); // do not clear the result
+            Session session = FFmpegKit.execute(cmd); // do not clear the result
+            if (!ReturnCode.isSuccess(session.getReturnCode()) || partial.length() == 0) {
+                return false;
+            }
+            java.nio.file.Files.move(partial.toPath(), pathFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
             if(callback != null) {
                 callback.onGenerated(targetPath, null,0,0);
             }
+            return true;
         }catch (Exception ex) {
             Log.e(TAG, "extractCoverArt", ex);
+            return false;
+        } finally {
+            partial.delete();
         }
     }
 
-    public static void removeCoverArt(Context context, Track tag) {
+    /** @return true if the file was rewritten without embedded pictures */
+    public static boolean removeCoverArt(Context context, Track tag) {
             String pathFile = tag.getPath();
             String ext = FileUtils.getExtension(pathFile);
-            pathFile = pathFile.replace("."+ext, "no_embed."+ext);
+            pathFile = pathFile.substring(0, pathFile.length() - ext.length() - 1) + "no_embed." + ext;
             String options = " -vn -codec:a copy ";
            // String options =" -map 0:V -y -codec copy ";
 
             String cmd = " -hide_banner -nostats -y -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
             LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
-            if (ReturnCode.isSuccess(session.getReturnCode())) {
-                FileSystem.safeMove(context, pathFile, tag.getPath(), true);
-                //return pathFile;
-            }else {
-                FileSystem.delete(pathFile);
+            if (ReturnCode.isSuccess(session.getReturnCode())
+                    && FileSystem.safeMove(context, pathFile, tag.getPath(), true)) {
+                return true;
             }
+            FileSystem.delete(pathFile);
+            return false;
     }
 
     public static final String KEY_BIT_RATE = "bit_rate";

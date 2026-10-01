@@ -64,6 +64,11 @@ public class FileOperationTask {
     /**
      * Delete multiple media files
      */
+    /** True for the terminal per-file statuses that mean the operation did not apply. */
+    public static boolean isFailureStatus(String status) {
+        return "Failed".equalsIgnoreCase(status) || "Error".equalsIgnoreCase(status);
+    }
+
     public void deleteFiles(@NonNull Context context,
                                    @NonNull List<Track> selections,
                                    @NonNull ProgressCallback callback) {
@@ -256,10 +261,11 @@ public class FileOperationTask {
                     boolean success = MusicAnalyser.analyse(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
-                    if (success) {
-                        // Write updated tags back to file
-                        TagWriter.writeTagToFile(context, tag);
-                        // if
+                    if (success && !TagWriter.writeTagToFile(context, tag)) {
+                        // Keep DB and file consistent: never persist values the file did not accept
+                        Log.w(TAG, "measureDR: tag write failed for " + tag.getPath());
+                        callback.onProgress(tag, progress, "Failed");
+                    } else if (success) {
                         fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
                         tag.setQualityInd(TagUtils.getQualityIndicator(tag));
                         tag.setIsManaged(FileRepository.isManagedInLibrary(context, tag));

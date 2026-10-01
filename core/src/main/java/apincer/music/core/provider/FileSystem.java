@@ -80,10 +80,9 @@ public class FileSystem {
         return false;
     }
 
-    public static void safeMove(Context context, String srcPath, String targetPath, boolean sameDirectory) {
+    public static boolean safeMove(Context context, String srcPath, String targetPath, boolean sameDirectory) {
         if(!sameDirectory) {
-            safeMove(context, srcPath, targetPath);
-            return;
+            return safeMove(context, srcPath, targetPath);
         }
 
         File targetFile = new File(targetPath);
@@ -96,11 +95,12 @@ public class FileSystem {
             if (targetBackedUp) {
                 delete(bakPath);
             }
-        } else {
-            if (targetBackedUp) {
-                rename(context, bakPath, targetPath); // rollback backup
-            }
+            return true;
         }
+        if (targetBackedUp) {
+            rename(context, bakPath, targetPath); // rollback backup
+        }
+        return false;
     }
 
     public static boolean rename(Context context, String srcPath, String targetPath) {

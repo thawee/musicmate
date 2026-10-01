@@ -278,6 +278,22 @@ public class MusicBrainzClient {
      */
     public boolean downloadCoverArt(String releaseId, java.io.File targetFile) {
         if (releaseId == null || releaseId.isBlank()) return false;
+        // Download beside the target and rename, so a failed transfer never truncates an existing image
+        java.io.File partial = new java.io.File(targetFile.getParentFile(), "." + targetFile.getName() + ".part");
+        try {
+            if (!downloadCoverArtTo(releaseId, partial) || partial.length() == 0) return false;
+            java.nio.file.Files.move(partial.toPath(), targetFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            return true;
+        } catch (java.io.IOException e) {
+            Log.w(TAG, "Failed to move downloaded cover art into place", e);
+            return false;
+        } finally {
+            partial.delete();
+        }
+    }
+
+    private boolean downloadCoverArtTo(String releaseId, java.io.File targetFile) {
         
         // Strategy 1: Attempt direct download of the 500px front thumbnail.
         // This is highly optimized for size/speed and uses a single request.

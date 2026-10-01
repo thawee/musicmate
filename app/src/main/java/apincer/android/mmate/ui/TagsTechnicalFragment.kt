@@ -54,37 +54,6 @@ class TagsTechnicalFragment : Fragment() {
         }
     }
 
-    fun doRemoveEmbedCoverart() {
-        tagsActivity.startProgressBar()
-        CompletableFuture.runAsync {
-            tagsActivity.editItems.forEach { tag ->
-                FFMpegHelper.removeCoverArt(context, tag)
-                fileRepos.scanMusicFile(File(tag.path), false)
-            }
-        }.thenAccept {
-            tagsActivity.stopProgressBar()
-        }.exceptionally {
-            tagsActivity.stopProgressBar()
-            null
-        }
-    }
-
-    fun doExtractEmbedCoverart() {
-        tagsActivity.startProgressBar()
-        CompletableFuture.runAsync {
-            tagsActivity.editItems.forEach { tag ->
-                val pathFile = File(tag.path).parentFile
-                val coverArtPath = "${pathFile?.absolutePath}/Cover.jpg"
-                FFMpegHelper.extractCoverArt(tag.path, File(coverArtPath), null)
-            }
-        }.thenAccept {
-            tagsActivity.stopProgressBar()
-        }.exceptionally {
-            tagsActivity.stopProgressBar()
-            null
-        }
-    }
-
     fun doResetTagFromFile() {
         tagsActivity.startProgressBar()
         CompletableFuture.runAsync {

@@ -847,3 +847,10 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [ ] Phase 2: Fix Lazy Extraction bug in `FileRepository.getCoverArt()` so embedded art is properly extracted and returned to Coil when missing.
 - [ ] Phase 3: Leave unmanaged file hashing as `MD5(file path)` to support heterogeneous folders (e.g., Downloads).
 - [ ] Phase 4: Refactor `CoverartFetcher` to use native Coil `AssetImageSource` instead of copying the default cover to the disk cache.
+
+## Data integrity fixes (2026-10-01, from tasks/app-review-2026-10-01-full.md)
+- [x] P1-11 FileOperationTask: fail item when TagWriter.writeTagToFile fails
+- [x] P1-12 Search & Match: stage downloaded cover, commit only on Save
+- [x] P1-10 Organize: require Save of dirty edits first
+- [x] P2-6 Extract/Remove embedded art: real result, confirm Remove
+- [x] P2-7 Batch ops: surface per-file failures, no finish() on total failure

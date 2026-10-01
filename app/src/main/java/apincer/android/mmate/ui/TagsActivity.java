@@ -64,6 +64,7 @@ import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -590,7 +591,7 @@ public class TagsActivity extends AppCompatActivity {
         });
         btnOrganize.setOnClickListener(v -> {
             performHapticClick(v);
-            doMoveMediaItems();
+            doMoveMediaItemsAfterSave();
         });
         btnMore.setOnClickListener(v -> {
             performHapticClick(v);
@@ -698,11 +699,11 @@ public class TagsActivity extends AppCompatActivity {
                 });
                 btnExtractArt.setOnClickListener(v -> {
                     performHapticClick(v);
-                    fragment.doExtractEmbedCoverart();
+                    doExtractEmbedCoverart();
                 });
                 btnRemoveArt.setOnClickListener(v -> {
                     performHapticClick(v);
-                    fragment.doRemoveEmbedCoverart();
+                    doRemoveEmbedCoverart();
                 });
             }
         }
@@ -893,6 +894,7 @@ public class TagsActivity extends AppCompatActivity {
     
     private void applySelectedSearchResult(Track item, apincer.music.core.repository.MusicBrainzClient.MusicBrainzSearchResult selected) {
         startProgressBar();
+        final boolean[] coverStaged = {false};
         CompletableFuture.supplyAsync(() -> {
             apincer.music.core.repository.MusicBrainzClient mbClient = new apincer.music.core.repository.MusicBrainzClient();
             apincer.music.core.repository.MusicBrainzClient.MusicBrainzMetadata meta = mbClient.getRecordingMetadata(selected.recordingId);
@@ -915,13 +917,28 @@ public class TagsActivity extends AppCompatActivity {
                     item.setGenre(meta.genre); changed = true;
                 }
                 
-                // For manual Search & Match, force download and overwrite the cover art
+                // Stage the matched cover like a picked image; the album's Cover.jpg is replaced only on Save
                 if (meta.releaseId != null && !meta.releaseId.isEmpty()) {
                     java.io.File parentDir = new java.io.File(item.getPath()).getParentFile();
                     if (parentDir != null && parentDir.exists()) {
                         java.io.File coverFile = new java.io.File(parentDir, "Cover.jpg");
-                        if (mbClient.downloadCoverArt(meta.releaseId, coverFile)) {
-                            item.setAlbumArtFilename(coverFile.getAbsolutePath());
+                        java.io.File download = null;
+                        boolean staged = false;
+                        try {
+                            download = java.io.File.createTempFile("mb-cover-", ".img", getCacheDir());
+                            if (mbClient.downloadCoverArt(meta.releaseId, download) && download.length() > 0) {
+                                try (InputStream in = new java.io.FileInputStream(download)) {
+                                    viewModel.stageArtwork(getCacheDir(), coverFile, in);
+                                }
+                                staged = true;
+                            }
+                        } catch (java.io.IOException e) {
+                            Log.w(TAG, "Search & Match: cover download failed", e);
+                        } finally {
+                            if (download != null) download.delete();
+                        }
+                        if (staged) {
+                            coverStaged[0] = true;
                             changed = true;
                         } else if (coverFile.exists()) {
                             if (item.getAlbumArtFilename() == null || !item.getAlbumArtFilename().equals(coverFile.getAbsolutePath())) {
@@ -938,6 +955,10 @@ public class TagsActivity extends AppCompatActivity {
                 if (isDestroyed() || isFinishing()) return;
                 if (changed) setDirty(true);
                 redisplayTag();
+                if (coverStaged[0]) {
+                    Track current = viewModel.displayTag.getValue();
+                    if (current != null) loadImages(current);
+                }
                 stopProgressBar();
                 if (changed) {
                     Toast.makeText(this, "Match applied successfully", Toast.LENGTH_SHORT).show();
@@ -1346,42 +1367,85 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void doExtractEmbedCoverart() {
+        List<Track> items = new ArrayList<>(getEditItems());
+        if (items.isEmpty()) return;
+        boolean replacesCover = false;
+        for (Track tag : items) {
+            File parent = new File(tag.getPath()).getParentFile();
+            if (parent != null && new File(parent, "Cover.jpg").exists()) { replacesCover = true; break; }
+        }
+        if (!replacesCover) {
+            runExtractEmbedCoverart(items);
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Replace folder cover?")
+                .setMessage("Cover.jpg already exists. It will be replaced only where the file has embedded art.")
+                .setPositiveButton("Replace", (dialog, which) -> runExtractEmbedCoverart(items))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void runExtractEmbedCoverart(List<Track> items) {
         startProgressBar();
-        CompletableFuture.runAsync(() -> {
-            for (Track tag : getEditItems()) {
+        CompletableFuture.supplyAsync(() -> {
+            int extracted = 0;
+            for (Track tag : items) {
                 File pathFile = new File(tag.getPath()).getParentFile();
-                if (pathFile != null) {
-                    File coverArtFile = new File(pathFile, "Cover.jpg");
-                    FFMpegHelper.extractCoverArt(tag.getPath(), coverArtFile, null);
+                if (pathFile != null && FFMpegHelper.extractCoverArt(tag.getPath(), new File(pathFile, "Cover.jpg"), null)) {
+                    extracted++;
                 }
             }
-        }).thenAccept(v -> {
-            runOnUiThread(() -> {
-                stopProgressBar();
-                Toast.makeText(this, "Cover art extracted to folder", Toast.LENGTH_SHORT).show();
-            });
-        }).exceptionally(ex -> {
+            return extracted;
+        }).thenAccept(extracted -> runOnUiThread(() -> {
+            if (isDestroyed() || isFinishing()) return;
+            stopProgressBar();
+            Track current = viewModel.displayTag.getValue();
+            if (current != null) loadImages(current);
+            String message = extracted == 0 ? "No embedded cover art found"
+                    : extracted == items.size() ? "Cover art extracted to folder"
+                    : "Cover art extracted for " + extracted + " of " + items.size() + " files";
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        })).exceptionally(ex -> {
             runOnUiThread(this::stopProgressBar);
             return null;
         });
     }
 
     public void doRemoveEmbedCoverart() {
+        List<Track> items = new ArrayList<>(getEditItems());
+        if (items.isEmpty()) return;
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Remove embedded cover art?")
+                .setMessage(items.size() == 1
+                        ? "The picture stored inside this file will be permanently removed."
+                        : "The pictures stored inside " + items.size() + " files will be permanently removed.")
+                .setPositiveButton("Remove", (dialog, which) -> runRemoveEmbedCoverart(items))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void runRemoveEmbedCoverart(List<Track> items) {
         startProgressBar();
-        CompletableFuture.runAsync(() -> {
-            for (Track tag : getEditItems()) {
-                FFMpegHelper.removeCoverArt(getApplicationContext(), tag);
-                if (fileRepos != null) {
-                    fileRepos.scanMusicFile(new File(tag.getPath()), false);
+        CompletableFuture.supplyAsync(() -> {
+            int removed = 0;
+            for (Track tag : items) {
+                if (FFMpegHelper.removeCoverArt(getApplicationContext(), tag)) {
+                    removed++;
+                    if (fileRepos != null) {
+                        fileRepos.scanMusicFile(new File(tag.getPath()), false);
+                    }
                 }
             }
-        }).thenAccept(v -> {
-            runOnUiThread(() -> {
-                redisplayTag();
-                stopProgressBar();
-                Toast.makeText(this, "Cover art removed", Toast.LENGTH_SHORT).show();
-            });
-        }).exceptionally(ex -> {
+            return removed;
+        }).thenAccept(removed -> runOnUiThread(() -> {
+            if (isDestroyed() || isFinishing()) return;
+            redisplayTag();
+            stopProgressBar();
+            String message = removed == items.size() ? "Cover art removed"
+                    : "Removed cover art from " + removed + " of " + items.size() + " files";
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        })).exceptionally(ex -> {
             runOnUiThread(this::stopProgressBar);
             return null;
         });
@@ -1817,24 +1881,68 @@ public class TagsActivity extends AppCompatActivity {
 
         moveToTrashButton.setOnClickListener(v -> {
             startProgressBar();
-            operationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+            List<Track> targets = new ArrayList<>(getEditItems());
+            List<String> failed = java.util.Collections.synchronizedList(new ArrayList<>());
+            operationTask.deleteFiles(getApplicationContext(), targets, new FileOperationTask.ProgressCallback() {
                 @Override
                 public void onProgress(Track tag, int progress, String status) {
                     Log.d(TAG, "Removing: " + tag.getSimpleName() + " -> " + status);
-                    updateProgressBar(status);
+                    if (FileOperationTask.isFailureStatus(status)) failed.add(new File(tag.getPath()).getName());
+                    runOnUiThread(() -> updateProgressBar(status));
                 }
 
                 @Override
                 public void onComplete() {
-                    stopProgressBar();
-                    setSaved(true);
-                    finish(); // back to prev activity
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        stopProgressBar();
+                        boolean anyDeleted = failed.size() < targets.size();
+                        if (anyDeleted) setSaved(true);
+                        if (failed.isEmpty()) {
+                            finish(); // back to prev activity
+                            return;
+                        }
+                        new MaterialAlertDialogBuilder(TagsActivity.this)
+                                .setTitle("Some tracks weren’t removed")
+                                .setMessage(failed.size() + " of " + targets.size() + " files failed:\n" + String.join("\n", failed))
+                                .setPositiveButton(android.R.string.ok, (d, w) -> { if (anyDeleted) finish(); })
+                                .setCancelable(false)
+                                .show();
+                    });
                 }
             });
             bottomSheetDialog.dismiss();
         });
 
         bottomSheetDialog.show();
+    }
+
+    private boolean hasUnsavedEdits() {
+        if (isDirty || viewModel.getDraftsDirty() || viewModel.getEditorState().isAnyModified()) return true;
+        // Check the editor fragment regardless of the active tab, so edits made before switching to Tech Info count.
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof TagsEditorFragment && f.isAdded()) {
+                return ((TagsEditorFragment) f).isModified();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Organize builds the destination path from the tags and persists them, so unsaved edits
+     * must be written to the files first; otherwise the DB and files can diverge.
+     */
+    private void doMoveMediaItemsAfterSave() {
+        if (!hasUnsavedEdits()) {
+            doMoveMediaItems();
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Save changes first?")
+                .setMessage("Organize uses the current tags to choose folders. Save your edits before moving the files.")
+                .setPositiveButton("Save & Organize", (dialog, which) -> doSaveMediaItemsDirectly(this::doMoveMediaItems))
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     public void doMoveMediaItems() {
@@ -1915,19 +2023,7 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
-            boolean hasUnsavedEdits = isDirty || viewModel.getDraftsDirty() || viewModel.getEditorState().isAnyModified();
-            // Always check the editor fragment for modifications, regardless of which tab is active.
-            // Previously this only checked activeFragment, which missed edits when on the Tech Info tab.
-            if (!hasUnsavedEdits) {
-                for (Fragment f : getSupportFragmentManager().getFragments()) {
-                    if (f instanceof TagsEditorFragment && f.isAdded()) {
-                        hasUnsavedEdits = ((TagsEditorFragment) f).isModified();
-                        break;
-                    }
-                }
-            }
-
-            if (hasUnsavedEdits) {
+            if (hasUnsavedEdits()) {
                 new MaterialAlertDialogBuilder(TagsActivity.this)
                         .setTitle("Discard changes?")
                         .setMessage("You have unsaved edits. Discard them?")

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Tag write failures:** Measure DR no longer saves to the library or reports Success when writing tags to the file fails, keeping the database and file in sync.
+- **Search & Match cover art:** The matched cover is staged like a picked image and replaces the folder `Cover.jpg` only on Save; Discard leaves the original untouched. Cover downloads write to a temporary file and rename, so a failed transfer never truncates an existing image.
+- **Organize with unsaved edits:** Organize now asks to save pending edits first, instead of moving files and persisting unsaved values to the library.
+- **Embedded cover art actions:** Remove asks for confirmation; Extract asks before replacing an existing `Cover.jpg`, never overwrites it when a file has no art, and both report the real result (including partial results across a selection).
+- **Batch file operations:** Delete, Move and Convert list any files that failed after the progress dialog closes. Deleting from the tag editor no longer closes the editor when nothing was removed.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.
