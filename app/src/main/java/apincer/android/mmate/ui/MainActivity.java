@@ -367,6 +367,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
+            restoreCriteria(savedInstanceState);
         }
 
         // Start the server here, where we are guaranteed to be in the foreground!
@@ -618,6 +619,31 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_REOPEN_FOLDERS, reopenFoldersAfterStorageGrant);
+        // The open collection, filter and search survive configuration changes and process death
+        if (currentCriteria != null) {
+            outState.putString("criteria_type", currentCriteria.getType().name());
+            outState.putString("criteria_keyword", currentCriteria.getKeyword());
+            outState.putString("criteria_filter_type", currentCriteria.getFilterType());
+            outState.putString("criteria_filter_text", currentCriteria.getFilterText());
+            outState.putBoolean("criteria_search_mode", currentCriteria.isSearchMode());
+            outState.putString("criteria_search_text", currentCriteria.getSearchText());
+        }
+    }
+
+    private void restoreCriteria(@NonNull Bundle state) {
+        String type = state.getString("criteria_type");
+        if (type == null) return;
+        try {
+            SearchCriteria restored = new SearchCriteria(SearchCriteria.TYPE.valueOf(type), state.getString("criteria_keyword"));
+            restored.setFilterType(state.getString("criteria_filter_type"));
+            restored.setFilterText(state.getString("criteria_filter_text"));
+            if (state.getBoolean("criteria_search_mode")) {
+                restored.searchFor(state.getString("criteria_search_text"));
+            }
+            currentCriteria = restored;
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ignoring unknown saved library type " + type);
+        }
     }
 
     @Override
