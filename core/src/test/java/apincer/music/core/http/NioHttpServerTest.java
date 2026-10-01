@@ -355,6 +355,33 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void stop_releasesOpenStreamsAndConnections() throws Exception {
+        try (Socket socket = connect()) {
+            socket.setReceiveBufferSize(4096);
+            socket.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            socket.getInputStream().read(new byte[1024]); // a stream is open and stalled
+            Thread.sleep(300);
+            assertEquals(1, counter("activeStreams"));
+
+            server.stop(); // the same cleanup runs when the selector is recreated after an error
+            long deadline = System.currentTimeMillis() + 5000;
+            while ((counter("activeStreams") != 0 || counter("activeConnections") != 0)
+                    && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+            }
+            assertEquals(0, counter("activeStreams"));
+            assertEquals(0, counter("activeConnections"));
+        }
+    }
+
+    private int counter(String name) throws Exception {
+        java.lang.reflect.Field field = NioHttpServer.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return ((java.util.concurrent.atomic.AtomicInteger) field.get(server)).get();
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {

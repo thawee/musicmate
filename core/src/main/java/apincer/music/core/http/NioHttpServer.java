@@ -631,17 +631,21 @@ public class NioHttpServer implements Runnable {
                         handleIdleConnections();
                     }
                 } finally {
-                    // Close all remaining client channels registered with this selector
-                    // to prevent socket/file descriptor leaks when recreating the selector.
+                    // Release every client connection registered with this selector, on stop or before
+                    // recreating it after an error. closeConnection() also closes open file streams and
+                    // updates the stream/connection counters; closing only the channels leaked them.
                     try {
-                        for (SelectionKey key : newSelector.keys()) {
+                        for (SelectionKey key : new java.util.ArrayList<>(newSelector.keys())) {
                             try {
-                                if (key.channel() != null) {
+                                if (key.channel() instanceof SocketChannel) {
+                                    closeConnection(key);
+                                } else if (key.channel() != null) {
                                     key.channel().close();
                                 }
-                            } catch (IOException ignored) {}
+                            } catch (Exception ignored) {}
                         }
                     } catch (Exception ignored) {}
+                    pendingEvictions.clear();
                 }
             } catch (Exception e) {
                 // This now catches errors with binding the socket or with the selector itself.
