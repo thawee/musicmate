@@ -34,6 +34,8 @@ class MainScaffoldState {
     val tracks = mutableStateListOf<Track>()
     val selectedTracks = mutableStateListOf<Track>()
     var hasMoreMusic = mutableStateOf(false)
+    /** True while the playback service is bound; track menus hide playback actions otherwise. */
+    var isPlaybackAvailable = mutableStateOf(false)
     /** Destination of the shown tracks; the list keeps one scroll position per key. */
     var musicListKey = mutableStateOf("")
     var musicLoadError = mutableStateOf<String?>(null)

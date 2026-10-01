@@ -942,3 +942,8 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P2-13 Scroll position kept per destination (musicListKey); drill-in starts at top, Back restores
 - [x] app/core tests, assembleDebug
 - [ ] Device: sleep chip countdown + DLNA fade/restore; startup during a pending full rescan; Convert keeps art (FLAC/MP3/ALAC/AIFF); multi-folder cover; fast scroll after paging; selection art tap; folder Play toast; drill-in/Back scroll
+
+## Track menu (2026-10-01, open items from tasks/app-review-2026-10-01.md)
+- [x] Convert Format in the track ⋮ menu (file-operations group, action_encoding_file)
+- [x] Playback group hidden while no playback service is bound (MainScaffoldState.isPlaybackAvailable), per UI.md §A
+- [ ] Device: open the ⋮ menu with and without a bound service; Convert Format opens the convert dialog

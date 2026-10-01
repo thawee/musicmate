@@ -83,6 +83,8 @@ fun MusicListScreen(
     trackArtwork: (@Composable (Track) -> Unit)? = null,
     /** Destination of [tracks]; each destination keeps its own scroll position. */
     listKey: String = "",
+    /** Whether the playback service is bound; track menus hide playback actions otherwise. */
+    playbackAvailable: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val pullRefreshState = rememberPullToRefreshState()
@@ -296,6 +298,7 @@ fun MusicListScreen(
 
                             TrackListItem(
                                 track = track,
+                                showPlaybackActions = playbackAvailable,
                                 isSelected = isSelected,
                                 isNowPlaying = isNowPlaying,
                                 isPlaying = isPlaying,

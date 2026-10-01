@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,6 +85,8 @@ fun TrackListItem(
     onMenuAction: (Int) -> Unit,
     onQuickPlayClick: () -> Unit = {},
     artwork: (@Composable (Track) -> Unit)? = null,
+    /** Playback group of the menu (UI.md §A); hidden when no playback service is bound. */
+    showPlaybackActions: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val trackTitle = track.title?.takeIf { it.isNotBlank() } ?: "Unknown Title"
@@ -250,34 +253,48 @@ fun TrackListItem(
                             .background(Color(0xFF242424))
                             .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(8.dp))
                     ) {
+                        if (showPlaybackActions) {
+                            DropdownMenuItem(
+                                text = { Text("Play Now", color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_baseline_play_arrow_24), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_play_now)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Play Next", color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_baseline_playlist_play_24), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_play_next)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Add to Queue", color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_baseline_queue_music_24), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_add_queue)
+                                }
+                            )
+                            HorizontalDivider(color = Color(0x1AFFFFFF))
+                        }
+                        // File operations group
                         DropdownMenuItem(
-                            text = { Text("Play Now", color = Color.White, fontSize = 15.sp) },
+                            text = { Text("Convert Format", color = Color.White, fontSize = 15.sp) },
                             leadingIcon = {
-                                Icon(painterResource(R.drawable.ic_baseline_play_arrow_24), contentDescription = null, tint = Color.White)
+                                Icon(painterResource(R.drawable.rounded_swap_horiz_24), contentDescription = null, tint = Color.White)
                             },
                             onClick = {
                                 showMenu = false
-                                onMenuAction(R.id.action_play_now)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Play Next", color = Color.White, fontSize = 15.sp) },
-                            leadingIcon = {
-                                Icon(painterResource(R.drawable.ic_baseline_playlist_play_24), contentDescription = null, tint = Color.White)
-                            },
-                            onClick = {
-                                showMenu = false
-                                onMenuAction(R.id.action_play_next)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Add to Queue", color = Color.White, fontSize = 15.sp) },
-                            leadingIcon = {
-                                Icon(painterResource(R.drawable.ic_baseline_queue_music_24), contentDescription = null, tint = Color.White)
-                            },
-                            onClick = {
-                                showMenu = false
-                                onMenuAction(R.id.action_add_queue)
+                                onMenuAction(R.id.action_encoding_file)
                             }
                         )
                         DropdownMenuItem(

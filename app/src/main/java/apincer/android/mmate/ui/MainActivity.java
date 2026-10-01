@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
+            MainScaffoldState.get().isPlaybackAvailable().setValue(true);
             refreshSleepTimerChip();
             apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
 
@@ -195,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 playbackStateSubscription = null;
             }
             isPlaybackServiceBound = false;
+            MainScaffoldState.get().isPlaybackAvailable().setValue(false);
             playbackService = null;
         }
     };
