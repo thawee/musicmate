@@ -415,7 +415,7 @@ public class NioHttpServerTest {
     public void imageMimeType_comesFromContentNotExtension() throws Exception {
         File png = temporary.newFile("cover.jpg"); // PNG bytes behind a .jpg name
         Files.write(png.toPath(), new byte[]{(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 0x0D});
-        assertEquals("image/png", NioHttpServer.MimeTypeUtil.readContentForMime(png));
+        assertEquals("image/png", FileContentTypes.readContentForMime(png));
     }
 
     @Test
