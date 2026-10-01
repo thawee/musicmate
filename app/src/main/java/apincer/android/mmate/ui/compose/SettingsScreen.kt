@@ -256,7 +256,6 @@ fun SettingsScreen(
 
                 AdaptiveChoiceGroup(
                     options = listOf(
-                        "httpcore" to "CoreHTTP",
                         "nio" to "SonicNIO",
                         "netty" to "Netty"
                     ),
@@ -432,7 +431,7 @@ private fun SettingsSwitchRow(
 @Composable
 private fun SettingsScreenPreview() {
     SettingsScreen(
-        serverEngine = "httpcore",
+        serverEngine = "nio",
         onServerEngineChange = {},
         showStorageSpace = true,
         onShowStorageSpaceChange = {},

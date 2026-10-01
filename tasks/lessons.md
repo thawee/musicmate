@@ -36,6 +36,7 @@
   - In WebUI mini-player bars, nested interactive elements (e.g. cover art `<img>` inside a container `<div id="footer-track-info">`) will trigger handlers twice in quick succession unless `e.stopPropagation()` is applied or event handling is consolidated onto the parent container.
   - When accessing playback state objects (`currentPlaybackState`, `currentTrack`) on user-initiated click actions (e.g., clicking cover art or expand buttons before the first status push from WebSocket), always use defensive null-checks (`state = currentPlaybackState || {}`, `(state && state.elapsed) || 0`) to prevent unhandled `TypeError: Cannot read properties of null` exceptions.
 
+- *(CoreHTTP was removed on 2026-10-01, ADR-035. The HttpCore lessons below are kept for reference.)*
 - **HttpCore 5 & Android Hidden API Linking (`jdk.net.Sockets.supportedOptions` / `NoSuchMethodError` / `ExtendedSocketOptions`)**:
   - Apache HttpCore 5.4.0+ (`ReflectionUtils.<clinit>`) directly invokes `jdk.net.Sockets.supportedOptions(Socket.class)` and references `ExtendedSocketOptions.TCP_KEEP*` fields during static class initialization.
   - On Android (specifically targeting SDK 35+, e.g. SDK 37 on modern ART), `jdk.net.Sockets` and `ExtendedSocketOptions` are core-platform blocked hidden APIs (`api=blocked, domain=core-platform`). Android ART denies linking at runtime with `NoSuchMethodError: No static method supportedOptions(Class) Set in jdk.net.Sockets`.

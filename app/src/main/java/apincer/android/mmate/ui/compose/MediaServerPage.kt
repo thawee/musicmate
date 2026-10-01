@@ -458,13 +458,6 @@ fun MediaServerPage(
                             modifier = Modifier.weight(1f)
                         )
                         EngineSegment(
-                            id = "httpcore",
-                            label = "CoreHTTP",
-                            isSelected = state.currentEngine == "httpcore",
-                            onSelect = onEngineChanged,
-                            modifier = Modifier.weight(1f)
-                        )
-                        EngineSegment(
                             id = "netty",
                             label = "Netty",
                             isSelected = state.currentEngine == "netty",

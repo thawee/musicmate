@@ -261,16 +261,17 @@ Smart Playlists (`PlaylistEntry.TYPE_SMART`) provide real-time, rule-based music
 
 ## 10. HTTP Zero-Copy Streaming Engine & RFC 7233 Specification
 
-MusicMate embeds high-performance HTTP servers (Apache HttpCore 5 and Netty) optimized for bit-perfect audio streaming to low-latency DAPs, network streamers, and web browsers:
+MusicMate embeds two HTTP servers, SonicNIO (default, `NioHttpServer`) and Netty, optimized for bit-perfect audio streaming to low-latency DAPs, network streamers, and web browsers:
 
-- **64KB NIO Direct Streaming (`PartialFileProducer.java`):**
-  - Streams directly from underlying `FileChannel` in 64KB chunks rather than splicing intermediate in-memory buffers, eliminating reactive backpressure aborts and buffer exhaustion.
+- **Zero-Copy Streaming (`NioHttpServer.FileResponse`):**
+  - Streams with `FileChannel.transferTo()` in 256 KB chunks, so file data never passes through the JVM heap.
   - Zero-latency startup is achieved by background page-cache warming via `AudioStreamCacheManager.preloadTrack()`, leveraging the Linux kernel VFS cache with zero JVM heap allocations.
-- **RFC 7233 Range Specification Compliance (`HttpCoreWebServerImpl.java`):**
-  - **Open-Ended Clamping:** Range headers with open or unbounded limits (e.g. `bytes=0-2147483647` sent by WiiM, Sony, Yamaha, and Chrome) are clamped to `fileLength - 1`. Prevents incorrect multi-gigabyte `Content-Length` headers and stream truncation errors on DLNA renderers.
-  - **416 Status Guard:** Returns HTTP `416 Range Not Satisfiable` with `Content-Range: bytes */fileLength` when requested start offsets exceed the file size.
-  - **Suffix Range Support:** Accurately resolves suffix range queries (e.g. `bytes=-500` for ID3v1 / trailing tag inspection).
-  - **HEAD Entity Body Suppression:** Conforms to RFC 7231 by returning `Content-Length` and `Content-Type` headers without attaching an entity stream body.
+- **RFC 7233 Range Compliance (`NioHttpServer.FileResponse`, covered by `NioHttpServerTest`):**
+  - **Open-Ended Clamping:** Range ends past the file (e.g. `bytes=0-2147483647` sent by WiiM, Sony, Yamaha, and Chrome) are clamped to `fileLength - 1`.
+  - **416 Status Guard:** Returns HTTP `416 Range Not Satisfiable` with `Content-Range: bytes */fileLength` when the requested start is past the end of the file.
+  - **Suffix Range Support:** Resolves suffix ranges (e.g. `bytes=-500` for ID3v1 / trailing tag inspection).
+  - **Invalid Ranges Ignored:** A malformed or multi-range header is ignored and the file is sent as `200 OK`; a stale `If-Range` validator also yields the whole file.
+  - **HEAD:** Returns `Content-Length` and `Accept-Ranges` without a body, keeping the connection usable.
 - **DLNA Natural Completion & Double-Skip Prevention (`MediaServerHubImpl.java`):**
   - Upon natural track completion (`position >= duration` or `STOPPED` GENA event), the controller immediately halts active polling loops via `stopPolling()` and latches `isUserInitiatedStop = true;` before notifying `playbackCallback.onPlaybackCompleted()`.
   - Prevents rapid recurring polling ticks or duplicate renderer GENA packets from advancing the queue multiple times.
@@ -282,8 +283,7 @@ MusicMate embeds high-performance HTTP servers (Apache HttpCore 5 and Netty) opt
 | Module | File | Key Responsibility |
 | :--- | :--- | :--- |
 | `:core` | [`AudioStreamCacheManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/AudioStreamCacheManager.java) | Zero-allocation OS kernel page-cache pre-warming for instant discrete handover. |
-| `:server-jupnp-httpcore` | [`HttpCoreWebServerImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp-httpcore/src/main/java/apincer/android/jupnp/server/httpcore/HttpCoreWebServerImpl.java) | Apache HttpCore 5 NIO server with RFC 7233 range parsing and dynamic ETag support. |
-| `:server-jupnp-httpcore` | [`PartialFileProducer.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp-httpcore/src/main/java/apincer/android/jupnp/server/httpcore/PartialFileProducer.java) | Direct FileChannel 64KB chunked HTTP entity producer with automatic descriptor cleanup. |
+| `:core` | [`NioHttpServer.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/http/NioHttpServer.java) | SonicNIO HTTP/WebSocket engine: zero-copy streaming, RFC 7233 ranges, UPnP control transport. |
 | `:core` | [`PlaybackTarget.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackTarget.java) | Target abstraction for Local, External Apps, and DLNA. |
 | `:core` | [`PlaybackService.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/spi/PlaybackService.java) | Master playback service contract. |
 | `:core` | [`ReplayGainManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/playback/ReplayGainManager.java) | Active ReplayGain 2.0 loudness scaling and anti-clipping true-peak guard. |

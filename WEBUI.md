@@ -31,22 +31,22 @@ The backend follows a "Core Logic + Plugin Engine" pattern, allowing the applica
 ### Server Engines
 MusicMate supports multiple pluggable server implementations to balance performance, memory footprint, and audiophile integrity.
 
-> **Maintenance policy:** SonicNIO, CoreHTTP and Netty are the only engines; they are listed in `settings.gradle` and maintained. The unbuilt Jetty 12 and Undertow modules were removed on 2026-10-01.
+> **Maintenance policy:** SonicNIO (default) and Netty are the only engines. CoreHTTP and the unbuilt Jetty 12 and Undertow modules were removed on 2026-10-01 (ADR-035).
 
-| Feature | SonicNIO | CoreHTTP | Netty |
-|:---|:---|:---|:---|
-| **Library** | Custom NIO | Apache HttpCore 5.5-beta3 | Netty 4.2.18 |
-| **Engine key** | `nio` **(default)** | `httpcore` | `netty` |
-| **Primary Use** | Balanced | **Default · Ultra-Low Memory** | **High Throughput** |
-| **Status** | ✅ Production | ✅ Production | ✅ Production |
-| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` |
-| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x10 (Low Delay) | ✅ DSCP 0x18 |
-| **Memory / Conn** | **~8 KB** | **~64 KB** | Watermarks 256 KB / 512 KB |
-| **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket** | ✅ | ✅ | ✅ |
-| **`X-Audio-*` headers** | ✅ | ✅ | ✅ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Feature | SonicNIO | Netty |
+|:---|:---|:---|
+| **Library** | Custom NIO | Netty 4.2.18 |
+| **Engine key** | `nio` **(default)** | `netty` |
+| **Primary Use** | Balanced | **High Throughput** |
+| **Status** | ✅ Production | ✅ Production |
+| **True Zero-Copy** | ✅ `transferTo` | ✅ `DefaultFileRegion` |
+| **Network Priority** | ✅ DSCP 0x18 | ✅ DSCP 0x18 |
+| **Memory / Conn** | **~8 KB** | Watermarks 256 KB / 512 KB |
+| **GC Pause** | **< 20 ms** | < 150 ms |
+| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **WebSocket** | ✅ | ✅ |
+| **`X-Audio-*` headers** | ✅ | ✅ |
+| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 
 ### API & Routing
 The server exposes three primary context paths:

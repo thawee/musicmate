@@ -137,7 +137,7 @@ internal object UxPreviewFixtures {
         serverStatusText = "Server Stopped"
         isServerRunning = false
         isNetworkAvailable = true
-        currentEngine = "httpcore"
+        currentEngine = "nio"
         engineDescription = "Balanced compatibility and efficiency"
     }
 
@@ -147,7 +147,7 @@ internal object UxPreviewFixtures {
         isNetworkAvailable = true
         serverUrl = "http://192.168.1.42:9000"
         broadcastInfo = "DLNA 1.5 • Wi-Fi • Port 9000"
-        currentEngine = "httpcore"
+        currentEngine = "nio"
         engineDescription = "Balanced compatibility and efficiency"
         qrCodeBitmap = null
     }

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Removed
+- **CoreHTTP engine:** Removed the Apache HttpCore engine (`:server-jupnp-httpcore`), its build-time bytecode patch and the HttpCore and ASM dependencies (ADR-035). SonicNIO is the default and Netty remains selectable; a saved CoreHTTP choice switches to SonicNIO automatically.
 - **Dead server code:** Deleted the unbuilt Jetty 12, Undertow and HttpCore 5.4 engine modules (not in `settings.gradle`, and their catalog entries no longer existed), the unused `MediaServerHubImplOld`, and Netty's unused `NettyUPnpServerImpl`/`UpnpContentHolder` (UPnP control always runs on SonicNIO). About 8,400 lines; no behaviour change. Engine docs updated to match, including stale notes about shadowed HttpCore classes.
 
 ### Changed

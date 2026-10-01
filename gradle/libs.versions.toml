@@ -110,9 +110,6 @@ square-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version = "5.5.0" }
 jupnp-android = { module = "org.jupnp:org.jupnp.android", version = "3.0.5" }
 jupnp-support = { module = "org.jupnp:org.jupnp.support", version = "3.0.5" }
 netty-codec-http = { module = "io.netty:netty-codec-http", version = "4.2.18.Final" }
-apache-httpcore = { module = "org.apache.httpcomponents.core5:httpcore5", version = "5.5-beta3" }
-apache-http2core = { module = "org.apache.httpcomponents.core5:httpcore5-h2", version = "5.5-beta3" }
-ow2-asm = { module = "org.ow2.asm:asm", version = "9.9" }
 anggrayudi-storage = { module = "com.anggrayudi:storage", version = "3.1.0" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 

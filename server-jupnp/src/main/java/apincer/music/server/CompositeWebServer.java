@@ -45,11 +45,6 @@ public class CompositeWebServer implements WebServer {
                     return (WebServer) clazz.getConstructor(Context.class, FileRepository.class, TagRepository.class)
                             .newInstance(context, fileRepos, tagRepos);
                 }
-                case "httpcore": {
-                    Class<?> clazz = Class.forName("apincer.android.jupnp.server.httpcore.HttpCoreWebServerImpl");
-                    return (WebServer) clazz.getConstructor(Context.class, FileRepository.class, TagRepository.class)
-                            .newInstance(context, fileRepos, tagRepos);
-                }
                 case "nio":
                 default:
                     // SonicNIO lives in this module, so it needs no reflection

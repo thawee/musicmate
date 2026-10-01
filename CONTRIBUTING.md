@@ -15,7 +15,6 @@ Music Mate uses a modular architecture to support multiple pluggable server engi
 *   `:app` - The main Android application module.
 *   `:core` - Shared business logic and interfaces (SPI: `UpnpServer`, `WebServer`, `MediaServerHub`).
 *   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine — **the default engine**.
-*   `:server-jupnp-httpcore` - **CoreHTTP** engine (Apache HttpCore 5.5-beta3) — being retired.
 *   `:server-jupnp-netty` - **Netty** engine (Netty 4.2.18).
 *   `:library` - Internal UI and utility libraries.
 
@@ -26,7 +25,6 @@ There are **no Gradle flavors**. A single APK is built, and the active engine is
 | Engine key | Server Engine | Module | Notes |
 | :--- | :--- | :--- | :--- |
 | `nio` | **SonicNIO** (Custom NIO Reactor) | `:server-jupnp` | **Default** — balanced, true zero-copy |
-| `httpcore` | **CoreHTTP** (Apache HttpCore 5) | `:server-jupnp-httpcore` | Being retired — ultra-low memory |
 | `netty` | **Netty 4.2** | `:server-jupnp-netty` | High throughput |
 
 Users switch engines at runtime under **App Settings → Server Engine**. To change the default, edit `Constants.DEFAULT_SERVER_ENGINE`; every reader uses it.
@@ -64,9 +62,9 @@ We use JUnit and AndroidX Test for verification.
 
 If you encounter issues with a specific server engine, document them in a log file within the relevant module or create a new issue.
 
-**Actively maintained engines** (`nio`, `httpcore`, `netty`) receive bug fixes and new features.
+**Actively maintained engines** (`nio`, `netty`) receive bug fixes and new features.
 
-*Note: CoreHTTP needs a build-time bytecode patch (`patchHttpCore`, ADR-032) to run on Android ART.*
+*Note: CoreHTTP (`httpcore`) was removed on 2026-10-01 (ADR-035); a saved `httpcore` choice is migrated to `nio` at startup.*
 
 ---
 

@@ -65,6 +65,8 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         //prepare defaultAssets
         initDefaultAssets();
 
+        migrateRetiredServerEngine();
+
         // start music scan
         startMusicScan();
 
@@ -92,6 +94,14 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
             ApplicationUtils.copyDirToAndroidCacheDir(getApplicationContext(), assetDir);
         } catch (IOException e) {
             Log.e(TAG, "cannot prepare initial assets", e);
+        }
+    }
+
+    /** CoreHTTP was removed; a saved "httpcore" choice moves to the default engine (SonicNIO). */
+    private void migrateRetiredServerEngine() {
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        if ("httpcore".equalsIgnoreCase(prefs.getString(Constants.PREF_SERVER_ENGINE, null))) {
+            prefs.edit().putString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE).apply();
         }
     }
 

@@ -93,27 +93,16 @@ All engines extend `BaseServer` and implement the `WebServer` SPI (`core/.../ser
 - **HTTP/1.1 Compliance** with Range request support, conditional validation, and Keep-Alive optimization.
 - **Audiophile Headers** for renderer metadata — see the per-engine table below, as coverage differs by engine.
 
-> **Maintenance policy:** Three engines are built and maintained: SonicNIO, CoreHTTP and Netty.
-> The unbuilt Jetty 12, Undertow and HttpCore 5.4 modules were removed on 2026-10-01.
+> **Maintenance policy:** Two engines are built and maintained: SonicNIO (default) and Netty.
+> CoreHTTP (Apache HttpCore 5.5) and the unbuilt Jetty 12, Undertow and HttpCore 5.4 modules were removed on 2026-10-01 (ADR-035).
 
-> **Default engine:** `nio` (SonicNIO), from `Constants.DEFAULT_SERVER_ENGINE`. Every code path that reads the preference (`CompositeWebServer`, `MainActivity`, `SettingsActivity`, `MediaServerState`) uses it when the preference is unset, and an unknown key also resolves to SonicNIO. CoreHTTP is being retired; users who explicitly chose it keep it for now.
+> **Default engine:** `nio` (SonicNIO), from `Constants.DEFAULT_SERVER_ENGINE`. Every code path that reads the preference (`CompositeWebServer`, `MainActivity`, `SettingsActivity`, `MediaServerState`) uses it when the preference is unset, and an unknown key also resolves to SonicNIO. A saved `httpcore` choice from earlier versions is migrated to `nio` at startup.
 
 ---
 
 ### ✅ Actively Maintained Engines
 
-All three are listed in `settings.gradle` and built into the shipping APK.
-
-#### ✅ CoreHTTP (`server-jupnp-httpcore` / engine key `httpcore`) — *Ultra-Low Memory · being retired*
-*   **Status:** **Production Grade, scheduled for removal.** No longer the default; kept only for users who explicitly select it.
-*   **Architecture:** Apache HttpCore 5.5-beta3 (`H2ServerBootstrap`), 2 IO threads. Android compatibility comes from the `patchHttpCore` Gradle task, which rewrites the stock jar's blocked `jdk.net` hidden-API calls with ASM (ADR-032); no HttpCore classes are shadowed.
-*   **Strengths:**
-    *   ✅ Full WebSocket support (RFC 6455)
-    *   ✅ ~64 KB/connection memory footprint via pooled direct `ByteBuffer`s (`MAX_BUFFER_POOL = 2× cores`)
-    *   ✅ < 30 ms GC pauses with buffer pooling
-    *   ✅ `X-Audio-*` audiophile headers including `X-Audio-Bit-Perfect`
-    *   ✅ `setTrafficClass(0x10)` (DSCP Low Delay)
-*   **Streaming:** 64 KB direct-buffer reads in `PartialFileProducer` (see note below).
+Both are listed in `settings.gradle` and built into the shipping APK.
 
 #### 🚀 SonicNIO (`server-jupnp` / engine key `nio`) — *Default · Balanced*
 *   **Status:** **Production Grade — the default engine.** Also serves UPnP control (SOAP/GENA) regardless of the selected engine.
@@ -131,13 +120,12 @@ All three are listed in `settings.gradle` and built into the shipping APK.
 
 ### ⚠️ Note on the "Zero-Copy" Claim
 
-Only two engines actually use `FileChannel.transferTo()` / OS-level file-region transfer:
+Both engines use `FileChannel.transferTo()` / OS-level file-region transfer:
 
 | Engine | Actual streaming path |
 |:---|:---|
 | **SonicNIO** | ✅ `FileChannel.transferTo()` — true zero-copy, 256 KB chunks |
 | **Netty** | ✅ `DefaultFileRegion` — true zero-copy (`ChunkedFile` when TLS is in play) |
-| **CoreHTTP** | ⚠️ **Not** zero-copy. `PartialFileProducer` reads the file into a 64 KB direct `ByteBuffer`, then writes it to the channel, rewinding the file position on partial writes. This is deliberate and still efficient, but its own Javadoc ("Zero-copy file streaming via FileChannel.transferTo()") is inaccurate. |
 
 ---
 
@@ -145,19 +133,19 @@ Only two engines actually use `FileChannel.transferTo()` / OS-level file-region 
 
 ### Actively Maintained
 
-| Feature | SonicNIO | CoreHTTP | Netty |
-|:---|:---|:---|:---|
-| **Engine key** | `nio` **(default)** | `httpcore` | `netty` |
-| **Recommended Use** | Balanced | Default / Ultra-Low Memory | High Throughput |
-| **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` |
-| **Network Priority (DSCP)** | ✅ `0x18` | ✅ `0x10` (Low Delay) | ✅ `0x18` |
-| **Memory footprint** | **~8 KB / conn** | **~64 KB / conn** | Pooled, watermarks 256 KB / 512 KB |
-| **GC Pause Duration** | **< 20 ms** | **< 30 ms** | < 150 ms |
-| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **WebSocket RFC 6455** | ✅ | ✅ | ✅ |
-| **`X-Audio-*` headers** | ✅ | ✅ | ✅ |
-| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Actively Maintained** | ✅ | ✅ | ✅ |
+| Feature | SonicNIO | Netty |
+|:---|:---|:---|
+| **Engine key** | `nio` **(default)** | `netty` |
+| **Recommended Use** | Balanced | High Throughput |
+| **True Zero-Copy** | ✅ `transferTo` | ✅ `DefaultFileRegion` |
+| **Network Priority (DSCP)** | ✅ `0x18` | ✅ `0x18` |
+| **Memory footprint** | **~8 KB / conn** | Pooled, watermarks 256 KB / 512 KB |
+| **GC Pause Duration** | **< 20 ms** | < 150 ms |
+| **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **WebSocket RFC 6455** | ✅ | ✅ |
+| **`X-Audio-*` headers** | ✅ | ✅ |
+| **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Actively Maintained** | ✅ | ✅ |
 
 ---
 
@@ -167,17 +155,14 @@ Only two engines actually use `FileChannel.transferTo()` / OS-level file-region 
 *   **Async/Reactive:** RxJava 3
 *   **DI/Architecture:** Hilt, Jetpack (ViewModel, LiveData)
 *   **Database:** Room (Google Jetpack)
-*   **Active Engines:** **Custom SonicNIO Reactor** (default), Netty 4.2.18, Apache HttpCore 5.5-beta3 (CoreHTTP, being retired)
+*   **Active Engines:** **Custom SonicNIO Reactor** (default), Netty 4.2.18
 *   **Library:** jUPnP 3.0.5 (fork of Cling), JAudiotagger, FFmpeg
 
 ---
 
 ## 🔧 Developer Notes & Android Compatibility
 
-Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). Music Mate applies targeted build-time patches to ensure platform interoperability:
-
-*   **HttpCore Hacks:**
-    *   `patchHttpCore` strips HttpCore's blocked `jdk.net` hidden-API calls from the upstream jar at build time (ADR-032); no HttpCore classes are vendored.
+Running enterprise-grade Java servers on Android requires specific workarounds due to platform limitations (e.g., missing APIs, restricted reflection). No engine currently needs a platform patch: SonicNIO uses only JDK NIO, and Netty runs on its NIO transport. CoreHTTP needed a build-time bytecode patch for blocked `jdk.net` hidden APIs (ADR-032) and was removed (ADR-035).
 
 ---
 

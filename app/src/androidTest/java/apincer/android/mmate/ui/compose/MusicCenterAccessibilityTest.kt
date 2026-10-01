@@ -149,7 +149,7 @@ class MusicCenterAccessibilityTest {
             serverStatusText = "MusicMate Server"
             serverUrl = "http://192.168.1.42:9000"
             broadcastInfo = "DLNA 1.5 • Wi-Fi • Port 9000"
-            currentEngine = "httpcore"
+            currentEngine = "nio"
             engineDescription = "Balanced compatibility and efficiency"
             qrCodeBitmap = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
         }
@@ -166,7 +166,7 @@ class MusicCenterAccessibilityTest {
         composeRule.onNodeWithContentDescription("Media server, running").assertExists()
         composeRule.onNodeWithContentDescription("Copy server URL, http://192.168.1.42:9000").assertExists()
         composeRule.onNodeWithContentDescription("Enlarge WebUI QR code").assertExists()
-        composeRule.onNodeWithText("CoreHTTP").assertIsSelected()
+        composeRule.onNodeWithText("SonicNIO").assertIsSelected()
         runAccessibilityChecks()
     }
 

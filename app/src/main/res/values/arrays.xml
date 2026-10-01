@@ -228,12 +228,10 @@
     </string-array>
     <string-array name="server_engine_entries">
         <item>SonicNIO (Default · Balanced/Zero-Copy)</item>
-        <item>CoreHTTP (Ultra-Low Memory)</item>
         <item>Netty (High Throughput)</item>
     </string-array>
     <string-array name="server_engine_values">
         <item>nio</item>
-        <item>httpcore</item>
         <item>netty</item>
     </string-array>
 </resources>

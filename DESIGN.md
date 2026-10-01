@@ -361,7 +361,7 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 
 
 ### ADR-032: Patch HttpCore Hidden-API Bytecode Instead of Vendoring Classes
-- **Status:** Accepted
+- **Status:** Superseded by ADR-035 (CoreHTTP removed)
 - **Date:** 2026-10-01
 - **Context:** HttpCore 5 links `jdk.net.Sockets` and `jdk.net.ExtendedSocketOptions`, which are blocked hidden APIs on Android. The module shipped edited copies of `SingleCoreIOReactor` and `ReflectionUtils` from 5.5-beta2 in place of the jar's classes. 5.5-beta3 changed `SingleCoreIOReactor` (a new constructor that `DefaultConnectingIOReactor` calls), so every upgrade risked a silent `NoSuchMethodError`.
 - **Decision:** `patchHttpCore` (`server-jupnp-httpcore/build.gradle`) rewrites the upstream jar with ASM. `getstatic ExtendedSocketOptions.*` becomes `aconst_null`, `Sockets.setOption(a, b, c)` becomes three `pop`s, and `Sockets.supportedOptions(Class)` returns `Collections.emptySet()`. Every use is guarded by `ReflectionUtils.supportsKeepAliveOptions()`, which is therefore false. The build fails if any `jdk/net/` instruction survives. The vendored sources are removed.
@@ -380,6 +380,13 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Context:** The `MediaLibrarySession` wrapped the internal ExoPlayer directly. ExoPlayer only holds the playing track and at most one gapless follower, so notification, lock-screen and headset Next/Previous used ExoPlayer's own seeks: Next did nothing without a preloaded follower, and when it worked the queue and UI were not updated.
 - **Decision:** The session gets `QueueAwareSessionPlayer`, a `ForwardingSimpleBasePlayer` over ExoPlayer. It always advertises Next/Previous and routes `COMMAND_SEEK_TO_NEXT*`/`COMMAND_SEEK_TO_PREVIOUS*` to the service's `skipToNextInQueue()`/`skipToPrevious()`, posted to the player looper because a skip replaces ExoPlayer's playlist. Previous past the 3 s threshold restarts the track. Everything else passes through to ExoPlayer.
 - **Consequences:** Every Next/Previous source shares the queue path (Repeat One, shuffle, history). Media3 still calls `handleSeek` (with index `C.INDEX_UNSET`) when ExoPlayer itself has no next or previous item, so the buttons always work.
+
+### ADR-035: Retire CoreHTTP; SonicNIO Is the Default Engine
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** Three engines served streams and the WebUI. SonicNIO (`NioHttpServer`) ships regardless: it carries UPnP control (SOAP/GENA) and is the fallback engine. CoreHTTP depended on a pre-release HttpCore (5.5-beta3), needed a build-time bytecode patch for blocked hidden APIs (ADR-032), and had the most streaming defects (4 MB / 58 s cutoff, spin-loop, descriptor leaks, backpressure). SonicNIO lacked the `X-Audio-*` headers and had no tests.
+- **Decision:** SonicNIO sends the shared `X-Audio-*` headers (`DLNAHeaderHelper.getAudioHeaders`) and is covered by `NioHttpServerTest`. It becomes the default (`Constants.DEFAULT_SERVER_ENGINE`), and `:server-jupnp-httpcore`, `patchHttpCore`, ASM and the HttpCore catalog entries are removed. A saved `httpcore` preference is migrated to `nio` at startup. Netty stays as the alternative engine.
+- **Consequences:** No third-party HTTP library is needed for the default path and no build-time patching remains. Netty is the only remaining large server dependency; it can be retired once SonicNIO has a soak record on real renderers.
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

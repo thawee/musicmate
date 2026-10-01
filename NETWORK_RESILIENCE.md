@@ -3,8 +3,8 @@
 > Covers the media server engine's network-awareness layer introduced in 2026.06.
 > Related classes: `MediaServerHubImpl`, `NetworkUtils`, `MediaServerAddressFactory`, `MusicMateServiceImpl`.
 >
-> **Engine scope:** These improvements apply to the three actively maintained engines —
-> **SonicNIO** (`nio`), **CoreHTTP** (`httpcore`), and **Netty** (`netty`).
+> **Engine scope:** These improvements apply to the two maintained engines —
+> **SonicNIO** (`nio`, default) and **Netty** (`netty`). CoreHTTP was removed on 2026-10-01 (ADR-035).
 
 ---
 
@@ -306,22 +306,22 @@ All player targets (`DMRPlayer`, `WebStreamingPlayer`, `ExternalAndroidPlayer`) 
 
 ### Dynamic Engine Proxy (`CompositeWebServer`)
 The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
-* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"`, `"httpcore"`, or `"netty"`), defaulting to **`"nio"`** (`Constants.DEFAULT_SERVER_ENGINE`) when unset; an unknown key also resolves to SonicNIO, which is constructed directly rather than through reflection.
+* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"` or `"netty"`; a legacy `"httpcore"` value is migrated to `"nio"` at startup), defaulting to **`"nio"`** (`Constants.DEFAULT_SERVER_ENGINE`) when unset; an unknown key also resolves to SonicNIO, which is constructed directly rather than through reflection.
 * Instantiates and delegates calls (`initServer`, `stopServer`, `restartServer`) to the selected engine via reflection. Any instantiation failure falls back to SonicNIO.
 * Allows hot-swapping server engines at runtime without restarting the Android application process.
 * Engine changes are applied by `MusicMateServiceImpl`, which listens for `PREF_SERVER_ENGINE` and calls `restartServersIfRunning()`; Settings and the Music Center only save the preference. A stopped server stays stopped.
 
 ### High-Res (352.8 kHz / DXD) Streaming Optimizations
 To support seamless high-bitrate streaming (>10 Mbps) to DAPs (e.g. HiBy R3) over Wi-Fi without buffer underruns:
-* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`) and on **CoreHTTP** (`IOReactorConfig.setSndBufSize`, with a 64 KB direct-buffer producer); **Netty** (`NettyWebServerImpl`) leaves `SO_SNDBUF` to the OS and bounds queued data with a 256 KB–512 KB write-buffer water mark. Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
-* **Large File Streaming Chunks:** SonicNIO and Netty stream in **256 KB** payload chunks (`NioHttpServer.CHUNK_SIZE = 262144`, Netty `ChunkedFile`/watermark 256 KB–512 KB). CoreHTTP's `PartialFileProducer` uses a **64 KB** direct buffer with file-position rewind on partial writes. Chunk sizes reduce application-level overhead and minimize selector iterations during high-rate (>10 Mbps) FLAC streaming.
+* **High-Rate Buffer Allocation:** Hardcoded `SO_SNDBUF` (512 KB) on **SonicNIO** (`NioHttpServer`); **Netty** (`NettyWebServerImpl`) leaves `SO_SNDBUF` to the OS and bounds queued data with a 256 KB–512 KB write-buffer water mark. Relying on OS-level TCP auto-tuning proved to aggressively shrink windows on poor Wi-Fi networks, causing mid-track DLNA buffering.
+* **Large File Streaming Chunks:** SonicNIO and Netty stream in **256 KB** payload chunks (`NioHttpServer.CHUNK_SIZE = 262144`, Netty `ChunkedFile`/watermark 256 KB–512 KB). Chunk sizes reduce application-level overhead and minimize selector iterations during high-rate (>10 Mbps) FLAC streaming.
 * **Socket Timeouts:** Increased `soTimeout` and `keepAliveTimeout` from 30s to **120s** to tolerate longer latency spikes and prevent premature stream disconnections.
 
 ### Zero-Copy Streaming Reality Check
-`FileChannel.transferTo()` / OS-level file-region transfer is used by **SonicNIO** (`transferTo`, 256 KB chunks) and **Netty** (`DefaultFileRegion`, with a `ChunkedFile` fallback for TLS). **CoreHTTP** does *not* use zero-copy: `PartialFileProducer` reads into a 64 KB direct `ByteBuffer` and writes it to the channel. This is intentional and still efficient, but renders CoreHTTP's own class Javadoc claim of "Zero-copy file streaming via FileChannel.transferTo()" inaccurate.
+`FileChannel.transferTo()` / OS-level file-region transfer is used by **SonicNIO** (`transferTo`, 256 KB chunks) and **Netty** (`DefaultFileRegion`, with a `ChunkedFile` fallback for TLS).
 
 ### Port & HTTP Endpoint Specification
-All server engines (`SonicNIO`, `CoreHTTP`, `Netty`) standardize on port **`9000`** and expose the following endpoint contract:
+All server engines (`SonicNIO`, `Netty`) standardize on port **`9000`** and expose the following endpoint contract:
 
 | Endpoint Type | Constant | Path Structure | Description |
 | :--- | :--- | :--- | :--- |
@@ -397,6 +397,7 @@ To prevent hardware DAC FIFO buffer acquisition stalls on renderers (e.g. HiBy R
 ## 11 — RFC 7233 Range Streaming & Natural Track Completion Latching
 
 > Added in 2026.09 (`HttpCoreWebServerImpl`, `PartialFileProducer`, `MediaServerHubImpl`, `AudioStreamCacheManager`).
+> CoreHTTP (`HttpCoreWebServerImpl`, `PartialFileProducer`) was removed on 2026-10-01 (ADR-035); its notes below are kept for history. SonicNIO's equivalent range handling is covered by `NioHttpServerTest`.
 
 ### Zero-Cliff Direct Streaming (`PartialFileProducer`)
 * Eliminated in-memory 4MB buffer splicing, streaming directly from `FileChannel` in 64KB chunks with immediate file descriptor recycling upon EOF or cancellation.

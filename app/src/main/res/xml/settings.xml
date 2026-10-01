@@ -9,7 +9,7 @@
             android:summary="Select high-performance HTTP web server engine for streaming"
             android:entries="@array/server_engine_entries"
             android:entryValues="@array/server_engine_values"
-            android:defaultValue="httpcore"
+            android:defaultValue="nio"
             app:useSimpleSummaryProvider="true"/>
     </PreferenceCategory>
     <PreferenceCategory

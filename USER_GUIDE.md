@@ -175,7 +175,6 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
 5. **Runtime Server Engine Switching (App Settings):**
    - Switch web server engines dynamically under **App Settings -> Server Engine** without restarting the app:
      * **SonicNIO (Default · Balanced):** Built-in engine with low CPU wake-ups, Java NIO non-blocking I/O and true zero-copy `FileChannel.transferTo()` streaming. This is the default when no engine has been chosen.
-     * **CoreHTTP (Ultra-Low Memory, being retired):** Apache HttpCore 5.5-beta3 engine (~64 KB/connection). Kept for now if you chose it; it will be removed in a later release.
      * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming, with true zero-copy `DefaultFileRegion` transfer and a REST bridge alongside the WebSocket API.
    - **Header note:** All engines send the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`).
 6. **Server Port & Endpoints Reference:**

@@ -188,7 +188,6 @@ dependencies {
     implementation libs.jupnp.android
     implementation project(':server-jupnp')
     implementation project(':server-jupnp-netty')
-    implementation project(':server-jupnp-httpcore')
 
     // Local Submodules
     implementation project(':library:library')

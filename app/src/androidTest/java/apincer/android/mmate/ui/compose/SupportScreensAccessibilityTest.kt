@@ -28,7 +28,7 @@ class SupportScreensAccessibilityTest {
         composeRule.setContent {
             MusicMateTheme {
                 SettingsScreen(
-                    serverEngine = "httpcore",
+                    serverEngine = "nio",
                     onServerEngineChange = {},
                     showStorageSpace = true,
                     onShowStorageSpaceChange = {},
@@ -44,7 +44,7 @@ class SupportScreensAccessibilityTest {
         }
 
         composeRule.onNodeWithText("Display Storage Space").assertIsOn()
-        composeRule.onNodeWithText("CoreHTTP").assertIsSelected()
+        composeRule.onNodeWithText("SonicNIO").assertIsSelected()
         runAccessibilityChecks()
     }
 
