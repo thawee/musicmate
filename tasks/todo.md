@@ -947,3 +947,11 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] Convert Format in the track ⋮ menu (file-operations group, action_encoding_file)
 - [x] Playback group hidden while no playback service is bound (MainScaffoldState.isPlaybackAvailable), per UI.md §A
 - [ ] Device: open the ⋮ menu with and without a bound service; Convert Format opens the convert dialog
+
+## P3 polish (2026-10-01, from tasks/app-review-2026-10-01-full.md)
+- [x] P3-1 Folder picker reopens after storage access is granted; PermissionActivity opened for storage closes itself once granted
+- [x] P3-2 Library destination (type, keyword, filter, search) saved in onSaveInstanceState and restored before the first load
+- [x] P3-3 Folder Play/Queue buttons 48dp with folder-named labels; track row click/long-press labels follow tap mode and selection (MainScaffoldState.listenerTapMode)
+- [x] P3-4 Removed unreferenced MySelectionTracker.java and the now-unused action_open_track string
+- [x] app tests, assembleDebug (lint not run)
+- [ ] Device: folder picker → grant storage → picker reopens; rotate/theme change inside a collection, search and filter; TalkBack labels in Listener and Curator modes
