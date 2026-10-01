@@ -263,6 +263,24 @@ public class NioHttpServerTest {
         assertEquals(1, maxCopiesOfOneRequestInPool());
     }
 
+    @Test
+    public void webSocket_serverClose_sendsCloseFrameAndClosesSocket() throws Exception {
+        try (Socket socket = connect()) {
+            exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
+                    + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+                    + "Sec-WebSocket-Version: 13\r\n\r\n", false);
+            OutputStream out = socket.getOutputStream();
+            out.write(new byte[]{(byte) 0x81, (byte) 0x85, 0, 0, 0, 0, 'c', 'l', 'o', 's', 'e'}); // masked "close"
+            out.flush();
+            InputStream in = socket.getInputStream();
+            assertEquals(0x88, in.read()); // CLOSE frame
+            int length = in.read();
+            byte[] payload = in.readNBytes(length);
+            assertEquals(WebSocket.CLOSE_NORMAL, ((payload[0] & 0xFF) << 8) | (payload[1] & 0xFF));
+            assertEquals(-1, in.read()); // then the server closes the socket
+        }
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {
@@ -355,7 +373,10 @@ public class NioHttpServerTest {
     private static final class EchoHandler implements WebSocket.Handler {
         @Override public String getNamespace() { return "/ws"; }
         @Override public void onOpen(WebSocket.Connection connection) { }
-        @Override public void onMessage(WebSocket.Connection connection, String message) { connection.send(message); }
+        @Override public void onMessage(WebSocket.Connection connection, String message) {
+            if ("close".equals(message)) connection.close(WebSocket.CLOSE_NORMAL, "bye");
+            else connection.send(message);
+        }
         @Override public void onMessage(WebSocket.Connection connection, byte[] message) { connection.send(message); }
         @Override public void onClose(WebSocket.Connection connection, int code, String reason) { }
         @Override public void onError(WebSocket.Connection connection, Exception ex) { }

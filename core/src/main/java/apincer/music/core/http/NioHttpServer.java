@@ -494,7 +494,8 @@ public class NioHttpServer implements Runnable {
         NioWebSocketConnection conn;
         while ((conn = pendingWebSocketWrites.poll()) != null) {
             conn.writeInterestQueued.set(false);
-            if (!conn.closed && conn.key.isValid()) {
+            // A connection that is closing still has its CLOSE frame queued; forceClose() empties the queue
+            if (conn.key.isValid() && !conn.outgoingQueue.isEmpty()) {
                 try {
                     int currentOps = conn.key.interestOps();
                     if ((currentOps & SelectionKey.OP_WRITE) == 0) {
@@ -1087,13 +1088,16 @@ public class NioHttpServer implements Runnable {
                     WebSocket.Handler currentWsHandler = attachment.wsHandler;
                     NioWebSocketConnection currentWsConn = attachment.wsConnection;
                     attachment.wsHandler = null; // Clear to prevent double calls
-                    workerPool.submit(() -> {
-                        try {
-                            currentWsHandler.onClose(currentWsConn, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
-                        } catch (Exception e) {
-                            // Log error during close if necessary
-                        }
-                    });
+                    // During shutdown the pool rejects tasks; an exception here would skip the cleanup below
+                    if (workerPool != null && !workerPool.isShutdown()) {
+                        workerPool.submit(() -> {
+                            try {
+                                currentWsHandler.onClose(currentWsConn, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
+                            } catch (Exception e) {
+                                // Log error during close if necessary
+                            }
+                        });
+                    }
                 }
                 if (attachment.response != null) {
                     try {
@@ -1175,6 +1179,7 @@ public class NioHttpServer implements Runnable {
                 }
                 // Generate the buffer ONCE per frame.
                 attachment.pendingWriteBuffer = frame.toByteBuffer();
+                attachment.closeAfterWrite = frame.getOpcode() == WebSocket.OPCODE_CLOSE;
             }
 
             // 2. Continuous write attempt
@@ -1189,6 +1194,12 @@ public class NioHttpServer implements Runnable {
             // 4. Frame finished. Clear the pending buffer to allow the next loop
             // to poll the next frame from the queue.
             attachment.pendingWriteBuffer = null;
+
+            // 5. Our CLOSE frame is out: end the connection here, on the selector thread
+            if (attachment.closeAfterWrite) {
+                closeConnection(key);
+                return;
+            }
         }
     }
 
@@ -1270,6 +1281,10 @@ public class NioHttpServer implements Runnable {
                 WebSocket.Frame closeFrame = new WebSocket.Frame(true, WebSocket.OPCODE_CLOSE, payload.array());
                 outgoingQueue.add(closeFrame);
                 hasOutgoingQueue = true; // Wake up selector
+                // Same path as send(): without OP_WRITE the close frame is never written
+                if (writeInterestQueued.compareAndSet(false, true)) {
+                    server.pendingWebSocketWrites.add(this);
+                }
 
                 key.selector().wakeup();
             } catch (Exception e) {
@@ -1328,6 +1343,8 @@ public class NioHttpServer implements Runnable {
         private ByteArrayOutputStream controlFrameBuffer;
 
         ByteBuffer pendingWriteBuffer = null;
+        // Set while the frame being written is our CLOSE frame; the socket closes once it is out
+        boolean closeAfterWrite = false;
         private final Object stateLock = new Object();
         private long bodyReadStartTime = 0;
         public static final long BODY_READ_TIMEOUT = 120_000; // 120 seconds for slow networks
@@ -1407,6 +1424,7 @@ public class NioHttpServer implements Runnable {
 
             wsHandler = null;
             pendingWriteBuffer = null;
+            closeAfterWrite = false;
             pendingClose = false;
             wsUpgradeHeaderEnd = 0;
 
