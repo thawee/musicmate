@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Convert keeps cover art:** Converted files keep the embedded cover. If a target format rejects the picture, the conversion is retried without it instead of failing.
 - **Picked cover for several folders:** When the edited tracks span several folders, a picked cover now applies to all of them (after a confirmation), so every saved track gets it. Previously only the shown track's folder changed while the toast reported all tracks saved.
 - **Fast scroll:** The fast-scroll thumb now stays in the right place as more pages load, and dragging it moves from where the drag started instead of jumping.
+- **Selection and artwork taps:** Tapping a track's artwork while selecting tracks now toggles that track like a row tap, instead of replacing the play queue.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.

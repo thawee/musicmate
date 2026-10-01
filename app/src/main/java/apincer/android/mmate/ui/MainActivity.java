@@ -1092,6 +1092,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     public void onTrackQuickPlayClick(Track track) {
+        if (isSelectionBlocked()) return;
+        if (selectionModel != null && selectionModel.hasSelection()) {
+            // During selection the artwork toggles the row like a row tap, never replaces the queue
+            int position = viewModel.getMusicItemsFlow().getValue().indexOf(track);
+            if (position >= 0) selectionModel.toggle(position);
+            return;
+        }
         onTrackQuickPlayClicked(track);
     }
 
