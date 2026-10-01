@@ -56,8 +56,10 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
        // serverSignature = getServerSignature();
     }
 
-    private String getVersion() {
-        return Version.identify().get("netty-common").artifactVersion();
+    /** Netty's version, or null if its version metadata is not packaged; must not fail the constructor. */
+    private static String getVersion() {
+        Version version = Version.identify().get("netty-common");
+        return version != null ? version.artifactVersion() : null;
     }
 
     @Override
