@@ -39,7 +39,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 /**
  * SonicNIO: High-Performance HTTP Reactor for Audio Streaming
@@ -407,9 +406,6 @@ public class NioHttpServer implements Runnable {
     // Connections to close on the selector thread: evicted streams and forceClose() from any thread.
     private final Queue<SelectionKey> pendingCloses = new ConcurrentLinkedQueue<>();
 
-    // --- Define the Object Pools ---
-    private ObjectPool<ConnectionAttachment> attachmentPool;
-    private ObjectPool<HttpRequest> requestPool;
 
     public NioHttpServer(int port) {
         this.port = port;
@@ -513,9 +509,6 @@ public class NioHttpServer implements Runnable {
             return;
         }
 
-        // --- Initialize the Object Pools ---
-        attachmentPool = new ObjectPool<>(() -> new ConnectionAttachment(clientReadBufferSize), 50);
-        requestPool = new ObjectPool<>(HttpRequest::new, 50);
 
         if (maxThread <= 0) {
             maxThread = Runtime.getRuntime().availableProcessors();
@@ -767,7 +760,7 @@ public class NioHttpServer implements Runnable {
         clientChannel.setOption(StandardSocketOptions.SO_SNDBUF, 524288); // 512KB for hi-res streaming
         clientChannel.setOption(StandardSocketOptions.IP_TOS, 0x18); // 0x18 = Low Delay (0x10) | High Throughput (0x08)
 
-        ConnectionAttachment attachment = attachmentPool.acquire();
+        ConnectionAttachment attachment = new ConnectionAttachment(clientReadBufferSize);
         clientChannel.register(selector, SelectionKey.OP_READ, attachment);
     }
 
@@ -815,13 +808,11 @@ public class NioHttpServer implements Runnable {
             } else {
                 byte[] requestBytes = attachment.requestData.toByteArray();
                 // --- Acquire and parse ---
-                HttpRequest request = requestPool.acquire();
+                HttpRequest request = new HttpRequest();
                 request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
 
                 // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
                 if (request.getHeader("transfer-encoding", "").toLowerCase().contains("chunked")) {
-                    request.reset();
-                    requestPool.release(request);
                     attachment.response = new HttpResponse()
                             .setStatus(501, "Not Implemented")
                             .addHeader("Connection", "close")
@@ -833,8 +824,6 @@ public class NioHttpServer implements Runnable {
                 // Validate content length
                 int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
                 if (contentLength < 0 || contentLength > maxRequestSize) {
-                    request.reset();
-                    requestPool.release(request);
                     attachment.response = contentLength < 0
                             ? new HttpResponse().setStatus(HTTP_BAD_REQUEST, "Bad Request")
                                     .addHeader("Connection", "close")
@@ -888,16 +877,13 @@ public class NioHttpServer implements Runnable {
     }
 
     /**
-     * Hands a complete request to a worker. The worker owns it from here and returns it to the
-     * pool, so the attachment drops its reference; otherwise closeConnection() would release the
-     * same object again when the client disconnects mid-response.
+     * Hands a complete request to a worker, which owns it from here; the attachment drops its
+     * reference so nothing on the selector thread touches the request again.
      */
     private void dispatch(SelectionKey key, ConnectionAttachment attachment, HttpRequest request) {
         attachment.request = null;
         key.interestOps(0);
         if (workerPool == null || workerPool.isShutdown()) {
-            request.reset();
-            requestPool.release(request);
             closeConnection(key); // Silently close connection if server is stopping
             return;
         }
@@ -985,10 +971,6 @@ public class NioHttpServer implements Runnable {
             }
             responseQueue.add(new ResponseTask(key, errorResponse));
             selector.wakeup();
-        } finally {
-            // --- Release the request object back to the pool ---
-            request.reset();
-            requestPool.release(request);
         }
     }
 
@@ -1096,12 +1078,7 @@ public class NioHttpServer implements Runnable {
             if (attachmentObj instanceof ConnectionAttachment attachment) {
                 key.attach(null); // Clear attachment immediately to prevent double close
 
-                // Release leaked HttpRequest back to the pool
-                if (attachment.request != null) {
-                    attachment.request.reset();
-                    requestPool.release(attachment.request);
-                    attachment.request = null;
-                }
+                attachment.request = null;
 
                 if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
                     WebSocket.Handler currentWsHandler = attachment.wsHandler;
@@ -1128,7 +1105,6 @@ public class NioHttpServer implements Runnable {
                 // Clean up WebSocket buffers
                 attachment.cleanup();
                 attachment.reset();
-                attachmentPool.release(attachment);
 
                 try {
                     socketChannel.close();
@@ -2300,35 +2276,6 @@ public class NioHttpServer implements Runnable {
         }
     }
 
-    private static class ObjectPool<T> {
-        private final Queue<T> pool = new ConcurrentLinkedQueue<>();
-        private final Supplier<T> factory;
-        private final int maxIdle; // Add a limit
-        private final AtomicInteger currentSize = new AtomicInteger(0);
-
-        ObjectPool(Supplier<T> factory, int maxIdle) {
-            this.factory = factory;
-            this.maxIdle = maxIdle;
-        }
-
-        public T acquire() {
-            T obj = pool.poll();
-            if (obj == null) {
-                return factory.get();
-            }
-            currentSize.decrementAndGet();
-            return obj;
-        }
-
-        public void release(T obj) {
-            if (currentSize.get() < maxIdle) {
-                pool.offer(obj);
-                currentSize.incrementAndGet();
-            }
-            // If the pool is full, we simply let the object fall out of scope for GC
-        }
-    }
-
     private static class BoundedByteArrayOutputStream extends ByteArrayOutputStream {
         private final int maxSize;
 
@@ -2380,12 +2327,6 @@ public class NioHttpServer implements Runnable {
         metrics.put("keepAliveTimeout", keepAliveTimeout);
         metrics.put("socketBacklog", socketBacklog);
         metrics.put("clientReadBufferSize", clientReadBufferSize);
-
-        // Pool sizes
-        metrics.put("attachmentPoolSize", attachmentPool != null ?
-                Math.min(attachmentPool.pool.size(), 50) : 0);
-        metrics.put("requestPoolSize", requestPool != null ?
-                Math.min(requestPool.pool.size(), 50) : 0);
 
         // Response queue size
         metrics.put("responseQueueSize", responseQueue.size());

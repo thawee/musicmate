@@ -23,9 +23,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Queue;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -256,7 +254,7 @@ public class NioHttpServerTest {
     }
 
     @Test
-    public void midStreamDisconnect_doesNotReturnRequestToPoolTwice() throws Exception {
+    public void midStreamDisconnect_releasesStreamAndConnection() throws Exception {
         try (Socket socket = connect()) {
             socket.setReceiveBufferSize(4096);
             OutputStream out = socket.getOutputStream();
@@ -265,8 +263,10 @@ public class NioHttpServerTest {
             socket.getInputStream().read(new byte[1024]);
             socket.setSoLinger(true, 0); // reset, as a renderer abandons a stream when seeking
         }
-        Thread.sleep(1500);
-        assertEquals(1, maxCopiesOfOneRequestInPool());
+        awaitCounter("activeStreams", 0);
+        awaitCounter("activeConnections", 0);
+        assertEquals(0, counter("activeStreams"));
+        assertEquals(0, counter("activeConnections"));
     }
 
     @Test
@@ -498,17 +498,6 @@ public class NioHttpServerTest {
 
     // --- helpers ---
 
-    private int maxCopiesOfOneRequestInPool() throws Exception {
-        java.lang.reflect.Field poolField = NioHttpServer.class.getDeclaredField("requestPool");
-        poolField.setAccessible(true);
-        Object pool = poolField.get(server);
-        java.lang.reflect.Field queueField = pool.getClass().getDeclaredField("pool");
-        queueField.setAccessible(true);
-        List<Object> items = new ArrayList<>((Queue<?>) queueField.get(pool));
-        IdentityHashMap<Object, Integer> counts = new IdentityHashMap<>();
-        for (Object item : items) counts.merge(item, 1, Integer::sum);
-        return counts.isEmpty() ? 0 : Collections.max(counts.values());
-    }
 
     private static String get(String range) {
         return "GET /track HTTP/1.1\r\nHost: test\r\nRange: " + range + "\r\n\r\n";

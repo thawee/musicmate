@@ -961,7 +961,8 @@ Goal: prove and improve SonicNIO with evidence; then decide whether Netty can be
 - [x] 1a. JVM soak test (NioHttpServerSoakTest): 16 clients/8 s and 64 clients/20 s, 0 errors, counters drain to 0, no pool duplicates. Baseline on a Mac: ~700 MB/s, range TTFB p50 4.6 ms / p95 24 ms (16 clients), 18.8 / 75 ms (64 clients)
 - [ ] 1b. On-device: run tools/bench/stream-bench.sh once with SonicNIO and once with Netty on the same large track; record results here
 - [x] 2. Fuzz (NioHttpServerFuzzTest): 23 hostile requests, mutated HTTP corpus (1,500 per run; 20,000 in one hunt) and random WebSocket frames (40 per run; 1,000 in one hunt). Found and fixed one leak: a protocol error after a queued reply (PING then malformed frame) left the connection with no interest ops, never closed; it now always ends with a CLOSE frame. Regression test in NioHttpServerTest
-- [ ] 3. Simplify: remove object pools (after 1 confirms no cost); split NioHttpServer into parser / connection / file response / WebSocket codec with ADR-036 rules in the structure
+- [x] 3a. Remove object pools: soak before 648-728 MB/s, TTFB p50 5.0-5.7 ms / p95 13-27 ms; after 685-752 MB/s, 4.3-4.9 ms / 6.8-23 ms (Mac JVM, 3 runs each)
+- [ ] 3b. Split NioHttpServer into parser / connection / file response / WebSocket session classes with ADR-036 rules in the structure; rewrite the class Javadoc (it claims buffer and connection pooling that does not exist)
 - [ ] 4. Protocol gaps: Expect: 100-continue, pipelining, HTTP/1.0 keep-alive, header-read timeout, write timeout for stalled clients
 - [ ] 5. Observability: counters (streams, evictions, 429/503, bytes/s), Android Log tags, Music Center diagnostics line
 - [ ] 6. Decision gate: retire Netty if SonicNIO matches it on device and passes soak

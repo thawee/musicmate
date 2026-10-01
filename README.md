@@ -107,7 +107,7 @@ Both are listed in `settings.gradle` and built into the shipping APK.
 #### 🚀 SonicNIO (`server-jupnp` / engine key `nio`) — *Default · Balanced*
 *   **Status:** **Production Grade — the default engine.** Also serves UPnP control (SOAP/GENA) regardless of the selected engine.
 *   **Architecture:** Custom-built, zero-dependency Reactor-pattern NIO engine optimised for Android (`NioHttpServer`, single selector + worker pool).
-*   **Strengths:** Minimalist Direct ByteBuffer pooling (< 20 ms GC pauses), 256 KB streaming chunks, intelligent LruCache for ETags and client profiles, `IP_TOS = 0x18` (DSCP Low Delay | High Throughput), 512 KB `SO_SNDBUF`.
+*   **Strengths:** No object pooling (plain allocations; audio never enters the heap thanks to `transferTo`), 256 KB streaming chunks, intelligent LruCache for ETags and client profiles, `IP_TOS = 0x18` (DSCP Low Delay | High Throughput), 512 KB `SO_SNDBUF`.
 *   **Headers:** DLNA `transferMode.dlna.org` / `contentFeatures.dlna.org` plus the full `X-Audio-*` set from `DLNAHeaderHelper.getAudioHeaders()`, shared with Netty.
 *   **Threading:** The selector thread owns all connections; workers hand back responses and queue closes, and each WebSocket connection's messages are handled in order (ADR-036).
 *   **Tests:** `NioHttpServerTest` (28 tests) drives a real socket: full and partial GETs (suffix, open-ended, clamped, 416), invalid and multi-range requests (200), `If-Range`, HEAD, keep-alive, `Connection: close`, POST bodies split across packets, chunked bodies (501), request-pool integrity after disconnects, stream eviction, stop/teardown, and WebSocket handshake, ordering, close and oversized frames. `RateLimitingHandlerTest` covers the limit and the cover-art exemption.

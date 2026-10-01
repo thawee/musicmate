@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
@@ -32,8 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Soak test for SonicNIO: concurrent clients mixing whole-file and range reads, keep-alive runs,
- * abrupt resets mid-stream and WebSocket bursts. Afterwards every counter must be back to zero and
- * the request pool must hold no duplicates. Prints a throughput / time-to-first-byte baseline.
+ * abrupt resets mid-stream and WebSocket bursts. Afterwards every counter must be back to zero.
+ * Prints a throughput / time-to-first-byte baseline.
  * Scale with the SOAK_CLIENTS and SOAK_SECONDS environment variables (defaults 16 and 8).
  */
 public class NioHttpServerSoakTest {
@@ -134,7 +133,6 @@ public class NioHttpServerSoakTest {
         assertEquals("errors: " + errors, 0, errors.size());
         assertEquals("activeStreams after load", 0, counter("activeStreams"));
         assertEquals("activeConnections after load", 0, counter("activeConnections"));
-        assertEquals("duplicate pooled requests", true, maxCopiesInRequestPool() <= 1);
     }
 
     private void runOneOperation() throws Exception {
@@ -288,16 +286,6 @@ public class NioHttpServerSoakTest {
         return ((AtomicInteger) field.get(server)).get();
     }
 
-    private int maxCopiesInRequestPool() throws Exception {
-        Field poolField = NioHttpServer.class.getDeclaredField("requestPool");
-        poolField.setAccessible(true);
-        Object pool = poolField.get(server);
-        Field queueField = pool.getClass().getDeclaredField("pool");
-        queueField.setAccessible(true);
-        IdentityHashMap<Object, Integer> counts = new IdentityHashMap<>();
-        for (Object item : new ArrayList<>((Queue<?>) queueField.get(pool))) counts.merge(item, 1, Integer::sum);
-        return counts.isEmpty() ? 0 : Collections.max(counts.values());
-    }
 
     private void printBaseline(int clients, double seconds) {
         List<Long> ttfb = new ArrayList<>(rangeTtfbMicros);
