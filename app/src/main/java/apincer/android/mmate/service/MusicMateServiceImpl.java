@@ -187,7 +187,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         @Override
         public void onPlaybackCompleted() {
-            skipToNextInQueue();
+            advanceQueue(false);
         }
 
         @Override
@@ -728,7 +728,16 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void skipToNextInQueue() {
-        historyTracker.end(true);
+        advanceQueue(true);
+    }
+
+    /**
+     * Advances playback to the next queued track.
+     * @param userSkip true for an explicit Next action, which overrides Repeat One;
+     *                 false for natural completion, which honours Repeat One.
+     */
+    private void advanceQueue(boolean userSkip) {
+        historyTracker.end(userSkip);
         if (sleepTimerEndOfTrack) {
             sleepTimerEndOfTrack = false;
             sleepTimerEndTimeMs = 0;
@@ -737,14 +746,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
-                internalSkipToNextOnDMRPlayer(playbackTarget);
+                internalSkipToNextOnDMRPlayer(playbackTarget, userSkip);
             } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
                 // Local ExoPlayer: advance MusicMate's queue
                 Track current = getNowPlayingSong();
                 if (current != null) {
                     queueManager.setCurrentTrack(current);
                 }
-                Track nextSong = queueManager.getNextTrack(true);
+                Track nextSong = queueManager.getNextTrack(userSkip);
                 if (nextSong != null) {
                     queueManager.setPlaybackTrack(nextSong);
                     playSong(nextSong);
@@ -758,12 +767,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         });
     }
 
-    private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget) {
+    private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget, boolean userSkip) {
         Track current = getNowPlayingSong();
         if (current != null) {
             queueManager.setCurrentTrack(current);
         }
-        Track song = queueManager.getNextTrack(true);
+        Track song = queueManager.getNextTrack(userSkip);
         if (song != null) {
             queueManager.setPlaybackTrack(song);
             internalPlayOnDMRPlayer(playbackTarget, song);
