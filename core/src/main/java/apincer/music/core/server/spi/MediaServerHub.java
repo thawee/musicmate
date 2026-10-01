@@ -51,6 +51,11 @@ public interface MediaServerHub {
     void playerSeek(String udn, long positionMs);
     void playerSetVolume(String udn, int volume);
 
+    /** Reads the renderer volume (0-100), waiting up to {@code timeoutMs}; -1 when unknown. Not for the main thread. */
+    default int playerGetVolume(String udn, long timeoutMs) {
+        return -1;
+    }
+
     void playerPlaySong(String rendererUdn, Track song);
     default void playerPlaySong(String rendererUdn, Track song, long initialPositionMs) {
         playerPlaySong(rendererUdn, song);

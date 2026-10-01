@@ -1183,18 +1183,38 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return Math.max(0, sleepTimerEndTimeMs - System.currentTimeMillis());
     }
 
+    /**
+     * Fades a renderer down from its real volume, pauses, then restores that volume so the next
+     * Play is not silent. When the volume cannot be read it pauses without fading, so the
+     * fade can never make playback louder.
+     */
     private void fadeOutAndPause() {
         new Thread(() -> {
             try {
-                for (int i = 4; i >= 1; i--) {
-                    adjustVolume(-1);
-                    Thread.sleep(500);
+                PlaybackTarget target = getPlayer();
+                String rendererId = (target != null && target.isStreaming()) ? target.getTargetId() : null;
+                int original = rendererId != null ? mediaHub.playerGetVolume(rendererId, 2000) : -1;
+                if (original > 0) {
+                    for (int quarter = 3; quarter >= 1; quarter--) {
+                        mediaHub.playerSetVolume(rendererId, original * quarter / 4);
+                        Thread.sleep(500);
+                    }
                 }
                 pausePlayer();
+                if (original > 0) {
+                    Thread.sleep(500); // let the pause land before the level comes back
+                    mediaHub.playerSetVolume(rendererId, original);
+                    dmrVolume = original;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                Log.w(TAG, "Sleep fade failed", e);
+            } finally {
                 sleepTimerEndTimeMs = 0;
                 sleepTimerEndOfTrack = false;
-            } catch (Exception ignored) {}
-        }).start();
+            }
+        }, "SleepFade").start();
     }
 
     private void fallbackToNextTrack(PlaybackTarget player) {

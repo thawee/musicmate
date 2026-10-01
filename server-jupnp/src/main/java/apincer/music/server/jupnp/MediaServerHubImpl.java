@@ -37,6 +37,7 @@ import org.jupnp.support.avtransport.callback.Play;
 import org.jupnp.support.avtransport.callback.Seek;
 import org.jupnp.support.avtransport.callback.SetAVTransportURI;
 import org.jupnp.support.avtransport.callback.Stop;
+import org.jupnp.support.renderingcontrol.callback.GetVolume;
 import org.jupnp.support.renderingcontrol.callback.SetVolume;
 import org.jupnp.support.model.MediaInfo;
 import org.jupnp.support.model.PositionInfo;
@@ -1470,6 +1471,38 @@ public class MediaServerHubImpl implements MediaServerHub {
                 }
             });
         });
+    }
+
+    @Override
+    public int playerGetVolume(String rendererUdn, long timeoutMs) {
+        UpnpService service = upnpService;
+        if (service == null || controlPoint == null) return -1;
+        Device device = service.getRegistry().getDevice(new UDN(rendererUdn), false);
+        if (device == null) return -1;
+        Service renderingControlService = findServiceRecursively(device, RENDERING_CONTROL_TYPE);
+        if (renderingControlService == null) return -1;
+
+        AtomicInteger volume = new AtomicInteger(-1);
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        controlPoint.execute(new GetVolume(renderingControlService) {
+            @Override
+            public void received(ActionInvocation<?> invocation, int currentVolume) {
+                volume.set(currentVolume);
+                done.countDown();
+            }
+
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                Log.w(TAG, "GetVolume failed: " + defaultMsg);
+                done.countDown();
+            }
+        });
+        try {
+            done.await(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return volume.get();
     }
 
     @Override
