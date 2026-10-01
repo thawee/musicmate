@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
+- **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
+- **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.
 - **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
 - **MQA identity and accents:** Preserve MQA labels on compact 24-bit/Hi-Res tracks, retain `MQA STUDIO` in expanded fallback badges and full-screen player verdicts, and consistently use the MQA magenta accent.
 - **MQA resolution details:** Show separately labeled encoded resolution and known original sample rate in player details and badge accessibility descriptions. Ignore stale original-rate metadata on non-MQA tracks and omit unknown rates.

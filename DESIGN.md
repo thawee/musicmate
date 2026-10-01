@@ -349,7 +349,15 @@ Library metadata rows and full-screen specification chips wrap when space is lim
   1. Replace FFmpeg image extraction with native Android `MediaMetadataRetriever`. It provides instantaneous, hardware-accelerated extraction directly to byte arrays, skipping expensive process creation.
   2. Implement an active lazy-loading trap in `FileRepository.getCoverArt()`. If Coil requests a missing cache file and the track specifies an embedded hex path, actively trigger the `MediaMetadataRetriever` extraction synchronously before returning the resolved file to Coil.
   3. For "Managed" library files, extract to the parent directory as `Cover.jpg`. For "Unmanaged" files (e.g., Downloads folder), maintain the exact file-path hashing to prevent diverse singles from overwriting each other's artwork in shared directories.
-- **Consequences:** Cover art loads instantaneously without CPU spikes. Embedded art always displays correctly in the UI. Storage waste is eliminated for managed albums, while unmanaged tracks safely preserve their distinct artwork in chaotic folders.
+  4. Keep an in-memory negative cache (`NO_EMBEDDED_ART`, path to `lastModified`) for files with no embedded picture. Coil does not cache failed loads, so without it every list bind re-opens the file. A changed `lastModified` invalidates the entry.
+- **Consequences:** Cover art loads instantaneously without CPU spikes. Embedded art always displays correctly in the UI. Storage waste is eliminated for managed albums, while unmanaged tracks safely preserve their distinct artwork in chaotic folders. Art-less files cost one retriever read per process lifetime.
+
+### ADR-031: Natural Completion vs. Explicit Skip Queue Advancement
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** `QueueManager.getNextTrack(boolean forceSkip)` lets an explicit Next bypass Repeat One. The completion callback (`onPlaybackCompleted`) reused the public `skipToNextInQueue()`, which forced the skip, so Repeat One never repeated on local playback. DLNA gapless preload still used `getNextTrack()`, leaving the renderer and the queue in disagreement, and natural ends were recorded as skips.
+- **Decision:** `MusicMateServiceImpl.skipToNextInQueue()` is the explicit-skip entry point and delegates to a private `advanceQueue(boolean userSkip)`. Completion callbacks call `advanceQueue(false)`. `userSkip` selects both `getNextTrack(userSkip)` (local and DMR paths) and `historyTracker.end(userSkip)`.
+- **Consequences:** Repeat One repeats on natural completion while Next always advances. Completion, gapless preload, and fallback paths share Repeat One semantics. Listening history counts only user skips.
 
 ---
 

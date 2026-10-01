@@ -14,7 +14,7 @@
 - **Playlist Loading & Smart Refill (`PlaylistPickerDialog`):** Dedicated modal picker for immediate playback ("Play All"), upcoming queue appending ("+ Queue"), or continuous smart auto-refill (`Source.PLAYLIST`) from any built-in (DR12+, Studio Masters Hi-Res, Pure DSD, Lossless Vault) or custom user playlist.
 - **High-Fidelity Track Items:** Each row displays a 42dp cover art thumbnail (`CoverartFetcher` + Coil `AsyncImage`), active playing gold glow border with animated equalizer overlay (`ic_equalizer_active`), audiophile `QualityBadge` (DSD, Hi-Res, 24-bit, CD quality), and track provenance micro-pills (`NOW PLAYING`, `PLAY NEXT`, `SMART`).
 - **Visual Queue Zoning:** Categorized section dividers (`NOW PLAYING`, `UP NEXT · MANUAL PRIORITY`, `✦ SMART REFILL · [SOURCE]`) provide instant clarity on track origin and sequencing.
-- **Smart Refill & Persistence:** The playback service refreshes sources on a dedicated 15-second worker; manual additions and Play Next take immediate priority over auto-fill. Manual freezes the list; Clear ends the session. Shuffle and repeat are reserved for Manual mode.
+- **Smart Refill & Persistence:** The playback service refreshes sources on a dedicated 15-second worker; manual additions and Play Next take immediate priority over auto-fill. Manual freezes the list; Clear ends the session. Shuffle and repeat are reserved for Manual mode. Under Repeat One, a track that ends naturally repeats; the Next control always advances to the following track.
 
 MusicMate is fundamentally a **music library organization and tag management application**, integrated with high-fidelity local & network playback capabilities (DLNA/UPnP, Bluetooth, native Android player integrations).
 
