@@ -373,6 +373,13 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Context:** `QueueManager` kept the shuffle order as physical indices and rebuilt it with a new random order after every edit. With shuffle on, Play Next landed at a random position and tracks already played came back. Removing the playing track left the indices on its follower, so Next skipped it.
 - **Decision:** The play order is kept by track id (`shuffleIds`). Edits merge into it: removed tracks drop out, Play Next goes directly after the playing track, and new or re-added tracks are slotted in at random among the tracks not yet played. A full reshuffle happens only when the queue is replaced or loaded, or shuffle is turned on. When the playing track is removed, its follower is recorded by id and drives Next/Previous until playback moves on.
 - **Consequences:** Queue edits never change what has been played or reorder what is still to come, apart from the edit itself. The shuffle order is still not persisted, so an app restart reshuffles with the current track first.
+
+### ADR-034: Media Session Next/Previous Follow the MusicMate Queue
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** The `MediaLibrarySession` wrapped the internal ExoPlayer directly. ExoPlayer only holds the playing track and at most one gapless follower, so notification, lock-screen and headset Next/Previous used ExoPlayer's own seeks: Next did nothing without a preloaded follower, and when it worked the queue and UI were not updated.
+- **Decision:** The session gets `QueueAwareSessionPlayer`, a `ForwardingSimpleBasePlayer` over ExoPlayer. It always advertises Next/Previous and routes `COMMAND_SEEK_TO_NEXT*`/`COMMAND_SEEK_TO_PREVIOUS*` to the service's `skipToNextInQueue()`/`skipToPrevious()`, posted to the player looper because a skip replaces ExoPlayer's playlist. Previous past the 3 s threshold restarts the track. Everything else passes through to ExoPlayer.
+- **Consequences:** Every Next/Previous source shares the queue path (Repeat One, shuffle, history). Media3 still calls `handleSeek` (with index `C.INDEX_UNSET`) when ExoPlayer itself has no next or previous item, so the buttons always work.
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

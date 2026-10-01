@@ -486,7 +486,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         
         // Initialize MediaLibrarySession for Media3
         if (androidPlayer.getInternalExoPlayer() != null) {
-            mediaLibrarySession = new MediaLibrarySession.Builder(this, androidPlayer.getInternalExoPlayer(), new MediaLibrarySession.Callback() {})
+            // Session Next/Previous (notification, lock screen, headset) follow the MusicMate queue
+            QueueAwareSessionPlayer sessionPlayer = new QueueAwareSessionPlayer(
+                    androidPlayer.getInternalExoPlayer(), this::skipToNextInQueue, this::skipToPrevious);
+            mediaLibrarySession = new MediaLibrarySession.Builder(this, sessionPlayer, new MediaLibrarySession.Callback() {})
                 .build();
                 
             DefaultMediaNotificationProvider notificationProvider = new DefaultMediaNotificationProvider.Builder(this)
