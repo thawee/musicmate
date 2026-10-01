@@ -404,7 +404,7 @@ public class NioHttpServer implements Runnable {
                     }
 
                     // Slowloris: headers (or a body) trickling in slower than their deadline
-                    if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS
+                    if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS && attachment.response == null
                             && attachment.requestStartTime > 0 && now - attachment.requestStartTime > headerReadTimeout) {
                         closeConnection(key);
                         continue;
@@ -559,6 +559,8 @@ public class NioHttpServer implements Runnable {
                 attachment.headerScanFrom = Math.max(0, attachment.requestData.size() - 3);
                 return;
             }
+            // Headers are in: the deadline ends here, or it would cut off a response streaming for minutes
+            attachment.requestStartTime = 0;
             byte[] requestBytes = attachment.requestData.toByteArray();
             HttpRequest request = new HttpRequest();
             request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());

@@ -38,6 +38,7 @@ public class NioHttpServerTest {
     private NioHttpServer server;
     private int port;
     private byte[] content;
+    private File trackFile;
     private File bigFile;
     private final AtomicReference<String> lastPostBody = new AtomicReference<>();
     private final List<Integer> wsSequence = Collections.synchronizedList(new ArrayList<>());
@@ -47,14 +48,25 @@ public class NioHttpServerTest {
     public void startServer() throws Exception {
         content = new byte[1000];
         for (int i = 0; i < content.length; i++) content[i] = (byte) (i % 251);
-        File file = temporary.newFile("track.flac");
-        Files.write(file.toPath(), content);
+        trackFile = temporary.newFile("track.flac");
+        Files.write(trackFile.toPath(), content);
         bigFile = temporary.newFile("big.flac");
         Files.write(bigFile.toPath(), new byte[8 * 1024 * 1024]);
 
-        try (ServerSocket probe = new ServerSocket(0)) {
-            port = probe.getLocalPort();
+        // The probed port is free only until the probe closes; another socket can take it before the
+        // server binds (common after the soak test's churn), so try a fresh port
+        for (int attempt = 1; ; attempt++) {
+            try (ServerSocket probe = new ServerSocket(0)) {
+                port = probe.getLocalPort();
+            }
+            launchServer();
+            if (awaitListening()) return;
+            server.stop();
+            if (attempt == 3) throw new IllegalStateException("server did not start on port " + port);
         }
+    }
+
+    private void launchServer() {
         server = new NioHttpServer(port);
         server.registerHttpHandler(request -> {
             try {
@@ -72,7 +84,7 @@ public class NioHttpServerTest {
                 if (request.getPath().startsWith("/big")) {
                     return server.createFileResponse(bigFile, request);
                 }
-                return server.createFileResponse(file, request);
+                return server.createFileResponse(trackFile, request);
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
@@ -81,7 +93,6 @@ public class NioHttpServerTest {
         Thread thread = new Thread(server, "nio-test-server");
         thread.setDaemon(true);
         thread.start();
-        awaitListening();
     }
 
     @After
@@ -594,6 +605,34 @@ public class NioHttpServerTest {
     }
 
     @Test
+    public void longStream_outlivesTheHeaderDeadline() throws Exception {
+        // A renderer plays a track over minutes on one connection; the header deadline must not cut it
+        server.setHeaderReadTimeout(500);
+        try (Socket socket = connect()) {
+            socket.setReceiveBufferSize(64 * 1024);
+            socket.setSoTimeout(5000);
+            socket.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            InputStream in = socket.getInputStream();
+            readResponseHead(in);
+            long received = 0;
+            long start = System.currentTimeMillis();
+            byte[] buffer = new byte[64 * 1024];
+            // read at about 4 MB/s, so the 8 MB body takes about 2 s, well past the 500 ms deadline
+            while (received < bigFile.length()) {
+                int n = in.read(buffer);
+                if (n < 0) break;
+                received += n;
+                long due = start + received / 4096; // 4096 bytes per ms
+                long wait = due - System.currentTimeMillis();
+                if (wait > 0) Thread.sleep(wait);
+            }
+            assertTrue("test did not run past the deadline", System.currentTimeMillis() - start > 1000);
+            assertEquals(bigFile.length(), received);
+        }
+    }
+
+    @Test
     public void stalledReader_isClosedAfterTheIdleTimeout() throws Exception {
         server.setKeepAliveTimeout(1000);
         try (Socket socket = connect()) {
@@ -669,15 +708,15 @@ public class NioHttpServerTest {
         return socket;
     }
 
-    private void awaitListening() throws Exception {
+    private boolean awaitListening() throws Exception {
         for (int i = 0; i < 100; i++) {
             try (Socket ignored = new Socket("127.0.0.1", port)) {
-                return;
+                return true;
             } catch (IOException notYet) {
                 Thread.sleep(50);
             }
         }
-        throw new IllegalStateException("server did not start on port " + port);
+        return false;
     }
 
     private static Response exchange(Socket socket, String raw, boolean readBody) throws IOException {
