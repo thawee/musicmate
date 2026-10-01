@@ -4,6 +4,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimitingHandler extends ChainedHandler {
     private final int maxRequestsPerSecond;
+    // Paths that are neither counted nor limited (e.g. cover art for a WebUI grid)
+    private final java.util.function.Predicate<String> exemptPath;
 
     // Tracks the request count per IP address
     private final ConcurrentHashMap<String, ClientRecord> clients = new ConcurrentHashMap<>();
@@ -15,12 +17,22 @@ public class RateLimitingHandler extends ChainedHandler {
     private final AtomicLong evictionCount = new AtomicLong(0);
 
     public RateLimitingHandler(int maxRequestsPerSecond, NioHttpServer.Handler next) {
+        this(maxRequestsPerSecond, path -> false, next);
+    }
+
+    public RateLimitingHandler(int maxRequestsPerSecond, java.util.function.Predicate<String> exemptPath,
+                               NioHttpServer.Handler next) {
         super(next);
         this.maxRequestsPerSecond = maxRequestsPerSecond;
+        this.exemptPath = exemptPath;
     }
 
     @Override
     public NioHttpServer.HttpResponse handle(NioHttpServer.HttpRequest request) {
+        String path = request.getPath();
+        if (path != null && exemptPath.test(path)) {
+            return next(request);
+        }
         String ip = request.getRemoteHost();
 
         // Fast integer division to get the current second

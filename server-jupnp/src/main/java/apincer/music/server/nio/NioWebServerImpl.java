@@ -73,7 +73,9 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             newServer.setKeepAliveTimeout(IDLE_TIMEOUT);
             wsHandler = new WebSocketHandlerImpl();
             newServer.registerWebSocketHandler(wsHandler);
-            NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50, this::handleRequest);
+            // Cover art is exempt: a WebUI grid loads many covers at once from one browser
+            NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50,
+                    path -> path.startsWith(CONTEXT_PATH_COVERART), this::handleRequest);
             newServer.registerHttpHandler(rateLimiter);
             server = newServer;
             serverThread = new Thread(() -> {
