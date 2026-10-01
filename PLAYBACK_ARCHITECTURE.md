@@ -128,6 +128,7 @@ Queue advances & primes upcoming track       Queue advances & primes upcoming tr
 - **Network Gapless:** `MediaServerHubImpl.setNextTrack()` dispatches UPnP `SetNextAVTransportURI` with complete DIDL-Lite metadata. A safety fallback timer scheduled at `100% duration + 1.5s` ensures queue progression if the renderer firmware drops the transition.
 - **Local Playlist Window:** `AndroidPlayerController.setNextTrack()` works relative to `getCurrentMediaItemIndex()`: it drops finished items and anything after the playing item before adding the follower. `null` clears the follower.
 - **Stale Follower Re-check:** `QueueManager` notifies a queue-change listener on edits and Repeat/Shuffle changes (not on navigation). The service then compares the handed-over follower with `getNextTrack()` and re-sends it, or clears it (`setNextTrack(null)`; an empty `NextURI` on DLNA) when the queue now ends.
+- **Sleep "End of Track":** While armed, `preloadNextTrackSafe()` hands no follower to the player and arming clears one already handed over, so every track end reaches `advanceQueue(false)` or the DLNA fallback, which pause via `stopForEndOfTrackSleep()`. An explicit Next (`advanceQueue(true)`) skips and keeps the timer armed.
 
 ---
 

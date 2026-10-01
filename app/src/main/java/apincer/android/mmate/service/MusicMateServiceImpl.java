@@ -746,12 +746,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
      */
     private void advanceQueue(boolean userSkip) {
         historyTracker.end(userSkip);
-        if (sleepTimerEndOfTrack) {
-            sleepTimerEndOfTrack = false;
-            sleepTimerEndTimeMs = 0;
-            pausePlayer();
-            return;
-        }
+        // A manual Next keeps the timer armed for the end of the new track
+        if (!userSkip && stopForEndOfTrackSleep()) return;
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
             if (isControllable(playbackTarget)) {
                 internalSkipToNextOnDMRPlayer(playbackTarget, userSkip);
@@ -1068,7 +1064,17 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     private java.util.Timer sleepTimer;
     private long sleepTimerEndTimeMs = 0;
-    private boolean sleepTimerEndOfTrack = false;
+    private volatile boolean sleepTimerEndOfTrack = false;
+
+    /** Pauses at a natural track end when "end of track" sleep is armed; true if it did. */
+    private boolean stopForEndOfTrackSleep() {
+        if (!sleepTimerEndOfTrack) return false;
+        sleepTimerEndOfTrack = false;
+        sleepTimerEndTimeMs = 0;
+        Log.i(TAG, "Sleep timer: stopping at end of track");
+        pausePlayer();
+        return true;
+    }
 
     @Override
     public void setSleepTimer(long minutes, boolean endOfTrack) {
@@ -1076,7 +1082,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             sleepTimer.cancel();
             sleepTimer = null;
         }
+        boolean wasEndOfTrack = sleepTimerEndOfTrack;
         sleepTimerEndOfTrack = endOfTrack;
+        if (endOfTrack && !wasEndOfTrack) {
+            // A gapless follower would start without passing the track-end check: take it back
+            lastPreloadedTrackId = -1;
+            scheduler.execute(() -> handNextToPlayer(null));
+        } else if (!endOfTrack && wasEndOfTrack && isPlaying()) {
+            scheduler.execute(this::preloadNextTrackSafe);
+        }
         if (minutes <= 0 && !endOfTrack) {
             sleepTimerEndTimeMs = 0;
             return;
@@ -1118,6 +1132,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void fallbackToNextTrack(PlaybackTarget player) {
+        if (stopForEndOfTrackSleep()) return; // the fallback fires only after the full track length
         Track current = getNowPlayingSong();
         Track expectedNext = queueManager.getNextTrack();
 
@@ -1503,6 +1518,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void preloadNextTrackSafe() {
+        if (sleepTimerEndOfTrack) {
+            Log.d(TAG, "Gapless: Skipped, sleep timer stops at end of this track");
+            return;
+        }
         Track next = queueManager.getNextTrack();
 
         if (next == null) {
