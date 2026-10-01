@@ -359,6 +359,13 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Decision:** `MusicMateServiceImpl.skipToNextInQueue()` is the explicit-skip entry point and delegates to a private `advanceQueue(boolean userSkip)`. Completion callbacks call `advanceQueue(false)`. `userSkip` selects both `getNextTrack(userSkip)` (local and DMR paths) and `historyTracker.end(userSkip)`.
 - **Consequences:** Repeat One repeats on natural completion while Next always advances. Completion, gapless preload, and fallback paths share Repeat One semantics. Listening history counts only user skips.
 
+
+### ADR-032: Patch HttpCore Hidden-API Bytecode Instead of Vendoring Classes
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** HttpCore 5 links `jdk.net.Sockets` and `jdk.net.ExtendedSocketOptions`, which are blocked hidden APIs on Android. The module shipped edited copies of `SingleCoreIOReactor` and `ReflectionUtils` from 5.5-beta2 in place of the jar's classes. 5.5-beta3 changed `SingleCoreIOReactor` (a new constructor that `DefaultConnectingIOReactor` calls), so every upgrade risked a silent `NoSuchMethodError`.
+- **Decision:** `patchHttpCore` (`server-jupnp-httpcore/build.gradle`) rewrites the upstream jar with ASM. `getstatic ExtendedSocketOptions.*` becomes `aconst_null`, `Sockets.setOption(a, b, c)` becomes three `pop`s, and `Sockets.supportedOptions(Class)` returns `Collections.emptySet()`. Every use is guarded by `ReflectionUtils.supportsKeepAliveOptions()`, which is therefore false. The build fails if any `jdk/net/` instruction survives. The vendored sources are removed.
+- **Consequences:** HttpCore upgrades need only a version change in `libs.versions.toml`. Upstream APIs stay intact, and `HttpServer`, `RequestListener` and `HttpRequester` are covered as well. TCP keep-alive tuning options stay off on all platforms, as before.
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

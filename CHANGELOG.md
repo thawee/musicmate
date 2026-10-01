@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **HttpCore 5.5-beta3:** Updated HttpCore and commons-lang3. HttpCore's blocked Android hidden-API calls are now stripped from the upstream jar at build time (ADR-032) instead of shipping edited copies of its classes, which no longer matched beta3.
 - **Tag write failures:** Measure DR no longer saves to the library or reports Success when writing tags to the file fails, keeping the database and file in sync.
 - **Search & Match cover art:** The matched cover is staged like a picked image and replaces the folder `Cover.jpg` only on Save; Discard leaves the original untouched. Cover downloads write to a temporary file and rename, so a failed transfer never truncates an existing image.
 - **Organize with unsaved edits:** Organize now asks to save pending edits first, instead of moving files and persisting unsaved values to the library.

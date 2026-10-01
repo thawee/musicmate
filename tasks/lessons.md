@@ -41,11 +41,11 @@
   - On Android (specifically targeting SDK 35+, e.g. SDK 37 on modern ART), `jdk.net.Sockets` and `ExtendedSocketOptions` are core-platform blocked hidden APIs (`api=blocked, domain=core-platform`). Android ART denies linking at runtime with `NoSuchMethodError: No static method supportedOptions(Class) Set in jdk.net.Sockets`.
   - Merely adding an overriding Java source file in a library module (`src/main/java/org/apache/hc/core5/util/ReflectionUtils.java`) is insufficient in multidex builds because AGP/D8 converts external JARs into separate DEX files (e.g. `classes31.dex`), keeping the original unpatched class in the APK. When caller classes from that JAR (`SingleCoreIOReactor`) execute, ART resolves the unpatched class from the same DEX, leading to fatal crashes.
   - **ART Class Verifier Linking of Blocked Hidden API Fields (`ExtendedSocketOptions.TCP_KEEP*`)**: Even when code is guarded by a runtime boolean check (e.g. `if (supportsKeepAliveOptions())`), ART's class verifier statically resolves all symbolic field references (`getstatic ExtendedSocketOptions.TCP_KEEPIDLE`) in `SingleCoreIOReactor.prepareSocket()` during class loading. When blocked, ART logs `hiddenapi: Accessing hidden field ... linking: denied`.
-  - **Resolution Pattern**:
-    1. Exclude both `org/apache/hc/core5/util/ReflectionUtils.class` and `org/apache/hc/core5/reactor/SingleCoreIOReactor*.class` from the external dependency JAR using Gradle `patchHttpCore` task (`Jar` with `exclude`).
-    2. Provide an Android-safe `ReflectionUtils.java` in module sources that detects Android (`Class.forName("android.os.Build")`) and safely returns `false` for `supportsKeepAliveOptions()` without touching `jdk.net.Sockets`.
-    3. Provide an Android-safe `SingleCoreIOReactor.java` in module sources omitting the dead `ExtendedSocketOptions` references.
-    4. This completely purges `jdk.net.Sockets` and `ExtendedSocketOptions` references from all APK DEX files, eliminating both the crash and all hidden API linking error logs.
+  - **Resolution Pattern (2026-10-01, replaces source vendoring)**:
+    1. `patchHttpCore` (`server-jupnp-httpcore/build.gradle`) rewrites the original upstream jar with ASM: `getstatic ExtendedSocketOptions.*` becomes `aconst_null`, `Sockets.setOption(a,b,c)` becomes three `pop`s, and `Sockets.supportedOptions(Class)` becomes `pop` plus `Collections.emptySet()`. Every use sits behind `ReflectionUtils.supportsKeepAliveOptions()`, which is therefore always false.
+    2. The task fails the build if any `jdk/net/` instruction survives, so an upstream change is caught at build time.
+    3. Do not vendor patched copies of upstream classes. Vendored beta2 `SingleCoreIOReactor` lacked the 8-arg constructor that beta3 `DefaultConnectingIOReactor` calls, a latent `NoSuchMethodError`. Bytecode patching keeps upstream APIs intact across version bumps.
+    4. In Groovy build scripts, use named top-level `ClassVisitor`/`MethodVisitor` subclasses. Anonymous inner classes inside a task class mis-dispatch `super` calls (`cannot be cast to DefaultTask`).
 
 - **Audio Output Target Iconography & Categorical Ordering**:
   - In multi-target audio routing pickers (DLNA streamers + local DAC/speaker + external Android music apps), never dump heterogeneous targets into a flat unsorted list with generic monochrome music note icons.

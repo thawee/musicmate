@@ -23,8 +23,8 @@ public class ReflectionUtilsTest {
     @Test
     public void testSupportsKeepAliveOptions_doesNotThrow() {
         // Must execute cleanly without NoSuchMethodError or ExceptionInInitializerError
-        boolean supported = ReflectionUtils.supportsKeepAliveOptions();
-        // Result is either true (on JVM with jdk.net support) or false (on Android / restricted JVM), but must never crash
+        // patchHttpCore strips jdk.net.Sockets.supportedOptions, so the guard is false even on a JVM
+        org.junit.Assert.assertFalse(ReflectionUtils.supportsKeepAliveOptions());
     }
 
     @Test
