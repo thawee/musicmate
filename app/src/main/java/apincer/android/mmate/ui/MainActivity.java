@@ -462,23 +462,38 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 .getWorkInfosForUniqueWorkLiveData("MusicScanWork")
                 .observe(this, workInfos -> {
                     if (workInfos != null && !workInfos.isEmpty()) {
-                        WorkInfo workInfo = workInfos.get(0);
+                        WorkInfo workInfo = activeScanWork(workInfos);
                         WorkInfo.State currentState = workInfo.getState();
-                        boolean isRunning = currentState == WorkInfo.State.RUNNING;
-                        if (isRunning) {
+                        if (currentState == WorkInfo.State.RUNNING) {
                             int progress = workInfo.getProgress().getInt("progress_value", 0);
                             int total = workInfo.getProgress().getInt("total_files", 0);
                             String scanMsg = total > 0 ? "Scanning: " + progress + "/" + total + " files" : "Scanning…";
                             apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, scanMsg);
-                        } else if (currentState.isFinished()) {
+                        } else if (currentState == WorkInfo.State.ENQUEUED || currentState == WorkInfo.State.BLOCKED) {
+                            // Waiting on its constraint (storage not low) or on a scan ahead of it
+                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, "Scan waiting to start…");
+                        } else {
                             apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(false, "");
                             if (lastWorkState == WorkInfo.State.RUNNING) {
                                 viewModel.loadMusicItems(currentCriteria);
+                            }
+                            if (currentState == WorkInfo.State.FAILED && lastWorkState != null && !lastWorkState.isFinished()) {
+                                android.widget.Toast.makeText(this, "Library scan failed. Run it again from Folders.", android.widget.Toast.LENGTH_LONG).show();
                             }
                         }
                         lastWorkState = currentState;
                     }
                 });
+    }
+
+    /** A running scan first, then one still waiting, else the last reported (chained scans share one name). */
+    private static WorkInfo activeScanWork(java.util.List<WorkInfo> workInfos) {
+        WorkInfo waiting = null;
+        for (WorkInfo info : workInfos) {
+            if (info.getState() == WorkInfo.State.RUNNING) return info;
+            if (waiting == null && !info.getState().isFinished()) waiting = info;
+        }
+        return waiting != null ? waiting : workInfos.get(workInfos.size() - 1);
     }
 
     public void setFloatingDockVisible(boolean visible) {
