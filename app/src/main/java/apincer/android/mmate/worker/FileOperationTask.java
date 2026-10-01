@@ -215,7 +215,7 @@ public class FileOperationTask {
                                 }
                                 fileRepos.saveCoverartToCache(newTag);
                                 newTag.setQualityInd(TagUtils.getQualityIndicator(newTag));
-                                newTag.setIsManaged(fileRepos.isManagedInLibrary(newTag));
+                                newTag.setIsManaged(FileRepository.isManagedInLibrary(context, newTag));
                                 tagRepos.saveTag(newTag);
                             }
                         }
@@ -262,7 +262,7 @@ public class FileOperationTask {
                         // if
                         fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
                         tag.setQualityInd(TagUtils.getQualityIndicator(tag));
-                        tag.setIsManaged(fileRepos.isManagedInLibrary(tag));
+                        tag.setIsManaged(FileRepository.isManagedInLibrary(context, tag));
                         // Update tag in repository
                         tagRepos.saveTag(tag);
 

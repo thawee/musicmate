@@ -126,10 +126,10 @@ public class ScanAudioFileWorker extends Worker {
             try {
                 //full scan
                 TagReader.readExtras(getApplicationContext(), basicTag);
-               //     basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+               //     basicTag.setMusicManaged(FileRepository.isManagedInLibrary(getApplicationContext(), basicTag));
                 //}
 
-                basicTag.setIsManaged(repos.isManagedInLibrary(basicTag));
+                basicTag.setIsManaged(FileRepository.isManagedInLibrary(getApplicationContext(), basicTag));
 
                 // re-try to extract embed album art
                 repos.saveCoverartToCache(basicTag);
