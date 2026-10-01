@@ -404,8 +404,8 @@ public class NioHttpServer implements Runnable {
     // Connections currently streaming a file, maintained on the selector thread. Workers read it to
     // pick an eviction victim instead of touching selector.keys(), which is not thread-safe.
     private final Set<SelectionKey> streamingKeys = java.util.concurrent.ConcurrentHashMap.newKeySet();
-    // Streams chosen for eviction by a worker; closed on the selector thread.
-    private final Queue<SelectionKey> pendingEvictions = new ConcurrentLinkedQueue<>();
+    // Connections to close on the selector thread: evicted streams and forceClose() from any thread.
+    private final Queue<SelectionKey> pendingCloses = new ConcurrentLinkedQueue<>();
 
     // --- Define the Object Pools ---
     private ObjectPool<ConnectionAttachment> attachmentPool;
@@ -476,23 +476,11 @@ public class NioHttpServer implements Runnable {
     public void stop() {
         stopped = true;
         isRunning = false;
-        gracefulShutdown(workerPool);
+        // Don't wait for busy handlers here: callers may be on a UI or control thread. The pool
+        // stops taking work now, and run() finishes the teardown when its loop exits.
+        ExecutorService pool = workerPool;
+        if (pool != null) pool.shutdown();
         if (selector != null) selector.wakeup();
-    }
-
-    private void gracefulShutdown(ExecutorService pool) {
-        if (pool == null) return;
-        pool.shutdown();
-        try {
-            if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-                pool.shutdownNow();
-                if (!pool.awaitTermination(5, TimeUnit.SECONDS))
-                    System.err.println("Worker pool did not terminate");
-            }
-        } catch (InterruptedException ie) {
-            pool.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
     }
 
     /**
@@ -571,7 +559,7 @@ public class NioHttpServer implements Runnable {
                     while (isRunning) {
                         processResponseQueue();
                         processWebSocketWrites();
-                        processEvictions();
+                        processPendingCloses();
 
                         long selectStart = System.currentTimeMillis();
                         int selectedKeysCount = selector.select(selectorTimeout);
@@ -645,7 +633,7 @@ public class NioHttpServer implements Runnable {
                             } catch (Exception ignored) {}
                         }
                     } catch (Exception ignored) {}
-                    pendingEvictions.clear();
+                    pendingCloses.clear();
                 }
             } catch (Exception e) {
                 // This now catches errors with binding the socket or with the selector itself.
@@ -693,8 +681,8 @@ public class NioHttpServer implements Runnable {
                     }
 
                     long idleTimeout = (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME)
-                            ? keepAliveTimeout * 4  // 2 minutes for WebSockets
-                            : keepAliveTimeout;     // 30 seconds for HTTP
+                            ? keepAliveTimeout * 4  // WebSockets: 4× the HTTP idle timeout
+                            : keepAliveTimeout;     // HTTP keep-alive idle timeout (default 120 s)
                     if (now - attachment.lastActivityTime > idleTimeout) {
                         if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
                             System.out.println("Closing idle WebSocket connection.");
@@ -820,13 +808,27 @@ public class NioHttpServer implements Runnable {
 
         // if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS) {
         if (currentState == ConnectionAttachment.ParseState.READING_HEADERS) {
-            // parse headers...
-            byte[] requestBytes = attachment.requestData.toByteArray();
-            int headerEnd = findHeaderEnd(requestBytes);
-            if (headerEnd != -1) {
+            // Scan only the bytes added since the last read; copy the buffer once the headers are complete
+            int headerEnd = attachment.requestData.indexOfHeaderEnd(attachment.headerScanFrom);
+            if (headerEnd == -1) {
+                attachment.headerScanFrom = Math.max(0, attachment.requestData.size() - 3);
+            } else {
+                byte[] requestBytes = attachment.requestData.toByteArray();
                 // --- Acquire and parse ---
                 HttpRequest request = requestPool.acquire();
                 request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
+
+                // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
+                if (request.getHeader("transfer-encoding", "").toLowerCase().contains("chunked")) {
+                    request.reset();
+                    requestPool.release(request);
+                    attachment.response = new HttpResponse()
+                            .setStatus(501, "Not Implemented")
+                            .addHeader("Connection", "close")
+                            .setBody("Chunked request bodies are not supported".getBytes());
+                    key.interestOps(SelectionKey.OP_WRITE);
+                    return;
+                }
 
                 // Validate content length
                 int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
@@ -965,6 +967,11 @@ public class NioHttpServer implements Runnable {
                         .setBody("404 Not Found".getBytes());
             }
 
+            // The client asked to close after this response (HTTP/1.1 Connection: close)
+            if ("close".equalsIgnoreCase(request.getHeader("connection", ""))) {
+                response.addHeader("Connection", "close");
+            }
+
             // Queue the response (either success, 404, or 500)
             responseQueue.add(new ResponseTask(key, response));
             selector.wakeup();
@@ -1048,7 +1055,7 @@ public class NioHttpServer implements Runnable {
 
     /**
      * Called on a worker thread when the stream limit is reached. Picks the least recently active
-     * stream and queues it; the selector thread closes it in {@link #processEvictions()}.
+     * stream and queues it; the selector thread closes it in {@link #processPendingCloses()}.
      * @return true if a stream was queued for eviction
      */
     private boolean tryEvictOldestStream() {
@@ -1066,16 +1073,16 @@ public class NioHttpServer implements Runnable {
         }
         System.out.println("Evicting oldest active stream connection. Last activity: " +
                 (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
-        pendingEvictions.add(oldestKey);
+        pendingCloses.add(oldestKey);
         Selector currentSelector = selector;
         if (currentSelector != null) currentSelector.wakeup();
         return true;
     }
 
-    /** Closes streams queued by {@link #tryEvictOldestStream()}, on the selector thread. */
-    private void processEvictions() {
+    /** Closes connections queued by {@link #tryEvictOldestStream()} or forceClose(), on the selector thread. */
+    private void processPendingCloses() {
         SelectionKey key;
-        while ((key = pendingEvictions.poll()) != null) {
+        while ((key = pendingCloses.poll()) != null) {
             if (key.isValid()) closeConnection(key);
         }
     }
@@ -1138,15 +1145,6 @@ public class NioHttpServer implements Runnable {
         }
     }
 
-    private int findHeaderEnd(byte[] data) {
-        for (int i = 0; i < data.length - 3; i++) {
-            if (data[i] == '\r' && data[i + 1] == '\n' && data[i + 2] == '\r' && data[i + 3] == '\n') {
-                return i + 4;
-            }
-        }
-        return -1;
-    }
-
     // --- WebSocket Specific Methods ---
     private void handleWebSocketRead(SelectionKey key) throws IOException {
         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
@@ -1162,7 +1160,19 @@ public class NioHttpServer implements Runnable {
         attachment.readBuffer.flip();
 
         // MODIFIED: Call the new parser with the attachment itself as the handler
-        attachment.wsFrameParser.parse(attachment.readBuffer, attachment);
+        try {
+            attachment.wsFrameParser.parse(attachment.readBuffer, attachment);
+        } catch (RuntimeException protocolError) {
+            // Malformed or oversized frame: stop reading. If a CLOSE frame was queued (e.g. 1009 too
+            // large), let it go out first; closeAfterWrite then closes the connection.
+            attachment.readBuffer.clear();
+            if (attachment.wsConnection != null && !attachment.wsConnection.getOutgoingQueue().isEmpty()) {
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
+                closeConnection(key);
+            }
+            return;
+        }
 
         attachment.readBuffer.compact();
 
@@ -1311,15 +1321,12 @@ public class NioHttpServer implements Runnable {
         public void forceClose() {
             if (closed) return;
             closed = true;
-
-            try {
-                outgoingQueue.clear();
-                SocketChannel channel = (SocketChannel) key.channel();
-                key.cancel();
-                channel.close();
-            } catch (IOException e) {
-                // Ignore
-            }
+            outgoingQueue.clear();
+            // Close through closeConnection() on the selector thread; cancelling the key here skipped
+            // the attachment release and the connection counter, and is unsafe from a worker.
+            server.pendingCloses.add(key);
+            Selector selector = key.selector();
+            if (selector != null) selector.wakeup();
         }
 
         public boolean isClosed() {
@@ -1379,7 +1386,8 @@ public class NioHttpServer implements Runnable {
         enum ParseState {READING_HEADERS, READING_BODY, WEBSOCKET_FRAME}
 
         final ByteBuffer readBuffer;
-        ByteArrayOutputStream requestData;
+        BoundedByteArrayOutputStream requestData;
+        int headerScanFrom = 0; // where the next header-end scan starts
         private volatile ParseState state = ParseState.READING_HEADERS;
         HttpRequest request;
         HttpResponse response;
@@ -1441,6 +1449,7 @@ public class NioHttpServer implements Runnable {
                 }
             }
             requestData = createByteArrayOutputStream();
+            headerScanFrom = 0;
             request = null;
 
             if (response != null) {
@@ -1784,7 +1793,7 @@ public class NioHttpServer implements Runnable {
         }
     }
 
-    private ByteArrayOutputStream createByteArrayOutputStream() {
+    private BoundedByteArrayOutputStream createByteArrayOutputStream() {
         return new BoundedByteArrayOutputStream(
                 8192, // Initial 8KB
                 NioHttpServer.this.maxRequestSize // Max 2MB for requests
@@ -2166,7 +2175,8 @@ public class NioHttpServer implements Runnable {
             //    NOW we read the content to find the *true* MIME type
             //    (in case it's really a PNG).
             String contentMimeType;
-            try (InputStream is = new FileInputStream(file)) {
+            // guessContentTypeFromStream needs mark/reset, which FileInputStream lacks
+            try (InputStream is = new java.io.BufferedInputStream(new FileInputStream(file))) {
                 // This reads the file's "magic bytes"
                 contentMimeType = URLConnection.guessContentTypeFromStream(is);
             } catch (IOException e) {
@@ -2320,6 +2330,16 @@ public class NioHttpServer implements Runnable {
         public BoundedByteArrayOutputStream(int initialSize, int maxSize) {
             super(initialSize);
             this.maxSize = maxSize;
+        }
+
+        /** Position just past the first CRLFCRLF at or after {@code from}, or -1; scans in place. */
+        synchronized int indexOfHeaderEnd(int from) {
+            for (int i = Math.max(0, from); i + 3 < count; i++) {
+                if (buf[i] == '\r' && buf[i + 1] == '\n' && buf[i + 2] == '\r' && buf[i + 3] == '\n') {
+                    return i + 4;
+                }
+            }
+            return -1;
         }
 
         @Override

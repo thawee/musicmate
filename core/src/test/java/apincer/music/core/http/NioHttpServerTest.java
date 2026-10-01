@@ -3,6 +3,7 @@ package apincer.music.core.http;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -61,6 +62,10 @@ public class NioHttpServerTest {
                 if ("POST".equals(request.getMethod())) {
                     lastPostBody.set(new String(request.getBody(), StandardCharsets.UTF_8));
                     return new NioHttpServer.HttpResponse().setBody("ok".getBytes(StandardCharsets.UTF_8));
+                }
+                if (request.getPath().startsWith("/slow")) {
+                    try { Thread.sleep(3000); } catch (InterruptedException ignored) { }
+                    return new NioHttpServer.HttpResponse().setBody("late".getBytes(StandardCharsets.UTF_8));
                 }
                 if (request.getPath().startsWith("/missing")) {
                     return new NioHttpServer.HttpResponse().setStatus(404, "Not Found"); // no body, like the UPnP adapter
@@ -382,6 +387,95 @@ public class NioHttpServerTest {
         return ((java.util.concurrent.atomic.AtomicInteger) field.get(server)).get();
     }
 
+    @Test
+    public void webSocket_forceClose_closesSocketAndReleasesConnection() throws Exception {
+        try (Socket socket = connect()) {
+            upgrade(socket);
+            sendMaskedText(socket, "kill");
+            assertEquals(-1, socket.getInputStream().read());
+        }
+        awaitCounter("activeConnections", 0);
+        assertEquals(0, counter("activeConnections"));
+    }
+
+    @Test
+    public void stop_returnsPromptlyWhileAHandlerIsBusy() throws Exception {
+        Socket socket = connect();
+        socket.getOutputStream().write("GET /slow HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+        socket.getOutputStream().flush();
+        Thread.sleep(200); // the handler is now sleeping on a worker
+        long start = System.currentTimeMillis();
+        server.stop();
+        long elapsed = System.currentTimeMillis() - start;
+        socket.close();
+        assertTrue("stop() blocked for " + elapsed + " ms", elapsed < 1000);
+    }
+
+    @Test
+    public void imageMimeType_comesFromContentNotExtension() throws Exception {
+        File png = temporary.newFile("cover.jpg"); // PNG bytes behind a .jpg name
+        Files.write(png.toPath(), new byte[]{(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 0x0D});
+        assertEquals("image/png", NioHttpServer.MimeTypeUtil.readContentForMime(png));
+    }
+
+    @Test
+    public void clientConnectionClose_isHonoured() throws Exception {
+        try (Socket socket = connect()) {
+            Response r = exchange(socket, "GET /track HTTP/1.1\r\nHost: test\r\nRange: bytes=0-3\r\nConnection: close\r\n\r\n", true);
+            assertEquals("close", r.header("connection"));
+            assertEquals(-1, socket.getInputStream().read());
+        }
+    }
+
+    @Test
+    public void chunkedRequestBody_isRejected() throws Exception {
+        try (Socket socket = connect()) {
+            Response r = exchange(socket, "POST /ctl HTTP/1.1\r\nHost: test\r\nTransfer-Encoding: chunked\r\n\r\n"
+                    + "5\r\nhello\r\n0\r\n\r\n", true);
+            assertEquals(501, r.status);
+        }
+        assertNull(lastPostBody.get());
+    }
+
+    @Test
+    public void webSocket_oversizedFrame_isNotDeliveredAsAMessage() throws Exception {
+        try (Socket socket = connect()) {
+            upgrade(socket);
+            // Header claiming a 2 MB payload (over the 1 MB limit); the frame is rejected
+            ByteArrayOutputStream frame = new ByteArrayOutputStream();
+            frame.write(0x81);
+            frame.write(0x80 | 127);
+            frame.write(new byte[]{0, 0, 0, 0, 0, 0x20, 0, 0});
+            frame.write(new byte[4]);
+            socket.getOutputStream().write(frame.toByteArray());
+            socket.getOutputStream().flush();
+            // An echoed empty text frame (0x81) would mean a partial message reached the handler
+            assertEquals(0x88, socket.getInputStream().read());
+        }
+    }
+
+    private void upgrade(Socket socket) throws IOException {
+        exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
+                + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+                + "Sec-WebSocket-Version: 13\r\n\r\n", false);
+    }
+
+    private static void sendMaskedText(Socket socket, String text) throws IOException {
+        byte[] payload = text.getBytes(StandardCharsets.UTF_8);
+        ByteArrayOutputStream frame = new ByteArrayOutputStream();
+        frame.write(0x81);
+        frame.write(0x80 | payload.length);
+        frame.write(new byte[4]); // zero mask
+        frame.write(payload);
+        socket.getOutputStream().write(frame.toByteArray());
+        socket.getOutputStream().flush();
+    }
+
+    private void awaitCounter(String name, int value) throws Exception {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (counter(name) != value && System.currentTimeMillis() < deadline) Thread.sleep(50);
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {
@@ -477,6 +571,8 @@ public class NioHttpServerTest {
         @Override public void onMessage(WebSocket.Connection connection, String message) {
             if ("close".equals(message)) {
                 connection.close(WebSocket.CLOSE_NORMAL, "bye");
+            } else if ("kill".equals(message)) {
+                connection.forceClose();
             } else if (message.startsWith("seq:")) {
                 int n = Integer.parseInt(message.substring(4));
                 if (n % 2 == 0) {

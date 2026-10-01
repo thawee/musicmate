@@ -161,8 +161,8 @@ public class WebSocket {
                             break;
                     }
                 } catch (RuntimeException e) {
-                    handler.onFrameEnd(); 
-                    throw e; 
+                    // Don't call onFrameEnd(): it would dispatch the partial payload as a message
+                    throw e;
                 }
             }
         }
