@@ -260,10 +260,22 @@ public class ScanAudioFileWorker extends Worker {
         return files;
     }
 
-    // One-time scan
+    /**
+     * Scan requested by the user. A full rescan replaces whatever is queued or running; an
+     * incremental scan runs after it instead, so it can never cancel a pending full rescan.
+     */
     public static void startScan(Context context, boolean isFullScan) {
-        WorkManager.getInstance(context).cancelAllWorkByTag(WORKER_TAG);
+        enqueueScan(context, isFullScan, isFullScan
+                ? androidx.work.ExistingWorkPolicy.REPLACE
+                : androidx.work.ExistingWorkPolicy.APPEND_OR_REPLACE);
+    }
 
+    /** Incremental scan at app start; keeps any scan already queued or running. */
+    public static void startStartupScan(Context context) {
+        enqueueScan(context, false, androidx.work.ExistingWorkPolicy.KEEP);
+    }
+
+    private static void enqueueScan(Context context, boolean isFullScan, androidx.work.ExistingWorkPolicy policy) {
         Data inputData = new Data.Builder()
                 .putBoolean("isFullScan", isFullScan)
                 .build();
@@ -283,12 +295,7 @@ public class ScanAudioFileWorker extends Worker {
                 .setInputData(inputData)
                 .build();
 
-       // WorkManager.getInstance(context).enqueue(scanRequest);
-        WorkManager.getInstance(context).enqueueUniqueWork(
-                "MusicScanWork",
-                androidx.work.ExistingWorkPolicy.KEEP,
-                scanRequest
-        );
+        WorkManager.getInstance(context).enqueueUniqueWork("MusicScanWork", policy, scanRequest);
     }
 
     // Dynamically adjust based on device capabilities

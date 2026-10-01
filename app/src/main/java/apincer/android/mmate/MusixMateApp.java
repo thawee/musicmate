@@ -101,10 +101,9 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
-            // On normal startup, do a quick incremental scan
-            Log.i(TAG, "Normal startup, performing incremental music scan");
-            boolean isFullScan = false;
-            ScanAudioFileWorker.startScan(getApplicationContext(), isFullScan);
+            // Incremental scan, unless a scan (possibly a full rescan) is already queued or running
+            Log.i(TAG, "Normal startup, requesting incremental music scan");
+            ScanAudioFileWorker.startStartupScan(getApplicationContext());
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }

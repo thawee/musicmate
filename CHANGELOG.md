@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Library paging during a scan:** Scrolling a large library while a scan runs no longer risks duplicate rows or a crash. Paged results are ordered with an id tiebreaker, and each new page skips tracks already shown.
 - **Sleep timer chip:** The Now Playing sleep chip now counts down ("12m", then seconds in the last minute) and clears itself when the timer fires.
 - **Sleep timer fade on DLNA renderers:** The fade now starts from the renderer's actual volume instead of assuming 50, so it can no longer get louder, and the volume is restored after pausing so the next Play is not silent.
+- **Library scans at startup:** Opening the app no longer cancels a scan that is queued or running, including a pending full rescan. A full rescan still replaces the current scan; a folder-change scan runs after it.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.
