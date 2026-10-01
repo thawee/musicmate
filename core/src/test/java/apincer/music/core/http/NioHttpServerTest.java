@@ -41,6 +41,7 @@ public class NioHttpServerTest {
     private byte[] content;
     private File bigFile;
     private final AtomicReference<String> lastPostBody = new AtomicReference<>();
+    private final List<Integer> wsSequence = Collections.synchronizedList(new ArrayList<>());
 
     @Before
     public void startServer() throws Exception {
@@ -306,6 +307,34 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void webSocket_messagesFromOneConnection_areHandledInOrder() throws Exception {
+        try (Socket socket = connect()) {
+            exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
+                    + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+                    + "Sec-WebSocket-Version: 13\r\n\r\n", false);
+            ByteArrayOutputStream frames = new ByteArrayOutputStream();
+            for (int i = 0; i < 50; i++) {
+                byte[] payload = ("seq:" + i).getBytes(StandardCharsets.UTF_8);
+                frames.write(0x81);
+                frames.write(0x80 | payload.length);
+                frames.write(new byte[4]); // zero mask
+                frames.write(payload);
+            }
+            socket.getOutputStream().write(frames.toByteArray());
+            socket.getOutputStream().flush();
+            long deadline = System.currentTimeMillis() + 5000;
+            while (wsSequence.size() < 50 && System.currentTimeMillis() < deadline) Thread.sleep(20);
+        }
+        assertEquals(new ArrayList<>(expected50()), new ArrayList<>(wsSequence));
+    }
+
+    private static List<Integer> expected50() {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 50; i++) list.add(i);
+        return list;
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {
@@ -395,12 +424,21 @@ public class NioHttpServerTest {
         }
     }
 
-    private static final class EchoHandler implements WebSocket.Handler {
+    private final class EchoHandler implements WebSocket.Handler {
         @Override public String getNamespace() { return "/ws"; }
         @Override public void onOpen(WebSocket.Connection connection) { }
         @Override public void onMessage(WebSocket.Connection connection, String message) {
-            if ("close".equals(message)) connection.close(WebSocket.CLOSE_NORMAL, "bye");
-            else connection.send(message);
+            if ("close".equals(message)) {
+                connection.close(WebSocket.CLOSE_NORMAL, "bye");
+            } else if (message.startsWith("seq:")) {
+                int n = Integer.parseInt(message.substring(4));
+                if (n % 2 == 0) {
+                    try { Thread.sleep(5); } catch (InterruptedException ignored) { }
+                }
+                wsSequence.add(n);
+            } else {
+                connection.send(message);
+            }
         }
         @Override public void onMessage(WebSocket.Connection connection, byte[] message) { connection.send(message); }
         @Override public void onClose(WebSocket.Connection connection, int code, String reason) { }

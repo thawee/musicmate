@@ -1004,13 +1004,14 @@ public class NioHttpServer implements Runnable {
                         selector.wakeup();
                     }
 
-                    // Queue onOpen in the background
+                    // Queue onOpen first on this connection's serial executor, ahead of any message
                     if (currentWsHandler != null) {
-                        workerPool.submit(() -> {
+                        final NioWebSocketConnection connection = attachment.wsConnection;
+                        attachment.wsTasks.execute(() -> {
                             try {
-                                currentWsHandler.onOpen(attachment.wsConnection);
+                                currentWsHandler.onOpen(connection);
                             } catch (Exception e) {
-                                currentWsHandler.onError(attachment.wsConnection, e);
+                                currentWsHandler.onError(connection, e);
                             }
                         });
                     }
@@ -1086,10 +1087,11 @@ public class NioHttpServer implements Runnable {
                 if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
                     WebSocket.Handler currentWsHandler = attachment.wsHandler;
                     NioWebSocketConnection currentWsConn = attachment.wsConnection;
+                    SerialExecutor tasks = attachment.wsTasks;
                     attachment.wsHandler = null; // Clear to prevent double calls
-                    // During shutdown the pool rejects tasks; an exception here would skip the cleanup below
-                    if (workerPool != null && !workerPool.isShutdown()) {
-                        workerPool.submit(() -> {
+                    // After this connection's pending messages; dropped quietly once the pool is shut down
+                    if (tasks != null) {
+                        tasks.execute(() -> {
                             try {
                                 currentWsHandler.onClose(currentWsConn, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
                             } catch (Exception e) {
@@ -1317,6 +1319,50 @@ public class NioHttpServer implements Runnable {
         }
     }
 
+    /**
+     * Runs tasks one at a time, in submission order, on the shared worker pool. Gives each
+     * WebSocket connection ordered callbacks without a thread of its own. Tasks submitted after
+     * the pool shuts down are dropped.
+     */
+    private final class SerialExecutor implements java.util.concurrent.Executor {
+        private final Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+        private final AtomicBoolean scheduled = new AtomicBoolean(false);
+
+        @Override
+        public void execute(@NonNull Runnable task) {
+            tasks.add(task);
+            schedule();
+        }
+
+        private void schedule() {
+            if (!scheduled.compareAndSet(false, true)) return;
+            ExecutorService pool = workerPool;
+            try {
+                if (pool == null || pool.isShutdown()) throw new java.util.concurrent.RejectedExecutionException();
+                pool.execute(this::drain);
+            } catch (java.util.concurrent.RejectedExecutionException e) {
+                tasks.clear();
+                scheduled.set(false);
+            }
+        }
+
+        private void drain() {
+            try {
+                Runnable task;
+                while ((task = tasks.poll()) != null) {
+                    try {
+                        task.run();
+                    } catch (RuntimeException ignored) {
+                        // The task reports its own errors (onError); keep draining
+                    }
+                }
+            } finally {
+                scheduled.set(false);
+                if (!tasks.isEmpty()) schedule(); // a task arrived after the last poll
+            }
+        }
+    }
+
     private class ConnectionAttachment implements WebSocket.FrameParser.FrameDataHandler { // MODIFIED: implements handler
         enum ParseState {READING_HEADERS, READING_BODY, WEBSOCKET_FRAME}
 
@@ -1331,6 +1377,8 @@ public class NioHttpServer implements Runnable {
         WebSocket.Handler wsHandler;
         NioWebSocketConnection wsConnection;
         WebSocket.FrameParser wsFrameParser;
+        // Runs this connection's onOpen/onMessage/onClose one at a time, in order
+        SerialExecutor wsTasks;
 
         private ByteArrayOutputStream reassemblyBuffer;
         private volatile int fragmentedOpcode = 0;
@@ -1422,6 +1470,7 @@ public class NioHttpServer implements Runnable {
             wsFrameParser = null;
 
             wsHandler = null;
+            wsTasks = null;
             pendingWriteBuffer = null;
             closeAfterWrite = false;
             pendingClose = false;
@@ -1464,6 +1513,7 @@ public class NioHttpServer implements Runnable {
             this.state = ParseState.WEBSOCKET_FRAME;
             this.wsFrameParser = new WebSocket.FrameParser();
             this.wsConnection = new NioWebSocketConnection(NioHttpServer.this, key);
+            this.wsTasks = new SerialExecutor();
 
             // Use bounded streams with the configured max frame size
             this.reassemblyBuffer = createByteArrayOutputStream();
@@ -1627,23 +1677,22 @@ public class NioHttpServer implements Runnable {
             switch (frame.getOpcode()) {
                 case WebSocket.OPCODE_TEXT: // TEXT
                 case WebSocket.OPCODE_BINARY: // BINARY
-                    if (workerPool != null && !workerPool.isShutdown()) {
+                    {
                         final WebSocket.Handler currentWsHandler = wsHandler;
-                        if (currentWsHandler == null) break;
-                        try {
-                            final String msg = (frame.getOpcode() == WebSocket.OPCODE_TEXT) ? frame.getPayloadAsText() : null;
-                            final byte[] binMsg = (frame.getOpcode() == WebSocket.OPCODE_BINARY) ? frame.getPayload() : null;
-                            workerPool.submit(() -> {
-                                try {
-                                    if (msg != null) currentWsHandler.onMessage(wsConnection, msg);
-                                    else currentWsHandler.onMessage(wsConnection, binMsg);
-                                } catch (Exception e) {
-                                    currentWsHandler.onError(wsConnection, e);
-                                }
-                            });
-                        } catch (Exception e) {
-                            currentWsHandler.onError(wsConnection, e);
-                        }
+                        if (currentWsHandler == null || wsTasks == null) break;
+                        // Capture now: the attachment may be reset or reused before the task runs
+                        final NioWebSocketConnection connection = wsConnection;
+                        final String msg = (frame.getOpcode() == WebSocket.OPCODE_TEXT) ? frame.getPayloadAsText() : null;
+                        final byte[] binMsg = (frame.getOpcode() == WebSocket.OPCODE_BINARY) ? frame.getPayload() : null;
+                        // Serial per connection, so commands are handled in the order they were sent
+                        wsTasks.execute(() -> {
+                            try {
+                                if (msg != null) currentWsHandler.onMessage(connection, msg);
+                                else currentWsHandler.onMessage(connection, binMsg);
+                            } catch (Exception e) {
+                                currentWsHandler.onError(connection, e);
+                            }
+                        });
                     }
 
                     // Reset buffer if it's grown too large (prevent memory fragmentation)
@@ -1672,8 +1721,9 @@ public class NioHttpServer implements Runnable {
                     final int code = closeCode;
                     final String reason = closeReason;
                     final WebSocket.Handler currentWsHandlerForClose = wsHandler;
-                    if (workerPool != null && !workerPool.isShutdown() && currentWsHandlerForClose != null) {
-                        workerPool.submit(() -> currentWsHandlerForClose.onClose(wsConnection, code, reason));
+                    final NioWebSocketConnection closingConnection = wsConnection;
+                    if (currentWsHandlerForClose != null && wsTasks != null) {
+                        wsTasks.execute(() -> currentWsHandlerForClose.onClose(closingConnection, code, reason));
                     }
                     // Null out wsHandler BEFORE scheduling pendingClose so that
                     // closeConnection() (called by handleWebSocketRead after parse returns)
