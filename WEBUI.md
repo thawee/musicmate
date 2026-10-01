@@ -36,7 +36,7 @@ MusicMate supports multiple pluggable server implementations to balance performa
 | Feature | SonicNIO | CoreHTTP | Netty |
 |:---|:---|:---|:---|
 | **Library** | Custom NIO | Apache HttpCore 5.5-beta3 | Netty 4.2.18 |
-| **Engine key** | `nio` | `httpcore` **(default)** | `netty` |
+| **Engine key** | `nio` **(default)** | `httpcore` | `netty` |
 | **Primary Use** | Balanced | **Default · Ultra-Low Memory** | **High Throughput** |
 | **Status** | ✅ Production | ✅ Production | ✅ Production |
 | **True Zero-Copy** | ✅ `transferTo` | ⚠️ 64 KB direct buffer | ✅ `DefaultFileRegion` |
@@ -45,7 +45,7 @@ MusicMate supports multiple pluggable server implementations to balance performa
 | **GC Pause** | **< 20 ms** | **< 30 ms** | < 150 ms |
 | **Seeking (Range)** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 | **WebSocket** | ✅ | ✅ | ✅ |
-| **`X-Audio-*` headers** | ❌ | ✅ (incl. Bit-Perfect) | ⚠️ (no Bit-Perfect) |
+| **`X-Audio-*` headers** | ✅ | ✅ | ✅ |
 | **Stability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 
 ### API & Routing
@@ -56,7 +56,7 @@ The server exposes three primary context paths:
 
 ### Advanced Features
 *   **Waveform Generation**: Servers generate 480-point peak data on-the-fly via `MusicAnalyser.generateWaveform(context, tag, 480, 0.6)` and cache results in a **256-entry** `LruCache` (bounded by entry count, not bytes, to prevent OOM), guarded by double-checked locking.
-*   **Audiophile Headers**: DLNA content features (`contentFeatures.dlna.org`, `transferMode.dlna.org`) are emitted by all engines. The `X-Audio-*` set (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`) is emitted by **CoreHTTP** and **Netty** only — SonicNIO omits it, and Netty omits `X-Audio-Bit-Perfect` specifically.
+*   **Audiophile Headers**: DLNA content features (`contentFeatures.dlna.org`, `transferMode.dlna.org`) are emitted by all engines. The `X-Audio-*` set (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`) is emitted by every engine; SonicNIO and Netty share `DLNAHeaderHelper.getAudioHeaders()`.
 *   **Client Profiling**: The `ProfileManager` detects the connecting client (e.g., BubbleUPnP, WiiM, Sony TV) to tune buffer sizes and header compatibility.
 
 ---

@@ -23,7 +23,7 @@ class SettingsActivity : ComponentActivity() {
 
         setContent {
             var serverEngine by remember {
-                mutableStateOf(prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore") ?: "httpcore")
+                mutableStateOf(prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE) ?: Constants.DEFAULT_SERVER_ENGINE)
             }
             var showStorageSpace by remember {
                 mutableStateOf(Settings.isShowStorageSpace(this@SettingsActivity))

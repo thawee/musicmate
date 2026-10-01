@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dead server code:** Deleted the unbuilt Jetty 12, Undertow and HttpCore 5.4 engine modules (not in `settings.gradle`, and their catalog entries no longer existed), the unused `MediaServerHubImplOld`, and Netty's unused `NettyUPnpServerImpl`/`UpnpContentHolder` (UPnP control always runs on SonicNIO). About 8,400 lines; no behaviour change. Engine docs updated to match, including stale notes about shadowed HttpCore classes.
 
 ### Changed
+- **Default streaming engine is SonicNIO:** New installs, and users who never picked an engine, now use the built-in SonicNIO engine, which needs no third-party HTTP library and already handles UPnP control. Users who explicitly chose CoreHTTP keep it for now; CoreHTTP is being retired.
 - **Audio headers on every engine:** SonicNIO now sends the `X-Audio-*` headers (sample rate, bit depth, bitrate, format, Bit-Perfect) and Netty adds the missing `X-Audio-Bit-Perfect`; both use one shared helper.
 
 ### Fixed

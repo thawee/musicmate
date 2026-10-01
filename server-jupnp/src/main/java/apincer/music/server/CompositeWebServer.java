@@ -34,28 +34,26 @@ public class CompositeWebServer implements WebServer {
     }
 
     private synchronized WebServer createEngine() {
-        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
         currentEngineKey = engineKey;
 
         Log.d(TAG, "Creating server engine: " + engineKey);
         try {
             switch (engineKey.toLowerCase()) {
-                case "nio": {
-                    Class<?> clazz = Class.forName("apincer.music.server.nio.NioWebServerImpl");
-                    return (WebServer) clazz.getConstructor(Context.class, FileRepository.class, TagRepository.class)
-                            .newInstance(context, fileRepos, tagRepos);
-                }
                 case "netty": {
                     Class<?> clazz = Class.forName("apincer.android.jupnp.server.netty.NettyWebServerImpl");
                     return (WebServer) clazz.getConstructor(Context.class, FileRepository.class, TagRepository.class)
                             .newInstance(context, fileRepos, tagRepos);
                 }
-                case "httpcore":
-                default: {
+                case "httpcore": {
                     Class<?> clazz = Class.forName("apincer.android.jupnp.server.httpcore.HttpCoreWebServerImpl");
                     return (WebServer) clazz.getConstructor(Context.class, FileRepository.class, TagRepository.class)
                             .newInstance(context, fileRepos, tagRepos);
                 }
+                case "nio":
+                default:
+                    // SonicNIO lives in this module, so it needs no reflection
+                    return new apincer.music.server.nio.NioWebServerImpl(context, fileRepos, tagRepos);
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to instantiate engine '" + engineKey + "', falling back to NioWebServerImpl", e);
@@ -64,7 +62,7 @@ public class CompositeWebServer implements WebServer {
     }
 
     private synchronized void checkAndUpdateEngine() {
-        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        String engineKey = prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
         if (!engineKey.equalsIgnoreCase(currentEngineKey)) {
             Log.d(TAG, "Engine preference changed from " + currentEngineKey + " to " + engineKey);
             if (activeEngine != null) {

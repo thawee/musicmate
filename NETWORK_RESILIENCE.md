@@ -306,7 +306,7 @@ All player targets (`DMRPlayer`, `WebStreamingPlayer`, `ExternalAndroidPlayer`) 
 
 ### Dynamic Engine Proxy (`CompositeWebServer`)
 The `CompositeWebServer` class acts as a dynamic proxy for the web server layer:
-* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"`, `"httpcore"`, or `"netty"`), defaulting to **`"httpcore"`** when unset.
+* Reads `preference_media_server_engine` from `SharedPreferences` (`"nio"`, `"httpcore"`, or `"netty"`), defaulting to **`"nio"`** (`Constants.DEFAULT_SERVER_ENGINE`) when unset; an unknown key also resolves to SonicNIO, which is constructed directly rather than through reflection.
 * Instantiates and delegates calls (`initServer`, `stopServer`, `restartServer`) to the selected engine via reflection. Any instantiation failure falls back to SonicNIO.
 * Allows hot-swapping server engines at runtime without restarting the Android application process.
 * Engine changes are applied by `MusicMateServiceImpl`, which listens for `PREF_SERVER_ENGINE` and calls `restartServersIfRunning()`; Settings and the Music Center only save the preference. A stopped server stays stopped.

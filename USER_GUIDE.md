@@ -174,10 +174,10 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
    - **Android Player Apps:** Displays local app title, package/version, and app type (e.g. `Poweramp (com.maxmpz.audioplayer • Android App)`).
 5. **Runtime Server Engine Switching (App Settings):**
    - Switch web server engines dynamically under **App Settings -> Server Engine** without restarting the app:
-     * **CoreHTTP (Default · Ultra-Low Memory):** Apache HttpCore 5.5-beta2 engine optimized for minimal RAM footprint (~64 KB/connection). This is the default when no engine has been chosen.
-     * **SonicNIO (Balanced):** Low CPU wake-ups with Java NIO non-blocking I/O and true zero-copy `FileChannel.transferTo()` streaming.
+     * **SonicNIO (Default · Balanced):** Built-in engine with low CPU wake-ups, Java NIO non-blocking I/O and true zero-copy `FileChannel.transferTo()` streaming. This is the default when no engine has been chosen.
+     * **CoreHTTP (Ultra-Low Memory, being retired):** Apache HttpCore 5.5-beta3 engine (~64 KB/connection). Kept for now if you chose it; it will be removed in a later release.
      * **Netty (High Throughput):** Event-driven asynchronous network engine for high concurrent streaming, with true zero-copy `DefaultFileRegion` transfer and a REST bridge alongside the WebSocket API.
-   - **Header note:** SonicNIO does not emit the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Perfect`, etc.). If a renderer or diagnostic tool relies on those headers, use CoreHTTP or Netty.
+   - **Header note:** All engines send the `X-Audio-*` audiophile headers (`X-Audio-Sample-Rate`, `X-Audio-Bit-Depth`, `X-Audio-Bitrate`, `X-Audio-Format`, `X-Audio-Bit-Perfect`).
 6. **Server Port & Endpoints Reference:**
    - **Default Server Port:** `9000` (HTTP)
    - **Endpoints Table:**

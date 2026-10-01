@@ -14,8 +14,8 @@ Music Mate uses a modular architecture to support multiple pluggable server engi
 
 *   `:app` - The main Android application module.
 *   `:core` - Shared business logic and interfaces (SPI: `UpnpServer`, `WebServer`, `MediaServerHub`).
-*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine.
-*   `:server-jupnp-httpcore` - **CoreHTTP** engine (Apache HttpCore 5.5-beta3) — **the default engine**.
+*   `:server-jupnp` - Base DLNA/UPnP server + **SonicNIO** HTTP engine — **the default engine**.
+*   `:server-jupnp-httpcore` - **CoreHTTP** engine (Apache HttpCore 5.5-beta3) — being retired.
 *   `:server-jupnp-netty` - **Netty** engine (Netty 4.2.18).
 *   `:library` - Internal UI and utility libraries.
 
@@ -25,11 +25,11 @@ There are **no Gradle flavors**. A single APK is built, and the active engine is
 
 | Engine key | Server Engine | Module | Notes |
 | :--- | :--- | :--- | :--- |
-| `httpcore` | **CoreHTTP** (Apache HttpCore 5) | `:server-jupnp-httpcore` | **Default** — ultra-low memory |
-| `nio` | **SonicNIO** (Custom NIO Reactor) | `:server-jupnp` | Balanced, true zero-copy |
+| `nio` | **SonicNIO** (Custom NIO Reactor) | `:server-jupnp` | **Default** — balanced, true zero-copy |
+| `httpcore` | **CoreHTTP** (Apache HttpCore 5) | `:server-jupnp-httpcore` | Being retired — ultra-low memory |
 | `netty` | **Netty 4.2** | `:server-jupnp-netty` | High throughput |
 
-Users switch engines at runtime under **App Settings → Server Engine**. To change the default, edit the fallback string in `CompositeWebServer.createEngine()` and the readers in `MainActivity` / `SettingsActivity`.
+Users switch engines at runtime under **App Settings → Server Engine**. To change the default, edit `Constants.DEFAULT_SERVER_ENGINE`; every reader uses it.
 
 ### Command Line Build
 

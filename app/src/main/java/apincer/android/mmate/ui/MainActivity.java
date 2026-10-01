@@ -1003,7 +1003,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         state.setNetworkAvailable(networkAvailable);
         state.setServerRunning(isRunning);
 
-        String engine = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        String engine = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
         state.setCurrentEngine(engine);
 
         if (isRunning) {
@@ -1033,7 +1033,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onAudioHubEngineChanged(String engine) {
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
+        String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, Constants.DEFAULT_SERVER_ENGINE);
         if (!engine.equals(prevEngine)) {
             // The service restarts a running server when this preference changes;
             // the status observer reports STARTING and then RUNNING or ERROR.
