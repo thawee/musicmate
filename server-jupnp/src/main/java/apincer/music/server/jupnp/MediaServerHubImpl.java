@@ -1432,7 +1432,8 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void setNextTrack(Track nextSong) {
-        if (controlPoint == null || nextSong == null) return;
+        if (controlPoint == null) return;
+        if (nextSong == null && preloadedNextTrack == null) return; // nothing queued on the renderer
         // SAFE-BY-DEFAULT: Only dispatch SetNextAVTransportURI for verified gapless streamers (WiiM, Eversolo, Linn, Auralic).
         // Generic DLNA renderers and DAPs use discrete handover with host RAM pre-caching.
         if (!isCurrentRendererVerifiedGapless()) {
@@ -1446,8 +1447,9 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
             if (currentAVTransport == null) return;
 
-            String nextUrl = BaseServer.getMusicUrl(nextSong);
-            String nextMetadata = createDidlLiteMetadata(nextSong, nextUrl);
+            // An empty NextURI clears the renderer's queued follower (UPnP AVTransport)
+            String nextUrl = nextSong != null ? BaseServer.getMusicUrl(nextSong) : "";
+            String nextMetadata = nextSong != null ? createDidlLiteMetadata(nextSong, nextUrl) : "";
 
             org.jupnp.model.meta.Action action =
                     currentAVTransport.getAction("SetNextAVTransportURI");
@@ -1469,13 +1471,20 @@ public class MediaServerHubImpl implements MediaServerHub {
                 @Override
                 public void success(ActionInvocation invocation) {
                     preloadedNextTrack = nextSong;
-                    preloadedNextUrl = nextUrl;
+                    preloadedNextUrl = nextSong != null ? nextUrl : null;
                     supportsGapless = true;
-                    Log.i(TAG, "Gapless: Next track queued successfully: " + nextSong.getTitle());
+                    Log.i(TAG, nextSong != null
+                            ? "Gapless: Next track queued successfully: " + nextSong.getTitle()
+                            : "Gapless: Cleared queued next track");
                 }
 
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    if (nextSong == null) {
+                        // Keep the old preload state so the transition check still recognises it if it plays
+                        Log.w(TAG, "Gapless: Renderer rejected clearing NextURI: " + defaultMsg);
+                        return;
+                    }
                     Log.w(TAG, "Gapless: Renderer rejected NextURI (might not support gapless): " + defaultMsg);
                     supportsGapless = false;
                     preloadedNextTrack = null;

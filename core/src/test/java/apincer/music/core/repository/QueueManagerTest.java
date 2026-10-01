@@ -641,4 +641,27 @@ public class QueueManagerTest {
 
         assertEquals(7L, queueManager.getNextTrack(true).getId());
     }
+
+    @Test
+    public void queueChangeListener_firesOnEditsAndModes_notOnNavigation() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        int[] calls = {0};
+        queueManager.setQueueChangeListener(() -> calls[0]++);
+
+        queueManager.setPlaybackTrack(q.get(1));
+        queueManager.getNextTrack(true);
+        assertEquals(0, calls[0]);
+
+        queueManager.addPlayNext(createDummyTrack(9L, "9"));
+        queueManager.addPlayingQueue(createDummyTrack(8L, "8"));
+        queueManager.moveTrack(0, 1);
+        queueManager.removeTrack(0);
+        queueManager.setRepeatMode(QueueManager.RepeatMode.ALL);
+        queueManager.setShuffle(true);
+        assertEquals(6, calls[0]);
+
+        queueManager.setQueueChangeListener(null);
+        queueManager.removeTrack(0);
+        assertEquals(6, calls[0]);
+    }
 }

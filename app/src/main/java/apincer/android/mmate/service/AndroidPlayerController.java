@@ -387,16 +387,25 @@ public class AndroidPlayerController {
         }
     }
 
+    /** Queues the gapless follower; {@code null} clears it so the current track ends the playlist. */
     public void setNextTrack(Track nextSong) {
-        if (nextSong == null || nextSong.getPath() == null) return;
+        if (nextSong != null && nextSong.getPath() == null) return;
         this.nextTrack = nextSong;
         if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
             runOnMainThread(() -> {
                 if (internalExoPlayer != null) {
                     try {
-                        if (internalExoPlayer.getMediaItemCount() > 1) {
-                            internalExoPlayer.removeMediaItem(1);
+                        // Positions are relative to the playing item: auto transitions leave finished
+                        // items in front of it, so a fixed index could remove the playing track.
+                        int current = internalExoPlayer.getCurrentMediaItemIndex();
+                        int count = internalExoPlayer.getMediaItemCount();
+                        if (count > current + 1) {
+                            internalExoPlayer.removeMediaItems(current + 1, count);
                         }
+                        if (current > 0) {
+                            internalExoPlayer.removeMediaItems(0, current);
+                        }
+                        if (nextSong == null) return;
                         internalExoPlayer.addMediaItem(buildMediaItem(nextSong));
                         Log.d(TAG, "Gapless ExoPlayer: Preloaded next media item: " + nextSong.getTitle());
                     } catch (Exception e) {

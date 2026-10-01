@@ -15,6 +15,7 @@ public interface MediaServerHub {
 
     void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting);
 
+    /** Queues the gapless follower on the renderer; {@code null} clears a queued one. */
     void setNextTrack(Track nextSong);
 
     enum ServerStatus {

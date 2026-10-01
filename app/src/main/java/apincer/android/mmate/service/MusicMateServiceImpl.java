@@ -153,6 +153,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             });
 
     private volatile long lastPreloadedTrackId = -1;
+    private final java.util.concurrent.atomic.AtomicBoolean preloadRecheckPending = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile long lastPlaybackTrackId = -1;
 
     // The Service is now the single source of truth for its status.
@@ -443,6 +444,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void onCreate() {
         super.onCreate();
+        // Queue edits and Repeat/Shuffle changes can make the preloaded gapless follower stale
+        queueManager.setQueueChangeListener(() -> {
+            if (preloadRecheckPending.compareAndSet(false, true)) {
+                scheduler.execute(this::revalidatePreloadedNext);
+            }
+        });
 
         try {
             // Only call it ONCE based on the Android version
@@ -617,6 +624,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
         public void onDestroy() {
+        queueManager.setQueueChangeListener(null);
         historyTracker.end(false);
         acceptingHistory = false;
         historyWriter.shutdown(); // Drain accepted events; never discard a completed listen.
@@ -1406,6 +1414,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
 
         lastPlaybackTrackId = trackId;
+        lastPreloadedTrackId = -1; // the new track's follower has not been handed to the player yet
 
         Log.d(TAG, "Event-driven: Track started → " + track.getTitle());
 
@@ -1473,6 +1482,26 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }, preloadDelayMs, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Re-checks a follower already handed to the player after a queue edit: replaces it with the
+     * queue's current next track, or clears it when the queue now ends here.
+     */
+    private void revalidatePreloadedNext() {
+        preloadRecheckPending.set(false);
+        long preloaded = lastPreloadedTrackId;
+        if (preloaded == -1) return; // nothing handed over yet; the scheduled preload reads the queue then
+        Track next = queueManager.getNextTrack();
+        if (next != null && next.getId() == preloaded) return;
+
+        Log.d(TAG, "Gapless: Queue changed, replacing preloaded next → " + (next != null ? next.getTitle() : "none"));
+        lastPreloadedTrackId = -1;
+        if (next != null) {
+            preloadNextTrackSafe();
+        } else {
+            handNextToPlayer(null);
+        }
+    }
+
     private void preloadNextTrackSafe() {
         Track next = queueManager.getNextTrack();
 
@@ -1490,7 +1519,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         Log.d(TAG, "Gapless: Preloading → " + next.getTitle());
         AudioStreamCacheManager.getInstance().preloadTrack(next);
+        handNextToPlayer(next);
+    }
 
+    /** Gives the gapless follower to the active player; {@code null} clears a queued one. */
+    private void handNextToPlayer(Track next) {
         PlaybackTarget activePlayer = getActivePlayer();
         boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
                 || mediaHub.isCurrentRendererHiBy();

@@ -126,6 +126,8 @@ Queue advances & primes upcoming track       Queue advances & primes upcoming tr
 
 - **Local Gapless:** `setNextTrack(nextSong)` double-buffers the next track into ExoPlayer's playlist. When the track finishes, `Player.Listener.onMediaItemTransition(MEDIA_ITEM_TRANSITION_REASON_AUTO)` notifies `PlaybackCallback.onPlaybackCompleted()` with **zero gap**.
 - **Network Gapless:** `MediaServerHubImpl.setNextTrack()` dispatches UPnP `SetNextAVTransportURI` with complete DIDL-Lite metadata. A safety fallback timer scheduled at `100% duration + 1.5s` ensures queue progression if the renderer firmware drops the transition.
+- **Local Playlist Window:** `AndroidPlayerController.setNextTrack()` works relative to `getCurrentMediaItemIndex()`: it drops finished items and anything after the playing item before adding the follower. `null` clears the follower.
+- **Stale Follower Re-check:** `QueueManager` notifies a queue-change listener on edits and Repeat/Shuffle changes (not on navigation). The service then compares the handed-over follower with `getNextTrack()` and re-sends it, or clears it (`setNextTrack(null)`; an empty `NextURI` on DLNA) when the queue now ends.
 
 ---
 

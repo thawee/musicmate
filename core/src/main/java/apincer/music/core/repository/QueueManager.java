@@ -62,6 +62,18 @@ public class QueueManager {
     private long removedAnchorId = -1;
     private Long anchorSuccessorId = null;
 
+    /** Notified after edits that can change the next track (queue contents, order, Repeat, Shuffle). */
+    private volatile Runnable queueChangeListener;
+
+    public void setQueueChangeListener(Runnable listener) {
+        this.queueChangeListener = listener;
+    }
+
+    private void notifyQueueChanged() {
+        Runnable listener = queueChangeListener;
+        if (listener != null) listener.run();
+    }
+
     private void clearRemovedAnchor() {
         anchorRemoved = false;
         removedAnchorId = -1;
@@ -306,6 +318,7 @@ public class QueueManager {
         
         updateShuffleOrder();
         persistSmartState();
+        notifyQueueChanged();
     }
 
     public synchronized void addPlayingQueue(long trackId) {
@@ -363,6 +376,7 @@ public class QueueManager {
             Log.e(TAG, "Failed to persist playing queue", e);
         }
         updateShuffleOrder();
+        notifyQueueChanged();
     }
 
     public synchronized void addPlayNext(Track song) {
@@ -426,6 +440,7 @@ public class QueueManager {
         updateShuffleOrder(song.getId());
         if (anchorRemoved) anchorSuccessorId = song.getId();
         persistSmartState();
+        notifyQueueChanged();
     }
 
     public synchronized boolean containsTrack(long trackId) {
@@ -856,6 +871,7 @@ public class QueueManager {
         dbHelper.saveShuffleMode(enabled);
         reshuffle();
         Log.d(TAG, "Shuffle mode set to: " + enabled);
+        notifyQueueChanged();
     }
 
     /**
@@ -876,6 +892,7 @@ public class QueueManager {
         this.repeatMode = mode;
         dbHelper.saveRepeatMode(mode != null ? mode.name() : RepeatMode.OFF.name());
         Log.d(TAG, "Repeat mode set to: " + mode);
+        notifyQueueChanged();
     }
 
     /**
@@ -912,6 +929,7 @@ public class QueueManager {
 
         dbHelper.savePlayingQueue(queueList);
         updateShuffleOrder();
+        notifyQueueChanged();
     }
 
     public synchronized void removeTrack(int position) {
@@ -956,6 +974,7 @@ public class QueueManager {
         dbHelper.savePlayingQueue(queueList);
         updateShuffleOrder();
         persistSmartState();
+        notifyQueueChanged();
     }
 
     public synchronized boolean removeTrackById(long id) {
