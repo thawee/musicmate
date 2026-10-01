@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
+            refreshSleepTimerChip();
             apincer.android.mmate.ui.compose.ListInterop.updateNowPlaying(playbackService.getNowPlayingSong(), false);
 
             if (playbackService instanceof MusicMateServiceImpl msi) {
@@ -575,6 +576,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     protected void onResume() {
         super.onResume();
         refreshSystemAccessState(false);
+        refreshSleepTimerChip();
+    }
+
+    @Override
+    protected void onPause() {
+        sleepTimerHandler.removeCallbacks(sleepTimerTick);
+        super.onPause();
     }
 
     private void refreshSystemAccessState(boolean forcePlayerRefresh) {
@@ -1144,17 +1152,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     public void onAudioHubSleepTimerSelected(long minutes, boolean endOfTrack) {
         if (playbackService != null) {
             playbackService.setSleepTimer(minutes, endOfTrack);
-            apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
-            if (nps != null) {
-                nps.isSleepTimerActive().setValue(minutes > 0 || endOfTrack);
-                if (endOfTrack) {
-                    nps.getSleepTimerText().setValue("Track End");
-                } else if (minutes > 0) {
-                    nps.getSleepTimerText().setValue(minutes + "m");
-                } else {
-                    nps.getSleepTimerText().setValue("");
-                }
-            }
+            refreshSleepTimerChip();
             if (minutes > 0) {
                 android.widget.Toast.makeText(this, "Sleep timer set for " + minutes + " minutes", android.widget.Toast.LENGTH_SHORT).show();
             } else if (endOfTrack) {
@@ -1163,6 +1161,33 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 android.widget.Toast.makeText(this, "Sleep timer turned off", android.widget.Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private final android.os.Handler sleepTimerHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable sleepTimerTick = this::refreshSleepTimerChip;
+
+    /**
+     * Shows the service's remaining sleep time and keeps it counting down while the screen is
+     * visible. The chip clears itself once the timer fires (the service reports 0).
+     */
+    private void refreshSleepTimerChip() {
+        sleepTimerHandler.removeCallbacks(sleepTimerTick);
+        apincer.android.mmate.ui.compose.NowPlayingState nps = MainScaffoldState.get().getNowPlayingState();
+        if (nps == null || playbackService == null) return;
+        long remainingMs = playbackService.getSleepTimerRemainingMs();
+        nps.isSleepTimerActive().setValue(remainingMs != 0);
+        nps.getSleepTimerText().setValue(formatSleepRemaining(remainingMs));
+        if (remainingMs != 0 && !isFinishing()) {
+            sleepTimerHandler.postDelayed(sleepTimerTick, 1000);
+        }
+    }
+
+    /** "Track End", "12m" (rounded up), "45s" in the last minute, or "" when off. */
+    static String formatSleepRemaining(long remainingMs) {
+        if (remainingMs < 0) return "Track End";
+        if (remainingMs == 0) return "";
+        long seconds = (remainingMs + 999) / 1000;
+        return seconds < 60 ? seconds + "s" : ((seconds + 59) / 60) + "m";
     }
 
     @Override

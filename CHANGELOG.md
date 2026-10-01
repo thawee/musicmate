@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Server engine switch:** Changing the server engine in Settings now restarts a running server so the new engine takes effect (it previously did nothing), and switching from either screen no longer starts a server that was stopped.
 - **Library load errors:** A failed library query now shows "Couldn't load music" with Retry instead of an empty "No tracks" list, and a failure in the related-tracks sheet shows a message instead of crashing.
 - **Library paging during a scan:** Scrolling a large library while a scan runs no longer risks duplicate rows or a crash. Paged results are ordered with an id tiebreaker, and each new page skips tracks already shown.
+- **Sleep timer chip:** The Now Playing sleep chip now counts down ("12m", then seconds in the last minute) and clears itself when the timer fires.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.
