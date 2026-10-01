@@ -491,3 +491,8 @@
 - `curl -fI` still prints the 404 headers, so check the status line, not just Content-Length.
 - Do not write an apostrophe inside `${var:?message}`; it opens a quote.
 - When a tool needs an id, tell the user how to find a real one (MusicMate track ids are large hash-like numbers, not 1..N).
+
+## Deadlines and benchmarks (2026-10-01)
+- A per-phase deadline (header read) must be disarmed when its phase ends. A state machine that stays in READING_HEADERS while a response streams turned a 30 s slowloris guard into a 30 s cap on every stream. Test every new timeout with an operation that legitimately runs past it.
+- Benchmarks must measure bytes actually received and check each transfer's exit status. stream-bench.sh assumed every parallel download completed, so streams cut at 30 s showed as 33 MB/s instead of failing.
+- A test loop that greps old result files proves nothing: delete results first and check the Gradle exit code and compile errors before reading them.

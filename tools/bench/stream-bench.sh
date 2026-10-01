@@ -33,19 +33,23 @@ cpu_sampler() {
     command -v adb >/dev/null && adb get-state >/dev/null 2>&1 || return 0
     local pid; pid=$(adb shell pidof "$PKG" 2>/dev/null | tr -d '\r')
     [ -n "$pid" ] || return 0
-    while :; do adb shell top -b -n 1 -p "$pid" 2>/dev/null | awk -v p="$pid" '$1==p{print $9}'; sleep 1; done
+    # Stops when the script exits, even if the kill below is missed
+    while kill -0 $$ 2>/dev/null; do adb shell top -b -n 1 -p "$pid" 2>/dev/null | awk -v p="$pid" '$1==p{print $9}'; sleep 1; done
 }
 
 # 1. Single stream
 cpu_sampler > /tmp/stream-bench-cpu.$$ & sampler=$!
-single=$(curl -s -o /dev/null -w '%{speed_download}' "$URL")
+trap 'kill $sampler 2>/dev/null || true' EXIT
+single=$(curl -s -o /dev/null -w '%{speed_download}' "$URL") || { echo "[$LABEL] single stream failed (curl exit $?): cut short or refused" >&2; exit 1; }
 kill $sampler 2>/dev/null || true
+wait $sampler 2>/dev/null || true  # reap it quietly (no "Terminated" line)
 
 # 2. Seek latency (time to first byte for random ranges)
 ttfbs=()
 for _ in $(seq $SEEKS); do
     start=$(( (RANDOM * 32768 + RANDOM) % (size - 262144) ))
-    t=$(curl -s -o /dev/null -r "$start-$((start + 262143))" -w '%{time_starttransfer}' "$URL")
+    t=$(curl -s -o /dev/null -r "$start-$((start + 262143))" -w '%{time_starttransfer}' "$URL") \
+        || { echo "[$LABEL] range request failed (curl exit $?)" >&2; exit 1; }
     ttfbs+=("$t")
 done
 sorted=$(printf '%s\n' "${ttfbs[@]}" | sort -n)
@@ -55,10 +59,18 @@ p95=$(echo "$sorted" | awk -v n=$SEEKS 'NR==int(n*0.95)+1')
 # 3. Parallel streams
 now() { perl -MTime::HiRes=time -e 'printf "%.3f", time'; }  # portable sub-second clock (BSD date lacks %N)
 pstart=$(now)
-for _ in $(seq $PARALLEL); do curl -s -o /dev/null "$URL" & done
-wait
+pids=()
+for i in $(seq $PARALLEL); do
+    curl -s -o /dev/null -w '%{size_download}' "$URL" > /tmp/stream-bench-par.$$.$i & pids+=($!)
+done
+failed=0
+for p in "${pids[@]}"; do wait "$p" || failed=$((failed + 1)); done
 pend=$(now)
-parallel=$(awk -v s="$size" -v n=$PARALLEL -v a="$pstart" -v b="$pend" 'BEGIN{printf "%.1f", s*n/(b-a)/1048576}')
+# Count bytes actually received: a stream cut short must not count as a whole file
+received=$(awk '{s+=$1} END{print s+0}' /tmp/stream-bench-par.$$.*)
+rm -f /tmp/stream-bench-par.$$.*
+parallel=$(awk -v r="$received" -v a="$pstart" -v b="$pend" 'BEGIN{printf "%.1f", r/(b-a)/1048576}')
+[ "$failed" -eq 0 ] || parallel="$parallel ($failed of $PARALLEL streams failed)"
 
 cpu=$(awk '{s+=$1; n++} END{if(n) printf "%.0f%%", s/n; else print "n/a"}' /tmp/stream-bench-cpu.$$ 2>/dev/null || echo n/a)
 rm -f /tmp/stream-bench-cpu.$$
