@@ -510,6 +510,7 @@ fun MainScaffold(
                 ) {
                     MusicListScreen(
                         tracks = state.tracks,
+                        listKey = state.musicListKey.value,
                         selectedTracks = state.selectedTracks.toSet(),
                         nowPlayingTrack = state.nowPlayingTrack.value,
                         isPlaying = state.isPlaying.value,

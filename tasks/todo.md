@@ -927,3 +927,18 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P1-14 appendPage / loadUntilFound skip ids already shown (LazyColumn is keyed by track id)
 - [x] TagRepositoryQueryErrorTest (red on old code), AppendPageTest; core 68/68, app 97/97, assembleDebug
 - [ ] Device: scroll a large library while a scan runs; no crash, no duplicate rows
+
+## P2 items (2026-10-01, from tasks/app-review-2026-10-01-full.md)
+- [x] P2-1 Sleep chip refreshes from getSleepTimerRemainingMs every second while visible; clears when the timer fires (SleepTimerFormatTest)
+- [x] P2-2 Sleep fade reads the renderer volume (new MediaServerHub.playerGetVolume), fades 3/4-1/2-1/4, pauses, restores it; unknown volume pauses without fading
+- [x] P2-3 Startup scan uses KEEP (never cancels a queued/running scan); user full rescan REPLACE; user incremental APPEND_OR_REPLACE
+- [x] P2-4 Media server auto-start is opt-in (default false); Start/Stop still remember the choice
+- [x] P2-5 Scan indicator shows "Scan waiting to start…" for ENQUEUED/BLOCKED; FAILED shows a toast; picks the active work among chained scans
+- [x] P2-8 Convert keeps the embedded cover (attached_pic map); retries audio-only if the muxer rejects it
+- [x] P2-9 Picked cover applies to every folder of the edited tracks (confirm when >1); ArtworkDraft supports several targets (ArtworkDraftTest)
+- [x] P2-10 FastScrollbar reads latest totalItems/offset/range/label; drag accumulates from its start
+- [x] P2-11 Artwork tap during selection toggles the row
+- [x] P2-12 Folder Play/Queue: no premature toast; outcome (count, empty, error) reported after the work; unbound says so
+- [x] P2-13 Scroll position kept per destination (musicListKey); drill-in starts at top, Back restores
+- [x] app/core tests, assembleDebug
+- [ ] Device: sleep chip countdown + DLNA fade/restore; startup during a pending full rescan; Convert keeps art (FLAC/MP3/ALAC/AIFF); multi-folder cover; fast scroll after paging; selection art tap; folder Play toast; drill-in/Back scroll

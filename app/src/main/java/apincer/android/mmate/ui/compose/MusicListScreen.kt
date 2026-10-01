@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -80,9 +81,13 @@ fun MusicListScreen(
     onFolderEnqueueClick: (Track) -> Unit,
     showGestureHints: Boolean = true,
     trackArtwork: (@Composable (Track) -> Unit)? = null,
+    /** Destination of [tracks]; each destination keeps its own scroll position. */
+    listKey: String = "",
     modifier: Modifier = Modifier
 ) {
     val pullRefreshState = rememberPullToRefreshState()
+    // Drilling into a collection starts at the top; Back returns to where that list was
+    val savedPositions = remember { mutableMapOf<String, Pair<Int, Int>>() }
     val coroutineScope = rememberCoroutineScope()
 
     PullToRefreshBox(
@@ -222,7 +227,15 @@ fun MusicListScreen(
                 }
             }
         } else {
-            val listState = rememberLazyListState()
+            val listState = remember(listKey) {
+                val (index, offset) = savedPositions[listKey] ?: (0 to 0)
+                LazyListState(index, offset)
+            }
+            DisposableEffect(listState) {
+                onDispose {
+                    savedPositions[listKey] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+                }
+            }
             LaunchedEffect(listState, tracks.size, hasMoreItems, isRefreshing, loadError) {
                 if (hasMoreItems && !isRefreshing && loadError == null) {
                     snapshotFlow {
@@ -242,7 +255,7 @@ fun MusicListScreen(
             }
             
             // Only show FAB when scrolled down a bit
-            val showFab by remember {
+            val showFab by remember(listState) {
                 derivedStateOf { listState.firstVisibleItemIndex > 5 }
             }
 

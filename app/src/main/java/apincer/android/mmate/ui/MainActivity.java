@@ -437,6 +437,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private void setupObserveViewModel() {
         viewModel.musicItems.observe(this, musicTags -> {
             runOnUiThread(() -> {
+                MainScaffoldState.get().getMusicListKey().setValue(viewModel.getMusicListKey());
                 apincer.android.mmate.ui.compose.ListInterop.updateTracks(musicTags);
                 selectionModel.setTracks(musicTags);
                 apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(false);

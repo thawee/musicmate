@@ -74,7 +74,7 @@ fun FastScrollbar(
     val currentItemLabel by rememberUpdatedState(itemLabel)
 
     // Current scroll fraction [0..1] — derived from LazyListState
-    val scrollFraction by remember {
+    val scrollFraction by remember(listState) {
         derivedStateOf {
             val info = listState.layoutInfo
             val visibleItems = info.visibleItemsInfo

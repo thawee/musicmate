@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fast scroll:** The fast-scroll thumb now stays in the right place as more pages load, and dragging it moves from where the drag started instead of jumping.
 - **Selection and artwork taps:** Tapping a track's artwork while selecting tracks now toggles that track like a row tap, instead of replacing the play queue.
 - **Folder Play and Queue feedback:** Playing or queueing a folder reports the real result after it finishes (number of tracks, nothing playable, or an error) instead of announcing success up front, and says when no player is connected instead of doing nothing.
+- **List scroll position:** Opening a collection now starts at the top of its list, and Back returns to where you were, instead of carrying one scroll position across all lists.
 - **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
 - **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
 - **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.

@@ -89,6 +89,17 @@ class MainViewModel(
         }
     }
 
+    /**
+     * Identifies the destination the shown items belong to (type, keyword, filter, search).
+     * Published together with the replacement items, so the list can keep a scroll position per destination.
+     */
+    var musicListKey: String = ""
+        private set
+
+    private fun keyOf(criteria: SearchCriteria?): String = criteria?.let {
+        "${it.type}|${it.keyword}|${it.filterType}|${it.filterText}|${it.isSearchMode}|${it.searchText}"
+    } ?: ""
+
     private fun setLoading(loading: Boolean) {
         _musicItemsLoading.value = loading
         _musicItemsLoadingFlow.value = loading
@@ -134,6 +145,7 @@ class MainViewModel(
                         _searchStats.value = stats
                         _searchStatsFlow.value = stats
                     }
+                    if (replace) musicListKey = keyOf(criteria)
                     val result = if (replace) items else appendPage(previousItems, items)
                     _musicItems.value = result
                     _musicItemsFlow.value = result
