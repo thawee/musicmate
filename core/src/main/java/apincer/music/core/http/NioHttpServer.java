@@ -1834,6 +1834,9 @@ public class NioHttpServer implements Runnable {
             try {
                 String rangeHeader = request.getHeader("range", "");
                 boolean rangeValid = true;
+                // 206 only for a range that was parsed and applied; RFC 7233 says an invalid or
+                // unsupported (e.g. multi-range) Range header is ignored and the file is sent as 200
+                boolean rangeApplied = false;
 
                 if (rangeHeader.startsWith("bytes=")) {
                     String ifRange = request.getHeader("if-range", null);
@@ -1857,6 +1860,7 @@ public class NioHttpServer implements Runnable {
 
                         tempStart = parsedStart;
                         tempEnd = Math.min(parsedEnd, fileSize - 1);
+                        rangeApplied = true;
                     }
                 }
 
@@ -1864,7 +1868,7 @@ public class NioHttpServer implements Runnable {
                 this.rangeEnd = tempEnd;
                 this.rangeLength = this.rangeEnd - this.rangeStart + 1;
 
-                if (rangeHeader.isEmpty() || !rangeValid) {
+                if (!rangeApplied) {
                     setStatus(HTTP_OK, "OK");
                 } else {
                     setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
