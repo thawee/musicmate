@@ -1,5 +1,7 @@
 # SonicNIO Web Engine - 10/10 Production Ready
 
+> **Superseded (2026-10-01).** A later code review found that the "10/10" rating did not hold: POST bodies arriving after the headers were truncated, pooled requests were released twice after mid-stream disconnects, stream eviction and `forceClose()` closed connections from worker threads, WebSocket `close()` never sent its frame, messages could run out of order, 416 responses had no `Content-Length`, and `stop()` could be undone. All are fixed and tested (`NioHttpServerTest`). The current rules are in **DESIGN.md ADR-036**; the rate limiter now also exempts `/coverart/`. This page is kept for history.
+
 ## Executive Summary
 
 The **SonicNIO** NIO-based HTTP/WebSocket engine has been upgraded from **8.5/10 to 10/10** by addressing critical thread safety issues, improving atomicity, and adding comprehensive monitoring capabilities.

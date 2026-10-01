@@ -387,6 +387,19 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Context:** Three engines served streams and the WebUI. SonicNIO (`NioHttpServer`) ships regardless: it carries UPnP control (SOAP/GENA) and is the fallback engine. CoreHTTP depended on a pre-release HttpCore (5.5-beta3), needed a build-time bytecode patch for blocked hidden APIs (ADR-032), and had the most streaming defects (4 MB / 58 s cutoff, spin-loop, descriptor leaks, backpressure). SonicNIO lacked the `X-Audio-*` headers and had no tests.
 - **Decision:** SonicNIO sends the shared `X-Audio-*` headers (`DLNAHeaderHelper.getAudioHeaders`) and is covered by `NioHttpServerTest`. It becomes the default (`Constants.DEFAULT_SERVER_ENGINE`), and `:server-jupnp-httpcore`, `patchHttpCore`, ASM and the HttpCore catalog entries are removed. A saved `httpcore` preference is migrated to `nio` at startup. Netty stays as the alternative engine.
 - **Consequences:** No third-party HTTP library is needed for the default path and no build-time patching remains. Netty is the only remaining large server dependency; it can be retired once SonicNIO has a soak record on real renderers.
+
+### ADR-036: SonicNIO Threading and Ownership Rules
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** A code review of SonicNIO (`NioHttpServer`) found defects that all came from unclear ownership across the selector thread and the worker pool: POST bodies delivered truncated, a pooled `HttpRequest` released twice after a mid-stream disconnect, stream eviction and `forceClose()` closing connections from worker threads, WebSocket messages handled out of order, and a `stop()` that could be undone by a starting thread.
+- **Decision:**
+  1. **The selector thread owns connections.** Only it calls `closeConnection()`, changes interest ops or reads `selector.keys()`. Other threads queue the key on `pendingCloses` (eviction, `forceClose()`) or a response on `responseQueue`, then wake the selector.
+  2. **Requests are handed off once.** A request is complete when `Content-Length` bytes are buffered; its body is taken from the whole buffer and cut to that length. `dispatch()` clears the attachment's reference, and from then on only the worker returns it to the pool.
+  3. **Each WebSocket connection is serial.** Its `onOpen`, `onMessage` and `onClose` run one at a time, in order, on a per-connection `SerialExecutor` over the shared pool. Callbacks capture their connection when queued.
+  4. **Every response is self-delimiting.** A response without a body sends `Content-Length: 0` (except 1xx, 204 and 304). Unsupported request framing (chunked bodies) is refused with `501`, never guessed.
+  5. **Stopping is final and non-blocking.** `stop()` sets a `stopped` flag that `run()` honours, shuts the pool down without waiting, and teardown releases every connection through `closeConnection()`.
+  6. **Rate limiting skips cover art** (`/coverart/`), so a WebUI grid loads fully; streams and API calls keep the 50 requests/second limit.
+- **Consequences:** Each rule is covered by `NioHttpServerTest` (28 end-to-end socket tests) and `RateLimitingHandlerTest`. New SonicNIO code must follow these rules; in particular, workers must never close connections or touch the selector directly.
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

@@ -5,6 +5,8 @@ The MusicMate WebSocket API enables real-time, bidirectional communication betwe
 ## 1. Request/Response Pattern
 The client sends JSON commands to the server. Some commands trigger a direct JSON response, while others trigger state updates broadcast to all connected clients.
 
+**Ordering:** Commands from one connection are handled one at a time, in the order they were sent (ADR-036), so a client can send several commands without waiting for each response. Commands from different connections may interleave. Messages larger than 1 MB are refused with close code 1009.
+
 ### Library Commands
 
 #### `browse`
