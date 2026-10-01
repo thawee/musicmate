@@ -36,6 +36,8 @@ class MainScaffoldState {
     var hasMoreMusic = mutableStateOf(false)
     /** True while the playback service is bound; track menus hide playback actions otherwise. */
     var isPlaybackAvailable = mutableStateOf(false)
+    /** Listener tap mode: tap plays, long-press edits. Curator: tap edits, long-press selects. */
+    var listenerTapMode = mutableStateOf(true)
     /** Destination of the shown tracks; the list keeps one scroll position per key. */
     var musicListKey = mutableStateOf("")
     var musicLoadError = mutableStateOf<String?>(null)

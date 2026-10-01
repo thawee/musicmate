@@ -609,6 +609,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onResume();
         refreshSystemAccessState(false);
         refreshSleepTimerChip();
+        // Settings may have changed the tap mode; row accessibility labels follow it
+        MainScaffoldState.get().getListenerTapMode().setValue(
+                Constants.TAP_MODE_LISTEN.equalsIgnoreCase(Settings.getTapActionMode(this)));
         if (reopenFoldersAfterStorageGrant && PermissionUtils.checkAccessPermissions(getApplicationContext())) {
             reopenFoldersAfterStorageGrant = false;
             doScanDirectories();

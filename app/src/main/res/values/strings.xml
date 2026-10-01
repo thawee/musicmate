@@ -501,8 +501,11 @@
     <string name="cd_rating_icon">Rating</string>
     <string name="cd_play_track">Play %1$s</string>
     <string name="cd_more_options_for_track">More options for %1$s</string>
-    <string name="action_open_track">Open %1$s</string>
     <string name="action_edit_track">Edit %1$s</string>
+    <string name="action_select_track">Select %1$s</string>
+    <string name="action_deselect_track">Deselect %1$s</string>
+    <string name="cd_play_folder">Play %1$s</string>
+    <string name="cd_queue_folder">Add %1$s to queue</string>
     <string name="cd_search_music">Search music</string>
     <string name="cd_clear_search">Clear search</string>
     <string name="cd_back">Back</string>

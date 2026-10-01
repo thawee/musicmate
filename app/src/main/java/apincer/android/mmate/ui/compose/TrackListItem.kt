@@ -87,6 +87,9 @@ fun TrackListItem(
     artwork: (@Composable (Track) -> Unit)? = null,
     /** Playback group of the menu (UI.md §A); hidden when no playback service is bound. */
     showPlaybackActions: Boolean = true,
+    /** Listener mode: tap plays, long-press edits. Curator mode: tap edits, long-press selects. */
+    listenerTapMode: Boolean = true,
+    selectionActive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val trackTitle = track.title?.takeIf { it.isNotBlank() } ?: "Unknown Title"
@@ -104,8 +107,16 @@ fun TrackListItem(
             .semantics { selected = isSelected }
             .combinedClickable(
                 role = Role.Button,
-                onClickLabel = stringResource(R.string.action_open_track, trackTitle),
-                onLongClickLabel = stringResource(R.string.action_edit_track, trackTitle),
+                // Labels describe what the gesture does in the current mode (see MainActivity.onTrackClicked)
+                onClickLabel = when {
+                    selectionActive && isSelected -> stringResource(R.string.action_deselect_track, trackTitle)
+                    selectionActive -> stringResource(R.string.action_select_track, trackTitle)
+                    listenerTapMode -> stringResource(R.string.cd_play_track, trackTitle)
+                    else -> stringResource(R.string.action_edit_track, trackTitle)
+                },
+                onLongClickLabel = if (listenerTapMode && !selectionActive)
+                    stringResource(R.string.action_edit_track, trackTitle)
+                else stringResource(R.string.action_select_track, trackTitle),
                 onClick = onClick,
                 onLongClick = onLongClick
             )

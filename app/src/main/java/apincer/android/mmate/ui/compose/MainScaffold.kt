@@ -512,6 +512,7 @@ fun MainScaffold(
                         tracks = state.tracks,
                         listKey = state.musicListKey.value,
                         playbackAvailable = state.isPlaybackAvailable.value,
+                        listenerTapMode = state.listenerTapMode.value,
                         selectedTracks = state.selectedTracks.toSet(),
                         nowPlayingTrack = state.nowPlayingTrack.value,
                         isPlaying = state.isPlaying.value,

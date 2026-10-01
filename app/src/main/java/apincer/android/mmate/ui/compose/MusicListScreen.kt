@@ -85,6 +85,8 @@ fun MusicListScreen(
     listKey: String = "",
     /** Whether the playback service is bound; track menus hide playback actions otherwise. */
     playbackAvailable: Boolean = true,
+    /** Tap mode for row accessibility labels (Listener: tap plays; Curator: tap edits). */
+    listenerTapMode: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val pullRefreshState = rememberPullToRefreshState()
@@ -299,6 +301,8 @@ fun MusicListScreen(
                             TrackListItem(
                                 track = track,
                                 showPlaybackActions = playbackAvailable,
+                                listenerTapMode = listenerTapMode,
+                                selectionActive = selectedTracks.isNotEmpty(),
                                 isSelected = isSelected,
                                 isNowPlaying = isNowPlaying,
                                 isPlaying = isPlaying,

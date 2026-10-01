@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +48,7 @@ fun FolderListItem(
     onEnqueueClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val folderTitle = track.title?.takeIf { it.isNotBlank() } ?: "folder"
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -128,24 +130,25 @@ fun FolderListItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                // 48dp touch targets; labels name the folder for screen readers
                 IconButton(
                     onClick = onEnqueueClick,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_queue_music_24),
-                        contentDescription = "Add to queue",
+                        contentDescription = stringResource(R.string.cd_queue_folder, folderTitle),
                         tint = Color(0xFF9E9E9E),
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 IconButton(
                     onClick = onPlayClick,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_play_rounded),
-                        contentDescription = "Play",
+                        contentDescription = stringResource(R.string.cd_play_folder, folderTitle),
                         tint = Color(0xFFEEEEEE),
                         modifier = Modifier.size(22.dp)
                     )
