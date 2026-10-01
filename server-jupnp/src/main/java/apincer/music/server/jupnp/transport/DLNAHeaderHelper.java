@@ -13,6 +13,21 @@ import apincer.music.core.model.Track;
 import apincer.music.core.utils.MimeTypeUtils;
 
 public class DLNAHeaderHelper {
+
+    /**
+     * Audiophile metadata headers sent with every track stream, identical on all engines:
+     * X-Audio-Sample-Rate/-Bit-Depth/-Bitrate (only when known), -Format and -Bit-Perfect.
+     */
+    public static java.util.Map<String, String> getAudioHeaders(Track tag) {
+        java.util.Map<String, String> headers = new java.util.LinkedHashMap<>();
+        if (tag == null) return headers;
+        if (tag.getAudioSampleRate() > 0) headers.put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
+        if (tag.getAudioBitsDepth() > 0) headers.put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
+        if (tag.getAudioBitRate() > 0) headers.put("X-Audio-Bitrate", tag.getAudioBitRate() / 1000 + " kbps");
+        headers.put("X-Audio-Format", String.valueOf(tag.getFileType()));
+        headers.put("X-Audio-Bit-Perfect", "true"); // files are streamed unmodified
+        return headers;
+    }
     // DLNA flags for audiophile streaming
     private static final String DLNA_FLAGS_STREAMING_LOSSLESS = "01700000000000000000000000000000";
     private static final String DLNA_FLAGS_GAPLESS = "01780000000000000000000000000000";

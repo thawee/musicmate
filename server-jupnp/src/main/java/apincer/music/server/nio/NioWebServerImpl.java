@@ -6,6 +6,8 @@ import static apincer.music.core.http.WebSocket.CLOSE_GOING_AWAY;
 import static apincer.music.core.http.WebSocket.CLOSE_SERVER_FULL;
 import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 
+import apincer.music.server.jupnp.transport.DLNAHeaderHelper;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -152,6 +154,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         if (cachedDate != null) {
             response.addHeader("Date", cachedDate);
         }
+        DLNAHeaderHelper.getAudioHeaders(song).forEach(response::addHeader);
         return response;
     }
 

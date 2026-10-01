@@ -384,10 +384,8 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
                 // Audiophile Dynamic Headers
                 if (content.getTrack() != null) {
                     Track tag = content.getTrack();
-                    if (tag.getAudioSampleRate() > 0) response.headers().set("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
-                    if (tag.getAudioBitsDepth() > 0) response.headers().set("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
-                    if (tag.getAudioBitRate() > 0) response.headers().set("X-Audio-Bitrate", tag.getAudioBitRate()/1000 + " kbps");
-                    response.headers().set("X-Audio-Format", String.valueOf(tag.getFileType()));
+                    apincer.music.server.jupnp.transport.DLNAHeaderHelper.getAudioHeaders(tag)
+                            .forEach((name, value) -> response.headers().set(name, value));
                     response.headers().set("transferMode.dlna.org", "Streaming");
                 }
 
