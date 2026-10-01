@@ -1163,10 +1163,15 @@ public class NioHttpServer implements Runnable {
         try {
             attachment.wsFrameParser.parse(attachment.readBuffer, attachment);
         } catch (RuntimeException protocolError) {
-            // Malformed or oversized frame: stop reading. If a CLOSE frame was queued (e.g. 1009 too
-            // large), let it go out first; closeAfterWrite then closes the connection.
+            // Malformed or oversized frame: stop reading and end with a CLOSE frame queued last
+            // (1002, or the 1009 onFrameStart already queued). Writing that frame closes the
+            // connection; replies queued before it (e.g. a PONG) still go out first.
             attachment.readBuffer.clear();
-            if (attachment.wsConnection != null && !attachment.wsConnection.getOutgoingQueue().isEmpty()) {
+            NioWebSocketConnection connection = attachment.wsConnection;
+            if (connection != null) {
+                connection.close(WebSocket.CLOSE_PROTOCOL_ERROR, "Protocol error");
+            }
+            if (connection != null && !connection.getOutgoingQueue().isEmpty()) {
                 key.interestOps(SelectionKey.OP_WRITE);
             } else {
                 closeConnection(key);

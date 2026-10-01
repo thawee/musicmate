@@ -454,6 +454,26 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void webSocket_protocolErrorAfterAQueuedReply_stillClosesTheConnection() throws Exception {
+        // Found by NioHttpServerFuzzTest: a PING queues a PONG, then a malformed frame arrives
+        try (Socket socket = connect()) {
+            upgrade(socket);
+            socket.getOutputStream().write(new byte[]{
+                    (byte) 0x89, (byte) 0x80, 0, 0, 0, 0,   // masked, empty PING
+                    (byte) 0x81, 0x01, 'x'});              // unmasked text frame: protocol error
+            socket.getOutputStream().flush();
+            InputStream in = socket.getInputStream();
+            byte[] buffer = new byte[64];
+            int n;
+            do {
+                n = in.read(buffer); // PONG, then CLOSE, then end of stream
+            } while (n >= 0);
+        }
+        awaitCounter("activeConnections", 0);
+        assertEquals(0, counter("activeConnections"));
+    }
+
     private void upgrade(Socket socket) throws IOException {
         exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
                 + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
