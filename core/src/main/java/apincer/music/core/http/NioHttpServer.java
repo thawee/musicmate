@@ -372,6 +372,8 @@ public class NioHttpServer implements Runnable {
     }
 
     private volatile boolean isRunning = false;
+    // Set by stop(); a server stopped before its thread reaches run() must not start
+    private volatile boolean stopped = false;
     private final int port;
     private Handler httpHandler = null;
     private WebSocket.Handler webSocketHandler = null;
@@ -472,6 +474,7 @@ public class NioHttpServer implements Runnable {
     }
 
     public void stop() {
+        stopped = true;
         isRunning = false;
         gracefulShutdown(workerPool);
         if (selector != null) selector.wakeup();
@@ -516,6 +519,11 @@ public class NioHttpServer implements Runnable {
     @Override
     public void run() {
         isRunning = true;
+        // Checked after setting isRunning: whichever order stop() and run() interleave in, the server ends stopped
+        if (stopped) {
+            isRunning = false;
+            return;
+        }
 
         // --- Initialize the Object Pools ---
         attachmentPool = new ObjectPool<>(() -> new ConnectionAttachment(clientReadBufferSize), 50);

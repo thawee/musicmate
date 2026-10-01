@@ -65,18 +65,20 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     public void initServer(InetAddress bindAddress) {
         synchronized (serverLock) {
             if (serverThread != null && serverThread.isAlive()) return;
+            // Build the server here, under the lock, so a stopServer() that arrives before the
+            // thread runs still finds it; it used to be assigned inside the thread.
+            NioHttpServer newServer = new NioHttpServer(WEB_SERVER_PORT);
+            newServer.setMaxThread(MAX_THREADS);
+            newServer.setClientReadBufferSize(READ_BUFFER_SIZE);
+            newServer.setKeepAliveTimeout(IDLE_TIMEOUT);
+            wsHandler = new WebSocketHandlerImpl();
+            newServer.registerWebSocketHandler(wsHandler);
+            NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50, this::handleRequest);
+            newServer.registerHttpHandler(rateLimiter);
+            server = newServer;
             serverThread = new Thread(() -> {
                 try {
-                    server = new NioHttpServer(WEB_SERVER_PORT);
-
-                    server.setMaxThread(MAX_THREADS);
-                    server.setClientReadBufferSize(READ_BUFFER_SIZE);
-                    server.setKeepAliveTimeout(IDLE_TIMEOUT);
-                    wsHandler = new WebSocketHandlerImpl();
-                    server.registerWebSocketHandler(wsHandler);
-                    NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50, this::handleRequest);
-                    server.registerHttpHandler(rateLimiter);
-                    server.run();
+                    newServer.run();
                 } catch (Exception e) { Log.e(TAG, "Failed to start WebServer", e); }
             });
             serverThread.setName("nio-webserver-runner");

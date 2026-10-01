@@ -335,6 +335,26 @@ public class NioHttpServerTest {
         return list;
     }
 
+    @Test
+    public void stopBeforeRun_keepsTheServerStopped() throws Exception {
+        int otherPort;
+        try (ServerSocket probe = new ServerSocket(0)) {
+            otherPort = probe.getLocalPort();
+        }
+        NioHttpServer early = new NioHttpServer(otherPort);
+        early.stop(); // e.g. a restart racing the start of the server thread
+        Thread thread = new Thread(early);
+        thread.setDaemon(true);
+        thread.start();
+        thread.join(2000);
+        try (Socket ignored = new Socket("127.0.0.1", otherPort)) {
+            early.stop();
+            throw new AssertionError("server started after stop()");
+        } catch (IOException expected) {
+            // nothing listening
+        }
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {
