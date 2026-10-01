@@ -429,7 +429,7 @@ public class NioHttpServer implements Runnable {
             SelectionKey key = task.key;
             if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
                 attachment.response = task.response;
-                attachment.wsHandler = task.wsHandler; // Carry over the handler for handshake
+                attachment.upgradeHandler = task.wsHandler; // Carry over the handler for handshake
                 if (task.response instanceof FileResponse) {
                     streamingKeys.add(key);
                 }
@@ -710,35 +710,13 @@ public class NioHttpServer implements Runnable {
 
         if (attachment.response.isFullySent()) {
 
-            if (attachment.response.statusCode == HTTP_SWITCHING_PROTOCOLS && attachment.wsHandler != null) {
-                // Case 1: The connection was just upgraded to a WebSocket.
-                // ATOMIC UPGRADE with proper handler cleanup and volatile flag check
-                synchronized (attachment) {
-                    attachment.upgradeToWebSocket(key);
-
-                    WebSocket.Handler currentWsHandler = attachment.wsHandler;
-
-                    // Check if WebSocket has queued messages (using volatile flag)
-                    if (attachment.wsConnection != null && attachment.wsConnection.hasOutgoingQueue) {
-                        attachment.wsConnection.hasOutgoingQueue = false;
-                        selector.wakeup();
-                    }
-
-                    // Queue onOpen first on this connection's serial executor, ahead of any message
-                    if (currentWsHandler != null) {
-                        final NioWebSocketConnection connection = attachment.wsConnection;
-                        attachment.wsTasks.execute(() -> {
-                            try {
-                                currentWsHandler.onOpen(connection);
-                            } catch (Exception e) {
-                                currentWsHandler.onError(connection, e);
-                            }
-                        });
-                    }
-
-                    // Only NOW enable reads
-                    key.interestOps(SelectionKey.OP_READ);
-                }
+            if (attachment.response.statusCode == HTTP_SWITCHING_PROTOCOLS && attachment.upgradeHandler != null) {
+                // Case 1: the 101 is out; the connection is now a WebSocket session
+                attachment.upgradeToWebSocket(key);
+                // Reads start only now; a CLOSE queued while parsing pipelined frames needs writes too
+                int ops = SelectionKey.OP_READ;
+                if (!attachment.ws.connection.getOutgoingQueue().isEmpty()) ops |= SelectionKey.OP_WRITE;
+                key.interestOps(ops);
 
             } else if ("close".equalsIgnoreCase(attachment.response.headers.get("Connection"))) {
                 // Case 2: The response headers indicate the connection should be closed.
@@ -813,21 +791,9 @@ public class NioHttpServer implements Runnable {
 
                 attachment.request = null;
 
-                if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME && attachment.wsHandler != null) {
-                    WebSocket.Handler currentWsHandler = attachment.wsHandler;
-                    NioWebSocketConnection currentWsConn = attachment.wsConnection;
-                    SerialExecutor tasks = attachment.wsTasks;
-                    attachment.wsHandler = null; // Clear to prevent double calls
-                    // After this connection's pending messages; dropped quietly once the pool is shut down
-                    if (tasks != null) {
-                        tasks.execute(() -> {
-                            try {
-                                currentWsHandler.onClose(currentWsConn, WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
-                            } catch (Exception e) {
-                                // Log error during close if necessary
-                            }
-                        });
-                    }
+                // onClose fires once per session: a peer CLOSE already reported its own code
+                if (attachment.ws != null) {
+                    attachment.ws.notifyClosed(WebSocket.CLOSE_ABNORMAL, "Connection closed abnormally");
                 }
                 if (attachment.response != null) {
                     try {
@@ -868,19 +834,16 @@ public class NioHttpServer implements Runnable {
 
         attachment.readBuffer.flip();
 
-        // MODIFIED: Call the new parser with the attachment itself as the handler
+        WebSocketSession ws = attachment.ws;
         try {
-            attachment.wsFrameParser.parse(attachment.readBuffer, attachment);
+            ws.parse(attachment.readBuffer);
         } catch (RuntimeException protocolError) {
             // Malformed or oversized frame: stop reading and end with a CLOSE frame queued last
             // (1002, or the 1009 onFrameStart already queued). Writing that frame closes the
             // connection; replies queued before it (e.g. a PONG) still go out first.
             attachment.readBuffer.clear();
-            NioWebSocketConnection connection = attachment.wsConnection;
-            if (connection != null) {
-                connection.close(WebSocket.CLOSE_PROTOCOL_ERROR, "Protocol error");
-            }
-            if (connection != null && !connection.getOutgoingQueue().isEmpty()) {
+            ws.connection.close(WebSocket.CLOSE_PROTOCOL_ERROR, "Protocol error");
+            if (!ws.connection.getOutgoingQueue().isEmpty()) {
                 key.interestOps(SelectionKey.OP_WRITE);
             } else {
                 closeConnection(key);
@@ -890,11 +853,8 @@ public class NioHttpServer implements Runnable {
 
         attachment.readBuffer.compact();
 
-        // Bug fix: a WebSocket CLOSE frame sets pendingClose=true inside processCompleteFrame
-        // so that closeConnection() is called here (after the parse chain has fully returned)
-        // rather than from inside the parse callbacks. This ensures activeConnections is
-        // decremented and the attachment is released back to the pool correctly.
-        if (attachment.pendingClose) {
+        // A peer CLOSE is acted on here, after the parse chain has returned, not inside its callbacks
+        if (ws.closeReceived) {
             closeConnection(key);
         }
     }
@@ -902,12 +862,13 @@ public class NioHttpServer implements Runnable {
     private void handleWebSocketWrite(SelectionKey key) throws IOException {
         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
         SocketChannel channel = (SocketChannel) key.channel();
-        Queue<WebSocket.Frame> queue = attachment.wsConnection.getOutgoingQueue();
+        WebSocketSession ws = attachment.ws;
+        Queue<WebSocket.Frame> queue = ws.connection.getOutgoingQueue();
 
         while (true) {
             // 1. Get a buffer to write.
             // If we have a partially written one, use it. Otherwise, poll the queue.
-            if (attachment.pendingWriteBuffer == null) {
+            if (ws.pendingWriteBuffer == null) {
                 WebSocket.Frame frame = queue.poll();
                 if (frame == null) {
                     // Queue is empty. Remove OP_WRITE and stop.
@@ -915,25 +876,25 @@ public class NioHttpServer implements Runnable {
                     return;
                 }
                 // Generate the buffer ONCE per frame.
-                attachment.pendingWriteBuffer = frame.toByteBuffer();
-                attachment.closeAfterWrite = frame.getOpcode() == WebSocket.OPCODE_CLOSE;
+                ws.pendingWriteBuffer = frame.toByteBuffer();
+                ws.closeAfterWrite = frame.getOpcode() == WebSocket.OPCODE_CLOSE;
             }
 
             // 2. Continuous write attempt
-            channel.write(attachment.pendingWriteBuffer);
+            channel.write(ws.pendingWriteBuffer);
 
             // 3. If the buffer still has data, the TCP window is full.
             // Exit and wait for the next OP_WRITE signal.
-            if (attachment.pendingWriteBuffer.hasRemaining()) {
+            if (ws.pendingWriteBuffer.hasRemaining()) {
                 return;
             }
 
             // 4. Frame finished. Clear the pending buffer to allow the next loop
             // to poll the next frame from the queue.
-            attachment.pendingWriteBuffer = null;
+            ws.pendingWriteBuffer = null;
 
             // 5. Our CLOSE frame is out: end the connection here, on the selector thread
-            if (attachment.closeAfterWrite) {
+            if (ws.closeAfterWrite) {
                 closeConnection(key);
                 return;
             }
@@ -962,7 +923,8 @@ public class NioHttpServer implements Runnable {
         HttpResponse handle(HttpRequest request);
     }
 
-    private class ConnectionAttachment implements WebSocket.FrameParser.FrameDataHandler { // MODIFIED: implements handler
+    /** Per-connection state, touched only by the selector thread (ADR-036). */
+    private class ConnectionAttachment {
         enum ParseState {READING_HEADERS, READING_BODY, WEBSOCKET_FRAME}
 
         final ByteBuffer readBuffer;
@@ -972,66 +934,30 @@ public class NioHttpServer implements Runnable {
         HttpRequest request;
         HttpResponse response;
         volatile long lastActivityTime; // read by workers choosing an eviction victim
-
-        // WebSocket specific fields
-        WebSocket.Handler wsHandler;
-        NioWebSocketConnection wsConnection;
-        WebSocket.FrameParser wsFrameParser;
-        // Runs this connection's onOpen/onMessage/onClose one at a time, in order
-        SerialExecutor wsTasks;
-
-        private ByteArrayOutputStream reassemblyBuffer;
-        private volatile int fragmentedOpcode = 0;
-        private volatile boolean currentFrameIsFin;
-        private volatile int currentFrameOpcode;
-        private final Object wsFrameLock = new Object();
-
-        // Control frame buffer for immediate handling
-        private ByteArrayOutputStream controlFrameBuffer;
-
-        ByteBuffer pendingWriteBuffer = null;
-        // Set while the frame being written is our CLOSE frame; the socket closes once it is out
-        boolean closeAfterWrite = false;
-        private final Object stateLock = new Object();
         private long bodyReadStartTime = 0;
         public static final long BODY_READ_TIMEOUT = 120_000; // 120 seconds for slow networks
-        // Set when a WebSocket CLOSE frame is received; triggers proper closeConnection()
-        // after the current parse cycle finishes, ensuring activeConnections is decremented.
-        volatile boolean pendingClose = false;
-        // Saved at HTTP parse time so upgradeToWebSocket() never reads headerEnd from the
-        // request object (which the worker thread's finally-block zeroes via request.reset()
-        // before the I/O thread calls upgradeToWebSocket()).
+
+        // WebSocket: the handler travels with the 101 response; the session exists after the upgrade
+        WebSocket.Handler upgradeHandler;
+        WebSocketSession ws;
+        // Saved at parse time: frames pipelined behind the Upgrade request start at this offset
         int wsUpgradeHeaderEnd = 0;
 
-        public ConnectionAttachment(int readBufferSize) {
+        ConnectionAttachment(int readBufferSize) {
             this.readBuffer = ByteBuffer.allocate(readBufferSize);
-            // Use bounded stream with max request size
             this.requestData = createByteArrayOutputStream();
             this.lastActivityTime = System.currentTimeMillis();
         }
 
-        // Atomic state validation
         private boolean isWebSocketState() {
             return state == ParseState.WEBSOCKET_FRAME;
         }
 
-        private boolean isHttpState() {
-            return state == ParseState.READING_HEADERS ||
-                    state == ParseState.READING_BODY;
-        }
-
-        public void reset() {
-            // HTTP cleanup
-            if (requestData != null) {
-                try {
-                    requestData.close();
-                } catch (IOException ignore) {
-                }
-            }
+        /** Ready for the next request on a keep-alive connection; also used when the connection closes. */
+        void reset() {
             requestData = createByteArrayOutputStream();
             headerScanFrom = 0;
             request = null;
-
             if (response != null) {
                 try {
                     response.close();
@@ -1039,67 +965,38 @@ public class NioHttpServer implements Runnable {
                 }
                 response = null;
             }
-
-            // ✅ WEBSOCKET CLEANUP (was missing!)
-            if (wsConnection != null) {
-                try {
-                    wsConnection.forceClose();
-                } catch (Exception ignore) {
-                }
+            if (ws != null) {
+                ws.connection.forceClose();
+                ws = null;
             }
-            wsConnection = null;
-
-            if (reassemblyBuffer != null) {
-                try {
-                    reassemblyBuffer.close();
-                } catch (IOException ignore) {
-                }
-            }
-            reassemblyBuffer = null;
-
-            if (controlFrameBuffer != null) {
-                try {
-                    controlFrameBuffer.close();
-                } catch (IOException ignore) {
-                }
-            }
-            controlFrameBuffer = null;
-
-            if (wsFrameParser != null) {
-                wsFrameParser.reset();  // Reset parser state
-            }
-            wsFrameParser = null;
-
-            wsHandler = null;
-            wsTasks = null;
-            pendingWriteBuffer = null;
-            closeAfterWrite = false;
-            pendingClose = false;
+            upgradeHandler = null;
             wsUpgradeHeaderEnd = 0;
-
-            // ✅ Reset WebSocket frame state
-            fragmentedOpcode = 0;
-            currentFrameIsFin = false;
-            currentFrameOpcode = 0;
-
-            // ✅ Finally, reset to HTTP state
+            bodyReadStartTime = 0;
             state = ParseState.READING_HEADERS;
         }
 
-        public void resetOld() {
-            // Close and recreate the stream to free memory
-            if (requestData != null) {
-                try {
-                    requestData.close();
-                } catch (IOException ignore) {
+        /** The 101 has been written: switch to WebSocket framing. */
+        void upgradeToWebSocket(SelectionKey key) {
+            state = ParseState.WEBSOCKET_FRAME;
+            ws = new WebSocketSession(upgradeHandler, new NioWebSocketConnection(NioHttpServer.this, key),
+                    new SerialExecutor(() -> workerPool), maxWebSocketFrameSize, maxRequestSize);
+            upgradeHandler = null;
+            // onOpen first, so it runs ahead of any message, including frames pipelined below
+            ws.open();
+            if (requestData != null && wsUpgradeHeaderEnd > 0) {
+                byte[] fullData = requestData.toByteArray();
+                if (fullData.length > wsUpgradeHeaderEnd) {
+                    ws.parse(ByteBuffer.wrap(fullData, wsUpgradeHeaderEnd, fullData.length - wsUpgradeHeaderEnd));
                 }
             }
-            requestData = createByteArrayOutputStream(); // Fresh small buffer
-
-            state = ParseState.READING_HEADERS;
             request = null;
+            response = null;
+            requestData = null; // no longer needed
+        }
 
-            // Also clean up response
+        /** Releases buffers and an unfinished response when the connection closes. */
+        void cleanup() {
+            requestData = null;
             if (response != null) {
                 try {
                     response.close();
@@ -1107,269 +1004,6 @@ public class NioHttpServer implements Runnable {
                 }
                 response = null;
             }
-            pendingWriteBuffer = null;
-        }
-
-        public void upgradeToWebSocket(SelectionKey key) {
-            this.state = ParseState.WEBSOCKET_FRAME;
-            this.wsFrameParser = new WebSocket.FrameParser();
-            this.wsConnection = new NioWebSocketConnection(NioHttpServer.this, key);
-            this.wsTasks = new SerialExecutor(() -> workerPool);
-
-            // Use bounded streams with the configured max frame size
-            this.reassemblyBuffer = createByteArrayOutputStream();
-            this.controlFrameBuffer = new BoundedByteArrayOutputStream(125, NioHttpServer.this.maxWebSocketFrameSize); // Control frames max 125 bytes
-
-            // Recover pipelined WebSocket frames that arrived in the same TCP segment as
-            // the HTTP Upgrade request. Use wsUpgradeHeaderEnd (saved on the attachment
-            // before the worker thread called request.reset()) rather than
-            // this.request.getHeaderEnd(), which is 0 after recycling.
-            if (this.requestData != null && this.wsUpgradeHeaderEnd > 0) {
-                byte[] fullData = this.requestData.toByteArray();
-                if (fullData.length > this.wsUpgradeHeaderEnd) {
-                    ByteBuffer leftover = ByteBuffer.wrap(fullData, this.wsUpgradeHeaderEnd, fullData.length - this.wsUpgradeHeaderEnd);
-                    this.wsFrameParser.parse(leftover, this);
-                }
-                try {
-                    this.requestData.close();
-                } catch (IOException ignore) {
-                }
-            }
-
-            this.request = null;
-            this.response = null;
-
-            if (this.requestData != null) {
-                try {
-                    this.requestData.close();
-                } catch (IOException ignore) {
-                }
-            }
-            this.requestData = null; // No longer needed
-        }
-
-        public void cleanup() {
-            if (reassemblyBuffer != null) {
-                try {
-                    reassemblyBuffer.close();
-                    reassemblyBuffer = null; // Help GC
-                } catch (IOException ignore) {
-                }
-            }
-            if (controlFrameBuffer != null) {
-                try {
-                    controlFrameBuffer.close();
-                    controlFrameBuffer = null; // Help GC
-                } catch (IOException ignore) {
-                }
-            }
-            // Clean up requestData
-            if (requestData != null) {
-                try {
-                    requestData.close();
-                    requestData = null;
-                } catch (IOException ignore) {
-                }
-            }
-            // Clean up response
-            if (response != null) {
-                try {
-                    response.close();
-                    response = null;
-                } catch (IOException ignore) {
-                }
-            }
-        }
-
-        // --- Implementation of FrameDataHandler ---
-
-        @Override
-        public void onFrameStart(boolean isFin, int opcode, long payloadLength) {
-            synchronized (wsFrameLock) {
-                this.currentFrameIsFin = isFin;
-                this.currentFrameOpcode = opcode;
-
-                // Handle control frames (opcodes 0x8-0xF)
-                if (opcode > 0x7) {
-                    // Control frames are handled separately and cannot be fragmented
-                    controlFrameBuffer.reset();
-                    return;
-                }
-
-                // Handle continuation frames (opcode 0x0)
-                if (opcode == WebSocket.OPCODE_CONTINUATION) {
-                    // This is a continuation frame, use the existing fragmentedOpcode
-                    if (fragmentedOpcode == 0) {
-                        throw new RuntimeException("Continuation frame without initial frame");
-                    }
-
-                    // Check total message size
-                    if (reassemblyBuffer.size() + payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                        wsConnection.close(WebSocket.CLOSE_TOO_LARGE, "Message too large");
-                        throw new RuntimeException("WebSocket message exceeds size limit");
-                    }
-                } else {
-                    // This is a new message (TEXT or BINARY)
-                    if (fragmentedOpcode != 0) {
-                        throw new RuntimeException("New frame started before previous fragmented message completed");
-                    }
-                    fragmentedOpcode = opcode;
-
-                    // Validate initial frame size
-                    if (payloadLength > NioHttpServer.this.maxWebSocketFrameSize) {
-                        wsConnection.close(WebSocket.CLOSE_TOO_LARGE, "Message too large");
-                        throw new RuntimeException("WebSocket message exceeds size limit");
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onFramePayloadData(ByteBuffer payloadChunk) {
-            synchronized (wsFrameLock) {
-                // Write the unmasked payload chunk to the appropriate buffer
-                byte[] chunkBytes = new byte[payloadChunk.remaining()];
-                payloadChunk.get(chunkBytes);
-                try {
-                    if (currentFrameOpcode > 0x7) {
-                        // Control frame payload
-                        controlFrameBuffer.write(chunkBytes);
-                    } else {
-                        // Data frame payload
-                        reassemblyBuffer.write(chunkBytes);
-                    }
-                } catch (IOException e) {
-                    // This is a memory stream, should not happen.
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        @Override
-        public void onFrameEnd() {
-            // Handle control frames immediately
-            if (currentFrameOpcode > 0x7) {
-                byte[] controlPayload = controlFrameBuffer.toByteArray();
-                WebSocket.Frame controlFrame = new WebSocket.Frame(true, currentFrameOpcode, controlPayload);
-                processCompleteFrame(controlFrame);
-                controlFrameBuffer.reset();
-                return;
-            }
-
-            // Handle data frames (TEXT/BINARY/CONTINUATION)
-            if (currentFrameIsFin) {
-                // This is the final frame of a message, process the reassembled payload
-                byte[] fullPayload = reassemblyBuffer.toByteArray();
-                int finalOpcode = fragmentedOpcode;
-
-                // Create a logical frame representing the complete message
-                WebSocket.Frame completeFrame = new WebSocket.Frame(true, finalOpcode, fullPayload);
-                processCompleteFrame(completeFrame);
-
-                // Reset for the next message
-                reassemblyBuffer.reset();
-                fragmentedOpcode = 0;
-            }
-            // If !isFin, we just keep accumulating data in reassemblyBuffer
-        }
-
-        // Method to process a complete logical frame
-        private void processCompleteFrame(final WebSocket.Frame frame) {
-            switch (frame.getOpcode()) {
-                case WebSocket.OPCODE_TEXT: // TEXT
-                case WebSocket.OPCODE_BINARY: // BINARY
-                    {
-                        final WebSocket.Handler currentWsHandler = wsHandler;
-                        if (currentWsHandler == null || wsTasks == null) break;
-                        // Capture now: the attachment may be reset or reused before the task runs
-                        final NioWebSocketConnection connection = wsConnection;
-                        final String msg = (frame.getOpcode() == WebSocket.OPCODE_TEXT) ? frame.getPayloadAsText() : null;
-                        final byte[] binMsg = (frame.getOpcode() == WebSocket.OPCODE_BINARY) ? frame.getPayload() : null;
-                        // Serial per connection, so commands are handled in the order they were sent
-                        wsTasks.execute(() -> {
-                            try {
-                                if (msg != null) currentWsHandler.onMessage(connection, msg);
-                                else currentWsHandler.onMessage(connection, binMsg);
-                            } catch (Exception e) {
-                                currentWsHandler.onError(connection, e);
-                            }
-                        });
-                    }
-
-                    // Reset buffer if it's grown too large (prevent memory fragmentation)
-                    if (reassemblyBuffer.size() > 1024 * 1024) { // 1MB threshold
-                        reassemblyBuffer = createByteArrayOutputStream();
-                    }
-
-                    break;
-                case WebSocket.OPCODE_CLOSE: // CLOSE
-                    int closeCode = WebSocket.CLOSE_NORMAL;
-                    String closeReason = "";
-                    if (frame.getPayload().length >= 2) {
-                        closeCode = ((frame.getPayload()[0] & 0xFF) << 8) | (frame.getPayload()[1] & 0xFF);
-
-                        // Validate close code per RFC 6455
-                        if (!isValidCloseCode(closeCode)) {
-                            wsConnection.close(WebSocket.CLOSE_PROTOCOL_ERROR,
-                                    "Invalid close code");
-                            return;
-                        }
-
-                        if (frame.getPayload().length > 2) {
-                            closeReason = new String(frame.getPayload(), 2, frame.getPayload().length - 2, StandardCharsets.UTF_8);
-                        }
-                    }
-                    final int code = closeCode;
-                    final String reason = closeReason;
-                    final WebSocket.Handler currentWsHandlerForClose = wsHandler;
-                    final NioWebSocketConnection closingConnection = wsConnection;
-                    if (currentWsHandlerForClose != null && wsTasks != null) {
-                        wsTasks.execute(() -> currentWsHandlerForClose.onClose(closingConnection, code, reason));
-                    }
-                    // Null out wsHandler BEFORE scheduling pendingClose so that
-                    // closeConnection() (called by handleWebSocketRead after parse returns)
-                    // does not fire a second onClose with WebSocket.CLOSE_ABNORMAL.
-                    wsHandler = null;
-                    wsConnection.forceClose();
-                    // Signal handleWebSocketRead to call closeConnection() once we return
-                    // from the parse chain. This ensures activeConnections is decremented
-                    // and the attachment is released back to the pool.
-                    pendingClose = true;
-                    break;
-                case WebSocket.OPCODE_PING: // PING
-                    wsConnection.send(new WebSocket.Frame(true, WebSocket.OPCODE_PONG, frame.getPayload())); // Send PONG
-                    break;
-            }
-        }
-
-        /**
-         * Validates WebSocket close code per RFC 6455 §7.4.1
-         */
-        private static boolean isValidCloseCode(int code) {
-            // Valid ranges:
-            // 1. 1000-1011 (standard codes)
-            // 2. 3000-3999 (registered codes for custom use)
-            // 3. 4000-4999 (available for private use)
-
-            // Explicitly forbidden codes
-            if (code == 1004 || code == 1005 || code == 1006 ||
-                    code == 1015 || (code >= 1012 && code <= 1014)) {
-                return false;
-            }
-
-            // Valid standard codes
-            if (code >= 1000 && code <= 1011) {
-                return true;
-            }
-
-            // Valid custom ranges
-            if ((code >= 3000 && code <= 3999) ||
-                    (code >= 4000 && code <= 4999)) {
-                return true;
-            }
-
-            // Everything else is invalid
-            return false;
         }
     }
 

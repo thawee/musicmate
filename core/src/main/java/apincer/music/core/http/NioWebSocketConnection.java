@@ -16,7 +16,6 @@ final class NioWebSocketConnection implements WebSocket.Connection {
     final SelectionKey key;
     final Queue<WebSocket.Frame> outgoingQueue = new ConcurrentLinkedQueue<>();
     private volatile boolean closed = false;
-    volatile boolean hasOutgoingQueue = false; // Volatile flag for safe wake-up
     final AtomicBoolean writeInterestQueued = new AtomicBoolean(false);
 
     NioWebSocketConnection(NioHttpServer server, SelectionKey key) {
@@ -37,7 +36,6 @@ final class NioWebSocketConnection implements WebSocket.Connection {
     public void send(WebSocket.Frame frame) {
         if (closed) return;
         outgoingQueue.add(frame);
-        hasOutgoingQueue = true; // Set volatile flag for thread-safe wake-up
         server.requestWebSocketWrite(this);
     }
 
@@ -59,7 +57,6 @@ final class NioWebSocketConnection implements WebSocket.Connection {
 
             WebSocket.Frame closeFrame = new WebSocket.Frame(true, WebSocket.OPCODE_CLOSE, payload.array());
             outgoingQueue.add(closeFrame);
-            hasOutgoingQueue = true; // Wake up selector
             // Same path as send(): without OP_WRITE the close frame is never written
             server.requestWebSocketWrite(this);
         } catch (Exception e) {

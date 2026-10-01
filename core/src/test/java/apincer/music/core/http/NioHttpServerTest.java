@@ -41,6 +41,7 @@ public class NioHttpServerTest {
     private File bigFile;
     private final AtomicReference<String> lastPostBody = new AtomicReference<>();
     private final List<Integer> wsSequence = Collections.synchronizedList(new ArrayList<>());
+    private final List<String> wsEvents = Collections.synchronizedList(new ArrayList<>());
 
     @Before
     public void startServer() throws Exception {
@@ -501,6 +502,26 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void webSocket_framePipelinedWithUpgrade_isHandledAfterOnOpen() throws Exception {
+        try (Socket socket = connect()) {
+            ByteArrayOutputStream raw = new ByteArrayOutputStream();
+            raw.write(("GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                    + "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            byte[] payload = "first".getBytes(StandardCharsets.UTF_8);
+            raw.write(0x81);
+            raw.write(0x80 | payload.length);
+            raw.write(new byte[4]);
+            raw.write(payload);
+            socket.getOutputStream().write(raw.toByteArray()); // upgrade and first message in one segment
+            socket.getOutputStream().flush();
+            long deadline = System.currentTimeMillis() + 5000;
+            while (wsEvents.size() < 2 && System.currentTimeMillis() < deadline) Thread.sleep(20);
+        }
+        assertEquals(java.util.Arrays.asList("open", "message"), new ArrayList<>(wsEvents));
+    }
+
     private void upgrade(Socket socket) throws IOException {
         exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
                 + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
@@ -603,10 +624,12 @@ public class NioHttpServerTest {
 
     private final class EchoHandler implements WebSocket.Handler {
         @Override public String getNamespace() { return "/ws"; }
-        @Override public void onOpen(WebSocket.Connection connection) { }
+        @Override public void onOpen(WebSocket.Connection connection) { wsEvents.add("open"); }
         @Override public void onMessage(WebSocket.Connection connection, String message) {
             if ("close".equals(message)) {
                 connection.close(WebSocket.CLOSE_NORMAL, "bye");
+            } else if ("first".equals(message)) {
+                wsEvents.add("message");
             } else if ("kill".equals(message)) {
                 connection.forceClose();
             } else if (message.startsWith("seq:")) {
