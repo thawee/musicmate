@@ -485,3 +485,9 @@
 
 - **Preserve line endings when scripting edits:** Python text-mode `read()`/`write()` turns `\r\n` into `\n`, so editing a CRLF or mixed-ending file (`TagRepository.java` is `i/mixed`) rewrites every line. Check `git ls-files --eol FILE` first and edit in binary mode, keeping each line's ending. Check `git diff --stat` after every scripted edit.
 - **Splitting a file's changes across commits:** `git apply --cached --unidiff-zero` placed zero-context insertion hunks at shifted positions when other hunks were skipped. Build each intermediate file version explicitly (worktree copy minus later changes, or splice hunks by old line number bottom-up) and stage it with `git hash-object -w` + `git update-index --cacheinfo`. Then build and test every commit in a separate worktree.
+
+## Shell tools: test the failure path before handing them over (2026-10-01)
+- stream-bench.sh exited silently on a bad track id: under `set -euo pipefail`, `x=$(failing | pipe)` aborts before the error message. Append `|| true` and check the result explicitly.
+- `curl -fI` still prints the 404 headers, so check the status line, not just Content-Length.
+- Do not write an apostrophe inside `${var:?message}`; it opens a quote.
+- When a tool needs an id, tell the user how to find a real one (MusicMate track ids are large hash-like numbers, not 1..N).
