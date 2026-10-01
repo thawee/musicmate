@@ -399,6 +399,11 @@ public class NioHttpServer implements Runnable {
     // A thread-safe queue for worker threads to hand off completed responses to the I/O thread.
     private final Queue<ResponseTask> responseQueue = new ConcurrentLinkedQueue<>();
     private final Queue<NioWebSocketConnection> pendingWebSocketWrites = new ConcurrentLinkedQueue<>();
+    // Connections currently streaming a file, maintained on the selector thread. Workers read it to
+    // pick an eviction victim instead of touching selector.keys(), which is not thread-safe.
+    private final Set<SelectionKey> streamingKeys = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    // Streams chosen for eviction by a worker; closed on the selector thread.
+    private final Queue<SelectionKey> pendingEvictions = new ConcurrentLinkedQueue<>();
 
     // --- Define the Object Pools ---
     private ObjectPool<ConnectionAttachment> attachmentPool;
@@ -558,6 +563,7 @@ public class NioHttpServer implements Runnable {
                     while (isRunning) {
                         processResponseQueue();
                         processWebSocketWrites();
+                        processEvictions();
 
                         long selectStart = System.currentTimeMillis();
                         int selectedKeysCount = selector.select(selectorTimeout);
@@ -712,6 +718,9 @@ public class NioHttpServer implements Runnable {
             if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
                 attachment.response = task.response;
                 attachment.wsHandler = task.wsHandler; // Carry over the handler for handshake
+                if (task.response instanceof FileResponse) {
+                    streamingKeys.add(key);
+                }
                 key.interestOps(SelectionKey.OP_WRITE);
             } else {
                 // Client disconnected before the response was delivered.
@@ -1017,60 +1026,50 @@ public class NioHttpServer implements Runnable {
             } else {
                 // Case 3: It's a standard HTTP keep-alive connection. Reset for the next request.
 
+                streamingKeys.remove(key);
                 attachment.reset();
                 key.interestOps(SelectionKey.OP_READ);
             }
         }
     }
 
+    /**
+     * Called on a worker thread when the stream limit is reached. Picks the least recently active
+     * stream and queues it; the selector thread closes it in {@link #processEvictions()}.
+     * @return true if a stream was queued for eviction
+     */
     private boolean tryEvictOldestStream() {
         SelectionKey oldestKey = null;
         long oldestActivityTime = Long.MAX_VALUE;
-
-        // Copy keys set to avoid ConcurrentModificationException
-        java.util.Set<SelectionKey> keysCopy = null;
-        for (int i = 0; i < 3; i++) {
-            try {
-                synchronized (selector) {
-                    keysCopy = new java.util.HashSet<>(selector.keys());
-                }
-                break;
-            } catch (java.util.ConcurrentModificationException | NullPointerException e) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ignored) {}
+        for (SelectionKey key : streamingKeys) {
+            if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment
+                    && attachment.lastActivityTime < oldestActivityTime) {
+                oldestActivityTime = attachment.lastActivityTime;
+                oldestKey = key;
             }
         }
-
-        if (keysCopy == null) {
-            return false;
+        if (oldestKey == null || !streamingKeys.remove(oldestKey)) {
+            return false; // nothing to evict, or another worker already took it
         }
+        System.out.println("Evicting oldest active stream connection. Last activity: " +
+                (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
+        pendingEvictions.add(oldestKey);
+        Selector currentSelector = selector;
+        if (currentSelector != null) currentSelector.wakeup();
+        return true;
+    }
 
-        for (SelectionKey key : keysCopy) {
-            try {
-                if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
-                    if (attachment.response instanceof FileResponse) {
-                        if (attachment.lastActivityTime < oldestActivityTime) {
-                            oldestActivityTime = attachment.lastActivityTime;
-                            oldestKey = key;
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
+    /** Closes streams queued by {@link #tryEvictOldestStream()}, on the selector thread. */
+    private void processEvictions() {
+        SelectionKey key;
+        while ((key = pendingEvictions.poll()) != null) {
+            if (key.isValid()) closeConnection(key);
         }
-
-        if (oldestKey != null) {
-            System.out.println("Evicting oldest active stream connection. Last activity: " + 
-                    (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
-            closeConnection(oldestKey);
-            selector.wakeup();
-            return true;
-        }
-        return false;
     }
 
     private void closeConnection(SelectionKey key) {
         if (key == null) return;
+        streamingKeys.remove(key);
 
         if (key.channel() instanceof SocketChannel socketChannel) {
             Object attachmentObj = key.attachment();
@@ -1326,7 +1325,7 @@ public class NioHttpServer implements Runnable {
         private volatile ParseState state = ParseState.READING_HEADERS;
         HttpRequest request;
         HttpResponse response;
-        long lastActivityTime;
+        volatile long lastActivityTime; // read by workers choosing an eviction victim
 
         // WebSocket specific fields
         WebSocket.Handler wsHandler;
@@ -1830,13 +1829,8 @@ public class NioHttpServer implements Runnable {
 
             // 1. Stream limit check
             int currentCount = activeStreams.get();
-            if (currentCount >= maxConcurrentStreams) {
-                if (tryEvictOldestStream()) {
-                    currentCount = activeStreams.get();
-                }
-            }
-
-            if (currentCount >= maxConcurrentStreams) {
+            // An eviction frees its slot on the selector thread shortly after; admit this stream meanwhile
+            if (currentCount >= maxConcurrentStreams && !tryEvictOldestStream()) {
                 throw new IOException("Service Unavailable - max concurrent streams reached (" +
                         currentCount + "/" + maxConcurrentStreams + ")");
             }

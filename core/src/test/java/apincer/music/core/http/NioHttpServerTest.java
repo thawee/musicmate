@@ -281,6 +281,31 @@ public class NioHttpServerTest {
         }
     }
 
+    @Test
+    public void streamLimit_newStreamEvictsTheIdleOne() throws Exception {
+        server.setMaxConcurrentStreams(1);
+        try (Socket first = connect(); Socket second = connect()) {
+            first.setReceiveBufferSize(4096);
+            first.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            first.getOutputStream().flush();
+            first.getInputStream().read(new byte[1024]); // stream is open and stalls on our full buffer
+            Thread.sleep(300);
+
+            Response r = exchange(second, get("bytes=0-3"), true);
+            assertEquals(206, r.status); // admitted, not 503
+
+            // the idle stream is closed by the server
+            InputStream in = first.getInputStream();
+            byte[] drain = new byte[65536];
+            long deadline = System.currentTimeMillis() + 5000;
+            int n;
+            do {
+                n = in.read(drain);
+            } while (n >= 0 && System.currentTimeMillis() < deadline);
+            assertEquals(-1, n);
+        }
+    }
+
     // --- helpers ---
 
     private int maxCopiesOfOneRequestInPool() throws Exception {
