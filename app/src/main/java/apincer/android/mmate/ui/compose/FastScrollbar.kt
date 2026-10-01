@@ -20,9 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,12 +69,16 @@ fun FastScrollbar(
     var isDragging by remember { mutableStateOf(false) }
     var bubbleLabel by remember { mutableStateOf("") }
     var lastHapticLabel by remember { mutableStateOf("") }
+    // Paging grows totalItems; long-lived lambdas must read the latest values, not the first ones
+    val currentTotalItems by rememberUpdatedState(totalItems)
+    val currentItemLabel by rememberUpdatedState(itemLabel)
 
     // Current scroll fraction [0..1] — derived from LazyListState
     val scrollFraction by remember {
         derivedStateOf {
             val info = listState.layoutInfo
             val visibleItems = info.visibleItemsInfo
+            val totalItems = currentTotalItems
             if (visibleItems.isEmpty() || totalItems == 0) return@derivedStateOf 0f
             val firstVisible = listState.firstVisibleItemIndex
             val firstVisibleOffset = listState.firstVisibleItemScrollOffset
@@ -98,6 +104,10 @@ fun FastScrollbar(
 
         // Thumb Y offset
         val thumbOffsetPx = (scrollFraction * scrollRangePx).coerceIn(0f, scrollRangePx)
+        val currentThumbOffsetPx by rememberUpdatedState(thumbOffsetPx)
+        val currentScrollRangePx by rememberUpdatedState(scrollRangePx)
+        // Finger position along the track, so a drag accumulates from where it started
+        var dragPositionPx by remember { mutableFloatStateOf(0f) }
 
         Box(modifier = Modifier.fillMaxSize()) {
 
@@ -133,9 +143,10 @@ fun FastScrollbar(
                     .align(Alignment.TopEnd)
                     .offset { IntOffset(x = 0, y = thumbOffsetPx.roundToInt()) }
                     .size(width = 24.dp, height = thumbHeightDp)
-                    .pointerInput(totalItems) {
+                    .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = {
+                                dragPositionPx = currentThumbOffsetPx
                                 isDragging = true
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
@@ -143,12 +154,15 @@ fun FastScrollbar(
                             onDragCancel = { isDragging = false },
                             onDrag = { change, dragAmount ->
                                 change.consume()
-                                val newFraction = (thumbOffsetPx + dragAmount.y)
-                                    .coerceIn(0f, scrollRangePx) / scrollRangePx
+                                val range = currentScrollRangePx
+                                val totalItems = currentTotalItems
+                                if (totalItems == 0) return@detectDragGestures
+                                dragPositionPx = (dragPositionPx + dragAmount.y).coerceIn(0f, range)
+                                val newFraction = dragPositionPx / range
                                 val targetIndex = (newFraction * (totalItems - 1))
                                     .roundToInt()
                                     .coerceIn(0, totalItems - 1)
-                                val currentLabel = itemLabel(targetIndex)
+                                val currentLabel = currentItemLabel(targetIndex)
                                 if (currentLabel.isNotEmpty() && currentLabel != lastHapticLabel) {
                                     lastHapticLabel = currentLabel
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
