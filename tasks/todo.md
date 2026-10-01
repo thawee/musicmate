@@ -911,3 +911,11 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] internalPlayOnDMRPlayer accepts a start position; any explicit playSong clears the pending resume
 - [x] app tests, assembleDebug (service has no unit-test harness)
 - [ ] Device: pause on local, switch to DLNA, Play (starts at the paused position); pause on DLNA, switch to local, Play
+
+## P1-7/P1-8/P1-9 Media server lifecycle and status (2026-10-01)
+- [x] P1-7 Hub tracks wantRunning: network recovery restarts only a server the user wants; Stop during STARTING applies when the start completes; Start during STOPPING restarts after the stop; network loss uses stopInternal
+- [x] P1-7 Failed start/restart releases locks and reports ERROR
+- [x] P1-8 Hub reports STARTING; the service mirrors the hub status flow (asLiveData) instead of posting RUNNING right after an async start
+- [x] P1-9 Service restarts a running server when PREF_SERVER_ENGINE changes; Settings and Music Center only save the preference; a stopped server stays stopped
+- [x] app/server-jupnp tests, assembleDebug (no hub/service unit-test harness)
+- [ ] Device: Stop, then toggle Wi-Fi (stays stopped); Stop right after Start; start without network (ERROR); Wi-Fi off/on while running (STOPPED then RUNNING); change engine in Settings while running and while stopped

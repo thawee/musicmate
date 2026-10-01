@@ -957,19 +957,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         String prevEngine = prefs.getString(Constants.PREF_SERVER_ENGINE, "httpcore");
         if (!engine.equals(prevEngine)) {
+            // The service restarts a running server when this preference changes;
+            // the status observer reports STARTING and then RUNNING or ERROR.
             prefs.edit().putString(Constants.PREF_SERVER_ENGINE, engine).apply();
             apincer.android.mmate.ui.compose.MainScaffoldState.get().getMediaServerState().setCurrentEngine(engine);
-            if (playbackService instanceof MusicMateServiceImpl msi) {
-                msi.stopServers();
-                msi.startServers();
-            }
-            android.widget.Toast.makeText(this, "Switching engine — restarting server…", android.widget.Toast.LENGTH_SHORT).show();
-            updateMediaServerState(MediaServerHub.ServerStatus.STARTING);
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                if (playbackService instanceof MusicMateServiceImpl msi) {
-                    updateMediaServerState(msi.getStatusLiveData().getValue());
-                }
-            }, 600);
         }
     }
 

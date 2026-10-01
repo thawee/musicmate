@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
 import androidx.core.view.WindowCompat
 import androidx.preference.PreferenceManager
-import apincer.android.mmate.service.MediaServerManager
 import apincer.android.mmate.ui.compose.MusicMateTheme
 import apincer.android.mmate.ui.compose.SettingsScreen
 import apincer.music.core.Constants
@@ -59,10 +58,8 @@ class SettingsActivity : ComponentActivity() {
                     serverEngine = serverEngine,
                     onServerEngineChange = { newEngine ->
                         serverEngine = newEngine
+                        // The service restarts a running server when this preference changes
                         prefs.edit().putString(Constants.PREF_SERVER_ENGINE, newEngine).apply()
-                        val manager = MediaServerManager(applicationContext)
-                        manager.doBindService()
-                        manager.restartServer()
                     },
                     showStorageSpace = showStorageSpace,
                     onShowStorageSpaceChange = { checked ->
