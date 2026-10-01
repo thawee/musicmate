@@ -42,7 +42,6 @@ import musicmate.core.R;
 public class TagRepository {
     private static final String TAG = "TagRepository";
     public static final List<String> LOSSY_AUDIO_FORMATS;
-    private static final List<Track> EMPTY_LIST = new ArrayList<>();
 
     static {
         // Initialize once when the class is loaded
@@ -340,7 +339,8 @@ public class TagRepository {
         if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
             return pageUnpaged(findPlaylist(criteria), firstResult, maxResults);
         }else {
-            return findMusicOrEmpty(criteria, firstResult, maxResults);
+            // Query failures propagate so callers can show an error instead of "No tracks"
+            return findByCriteria(criteria, firstResult, maxResults);
         }
     }
 
@@ -413,19 +413,6 @@ public class TagRepository {
         tag.setId(10000+index);
         tag.setDescription(entry.getDescription());
         return tag;
-    }
-
-    private List<Track> findMusicOrEmpty(SearchCriteria criteria) {
-        return findMusicOrEmpty(criteria, 0, 0);
-    }
-
-    private List<Track> findMusicOrEmpty(SearchCriteria criteria, long firstResult, long maxResults) {
-        try {
-            return findByCriteria(criteria, firstResult, maxResults);
-        }catch (Exception e) {
-            // retry one more time
-            return EMPTY_LIST;
-        }
     }
 
     private List<Track> findByCriteria(SearchCriteria criteria, long firstResult, long maxResults) {

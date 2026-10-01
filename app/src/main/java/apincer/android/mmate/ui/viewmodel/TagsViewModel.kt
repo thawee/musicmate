@@ -325,7 +325,16 @@ class TagsViewModel(
                 this.filterType = filterType
                 this.filterText = filterKeyword
             }
-            val results = repos.findMusic(criteria) ?: emptyList()
+            val results = try {
+                repos.findMusic(criteria) ?: emptyList()
+            } catch (e: Exception) {
+                android.util.Log.w("TagsViewModel", "Related tracks query failed", e)
+                _relatedTracksSheetState.value = _relatedTracksSheetState.value.copy(
+                    subtitle = "Couldn't load tracks. Try again.",
+                    isLoading = false
+                )
+                return@launch
+            }
             val stats = repos.getSearchStats(criteria)
             val count = (stats?.totalCount ?: results.size.toLong()).toInt()
             val durationMin = if (stats != null && stats.totalDuration > 0) {

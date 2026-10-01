@@ -357,6 +357,7 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 ```
 
 - **Paged Loading:** The library list loads in incremental pages of **500 tracks** (`MainViewModel.PAGE_SIZE`) to keep initial render fast on large libraries.
+- **Load Errors:** A failed library query reaches the list as "Couldn't load music" with **Retry** (`MainViewModel.loadError`); `TagRepository.findMusic` no longer turns failures into an empty "No tracks" result.
 - **Scroll Memory:** Before the adapter is repopulated (refresh, filter change), the `LayoutManager` state is saved via `onSaveInstanceState()` and restored afterward, so list updates never jump the user's scroll position. Active multi-select selections are likewise preserved across data reloads.
 
 ### A. Unified Floating Dock (`CardView 20dp` Corner Radius)
