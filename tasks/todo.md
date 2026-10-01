@@ -955,3 +955,14 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P3-4 Removed unreferenced MySelectionTracker.java and the now-unused action_open_track string
 - [x] app tests, assembleDebug (lint not run)
 - [ ] Device: folder picker → grant storage → picker reopens; rotate/theme change inside a collection, search and filter; TalkBack labels in Listener and Curator modes
+
+## SonicNIO to top grade (2026-10-01)
+Goal: prove and improve SonicNIO with evidence; then decide whether Netty can be retired.
+- [x] 1a. JVM soak test (NioHttpServerSoakTest): 16 clients/8 s and 64 clients/20 s, 0 errors, counters drain to 0, no pool duplicates. Baseline on a Mac: ~700 MB/s, range TTFB p50 4.6 ms / p95 24 ms (16 clients), 18.8 / 75 ms (64 clients)
+- [ ] 1b. On-device: run tools/bench/stream-bench.sh once with SonicNIO and once with Netty on the same large track; record results here
+- [ ] 2. Fuzz request and WebSocket parsers; fix findings
+- [ ] 3. Simplify: remove object pools (after 1 confirms no cost); split NioHttpServer into parser / connection / file response / WebSocket codec with ADR-036 rules in the structure
+- [ ] 4. Protocol gaps: Expect: 100-continue, pipelining, HTTP/1.0 keep-alive, header-read timeout, write timeout for stalled clients
+- [ ] 5. Observability: counters (streams, evictions, 429/503, bytes/s), Android Log tags, Music Center diagnostics line
+- [ ] 6. Decision gate: retire Netty if SonicNIO matches it on device and passes soak
+Out of scope: HTTP/2, TLS, chunked request bodies.
