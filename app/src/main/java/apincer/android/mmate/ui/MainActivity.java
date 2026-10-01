@@ -362,7 +362,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onCreate(savedInstanceState);
 
         // Start the server here, where we are guaranteed to be in the foreground!
-        if (getPreferences(MODE_PRIVATE).getBoolean("media_server_auto_start", true)) {
+        // Opt-in: the server starts automatically only after the user has started it themselves
+        if (getPreferences(MODE_PRIVATE).getBoolean("media_server_auto_start", false)) {
             mediaServerManager.startServer();
         }
         mediaServerManager.getServerStatus().observe(this, this::updateMediaServerState);
