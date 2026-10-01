@@ -256,6 +256,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
             state = State.STARTING;
         }
+        serverStatus.setValue(ServerStatus.STARTING);
 
         // Register both network watchers BEFORE starting the UPnP thread so they survive
         // the stop() → IDLE transition and can fire evaluateNetworkState() on recovery.
@@ -389,6 +390,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             }
             state = State.STARTING;
         }
+        serverStatus.setValue(ServerStatus.STARTING);
 
         runOnUpnpThread(() -> {
             Log.i(TAG, "Restarting UPnP Server stack for updated network interface...");

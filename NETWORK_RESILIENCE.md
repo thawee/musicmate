@@ -84,6 +84,14 @@ when the transition completes:
 - `start()` during `STOPPING` → sets `startAfterStop`; the stop finishes and starts again.
 - A failed start or restart releases the locks, returns to `IDLE` and reports `ServerStatus.ERROR`.
 
+#### Status reporting
+
+The hub's `serverStatus` flow is the single source of truth: `STARTING` when a start or restart
+begins, then `RUNNING` (or `CAST` while streaming), `STOPPED`, or `ERROR`. `MusicMateServiceImpl`
+mirrors it into `getStatusLiveData()` via `FlowLiveDataConversions.asLiveData()` instead of posting
+`RUNNING` right after the asynchronous `start()`. Only "no Wi-Fi or hotspot" is reported by the
+service itself (`ERROR` before calling the hub).
+
 #### `stopInternal()` — what happens on loss or Stop
 
 1. Cancels periodic UPnP discovery

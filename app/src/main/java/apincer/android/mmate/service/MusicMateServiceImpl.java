@@ -173,6 +173,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     // The Service is now the single source of truth for its status.
     private final MutableLiveData<MediaServerHub.ServerStatus> statusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
+    /** The hub's own status (STARTING, RUNNING, CAST, STOPPED, ERROR), mirrored into statusLiveData. */
+    private androidx.lifecycle.LiveData<MediaServerHub.ServerStatus> hubStatus;
+    private final androidx.lifecycle.Observer<MediaServerHub.ServerStatus> hubStatusMirror = statusLiveData::setValue;
     private androidx.lifecycle.Observer<MediaServerHub.ServerStatus> statusObserver;
 
     private final PlaybackCallback playbackCallback = new PlaybackCallback() {
@@ -494,6 +497,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             }
         };
         getStatusLiveData().observeForever(statusObserver);
+        // Async start results, failures and network-loss stops come from the hub itself
+        if (mediaHub != null) {
+            hubStatus = androidx.lifecycle.FlowLiveDataConversions.asLiveData(mediaHub.getStatus());
+            hubStatus.observeForever(hubStatusMirror);
+        }
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
@@ -615,8 +623,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             return;
         }
 
-        mediaHub.start();
-        statusLiveData.postValue(MediaServerHub.ServerStatus.RUNNING);
+        mediaHub.start(); // the hub reports STARTING, then RUNNING or ERROR
     }
 
     public void stopServers() {
@@ -669,6 +676,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // 3. Remove LiveData observer
         if (statusObserver != null) {
             getStatusLiveData().removeObserver(statusObserver);
+            if (hubStatus != null) hubStatus.removeObserver(hubStatusMirror);
         }
 
         // 4. Cancel coroutines job
