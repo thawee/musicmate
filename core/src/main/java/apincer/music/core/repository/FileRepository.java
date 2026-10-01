@@ -23,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -46,6 +48,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 @Singleton
 public class FileRepository {
     private static final String TAG = "FileRepository";
+    /** Files known to have no embedded picture, keyed by path to lastModified, so lazy loads do not re-read them. */
+    private static final Map<String, Long> NO_EMBEDDED_ART = new ConcurrentHashMap<>();
     private final Context context;
     private final TagRepository tagRepos;
 
@@ -212,6 +216,11 @@ public class FileRepository {
             }
 
             if (!pathFile.exists()) {
+                long lastModified = new File(path).lastModified();
+                Long knownMissing = NO_EMBEDDED_ART.get(path);
+                if (knownMissing != null && knownMissing == lastModified) {
+                    return null;
+                }
                 try (android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever()) {
                     retriever.setDataSource(path);
                     byte[] art = retriever.getEmbeddedPicture();
@@ -220,6 +229,7 @@ public class FileRepository {
                             fos.write(art);
                         }
                     } else {
+                        NO_EMBEDDED_ART.put(path, lastModified);
                         return null; // No embedded art found
                     }
                 }
