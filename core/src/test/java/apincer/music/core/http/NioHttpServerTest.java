@@ -300,14 +300,18 @@ public class NioHttpServerTest {
             Response r = exchange(second, get("bytes=0-3"), true);
             assertEquals(206, r.status); // admitted, not 503
 
-            // the idle stream is closed by the server
+            // the idle stream is closed by the server: end of stream, or a reset (timing-dependent)
             InputStream in = first.getInputStream();
             byte[] drain = new byte[65536];
             long deadline = System.currentTimeMillis() + 5000;
             int n;
-            do {
-                n = in.read(drain);
-            } while (n >= 0 && System.currentTimeMillis() < deadline);
+            try {
+                do {
+                    n = in.read(drain);
+                } while (n >= 0 && System.currentTimeMillis() < deadline);
+            } catch (java.net.SocketException reset) {
+                n = -1;
+            }
             assertEquals(-1, n);
         }
     }

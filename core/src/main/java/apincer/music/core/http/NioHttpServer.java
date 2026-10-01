@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -775,10 +774,24 @@ public class NioHttpServer implements Runnable {
         }
         System.out.println("Evicting oldest active stream connection. Last activity: " +
                 (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
-        pendingCloses.add(oldestKey);
-        Selector currentSelector = selector;
-        if (currentSelector != null) currentSelector.wakeup();
+        requestClose(oldestKey);
         return true;
+    }
+
+    /** Any thread: asks the selector thread to write this connection's queued frames. */
+    void requestWebSocketWrite(NioWebSocketConnection connection) {
+        if (connection.writeInterestQueued.compareAndSet(false, true)) {
+            pendingWebSocketWrites.add(connection);
+        }
+        Selector current = selector;
+        if (current != null) current.wakeup();
+    }
+
+    /** Any thread: asks the selector thread to close this connection through closeConnection(). */
+    void requestClose(SelectionKey key) {
+        pendingCloses.add(key);
+        Selector current = selector;
+        if (current != null) current.wakeup();
     }
 
     /** Closes connections queued by {@link #tryEvictOldestStream()} or forceClose(), on the selector thread. */
@@ -947,96 +960,6 @@ public class NioHttpServer implements Runnable {
     @FunctionalInterface
     public interface Handler {
         HttpResponse handle(HttpRequest request);
-    }
-
-    public static class NioWebSocketConnection implements WebSocket.Connection {
-        private final NioHttpServer server;
-        private final SelectionKey key;
-        private final Queue<WebSocket.Frame> outgoingQueue = new ConcurrentLinkedQueue<>();
-        private volatile boolean closed = false;
-        private volatile boolean hasOutgoingQueue = false; // Volatile flag for safe wake-up
-        private volatile long lastActivityTime = 0; // Track activity for idle timeout
-        final AtomicBoolean writeInterestQueued = new AtomicBoolean(false);
-
-        NioWebSocketConnection(NioHttpServer server, SelectionKey key) {
-            this.server = server;
-            this.key = key;
-        }
-
-        public void send(String message) {
-            if (closed) return;
-            send(new WebSocket.Frame(true, WebSocket.OPCODE_TEXT, message.getBytes(StandardCharsets.UTF_8)));
-        }
-
-        public void send(byte[] message) {
-            if (closed) return;
-            send(new WebSocket.Frame(true, WebSocket.OPCODE_BINARY, message));
-        }
-
-        public void send(WebSocket.Frame frame) {
-            if (closed) return;
-            outgoingQueue.add(frame);
-            hasOutgoingQueue = true; // Set volatile flag for thread-safe wake-up
-            if (writeInterestQueued.compareAndSet(false, true)) {
-                server.pendingWebSocketWrites.add(this);
-            }
-            if (key.selector() != null) {
-                key.selector().wakeup();
-            }
-        }
-
-        /**
-         * Closes the WebSocket connection gracefully.
-         *
-         * @param code   Close status code (e.g., 1000 for normal closure)
-         * @param reason Close reason message
-         */
-        public void close(int code, String reason) {
-            if (closed) return;
-            closed = true;
-            lastActivityTime = System.currentTimeMillis(); // Track close time
-
-            try {
-                // Send WebSocket close frame (opcode 0x8)
-                ByteBuffer payload = ByteBuffer.allocate(2 + reason.getBytes(StandardCharsets.UTF_8).length);
-                payload.putShort((short) code);
-                payload.put(reason.getBytes(StandardCharsets.UTF_8));
-
-                WebSocket.Frame closeFrame = new WebSocket.Frame(true, WebSocket.OPCODE_CLOSE, payload.array());
-                outgoingQueue.add(closeFrame);
-                hasOutgoingQueue = true; // Wake up selector
-                // Same path as send(): without OP_WRITE the close frame is never written
-                if (writeInterestQueued.compareAndSet(false, true)) {
-                    server.pendingWebSocketWrites.add(this);
-                }
-
-                key.selector().wakeup();
-            } catch (Exception e) {
-                forceClose();
-            }
-        }
-
-        /**
-         * Closes without sending a close frame.
-         */
-        public void forceClose() {
-            if (closed) return;
-            closed = true;
-            outgoingQueue.clear();
-            // Close through closeConnection() on the selector thread; cancelling the key here skipped
-            // the attachment release and the connection counter, and is unsafe from a worker.
-            server.pendingCloses.add(key);
-            Selector selector = key.selector();
-            if (selector != null) selector.wakeup();
-        }
-
-        public boolean isClosed() {
-            return closed;
-        }
-
-        Queue<WebSocket.Frame> getOutgoingQueue() {
-            return outgoingQueue;
-        }
     }
 
     private class ConnectionAttachment implements WebSocket.FrameParser.FrameDataHandler { // MODIFIED: implements handler
