@@ -147,6 +147,7 @@ MusicMate enforces strict single-instance uniqueness across the playing queue:
 - **`addPlayingQueue(Track)` & `addPlayNext(Track)`:** Automatically remove any prior instance of the song before adding or moving it, maintaining index pointer alignment.
 - **Index Synchronization:** Left-shifts `currentIndex` and `playbackIndex` when removing preceding items to prevent skipping tracks.
 - **Removing the Playing Track:** `removeTrack()` records the removed track's follower by id (`anchorSuccessorId`; `null` when it was last). `getNextTrack()` and `getPreviousTrack()` continue from it until playback moves to another track, and `setPlaybackTrack()` does not re-enqueue the removed track when a renderer reports it again.
+- **Shuffle Order (ADR-033):** The play order is kept by track id (`shuffleIds`); `shuffleOrder`/`shuffleIndexMap` are its index view. Edits merge into it (Play Next directly after the playing track, new tracks at random among upcoming ones); only replacing or loading the queue, or turning shuffle on, reshuffles.
 - **Persistent State:** Saves and restores `isShuffle` and `repeatMode` to database/preferences on app restarts.
 
 ---

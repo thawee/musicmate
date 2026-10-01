@@ -366,6 +366,13 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Context:** HttpCore 5 links `jdk.net.Sockets` and `jdk.net.ExtendedSocketOptions`, which are blocked hidden APIs on Android. The module shipped edited copies of `SingleCoreIOReactor` and `ReflectionUtils` from 5.5-beta2 in place of the jar's classes. 5.5-beta3 changed `SingleCoreIOReactor` (a new constructor that `DefaultConnectingIOReactor` calls), so every upgrade risked a silent `NoSuchMethodError`.
 - **Decision:** `patchHttpCore` (`server-jupnp-httpcore/build.gradle`) rewrites the upstream jar with ASM. `getstatic ExtendedSocketOptions.*` becomes `aconst_null`, `Sockets.setOption(a, b, c)` becomes three `pop`s, and `Sockets.supportedOptions(Class)` returns `Collections.emptySet()`. Every use is guarded by `ReflectionUtils.supportsKeepAliveOptions()`, which is therefore false. The build fails if any `jdk/net/` instruction survives. The vendored sources are removed.
 - **Consequences:** HttpCore upgrades need only a version change in `libs.versions.toml`. Upstream APIs stay intact, and `HttpServer`, `RequestListener` and `HttpRequester` are covered as well. TCP keep-alive tuning options stay off on all platforms, as before.
+
+### ADR-033: Queue Edits Keep the Play Position and Shuffle Order
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** `QueueManager` kept the shuffle order as physical indices and rebuilt it with a new random order after every edit. With shuffle on, Play Next landed at a random position and tracks already played came back. Removing the playing track left the indices on its follower, so Next skipped it.
+- **Decision:** The play order is kept by track id (`shuffleIds`). Edits merge into it: removed tracks drop out, Play Next goes directly after the playing track, and new or re-added tracks are slotted in at random among the tracks not yet played. A full reshuffle happens only when the queue is replaced or loaded, or shuffle is turned on. When the playing track is removed, its follower is recorded by id and drives Next/Previous until playback moves on.
+- **Consequences:** Queue edits never change what has been played or reorder what is still to come, apart from the edit itself. The shuffle order is still not persisted, so an app restart reshuffles with the current track first.
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records

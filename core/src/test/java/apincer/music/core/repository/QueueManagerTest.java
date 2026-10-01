@@ -548,4 +548,97 @@ public class QueueManagerTest {
         assertEquals(4L, queueManager.getNextTrack(true).getId());
         assertEquals(1L, queueManager.getPreviousTrack().getId());
     }
+
+    /** Plays forward from the current track until the queue ends; returns the ids in play order. */
+    private List<Long> playToEnd() {
+        List<Long> played = new ArrayList<>();
+        Track next;
+        while ((next = queueManager.getNextTrack(true)) != null && played.size() < 100) {
+            queueManager.setPlaybackTrack(next);
+            played.add(next.getId());
+        }
+        return played;
+    }
+
+    private List<Long> shuffledAndPlayed(int playedCount, List<Long> played) {
+        List<Track> q = queueOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        queueManager.setPlaybackTrack(q.get(0));
+        queueManager.setShuffle(true);
+        played.add(1L);
+        for (int i = 0; i < playedCount; i++) {
+            Track next = queueManager.getNextTrack(true);
+            queueManager.setPlaybackTrack(next);
+            played.add(next.getId());
+        }
+        return played;
+    }
+
+    @Test
+    public void shuffle_playNext_isNextAndPlayedTracksDoNotReturn() {
+        List<Long> played = shuffledAndPlayed(3, new ArrayList<>());
+
+        queueManager.addPlayNext(createDummyTrack(99L, "Next"));
+
+        assertEquals(99L, queueManager.getNextTrack(true).getId());
+        List<Long> rest = playToEnd();
+        assertEquals(99L, (long) rest.get(0));
+        for (Long id : played) assertTrue("replayed " + id, !rest.contains(id));
+        assertEquals(10 - played.size() + 1, rest.size());
+    }
+
+    @Test
+    public void shuffle_enqueue_keepsPlayedTracksOutAndPlaysNewOnes() {
+        List<Long> played = shuffledAndPlayed(4, new ArrayList<>());
+
+        List<Track> extra = new ArrayList<>();
+        extra.add(createDummyTrack(11L, "11"));
+        extra.add(createDummyTrack(12L, "12"));
+        queueManager.enqueuePlayingQueue(extra);
+
+        List<Long> rest = playToEnd();
+        for (Long id : played) assertTrue("replayed " + id, !rest.contains(id));
+        assertTrue(rest.contains(11L) && rest.contains(12L));
+        assertEquals(12 - played.size(), rest.size());
+    }
+
+    @Test
+    public void shuffle_removeOrMoveOtherTrack_keepsNextTrack() {
+        shuffledAndPlayed(2, new ArrayList<>());
+        long next = queueManager.getNextTrack(true).getId();
+
+        int other = -1;
+        long playing = queueManager.getSongs().get(queueManager.getCurrentIndex()).getId();
+        for (int i = 0; i < queueManager.getQueueSize(); i++) {
+            long id = queueManager.getSongs().get(i).getId();
+            if (id != next && id != playing) { other = i; break; }
+        }
+        queueManager.removeTrack(other);
+        assertEquals(next, queueManager.getNextTrack(true).getId());
+
+        queueManager.moveTrack(0, queueManager.getQueueSize() - 1);
+        assertEquals(next, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_playingTrack_thenPlayNext_playsItThenFollower() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(1));
+        queueManager.removeTrack(1);
+
+        queueManager.addPlayNext(createDummyTrack(99L, "Next"));
+
+        List<Long> rest = playToEnd();
+        assertEquals(java.util.Arrays.asList(99L, 3L, 4L), rest);
+    }
+
+    @Test
+    public void removeTrack_lastPlayingTrack_thenEnqueue_playsNewTrack() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(2));
+        queueManager.removeTrack(2);
+
+        queueManager.addPlayingQueue(createDummyTrack(7L, "7"));
+
+        assertEquals(7L, queueManager.getNextTrack(true).getId());
+    }
 }

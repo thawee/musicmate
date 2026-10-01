@@ -264,7 +264,7 @@ public class QueueManager {
             Log.e(TAG, "Failed to persist playing queue batch", e);
         }
         
-        updateShuffleOrder();
+        reshuffle();
         persistSmartState();
     }
 
@@ -334,6 +334,7 @@ public class QueueManager {
         boolean wasCurrent = (existingIndex != -1 && existingIndex == currentIndex);
         boolean wasPlayback = (existingIndex != -1 && existingIndex == playbackIndex);
         if (existingIndex != -1) {
+            shuffleIds.remove(song.getId()); // re-added: slot it in again among upcoming tracks
             queueList.remove(existingIndex);
             if (existingIndex < currentIndex) {
                 currentIndex--;
@@ -395,6 +396,19 @@ public class QueueManager {
             playbackIndex = 0;
         } else {
             int insertPos = (currentIndex != -1 && currentIndex < queueList.size()) ? currentIndex + 1 : queueList.size();
+            if (anchorRemoved) {
+                // The playing track was removed: go in front of the track lined up after it
+                insertPos = queueList.size();
+                for (int i = 0; i < queueList.size(); i++) {
+                    if (anchorSuccessorId != null && queueList.get(i).getId() == anchorSuccessorId) {
+                        insertPos = i;
+                        break;
+                    }
+                }
+                if (existingIndex != -1 && anchorSuccessorId != null && song.getId() == anchorSuccessorId) {
+                    insertPos = existingIndex;
+                }
+            }
             queueList.add(insertPos, song);
             if (wasCurrent) {
                 currentIndex = insertPos;
@@ -409,7 +423,8 @@ public class QueueManager {
         } catch (Exception e) {
             Log.e(TAG, "Failed to persist playing queue", e);
         }
-        updateShuffleOrder();
+        updateShuffleOrder(song.getId());
+        if (anchorRemoved) anchorSuccessorId = song.getId();
         persistSmartState();
     }
 
@@ -438,7 +453,7 @@ public class QueueManager {
         dbHelper.savePlayingQueue(queueList);
         currentIndex = queueList.isEmpty() ? -1 : 0;
         playbackIndex = currentIndex;
-        updateShuffleOrder();
+        reshuffle();
     }
 
     /**
@@ -534,7 +549,7 @@ public class QueueManager {
             }
 
             restoreSmartState();
-            updateShuffleOrder();
+            reshuffle();
             Log.d(TAG, "Loaded queue from DB. Size: " + queueList.size() + ", Shuffle: " + isShuffle + ", Repeat: " + repeatMode);
         } catch (Exception e) {
             Log.e(TAG, "Error loading playing queue from database", e);
@@ -735,51 +750,98 @@ public class QueueManager {
         }
     }
 
+    /** Play order by track id. It survives queue edits; shuffleOrder/shuffleIndexMap are its index view. */
+    private final List<Long> shuffleIds = new ArrayList<>();
+
+    /** Starts a fresh order: with shuffle on, the playing track first and the rest random. */
+    private synchronized void reshuffle() {
+        shuffleIds.clear();
+        updateShuffleOrder(null);
+    }
+
+    private void updateShuffleOrder() {
+        updateShuffleOrder(null);
+    }
+
     /**
-     * Updates the shuffle mapping when the queue size or shuffle state changes.
-     *
-     * Behavior:
-     * - If shuffle OFF → sequential order
-     * - If shuffle ON:
-     *   - Keep current playing track at front
-     *   - Shuffle remaining tracks
-     * - Builds reverse index map for O(1) lookup
+     * Brings the play order in line with the queue after an edit, without reshuffling:
+     * removed tracks drop out and tracks new to the order are slotted in at random after the
+     * playing one, so tracks already played do not come back. {@code playNextId} goes
+     * directly after the playing track. With shuffle off the order is the queue order.
      */
-    private synchronized void updateShuffleOrder() {
+    private synchronized void updateShuffleOrder(Long playNextId) {
         shuffleOrder.clear();
         shuffleIndexMap.clear();
-
-        int size = queueList.size();
-        if (size == 0) return;
-
-        // Build base order
-        for (int i = 0; i < size; i++) {
-            shuffleOrder.add(i);
+        if (queueList.isEmpty()) {
+            shuffleIds.clear();
+            return;
         }
 
-        if (isShuffle) {
-            // Prefer playbackIndex (DLNA), fallback to currentIndex
-            int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        java.util.Set<Long> known = new java.util.HashSet<>(shuffleIds);
+        if (!isShuffle) {
+            shuffleIds.clear();
+            for (Track track : queueList) shuffleIds.add(track.getId());
+        } else if (known.isEmpty()) {
+            Long anchor = anchorTrackId();
+            for (Track track : queueList) shuffleIds.add(track.getId());
+            if (anchor != null) shuffleIds.remove(anchor);
+            Collections.shuffle(shuffleIds);
+            if (anchor != null) shuffleIds.add(0, anchor);
+        } else {
+            mergeIntoShuffle(playNextId);
+        }
 
-            if (baseIndex >= 0 && baseIndex < size) {
-                // Remove current track
-                shuffleOrder.remove((Integer) baseIndex);
-
-                // Shuffle remaining
-                Collections.shuffle(shuffleOrder);
-
-                // Put current track at front
-                shuffleOrder.add(0, baseIndex);
-            } else {
-                // No active track → shuffle all
-                Collections.shuffle(shuffleOrder);
+        // The removed playing track was last: the first newly added track continues the queue
+        if (anchorRemoved && anchorSuccessorId == null && !known.isEmpty()) {
+            for (Long id : shuffleIds) {
+                if (!known.contains(id)) {
+                    anchorSuccessorId = id;
+                    break;
+                }
             }
         }
 
-        // Build reverse lookup map (physical index → shuffle position)
-        for (int i = 0; i < shuffleOrder.size(); i++) {
-            shuffleIndexMap.put(shuffleOrder.get(i), i);
+        for (Long id : shuffleIds) {
+            shuffleIndexMap.put(indexMap.get(id), shuffleOrder.size());
+            shuffleOrder.add(indexMap.get(id));
         }
+    }
+
+    private void mergeIntoShuffle(Long playNextId) {
+        shuffleIds.removeIf(id -> !indexMap.containsKey(id));
+        Long anchor = anchorRemoved ? null : anchorTrackId();
+        boolean placeNext = playNextId != null && !playNextId.equals(anchor) && indexMap.containsKey(playNextId);
+        if (placeNext) shuffleIds.remove(playNextId);
+
+        // Upcoming tracks are inserted after this shuffle position
+        int insertAfter;
+        if (anchorRemoved) {
+            int follower = anchorSuccessorId != null ? shuffleIds.indexOf(anchorSuccessorId) : -1;
+            insertAfter = follower != -1 ? follower - 1 : shuffleIds.size() - 1;
+        } else if (anchor != null) {
+            insertAfter = shuffleIds.indexOf(anchor);
+            if (insertAfter == -1) {
+                shuffleIds.add(0, anchor);
+                insertAfter = 0;
+            }
+        } else {
+            insertAfter = -1;
+        }
+
+        if (placeNext) shuffleIds.add(++insertAfter, playNextId);
+
+        java.util.Set<Long> present = new java.util.HashSet<>(shuffleIds);
+        for (Track track : queueList) {
+            if (present.add(track.getId())) {
+                int slots = shuffleIds.size() - insertAfter;
+                shuffleIds.add(insertAfter + 1 + ThreadLocalRandom.current().nextInt(slots), track.getId());
+            }
+        }
+    }
+
+    private Long anchorTrackId() {
+        int base = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        return (base >= 0 && base < queueList.size()) ? queueList.get(base).getId() : null;
     }
 
     /**
@@ -792,7 +854,7 @@ public class QueueManager {
         if (this.isShuffle == enabled) return;
         this.isShuffle = enabled;
         dbHelper.saveShuffleMode(enabled);
-        updateShuffleOrder();
+        reshuffle();
         Log.d(TAG, "Shuffle mode set to: " + enabled);
     }
 
@@ -926,6 +988,7 @@ public class QueueManager {
         indexMap.clear();
         shuffleOrder.clear();
         shuffleIndexMap.clear();
+        shuffleIds.clear();
         currentIndex = -1;
         playbackIndex = -1;
         persistSmartState();
