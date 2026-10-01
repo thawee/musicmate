@@ -51,4 +51,15 @@ class ArtworkDraftTest {
         draft.commit()
         assertEquals("new artwork", target.readText())
     }
+
+    @Test fun saveWritesTheCoverIntoEveryTargetFolder() {
+        val first = temporary.newFolder("albumA")
+        val second = temporary.newFolder("albumB")
+        val targets = listOf(File(first, "Cover.jpg"), File(second, "Cover.jpg").apply { writeText("old") })
+        val draft = ArtworkDraft.stage(temporary.root, targets, "new artwork".byteInputStream())
+        draft.commit()
+        assertEquals("new artwork", targets[0].readText())
+        assertEquals("new artwork", targets[1].readText())
+        assertEquals(targets[0], draft.target)
+    }
 }

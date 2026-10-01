@@ -69,8 +69,13 @@ class TagsViewModel(
     val pendingArtworkFile: java.io.File? get() = artworkDraft?.file
 
     @Throws(java.io.IOException::class)
-    fun stageArtwork(cacheDirectory: java.io.File, target: java.io.File, input: java.io.InputStream) {
-        val replacement = ArtworkDraft.stage(cacheDirectory, target, input)
+    fun stageArtwork(cacheDirectory: java.io.File, target: java.io.File, input: java.io.InputStream) =
+        stageArtwork(cacheDirectory, listOf(target), input)
+
+    /** Stages one image for several folders: each target is that folder's cover file. */
+    @Throws(java.io.IOException::class)
+    fun stageArtwork(cacheDirectory: java.io.File, targets: List<java.io.File>, input: java.io.InputStream) {
+        val replacement = ArtworkDraft.stage(cacheDirectory, targets, input)
         artworkDraft?.discard()
         artworkDraft = replacement
     }
@@ -82,8 +87,9 @@ class TagsViewModel(
 
     fun applyArtworkToTrack(track: Track) {
         artworkDraft?.let { draft ->
-            if (track.path != null && java.io.File(track.path).parentFile == draft.target.parentFile) {
-                track.albumArtFilename = draft.target.absolutePath
+            val folder = track.path?.let { java.io.File(it).parentFile } ?: return
+            draft.targets.firstOrNull { it.parentFile == folder }?.let {
+                track.albumArtFilename = it.absolutePath
             }
         }
     }
@@ -108,7 +114,7 @@ class TagsViewModel(
     fun saveDraftState(): android.os.Bundle = android.os.Bundle().apply {
         artworkDraft?.let {
             putString("artworkDraft", it.file.absolutePath)
-            putString("artworkTarget", it.target.absolutePath)
+            putStringArrayList("artworkTargets", ArrayList(it.targets.map(java.io.File::getAbsolutePath)))
         }
         putBoolean("dirty", draftsDirty)
         putBundle("editor", android.os.Bundle().apply {
@@ -136,9 +142,10 @@ class TagsViewModel(
     fun restoreDraftState(state: android.os.Bundle?) {
         if (state == null) return
         val artworkPath = state.getString("artworkDraft")
-        val artworkTarget = state.getString("artworkTarget")
-        if (artworkPath != null && artworkTarget != null) {
-            artworkDraft = ArtworkDraft(java.io.File(artworkPath), java.io.File(artworkTarget))
+        val artworkTargets = state.getStringArrayList("artworkTargets")
+            ?: state.getString("artworkTarget")?.let { arrayListOf(it) }
+        if (artworkPath != null && !artworkTargets.isNullOrEmpty()) {
+            artworkDraft = ArtworkDraft(java.io.File(artworkPath), artworkTargets.map { java.io.File(it) })
         }
         draftsDirty = state.getBoolean("dirty")
         state.getBundle("editor")?.let { bundle ->

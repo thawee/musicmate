@@ -1480,16 +1480,35 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void applySelectedCoverArt(android.net.Uri uri) {
-        Track display = viewModel.displayTag.getValue();
-        if (display == null || display.getPath() == null) return;
-        File parentDir = new File(display.getPath()).getParentFile();
-        if (parentDir == null) return;
+        // One Cover.jpg per folder of the tracks being edited, so every saved track gets the cover
+        java.util.LinkedHashSet<File> folders = new java.util.LinkedHashSet<>();
+        for (Track tag : getEditItems()) {
+            File parent = tag.getPath() != null ? new File(tag.getPath()).getParentFile() : null;
+            if (parent != null) folders.add(parent);
+        }
+        if (folders.isEmpty()) return;
+        List<File> targets = new ArrayList<>();
+        for (File folder : folders) targets.add(new File(folder, "Cover.jpg"));
+        if (targets.size() == 1) {
+            stageSelectedCoverArt(uri, targets);
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Use this cover for " + targets.size() + " folders?")
+                .setMessage("The selected tracks are in " + targets.size()
+                        + " folders. On Save, Cover.jpg is replaced in each of them.")
+                .setPositiveButton("Use for all", (dialog, which) -> stageSelectedCoverArt(uri, targets))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void stageSelectedCoverArt(android.net.Uri uri, List<File> targets) {
         startProgressBar();
         CompletableFuture.runAsync(() -> {
             try {
                 try (InputStream in = getContentResolver().openInputStream(uri)) {
                     if (in == null) throw new java.io.IOException("Cannot open selected image");
-                    viewModel.stageArtwork(getCacheDir(), new File(parentDir, "Cover.jpg"), in);
+                    viewModel.stageArtwork(getCacheDir(), targets, in);
                 }
             } catch (Exception e) {
                 throw new java.util.concurrent.CompletionException(e);
