@@ -61,6 +61,9 @@ public class NioHttpServerTest {
                     lastPostBody.set(new String(request.getBody(), StandardCharsets.UTF_8));
                     return new NioHttpServer.HttpResponse().setBody("ok".getBytes(StandardCharsets.UTF_8));
                 }
+                if (request.getPath().startsWith("/missing")) {
+                    return new NioHttpServer.HttpResponse().setStatus(404, "Not Found"); // no body, like the UPnP adapter
+                }
                 if (request.getPath().startsWith("/big")) {
                     return server.createFileResponse(bigFile, request);
                 }
@@ -125,6 +128,26 @@ public class NioHttpServerTest {
         Response r = requestHeadersOnly(get("bytes=1000-"));
         assertEquals(416, r.status);
         assertEquals("bytes */1000", r.header("content-range"));
+    }
+
+    @Test
+    public void rangeStartPastEof_416EndsCleanly_andConnectionIsReusable() throws Exception {
+        try (Socket socket = connect()) {
+            Response r = exchange(socket, get("bytes=1000-"), true);
+            assertEquals(416, r.status);
+            assertEquals("0", r.header("content-length"));
+            assertEquals(206, exchange(socket, get("bytes=0-3"), true).status);
+        }
+    }
+
+    @Test
+    public void bodylessResponse_hasZeroContentLength_andConnectionIsReusable() throws Exception {
+        try (Socket socket = connect()) {
+            Response r = exchange(socket, "GET /missing HTTP/1.1\r\nHost: test\r\n\r\n", true);
+            assertEquals(404, r.status);
+            assertEquals("0", r.header("content-length"));
+            assertEquals(206, exchange(socket, get("bytes=0-3"), true).status);
+        }
     }
 
     @Test

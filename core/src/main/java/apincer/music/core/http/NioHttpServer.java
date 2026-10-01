@@ -1750,6 +1750,12 @@ public class NioHttpServer implements Runnable {
         }
 
         protected void buildHeaders() {
+            // A keep-alive client can only find the end of a bodyless response from Content-Length
+            // (RFC 9112 §6.3); 1xx, 204 and 304 never carry a body.
+            if (bodyBuffer == null && !headers.containsKey("Content-Length")
+                    && statusCode >= 200 && statusCode != 204 && statusCode != HTTP_NOT_MODIFIED) {
+                headers.put("Content-Length", "0");
+            }
             StringBuilder sb = new StringBuilder();
             sb.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusText).append("\r\n");
             headers.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\r\n"));
