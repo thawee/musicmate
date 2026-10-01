@@ -854,3 +854,60 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P1-10 Organize: require Save of dirty edits first
 - [x] P2-6 Extract/Remove embedded art: real result, confirm Remove
 - [x] P2-7 Batch ops: surface per-file failures, no finish() on total failure
+
+## HttpCore 5.5-beta3: bytecode patch instead of vendored classes (2026-10-01, N2)
+- [x] patchHttpCore: ASM-rewrite jdk/net references in the original jar (getstatic -> aconst_null, Sockets.setOption -> pops, supportedOptions -> emptySet)
+- [x] Fail the build if any jdk/net reference survives
+- [x] Delete vendored SingleCoreIOReactor.java and ReflectionUtils.java
+- [x] Verify: build, javap scan of patched jar, unit tests (ReflectionUtilsTest), assembleDebug
+
+## Batch completion race (2026-10-01, N1/N3/N4 from tasks/app-review-2026-10-01-delta.md)
+- [x] FileOperationTask: delete/move/measureDR complete exactly once, after every item's final status (finishItem in finally)
+- [x] measureDR analyses a copy, so a failed write leaves the displayed track unchanged
+- [x] TagsActivity Organize: Measure DR completion runs on the UI thread
+- [x] FileOperationTaskCompletionTest (200 rounds x 64 items, 8 threads); app unit tests 95/95; assembleDebug
+
+## P1-1 Removing the playing track skips its follower (2026-10-01)
+- [x] QueueManager: removing the playing track records its follower; Next/Previous continue from it until playback moves
+- [x] Removing that follower too moves on to the next one; Repeat All wraps; last track ends the queue
+- [x] setPlaybackTrack no longer re-enqueues the removed, still-playing track (part of P1-3)
+- [x] onTrackDeleted plays the follower or stops, instead of replaying the previous track when the last one is deleted
+- [x] skipUnplayable bounded so Repeat All with all-missing files cannot spin
+- [x] 8 new QueueManagerTest cases (red then green); core 61/61, app 95/95, assembleDebug
+
+## P1-5 Shuffle reshuffles on every queue edit (2026-10-01)
+- [x] Shuffle order kept by track id (shuffleIds); edits merge instead of reshuffling
+- [x] Play Next goes directly after the playing track; enqueued/re-added tracks slot in randomly among upcoming ones; played tracks do not return
+- [x] Full reshuffle only on queue replace/load and when shuffle is turned on
+- [x] Play Next / enqueue after the playing track was removed continue from the right place (P1-1 follow-up)
+- [x] 5 new QueueManagerTest cases (red then green, 5 repeated runs); core 66/66, app 95/95, assembleDebug
+
+## P1-3 Stale gapless preload after queue edits (2026-10-01)
+- [x] QueueManager change listener (queue edits, Repeat, Shuffle); not fired by navigation
+- [x] Service re-checks the handed-over follower on change (coalesced on the scheduler); replaces or clears it
+- [x] DLNA: setNextTrack(null) clears with empty NextURI; a rejected clear keeps preload state for transition matching
+- [x] Local ExoPlayer: setNextTrack is relative to the playing item (old removeMediaItem(1) removed the playing track after an auto transition); null clears
+- [x] lastPreloadedTrackId reset on track start
+- [x] QueueManagerTest listener case; core/app/server-jupnp tests, assembleDebug
+- [ ] Device: local gapless across 3+ tracks; edit queue / toggle Repeat after preload (local + verified-gapless DLNA)
+
+## P1-6 Sleep "end of track" (2026-10-01)
+- [x] Manual Next no longer pauses; the timer stays armed for the new track
+- [x] While armed, no gapless follower is handed to the player (and an already-handed one is cleared), so every track end passes the check
+- [x] DLNA fallback timer honours the armed timer; disarming re-preloads when playing
+- [x] app tests, assembleDebug (no service unit-test harness; logic verified by reading)
+- [ ] Device: arm end-of-track on local and verified-gapless DLNA; press Next once (keeps playing), then let the track end (pauses)
+
+## P1-2 Session Next/Previous ignore the queue on local playback (2026-10-01)
+- [x] QueueAwareSessionPlayer (ForwardingSimpleBasePlayer) wraps ExoPlayer for the MediaLibrarySession
+- [x] Always advertises Next/Previous; Next/Previous run the service queue skip (posted to the player looper); Previous past 3 s restarts the track
+- [x] Verified Media3 1.11.1 dispatches handleSeek(-1, ...) when ExoPlayer has no next/previous item
+- [x] app tests, assembleDebug (no Robolectric/Media3 test utils; no unit test)
+- [ ] Device: notification, lock screen, wired/Bluetooth headset Next/Previous on local playback; queue sheet and now-playing stay in sync
+
+## P1-4 Play after a paused target switch resumes an empty renderer (2026-10-01)
+- [x] switchPlayer records PendingResume(target, track, position) when switching while paused
+- [x] resumePlayer starts the track there instead: DLNA via playerPlaySong(udn, track, positionMs); local/external via playSong + seekTo
+- [x] internalPlayOnDMRPlayer accepts a start position; any explicit playSong clears the pending resume
+- [x] app tests, assembleDebug (service has no unit-test harness)
+- [ ] Device: pause on local, switch to DLNA, Play (starts at the paused position); pause on DLNA, switch to local, Play
