@@ -63,7 +63,7 @@ class MainLibraryAccessibilityTest {
                     onRefresh = {},
                     onTrackClick = { _, _ -> },
                     onTrackLongClick = { _, _ -> },
-                    onTrackMenuClick = { _, _ -> },
+                    onTrackMenuAction = { _, _, _ -> },
                     onTrackQuickPlayClick = {},
                     onFolderPlayClick = {},
                     onFolderEnqueueClick = {},
@@ -101,7 +101,7 @@ class MainLibraryAccessibilityTest {
                     onRefresh = {},
                     onTrackClick = { _, _ -> },
                     onTrackLongClick = { _, _ -> },
-                    onTrackMenuClick = { _, _ -> },
+                    onTrackMenuAction = { _, _, _ -> },
                     onFolderPlayClick = {},
                     onFolderEnqueueClick = {},
                     showGestureHints = false
@@ -129,7 +129,7 @@ class MainLibraryAccessibilityTest {
                     onRefresh = {},
                     onTrackClick = { _, _ -> },
                     onTrackLongClick = { _, _ -> },
-                    onTrackMenuClick = { _, _ -> },
+                    onTrackMenuAction = { _, _, _ -> },
                     onFolderPlayClick = {},
                     onFolderEnqueueClick = {},
                     showGestureHints = false
