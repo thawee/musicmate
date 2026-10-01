@@ -54,6 +54,21 @@ public class QueueManager {
     private volatile int playbackIndex = -1;
 
     /**
+     * Set when the playing track is removed from the queue while it keeps playing.
+     * Next then continues with the track that followed it ({@code null} = queue ended),
+     * until playback moves to another track.
+     */
+    private boolean anchorRemoved = false;
+    private long removedAnchorId = -1;
+    private Long anchorSuccessorId = null;
+
+    private void clearRemovedAnchor() {
+        anchorRemoved = false;
+        removedAnchorId = -1;
+        anchorSuccessorId = null;
+    }
+
+    /**
      * The current repetition behavior for the queue.
      */
     private RepeatMode repeatMode = RepeatMode.OFF;
@@ -221,6 +236,7 @@ public class QueueManager {
 
     public synchronized void setPlayingQueue(List<Track> songs) {
         if (songs == null || songs.isEmpty()) return;
+        clearRemovedAnchor();
         source = Source.MANUAL;
         sourceRevision++;
         sessionIds.clear();
@@ -406,6 +422,7 @@ public class QueueManager {
     }
 
     public synchronized void savePlayingQueue(List<Track> songsInContext) {
+        clearRemovedAnchor();
         queueList.clear();
         indexMap.clear();
         if (songsInContext != null) {
@@ -495,6 +512,7 @@ public class QueueManager {
             }
 
             List<Track> songs = dbHelper.getPlayingQueue();
+            clearRemovedAnchor();
             queueList.clear();
             indexMap.clear();
             for (int i = 0; i < songs.size(); i++) {
@@ -536,6 +554,7 @@ public class QueueManager {
 
         Integer idx = indexMap.get(track.getId());
         if (idx != null) {
+            clearRemovedAnchor();
             currentIndex = idx;
 
             if (isShuffle && (shuffleOrder.isEmpty() || !shuffleIndexMap.containsKey(idx))) {
@@ -552,6 +571,10 @@ public class QueueManager {
         if (track == null) return;
 
         Integer idx = indexMap.get(track.getId());
+        if (idx == null && anchorRemoved && track.getId() == removedAnchorId) {
+            return; // the user removed it while it plays; keep it out of the queue
+        }
+        clearRemovedAnchor();
         if (idx == null) {
             queueList.add(track);
             idx = queueList.size() - 1;
@@ -593,6 +616,14 @@ public class QueueManager {
     public synchronized Track getNextTrack(boolean forceSkip) {
         if (queueList.isEmpty()) return null;
 
+        if (anchorRemoved) {
+            // The removed track cannot repeat, so Repeat One also continues with its follower
+            Integer follower = anchorSuccessorId != null ? indexMap.get(anchorSuccessorId) : null;
+            if (follower == null) return null;
+            int nextIndex = skipUnplayable(follower);
+            return nextIndex != -1 ? queueList.get(nextIndex) : null;
+        }
+
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
         if (baseIndex == -1) {
             baseIndex = 0;
@@ -603,16 +634,22 @@ public class QueueManager {
             return queueList.get(baseIndex);
         }
 
-        int nextIndex = getNextIndex(baseIndex);
-        while (nextIndex != -1 && source != Source.MANUAL
-                && (queueList.get(nextIndex).getPath() == null
-                || !new java.io.File(queueList.get(nextIndex).getPath()).isFile())) {
-            nextIndex = getNextIndex(nextIndex);
-        }
+        int nextIndex = skipUnplayable(getNextIndex(baseIndex));
         if (nextIndex != -1) {
             return queueList.get(nextIndex);
         }
         return null;
+    }
+
+    /** Smart sources skip tracks whose file is gone; bounded so Repeat All cannot spin forever. */
+    private int skipUnplayable(int index) {
+        int steps = 0;
+        while (index != -1 && source != Source.MANUAL && steps++ < queueList.size()
+                && (queueList.get(index).getPath() == null
+                || !new java.io.File(queueList.get(index).getPath()).isFile())) {
+            index = getNextIndex(index);
+        }
+        return steps > queueList.size() ? -1 : index;
     }
 
     private int getPreviousIndex(int baseIndex) {
@@ -641,6 +678,16 @@ public class QueueManager {
     }
 
     public synchronized Track getPreviousTrack() {
+        if (anchorRemoved && !queueList.isEmpty()) {
+            Integer follower = anchorSuccessorId != null ? indexMap.get(anchorSuccessorId) : null;
+            if (follower == null) {
+                // The removed track was last: previous is the one now at the end of the order
+                return queueList.get(isShuffle && !shuffleOrder.isEmpty()
+                        ? shuffleOrder.get(shuffleOrder.size() - 1) : queueList.size() - 1);
+            }
+            int prevIndex = getPreviousIndex(follower);
+            return prevIndex != -1 ? queueList.get(prevIndex) : null;
+        }
         int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
         int prevIndex = getPreviousIndex(baseIndex);
         return prevIndex != -1 ? queueList.get(prevIndex) : null;
@@ -808,6 +855,21 @@ public class QueueManager {
     public synchronized void removeTrack(int position) {
         if (position < 0 || position >= queueList.size()) return;
         Track removed = queueList.get(position);
+
+        // Removing the playing track (or, once it is gone, the track lined up after it)
+        // moves the anchor to that track's follower, captured before the order changes.
+        int anchorIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        boolean removesAnchor = anchorRemoved
+                ? removed != null && anchorSuccessorId != null && removed.getId() == anchorSuccessorId
+                : position == anchorIndex;
+        if (removesAnchor) {
+            int follower = getNextIndex(position);
+            if (!anchorRemoved) {
+                removedAnchorId = removed != null ? removed.getId() : -1;
+            }
+            anchorRemoved = true;
+            anchorSuccessorId = (follower != -1 && follower != position) ? queueList.get(follower).getId() : null;
+        }
         if (removed != null) {
             sessionIds.add(removed.getId());
             smartTrackIds.remove(removed.getId());
@@ -854,6 +916,7 @@ public class QueueManager {
     }
 
     public synchronized void emptyPlayingQueue() {
+        clearRemovedAnchor();
         source = Source.MANUAL;
         sourceRevision++;
         sessionIds.clear();

@@ -451,4 +451,101 @@ public class QueueManagerTest {
         assertNotNull(userSkipNext);
         assertEquals(2L, userSkipNext.getId());
     }
+
+    private List<Track> queueOf(long... ids) {
+        List<Track> list = new ArrayList<>();
+        for (long id : ids) list.add(createDummyTrack(id, "Track " + id));
+        queueManager.savePlayingQueue(list);
+        return list;
+    }
+
+    @Test
+    public void removeTrack_playingTrack_nextIsItsFollower() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(1));
+
+        queueManager.removeTrack(1);
+
+        assertEquals(3L, queueManager.getNextTrack(true).getId());
+        assertEquals(3L, queueManager.getNextTrack(false).getId());
+        assertEquals(1L, queueManager.getPreviousTrack().getId());
+    }
+
+    @Test
+    public void removeTrack_playingFirstTrack_nextIsNewFirst() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(0));
+
+        queueManager.removeTrack(0);
+
+        assertEquals(2L, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_playingLastTrack_queueEnds() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(2));
+
+        queueManager.removeTrack(2);
+
+        assertNull(queueManager.getNextTrack(true));
+        assertEquals(2L, queueManager.getPreviousTrack().getId());
+    }
+
+    @Test
+    public void removeTrack_playingLastTrack_repeatAllWraps() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setRepeatMode(QueueManager.RepeatMode.ALL);
+        queueManager.setPlaybackTrack(q.get(2));
+
+        queueManager.removeTrack(2);
+
+        assertEquals(1L, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_followerAlsoRemoved_nextMovesOn() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(1));
+
+        queueManager.removeTrack(1); // playing track 2
+        queueManager.removeTrack(1); // its follower, track 3
+
+        assertEquals(4L, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_otherTrack_doesNotDetachPlayback() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(2));
+
+        queueManager.removeTrack(0);
+
+        assertEquals(4L, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_playingTrackReportedAgain_isNotReEnqueued() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(1));
+        queueManager.removeTrack(1);
+
+        // Renderer status event for the removed, still-playing track
+        queueManager.setPlaybackTrack(q.get(1));
+
+        assertEquals(2, queueManager.getQueueSize());
+        assertEquals(3L, queueManager.getNextTrack(true).getId());
+    }
+
+    @Test
+    public void removeTrack_thenPlaybackMoves_normalNavigationResumes() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(1));
+        queueManager.removeTrack(1);
+
+        queueManager.setPlaybackTrack(q.get(2)); // track 3 starts
+
+        assertEquals(4L, queueManager.getNextTrack(true).getId());
+        assertEquals(1L, queueManager.getPreviousTrack().getId());
+    }
 }
