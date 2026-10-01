@@ -1969,15 +1969,17 @@ public class TagsActivity extends AppCompatActivity {
 
                     @Override
                     public void onComplete() {
-                        if(closeScreen) {
+                        // Called on a worker thread; setSaved touches views
+                        runOnUiThread(() -> {
+                            if (isDestroyed()) return;
                             stopProgressBar();
                             setSaved(true);
-                            finish(); // back to prev activity
-                        }else {
-                            stopProgressBar();
-                            setSaved(true);
-                            viewModel.reloadPersistedTags();
-                        }
+                            if (closeScreen) {
+                                finish(); // back to prev activity
+                            } else {
+                                viewModel.reloadPersistedTags();
+                            }
+                        });
                     }
                 });
             }

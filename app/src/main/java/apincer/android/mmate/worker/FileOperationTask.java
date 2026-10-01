@@ -61,19 +61,30 @@ public class FileOperationTask {
         void onComplete();
     }
 
-    /**
-     * Delete multiple media files
-     */
     /** True for the terminal per-file statuses that mean the operation did not apply. */
     public static boolean isFailureStatus(String status) {
         return "Failed".equalsIgnoreCase(status) || "Error".equalsIgnoreCase(status);
     }
 
+    /**
+     * Completes a parallel batch exactly once, after every item has posted its final status.
+     * Counting at the end of each item (not before its status) keeps the last status ahead of onComplete.
+     */
+    static void finishItem(AtomicInteger done, int total, ProgressCallback callback) {
+        if (done.incrementAndGet() == total) {
+            callback.onComplete();
+        }
+    }
+
+    /**
+     * Delete multiple media files
+     */
     public void deleteFiles(@NonNull Context context,
                                    @NonNull List<Track> selections,
                                    @NonNull ProgressCallback callback) {
 
         final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
         for (Track tag : selections) {
@@ -89,16 +100,11 @@ public class FileOperationTask {
                     } else {
                         callback.onProgress(tag, progress, "Failed");
                     }
-
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Error deleting file", e);
                     callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
+                } finally {
+                    finishItem(done, selections.size(), callback);
                 }
             });
         }
@@ -111,6 +117,7 @@ public class FileOperationTask {
                                  @NonNull List<Track> selections,
                                  @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
         for (Track tag : selections) {
@@ -126,16 +133,11 @@ public class FileOperationTask {
                     } else {
                         callback.onProgress(tag, progress, "Failed");
                     }
-
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Error moving file", e);
                     callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
+                } finally {
+                    finishItem(done, selections.size(), callback);
                 }
             });
         }
@@ -251,6 +253,7 @@ public class FileOperationTask {
                                  @NonNull List<Track> selections,
                                  @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
         for (Track tag : selections) {
@@ -258,34 +261,31 @@ public class FileOperationTask {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Evaluating");
 
-                    boolean success = MusicAnalyser.analyse(tag);
+                    // Analyse a copy so a failed write never leaves unsaved values on the displayed track
+                    Track measured = tag.copy();
+                    boolean success = MusicAnalyser.analyse(measured);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
-                    if (success && !TagWriter.writeTagToFile(context, tag)) {
+                    if (success && !TagWriter.writeTagToFile(context, measured)) {
                         // Keep DB and file consistent: never persist values the file did not accept
                         Log.w(TAG, "measureDR: tag write failed for " + tag.getPath());
                         callback.onProgress(tag, progress, "Failed");
                     } else if (success) {
-                        fileRepos.saveCoverartToCache(tag); // must call before save tag, update albumArtName
-                        tag.setQualityInd(TagUtils.getQualityIndicator(tag));
-                        tag.setIsManaged(FileRepository.isManagedInLibrary(context, tag));
+                        fileRepos.saveCoverartToCache(measured); // must call before save tag, update albumArtName
+                        measured.setQualityInd(TagUtils.getQualityIndicator(measured));
+                        measured.setIsManaged(FileRepository.isManagedInLibrary(context, measured));
                         // Update tag in repository
-                        tagRepos.saveTag(tag);
+                        tagRepos.saveTag(measured);
 
                         callback.onProgress(tag, progress, "Success");
                     } else {
                         callback.onProgress(tag, progress, "Failed");
                     }
-
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Error measuring DR", e);
                     callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
-                    if (count.get() == selections.size()) {
-                        callback.onComplete();
-                    }
+                } finally {
+                    finishItem(done, selections.size(), callback);
                 }
             });
         }
