@@ -456,6 +456,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 viewModel.playbackError.setValue(null);
             }
         });
+        viewModel.playbackNotice.observe(this, notice -> {
+            if (notice != null) {
+                android.widget.Toast.makeText(this, notice, android.widget.Toast.LENGTH_SHORT).show();
+                viewModel.playbackNotice.setValue(null);
+            }
+        });
         viewModel.musicItemsLoading.observe(this, isLoading -> runOnUiThread(() -> apincer.android.mmate.ui.compose.ListInterop.updateRefreshing(isLoading)));
 
         WorkManager.getInstance(getApplicationContext())
@@ -2091,15 +2097,17 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onFolderPlayClicked(apincer.music.core.model.Track tag) {
         if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCollection(tag, playbackService, false);
-            android.widget.Toast.makeText(this, "Playing collection", android.widget.Toast.LENGTH_SHORT).show();
+            viewModel.playCollection(tag, playbackService, false); // reports its outcome via playbackNotice/Error
+        } else {
+            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 
     public void onFolderEnqueueClicked(apincer.music.core.model.Track tag) {
         if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCollection(tag, playbackService, true);
-            android.widget.Toast.makeText(this, "Collection added to queue", android.widget.Toast.LENGTH_SHORT).show();
+            viewModel.playCollection(tag, playbackService, true); // reports its outcome via playbackNotice/Error
+        } else {
+            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 

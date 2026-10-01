@@ -65,6 +65,9 @@ class MainViewModel(
     val loadError = MutableLiveData<String?>(null)
     @JvmField
     val playbackError = MutableLiveData<String?>(null)
+    /** Outcome of a successful collection play/enqueue, shown once and then cleared. */
+    @JvmField
+    val playbackNotice = MutableLiveData<String?>(null)
     @JvmField
     val libraryEmpty = MutableLiveData(false)
     private var currentCriteria: SearchCriteria? = null
@@ -257,10 +260,21 @@ class MainViewModel(
                     val totalDurationStr = if (totalSec > 0) StringUtils.formatDuration(totalSec.toDouble(), true) else ""
                     withContext(Dispatchers.Main) {
                         MainScaffoldState.updateQueue(ArrayList(allQueueSongs), playingKey, totalDurationStr)
+                        playbackNotice.value = if (enqueueOnly) "Added ${songsToPlay.size} tracks to queue"
+                            else "Playing ${songsToPlay.size} tracks"
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        playbackError.value = "No playable tracks in this collection"
                     }
                 }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.w("MainViewModel", "playCollection failed", e)
+                withContext(Dispatchers.Main) {
+                    playbackError.value = "Couldn't play this collection. Please try again."
+                }
             }
         }
     }
