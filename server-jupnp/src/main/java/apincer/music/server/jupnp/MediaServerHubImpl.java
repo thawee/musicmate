@@ -176,6 +176,13 @@ public class MediaServerHubImpl implements MediaServerHub {
     private final Object stateLock = new Object();
     private volatile State state = State.IDLE;
 
+    /**
+     * What the user asked for. Network recovery restarts only a server the user wants running,
+     * and a Stop or Start that arrives mid-transition is applied when the transition completes.
+     */
+    private boolean wantRunning = false;
+    private boolean startAfterStop = false;
+
     // Network — WiFi / Ethernet client
     private final ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
@@ -237,6 +244,12 @@ public class MediaServerHubImpl implements MediaServerHub {
     @Override
     public void start() {
         synchronized (stateLock) {
+            wantRunning = true;
+            if (state == State.STOPPING) {
+                startAfterStop = true;
+                Log.d(TAG, "Start deferred until stop completes");
+                return;
+            }
             if (state != State.IDLE) {
                 Log.d(TAG, "Start ignored, state=" + state);
                 return;
@@ -256,18 +269,26 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                 startPeriodicDiscovery();
 
+                boolean stopRequested;
                 synchronized (stateLock) {
                     state = State.RUNNING;
+                    stopRequested = !wantRunning;
                 }
                 serverStatus.setValue(ServerStatus.RUNNING);
 
                 Log.i(TAG, "UPnP started");
+                if (stopRequested) {
+                    Log.i(TAG, "Stop was requested while starting → stopping");
+                    stopInternal();
+                }
 
             } catch (Exception e) {
                 Log.e(TAG, "Start failed", e);
+                releaseLocks();
                 synchronized (stateLock) {
                     state = State.IDLE;
                 }
+                serverStatus.setValue(ServerStatus.ERROR);
             }
         });
     }
@@ -301,11 +322,21 @@ public class MediaServerHubImpl implements MediaServerHub {
      *
      * <p>The {@link ConnectivityManager.NetworkCallback} is intentionally <b>not</b> unregistered
      * here. It must remain active so that {@link #evaluateNetworkState()} can detect when WiFi
-     * is restored and automatically restart the server. The callback is only torn down in
-     * {@link #release()}.
+     * is restored and restart a server stopped by network loss ({@link #stopInternal()}).
+     * A user Stop clears {@code wantRunning}, so the callback leaves the server stopped.
+     * The callback is only torn down in {@link #release()}.
      */
     @Override
     public void stop() {
+        synchronized (stateLock) {
+            wantRunning = false;
+            startAfterStop = false;
+        }
+        stopInternal();
+    }
+
+    /** Stops the stack without changing what the user asked for (used for network loss). */
+    private void stopInternal() {
         synchronized (stateLock) {
             if (state != State.RUNNING) {
                 Log.d(TAG, "Stop ignored, state=" + state);
@@ -336,9 +367,13 @@ public class MediaServerHubImpl implements MediaServerHub {
                 releaseLocks();
                 serverStatus.setValue(ServerStatus.STOPPED);
 
+                boolean startAgain;
                 synchronized (stateLock) {
                     state = State.IDLE;
+                    startAgain = startAfterStop && wantRunning;
+                    startAfterStop = false;
                 }
+                if (startAgain) start();
             }
         });
     }
@@ -377,16 +412,21 @@ public class MediaServerHubImpl implements MediaServerHub {
                 initUpnp();
                 startPeriodicDiscovery();
 
+                boolean stopRequested;
                 synchronized (stateLock) {
                     state = State.RUNNING;
+                    stopRequested = !wantRunning;
                 }
                 serverStatus.setValue(ServerStatus.RUNNING);
                 Log.i(TAG, "UPnP restart completed successfully on IP: " + lastBoundIp);
+                if (stopRequested) stopInternal();
             } catch (Exception e) {
                 Log.e(TAG, "UPnP restart failed", e);
+                releaseLocks();
                 synchronized (stateLock) {
                     state = State.IDLE;
                 }
+                serverStatus.setValue(ServerStatus.ERROR);
             }
         });
     }
@@ -574,7 +614,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                     + ", networkUp=" + networkUp + ", lastBoundIp=" + lastBoundIp + ", currentIp=" + currentIp);
 
             if (networkUp && currentIp != null && !currentIp.isEmpty() && !"127.0.0.1".equals(currentIp)) {
-                if (state == State.IDLE) {
+                if (state == State.IDLE && wantRunning) {
                     Log.d(TAG, "Network OK (IP " + currentIp + ") → starting UPnP");
                     start();
                 } else if (state == State.RUNNING) {
@@ -592,7 +632,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             } else {
                 if (state == State.RUNNING) {
                     Log.d(TAG, "Network lost or invalid IP → stopping UPnP");
-                    stop();
+                    stopInternal(); // keep wantRunning so the server returns with the network
                 }
             }
         }

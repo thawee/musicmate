@@ -16,7 +16,7 @@ even when the underlying network changes. Two scenarios are handled:
 
 | Scenario | Trigger | Recovery |
 |----------|---------|----------|
-| **WiFi / Ethernet loss** | `ConnectivityManager.NetworkCallback.onLost()` | Server auto-stops; auto-restarts when network returns |
+| **WiFi / Ethernet loss** | `ConnectivityManager.NetworkCallback.onLost()` | Server auto-stops; auto-restarts when network returns, unless the user stopped it |
 | **Hotspot mode** | `BroadcastReceiver` for `WIFI_AP_STATE_CHANGED` | Server starts/stops with the hotspot; UPnP binds to AP interface |
 
 ---
@@ -69,11 +69,22 @@ evaluateNetworkState();   // immediate — no delay
 
 ```java
 boolean networkUp = wifiAvailable || hotspotAvailable;
-if (networkUp  && state == IDLE)    start();
-if (!networkUp && state == RUNNING) stop();
+if (networkUp  && state == IDLE && wantRunning) start();
+if (!networkUp && state == RUNNING)             stopInternal();  // keeps wantRunning
 ```
 
-#### `stop()` — what happens on loss
+#### User intent (`wantRunning`)
+
+`start()` sets `wantRunning`; the public `stop()` clears it and then calls `stopInternal()`.
+Network loss calls `stopInternal()` directly, so only a server the user wants running comes
+back with the network; a user Stop survives later network events. Requests that arrive mid-transition are applied
+when the transition completes:
+
+- `stop()` during `STARTING` → the start finishes, sees `!wantRunning`, and stops.
+- `start()` during `STOPPING` → sets `startAfterStop`; the stop finishes and starts again.
+- A failed start or restart releases the locks, returns to `IDLE` and reports `ServerStatus.ERROR`.
+
+#### `stopInternal()` — what happens on loss or Stop
 
 1. Cancels periodic UPnP discovery
 2. **Does NOT unregister `networkCallback`** — it must stay alive to detect recovery
