@@ -474,6 +474,29 @@ public class NioHttpServerTest {
         assertEquals(0, counter("activeConnections"));
     }
 
+    @Test
+    public void notModified_doesNotEvictAnActiveStream() throws Exception {
+        String etag;
+        try (Socket probe = connect()) {
+            etag = exchange(probe, "GET /big HTTP/1.1\r\nHost: test\r\nRange: bytes=0-0\r\n\r\n", true).header("etag");
+        }
+        server.setMaxConcurrentStreams(1);
+        try (Socket stream = connect()) {
+            stream.setReceiveBufferSize(4096);
+            stream.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            stream.getOutputStream().flush();
+            stream.getInputStream().read(new byte[1024]); // holds the only stream slot
+            Thread.sleep(300);
+            try (Socket revalidate = connect()) {
+                Response r = exchange(revalidate, "GET /big HTTP/1.1\r\nHost: test\r\nIf-None-Match: " + etag + "\r\n\r\n", false);
+                assertEquals(304, r.status);
+            }
+            Thread.sleep(500);
+            // still one open stream: the 304 must not have evicted it (buffered bytes would hide a close)
+            assertEquals(1, counter("activeStreams"));
+        }
+    }
+
     private void upgrade(Socket socket) throws IOException {
         exchange(socket, "GET /ws HTTP/1.1\r\nHost: test\r\nUpgrade: websocket\r\n"
                 + "Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"

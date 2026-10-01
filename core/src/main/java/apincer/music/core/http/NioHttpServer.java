@@ -4,7 +4,6 @@ package apincer.music.core.http;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
@@ -14,19 +13,14 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -94,6 +88,20 @@ public class NioHttpServer implements Runnable {
 
 
     private final AtomicInteger activeStreams = new AtomicInteger(0);
+    // An eviction frees its slot on the selector thread shortly after; the new stream is admitted meanwhile
+    private final StreamSlots streamSlots = new StreamSlots() {
+        @Override
+        public boolean acquire() {
+            if (activeStreams.get() >= maxConcurrentStreams && !tryEvictOldestStream()) return false;
+            activeStreams.incrementAndGet();
+            return true;
+        }
+
+        @Override
+        public void release() {
+            activeStreams.decrementAndGet();
+        }
+    };
 
     private final AtomicInteger activeConnections = new AtomicInteger(0);
     private int maxConnections = 1000; // Configurable
@@ -921,7 +929,7 @@ public class NioHttpServer implements Runnable {
 
     public HttpResponse createFileResponse(File file, HttpRequest request) throws IOException {
         try {
-            return new FileResponse(file, request);
+            return new FileResponse(file, request, streamSlots);
         } catch (IOException e) {
             if (e.getMessage() != null && e.getMessage().startsWith("Service Unavailable")) {
                 return new HttpResponse()
@@ -1514,240 +1522,6 @@ public class NioHttpServer implements Runnable {
         }
 
         public void close() throws IOException {
-        }
-    }
-
-    private class FileResponse extends HttpResponse {
-        private final FileChannel fileChannel;
-        private final long fileSize;
-        private long bytesSent = 0;
-        private final long rangeStart;
-        private final long rangeEnd;
-        private final long rangeLength;
-        private final AtomicBoolean hasClosed = new AtomicBoolean(false);
-
-        private static final long CHUNK_SIZE = 262144; // 256KB chunks for smooth streaming
-
-        private FileResponse(File file, HttpRequest request) throws IOException {
-            super();
-
-            long fileLen = file.length();
-
-            // HEAD request → no streaming, no stream count
-            if ("HEAD".equalsIgnoreCase(request.getMethod())) {
-                this.fileChannel = null;
-                this.fileSize = fileLen;
-                this.rangeStart = 0;
-                this.rangeEnd = 0;
-                this.rangeLength = 0;
-
-                setStatus(HTTP_OK, "OK");
-                addHeader("Content-Length", String.valueOf(fileLen));
-                addHeader("Accept-Ranges", "bytes");
-                return;
-            }
-
-            // 1. Stream limit check
-            int currentCount = activeStreams.get();
-            // An eviction frees its slot on the selector thread shortly after; admit this stream meanwhile
-            if (currentCount >= maxConcurrentStreams && !tryEvictOldestStream()) {
-                throw new IOException("Service Unavailable - max concurrent streams reached (" +
-                        currentCount + "/" + maxConcurrentStreams + ")");
-            }
-
-            this.addHeader("Content-Type", FileContentTypes.readContentForMime(file));
-
-            String etag = generateETag(file);
-            this.addHeader("ETag", etag);
-            this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
-
-            long tempStart = 0;
-            long tempEnd = fileLen - 1;
-
-            String ifNoneMatch = request.getHeader("if-none-match", null);
-            if (ifNoneMatch != null && ifNoneMatch.equals(etag)) {
-                setStatus(HTTP_NOT_MODIFIED, "Not Modified");
-                this.fileChannel = null;
-                this.fileSize = 0;
-                this.rangeStart = 0;
-                this.rangeEnd = 0;
-                this.rangeLength = 0;
-                return;
-            }
-
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
-            this.fileChannel = raf.getChannel();
-            this.fileSize = fileChannel.size();
-
-            // 2. Increment stream count
-            activeStreams.incrementAndGet();
-
-            try {
-                String rangeHeader = request.getHeader("range", "");
-                boolean rangeValid = true;
-                // 206 only for a range that was parsed and applied; RFC 7233 says an invalid or
-                // unsupported (e.g. multi-range) Range header is ignored and the file is sent as 200
-                boolean rangeApplied = false;
-
-                if (rangeHeader.startsWith("bytes=")) {
-                    String ifRange = request.getHeader("if-range", null);
-                    if (ifRange != null) {
-                        rangeValid = ifRange.equals(etag);
-                    }
-
-                    if (rangeValid && parseRangeHeader(rangeHeader)) {
-
-                        if (parsedStart >= fileSize) {
-                            setStatus(HTTP_RANGE_NOT_SATISFIABLE, "Range Not Satisfiable");
-                            addHeader("Content-Range", "bytes */" + fileSize);
-
-                            rangeStart = 0;
-                            rangeEnd = 0;
-                            rangeLength = 0;
-
-                            close();
-                            return;
-                        }
-
-                        tempStart = parsedStart;
-                        tempEnd = Math.min(parsedEnd, fileSize - 1);
-                        rangeApplied = true;
-                    }
-                }
-
-                this.rangeStart = tempStart;
-                this.rangeEnd = tempEnd;
-                this.rangeLength = this.rangeEnd - this.rangeStart + 1;
-
-                if (!rangeApplied) {
-                    setStatus(HTTP_OK, "OK");
-                } else {
-                    setStatus(HTTP_PARTIAL_CONTENT, "Partial Content");
-                    addHeader("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileSize);
-                }
-
-                addHeader("Content-Length", String.valueOf(rangeLength));
-                addHeader("Accept-Ranges", "bytes");
-                addHeader("Connection", "keep-alive"); // DLNA stability
-            } catch (Exception e) {
-                close();
-                throw e;
-            }
-        }
-
-        private long parsedStart, parsedEnd;
-
-        private boolean parseRangeHeader(String rangeHeader) {
-            try {
-                String rangeValue = rangeHeader.substring(6);
-                parsedStart = -1;
-                parsedEnd = -1;
-
-                if (rangeValue.startsWith("-")) {
-                    long lastBytes = Long.parseLong(rangeValue.substring(1));
-                    parsedStart = Math.max(0, this.fileSize - lastBytes);
-                    parsedEnd = this.fileSize - 1;
-                } else {
-                    String[] ranges = rangeValue.split("-");
-                    parsedStart = Long.parseLong(ranges[0]);
-                    parsedEnd = (ranges.length > 1 && !ranges[1].isEmpty())
-                            ? Long.parseLong(ranges[1])
-                            : this.fileSize - 1;
-                }
-
-                // Syntax is valid even when the requested start is past EOF; the caller
-                // must return 416 for that unsatisfiable range instead of serving the whole file.
-                return parsedStart >= 0 && (parsedStart >= fileSize ||
-                        (parsedEnd >= 0 && parsedStart <= parsedEnd));
-
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        private String generateETag(File file) {
-            String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
-
-            try {
-                MessageDigest md = MessageDigest.getInstance("SHA-256");
-                byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
-                return "\"" + bytesToHex(hash).substring(0, 16) + "-" +
-                        Long.toHexString(file.length()) + "\"";
-            } catch (NoSuchAlgorithmException e) {
-                int hash = value.hashCode();
-                return "\"" + Integer.toHexString(hash) + "-" +
-                        Long.toHexString(file.length()) + "\"";
-            }
-        }
-
-        private static String bytesToHex(byte[] bytes) {
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        }
-
-        private String formatHttpDate(long timestamp) {
-            SimpleDateFormat df = new SimpleDateFormat(
-                    "EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-            df.setTimeZone(TimeZone.getTimeZone("GMT"));
-            return df.format(new Date(timestamp));
-        }
-
-        @Override
-        public void write(SocketChannel channel) throws IOException {
-            if (headerBuffer == null) buildHeaders();
-
-            if (!headersSent) {
-                channel.write(headerBuffer);
-                if (headerBuffer.hasRemaining()) return;
-                headersSent = true;
-            }
-
-            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) return;
-
-            if (fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
-                long position = rangeStart + bytesSent;
-                long remaining = rangeLength - bytesSent;
-
-                int maxTries = 1; // Yield after each chunk to ensure other HTTP requests (like cover art or metadata) aren't starved
-
-                while (remaining > 0 && maxTries-- > 0) {
-                    long chunk = Math.min(remaining, CHUNK_SIZE);
-
-                    long written = fileChannel.transferTo(position, chunk, channel);
-
-                    if (written <= 0) {
-                        // IMPORTANT: socket not ready → wait for next OP_WRITE
-                        break;
-                    }
-
-                    position += written;
-                    remaining -= written;
-                    bytesSent += written;
-                }
-            }
-        }
-
-        @Override
-        public boolean isFullySent() {
-            if (statusCode != HTTP_OK && statusCode != HTTP_PARTIAL_CONTENT) {
-                return headersSent;
-            }
-            return headersSent && (fileChannel == null || bytesSent >= rangeLength);
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (!hasClosed.compareAndSet(false, true)) return;
-
-            if (fileChannel != null) {
-                if (fileChannel.isOpen()) {
-                    fileChannel.close();
-                }
-                activeStreams.decrementAndGet();
-            }
         }
     }
 
