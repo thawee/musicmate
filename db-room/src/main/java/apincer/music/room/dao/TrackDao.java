@@ -127,6 +127,10 @@ public interface TrackDao {
     @Query("SELECT COUNT(*) FROM musictag")
     long getTotalCount();
 
+    /** Changes when tracks are added, removed or their files rewritten (tag edits). */
+    @Query("SELECT COUNT(*) || ':' || IFNULL(MAX(id), 0) || ':' || IFNULL(SUM(fileLastModified), 0) FROM musictag")
+    String getLibraryVersion();
+
     @Query("SELECT SUM(fileSize) FROM musictag")
     long getTotalSize();
 

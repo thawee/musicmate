@@ -61,14 +61,22 @@ public abstract class AbstractContentBrowser {
      */
     public List<DIDLObject> browseChildren(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<DIDLObject> result = new ArrayList<>();
-        if (pagesChildren()) {
+        java.util.Comparator<DIDLObject> sort = BrowseSort.didl(orderby);
+        // A sorted request needs every child before paging, unless the browser sorts itself
+        if (pagesChildren() && (sort == null || sortsChildren())) {
             result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
             result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
             return result;
         }
         result.addAll(browseContainer(contentDirectory, myId, 0, 0, orderby));
         result.addAll(browseItem(contentDirectory, myId, 0, 0, orderby));
+        if (sort != null) result.sort(sort);
         return page(result, firstResult, maxResults);
+    }
+
+    /** True when a browser that pages itself also applies SortCriteria (before paging). */
+    protected boolean sortsChildren() {
+        return false;
     }
 
     /** True when browseContainer and browseItem already apply StartingIndex and RequestedCount. */

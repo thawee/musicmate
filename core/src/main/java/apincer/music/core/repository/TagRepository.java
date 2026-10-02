@@ -679,6 +679,16 @@ public class TagRepository {
         }
     }
 
+    /** Changes when tracks are added, removed or edited; "" if it cannot be read. */
+    public String getLibraryVersion() {
+        try {
+            String version = dbHelper.getLibraryVersion();
+            return version != null ? version : "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     public long getTotalDuration() {
         try {
             return dbHelper.getTotalDuration();

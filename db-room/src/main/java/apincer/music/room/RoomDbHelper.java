@@ -467,6 +467,11 @@ public class RoomDbHelper implements DbHelper {
     }
 
     @Override
+    public String getLibraryVersion() {
+        return trackDao.getLibraryVersion();
+    }
+
+    @Override
     public long getTotalDuration() throws SQLException {
         return (long) trackDao.getTotalDuration();
     }

@@ -61,6 +61,12 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         return results;
     }
 
+    /** Sorts the track list itself, so a sorted "All Songs" page stays cheap. */
+    @Override
+    protected boolean sortsChildren() {
+        return true;
+    }
+
     /** Pages the track list before building DIDL items; "All Songs" has thousands of tracks. */
     @Override
     protected boolean pagesChildren() {
@@ -79,7 +85,13 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String uuid = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
-        List<Track> tags = page(getItems(contentDirectory, uuid), firstResult, maxResults);
+        List<Track> all = getItems(contentDirectory, uuid);
+        java.util.Comparator<Track> sort = BrowseSort.tracks(orderby);
+        if (sort != null) {
+            all = new ArrayList<>(all);
+            all.sort(sort);
+        }
+        List<Track> tags = page(all, firstResult, maxResults);
         for(Track tag: tags) {
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);

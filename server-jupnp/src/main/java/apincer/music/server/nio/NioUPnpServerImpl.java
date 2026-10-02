@@ -45,6 +45,7 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         @Override
         public NioHttpServer.HttpResponse handle(NioHttpServer.HttpRequest request) {
             String rawUri = request.getPath();
+            apincer.music.core.server.ClientRegistry.observe(request.getRemoteHost(), request.getHeaders(), rawUri);
             try {
                 // Basic Path Validation for UPnP
                 String normalizedPath = normalizePath(rawUri);

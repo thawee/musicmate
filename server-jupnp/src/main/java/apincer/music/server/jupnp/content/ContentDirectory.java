@@ -97,8 +97,9 @@ import apincer.music.core.model.Track;
 })
 public class ContentDirectory {
     private static final String TAG = "ContentDirectory";
-    private static final List<String> CAPS_SEARCH = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
-    private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist");
+    // What UpnpSearch and BrowseSort actually support
+    private static final List<String> CAPS_SEARCH = List.of("dc:title", "dc:creator", "upnp:artist", "upnp:album", "upnp:genre", "upnp:class");
+    private static final List<String> CAPS_SORT = BrowseSort.PROPERTIES;
 
     // Cache for browse results to improve performance
     private final Map<String, CachedBrowseResult> browseResultCache = new ConcurrentHashMap<>();
@@ -204,6 +205,7 @@ public class ContentDirectory {
 
     @UpnpAction(out = @UpnpOutputArgument(name = "Id"))
     synchronized public UnsignedIntegerFourBytes getSystemUpdateID() {
+        checkLibraryChanged();
         return systemUpdateID;
     }
 
@@ -218,11 +220,33 @@ public class ContentDirectory {
      * potentially outdated and has to be refreshed.
      * </p>
      */
+    private String libraryVersion;
+    private long libraryCheckedAt;
+
+    /**
+     * Bumps SystemUpdateID (and clears the browse cache) when tracks were added, removed or
+     * edited since the last check, so clients refresh their cached view. Checked at most every
+     * 30 s, on Browse, Search and GetSystemUpdateID.
+     */
+    synchronized void checkLibraryChanged() {
+        long now = System.currentTimeMillis();
+        if (libraryVersion != null && now - libraryCheckedAt < 30_000) return;
+        libraryCheckedAt = now;
+        String current = tagRepos.getLibraryVersion();
+        if (libraryVersion != null && !libraryVersion.equals(current)) {
+            Log.i(TAG, "Library changed; SystemUpdateID bumped");
+            changeSystemUpdateID();
+        }
+        libraryVersion = current;
+    }
+
     synchronized protected void changeSystemUpdateID() {
-        Long oldUpdateID = getSystemUpdateID().getValue();
+        // The field, not getSystemUpdateID(): that runs the library check, which needs tagRepos
+        // (not yet set when the constructor calls this) and would re-enter this method
+        Long oldUpdateID = systemUpdateID.getValue();
         systemUpdateID.increment(true);
         getPropertyChangeSupport().firePropertyChange("SystemUpdateID",
-                oldUpdateID, getSystemUpdateID().getValue());
+                oldUpdateID, systemUpdateID.getValue());
 
         // Clear cache when content changes
         cacheLock.writeLock().lock();
@@ -309,6 +333,7 @@ public class ContentDirectory {
             @UpnpInputArgument(name = "SortCriteria") String orderBy)
             throws ContentDirectoryException {
 
+        checkLibraryChanged();
         java.util.function.Predicate<Track> matches;
         try {
             matches = UpnpSearch.parse(searchCriteria);
@@ -322,6 +347,8 @@ public class ContentDirectory {
             for (Track track : tagRepos.getAllMusicsForPlaylist()) {
                 if (matches.test(track)) found.add(track);
             }
+            java.util.Comparator<Track> sort = BrowseSort.tracks(SortCriterion.valueOf(orderBy));
+            if (sort != null) found.sort(sort);
             List<Track> page = AbstractContentBrowser.page(found, firstResult.getValue(), maxResults.getValue());
             String allSongsId = ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + CollectionsBrowser.ALL_SONGS;
             MusicItemBrowser builder = new MusicItemBrowser(getContext(), tagRepos,
@@ -359,7 +386,11 @@ public class ContentDirectory {
 
     /** This server does not create, change or delete objects: everything is restricted="1". */
     private static void markReadOnly(DIDLContent didl) {
-        for (DIDLObject object : didl.getContainers()) object.setRestricted(true);
+        for (org.jupnp.support.model.container.Container container : didl.getContainers()) {
+            container.setRestricted(true);
+            // Search covers the whole library, so the root says it can be searched
+            if ("0".equals(container.getId())) container.setSearchable(true);
+        }
         for (DIDLObject object : didl.getItems()) object.setRestricted(true);
     }
 
@@ -379,6 +410,7 @@ public class ContentDirectory {
     public BrowseResult browse(String objectID, BrowseFlag browseFlag,
                                String filter, long firstResult, long maxResults,
                                SortCriterion[] orderby) throws ContentDirectoryException {
+        checkLibraryChanged();
         // Check if we can use a cached result
         String cacheKey = generateCacheKey(objectID, browseFlag, filter, firstResult, maxResults, orderby);
 

@@ -130,12 +130,16 @@ fun MediaServerPage(
                         if (state.isServerRunning && state.diagnostics.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                // Wrap only between values ("6 requests" stays together)
-                                text = state.diagnostics.split(" • ").joinToString(" • ") { it.replace(' ', '\u00A0') },
+                                // Wrap only between values ("6 requests", "LG webOS TV (…)" stay together)
+                                text = state.diagnostics.lines().joinToString("\n") { line ->
+                                    line.split(" • ").joinToString(" • ") { value ->
+                                        value.split(", ").joinToString(", ") { it.replace(' ', '\u00A0') }
+                                    }
+                                },
                                 color = Color(0xFF888888),
                                 fontSize = 10.sp,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                maxLines = 2,
+                                maxLines = 5, // counters, then the clients seen
                                 overflow = TextOverflow.Ellipsis
                             )
                         }

@@ -117,6 +117,9 @@ public interface DbHelper {
 
     long getTotalSongs() throws SQLException;
 
+    /** An opaque value that changes when tracks are added, removed or edited. */
+    String getLibraryVersion() throws SQLException;
+
     long getTotalDuration() throws SQLException;
 
     List<Track> findByIds(long[] ids);

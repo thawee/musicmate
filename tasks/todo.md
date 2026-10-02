@@ -1014,3 +1014,12 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] 13 (2026-10-02, user chose thumbnails): second albumArtURI /coverart/tn_<key> tagged JPEG_TN (CoverThumbnails, 3 tests); full-size cover stays first. Device: 160x160 JPEG, 86 ms first / 25 ms cached; missing cover gives a default thumbnail
 - [x] Windows/Xbox X_MS_MediaReceiverRegistrar:1 (2026-10-02): MediaReceiverRegistrarService on jUPnP's base class, bound with the Microsoft service type (jUPnP's annotation type was wrong); test 2; device: listed, IsAuthorized/IsValidated return 1. Not tried with a real Windows PC or Xbox
 - [x] Samsung (2026-10-02): X_GetFeatureList (BASICVIEW audio at root "0") and getMediaInfo.sec -> MediaInfo.sec: SEC_Duration=<ms> (formats checked against UMS source); ProductCap advertises getMediaInfo.sec only; tests SamsungFeatureListTest (2) + duration; verified over the network on device. Not tried with a real Samsung TV. X_SetBookmark (video resume) not needed
+
+## Sony / LG / Toshiba (2026-10-02, evidence: UMS renderer profiles; no Toshiba profile exists)
+- [x] 1a. Root container searchable="1" (Search covers the whole library)
+- [x] 1b. SearchCaps add upnp:class, dc:creator (both supported)
+- [x] 1c. SortCriteria (BrowseSort, 4 tests; device: title +/-, artist+title, date): sort by dc:title, upnp:artist, upnp:album, dc:date (+/-) for Browse and Search; advertise only those
+- [x] 1d. SystemUpdateID changes (library version = count:max(id):sum(fileLastModified), checked at most every 30 s; bump on a real change not yet seen on device) when the library changes (was fixed at 1)
+- [x] 1e. Client detection and log (ClientRegistry, 5 tests; device: Sony/LG headers named, logcat DlnaClients): User-Agent / X-AV-Client-Info per client, logged once with headers; "clients seen" on the Server tab (gives Toshiba evidence)
+- [ ] 2. Time-based seeking: TimeSeekRange.dlna.org (npt) -> byte offset (FLAC SEEKTABLE, WAV exact, MP3 proportional); DLNA.ORG_OP=11 only where supported; LG 2022+ seeks only by time
+- [ ] 3. Formats a TV cannot play (DSD all; ALAC Sony; FLAC older LG): hide or convert to PCM (user to decide)

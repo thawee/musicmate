@@ -52,8 +52,11 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         NioHttpServer current = server;
         RateLimitingHandler limiter = rateLimiter;
         if (current == null) return "";
-        return diagnostics.line(current.getStats(), limiter != null ? limiter.getRateLimitedCount() : 0,
-                System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        String line = diagnostics.line(current.getStats(), limiter != null ? limiter.getRateLimitedCount() : 0, now);
+        // Second line: clients (TVs, apps) seen on either port in the last 10 minutes
+        String clients = apincer.music.core.server.ClientRegistry.SHARED.recentSummary(now, 10 * 60_000L);
+        return clients.isEmpty() ? line : line + "\nClients: " + clients;
     }
     private WebSocketHandlerImpl wsHandler;
     //private final ProfileManager profileManager;
@@ -105,6 +108,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         String rawUri = request.getPath();
         String remoteHost = request.getRemoteHost();
         String userAgent = request.getHeader("User-Agent", "Unknown");
+        apincer.music.core.server.ClientRegistry.observe(remoteHost, request.getHeaders(), rawUri);
         try {
             ContentHolder contentHolder = resolveRequest(rawUri, remoteHost, userAgent);
             if (contentHolder == null || !contentHolder.exists()) {
