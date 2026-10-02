@@ -596,8 +596,9 @@ fun NowPlayingPage(
                         }
                         val hasRg = rgStr.isNotEmpty()
                         if (hasChannels || hasDr || hasRg) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
+                            // FlowRow: at large text sizes a value moves to the next line whole
+                            FlowRow(
+                                itemVerticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 if (hasChannels) {
@@ -607,7 +608,8 @@ fun NowPlayingPage(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.5.sp,
+                                        softWrap = false
                                     )
                                 }
                                 if (hasDr) {
@@ -617,7 +619,8 @@ fun NowPlayingPage(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.5.sp,
+                                        softWrap = false
                                     )
                                 }
                                 if (hasRg) {
@@ -627,7 +630,8 @@ fun NowPlayingPage(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.5.sp,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -638,8 +642,8 @@ fun NowPlayingPage(
                         val hasDuration = durationStr.isNotEmpty()
                         val hasFileSize = fileSizeStr.isNotEmpty() && fileSizeStr != "-"
                         if (hasDuration || hasFileSize) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
+                            FlowRow(
+                                itemVerticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 if (hasDuration) {
@@ -649,7 +653,8 @@ fun NowPlayingPage(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.4.sp
+                                        letterSpacing = 0.4.sp,
+                                        softWrap = false
                                     )
                                 }
                                 if (hasFileSize) {
@@ -659,7 +664,8 @@ fun NowPlayingPage(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.3.sp
+                                        letterSpacing = 0.3.sp,
+                                        softWrap = false
                                     )
                                 }
                             }

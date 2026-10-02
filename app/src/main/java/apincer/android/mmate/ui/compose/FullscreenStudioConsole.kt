@@ -251,10 +251,13 @@ fun FullscreenStudioConsole(
     )
 
     // 4. Integrated Minimalist Studio Digital Clock
+    // Previews and screenshot tests show a fixed time so their images do not change every minute
+    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
     var studioClockTime by remember {
-        mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()))
+        mutableStateOf(if (isPreview) "10:00" else SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()))
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isPreview) {
+        if (isPreview) return@LaunchedEffect
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         while (isActive) {
             studioClockTime = timeFormatter.format(Date())
@@ -481,7 +484,8 @@ fun FullscreenStudioConsole(
                                 fontSize = 8.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
-                                letterSpacing = 1.sp
+                                letterSpacing = 1.sp,
+                                maxLines = 1
                             )
                             if (studioClockTime.isNotEmpty()) {
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -495,8 +499,10 @@ fun FullscreenStudioConsole(
                             }
                         }
 
-                        // Right: Output Target Selector & Quick Actions
+                        // Right: Output Target Selector & Quick Actions. The target chip shrinks
+                        // (ellipsis) so the fixed-size buttons stay on screen at large text sizes.
                         Row(
+                            modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -507,6 +513,7 @@ fun FullscreenStudioConsole(
                             }
                             Row(
                                 modifier = Modifier
+                                    .weight(1f, fill = false)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(Color(0x33222222))
                                     .border(BorderStroke(0.75.dp, targetDotColor.copy(alpha = 0.45f)), RoundedCornerShape(10.dp))
@@ -527,7 +534,8 @@ fun FullscreenStudioConsole(
                                     fontSize = 8.5.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 if (isDLNA) {
                                     Spacer(modifier = Modifier.width(4.dp))

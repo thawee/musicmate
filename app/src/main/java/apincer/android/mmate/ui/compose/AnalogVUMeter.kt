@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
 import java.util.Locale
@@ -288,16 +290,22 @@ fun AnalogVUMeter(
                         fontSize = 8.5.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        maxLines = 1
                     )
                 }
 
+                // One line only: at large text sizes a wrapped header left no room for the meters
                 Text(
                     text = if (isLivePcm) "LIVE PCM • 300ms ANSI" else "ANSI BALLISTICS • 300ms",
                     color = if (isLivePcm) palette.needleColor.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.35f),
                     fontSize = 7.5.sp,
                     fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp)
                 )
             }
 
@@ -413,8 +421,18 @@ private fun SingleVUDial(
         if (w <= 0 || h <= 0) return@Canvas
 
         val cx = w / 2f
-        val cy = h * 0.96f
-        val dialRadius = h * 0.78f
+        // Size the dial by height, but never wider than the panel: the arc ends sit at +/-42 deg
+        // (half-width 0.669 r), plus room for the scale labels. Tall panels (full screen) used to
+        // crop both ends of the scale.
+        val radiusByHeight = h * 0.78f
+        val radiusByWidth = (w / 2f - 10.dp.toPx()) / 0.669f
+        val dialRadius = minOf(radiusByHeight, radiusByWidth)
+        // Width-limited: centre the dial vertically instead of pinning it to the bottom
+        val cy = if (radiusByWidth < radiusByHeight) minOf(h * 0.96f, h * 0.5f + dialRadius * 0.55f) else h * 0.96f
+        // Gauge-face lettering follows the font scale only as far as the dial has room for it;
+        // at 200% text on a small dial the scale numbers and labels overlapped
+        val labelScale = minOf(fontScale, maxOf(1f, dialRadius / 70.dp.toPx()))
+        fun dialTextPx(sizeSp: Float) = sizeSp * density * labelScale
 
         // Warm radial backlight illumination
         drawCircle(
@@ -500,7 +518,7 @@ private fun SingleVUDial(
         }
 
         // Draw Major Ticks & Text
-        scalePaint.textSize = 8.5.sp.toPx()
+        scalePaint.textSize = dialTextPx(8.5f)
         val textRadius = dialRadius - majorLen - 5.5.dp.toPx()
 
         for ((mNorm, label) in majorTicks) {
@@ -532,7 +550,7 @@ private fun SingleVUDial(
         }
 
         // Vintage "VU" Mark
-        scalePaint.textSize = 8.sp.toPx()
+        scalePaint.textSize = dialTextPx(8f)
         scalePaint.color = arcNormalColor.copy(alpha = 0.6f).toArgb()
         drawIntoCanvas { canvas ->
             canvas.nativeCanvas.drawText("VU", cx, cy - dialRadius * 0.46f, scalePaint)
@@ -634,13 +652,13 @@ private fun SingleVUDial(
         val currentDb = if (levelNorm <= 0.01f) -20.0f else (-20f + levelNorm * 23f)
         val dbFormatted = "${if (currentDb > 0) "+" else ""}${String.format(Locale.US, "%.1f", currentDb)} dB"
 
-        scalePaint.textSize = 7.5.sp.toPx()
+        scalePaint.textSize = dialTextPx(7.5f)
         scalePaint.color = accentTextColor.copy(alpha = 0.75f).toArgb()
         drawIntoCanvas { canvas ->
             canvas.nativeCanvas.drawText(channelLabel, cx, cy - 14.dp.toPx(), scalePaint)
         }
 
-        scalePaint.textSize = 8.5.sp.toPx()
+        scalePaint.textSize = dialTextPx(8.5f)
         scalePaint.color = (if (levelNorm >= zeroVuNorm) overloadRed else Color.White.copy(alpha = 0.85f)).toArgb()
         drawIntoCanvas { canvas ->
             canvas.nativeCanvas.drawText(dbFormatted, cx, cy - 2.dp.toPx(), scalePaint)
