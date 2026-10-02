@@ -314,6 +314,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 updateAvailableExternalPlayers(controllers);
             };
     private boolean activeSessionsListenerRegistered = false;
+    // One callback per external app session: a paused app that resumes changes no session list,
+    // so only its own state callback tells us it started playing
+    private final java.util.Map<MediaController, MediaController.Callback> sessionWatchers = new java.util.HashMap<>();
 
     public MusicMateServiceImpl( ) {
     }
@@ -358,6 +361,40 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     }
 
+    /** An external app that starts playing is offered to the player priority (it may take over an idle target). */
+    private void watchExternalSession(MediaController controller, PlaybackTarget player) {
+        MediaController.Callback callback = new MediaController.Callback() {
+            @Override
+            public void onPlaybackStateChanged(android.media.session.PlaybackState state) {
+                if (state == null || state.getState() != android.media.session.PlaybackState.STATE_PLAYING) return;
+                PlaybackTarget current = getActivePlayer();
+                if (current != null && current.getTargetId().equals(player.getTargetId())) return;
+                switchPlayer(player, false);
+            }
+        };
+        try {
+            controller.registerCallback(callback, new android.os.Handler(android.os.Looper.getMainLooper()));
+            synchronized (sessionWatchers) {
+                sessionWatchers.put(controller, callback);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Cannot watch " + controller.getPackageName(), e);
+        }
+    }
+
+    private void unwatchExternalSessions() {
+        synchronized (sessionWatchers) {
+            for (java.util.Map.Entry<MediaController, MediaController.Callback> watcher : sessionWatchers.entrySet()) {
+                try {
+                    watcher.getKey().unregisterCallback(watcher.getValue());
+                } catch (Exception ignored) {
+                    // the session is already gone
+                }
+            }
+            sessionWatchers.clear();
+        }
+    }
+
     private PlaybackTarget getActivePlayer() {
         return currentPlayerFlow.getValue().orElse(null);
     }
@@ -393,6 +430,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         PlaybackTarget playingPlayer = null;
         Set<String> addedPackages = new HashSet<>();
+        unwatchExternalSessions();
 
         // Add external media session targets
         if (controllers != null) {
@@ -407,6 +445,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 if (player != null) {
                     addLocalPlaybackTarget(player, false);
                     addedPackages.add(packageName);
+                    watchExternalSession(controller, player);
                     android.media.session.PlaybackState state = controller.getPlaybackState();
                     if (state != null && state.getState() == android.media.session.PlaybackState.STATE_PLAYING) {
                         playingPlayer = player;
@@ -708,6 +747,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
             activeSessionsListenerRegistered = false;
         }
+        unwatchExternalSessions();
         if (androidPlayer != null) {
             androidPlayer.release();
         }
