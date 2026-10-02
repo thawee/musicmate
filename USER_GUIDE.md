@@ -167,6 +167,7 @@ MusicMate features an embedded Java NIO-based DLNA Media Server allowing you to 
 1. Click the **Media Server** icon in the bottom menu.
 2. A bottom sheet displays the current server status (Running / Offline), configuration details (URL, active connections), and currently active playback player.
 3. Tap **Start / Stop** to toggle the server or tap **Select Player** to switch between active targets.
+   - **Live activity:** While the server runs, the **Server** tab in Music Center shows what it is doing, for example `2 streams • 9.0 MB/s • 1,204 requests`. If a renderer was cut off to make room for another stream, or requests were turned away, the line adds `evicted`, `refused` or `rate-limited` counts.
    - **Stop persists:** After you tap Stop, reopening or recreating the main screen does not restart the server. Tap Start to enable automatic startup again; choosing a streaming target can intentionally start the server for playback.
 4. **Standardized Player Target Displays:**
    - **DLNA Renderers:** Displays device friendly name and IP address (e.g. `HiBy R3 (192.168.1.50 • DLNA Renderer)`).

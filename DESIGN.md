@@ -408,6 +408,17 @@ Library metadata rows and full-screen specification chips wrap when space is lim
 - **Decision:** Delete `:server-jupnp-netty` and the Netty dependency. Delete `CompositeWebServer`; `ServerModule` provides `NioWebServerImpl` directly. Remove the engine choice from Settings and the Music Center Server tab, the `PREF_SERVER_ENGINE` / `DEFAULT_SERVER_ENGINE` constants and the service's restart-on-engine-change listener. At startup the app deletes a saved `preference_media_server_engine` value (`httpcore`, `netty` or `nio`).
 - **Consequences:** One engine to maintain and test, about 3.5 MB less APK, no reflection-based engine loading and no silent fallback. Netty's REST bridge is gone; the WebSocket API covers the same commands. If a second engine is ever needed, the `WebServer` SPI is the seam; reintroduce selection only with a test that fails when the selected engine is not the one running.
 
+### ADR-038: DLNA Browse Paging and Per-Request Work
+- **Status:** Accepted
+- **Date:** 2026-10-02
+- **Context:** An end-to-end check against the phone (8,305 tracks) found that most ContentDirectory folders ignored `StartingIndex`/`RequestedCount` ("Recently Added" returned 614 entries for a request of 20), source folders returned nothing from the third page, an unknown object id came back as an empty success, and a whole "All Songs" listing took 15.7 s because every track looked up the server address by scanning all network interfaces.
+- **Decision:**
+  1. **Paging lives in `AbstractContentBrowser.browseChildren`.** A browser either returns all its children (containers then items) and lets the base class page them, or pages in its own query and overrides `pagesChildren()` to return true. Album, artist and genre folders page in SQL; collection folders page their track list before building DIDL items. `RequestedCount` 0 means all remaining entries.
+  2. **A browser instance serves one Browse request.** Per-request values are computed once and kept on the instance: the server address (`serverHost()`), a collection's track list (shared by the page and `TotalMatches`), and the Sources folder list. Nothing is cached across requests except the 30 s `ContentDirectory` result cache.
+  3. **Errors use UPnP codes.** An unknown object id or missing item metadata throws `NO_SUCH_OBJECT` (701). On the UPnP port, methods UPnP does not use over HTTP get 405 with `Allow`, and malformed URIs 400.
+  4. **`TotalMatches` comes from the same data as the list,** so paging clients see consistent totals.
+- **Consequences:** Paging is consistent across all folder types (`BrowsePagingTest`, plus a device check of eight folder types). Measured on device: a page of "All Songs" 0.5 s (was 6 s), the whole list 4.8 s (was 15.7 s), Sources 0.6 s (was 1.1 s). The uncached root listing (0.8 to 1.6 s) still loads the library for each folder's count; a shared library snapshot would remove that if it matters.
+
 ---
 
 ### Cross-Reference: UI & Interaction Decision Records
