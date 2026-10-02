@@ -40,6 +40,15 @@ public class DLNAHeaderHelper {
                 + "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
     }
 
+    /**
+     * Samsung TVs send "getMediaInfo.sec: 1" and read the track length from the reply header
+     * "MediaInfo.sec: SEC_Duration=<milliseconds>". Null when the length is unknown.
+     */
+    public static String getSamsungMediaInfo(Track tag) {
+        double seconds = tag.getAudioDuration();
+        return seconds > 0 ? "SEC_Duration=" + Math.round(seconds * 1000) : null;
+    }
+
     private static String dlnaProfile(Track tag) {
         if (isMPegFile(tag)) return "MP3";
         if (isAACFile(tag)) {

@@ -213,8 +213,9 @@ public class MediaServerDevice extends LocalDevice {
             // seeking (byte ranges only). Clients used to be told it accepted uploads and time seeks.
             private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[]{});
             private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
-            // Samsung extensions (subtitles, getMediaInfo.sec, getCaptionInfo.sec) are not implemented
-            private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{});
+            // Samsung: track length via getMediaInfo.sec (MediaInfo.sec reply header) is implemented;
+            // subtitles and getCaptionInfo.sec are not, so they are not advertised
+            private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{"getMediaInfo.sec"});
 
             @Override
             public DeviceDetails provide(RemoteClientInfo info) {

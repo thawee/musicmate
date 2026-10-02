@@ -169,6 +169,11 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             response.addHeader("Date", cachedDate);
         }
         DLNAHeaderHelper.getAudioHeaders(song).forEach(response::addHeader);
+        // Samsung TVs ask for the track length this way
+        if (request.getHeader("getmediainfo.sec", null) != null) {
+            String mediaInfo = DLNAHeaderHelper.getSamsungMediaInfo(song);
+            if (mediaInfo != null) response.addHeader("MediaInfo.sec", mediaInfo);
+        }
         return response;
     }
 

@@ -47,6 +47,7 @@ import apincer.music.core.model.Track;
         serviceType = @UpnpServiceType(value = "ContentDirectory", version = 1))
 @UpnpStateVariables({
         @UpnpStateVariable(name = "A_ARG_TYPE_ContainerID", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_FeatureList", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_ObjectID", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_Result", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_SearchCriteria",sendEvents = false, datatype = "string"),
@@ -336,6 +337,24 @@ public class ContentDirectory {
             Log.e(TAG, "Search failed for criteria: " + searchCriteria, e);
             throw new ContentDirectoryException(ContentDirectoryErrorCode.CANNOT_PROCESS, e.toString());
         }
+    }
+
+    /**
+     * Samsung TVs call X_GetFeatureList to find the starting folder of their simple "basic view"
+     * per media type. Audio only, at the root ("0"); no video or photo entries.
+     */
+    static final String SAMSUNG_FEATURE_LIST = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<Features xmlns=\"urn:schemas-upnp-org:av:avs\""
+            + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+            + " xsi:schemaLocation=\"urn:schemas-upnp-org:av:avs http://www.upnp.org/schemas/av/avs.xsd\">"
+            + "<Feature name=\"samsung.com_BASICVIEW\" version=\"1\">"
+            + "<container id=\"0\" type=\"object.item.audioItem\"/>"
+            + "</Feature></Features>";
+
+    @UpnpAction(name = "X_GetFeatureList",
+            out = @UpnpOutputArgument(name = "FeatureList", stateVariable = "A_ARG_TYPE_FeatureList"))
+    public String samsungFeatureList() {
+        return SAMSUNG_FEATURE_LIST;
     }
 
     /** This server does not create, change or delete objects: everything is restricted="1". */

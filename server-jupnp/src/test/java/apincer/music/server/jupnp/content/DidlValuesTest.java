@@ -32,6 +32,15 @@ public class DidlValuesTest {
     }
 
     @Test
+    public void samsungMediaInfo_isTheDurationInMilliseconds() {
+        AudioTag t = file("/m/a.flac", "FLAC");
+        t.setAudioDuration(263.25);
+        assertEquals("SEC_Duration=263250", DLNAHeaderHelper.getSamsungMediaInfo(t));
+        t.setAudioDuration(0);
+        assertNull(DLNAHeaderHelper.getSamsungMediaInfo(t)); // unknown length: no header
+    }
+
+    @Test
     public void didlDate_isAnIsoDate() {
         assertEquals("2023-06-09", AbstractContentBrowser.didlDate("2023-06-09"));
         assertEquals("1959-01-01", AbstractContentBrowser.didlDate("1959"));
