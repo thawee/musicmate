@@ -180,16 +180,18 @@ public class BaseServer {
     }
 
     public String getServerSignature() {
-        String componentName = "Server";
-        if(this instanceof UpnpServer) {
-            componentName = "UpnpServer";
-        }else  if(this instanceof WebServer) {
-            componentName = "WebServer";
-        }
-        //Server:  WebServer MusicMate/3.11.0-251014 (Android/16; Jetty/12.1.1;)
-        String libInfos = String.join("; ", this.libInfos);
+        return serverHeader(osVersion, appVersion, libInfos);
+    }
 
-        return String.format("%s MusicMate/%s (Android/%s; %s)", trimToEmpty(componentName), appVersion, osVersion, trimToEmpty(libInfos));
+    /**
+     * The HTTP Server header in the UPnP Device Architecture form "OS/version UPnP/1.0
+     * product/version", with the engine (e.g. SonicNIO/2.2) as an extra product token.
+     */
+    static String serverHeader(String osVersion, String appVersion, java.util.List<String> libInfos) {
+        StringBuilder sb = new StringBuilder("Android/").append(osVersion)
+                .append(" UPnP/1.0 MusicMate/").append(appVersion);
+        for (String lib : libInfos) sb.append(' ').append(lib);
+        return sb.toString();
     }
 
     public void addLibInfo(String name, String version) {

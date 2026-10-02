@@ -219,7 +219,9 @@ public class MediaServerDevice extends LocalDevice {
                 // Add serialNumber for better device identification
                 String serialNumber = getUuid(context).substring(0, 12).toUpperCase();
 
-                ModelDetails modelDetails = new ModelDetails(ApplicationUtils.getDeviceModel(),
+                // modelName names the product, as clients use it to recognise servers; the phone
+                // model is already in the friendly name, e.g. "MusicMate (Galaxy S25)"
+                ModelDetails modelDetails = new ModelDetails("MusicMate",
                         modelDescription,
                         modelNumber,
                         "https://github.com/thawee/musicmate"  // Add modelURL for more information

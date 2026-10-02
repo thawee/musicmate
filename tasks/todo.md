@@ -1010,4 +1010,6 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] 8. Remove artistDiscographyURI -> /hires_badge (404)
 - [x] 9. restricted="1" (read-only server)
 - [x] Verify: 244 unit tests (UpnpSearchTest 10, DidlValuesTest 3); device: DIDL item fields, Search (383 for "love", 10 for audio by Miles, 8305 all audio, 0 for album class, 708 for malformed), empty caps, contentFeatures without PN for FLAC
-- [ ] Later (review items 10, 11, 13): standard Server header with UPnP/1.0, modelName "MusicMate", albumArtURI dlna:profileID; Windows/Xbox MediaReceiverRegistrar and Samsung X_GetFeatureList only if a client needs them
+- [x] 10/11 (2026-10-02): Server header "Android/16 UPnP/1.0 MusicMate/<ver> [SonicNIO/2.2]" (ServerHeaderTest); modelName "MusicMate". Verified on device on both ports
+- [ ] 13: albumArtURI dlna:profileID needs a real thumbnail (JPEG_TN is at most 160x160); decision pending
+- [ ] Windows/Xbox MediaReceiverRegistrar and Samsung X_GetFeatureList only if a client needs them
