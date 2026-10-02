@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.21.0] - 2026-10-02
+
 ### Added
 - **FLAC and ALAC on Sony and LG TVs:** TVs that cannot play a format now get it converted to WAV while it streams, at the original sample rate and bit depth: FLAC for LG (which plays FLAC only on 2022 and later models) and ALAC for Sony and LG. The conversion is bit-perfect (FLAC: the converted audio's MD5 matches the MD5 stored in the file; ALAC: identical to Apple's own decoder), with byte-range and time seeking. Other clients still get the original files. DSD is no longer listed for Sony, LG and Toshiba TVs, which cannot play it.
 - **Seeking by time (LG and Sony TVs):** FLAC and MP3 can now be seeked by time (DLNA `TimeSeekRange.dlna.org`), which LG webOS TVs from 2022 use exclusively and Sony TVs prefer; before, only byte-range seeking was offered, so seeking could fail on those TVs. FLAC uses the file's seek table (the stream starts exactly at a seek point); MP3 is proportional and aligned to a frame. Other formats keep byte-range seeking only and answer a time seek with 406.
