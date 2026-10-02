@@ -210,19 +210,11 @@ public class BaseServer {
 
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
-                // Defense-in-depth: Do NOT switch player or notify track access when a controlled
-                // DMR session is active. Passive HTTP GET requests from renderers pre-buffering
-                // the next track must not disrupt active playback state.
-                PlaybackTarget currentPlayer = playbackService.getPlayer();
-                if (currentPlayer != null && currentPlayer.isStreaming() && currentPlayer.canReadSate()) {
-                    // Active controlled DMR session — silently ignore passive HTTP notification
-                    return;
-                }
-
+                // The service applies the player priority: a stream never interrupts music that is
+                // playing, and a driven renderer's own pre-fetch is the same session, not a new one
                 String cleanIp = NetworkUtils.extractIpAddress(clientIp);
                 PlaybackTarget player = WebStreamingPlayer.Factory.create(cleanIp, userAgent, cleanIp);
-                playbackService.switchPlayer(player, false);
-                playbackService.onAccessMediaTrack(tag);
+                playbackService.onStreamAccess(player, tag);
             }
         });
     }

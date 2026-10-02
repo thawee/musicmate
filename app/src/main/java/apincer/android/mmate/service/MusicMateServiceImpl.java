@@ -1329,10 +1329,19 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
                 && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
 
-            // If this is an unprompted / uncontrolled HTTP streaming request (controlled == false)
-            // and we ALREADY have an active controlled DMR player, do NOT switch or deactivate the current player!
-            if (!controlled && currentPlayerFlow.getValue().isPresent() && isControllable(currentPlayerFlow.getValue().get())) {
-                return;
+            // Automatic switches (a stream, an external app starting) follow the player priority:
+            // never interrupt what is playing; when idle, only a higher or equal source takes over.
+            // The listener's own choice (controlled) always wins.
+            if (!controlled) {
+                PlaybackTarget current = currentPlayerFlow.getValue().orElse(null);
+                if (isSameTarget) return; // nothing changes (e.g. a driven renderer pre-fetching)
+                if (current != null && !PlayerPriority.mayTakeOver(
+                        PlayerPriority.rank(current, isControllable(current)), isCurrentTargetPlaying(current),
+                        PlayerPriority.rank(resolvedTarget, false))) {
+                    Log.d(TAG, "Not switching to " + resolvedTarget.getDisplayName() + ": "
+                            + current.getDisplayName() + " keeps priority");
+                    return;
+                }
             }
 
             // 2. Deactivate current player IF DIFFERENT
@@ -1445,6 +1454,32 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return player instanceof DMRPlayer && player.getTargetId().equals(controlledPlayerTargetId);
     }
 
+    // A passive stream reports no state; it counts as playing for the track's length after its request
+    private volatile long passiveStreamBusyUntil;
+
+    /** Is the current target playing? A followed stream is busy for its track's length. */
+    private boolean isCurrentTargetPlaying(PlaybackTarget current) {
+        if (isMonitoredStream(current)) return android.os.SystemClock.elapsedRealtime() < passiveStreamBusyUntil;
+        return isPlaying();
+    }
+
+    @Override
+    public void onStreamAccess(PlaybackTarget client, Track track) {
+        switchPlayer(client, false);
+        // Follow the stream only if it is now the current target (it may have lost to music playing,
+        // or be a driven renderer pre-fetching its next track)
+        PlaybackTarget active = getActivePlayer();
+        PlaybackTarget resolved = resolveStreamingPlayerTarget(client);
+        if (active == null || !isMonitoredStream(active) || !active.getTargetId().equals(resolved.getTargetId())) {
+            Log.d(TAG, "Stream from " + client.getDisplayName() + " not followed; "
+                    + (active != null ? active.getDisplayName() : "no player") + " keeps priority");
+            return;
+        }
+        double seconds = track != null && track.getAudioDuration() > 0 ? track.getAudioDuration() : 0;
+        passiveStreamBusyUntil = android.os.SystemClock.elapsedRealtime() + Math.max(60_000L, (long) (seconds * 1000) + 15_000L);
+        onAccessMediaTrack(track);
+    }
+
     /** A streaming target MusicMate only follows: transport commands cannot reach it. */
     private boolean isMonitoredStream(PlaybackTarget player) {
         return player != null && player.isStreaming() && !isControllable(player);
@@ -1461,55 +1496,25 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
      * @return An Optional containing the highest-priority player found, or Optional.empty() if no suitable player is available.
      */
     public Optional<PlaybackTarget> autoSelectBestPlayer() {
-        if (getPlaybackTargets() == null || getPlaybackTargets().isEmpty()) {
-            return Optional.empty();
-        }
-
-        PlaybackTarget webStreamingFallback = null;
-        PlaybackTarget externalPlayerFallback = null;
-
-        // We iterate once to find the best match
-        for (PlaybackTarget target : getPlaybackTargets()) {
-            if(target == null) continue;
-
-            // --- Priority 1: DMCA / DMR Player ---
-            // (Replace 'DMR Player' with your actual DLNA/UPnP player class name)
-            if (target.isStreaming() && target.canReadSate()) {
-                Log.d(TAG, "Auto-select: Found high-priority DMR Player: " + target.getTargetId());
-                // This is the highest priority, so we can return immediately
-                return Optional.of(target);
-            }
-
-            // --- Priority 2: WebStreaming Player ---
-            // If we haven't found a streaming player yet, save this one
-            if (webStreamingFallback == null && target.isStreaming()) {
-                Log.d(TAG, "Auto-select: Found streaming player (fallback 1): " + target.getTargetId());
-                webStreamingFallback = target;
-            }
-
-            // --- Priority 3: External Player ---
-            // If we haven't found an external player yet, save this one
-            if (externalPlayerFallback == null && target instanceof ExternalAndroidPlayer) {
-                Log.d(TAG, "Auto-select: Found external player (fallback 2): " + target.getTargetId());
-                externalPlayerFallback = target;
+        // Startup / fallback default: DLNA renderer > local playback > external app. A passive
+        // stream is driven by another device and cannot be chosen (PlayerPriority).
+        List<PlaybackTarget> targets = getPlaybackTargets();
+        if (targets == null || targets.isEmpty()) return Optional.empty();
+        PlaybackTarget best = null;
+        int bestRank = 0;
+        for (PlaybackTarget target : targets) {
+            if (target == null) continue;
+            int rank;
+            if (target instanceof DMRPlayer) rank = PlayerPriority.RENDERER;
+            else if (target.isStreaming()) continue;
+            else rank = PlayerPriority.rank(target, false);
+            if (rank > bestRank) {
+                best = target;
+                bestRank = rank;
             }
         }
-
-        // After checking all players, we use our fallbacks in order of priority
-
-        if (webStreamingFallback != null) {
-            Log.d(TAG, "Auto-select: Using streaming player fallback: " + webStreamingFallback.getTargetId());
-            return Optional.of(webStreamingFallback);
-        }
-
-        if (externalPlayerFallback != null) {
-            Log.d(TAG, "Auto-select: Using external player fallback: " + externalPlayerFallback.getTargetId());
-            return Optional.of(externalPlayerFallback);
-        }
-
-        // No players matched any of our criteria
-        Log.d(TAG, "Auto-select: No suitable player found in the list.");
-        return Optional.empty();
+        if (best != null) Log.d(TAG, "Auto-select: " + best.getTargetId());
+        return Optional.ofNullable(best);
     }
 
     private void initWebUIAssets(Context context) {

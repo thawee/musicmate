@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dead server code:** Deleted the unbuilt Jetty 12, Undertow and HttpCore 5.4 engine modules (not in `settings.gradle`, and their catalog entries no longer existed), the unused `MediaServerHubImplOld`, and Netty's unused `NettyUPnpServerImpl`/`UpnpContentHolder` (UPnP control always runs on SonicNIO). About 8,400 lines; no behaviour change. Engine docs updated to match, including stale notes about shadowed HttpCore classes.
 
 ### Changed
+- **Player priority:** Music you are listening to is no longer interrupted by another device. Before, a TV or browser playing a song from MusicMate took over as the current player and stopped local playback. Now nothing automatic interrupts what is playing; when nothing is playing, a DLNA stream (TV, browser) takes over before a DLNA renderer, then local playback, then an external player app. Choosing a player yourself always wins. On start, MusicMate picks your last player, else a DLNA renderer, then local, then an external app.
 - **SonicNIO is the streaming engine:** Every install now streams with the built-in SonicNIO engine, which needs no third-party HTTP library and already handles UPnP control.
 - **Audio headers:** SonicNIO now sends the `X-Audio-*` headers (sample rate, bit depth, bitrate, format, Bit-Perfect) from one shared helper.
 

@@ -89,6 +89,21 @@ Unified event bus bridging native ExoPlayer, third-party MediaSessions, and remo
 
 ---
 
+## 2a. Control vs Monitor and Player Priority (2026-10-02)
+
+Whether MusicMate drives or only follows playback depends on the current target:
+
+| Target | Who decides what plays | How MusicMate follows it |
+|:---|:---|:---|
+| Local playback (`ExternalAndroidPlayer.LOCAL_TARGET_ID`, ExoPlayer) | MusicMate's queue | ExoPlayer events; track end advances the queue |
+| DLNA renderer chosen by the listener (`DMRPlayer`, `isControllable`) | MusicMate's queue | GENA events, polling fallback |
+| External player app (UAPP, HiBy, Poweramp) | The app; MusicMate's queue when MusicMate sent the track (`ExternalTrackEnd`) | MediaSession metadata and state |
+| Passive stream (`WebStreamingPlayer`, or a renderer driven by another app) | The other client | Each HTTP request (`onStreamAccess`) |
+
+`isControllable` is true only for a `DMRPlayer` chosen with `switchPlayer(..., controlled=true)`. Transport commands do nothing on a followed stream.
+
+**Priority (`PlayerPriority`):** the listener's choice always wins. An automatic switch (a TV or browser streaming, an external app starting) never interrupts a target that is playing; when it is idle, a higher or equal source takes over: DLNA stream 4 > chosen DLNA renderer 3 > local 2 > external app 1. A followed stream reports no state, so it counts as playing for its track's length after each request. Now Playing follows a stream only if it became the current target, and a driven renderer's own pre-fetch resolves to that renderer (same target), so it is never a new stream. The startup / fallback default is the last chosen player, else DLNA renderer > local > external (`autoSelectBestPlayer`).
+
 ## 3. Direct Audio Engine & Hardware Pipeline
 
 *Path:* `app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java`

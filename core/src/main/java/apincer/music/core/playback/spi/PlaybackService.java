@@ -70,6 +70,16 @@ public interface PlaybackService {
 
     void onAccessMediaTrack(Track tag);
 
+    /**
+     * A client (TV, browser, renderer) is streaming {@code tag} from MusicMate's server. The
+     * service decides whether that stream becomes the current target (it never interrupts music
+     * that is playing) and only then follows it in Now Playing.
+     */
+    default void onStreamAccess(apincer.music.core.playback.spi.PlaybackTarget client, Track tag) {
+        switchPlayer(client, false);
+        onAccessMediaTrack(tag);
+    }
+
     void onTrackDeleted(Track tag);
 
     void onTrackDeleted(long trackId);

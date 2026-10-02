@@ -1038,4 +1038,13 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] 4. Remove the unused RUNNING_MODE field; fix the stale "NO internal ExoPlayer" comment
 - [x] Verified on device: passive HTTP requests now produce nowPlaying/playbackState broadcasts (none before); pause on a monitored stream is ignored. Controlled DMR path not exercised (no renderer on this network)
 - [ ] Verify external continuation (fix 3) with HiBy/Poweramp on the phone
-- [ ] Decide: a passive stream (browser/TV fetching a song) currently becomes the current target and deactivates local playback; only a controlled DLNA renderer is protected
+- [x] Decided (player priority, below): automatic switches never interrupt what is playing
+
+## Player priority (2026-10-02, user: DLNA stream > DLNA renderer > local > external; UX rules agreed)
+- [x] Explicit choice in MusicMate (switchPlayer controlled=true) always wins
+- [x] Automatic switches (a TV/browser stream, an external app starting) never interrupt a target that is playing; when it is idle, the higher-ranked source wins: DLNA stream 4 > chosen DLNA renderer 3 > local 2 > external app 1
+- [x] A passive stream counts as playing for the track's length after its request (it reports no state)
+- [x] Now Playing follows a stream only if that stream is the current target (not a stream that lost to music already playing)
+- [x] A controlled renderer's own pre-fetch (same device) is never a new stream
+- [x] Startup / fallback default: last chosen player, else DLNA renderer > local > external
+- [x] Tests (PlayerPriorityTest 4); device: idle + browser stream -> followed; local playing + stream -> local keeps priority (logged); local paused + stream -> stream takes over
