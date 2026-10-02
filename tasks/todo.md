@@ -846,10 +846,11 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] Run `:app:assembleDebug` to verify no AAPT color resource linking errors.
 
 ## Cover Art Architecture Fixes
-- [ ] Phase 1: Implement `MediaMetadataRetriever` in `FileRepository` to replace `FFMpegHelper` for embedded cover extraction.
-- [ ] Phase 2: Fix Lazy Extraction bug in `FileRepository.getCoverArt()` so embedded art is properly extracted and returned to Coil when missing.
-- [ ] Phase 3: Leave unmanaged file hashing as `MD5(file path)` to support heterogeneous folders (e.g., Downloads).
-- [ ] Phase 4: Refactor `CoverartFetcher` to use native Coil `AssetImageSource` instead of copying the default cover to the disk cache.
+- [x] Phase 1 (already in code, confirmed 2026-10-02): Implement `MediaMetadataRetriever` in `FileRepository` to replace `FFMpegHelper` for embedded cover extraction.
+- [x] Phase 2 (already in code, confirmed 2026-10-02; scan always sets albumArtFilename and extraction writes the file the lookup re-checks): Fix Lazy Extraction bug in `FileRepository.getCoverArt()` so embedded art is properly extracted and returned to Coil when missing.
+- [x] Phase 3 (already in code): Leave unmanaged file hashing as `MD5(file path)` to support heterogeneous folders (e.g., Downloads).
+- [x] Phase 4 (2026-10-02): Refactor `CoverartFetcher` to use native Coil `AssetImageSource` instead of copying the default cover to the disk cache.
+- [ ] Device: a track with no art shows the default cover, and cache/Covers/no_cover.png is not recreated
 
 ## Data integrity fixes (2026-10-01, from tasks/app-review-2026-10-01-full.md)
 - [x] P1-11 FileOperationTask: fail item when TagWriter.writeTagToFile fails
