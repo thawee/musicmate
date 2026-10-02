@@ -1157,6 +1157,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
+    public void onPlayResults(boolean shuffle) {
+        if (isPlaybackServiceBound && playbackService != null) {
+            viewModel.playCurrentResults(null, playbackService, shuffle);
+        }
+    }
+
+    @Override
     public void onSmartPlaylistCreated(apincer.music.core.model.PlaylistEntry entry) {
         viewModel.loadMusicItems();
         android.widget.Toast.makeText(this, "Smart Playlist '" + entry.getName() + "' created", android.widget.Toast.LENGTH_SHORT).show();
@@ -1449,6 +1456,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Added to queue", android.widget.Toast.LENGTH_SHORT).show();
             }
+        } else if (actionId == R.id.action_go_to_artist) {
+            doShowFilteredLibrary(Constants.FILTER_TYPE_ARTIST, track.getArtist());
+        } else if (actionId == R.id.action_go_to_album) {
+            doShowFilteredLibrary(Constants.FILTER_TYPE_ALBUM, track.getAlbum());
         } else if (actionId == R.id.action_encoding_file) {
             doEncodeAudioFiles(singleTrackList);
         } else if (actionId == R.id.action_open_with) {
@@ -1462,6 +1473,19 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 Log.e(TAG, "Failed to start external player activity", e);
             }
         }
+    }
+
+    /** Narrows the current library view to one artist or album, as the song page's links do. */
+    private void doShowFilteredLibrary(String filterType, String filterText) {
+        if (isEmpty(filterText) || currentCriteria == null) return;
+        if (currentCriteria.isSearchMode()) {
+            // Search results ignore filters (TagRepository), so leave search first.
+            currentCriteria.resetSearch();
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateSearchQuery("");
+        }
+        currentCriteria.setFilterType(filterType);
+        currentCriteria.setFilterText(filterText);
+        viewModel.loadMusicItems(currentCriteria);
     }
 
     public void showPlayerPickerPopup(View anchorView) {
@@ -1520,8 +1544,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 } else if (AudioOutputHelper.isExternalAppTarget(target)) {
                     // 2. External Music App Target
                     String title = target.getDisplayName();
-                    String vStr = apincer.music.core.utils.PlayerNameUtils.formatAppVersion(target.getDescription());
-                    String subtitle = !vStr.isEmpty() ? vStr + " • External Player" : "External Music App";
+                    String subtitle = "External Music App";
                     int iconRes = R.drawable.rounded_music_note_24;
 
                     appItems.add(new apincer.android.mmate.ui.compose.PlayerTargetItem(

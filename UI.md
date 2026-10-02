@@ -102,10 +102,15 @@ Focused strictly on **quick playback actions** and **file-level utility** for on
 │  ⏭  Play Next           │ Playback Group│
 │  ➕  Add to Queue        ┘               │
 │  ───────────────────────────────────────│
+│  👤  Go to Artist       ┐ Browse Group  │
+│  💿  Go to Album        ┘               │
+│  ───────────────────────────────────────│
 │  🔁  Convert Format     ┐ File Ops      │
 │  🔗  Open in External   ┘ Group         │
 └─────────────────────────────────────────┘
 ```
+
+- **Browse Group:** Go to Artist / Go to Album narrow the current library view with the same artist/album filter the song page's provenance links use. Each is hidden when the track has no artist or album.
 
 - **Dynamic Visibility:** The playback group (`R.id.group_playback`) is hidden dynamically (`setGroupVisible(false)`) when no playback service/device is bound.
 - **Excluded Items:**
@@ -230,9 +235,9 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 │  INSTALLED MUSIC APPS                                     │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │ [🎨 Poweramp Icon] Poweramp                         │  │ ← Native App Icon
-│  │                    v935 • External Player           │  │   (Squircle 6dp)
+│  │                    External Music App               │  │   (Squircle 6dp)
 │  │ [🎨 UAPP Icon]     USB Audio Player PRO             │  │
-│  │                    v6.1 • External Player           │  │
+│  │                    External Music App               │  │
 │  └─────────────────────────────────────────────────────┘  │
 │  ───────────────────────────────────────────────────────  │
 │  🔄  Rescan for DLNA players                              │ ┐ Group 1:

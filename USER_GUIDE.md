@@ -69,7 +69,8 @@ The main dashboard is optimized for handling extremely large music libraries.
 ### Key Features & Controls
 * **Smart Search & Quick Cast:** Search your library or tap the cast icon (`rounded_music_cast_24`) in the top header for instant 1-tap renderer switching.
   - **Dynamic Status Tinting:** Tints **Gold** (`#FFC107`) when casting to a remote DLNA renderer, and default theme tint when playing locally.
-  - **Device Type & App Icons:** Target selection menu displays official **DLNA logo icons** for network renderers, **actual installed app icons** for Android music apps (Poweramp, UAPP, Foobar2000, etc.), version numbers (e.g. `Poweramp • v935`), and active checkmarks (`✓`).
+  - **Device Type & App Icons:** Target selection menu displays official **DLNA logo icons** for network renderers, **actual installed app icons** for Android music apps (Poweramp, UAPP, Foobar2000, etc.) shown by name, and active checkmarks (`✓`).
+* **Play / Shuffle:** The track count line ("35 Tracks • 1.51 GB") has **Play** and **Shuffle** buttons that put every track in the current list or search results into the queue, in order or shuffled. They are hidden for artist, genre and playlist overviews.
 ### Gestures & Interactions
 
 MusicMate uses a deliberate, purpose-built interaction model — every gesture has exactly one job:
@@ -93,6 +94,8 @@ Focused on **quick actions for one track**. The playback group is automatically 
 | ▶ **Play Now** | Player active |
 | ⏭ **Play Next** | Player active |
 | ➕ **Add to Queue** | Player active |
+| 👤 **Go to Artist** | Track has an artist |
+| 💿 **Go to Album** | Track has an album |
 | 🔁 **Convert Format** | Always |
 | 🔗 **Open in External App** | Always |
 
@@ -136,7 +139,7 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 
 ## 3. Editing Tags & Technical Details (TagsActivity)
 
-Selecting a song from the list opens the **Tags Editor**. The expanded preview has **Back** (top-left) and an icon-only **Change Cover** control (top-right), with the title on a separate surface below the artwork, followed by quality badges, a Genre chip when available, and artist/album/folder provenance. There is no separate Play button on the cover. Scrolling down (or tapping **Edit Song Info**) opens the detail workspace with the **Song Info / Tech Info** switcher. **Save** dims when there are no unsaved changes.
+Selecting a song from the list opens the **Tags Editor**. The expanded preview has **Back** (top-left) and an icon-only **Change Cover** control (top-right), with the title on a separate surface below the artwork, followed by quality badges, a Genre chip when available, and artist/album/folder provenance. A gold **Play** button at the cover's lower right plays the song; long-press it to play the song next. Scrolling down (or tapping **Edit Song Info**) opens the detail workspace with the **Song Info / Tech Info** switcher. **Save** dims when there are no unsaved changes.
 
 ### Tab A: Song Info (Metadata Editor)
 This tab allows you to edit standard fields including:

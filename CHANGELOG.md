@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Play or shuffle a whole list:** The track count line in the library and in search results now has **Play** and **Shuffle** buttons. Before, search results ("queen": 35 tracks) could only be played one track at a time.
+- **Play from the song page:** The song page has a gold Play button on the cover again; long-press plays the song next. 3.19.8 removed the cover play button, which left the page with no way to play the song.
+- **Go to Artist and Go to Album:** The track `⋮` menu can narrow the library to the track's artist or album.
+
+### Fixed
+- **Version in the menu:** The navigation drawer showed a hardcoded "v3.20.1"; it now shows the installed version.
+- **Player app names:** External player apps show by name only ("Poweramp" instead of "Poweramp • v1031") in the mini player, Now Playing and the output picker.
+- **Track menu icon:** "Open in External App" now has an icon and lines up with the other items.
+
 ## [3.21.0] - 2026-10-02
 
 ### Added

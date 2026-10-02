@@ -129,6 +129,31 @@
                             app:iconPadding="0dp"
                             app:iconSize="24dp" />
 
+                        <!-- Play this song; long-press plays it next. Sits inside the 240dp
+                             cover's bottom-right corner: 120 - 28 (half button) - 8 = 84dp. -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_play_song"
+                            style="@style/Widget.Material3.Button"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:translationX="84dp"
+                            android:translationY="-8dp"
+                            android:padding="0dp"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:minWidth="0dp"
+                            android:contentDescription="@string/btn_play_song_cd"
+                            app:backgroundTint="#FFFFD700"
+                            app:cornerRadius="28dp"
+                            app:icon="@drawable/ic_baseline_play_arrow_32"
+                            app:iconTint="#FF121212"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="32dp" />
+
                     </FrameLayout>
 
                     <!-- Title shares the preview surface below the full square cover. -->

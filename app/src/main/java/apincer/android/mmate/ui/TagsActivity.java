@@ -390,6 +390,18 @@ public class TagsActivity extends AppCompatActivity {
                 doShowCoverArtActions();
             });
         }
+        View btnPlaySong = findViewById(R.id.btn_play_song);
+        if (btnPlaySong != null) {
+            btnPlaySong.setOnClickListener(v -> {
+                performHapticClick(v);
+                doPlaySong();
+            });
+            btnPlaySong.setOnLongClickListener(v -> {
+                performHapticClick(v);
+                doPlaySongNext();
+                return true;
+            });
+        }
         View btnBack = findViewById(R.id.btn_back);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> {
@@ -1052,6 +1064,21 @@ public class TagsActivity extends AppCompatActivity {
         if (playbackService != null) {
             playbackService.playSong(track);
             Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void doPlaySongNext() {
+        Track track = viewModel.displayTag.getValue();
+        if (track == null && !getEditItems().isEmpty()) {
+            track = getEditItems().get(0);
+        }
+        if (track == null) return;
+
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            playbackService.getQueueManager().addPlayNext(track);
+            Toast.makeText(this, "Playing next: " + track.getTitle(), Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
         }

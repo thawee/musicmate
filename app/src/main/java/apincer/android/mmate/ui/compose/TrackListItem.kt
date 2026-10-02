@@ -297,6 +297,32 @@ fun TrackListItem(
                             )
                             HorizontalDivider(color = Color(0x1AFFFFFF))
                         }
+                        // Browse group
+                        if (!track.artist.isNullOrBlank()) {
+                            DropdownMenuItem(
+                                text = { Text("Go to Artist", color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_context_artist_24dp), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_go_to_artist)
+                                }
+                            )
+                        }
+                        if (!track.album.isNullOrBlank()) {
+                            DropdownMenuItem(
+                                text = { Text("Go to Album", color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_context_album_24dp), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_go_to_album)
+                                }
+                            )
+                        }
+                        HorizontalDivider(color = Color(0x1AFFFFFF))
                         // File operations group
                         DropdownMenuItem(
                             text = { Text("Convert Format", color = Color.White, fontSize = 15.sp) },
@@ -310,6 +336,9 @@ fun TrackListItem(
                         )
                         DropdownMenuItem(
                             text = { Text("Open in External App", color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_baseline_open_in_new_24), contentDescription = null, tint = Color.White)
+                            },
                             onClick = {
                                 showMenu = false
                                 onMenuAction(R.id.action_open_with)

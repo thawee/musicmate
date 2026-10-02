@@ -1,3 +1,27 @@
+# UX/UI improvements (review: tasks/ux-review-2026-10-02.md)
+
+## Batch 1: P1 quick wins
+- [x] 1. Drawer version from BuildConfig (MainScaffold.kt:220)
+- [x] 2. Hide player app build number outside Diagnostics (PlayerNameUtils)
+- [x] 3. Play / Play Next on song detail
+- [x] 4. Play all / Shuffle for the current list and search results
+- [x] 5. Track menu (Add to Playlist dropped: no single-track playlist add exists): Go to Artist, Go to Album, icon for Open in External App
+
+- [x] Device check (S25): drawer v3.21.0, Play/Shuffle on "queen" (35 tracks, shuffled queue), Go to Artist (21 Queen tracks, Back clears), song page Play
+- [ ] Follow-up: a filtered list (Go to Artist/Album, song page links) shows only "21 Tracks" with no "Artist: Queen" label
+
+## Batch 2: P2 polish
+- [ ] 6. Music Center button icon
+- [ ] 7. Queue source chips: Replenish to header, fade edge, clearer counter, one count
+- [ ] 8. Server tab clients as rows, friendly browser name
+- [ ] 9. Output picker: "This phone" with live route
+- [ ] 10. Now Playing scrim and album line
+
+## Verification
+- [ ] Unit tests + assembleDebug; update screenshot references touched
+- [ ] Install on device and re-capture each changed screen
+- [ ] UI.md, USER_GUIDE.md, CHANGELOG Unreleased
+
 # MQA display fixes
 
 ## Documentation and commit follow-up

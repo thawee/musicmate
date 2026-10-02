@@ -472,6 +472,7 @@
     <string name="menu_pick_cover_art">Choose Cover Art from Gallery</string>
     <string name="menu_view_cover_art">View Fullscreen Cover Art</string>
     <string name="btn_edit_cover">Change Cover</string>
+    <string name="btn_play_song_cd">Play song. Long press to play next</string>
     <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 
     <!-- New Indicator -->

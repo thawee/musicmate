@@ -125,6 +125,11 @@ fun MainScaffold(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val appVersion = remember(context) {
+        // versionName is "3.21.0-261002"; the build date is not for the drawer.
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull()?.substringBefore('-').orEmpty()
+    }
     val focusManager = LocalFocusManager.current
     val activeItemId = LibraryDestinationMenuMapping.toMenuItemId(
         navigationState.selectedLibraryDestination
@@ -217,7 +222,7 @@ fun MainScaffold(
                                     letterSpacing = (-0.4).sp
                                 )
                                 Text(
-                                    text = "v3.20.1 • Hi-Res Edition",
+                                    text = "v$appVersion • Hi-Res Edition",
                                     color = drawerGold.copy(alpha = 0.85f),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
@@ -491,6 +496,10 @@ fun MainScaffold(
                     },
                     showMenuButton = !useExpandedNavigation,
                     statsText = state.headerStatsText.value,
+                    // Containers (artists, genres, folders) are not playable as one list.
+                    canPlayResults = !state.isPlaylistOverview.value &&
+                        state.tracks.firstOrNull()?.isContainer == false,
+                    onPlayResults = { shuffle -> callbacks?.onPlayResults(shuffle) },
                     isPlaylistOverview = state.isPlaylistOverview.value,
                     isScanning = state.isScanning.value,
                     scanProgressText = state.scanProgressText.value,
@@ -696,6 +705,8 @@ private fun TopSearchBar(
     onMenuClick: () -> Unit,
     showMenuButton: Boolean,
     statsText: String,
+    canPlayResults: Boolean = false,
+    onPlayResults: (shuffle: Boolean) -> Unit = {},
     isPlaylistOverview: Boolean,
     isScanning: Boolean,
     scanProgressText: String,
@@ -893,7 +904,10 @@ private fun TopSearchBar(
                         text = statsText,
                         color = Color(0x99FFFFFF),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                 } else {
                     Spacer(modifier = Modifier.width(1.dp))
@@ -901,8 +915,43 @@ private fun TopSearchBar(
 
                 if (isScanning) {
                     ScanningIndicator(scanProgressText)
+                } else if (canPlayResults) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play") { onPlayResults(false) }
+                        PlayResultsPill(R.drawable.ic_baseline_shuffle_24, "Shuffle") { onPlayResults(true) }
+                    }
                 }
             }
+        }
+    }
+}
+
+// ── Play / Shuffle the current list ──────────────────────────────────────────
+@Composable
+private fun PlayResultsPill(iconRes: Int, label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .clickable(role = Role.Button, onClickLabel = "$label all", onClick = onClick)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0x1FFFD700))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = Color(0xFFFFD700),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = label, color = Color(0xFFFFD700), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
         }
     }
 }

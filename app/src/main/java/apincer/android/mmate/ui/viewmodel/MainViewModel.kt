@@ -291,7 +291,8 @@ class MainViewModel(
         }
     }
 
-    fun playCurrentResults(startTrack: Track?, playbackService: PlaybackService?) {
+    @JvmOverloads
+    fun playCurrentResults(startTrack: Track?, playbackService: PlaybackService?, shuffle: Boolean = false) {
         if (playbackService == null) return
         val criteria = snapshot(currentCriteria) ?: return
         playbackError.value = null
@@ -300,6 +301,7 @@ class MainViewModel(
             try {
                 val songsToPlay = (repos.findMusic(criteria, 0L, Long.MAX_VALUE) ?: emptyList())
                     .filter { !it.isContainer }
+                    .let { if (shuffle) it.shuffled() else it }
                 if (songsToPlay.isEmpty()) throw IllegalStateException("No playable results")
                 val targetTrack = startTrack?.let { selected ->
                     songsToPlay.firstOrNull { it.id == selected.id }
