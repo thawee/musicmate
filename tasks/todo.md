@@ -6,7 +6,8 @@
 - [x] Stage only MQA changes and verify the staged source snapshot builds and passes app tests.
 - [x] Commit the MQA fix and documentation; preserve unrelated working-tree changes. (85065968; confirmed 2026-10-02)
 - [ ] Device: real MQA / MQA Studio files, track changes, compact and wide layouts, both player modes (mqa-display-fix-plan.md step 4)
-- [ ] Record reference images for the 8 MqaScreenshotTest previews (none exist yet; inspect the renders first)
+- [x] Record reference images for MqaScreenshotTest: 5 of 8 recorded after inspection (audio details, badges compact/large text/wider, playback)
+- [ ] Fix, then record: audio details at 200% text (VU meter panel collapses to its header, "-4.2 dB" wraps mid-value); full screen at 200% text (header overflows, full-screen button clipped at the right edge, "ANSI BALLISTICS" overlaps); full screen default (VU dials cropped, scale labels cut at the left edge)
 
 Plan and verification: `tasks/mqa-display-fix-plan.md`. Implemented; 94 app tests and debug build pass. Eight previews visually inspected; screenshot references and remaining live-device matrix pending.
 
