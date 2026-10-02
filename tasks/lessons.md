@@ -497,3 +497,4 @@
 - Benchmarks must measure bytes actually received and check each transfer's exit status. stream-bench.sh assumed every parallel download completed, so streams cut at 30 s showed as 33 MB/s instead of failing.
 - A test loop that greps old result files proves nothing: delete results first and check the Gradle exit code and compile errors before reading them.
 - A fallback that catches an exception and quietly substitutes a default (CompositeWebServer falling back to SonicNIO) hid a broken Netty engine from every user while the UI said Netty. Fail visibly, or at least surface the active implementation (the Server header showed it) and test that the selected one is the one running.
+- Before claiming a file "will not be recreated", search for every writer, not just the code being changed. initDefaultAssets() copied the same asset at startup, so the claim was wrong.

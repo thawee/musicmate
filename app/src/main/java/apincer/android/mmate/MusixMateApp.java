@@ -13,13 +13,11 @@ import androidx.work.WorkManager;
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 
-import java.io.IOException;
 
 import javax.inject.Inject;
 
 import apincer.music.core.Constants;
 import apincer.music.core.Settings;
-import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -62,9 +60,6 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         // initialize thread executors
         MusicMateExecutors.getInstance();
 
-        //prepare defaultAssets
-        initDefaultAssets();
-
         removeRetiredServerEnginePreference();
 
         // start music scan
@@ -88,14 +83,7 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         }
     }
 
-    private void initDefaultAssets() {
-        try {
-            String assetDir = "Covers";
-            ApplicationUtils.copyDirToAndroidCacheDir(getApplicationContext(), assetDir);
-        } catch (IOException e) {
-            Log.e(TAG, "cannot prepare initial assets", e);
-        }
-    }
+
 
     /** SonicNIO is the only streaming engine (ADR-037); drop the old engine choice ("httpcore", "netty"). */
     private void removeRetiredServerEnginePreference() {

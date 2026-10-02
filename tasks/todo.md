@@ -850,7 +850,8 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] Phase 2 (already in code, confirmed 2026-10-02; scan always sets albumArtFilename and extraction writes the file the lookup re-checks): Fix Lazy Extraction bug in `FileRepository.getCoverArt()` so embedded art is properly extracted and returned to Coil when missing.
 - [x] Phase 3 (already in code): Leave unmanaged file hashing as `MD5(file path)` to support heterogeneous folders (e.g., Downloads).
 - [x] Phase 4 (2026-10-02): Refactor `CoverartFetcher` to use native Coil `AssetImageSource` instead of copying the default cover to the disk cache.
-- [ ] Device: a track with no art shows the default cover, and cache/Covers/no_cover.png is not recreated
+- [x] Device (2026-10-02): a track with no art shows the default cover (user confirmed). The cached copy did come back: MusixMateApp.initDefaultAssets() copied the whole Covers asset folder at every startup (skipping existing files). Nothing read those copies, so that startup copy was removed; after relaunch neither no_cover.png nor no_cover3.png is recreated
+- [ ] Unused asset: assets/Covers/no_cover3.png (about 1.2 MB) is referenced nowhere; remove it if it is not wanted. A local, untracked assets/Covers/.DS_Store is packaged into local builds
 
 ## Data integrity fixes (2026-10-01, from tasks/app-review-2026-10-01-full.md)
 - [x] P1-11 FileOperationTask: fail item when TagWriter.writeTagToFile fails
