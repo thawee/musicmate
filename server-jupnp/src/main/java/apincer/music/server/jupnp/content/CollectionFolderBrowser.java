@@ -44,6 +44,10 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
             return items;
         }
         List<Track> list = tagRepos.getAllMusicsForPlaylist();
+        if (clientProfile.adapts()) {
+            list = new ArrayList<>(list);
+            list.removeIf(clientProfile::hides); // e.g. DSD for TVs
+        }
         List<Track> results;
         if (CollectionsBrowser.ALL_SONGS.equals(uuid)) {
             results = list;
@@ -59,6 +63,12 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         items = results;
         itemsUuid = uuid;
         return results;
+    }
+
+    /** Hides the client's unplayable formats in its track list (before paging and counting). */
+    @Override
+    protected boolean filtersChildren() {
+        return true;
     }
 
     /** Sorts the track list itself, so a sorted "All Songs" page stays cheap. */

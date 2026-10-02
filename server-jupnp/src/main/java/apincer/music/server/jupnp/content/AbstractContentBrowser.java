@@ -62,16 +62,48 @@ public abstract class AbstractContentBrowser {
     public List<DIDLObject> browseChildren(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<DIDLObject> result = new ArrayList<>();
         java.util.Comparator<DIDLObject> sort = BrowseSort.didl(orderby);
-        // A sorted request needs every child before paging, unless the browser sorts itself
-        if (pagesChildren() && (sort == null || sortsChildren())) {
+        boolean hiding = clientProfile.adapts();
+        // A sorted or filtered request needs every child before paging, unless the browser does it itself
+        if (pagesChildren() && (sort == null || sortsChildren()) && (!hiding || filtersChildren())) {
             result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
             result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
             return result;
         }
         result.addAll(browseContainer(contentDirectory, myId, 0, 0, orderby));
         result.addAll(browseItem(contentDirectory, myId, 0, 0, orderby));
+        if (hiding && result.removeIf(AbstractContentBrowser::isDsdItem)) {
+            filteredTotal = result.size();
+        }
         if (sort != null) result.sort(sort);
         return page(result, firstResult, maxResults);
+    }
+
+    /** The requesting client's format profile; set per request by ContentDirectory. */
+    protected apincer.music.core.server.ClientFormatProfile clientProfile =
+            apincer.music.core.server.ClientFormatProfile.DEFAULT;
+    private Integer filteredTotal;
+
+    void setClientProfile(apincer.music.core.server.ClientFormatProfile profile) {
+        this.clientProfile = profile != null ? profile : apincer.music.core.server.ClientFormatProfile.DEFAULT;
+    }
+
+    /** The total after hiding formats this client cannot play, when browseChildren filtered; else null. */
+    Integer filteredTotal() {
+        return filteredTotal;
+    }
+
+    /** DSD items carry audio/x-dsd in their res protocolInfo. */
+    private static boolean isDsdItem(DIDLObject object) {
+        if (!(object instanceof Item)) return false;
+        for (Res res : object.getResources()) {
+            if (res.getProtocolInfo() != null && "audio/x-dsd".equals(res.getProtocolInfo().getContentFormat())) return true;
+        }
+        return false;
+    }
+
+    /** True when a browser that pages itself also hides the client's unplayable formats (before paging). */
+    protected boolean filtersChildren() {
+        return false;
     }
 
     /** True when a browser that pages itself also applies SortCriteria (before paging). */

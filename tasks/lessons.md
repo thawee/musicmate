@@ -498,3 +498,4 @@
 - A test loop that greps old result files proves nothing: delete results first and check the Gradle exit code and compile errors before reading them.
 - A fallback that catches an exception and quietly substitutes a default (CompositeWebServer falling back to SonicNIO) hid a broken Netty engine from every user while the UI said Netty. Fail visibly, or at least surface the active implementation (the Server header showed it) and test that the selected one is the one running.
 - Before claiming a file "will not be recreated", search for every writer, not just the code being changed. initDefaultAssets() copied the same asset at startup, so the claim was wrong.
+- Never create a file with `cat >` or Write without checking the path first: `cat > .../ClientProfile.java` silently overwrote an existing class (restored from git). Check `ls`/`git ls-files` for the path, and grep the class name, before writing a new file.

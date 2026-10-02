@@ -280,7 +280,8 @@ public class ContentDirectory {
             @UpnpInputArgument(name = "Filter") String filter,
             @UpnpInputArgument(name = "StartingIndex", stateVariable = "A_ARG_TYPE_Index") UnsignedIntegerFourBytes firstResult,
             @UpnpInputArgument(name = "RequestedCount", stateVariable = "A_ARG_TYPE_Count") UnsignedIntegerFourBytes maxResults,
-            @UpnpInputArgument(name = "SortCriteria") String orderBy)
+            @UpnpInputArgument(name = "SortCriteria") String orderBy,
+            org.jupnp.model.profile.RemoteClientInfo remoteClientInfo)
             throws ContentDirectoryException {
 
         SortCriterion[] orderByCriteria;
@@ -296,7 +297,7 @@ public class ContentDirectory {
         try {
             return browse(objectId, BrowseFlag.valueOrNullOf(browseFlag),
                     filter, firstResult.getValue(), maxResults.getValue(),
-                    orderByCriteria);
+                    orderByCriteria, profileOf(remoteClientInfo));
         } catch (ContentDirectoryException ex) {
             Log.e(TAG, "Browse failed for objectID: " + objectId + ", flag: " + browseFlag, ex);
             throw ex;
@@ -330,7 +331,8 @@ public class ContentDirectory {
             @UpnpInputArgument(name = "Filter") String filter,
             @UpnpInputArgument(name = "StartingIndex", stateVariable = "A_ARG_TYPE_Index") UnsignedIntegerFourBytes firstResult,
             @UpnpInputArgument(name = "RequestedCount", stateVariable = "A_ARG_TYPE_Count") UnsignedIntegerFourBytes maxResults,
-            @UpnpInputArgument(name = "SortCriteria") String orderBy)
+            @UpnpInputArgument(name = "SortCriteria") String orderBy,
+            org.jupnp.model.profile.RemoteClientInfo remoteClientInfo)
             throws ContentDirectoryException {
 
         checkLibraryChanged();
@@ -344,8 +346,9 @@ public class ContentDirectory {
         try {
             // Searches the whole library whatever the ContainerID; results are tracks only
             List<Track> found = new java.util.ArrayList<>();
+            apincer.music.core.server.ClientFormatProfile profile = profileOf(remoteClientInfo);
             for (Track track : tagRepos.getAllMusicsForPlaylist()) {
-                if (matches.test(track)) found.add(track);
+                if (matches.test(track) && !profile.hides(track)) found.add(track);
             }
             java.util.Comparator<Track> sort = BrowseSort.tracks(SortCriterion.valueOf(orderBy));
             if (sort != null) found.sort(sort);
@@ -353,6 +356,7 @@ public class ContentDirectory {
             String allSongsId = ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + CollectionsBrowser.ALL_SONGS;
             MusicItemBrowser builder = new MusicItemBrowser(getContext(), tagRepos,
                     ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
+            builder.setClientProfile(profile);
             DIDLContent didl = new DIDLContent();
             for (Track track : page) {
                 didl.addItem(builder.buildMusicTrack(this, track, allSongsId,
@@ -410,9 +414,25 @@ public class ContentDirectory {
     public BrowseResult browse(String objectID, BrowseFlag browseFlag,
                                String filter, long firstResult, long maxResults,
                                SortCriterion[] orderby) throws ContentDirectoryException {
+        return browse(objectID, browseFlag, filter, firstResult, maxResults, orderby,
+                apincer.music.core.server.ClientFormatProfile.DEFAULT);
+    }
+
+    /** The client's format profile (Sony/LG/Toshiba TVs), from its request headers. */
+    static apincer.music.core.server.ClientFormatProfile profileOf(org.jupnp.model.profile.RemoteClientInfo info) {
+        if (info == null) return apincer.music.core.server.ClientFormatProfile.DEFAULT;
+        String avClientInfo = info.getRequestHeaders() != null ? info.getRequestHeaders().getFirstHeader("X-AV-Client-Info") : null;
+        return apincer.music.core.server.ClientFormatProfile.of(info.getRequestUserAgent(), avClientInfo);
+    }
+
+    public BrowseResult browse(String objectID, BrowseFlag browseFlag,
+                               String filter, long firstResult, long maxResults,
+                               SortCriterion[] orderby, apincer.music.core.server.ClientFormatProfile profile)
+            throws ContentDirectoryException {
         checkLibraryChanged();
         // Check if we can use a cached result
-        String cacheKey = generateCacheKey(objectID, browseFlag, filter, firstResult, maxResults, orderby);
+        // The profile is part of the key: a TV's listing (no DSD, WAV entries) differs from others'
+        String cacheKey = profile.name() + "|" + generateCacheKey(objectID, browseFlag, filter, firstResult, maxResults, orderby);
 
         cacheLock.readLock().lock();
         try {
@@ -431,6 +451,7 @@ public class ContentDirectory {
         DIDLObject didlObject;
         DIDLContent didl = new DIDLContent();
         AbstractContentBrowser contentBrowser = findBrowserFor(objectID);
+        if (contentBrowser != null) contentBrowser.setClientProfile(profile);
         if (contentBrowser != null) {
                 if (browseFlag == BrowseFlag.METADATA) {
                     didlObject = contentBrowser.browseMeta(this, objectID, firstResult, maxResults, orderby);
@@ -446,7 +467,9 @@ public class ContentDirectory {
                         didl.addObject(child);
                         childCount++;
                     }
-                    totalMatches = contentBrowser.getTotalMatches(this, objectID);
+                    // A browser that filtered (hidden formats) reports the filtered total
+                    Integer filtered = contentBrowser.filteredTotal();
+                    totalMatches = filtered != null ? filtered : contentBrowser.getTotalMatches(this, objectID);
                 }
 
             try {

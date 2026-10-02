@@ -1022,4 +1022,10 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] 1d. SystemUpdateID changes (library version = count:max(id):sum(fileLastModified), checked at most every 30 s; bump on a real change not yet seen on device) when the library changes (was fixed at 1)
 - [x] 1e. Client detection and log (ClientRegistry, 5 tests; device: Sony/LG headers named, logcat DlnaClients): User-Agent / X-AV-Client-Info per client, logged once with headers; "clients seen" on the Server tab (gives Toshiba evidence)
 - [x] 2. Time-based seeking (2026-10-02; TimeSeek 7 tests, start-offset 2 tests; device: FLAC 120 s / 300 s land on seek points with frame sync and match the file, MP3 60 s proportional on a frame, DSD/M4A/WAV/AIFF 406 with OP=01, past end 416). Not tried on a real LG/Sony TV: TimeSeekRange.dlna.org (npt) -> byte offset (FLAC SEEKTABLE, WAV exact, MP3 proportional); DLNA.ORG_OP=11 only where supported; LG 2022+ seeks only by time
-- [ ] 3. Formats a TV cannot play (DSD all; ALAC Sony; FLAC older LG): hide or convert to PCM (user to decide)
+- [ ] 3. Formats a TV cannot play (user chose: convert FLAC/ALAC to PCM, hide DSD)
+    - [x] 3a. ClientFormatProfile (5 tests; named so it does not clash with the existing, unused ProfileManager/ClientProfile) from User-Agent / X-AV-Client-Info: Sony TV (plays FLAC; convert ALAC), LG TV (FLAC only on 2022+ and the UA cannot tell the year: convert FLAC and ALAC), Toshiba TV (no evidence yet: hide DSD only); other clients unchanged
+    - [x] 3b. Hide DSD for TV profiles (device: LG UA sees 8299 of 8305 in All Songs and Search, 0 DSD; BubbleUPnP all 8305; browse cache keyed by profile; container childCount still counts DSD) in Browse and Search, with paging and TotalMatches consistent (RemoteClientInfo injected into the actions)
+    - [ ] 3c. NioHttpServer streaming body (producer thread, bounded buffer, write interest paused while empty, no busy loop), tested
+    - [ ] 3d. FLAC -> WAV (native bit depth and rate) with the pure-Java FlacDecoder; exact Content-Length from STREAMINFO; byte Range and time seek by sample-accurate seek; proof: MD5 of the WAV data equals the FLAC STREAMINFO MD5
+    - [ ] 3e. ALAC -> WAV (MediaCodec where available, FFmpegKit otherwise); bit depth checked
+    - [ ] 3f. DIDL for converted tracks advertises audio/wav, PCM size and OP for that client
