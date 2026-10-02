@@ -1034,7 +1034,7 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 ## Playback control vs monitor fixes (2026-10-02, from the playback review)
 - [x] 1. isControllable: only a DLNA renderer (DMRPlayer) that MusicMate was asked to drive (switchPlayer(..., controlled=true)); no side effect. Passive streams (browser, BubbleUPnP-driven renderer) are followed, never driven
 - [x] 2. Transport commands (next/previous/pause/resume/seek/stop) on a monitored stream do nothing instead of reaching the Android MediaController path
-- [ ] 3. External apps (UAPP, HiBy, Poweramp): when MusicMate sent the track and the app stops at its end, play the next queued track
+- [x] 3. External apps (UAPP, HiBy, Poweramp): when MusicMate sent the track and the app stops at its end, play the next queued track (ExternalTrackEnd: STOPPED within 3 s / PAUSED within 1 s of the end; 3 s grace after sending a track; tests 4). Device test blocked: HiBy was not running, MusicMate fell back to ACTION_VIEW, HiBy launched but did not play (no media session)
 - [x] 4. Remove the unused RUNNING_MODE field; fix the stale "NO internal ExoPlayer" comment
 - [x] Verified on device: passive HTTP requests now produce nowPlaying/playbackState broadcasts (none before); pause on a monitored stream is ignored. Controlled DMR path not exercised (no renderer on this network)
 - [ ] Verify external continuation (fix 3) with HiBy/Poweramp on the phone

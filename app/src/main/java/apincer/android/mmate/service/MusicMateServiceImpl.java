@@ -129,6 +129,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
 
     private volatile String controlledPlayerTargetId;
+    // An external app (UAPP, HiBy, Poweramp) playing a track MusicMate sent it from the queue: when
+    // that track ends, MusicMate sends the next one (the app only has the one file). -1 when not.
+    private volatile long drivenExternalTrackId = -1;
+    private volatile long lastExternalPositionSec;
+    private volatile long drivenExternalStartedAt; // elapsedRealtime when MusicMate sent the track
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
@@ -751,6 +756,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             if (isControllable(playbackTarget)) {
                 internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
+                boolean externalApp = playbackTarget instanceof ExternalAndroidPlayer
+                        && !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId());
+                drivenExternalTrackId = (externalApp && song != null) ? song.getId() : -1;
+                lastExternalPositionSec = 0;
+                drivenExternalStartedAt = android.os.SystemClock.elapsedRealtime();
                 androidPlayer.play(song);
                 currentTrackFlow.setValue(Optional.ofNullable(song));
                 if (song != null) {
@@ -786,22 +796,36 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 internalSkipToNextOnDMRPlayer(playbackTarget, userSkip);
             } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
                 // Local ExoPlayer: advance MusicMate's queue
-                Track current = getNowPlayingSong();
-                if (current != null) {
-                    queueManager.setCurrentTrack(current);
-                }
-                Track nextSong = queueManager.getNextTrack(userSkip);
-                if (nextSong != null) {
-                    queueManager.setPlaybackTrack(nextSong);
-                    playSong(nextSong);
-                } else {
-                    stopPlaying();
-                }
+                playNextFromQueue(userSkip);
+            } else if (isDrivingExternalApp()) {
+                // An external app playing MusicMate's queue: it only has the one file
+                playNextFromQueue(userSkip);
             } else {
                 // External music app: MediaSession IPC event
                 androidPlayer.skipToNext();
             }
         });
+    }
+
+    /** Plays the queue's next track on the current target, or stops at the end of the queue. */
+    private void playNextFromQueue(boolean userSkip) {
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
+        Track nextSong = queueManager.getNextTrack(userSkip);
+        if (nextSong != null) {
+            queueManager.setPlaybackTrack(nextSong);
+            playSong(nextSong);
+        } else {
+            stopPlaying();
+        }
+    }
+
+    /** True while an external app is playing the track MusicMate sent it from the queue. */
+    private boolean isDrivingExternalApp() {
+        Track current = getNowPlayingSong();
+        return drivenExternalTrackId >= 0 && current != null && current.getId() == drivenExternalTrackId;
     }
 
     private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget, boolean userSkip) {
@@ -1715,6 +1739,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onMediaTrackChanged(Track song) {
+        if (song == null || song.getId() != drivenExternalTrackId) {
+            drivenExternalTrackId = -1; // the app moved on by itself (its own queue or the listener)
+        }
         currentTrackFlow.setValue(Optional.ofNullable(song));
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -1787,6 +1814,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         observeListeningState(state);
         playbackStateFlow.setValue(state);
         apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        continueExternalQueueIfEnded(state, target);
         // Only manually update notification if NOT using the local Media3 ExoPlayer
         if (target == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
             boolean isPlaying = state != null && state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -1802,12 +1830,42 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             // setValue() calls with the same object instance, even if fields changed.
             apincer.music.core.playback.PlaybackState updated = state.copy();
             updated.currentPositionSecond = elapsedTimeMS;
+            if (drivenExternalTrackId >= 0) lastExternalPositionSec = Math.max(lastExternalPositionSec, elapsedTimeMS);
             observeListeningState(updated);
             if (acceptingHistory && updated.currentTrack != null && elapsedTimeMS >= 0) {
                 historyTracker.onPosition(updated.currentTrack.getId(), elapsedTimeMS * 1000L,
                         android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
             }
             playbackStateFlow.setValue(updated);
+        }
+    }
+
+    /**
+     * An external app that played the track MusicMate sent it reports STOPPED (or PAUSED) at the
+     * end of that one file; continue with the queue's next track. A stop mid-track, or the app
+     * moving to its own next track, does not count (ExternalTrackEnd, onMediaTrackChanged).
+     */
+    private void continueExternalQueueIfEnded(apincer.music.core.playback.PlaybackState state,
+                                              apincer.music.core.playback.spi.PlaybackTarget target) {
+        if (state == null || !(target instanceof ExternalAndroidPlayer)
+                || ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) return;
+        Track current = getNowPlayingSong();
+        if (current == null || current.getId() != drivenExternalTrackId) return;
+        // A late STOPPED for the previous track (with its end position) must not skip this one
+        if (android.os.SystemClock.elapsedRealtime() - drivenExternalStartedAt < 3000) return;
+        if (state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING) {
+            lastExternalPositionSec = Math.max(lastExternalPositionSec, state.currentPositionSecond);
+            return;
+        }
+        long position = Math.max(lastExternalPositionSec, state.currentPositionSecond);
+        if (ExternalTrackEnd.endedNaturally(state.currentState, position, current.getAudioDuration())) {
+            drivenExternalTrackId = -1; // once per track
+            Log.i(TAG, "External app finished '" + current.getTitle() + "'; continuing the queue");
+            scheduler.execute(() -> {
+                historyTracker.end(false);
+                if (stopForEndOfTrackSleep()) return;
+                playNextFromQueue(false);
+            });
         }
     }
 
