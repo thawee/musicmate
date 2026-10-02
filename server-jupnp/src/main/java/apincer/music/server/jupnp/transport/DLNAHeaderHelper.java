@@ -43,6 +43,14 @@ public class DLNAHeaderHelper {
                 + "DLNA.ORG_OP=" + op + ";DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
     }
 
+    /**
+     * DLNA parameters for a track converted to WAV for a TV: no profile name (WAV has none),
+     * time and byte seeks (OP=11), and CI=1 because the content is converted.
+     */
+    public static String getConvertedPcmContentFeatures() {
+        return "DLNA.ORG_OP=11;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
+    }
+
     /** "flac" or "mp3" when the track can be seeked by time (see {@link TimeSeek}), else null. */
     public static String timeSeekFormat(Track tag) {
         if (isFLACFile(tag)) return "flac";

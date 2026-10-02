@@ -157,6 +157,14 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         String serverSignature = getServerSignature();
         String cachedDate = getCachedDate();
 
+        // A TV that cannot play this format gets it converted to WAV (lossless PCM)
+        apincer.music.core.server.ClientFormatProfile profile = apincer.music.core.server.ClientFormatProfile.of(
+                request.getHeader("user-agent", null), request.getHeader("x-av-client-info", null));
+        if (profile.convertsToPcm(song) && TagUtils.isFLACFile(song)) {
+            NioHttpServer.HttpResponse converted = createFlacAsWavResponse(audioFile, song, request);
+            if (converted != null) return converted;
+        }
+
         // DLNA time-based seek (LG webOS 2022+ seeks only this way; Sony prefers it)
         String timeSeekRange = request.getHeader("timeseekrange.dlna.org", null);
         long startOffset = -1;
@@ -204,6 +212,83 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             String mediaInfo = DLNAHeaderHelper.getSamsungMediaInfo(song);
             if (mediaInfo != null) response.addHeader("MediaInfo.sec", mediaInfo);
         }
+        return response;
+    }
+
+    /**
+     * The FLAC as a WAV stream (FlacToWav: native rate and depth, bit-perfect PCM), decoded while
+     * it is sent; supports byte Range (206) and DLNA time seek (200 + TimeSeekRange). Null if the
+     * FLAC cannot be read, so the caller serves the original file.
+     */
+    private NioHttpServer.HttpResponse createFlacAsWavResponse(File flac, Track song, NioHttpServer.HttpRequest request) {
+        apincer.music.core.codec.FlacToWav wav;
+        try {
+            wav = apincer.music.core.codec.FlacToWav.open(flac);
+        } catch (IOException e) {
+            Log.w(TAG, "Cannot convert " + flac + "; serving the original", e);
+            return null;
+        }
+        long length = wav.wavLength();
+        long from = 0;
+        long to = length - 1;
+        int status = 200;
+        String statusText = "OK";
+        String contentRange = null;
+        String timeSeekRange = null;
+
+        String timeSeek = request.getHeader("timeseekrange.dlna.org", null);
+        String range = request.getHeader("range", null);
+        double duration = wav.numSamples / (double) wav.sampleRate;
+        if (timeSeek != null) {
+            double[] npt = apincer.music.server.jupnp.transport.TimeSeek.parseNpt(timeSeek);
+            if (npt == null) return createErrorResponse(400, "Bad TimeSeekRange");
+            if (npt[0] >= duration) return createErrorResponse(416, "Time out of range");
+            from = wav.byteAtSeconds(npt[0]);
+            String total = apincer.music.server.jupnp.transport.TimeSeek.npt(duration);
+            timeSeekRange = "npt=" + apincer.music.server.jupnp.transport.TimeSeek.npt(npt[0]) + "-" + total + "/" + total;
+        } else if (range != null && range.startsWith("bytes=") && !range.contains(",")) {
+            String spec = range.substring(6).trim();
+            try {
+                if (spec.startsWith("-")) {
+                    from = Math.max(0, length - Long.parseLong(spec.substring(1)));
+                } else {
+                    String[] parts = spec.split("-", 2);
+                    from = Long.parseLong(parts[0]);
+                    if (parts.length > 1 && !parts[1].isEmpty()) to = Math.min(length - 1, Long.parseLong(parts[1]));
+                }
+                if (from >= length || from > to) {
+                    return new NioHttpServer.HttpResponse().setStatus(416, "Range Not Satisfiable")
+                            .addHeader("Content-Range", "bytes */" + length);
+                }
+                status = 206;
+                statusText = "Partial Content";
+                contentRange = "bytes " + from + "-" + to + "/" + length;
+            } catch (NumberFormatException ignored) {
+                from = 0; // RFC 7233: an invalid Range is ignored
+                to = length - 1;
+            }
+        }
+
+        NioHttpServer.HttpResponse response;
+        if ("HEAD".equalsIgnoreCase(request.getMethod())) {
+            response = new NioHttpServer.HttpResponse().addHeader("Content-Length", String.valueOf(length));
+        } else {
+            final long start = from;
+            final long end = to;
+            final apincer.music.core.codec.FlacToWav source = wav;
+            response = server.createStreamingResponse(status, statusText, end - start + 1,
+                    sink -> source.write(flac, start, end, sink::write));
+        }
+        response.addHeader("Content-Type", "audio/wav");
+        response.addHeader("Accept-Ranges", "bytes");
+        if (contentRange != null) response.addHeader("Content-Range", contentRange);
+        if (timeSeekRange != null) response.addHeader("TimeSeekRange.dlna.org", timeSeekRange);
+        response.addHeader("transferMode.dlna.org", "Streaming");
+        // CI=1: converted content; OP=11: time and byte seeks both work
+        response.addHeader("contentFeatures.dlna.org", DLNAHeaderHelper.getConvertedPcmContentFeatures());
+        response.addHeader("Cache-Control", "no-cache");
+        response.addHeader("Server", getServerSignature());
+        response.addHeader("Date", getCachedDate());
         return response;
     }
 

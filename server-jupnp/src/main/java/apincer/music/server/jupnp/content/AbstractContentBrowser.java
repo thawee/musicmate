@@ -154,6 +154,11 @@ public abstract class AbstractContentBrowser {
     }
     private String serverHost;
 
+    /** The stream URL with another file extension (the server identifies tracks by id only). */
+    public String getUriString(ContentDirectory contentDirectory, Track tag, String extension) {
+        return "http://" + serverHost() + ":" + WEB_SERVER_PORT + CONTEXT_PATH_MUSIC + tag.getId() + "/file." + extension;
+    }
+
     public String getUriString(ContentDirectory contentDirectory, Track tag) {
         return "http://" + serverHost() + ":" +WEB_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
@@ -191,11 +196,20 @@ public abstract class AbstractContentBrowser {
         // the ability of playing a file by the file extension
 
         // Create the resource (streaming URL) with technical metadata
-        ProtocolInfo protocolInfo = getProtocolInfo(tag); //new MimeType("audio", tag.getAudioEncoding());
-        String uri = getUriString(contentDirectory, tag);
-        Res resource = new Res(protocolInfo, tag.getFileSize(), uri);
+        // A TV that cannot play FLAC is offered the same track as WAV, which the server converts
+        boolean asWav = clientProfile.convertsToPcm(tag) && TagUtils.isFLACFile(tag);
+        ProtocolInfo protocolInfo = asWav
+                ? new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wav",
+                        apincer.music.server.jupnp.transport.DLNAHeaderHelper.getConvertedPcmContentFeatures())
+                : getProtocolInfo(tag);
+        String uri = asWav ? getUriString(contentDirectory, tag, "wav") : getUriString(contentDirectory, tag);
+        int pcmFrameBytes = TagUtils.getChannels(tag) * ((tag.getAudioBitsDepth() + 7) / 8);
+        long size = asWav
+                ? 44 + (long) (tag.getAudioDuration() * tag.getAudioSampleRate()) * pcmFrameBytes // estimate; HTTP has the exact length
+                : tag.getFileSize();
+        Res resource = new Res(protocolInfo, size, uri);
         // Add technical metadata for streaming optimization
-        resource.setBitrate(didlBitrate(tag.getAudioBitRate()));
+        resource.setBitrate(asWav ? (long) tag.getAudioSampleRate() * pcmFrameBytes : didlBitrate(tag.getAudioBitRate()));
         resource.setBitsPerSample((long) tag.getAudioBitsDepth());
         resource.setSampleFrequency(tag.getAudioSampleRate());
         resource.setNrAudioChannels((long) TagUtils.getChannels(tag));

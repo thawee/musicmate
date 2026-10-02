@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **FLAC on LG TVs:** LG TVs (which play FLAC only on 2022 and later models) now get FLAC converted to WAV while it streams: the original sample rate and bit depth, bit-perfect (the converted audio's MD5 matches the MD5 stored in the FLAC), with byte-range and time seeking. Other clients still get the original FLAC. DSD is no longer listed for Sony, LG and Toshiba TVs, which cannot play it.
 - **Seeking by time (LG and Sony TVs):** FLAC and MP3 can now be seeked by time (DLNA `TimeSeekRange.dlna.org`), which LG webOS TVs from 2022 use exclusively and Sony TVs prefer; before, only byte-range seeking was offered, so seeking could fail on those TVs. FLAC uses the file's seek table (the stream starts exactly at a seek point); MP3 is proportional and aligned to a frame. Other formats keep byte-range seeking only and answer a time seek with 406.
 - **DLNA clients list:** The Server tab lists the TVs and apps that used the server in the last 10 minutes (Sony BRAVIA and LG webOS TVs are named by model or type), and each new client's request headers are logged once (logcat tag `DlnaClients`) to diagnose device-specific problems.
 - **Samsung TVs:** The media server answers Samsung's `X_GetFeatureList` (the TV's simple music view now opens at the library root) and its track-length request (`getMediaInfo.sec`, answered with `MediaInfo.sec: SEC_Duration`), which Samsung TVs use to show the length and seek bar. Only these Samsung features are advertised.
