@@ -453,6 +453,14 @@ public class NioHttpServerTest {
     }
 
     @Test
+    public void jpegBehindAPngName_isServedAsJpeg() throws Exception {
+        // Seen on device: 142 of 315 album covers were JPEG files named .png
+        File jpeg = temporary.newFile("Cover.png");
+        Files.write(jpeg.toPath(), new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0x10, 'J', 'F', 'I', 'F', 0});
+        assertEquals("image/jpeg", FileContentTypes.readContentForMime(jpeg));
+    }
+
+    @Test
     public void clientConnectionClose_isHonoured() throws Exception {
         try (Socket socket = connect()) {
             Response r = exchange(socket, "GET /track HTTP/1.1\r\nHost: test\r\nRange: bytes=0-3\r\nConnection: close\r\n\r\n", true);

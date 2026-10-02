@@ -132,12 +132,10 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         }
         if (filePath == null || !filePath.exists()) return createErrorResponse(HTTP_NOT_FOUND, "Art not found");
 
-        String contentType = content != null ? content.getContentType() : null;
-
+        // Content-Type comes from FileResponse, which reads the image's bytes. The extension is often
+        // wrong (JPEG covers named .png, embedded PNG art saved as Cover.jpg), and strict DLNA
+        // renderers reject a mismatched type.
         NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
-        if (contentType != null) {
-            response.addHeader("Content-Type", contentType);
-        }
         response.addHeader("Cache-Control", "public, max-age=604800");
         return response;
     }
