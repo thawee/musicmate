@@ -1048,3 +1048,7 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] A controlled renderer's own pre-fetch (same device) is never a new stream
 - [x] Startup / fallback default: last chosen player, else DLNA renderer > local > external
 - [x] Tests (PlayerPriorityTest 4); device: idle + browser stream -> followed; local playing + stream -> local keeps priority (logged); local paused + stream -> stream takes over
+- [x] Activity beats idleness (user "ok" after Poweramp was not followed): an idle target never blocks one that starts; rank only decides between two starting within 5 s (automaticSwitchAt). Device: Poweramp song followed while an idle renderer was selected
+- [x] "Last player" saved only for the listener's choice, not automatic switches
+- [x] Now Playing trackId 0 for an external app's song: TrackEntity.copy() did not copy the id (findMusic returns a copy). Fixed; TrackEntityTest fails without the fix
+- [ ] Device check: Now Playing shows the library id for an external app's song (server was stopped by the reinstall; Poweramp paused)

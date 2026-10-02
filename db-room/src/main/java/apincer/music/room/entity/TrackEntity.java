@@ -294,6 +294,7 @@ public class TrackEntity implements Track {
     @Override
     public Track copy(Track original) {
         if (original == null) return this;
+        this.id = original.getId();
         this.uniqueKey = original.getUniqueKey() != null ? original.getUniqueKey() : "";
         this.path = original.getPath();
         this.title = original.getTitle();

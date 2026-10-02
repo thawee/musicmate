@@ -5,10 +5,12 @@ import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.PlaybackTarget;
 
 /**
- * Which playback target wins when one is not chosen by the listener. Order (user, 2026-10-02):
- * a DLNA stream (a TV or browser pulling from MusicMate, or a renderer driven by another app) >
- * the DLNA renderer the listener chose > local playback > an external player app. An automatic
- * switch never interrupts a target that is playing; an explicit choice always wins (not here).
+ * Which playback target wins when one is not chosen by the listener (user, 2026-10-02). The
+ * listener's choice always wins (not here). An automatic switch never interrupts a target that
+ * is playing, and an idle target never blocks one that starts. The order - a DLNA stream (a TV or
+ * browser pulling from MusicMate, or a renderer driven by another app) > the DLNA renderer the
+ * listener chose > local playback > an external player app - decides between two starting at
+ * once and the startup default.
  */
 final class PlayerPriority {
     static final int EXTERNAL_APP = 1;
@@ -28,8 +30,14 @@ final class PlayerPriority {
         return EXTERNAL_APP;
     }
 
-    /** May an automatic (not listener-chosen) switch replace the current target? */
-    static boolean mayTakeOver(int currentRank, boolean currentPlaying, int newRank) {
-        return !currentPlaying && newRank >= currentRank;
+    /**
+     * May an automatic (not listener-chosen) switch replace the current target? An idle target
+     * never blocks one that starts (activity beats idleness); a playing one is never interrupted,
+     * except that when two start at once (the current one took over automatically moments ago)
+     * the higher rank wins.
+     */
+    static boolean mayTakeOver(int currentRank, boolean currentPlaying, boolean currentJustTookOver, int newRank) {
+        if (!currentPlaying) return true;
+        return currentJustTookOver && newRank > currentRank;
     }
 }

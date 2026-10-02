@@ -1330,14 +1330,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
 
             // Automatic switches (a stream, an external app starting) follow the player priority:
-            // never interrupt what is playing; when idle, only a higher or equal source takes over.
-            // The listener's own choice (controlled) always wins.
+            // never interrupt what is playing; an idle target never blocks one that starts; two at
+            // once: the higher rank wins. The listener's own choice (controlled) always wins.
             if (!controlled) {
                 PlaybackTarget current = currentPlayerFlow.getValue().orElse(null);
                 if (isSameTarget) return; // nothing changes (e.g. a driven renderer pre-fetching)
+                boolean currentJustTookOver = android.os.SystemClock.elapsedRealtime() - automaticSwitchAt < 5000;
                 if (current != null && !PlayerPriority.mayTakeOver(
                         PlayerPriority.rank(current, isControllable(current)), isCurrentTargetPlaying(current),
-                        PlayerPriority.rank(resolvedTarget, false))) {
+                        currentJustTookOver, PlayerPriority.rank(resolvedTarget, false))) {
                     Log.d(TAG, "Not switching to " + resolvedTarget.getDisplayName() + ": "
                             + current.getDisplayName() + " keeps priority");
                     return;
@@ -1352,7 +1353,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 }
             });
 
-            apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), resolvedTarget.getTargetId());
+            // "Last player" is the listener's choice: an automatic switch (a stream, an app) is not saved
+            if (controlled) apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), resolvedTarget.getTargetId());
+            automaticSwitchAt = controlled ? 0 : android.os.SystemClock.elapsedRealtime();
 
             // Publish the destination before activation: handoff playback and seek route
             // through currentPlayerFlow, as do callbacks from the newly active player.
@@ -1456,6 +1459,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     // A passive stream reports no state; it counts as playing for the track's length after its request
     private volatile long passiveStreamBusyUntil;
+    // When the current target last took over automatically (elapsedRealtime); 0 after a listener choice
+    private volatile long automaticSwitchAt;
 
     /** Is the current target playing? A followed stream is busy for its track's length. */
     private boolean isCurrentTargetPlaying(PlaybackTarget current) {

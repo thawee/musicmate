@@ -26,22 +26,24 @@ public class PlayerPriorityTest {
 
     @Test
     public void nothingInterruptsWhatIsPlaying() {
-        assertFalse(PlayerPriority.mayTakeOver(LOCAL, true, STREAM));
-        assertFalse(PlayerPriority.mayTakeOver(EXTERNAL_APP, true, STREAM));
-        assertFalse(PlayerPriority.mayTakeOver(RENDERER, true, STREAM));
+        assertFalse(PlayerPriority.mayTakeOver(LOCAL, true, false, STREAM));
+        assertFalse(PlayerPriority.mayTakeOver(EXTERNAL_APP, true, false, STREAM));
+        assertFalse(PlayerPriority.mayTakeOver(RENDERER, true, false, STREAM));
     }
 
     @Test
-    public void whenIdle_aHigherOrEqualSourceTakesOver() {
-        assertTrue(PlayerPriority.mayTakeOver(LOCAL, false, STREAM));
-        assertTrue(PlayerPriority.mayTakeOver(RENDERER, false, STREAM));
-        assertTrue(PlayerPriority.mayTakeOver(STREAM, false, STREAM)); // another TV after the first stopped
-        assertTrue(PlayerPriority.mayTakeOver(EXTERNAL_APP, false, LOCAL));
+    public void anIdlePlayer_neverBlocksOneThatStarts() {
+        // Seen on the phone: an idle browser stream blocked Poweramp the listener had started
+        assertTrue(PlayerPriority.mayTakeOver(STREAM, false, false, EXTERNAL_APP));
+        assertTrue(PlayerPriority.mayTakeOver(LOCAL, false, false, EXTERNAL_APP));
+        assertTrue(PlayerPriority.mayTakeOver(LOCAL, false, false, STREAM));
     }
 
     @Test
-    public void whenIdle_aLowerSourceDoesNot() {
-        assertFalse(PlayerPriority.mayTakeOver(LOCAL, false, EXTERNAL_APP));
-        assertFalse(PlayerPriority.mayTakeOver(RENDERER, false, EXTERNAL_APP));
+    public void twoStartingAtOnce_theHigherRankWins() {
+        // the current one took over automatically moments ago and is (now) playing
+        assertTrue(PlayerPriority.mayTakeOver(EXTERNAL_APP, true, true, STREAM));
+        assertFalse(PlayerPriority.mayTakeOver(STREAM, true, true, EXTERNAL_APP));
+        assertFalse(PlayerPriority.mayTakeOver(LOCAL, true, true, LOCAL));
     }
 }
