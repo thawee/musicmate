@@ -570,16 +570,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
             if (isEmpty(currentCriteria.getFilterType()) && count > 0) {
                 statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
-            } else {
-                String filterText = currentCriteria.getFilterText();
-                if ("Folder".equals(currentCriteria.getFilterType())) {
-                    filterText = StringUtils.truncate(DocumentFileCompat.getBasePath(getApplicationContext(), filterText), 38, StringUtils.TruncateType.PREFIX);
-                } else {
-                    filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
-                }
-                if (!isEmpty(filterText)) {
-                    statText = statText + " · [" + filterText + "]";
-                }
             }
         } else {
             if (count > 0) {
@@ -600,11 +590,28 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
         }
 
+        // Name the active filter first ("Artist: Queen • 21 Tracks") so it survives truncation.
+        String filterLabel = hasActiveFilter ? getFilterLabel() : "";
+        if (!isEmpty(filterLabel)) {
+            statText = isEmpty(statText) ? filterLabel : filterLabel + SYMBOL_ENC_SEP + statText;
+        }
+
         apincer.android.mmate.ui.compose.MainScaffoldState.updateHeaderStats(statText);
         apincer.android.mmate.ui.compose.MainScaffoldState.updatePlaylistOverview(
                 SearchCriteria.TYPE.PLAYLIST.equals(type) && isEmpty(currentCriteria.getKeyword()));
         apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(hasActiveFilter || currentCriteria.isSearchMode()
                 || !SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
+    }
+
+    private String getFilterLabel() {
+        String filterText = currentCriteria.getFilterText();
+        if (isEmpty(filterText)) return "";
+        if (Constants.FILTER_TYPE_PATH.equals(currentCriteria.getFilterType())) {
+            filterText = StringUtils.truncate(DocumentFileCompat.getBasePath(getApplicationContext(), filterText), 38, StringUtils.TruncateType.PREFIX);
+        } else {
+            filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
+        }
+        return currentCriteria.getFilterType() + ": " + filterText;
     }
 
     @Override
@@ -1512,7 +1519,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     // 1. Local Device Target (This Device)
                     String title = "Phone Speaker";
                     int iconRes = R.drawable.ic_round_speaker_24;
-                    String subtitle = "Internal Speaker";
+                    String subtitle = "Plays on this phone";
 
                     if (audioOutputDevice != null) {
                         if (audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty()) {
@@ -1527,7 +1534,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                             iconRes = R.drawable.ic_round_bluetooth_audio_24;
                         } else if (audioOutputDevice.getResId() != 0) {
                             iconRes = audioOutputDevice.getResId();
-                            subtitle = "Direct Hardware Output";
+                            subtitle = "Plays on this phone";
                         }
                     }
 

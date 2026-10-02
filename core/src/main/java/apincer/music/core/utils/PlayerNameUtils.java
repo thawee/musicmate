@@ -151,7 +151,7 @@ public final class PlayerNameUtils {
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
             if (apincer.music.core.playback.ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
                 String desc = player.getDescription();
-                return desc != null && !desc.isEmpty() ? name + "\n(" + desc + ")" : name;
+                return desc != null && !desc.isEmpty() && !desc.equalsIgnoreCase(name) ? name + "\n(" + desc + ")" : name;
             }
             return name + "\n(Android App)";
         } else if (player.isStreaming()) {
@@ -175,7 +175,7 @@ public final class PlayerNameUtils {
         } else if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer) {
             if (apincer.music.core.playback.ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId())) {
                 String desc = player.getDescription();
-                return desc != null && !desc.isEmpty() ? name + " • " + desc : name;
+                return desc != null && !desc.isEmpty() && !desc.equalsIgnoreCase(name) ? name + " • " + desc : name;
             }
             // Listeners know the app by name; its build number is noise.
             return name;

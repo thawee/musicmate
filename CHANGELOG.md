@@ -11,11 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Play or shuffle a whole list:** The track count line in the library and in search results now has **Play** and **Shuffle** buttons. Before, search results ("queen": 35 tracks) could only be played one track at a time.
 - **Play from the song page:** The song page has a gold Play button on the cover again; long-press plays the song next. 3.19.8 removed the cover play button, which left the page with no way to play the song.
 - **Go to Artist and Go to Album:** The track `⋮` menu can narrow the library to the track's artist or album.
+- **Filter label:** A list narrowed to one artist, album, genre or folder now says so first on the track count line ("Artist: Queen • 21 Tracks"); before, only "21 Tracks" showed.
 
 ### Fixed
 - **Version in the menu:** The navigation drawer showed a hardcoded "v3.20.1"; it now shows the installed version.
 - **Player app names:** External player apps show by name only ("Poweramp" instead of "Poweramp • v1031") in the mini player, Now Playing and the output picker.
 - **Track menu icon:** "Open in External App" now has an icon and lines up with the other items.
+- **Music Center button:** Uses a speaker icon instead of the bar chart that the Audio Quality menu item also uses.
+- **Queue sources:** The source buttons fade at an edge that hides more (two of six were off screen with no hint), the selected source scrolls into view, and the unexplained "Downloads · 20/20" counter is gone.
+- **Server tab clients:** Connected clients are listed one per row under the counters, across the full card width; an IP address no longer splits across lines. Web browsers show as "Chrome browser", "Safari browser" and so on instead of "Mozilla", and Samsung Tizen and LG Web0S user agents are recognised as TVs.
+- **Phone output name:** The phone's own output shows as "Phone Speaker" (or "Wired Headphones") instead of the model code "SM-S931B", with "Plays on this phone" instead of "Direct Hardware Output".
+- **Now Playing readability:** A darker gradient and a soft text shadow keep the title and artist readable on bright covers, and the album now shows with the artist.
 
 ## [3.21.0] - 2026-10-02
 

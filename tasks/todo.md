@@ -8,14 +8,18 @@
 - [x] 5. Track menu (Add to Playlist dropped: no single-track playlist add exists): Go to Artist, Go to Album, icon for Open in External App
 
 - [x] Device check (S25): drawer v3.21.0, Play/Shuffle on "queen" (35 tracks, shuffled queue), Go to Artist (21 Queen tracks, Back clears), song page Play
-- [ ] Follow-up: a filtered list (Go to Artist/Album, song page links) shows only "21 Tracks" with no "Artist: Queen" label
+- [x] Filter label: "Artist: Queen • 21 Tracks" (verified on device)
 
 ## Batch 2: P2 polish
-- [ ] 6. Music Center button icon
-- [ ] 7. Queue source chips: Replenish to header, fade edge, clearer counter, one count
-- [ ] 8. Server tab clients as rows, friendly browser name
-- [ ] 9. Output picker: "This phone" with live route
-- [ ] 10. Now Playing scrim and album line
+- [x] 6. Music Center button icon
+- [x] 7. Queue source chips: Replenish to header, fade edge, clearer counter, one count
+- [x] 8. Server tab clients as rows, friendly browser name
+- [x] 9. Output picker: "This phone" with live route
+- [x] 10. Now Playing scrim and album line
+
+- [x] Device check (S25): speaker icon, queue fade and no 20/20, Server CONNECTED list (Chrome browser), "Phone Speaker" in picker and mini player, Now Playing "Queen • The Works"
+- [ ] Follow-up: scroll-to-top FAB covers the ⋮ button of the row under it
+- [ ] Follow-up: regenerate stale screenshot references
 
 ## Verification
 - [ ] Unit tests + assembleDebug; update screenshot references touched

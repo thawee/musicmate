@@ -30,6 +30,16 @@ public class ClientRegistryTest {
         assertEquals("Windows Media Player", ClientRegistry.describe("Windows-Media-Player/12.0.19041", null));
         assertEquals("BubbleUPnP", ClientRegistry.describe("BubbleUPnP UPnP/1.1", null));
         assertEquals("Kodi", ClientRegistry.describe("Kodi/21.0 (Linux) UPnP/1.0", null));
+        assertEquals("Chrome browser", ClientRegistry.describe(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36", null));
+        assertEquals("Safari browser", ClientRegistry.describe(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1", null));
+        assertEquals("Firefox browser", ClientRegistry.describe("Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0", null));
+        assertEquals("Web browser", ClientRegistry.describe("Mozilla/5.0", null));
+        assertEquals("Samsung TV", ClientRegistry.describe(
+                "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) 76.0.3809.146/6.0 TV Safari/537.36", null));
+        assertEquals("LG webOS TV", ClientRegistry.describe(
+                "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36", null));
     }
 
     @Test

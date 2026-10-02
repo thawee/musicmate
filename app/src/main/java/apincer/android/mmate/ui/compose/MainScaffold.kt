@@ -870,7 +870,7 @@ private fun TopSearchBar(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.rounded_equalizer_24),
+                            painter = painterResource(id = R.drawable.rounded_speaker_24),
                             contentDescription = stringResource(R.string.cd_open_music_center),
                             tint = if (isPlaybackTargetActive) drawerGold else Color(0xE5FFFFFF),
                             modifier = Modifier.size(20.dp)

@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -336,7 +338,6 @@ fun QueuePage(
             // Ultra-Compact Single-Line Source Capsules (~28dp)
             CompactSourceDeck(
                 selectedSource = source,
-                queueSize = state.tracks.size,
                 activePlaylistName = activePlaylistName,
                 refreshing = refreshing,
                 onRefreshClick = { triggerManualRefresh() },
@@ -598,7 +599,6 @@ private fun CompactQueueHeader(
 @Composable
 private fun CompactSourceDeck(
     selectedSource: QueueManager.Source,
-    queueSize: Int,
     activePlaylistName: String?,
     refreshing: Boolean,
     onRefreshClick: () -> Unit,
@@ -624,10 +624,16 @@ private fun CompactSourceDeck(
         )
     }
 
+    // Six sources never fit a phone: fade the edges that hide more chips.
+    val scrollState = rememberScrollState()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
+            .fadingEdge(
+                startWidth = if (scrollState.canScrollBackward) 24.dp else 0.dp,
+                endWidth = if (scrollState.canScrollForward) 24.dp else 0.dp
+            )
+            .horizontalScroll(scrollState)
             .padding(horizontal = 14.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -635,10 +641,11 @@ private fun CompactSourceDeck(
         sources.forEach { opt ->
             val isSelected = opt.source == selectedSource
             val isSelectedSmartSource = isSelected && opt.source != QueueManager.Source.MANUAL
-            val label = if (isSelectedSmartSource) {
-                UiLayoutPolicy.smartQueueSourceLabel(opt.label, queueSize)
-            } else {
-                opt.label
+            val label = opt.label
+            // Keep the selected source (and its Replenish button) on screen.
+            val bringIntoView = remember { BringIntoViewRequester() }
+            if (isSelected) {
+                LaunchedEffect(selectedSource) { bringIntoView.bringIntoView() }
             }
             val bgModifier = if (isSelected) {
                 Modifier
@@ -659,6 +666,7 @@ private fun CompactSourceDeck(
 
             Row(
                 modifier = Modifier
+                    .bringIntoViewRequester(bringIntoView)
                     .clip(RoundedCornerShape(12.dp))
                     .then(bgModifier)
                     .clickable(enabled = !refreshing) {

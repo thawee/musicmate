@@ -32,12 +32,6 @@ class UiLayoutPolicyTest {
     }
 
     @Test
-    fun `smart queue capacity is included in the source label`() {
-        assertEquals("New · 20/20", UiLayoutPolicy.smartQueueSourceLabel("New", 21))
-        assertEquals("Discover · 7/20", UiLayoutPolicy.smartQueueSourceLabel("Discover", 7))
-    }
-
-    @Test
     fun `choice controls stack for large text`() {
         assertFalse(UiLayoutPolicy.stackChoiceControls(windowWidthDp = 432, fontScale = 1.0f))
         assertTrue(UiLayoutPolicy.stackChoiceControls(windowWidthDp = 432, fontScale = 1.3f))

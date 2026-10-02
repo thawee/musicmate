@@ -54,9 +54,9 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         if (current == null) return "";
         long now = System.currentTimeMillis();
         String line = diagnostics.line(current.getStats(), limiter != null ? limiter.getRateLimitedCount() : 0, now);
-        // Second line: clients (TVs, apps) seen on either port in the last 10 minutes
-        String clients = apincer.music.core.server.ClientRegistry.SHARED.recentSummary(now, 10 * 60_000L);
-        return clients.isEmpty() ? line : line + "\nClients: " + clients;
+        // Then one line per client (TV, app, browser) seen on either port in the last 10 minutes
+        java.util.List<String> clients = apincer.music.core.server.ClientRegistry.SHARED.recentClients(now, 10 * 60_000L);
+        return clients.isEmpty() ? line : line + "\n" + String.join("\n", clients);
     }
     private WebSocketHandlerImpl wsHandler;
     //private final ProfileManager profileManager;

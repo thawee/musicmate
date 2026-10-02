@@ -71,6 +71,7 @@ fun MediaServerPage(
                 .fillMaxWidth()
                 .semantics { contentDescription = serverStatusDescription }
         ) {
+          Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,22 +128,6 @@ fun MediaServerPage(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (state.isServerRunning && state.diagnostics.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                // Wrap only between values ("6 requests", "LG webOS TV (…)" stay together)
-                                text = state.diagnostics.lines().joinToString("\n") { line ->
-                                    line.split(" • ").joinToString(" • ") { value ->
-                                        value.split(", ").joinToString(", ") { it.replace(' ', '\u00A0') }
-                                    }
-                                },
-                                color = Color(0xFF888888),
-                                fontSize = 10.sp,
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                maxLines = 5, // counters, then the clients seen
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
 
@@ -201,6 +186,10 @@ fun MediaServerPage(
                     }
                 }
             }
+            if (state.isServerRunning && state.diagnostics.isNotEmpty()) {
+                ServerDiagnostics(state.diagnostics)
+            }
+          }
         }
 
         // ── 2. WEBUI ENDPOINT & DLNA ACCESS (When Running) ────────────────────
@@ -517,6 +506,69 @@ fun MediaServerPage(
                         ) {
                             Text(text = "Done", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Full-width diagnostics under the status row: the counters line, then one row per client
+ * seen recently ("LG webOS TV (192.168.1.20)" from the server), name left and address right.
+ */
+@Composable
+private fun ServerDiagnostics(diagnostics: String) {
+    val lines = diagnostics.lines().filter { it.isNotBlank() }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 14.dp)
+    ) {
+        Text(
+            // Wrap only between values: "6 requests" stays together
+            text = lines.first().split(" • ").joinToString(" • ") { it.replace(' ', '\u00A0') },
+            color = Color(0xFF9E9E9E),
+            fontSize = 11.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        val clients = lines.drop(1)
+        if (clients.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "CONNECTED",
+                color = Color(0xFF757575),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            clients.forEach { client ->
+                val match = Regex("""^(.*) \(([^)]*)\)$""").find(client)
+                val name = match?.groupValues?.get(1) ?: client
+                val address = match?.groupValues?.get(2).orEmpty()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = name,
+                        color = Color(0xFFD0D0D0),
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (address.isNotEmpty()) {
+                        Text(
+                            text = address,
+                            color = Color(0xFF888888),
+                            fontSize = 11.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            maxLines = 1
+                        )
                     }
                 }
             }

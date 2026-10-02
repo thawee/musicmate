@@ -51,11 +51,16 @@ public final class ClientRegistry {
 
     /** "LG webOS TV (192.168.1.20), BubbleUPnP (192.168.1.21)" for clients seen within the window. */
     public synchronized String recentSummary(long nowMs, long windowMs) {
+        return String.join(", ", recentClients(nowMs, windowMs));
+    }
+
+    /** One "LG webOS TV (192.168.1.20)" entry per client seen within the window. */
+    public synchronized List<String> recentClients(long nowMs, long windowMs) {
         List<String> parts = new ArrayList<>();
         for (Client c : clients.values()) {
             if (nowMs - c.lastSeen <= windowMs) parts.add(c.name + " (" + c.address + ")");
         }
-        return String.join(", ", parts);
+        return parts;
     }
 
     /**
@@ -91,6 +96,17 @@ public final class ClientRegistry {
         if (ua.contains("xbox")) return "Xbox";
         if (ua.contains("bubbleupnp")) return "BubbleUPnP";
         if (ua.contains("kodi")) return "Kodi";
+        // TVs above also send "Mozilla/5.0"; anything else that does is a web browser (WebUI)
+        if (ua.contains("tizen")) return "Samsung TV";
+        if (ua.contains("web0s")) return "LG webOS TV";
+        if (ua.startsWith("mozilla/")) {
+            if (ua.contains("edg/")) return "Edge browser";
+            if (ua.contains("opr/")) return "Opera browser";
+            if (ua.contains("firefox/") || ua.contains("fxios/")) return "Firefox browser";
+            if (ua.contains("chrome/") || ua.contains("crios/")) return "Chrome browser";
+            if (ua.contains("safari/")) return "Safari browser";
+            return "Web browser";
+        }
         String first = userAgent.trim().split("[\\s/]", 2)[0];
         return first.isEmpty() ? "Unknown client" : first;
     }

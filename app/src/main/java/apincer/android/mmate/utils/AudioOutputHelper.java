@@ -198,7 +198,11 @@ public class AudioOutputHelper {
                 outputDevice.setDescription(typeToString(selectedDevice.getType()));
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
             }
-            outputDevice.setName(String.valueOf(selectedDevice.getProductName()));
+            // Built-in outputs (speaker, earpiece, wired jack) report the phone model ("SM-S931B")
+            // as their product name; name those by type instead.
+            String productName = selectedDevice.getProductName() != null ? selectedDevice.getProductName().toString().trim() : "";
+            boolean isGenericName = productName.isEmpty() || productName.equalsIgnoreCase(Build.MODEL);
+            outputDevice.setName(isGenericName ? typeToString(selectedDevice.getType()) : productName);
         } else {
             outputDevice.setCodec("SRC");
             outputDevice.setName("Phone Speaker");

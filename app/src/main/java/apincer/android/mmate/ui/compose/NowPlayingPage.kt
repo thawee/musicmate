@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -305,9 +306,12 @@ fun NowPlayingPage(
                             .fillMaxSize()
                             .background(
                                 Brush.verticalGradient(
+                                    // Darker from mid-art down: the text block covers the lower
+                                    // ~45%, and bright covers left the artist line unreadable.
                                     0.0f to Color.Transparent,
-                                    0.35f to Color(0x40000000),
-                                    0.65f to Color(0xCC000000),
+                                    0.3f to Color(0x33000000),
+                                    0.5f to Color(0xB3000000),
+                                    0.7f to Color(0xE6000000),
                                     1.0f to Color.Black
                                 )
                             )
@@ -327,6 +331,7 @@ fun NowPlayingPage(
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
+                            style = LocalTextStyle.current.copy(shadow = ArtTextShadow),
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -337,10 +342,13 @@ fun NowPlayingPage(
 
                         // Artist Subtitle
                         Text(
-                            text = track?.artist ?: "Select a song",
-                            color = Color(0xFFDDDDDD),
+                            text = track?.let { t ->
+                                listOf(t.artist, t.album).filter { !it.isNullOrBlank() }.joinToString(" • ")
+                            } ?: "Select a song",
+                            color = Color(0xFFEEEEEE),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Normal,
+                            style = LocalTextStyle.current.copy(shadow = ArtTextShadow),
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1094,3 +1102,10 @@ private fun accessiblePlaybackTime(milliseconds: Long): String {
         "%d:%02d".format(minutes, seconds)
     }
 }
+
+/** Soft shadow that keeps text over album art readable on bright covers. */
+private val ArtTextShadow = androidx.compose.ui.graphics.Shadow(
+    color = Color(0x99000000),
+    offset = androidx.compose.ui.geometry.Offset(0f, 2f),
+    blurRadius = 6f
+)
