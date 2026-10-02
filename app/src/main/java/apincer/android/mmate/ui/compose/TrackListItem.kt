@@ -87,6 +87,7 @@ fun TrackListItem(
     artwork: (@Composable (Track) -> Unit)? = null,
     /** Playback group of the menu (UI.md §A); hidden when no playback service is bound. */
     showPlaybackActions: Boolean = true,
+    showRemoveFromPlaylist: Boolean = false,
     /** Listener mode: tap plays, long-press edits. Curator mode: tap edits, long-press selects. */
     listenerTapMode: Boolean = true,
     selectionActive: Boolean = false,
@@ -298,6 +299,18 @@ fun TrackListItem(
                             HorizontalDivider(color = Color(0x1AFFFFFF))
                         }
                         // Browse group
+                        if (showRemoveFromPlaylist) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.playlist_remove_menu), color = Color.White, fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.rounded_playlist_remove_24), contentDescription = null, tint = Color.White)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onMenuAction(R.id.action_remove_from_playlist)
+                                }
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.playlist_add_menu), color = Color.White, fontSize = 15.sp) },
                             leadingIcon = {

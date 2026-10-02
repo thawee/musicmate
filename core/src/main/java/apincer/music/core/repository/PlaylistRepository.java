@@ -222,8 +222,38 @@ public class PlaylistRepository {
         return true;
     }
 
+    /** True for playlists the user made (song or smart); only these can be edited or deleted. */
+    public static synchronized boolean isUserPlaylist(String uuid) {
+        return uuid != null && uuid.startsWith(CUSTOM_UUID_PREFIX) && findPlaylistByUuid(uuid).isPresent();
+    }
+
+    /** The user's song playlist with this name, or null (bundled and smart playlists too). */
+    public static synchronized PlaylistEntry findUserSongPlaylistByName(String name) {
+        Optional<PlaylistEntry> opt = findPlaylistByName(name);
+        return opt.isPresent() && isUserSongPlaylist(opt.get()) ? opt.get() : null;
+    }
+
+    /** Removes a track (matched by title and artist) from a song-list playlist the user made. */
+    public static synchronized boolean removeTrackFromPlaylist(Context context, String playlistUuid, Track track) {
+        if (context == null || track == null) return false;
+        Optional<PlaylistEntry> opt = findPlaylistByUuid(playlistUuid);
+        if (opt.isEmpty() || !isUserSongPlaylist(opt.get()) || opt.get().getRules() == null) return false;
+        PlaylistEntry entry = opt.get();
+        long key = PlaylistEntry.songKey(track.getTitle(), track.getArtist());
+        List<PlaylistRule> kept = new ArrayList<>();
+        for (PlaylistRule r : entry.getRules()) {
+            if (PlaylistEntry.songKey(r.getTitle(), r.getArtist()) != key) kept.add(r);
+        }
+        if (kept.size() == entry.getRules().size()) return false;
+        entry.setRules(kept);
+        entry.compileRules();
+        writeCustomPlaylistsToDisk(context);
+        return true;
+    }
+
     public static synchronized void deleteCustomPlaylist(Context context, String uuid) {
         if (uuid == null || context == null) return;
+        if (!uuid.startsWith(CUSTOM_UUID_PREFIX)) return; // bundled playlists are not the user's to delete
         playlists.removeIf(p -> uuid.equalsIgnoreCase(p.getUuid()));
         writeCustomPlaylistsToDisk(context);
     }

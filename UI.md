@@ -112,6 +112,8 @@ Focused strictly on **quick playback actions** and **file-level utility** for on
 ```
 
 - **Add to Playlist…** (`action_add_to_playlist`): `AddToPlaylistDialog` lists the user's own song playlists plus **New playlist…** (name it, then **Create & Add**). Tracks are matched by title and artist, like the bundled playlists, and saved with their rules in `custom_playlists.json`. A name that belongs to a bundled playlist is refused, since the library opens playlists by name.
+- **Remove from Playlist** (`action_remove_from_playlist`): shown only while one of the user's own song playlists is open (`MainScaffoldState.openUserPlaylistUuid`); confirms, then removes the title/artist rule. The file is untouched.
+- **Delete playlist:** long-press a playlist card the user made (uuid `custom-…`, song or smart) to delete it after confirmation. Long-press on bundled playlist cards and other cards does nothing; cards are not selectable.
 - **Browse Group:** Go to Artist / Go to Album narrow the current library view with the same artist/album filter the song page's provenance links use. Each is hidden when the track has no artist or album.
 
 - **Dynamic Visibility:** The playback group (`R.id.group_playback`) is hidden dynamically (`setGroupVisible(false)`) when no playback service/device is bound.

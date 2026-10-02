@@ -85,6 +85,7 @@ fun MusicListScreen(
     listKey: String = "",
     /** Whether the playback service is bound; track menus hide playback actions otherwise. */
     playbackAvailable: Boolean = true,
+    userPlaylistOpen: Boolean = false,
     /** Tap mode for row accessibility labels (Listener: tap plays; Curator: tap edits). */
     listenerTapMode: Boolean = true,
     modifier: Modifier = Modifier
@@ -292,7 +293,8 @@ fun MusicListScreen(
                                 track = track,
                                 onClick = { onTrackClick(track, index) },
                                 onPlayClick = { onFolderPlayClick(track) },
-                                onEnqueueClick = { onFolderEnqueueClick(track) }
+                                onEnqueueClick = { onFolderEnqueueClick(track) },
+                                onLongClick = { onTrackLongClick(track, index) }
                             )
                         } else {
                             val isSelected = selectedTracks.contains(track)
@@ -301,6 +303,7 @@ fun MusicListScreen(
                             TrackListItem(
                                 track = track,
                                 showPlaybackActions = playbackAvailable,
+                                showRemoveFromPlaylist = userPlaylistOpen,
                                 listenerTapMode = listenerTapMode,
                                 selectionActive = selectedTracks.isNotEmpty(),
                                 isSelected = isSelected,

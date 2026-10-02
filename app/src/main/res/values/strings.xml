@@ -306,6 +306,14 @@
     <string name="playlist_new">New playlist…</string>
     <string name="playlist_name_hint">Playlist name</string>
     <string name="playlist_new_title">New Playlist</string>
+    <string name="playlist_remove_menu">Remove from Playlist</string>
+    <string name="playlist_remove_confirm">Remove \"%1$s\" from %2$s? The file stays in your library.</string>
+    <string name="playlist_remove">Remove</string>
+    <string name="playlist_removed">Removed from %1$s</string>
+    <string name="playlist_delete_title">Delete playlist?</string>
+    <string name="playlist_delete_confirm">Delete the playlist \"%1$s\"? Its songs stay in your library.</string>
+    <string name="playlist_delete">Delete Playlist</string>
+    <string name="playlist_deleted">Deleted %1$s</string>
     <string name="playlist_create_and_add">Create &amp; Add</string>
     <string name="playlist_added">Added to %1$s</string>
     <string name="playlist_already_in">Already in %1$s</string>

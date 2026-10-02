@@ -3,6 +3,7 @@ package apincer.android.mmate.ui.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -46,7 +47,8 @@ fun FolderListItem(
     onClick: () -> Unit,
     onPlayClick: () -> Unit,
     onEnqueueClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
 ) {
     val folderTitle = track.title?.takeIf { it.isNotBlank() } ?: "folder"
     Box(
@@ -57,7 +59,7 @@ fun FolderListItem(
             .background(folderCardBgDark, folderCardShape)
             .background(folderCardBg, folderCardShape)
             .border(width = 1.5.dp, color = folderCardBorder, shape = folderCardShape)
-            .clickable(onClick = onClick)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
     ) {
         Row(
             modifier = Modifier

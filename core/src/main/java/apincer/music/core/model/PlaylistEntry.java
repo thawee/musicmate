@@ -91,6 +91,10 @@ public class PlaylistEntry {
     }
 
     public void compileRules() {
+        // Rebuild from scratch: rules can now shrink (Remove from Playlist)
+        titleIndexRules.clear();
+        genreIndexRules.clear();
+        genreComplexRules.clear();
         if (TYPE_SMART.equals(type)) {
             return;
         }

@@ -597,6 +597,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
 
         apincer.android.mmate.ui.compose.MainScaffoldState.updateHeaderStats(statText);
+        apincer.music.core.model.PlaylistEntry openPlaylist = SearchCriteria.TYPE.PLAYLIST.equals(type) && !isEmpty(currentCriteria.getKeyword())
+                ? PlaylistRepository.findUserSongPlaylistByName(currentCriteria.getKeyword()) : null;
+        apincer.android.mmate.ui.compose.MainScaffoldState.get().getOpenUserPlaylistUuid().setValue(
+                openPlaylist != null ? openPlaylist.getUuid() : null);
         apincer.android.mmate.ui.compose.MainScaffoldState.updatePlaylistOverview(
                 SearchCriteria.TYPE.PLAYLIST.equals(type) && isEmpty(currentCriteria.getKeyword()));
         apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(hasActiveFilter || currentCriteria.isSearchMode()
@@ -1470,6 +1474,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     viewModel.loadMusicItems(currentCriteria);
                 }
             });
+        } else if (actionId == R.id.action_remove_from_playlist) {
+            doConfirmRemoveFromPlaylist(track);
         } else if (actionId == R.id.action_go_to_artist) {
             doShowFilteredLibrary(Constants.FILTER_TYPE_ARTIST, track.getArtist());
         } else if (actionId == R.id.action_go_to_album) {
@@ -1487,6 +1493,41 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 Log.e(TAG, "Failed to start external player activity", e);
             }
         }
+    }
+
+    private void doConfirmRemoveFromPlaylist(Track track) {
+        String uuid = apincer.android.mmate.ui.compose.MainScaffoldState.get().getOpenUserPlaylistUuid().getValue();
+        String playlistName = currentCriteria != null ? currentCriteria.getKeyword() : null;
+        if (uuid == null || playlistName == null) return;
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle(R.string.playlist_remove_menu)
+                .setMessage(getString(R.string.playlist_remove_confirm, track.getTitle(), playlistName))
+                .setPositiveButton(R.string.playlist_remove, (d, w) -> {
+                    if (PlaylistRepository.removeTrackFromPlaylist(getApplicationContext(), uuid, track)) {
+                        android.widget.Toast.makeText(this, getString(R.string.playlist_removed, playlistName), android.widget.Toast.LENGTH_SHORT).show();
+                        viewModel.loadMusicItems(currentCriteria);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    /** Long-press on one of the user's playlist cards: delete it (bundled playlists are not deletable). */
+    private boolean doConfirmDeletePlaylist(Track playlistCard) {
+        String uuid = playlistCard.getUniqueKey();
+        if (!PlaylistRepository.isUserPlaylist(uuid)) return false;
+        String name = playlistCard.getTitle();
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle(R.string.playlist_delete_title)
+                .setMessage(getString(R.string.playlist_delete_confirm, name))
+                .setPositiveButton(R.string.playlist_delete, (d, w) -> {
+                    PlaylistRepository.deleteCustomPlaylist(getApplicationContext(), uuid);
+                    android.widget.Toast.makeText(this, getString(R.string.playlist_deleted, name), android.widget.Toast.LENGTH_SHORT).show();
+                    viewModel.loadMusicItems(currentCriteria);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        return true;
     }
 
     /** Narrows the current library view to one artist or album, as the song page's links do. */
@@ -2156,6 +2197,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onTrackLongClicked(apincer.music.core.model.Track tag, int position) {
         if (isSelectionBlocked()) return;
+        if (tag != null && tag.isContainer()) {
+            // Cards are not selectable; a long-press on one of the user's playlists offers Delete
+            if (SearchCriteria.TYPE.PLAYLIST.equals(tag.getContainerType())) doConfirmDeletePlaylist(tag);
+            return;
+        }
         if (selectionModel != null && selectionModel.hasSelection()) {
             selectionModel.select(position);
             return;

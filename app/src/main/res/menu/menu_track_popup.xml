@@ -25,6 +25,12 @@
 
     <!-- Browse group: filter the library to this track's artist or album -->
     <group android:id="@+id/group_browse">
+        <!-- Shown only inside one of the user's own song playlists -->
+        <item
+            android:id="@+id/action_remove_from_playlist"
+            android:icon="@drawable/rounded_playlist_remove_24"
+            android:title="@string/playlist_remove_menu"
+            app:showAsAction="never" />
         <item
             android:id="@+id/action_add_to_playlist"
             android:icon="@drawable/rounded_playlist_add_24"

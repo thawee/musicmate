@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:tint="#FFFFFF"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Three list lines with an X: remove a song from a playlist -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4,6h11a1,1 0,0 1,0 2H4a1,1 0,0 1,0 -2zM4,10h11a1,1 0,0 1,0 2H4a1,1 0,0 1,0 -2zM4,14h6a1,1 0,0 1,0 2H4a1,1 0,0 1,0 -2zM14.41,20.41a1,1 0,0 1,-1.41 -1.41L14.59,17.41 13,15.83a1,1 0,0 1,1.41 -1.41L16,16 17.59,14.41a1,1 0,0 1,1.41 1.41L17.41,17.41 19,19a1,1 0,0 1,-1.41 1.41L16,18.83z" />
+</vector>

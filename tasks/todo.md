@@ -23,7 +23,7 @@
 - [x] Volume slider matches seek bar family
 - [x] Delete moved into song page More… (last, red, batch count); verified on device
 - [x] Add to Playlist: track menu, song page More…, multi-select; persisted in custom_playlists.json; verified on device (create, add, duplicate skipped, survives restart)
-- [ ] Cleanup: test playlist "UX Test" left on the S25 for the user to remove
+- [x] Remove from Playlist + Delete playlist (long-press own card); verified on device, test playlist "UX Test" removed with it
 - [ ] Flaky: NioHttpServerTest midStreamDisconnect / stop_releases fail under full-suite load, pass alone
 
 ## Verification

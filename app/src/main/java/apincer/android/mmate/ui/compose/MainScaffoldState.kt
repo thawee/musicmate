@@ -43,6 +43,8 @@ class MainScaffoldState {
     var musicLoadError = mutableStateOf<String?>(null)
     var libraryEmpty = mutableStateOf(false)
     var hasActiveMusicFilters = mutableStateOf(false)
+    /** Uuid of the user's own song playlist on screen, or null; enables "Remove from Playlist". */
+    var openUserPlaylistUuid = mutableStateOf<String?>(null)
     var isRefreshing = mutableStateOf(false)
     var scrollToIndex = mutableIntStateOf(-1)
 

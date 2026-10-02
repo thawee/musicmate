@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Play or shuffle a whole list:** The track count line in the library and in search results now has **Play** and **Shuffle** buttons. Before, search results ("queen": 35 tracks) could only be played one track at a time.
 - **Play from the song page:** The song page has a gold Play button on the cover again; long-press plays the song next. 3.19.8 removed the cover play button, which left the page with no way to play the song.
-- **Your own playlists:** **Add to Playlist…** in the track `⋮` menu, the song page's **More…** menu and multi-select adds songs to a playlist you name ("New playlist…") or one you made before. Playlists appear under Playlists, match songs by title and artist like the built-in ones, and are saved in `custom_playlists.json` with the smart playlists.
+- **Your own playlists:** **Add to Playlist…** in the track `⋮` menu, the song page's **More…** menu and multi-select adds songs to a playlist you name ("New playlist…") or one you made before. Playlists appear under Playlists, match songs by title and artist like the built-in ones, and are saved in `custom_playlists.json` with the smart playlists. Inside one of your playlists, the `⋮` menu has **Remove from Playlist**; long-press a playlist you made (song or smart) to delete it. Both confirm first and never touch the music files. Before, a smart playlist you created could not be deleted at all.
 - **Go to Artist and Go to Album:** The track `⋮` menu can narrow the library to the track's artist or album.
 - **Filter label:** A list narrowed to one artist, album, genre or folder now says so first on the track count line ("Artist: Queen • 21 Tracks"); before, only "21 Tracks" showed.
 
