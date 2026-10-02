@@ -308,12 +308,23 @@ public class BaseServer {
             return getDefaultAlbumArt();
         }
 
+        // "tn_<key>": a 160x160 JPEG of that cover, for renderers that need the JPEG_TN profile
+        boolean thumbnail = albumUniqueKey.startsWith(THUMBNAIL_KEY_PREFIX);
+        if (thumbnail) albumUniqueKey = albumUniqueKey.substring(THUMBNAIL_KEY_PREFIX.length());
+
         File albumArt = getFileRepos().getCoverArtByAlbumartFilename(albumUniqueKey);
         if(albumArt == null || albumArt.length() == 0) {
             albumArt = getDefaultAlbumArt();
         }
+        if (thumbnail) {
+            File small = CoverThumbnails.thumbnailFor(albumArt, getContext().getCacheDir());
+            if (small != null) return small;
+        }
         return albumArt;
     }
+
+    /** Cover art key prefix for the 160x160 JPEG thumbnail (DLNA JPEG_TN). */
+    public static final String THUMBNAIL_KEY_PREFIX = "tn_";
 
     private Track getSong(String uri) {
         if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {

@@ -64,9 +64,7 @@ public class AlbumsBrowser extends AbstractContentBrowser {
             }
 
             //set albumArt
-            URI albumArtUri = getAlbumArtUri(contentDirectory, group.getUniqueKey());
-            musicAlbum.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
-                    albumArtUri));
+            addAlbumArt(contentDirectory, musicAlbum, group.getUniqueKey());
 
             result.add(musicAlbum);
         }

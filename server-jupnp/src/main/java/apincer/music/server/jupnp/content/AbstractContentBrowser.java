@@ -122,6 +122,20 @@ public abstract class AbstractContentBrowser {
         return getAlbumArtUri(contentDirectory, tag.getAlbumArtFilename());
     }
 
+    /**
+     * Two albumArtURI entries: the full-size cover first and untagged (most renderers use the
+     * first), then a 160x160 JPEG tagged dlna:profileID="JPEG_TN" for renderers that only show
+     * art carrying a DLNA image profile. The thumbnail is made on the phone when first requested.
+     */
+    protected void addAlbumArt(ContentDirectory contentDirectory, DIDLObject object, String name) {
+        object.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(getAlbumArtUri(contentDirectory, name)));
+        DIDLObject.Property.DLNA.PROFILE_ID jpegTn = new DIDLObject.Property.DLNA.PROFILE_ID(
+                new org.jupnp.support.model.DIDLAttribute(DIDLObject.Property.DLNA.NAMESPACE.URI, "dlna", "JPEG_TN"));
+        object.addProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
+                getAlbumArtUri(contentDirectory, apincer.music.core.server.BaseServer.THUMBNAIL_KEY_PREFIX + name),
+                java.util.List.of(jpegTn)));
+    }
+
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, String name) {
         //String uri = key+".png";
         return URI.create("http://"
@@ -161,10 +175,7 @@ public abstract class AbstractContentBrowser {
                 resource);
 
         // Add album art - critical for mConnectHD display
-        URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
-        DIDLObject.Property<URI> albumArtProperty = new DIDLObject.Property.UPNP.ALBUM_ART_URI(
-                albumArtUri);
-        musicTrack.replaceFirstProperty(albumArtProperty);
+        addAlbumArt(contentDirectory, musicTrack, tag.getAlbumArtFilename());
 
         // Add track number
         int trackNum = StringUtils.extractTrackNumber(tag.getTrack());
