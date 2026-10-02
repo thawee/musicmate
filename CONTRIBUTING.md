@@ -52,7 +52,7 @@ We use JUnit and AndroidX Test for verification.
 
 ## 🐛 Debugging the Streaming Server
 
-SonicNIO logs through `System.out`, which appears in logcat under the `System.out` tag. `NioHttpServerTest`, `NioHttpServerSoakTest` and `NioHttpServerFuzzTest` reproduce most server issues on the JVM; `tools/bench/stream-bench.sh` measures a device over the network.
+SonicNIO logs through `java.util.logging`, which appears in logcat under the `NioHttpServer` tag (errors as warnings with the stack trace; per-connection idle closes only at `FINE`). The Music Center Server tab shows live counters from `NioHttpServer.getStats()`: active streams, throughput, requests, and any evicted, refused or rate-limited requests. `NioHttpServerTest`, `NioHttpServerSoakTest` and `NioHttpServerFuzzTest` reproduce most server issues on the JVM; `tools/bench/stream-bench.sh` measures a device over the network.
 
 *Note: CoreHTTP (ADR-035) and Netty (ADR-037) were removed on 2026-10-01; a saved engine choice from an earlier version is deleted at startup.*
 

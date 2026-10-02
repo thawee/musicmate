@@ -326,6 +326,24 @@ public class NioHttpServerTest {
             }
             assertEquals(-1, n);
         }
+        assertEquals(1, server.getStats().evictions);
+    }
+
+    @Test
+    public void stats_countRequestsBytesAndConnections() throws Exception {
+        NioHttpServer.Stats before = server.getStats();
+        try (Socket socket = connect()) {
+            assertEquals(200, exchange(socket, "GET /track HTTP/1.1\r\nHost: test\r\n\r\n", true).status);
+            assertEquals(206, exchange(socket, get("bytes=0-99"), true).status);
+            NioHttpServer.Stats during = server.getStats();
+            assertEquals(1, during.connections);
+            assertEquals(2, during.requests - before.requests);
+            // both bodies (1000 + 100 bytes) plus their headers
+            assertTrue("bytesSent " + during.bytesSent, during.bytesSent - before.bytesSent > 1100);
+        }
+        awaitCounter("activeConnections", 0);
+        assertEquals(0, server.getStats().connections);
+        assertEquals(0, server.getStats().streams);
     }
 
     @Test
@@ -601,6 +619,7 @@ public class NioHttpServerTest {
             }
             assertTrue("slow client was not cut off", closed);
             assertTrue("cut off too late", System.currentTimeMillis() - start < 6000);
+            assertEquals(1, server.getStats().timeouts);
         }
     }
 

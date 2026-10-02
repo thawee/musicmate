@@ -15,6 +15,12 @@ public class RateLimitingHandler extends ChainedHandler {
     
     // Atomic counter for evictions to prevent lost updates under high concurrency
     private final AtomicLong evictionCount = new AtomicLong(0);
+    private final AtomicLong limitedCount = new AtomicLong(0);
+
+    /** Requests answered with 429 since start. */
+    public long getRateLimitedCount() {
+        return limitedCount.get();
+    }
 
     public RateLimitingHandler(int maxRequestsPerSecond, NioHttpServer.Handler next) {
         this(maxRequestsPerSecond, path -> false, next);
@@ -47,7 +53,7 @@ public class RateLimitingHandler extends ChainedHandler {
             clients.entrySet().removeIf(e -> currentSecond - e.getValue().second > 2);
             // Log eviction count periodically
             if (removed % 10000 == 0) {
-                System.out.println("RateLimiter: Evicted " + removed + " stale entries");
+                java.util.logging.Logger.getLogger("NioHttpServer").fine("RateLimiter: evicted " + removed + " stale entries");
             }
         }
 
@@ -65,6 +71,7 @@ public class RateLimitingHandler extends ChainedHandler {
 
             // If the TV is spamming, drop the hammer
             if (record.count > maxRequestsPerSecond) {
+                limitedCount.incrementAndGet();
                 return new NioHttpServer.HttpResponse()
                         .setStatus(429, "Too Many Requests")
                         .addHeader("Retry-After", "2") // Tell the TV to back off for 2 seconds

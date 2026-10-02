@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Server diagnostics:** The Music Center Server tab shows a live line while the server runs: active streams, throughput, total requests, and any evicted, refused or rate-limited requests (for example "2 streams • 9.0 MB/s • 1,204 requests"). SonicNIO now logs to logcat under the `NioHttpServer` tag instead of printing to standard output, and its high-load warnings appear once instead of every second.
+
 ### Removed
 - **Netty engine and the engine setting:** Removed the Netty engine (`:server-jupnp-netty`), the "Server engine" choice in Settings and the Music Center Server tab, and the engine-switching layer (ADR-037). On-device benchmarks showed Netty no faster than SonicNIO, and choosing Netty had never taken effect: a missing packaged file made it fail at startup and the app quietly kept using SonicNIO. Everyone now streams with SonicNIO; a saved engine choice is cleared at startup. The app is about 3.5 MB smaller.
 - **CoreHTTP engine:** Removed the Apache HttpCore engine (`:server-jupnp-httpcore`), its build-time bytecode patch and the HttpCore and ASM dependencies (ADR-035). A saved CoreHTTP choice switches to SonicNIO automatically.

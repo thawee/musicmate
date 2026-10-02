@@ -29,6 +29,7 @@ public class RateLimitingHandlerTest {
             }
             if (System.currentTimeMillis() / 1000 == second) {
                 assertEquals(10, limited);
+                assertEquals(10, limiter.getRateLimitedCount());
                 return;
             }
         }

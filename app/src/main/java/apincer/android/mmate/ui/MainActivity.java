@@ -145,6 +145,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Inject
     MediaServerManager mediaServerManager;
 
+    @Inject
+    apincer.music.core.server.spi.WebServer webServer;
+
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
     private AutoCloseable playbackStateSubscription = null;
@@ -1009,6 +1012,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             String netDesc = NetworkUtils.isWifiConnected(this) ? "Wi-Fi" : NetworkUtils.isHotspotActive(this) ? "Hotspot" : "Local Network";
             state.setBroadcastInfo("DLNA 1.5 • " + netDesc + " • Port " + apincer.music.core.server.BaseServer.WEB_SERVER_PORT);
             state.setServerStatusText("DLNA Server Active");
+            state.setDiagnosticsSource(() -> webServer.getDiagnostics());
             state.setQrCodeBitmap(BitmapHelper.generateQRCode(url, 400, 400));
         } else if (status == MediaServerHub.ServerStatus.STARTING) {
             state.setServerStatusText("Starting Server…");

@@ -921,7 +921,7 @@ Evidence: 142 unit tests and debug assembly pass. Screenshot comparisons fail fo
 - [x] P1-8 Hub reports STARTING; the service mirrors the hub status flow (asLiveData) instead of posting RUNNING right after an async start
 - [x] P1-9 Service restarts a running server when PREF_SERVER_ENGINE changes; Settings and Music Center only save the preference; a stopped server stays stopped
 - [x] app/server-jupnp tests, assembleDebug (no hub/service unit-test harness)
-- [ ] Device: Stop, then toggle Wi-Fi (stays stopped); Stop right after Start; start without network (ERROR); Wi-Fi off/on while running (STOPPED then RUNNING); change engine in Settings while running and while stopped
+- [ ] Device: Stop, then toggle Wi-Fi (stays stopped); Stop right after Start; start without network (ERROR); Wi-Fi off/on while running (STOPPED then RUNNING)
 
 ## P1-13/P1-14 Library query errors and paging (2026-10-01)
 - [x] P1-13 TagRepository.findMusic propagates query failures (removed findMusicOrEmpty/EMPTY_LIST), so the list shows "Couldn't load music" + Retry instead of "No tracks"
@@ -971,6 +971,10 @@ Goal: prove and improve SonicNIO with evidence; then decide whether Netty can be
 - [x] 3b. Split NioHttpServer (2,405 -> 1,165 lines): FileResponse (behind StreamSlots), WebSocketSession, NioWebSocketConnection (cross-thread requests via requestWebSocketWrite/requestClose), SerialExecutor, WebSocketHandshake, BoundedByteArrayOutputStream, FileContentTypes; accurate class Javadoc. Fixed on the way: 304 evicting a stream, onOpen after pipelined frames; removed dead metrics, resetOld, isHttpState, locks
 - [x] 4. Protocol gaps: Expect: 100-continue, pipelining (in order), HTTP/1.0 closes without keep-alive, 30 s header-read deadline (slowloris), idle sweep every 1 s. A stalled reader was already closed by the idle timeout (test added). 5 tests; 3 fail on the previous commit. Soak client retries connect on host ephemeral-port exhaustion (BindException)
 - [ ] 5. Observability: counters (streams, evictions, 429/503, bytes/s), Android Log tags, Music Center diagnostics line
+    - [x] 5a. Logging: replace System.out/err in NioHttpServer and RateLimitingHandler with java.util.logging (logcat tag NioHttpServer); per-connection idle closes at FINE, evictions and limits at INFO, errors at WARNING with the exception
+    - [x] 5b. Counters: NioHttpServer.getStats() snapshot (connections, streams, requests, bytes sent, evictions, 503 rejections, header timeouts, idle closes) plus RateLimitingHandler 429 count; unit-tested over a real socket
+    - [x] 5c. Diagnostics line on the Music Center Server tab (ServerDiagnostics, 5 tests; WebServer.getDiagnostics). Compiles and unit-tested; not yet seen on device (phone locked)
+    - [ ] Device: open the Server tab while streaming; check the line updates and fits
 - [x] 6. Decision gate: Netty retired (ADR-037); see "Retire Netty and the engine selector" below
 Out of scope: HTTP/2, TLS, chunked request bodies.
 

@@ -27,6 +27,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * SonicNIO: MusicMate's built-in HTTP/1.1 and WebSocket server, used for media streaming, the
@@ -87,12 +89,27 @@ public class NioHttpServer implements Runnable {
     private int maxThread = 0;
 
 
+    // logcat tag "NioHttpServer"; levels are set in LogHelper
+    private static final Logger LOG = Logger.getLogger("NioHttpServer");
+    private boolean buffersHighLogged;  // selector thread only
+    private boolean streamsHighLogged;  // selector thread only
+
     private final AtomicInteger activeStreams = new AtomicInteger(0);
+    // Totals since start, for getStats(); incremented on the selector or worker threads
+    private final java.util.concurrent.atomic.AtomicLong requestCount = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong bytesSentCount = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong evictionCount = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong rejectedCount = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong timeoutCount = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong idleCloseCount = new java.util.concurrent.atomic.AtomicLong();
     // An eviction frees its slot on the selector thread shortly after; the new stream is admitted meanwhile
     private final StreamSlots streamSlots = new StreamSlots() {
         @Override
         public boolean acquire() {
-            if (activeStreams.get() >= maxConcurrentStreams && !tryEvictOldestStream()) return false;
+            if (activeStreams.get() >= maxConcurrentStreams && !tryEvictOldestStream()) {
+                rejectedCount.incrementAndGet();
+                return false;
+            }
             activeStreams.incrementAndGet();
             return true;
         }
@@ -334,7 +351,7 @@ public class NioHttpServer implements Runnable {
                                 // }
                                 closeConnection(key);
                             } catch (Exception e) {
-                                System.err.println("Error handling key: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                                LOG.log(Level.WARNING, "Error handling connection; closing it", e);
                                 closeConnection(key);
                             }
                         }
@@ -359,8 +376,7 @@ public class NioHttpServer implements Runnable {
                 }
             } catch (Exception e) {
                 // This now catches errors with binding the socket or with the selector itself.
-                System.err.println("Server main loop error, will try to recover: " + e.getMessage());
-                e.printStackTrace();
+                LOG.log(Level.WARNING, "Server loop error on port " + port + "; restarting in 1 s", e);
                 try {
                     // Wait a moment before trying to re-bind the socket to prevent a fast spin-loop.
                     Thread.sleep(1000);
@@ -372,7 +388,7 @@ public class NioHttpServer implements Runnable {
 
         // Final cleanup when isRunning is set to false.
         if (workerPool != null && !workerPool.isShutdown()) workerPool.shutdownNow();
-        System.out.println("NIO Server stopped.");
+        LOG.info("Server on port " + port + " stopped");
     }
 
     private void handleIdleConnections() {
@@ -406,11 +422,13 @@ public class NioHttpServer implements Runnable {
                     // Slowloris: headers (or a body) trickling in slower than their deadline
                     if (attachment.state == ConnectionAttachment.ParseState.READING_HEADERS && attachment.response == null
                             && attachment.requestStartTime > 0 && now - attachment.requestStartTime > headerReadTimeout) {
+                        timeoutCount.incrementAndGet();
                         closeConnection(key);
                         continue;
                     }
                     if (attachment.state == ConnectionAttachment.ParseState.READING_BODY
                             && attachment.bodyReadStartTime > 0 && now - attachment.bodyReadStartTime > ConnectionAttachment.BODY_READ_TIMEOUT) {
+                        timeoutCount.incrementAndGet();
                         closeConnection(key);
                         continue;
                     }
@@ -419,28 +437,27 @@ public class NioHttpServer implements Runnable {
                             ? keepAliveTimeout * 4  // WebSockets: 4× the HTTP idle timeout
                             : keepAliveTimeout;     // HTTP keep-alive idle timeout (default 120 s)
                     if (now - attachment.lastActivityTime > idleTimeout) {
-                        if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
-                            System.out.println("Closing idle WebSocket connection.");
-                        } else {
-                            System.out.println("Closing idle HTTP connection.");
-                        }
+                        LOG.fine(attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME
+                                ? "Closing idle WebSocket connection" : "Closing idle HTTP connection");
+                        idleCloseCount.incrementAndGet();
                         closeConnection(key);
                     }
                 }
             }
 
-            // Memory warning
-            if (totalRequestBufferSize > 100 * 1024 * 1024) { // 100MB threshold
-                System.err.println("WARNING: High memory usage in request buffers: " +
-                        (totalRequestBufferSize / 1024 / 1024) + "MB across " +
-                        selector.keys().size() + " connections");
+            // Warnings are logged when the condition starts, not on every one-second sweep
+            boolean buffersHigh = totalRequestBufferSize > 100 * 1024 * 1024; // 100MB threshold
+            if (buffersHigh && !buffersHighLogged) {
+                LOG.warning("High memory use in request buffers: " + (totalRequestBufferSize / 1024 / 1024)
+                        + " MB across " + selector.keys().size() + " connections");
             }
+            buffersHighLogged = buffersHigh;
 
-            // Stream count warning
-            if (activeFileStreams > maxConcurrentStreams * 0.8) {
-                System.err.println("WARNING: High concurrent stream count: " + activeFileStreams +
-                        "/" + maxConcurrentStreams);
+            boolean streamsHigh = activeFileStreams > maxConcurrentStreams * 0.8;
+            if (streamsHigh && !streamsHighLogged) {
+                LOG.info("High concurrent stream count: " + activeFileStreams + "/" + maxConcurrentStreams);
             }
+            streamsHighLogged = streamsHigh;
 
             lastTimeoutCheck = now;
         }
@@ -478,6 +495,7 @@ public class NioHttpServer implements Runnable {
         if (clientChannel == null) return;
 
         if (activeConnections.get() >= maxConnections) {
+            rejectedCount.incrementAndGet();
             // Send 503 Service Unavailable and drop the connection immediately.
             ByteBuffer response = ByteBuffer.wrap(
                     "HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
@@ -623,6 +641,7 @@ public class NioHttpServer implements Runnable {
      * reference so nothing on the selector thread touches the request again.
      */
     private void dispatch(SelectionKey key, ConnectionAttachment attachment, HttpRequest request) {
+        requestCount.incrementAndGet();
         attachment.request = null;
         key.interestOps(0);
         if (workerPool == null || workerPool.isShutdown()) {
@@ -681,7 +700,7 @@ public class NioHttpServer implements Runnable {
                     response = httpHandler.handle(request);
                 } catch (Exception e) {
                     // Handle exceptions from the handler
-                    System.err.println("Handler error: " + e.getMessage());
+                    LOG.log(Level.WARNING, "Handler failed for " + request.getMethod() + " " + request.getPath(), e);
                     response = new HttpResponse()
                             .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
                     if (e.getMessage() != null) {
@@ -708,7 +727,7 @@ public class NioHttpServer implements Runnable {
             selector.wakeup();
 
         } catch (Exception e) {
-            System.err.println("Error processing request: " + e.getMessage());
+            LOG.log(Level.WARNING, "Error processing request", e);
             HttpResponse errorResponse = new HttpResponse()
                     .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
             if (e.getMessage() != null) {
@@ -732,7 +751,7 @@ public class NioHttpServer implements Runnable {
         if (attachment.response == null) return;
 
         SocketChannel clientChannel = (SocketChannel) key.channel();
-        attachment.response.write(clientChannel);
+        bytesSentCount.addAndGet(attachment.response.write(clientChannel));
 
         if (attachment.response.isFullySent()) {
 
@@ -781,8 +800,9 @@ public class NioHttpServer implements Runnable {
         if (oldestKey == null || !streamingKeys.remove(oldestKey)) {
             return false; // nothing to evict, or another worker already took it
         }
-        System.out.println("Evicting oldest active stream connection. Last activity: " +
-                (System.currentTimeMillis() - oldestActivityTime) + "ms ago.");
+        LOG.info("Stream limit reached; evicting the stream idle for "
+                + (System.currentTimeMillis() - oldestActivityTime) + " ms");
+        evictionCount.incrementAndGet();
         requestClose(oldestKey);
         return true;
     }
@@ -930,6 +950,30 @@ public class NioHttpServer implements Runnable {
                 return;
             }
         }
+    }
+
+    /** Counters for diagnostics: current connections and streams, and totals since start. */
+    public static final class Stats {
+        public final int connections, streams;
+        public final long requests, bytesSent, evictions, rejected, timeouts, idleCloses;
+
+        Stats(int connections, int streams, long requests, long bytesSent, long evictions,
+              long rejected, long timeouts, long idleCloses) {
+            this.connections = connections;
+            this.streams = streams;
+            this.requests = requests;
+            this.bytesSent = bytesSent;
+            this.evictions = evictions;
+            this.rejected = rejected;
+            this.timeouts = timeouts;
+            this.idleCloses = idleCloses;
+        }
+    }
+
+    /** A snapshot of the counters; safe from any thread. */
+    public Stats getStats() {
+        return new Stats(activeConnections.get(), activeStreams.get(), requestCount.get(), bytesSentCount.get(),
+                evictionCount.get(), rejectedCount.get(), timeoutCount.get(), idleCloseCount.get());
     }
 
     public HttpResponse createFileResponse(File file, HttpRequest request) throws IOException {
@@ -1107,13 +1151,16 @@ public class NioHttpServer implements Runnable {
             this.headerBuffer = ByteBuffer.wrap(sb.toString().getBytes(StandardCharsets.UTF_8));
         }
 
-        public void write(SocketChannel channel) throws IOException {
+        /** Writes what the socket accepts now; returns the bytes written. */
+        public long write(SocketChannel channel) throws IOException {
             if (headerBuffer == null) buildHeaders();
+            long written = 0;
             if (!headersSent) {
-                channel.write(headerBuffer);
+                written += channel.write(headerBuffer);
                 if (!headerBuffer.hasRemaining()) headersSent = true;
             }
-            if (headersSent && bodyBuffer != null) channel.write(bodyBuffer);
+            if (headersSent && bodyBuffer != null) written += channel.write(bodyBuffer);
+            return written;
         }
 
         public boolean isFullySent() {

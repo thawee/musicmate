@@ -200,16 +200,17 @@ final class FileResponse extends NioHttpServer.HttpResponse {
     }
 
     @Override
-    public void write(SocketChannel channel) throws IOException {
+    public long write(SocketChannel channel) throws IOException {
         if (headerBuffer == null) buildHeaders();
+        long sent = 0;
 
         if (!headersSent) {
-            channel.write(headerBuffer);
-            if (headerBuffer.hasRemaining()) return;
+            sent += channel.write(headerBuffer);
+            if (headerBuffer.hasRemaining()) return sent;
             headersSent = true;
         }
 
-        if (statusCode != NioHttpServer.HTTP_OK && statusCode != NioHttpServer.HTTP_PARTIAL_CONTENT) return;
+        if (statusCode != NioHttpServer.HTTP_OK && statusCode != NioHttpServer.HTTP_PARTIAL_CONTENT) return sent;
 
         if (fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
             long position = rangeStart + bytesSent;
@@ -230,8 +231,10 @@ final class FileResponse extends NioHttpServer.HttpResponse {
                 position += written;
                 remaining -= written;
                 bytesSent += written;
+                sent += written;
             }
         }
+        return sent;
     }
 
     @Override

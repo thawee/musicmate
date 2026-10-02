@@ -39,6 +39,16 @@ fun MediaServerPage(
     onQrCodeClicked: () -> Unit
 ) {
     var showQrZoomDialog by remember { mutableStateOf(false) }
+
+    // Refresh the live summary every 2 s while this tab is shown and the server runs
+    LaunchedEffect(state.isServerRunning) {
+        while (state.isServerRunning) {
+            val source = state.diagnosticsSource ?: break
+            state.diagnostics = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { source() }
+            kotlinx.coroutines.delay(2_000)
+        }
+        if (!state.isServerRunning) state.diagnostics = ""
+    }
     val serverStatusDescription = stringResource(
         if (state.isServerRunning) R.string.cd_media_server_running else R.string.cd_media_server_stopped
     )
@@ -117,6 +127,17 @@ fun MediaServerPage(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        if (state.isServerRunning && state.diagnostics.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = state.diagnostics,
+                                color = Color(0xFF888888),
+                                fontSize = 10.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 

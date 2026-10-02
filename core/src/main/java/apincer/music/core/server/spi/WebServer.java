@@ -11,4 +11,9 @@ public interface WebServer {
     int getListenPort();
 
     List<String> getLibInfos();
+
+    /** One-line live summary for the Music Center Server tab, or "" when not running. */
+    default String getDiagnostics() {
+        return "";
+    }
 }

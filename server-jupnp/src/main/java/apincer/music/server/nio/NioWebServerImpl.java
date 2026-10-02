@@ -44,6 +44,17 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     private Thread serverThread;
     private final Object serverLock = new Object();
     private NioHttpServer server;
+    private RateLimitingHandler rateLimiter;
+    private final apincer.music.core.http.ServerDiagnostics diagnostics = new apincer.music.core.http.ServerDiagnostics();
+
+    @Override
+    public String getDiagnostics() {
+        NioHttpServer current = server;
+        RateLimitingHandler limiter = rateLimiter;
+        if (current == null) return "";
+        return diagnostics.line(current.getStats(), limiter != null ? limiter.getRateLimitedCount() : 0,
+                System.currentTimeMillis());
+    }
     private WebSocketHandlerImpl wsHandler;
     //private final ProfileManager profileManager;
 
@@ -74,9 +85,10 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
             wsHandler = new WebSocketHandlerImpl();
             newServer.registerWebSocketHandler(wsHandler);
             // Cover art is exempt: a WebUI grid loads many covers at once from one browser
-            NioHttpServer.Handler rateLimiter = new RateLimitingHandler(50,
+            RateLimitingHandler rateLimiter = new RateLimitingHandler(50,
                     path -> path.startsWith(CONTEXT_PATH_COVERART), this::handleRequest);
             newServer.registerHttpHandler(rateLimiter);
+            this.rateLimiter = rateLimiter;
             server = newServer;
             serverThread = new Thread(() -> {
                 try {
