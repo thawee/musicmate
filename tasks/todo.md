@@ -2,9 +2,11 @@
 
 ## Documentation and commit follow-up
 
-- [ ] Update DESIGN.md, UI.md, and CHANGELOG.md to describe the implemented MQA behavior.
-- [ ] Stage only MQA changes and verify the staged source snapshot builds and passes app tests.
-- [ ] Commit the MQA fix and documentation; preserve unrelated working-tree changes.
+- [x] Update DESIGN.md, UI.md, and CHANGELOG.md to describe the implemented MQA behavior. (DESIGN "Native MQA metadata presentation", UI.md MQA precedence, CHANGELOG MQA entries)
+- [x] Stage only MQA changes and verify the staged source snapshot builds and passes app tests.
+- [x] Commit the MQA fix and documentation; preserve unrelated working-tree changes. (85065968; confirmed 2026-10-02)
+- [ ] Device: real MQA / MQA Studio files, track changes, compact and wide layouts, both player modes (mqa-display-fix-plan.md step 4)
+- [ ] Record reference images for the 8 MqaScreenshotTest previews (none exist yet; inspect the renders first)
 
 Plan and verification: `tasks/mqa-display-fix-plan.md`. Implemented; 94 app tests and debug build pass. Eight previews visually inspected; screenshot references and remaining live-device matrix pending.
 
