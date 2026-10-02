@@ -49,6 +49,7 @@ import apincer.android.mmate.ui.compose.ExternalPlayerAccessPolicy;
 import apincer.android.mmate.ui.compose.ExternalPlayerListenerAction;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.AudioStreamCacheManager;
+import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.QueueManager;
@@ -75,13 +76,15 @@ import kotlinx.coroutines.flow.StateFlowKt;
  * 3. Bridges external playback state to streaming player targets
  * 4. Manages playing queue for streaming player playback
  *
- * NO internal ExoPlayer - only monitors and controls external apps and streaming targets.
+ * Control vs monitor is decided by the target: MusicMate drives local ExoPlayer playback and
+ * DLNA renderers the user chose (isControllable), follows other Android apps through their
+ * media session, and only follows passive HTTP streams (browsers, renderers driven by other
+ * control points); see PLAYBACK_ARCHITECTURE.md.
  */
 @AndroidEntryPoint
 public class MusicMateServiceImpl extends MediaLibraryService implements PlaybackService {
     private static final String TAG = "MusicMateServiceImpl";
 
-    enum RUNNING_MODE {MONITOR, CONTROL}
     public static final String CHANNEL_ID = "musicmate_service_channel";
     public static final int SERVICE_ID = 1;
 
@@ -125,7 +128,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public StateFlow<Optional<Track>> getCurrentTrackFlow() { return currentTrackFlow; }
     public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
 
-    private volatile RUNNING_MODE runningMode = RUNNING_MODE.MONITOR;
     private volatile String controlledPlayerTargetId;
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
@@ -746,7 +748,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             AudioStreamCacheManager.getInstance().preloadTrack(song);
         }
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
-            runningMode = RUNNING_MODE.CONTROL;
             if (isControllable(playbackTarget)) {
                 internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
@@ -777,6 +778,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // A manual Next keeps the timer armed for the end of the new track
         if (!userSkip && stopForEndOfTrackSleep()) return;
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
             if (isControllable(playbackTarget)) {
                 internalSkipToNextOnDMRPlayer(playbackTarget, userSkip);
             } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
@@ -818,6 +823,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void skipToPrevious() {
         historyTracker.end(true);
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
             if (isControllable(playbackTarget)) {
                 internalPreviousOnDMRPlayer(playbackTarget);
             } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
@@ -854,6 +863,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void pausePlayer() {
         historyTracker.suspend();
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
             if (isControllable(playbackTarget)) {
                 InternalPauseDMRPlayer(playbackTarget);
             } else {
@@ -894,6 +907,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void resumePlayer() {
         PendingResume pending = pendingResume;
         PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        if (isMonitoredStream(target)) {
+            Log.d(TAG, "Ignoring resume for monitored stream " + target.getDisplayName());
+            return;
+        }
         if (pending != null && target != null && pending.targetId.equals(target.getTargetId())) {
             Log.i(TAG, "Resume after target switch: starting " + pending.track.getTitle()
                     + " at " + pending.positionMs + "ms on " + target.getDisplayName());
@@ -950,6 +967,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void stopPlaying() {
         historyTracker.end(false);
         currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
             if (isControllable(playbackTarget)) {
                 internalStopOnDMRPlayer(playbackTarget);
             } else {
@@ -1051,6 +1072,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void seekTo(long positionMs) {
         historyTracker.seek();
         PlaybackTarget currentTarget = getPlayer();
+        if (isMonitoredStream(currentTarget)) {
+            Log.d(TAG, "Ignoring seek for monitored stream " + currentTarget.getDisplayName());
+            return;
+        }
         if (currentTarget != null) {
             try {
                 Track currentTrack = getNowPlayingSong();
@@ -1298,8 +1323,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
             // Publish the destination before activation: handoff playback and seek route
             // through currentPlayerFlow, as do callbacks from the newly active player.
-            if (controlled || resolvedTarget.isStreaming()) {
-                this.controlledPlayerTargetId = resolvedTarget.getTargetId();
+            if (controlled) {
+                // Only a user-chosen DLNA renderer is driven; choosing anything else ends that
+                this.controlledPlayerTargetId = resolvedTarget instanceof DMRPlayer ? resolvedTarget.getTargetId() : null;
             }
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
 
@@ -1385,14 +1411,19 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return player;
     }
 
+    /**
+     * True when MusicMate drives this target as a DLNA renderer: a DMRPlayer the user chose
+     * (switchPlayer(..., controlled=true)). A passive HTTP stream (a browser, or a renderer driven
+     * by another control point) is only followed. It used to count any streaming target, and
+     * adopted the first one asked about, so passive streams were ignored as "controlled".
+     */
     public boolean isControllable(PlaybackTarget player) {
-        if (player == null || !player.isStreaming()) {
-            return false;
-        }
-        if (controlledPlayerTargetId == null) {
-            controlledPlayerTargetId = player.getTargetId();
-        }
-        return controlledPlayerTargetId.equals(player.getTargetId());
+        return player instanceof DMRPlayer && player.getTargetId().equals(controlledPlayerTargetId);
+    }
+
+    /** A streaming target MusicMate only follows: transport commands cannot reach it. */
+    private boolean isMonitoredStream(PlaybackTarget player) {
+        return player != null && player.isStreaming() && !isControllable(player);
     }
 
     /**
@@ -1685,7 +1716,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void onMediaTrackChanged(Track song) {
         currentTrackFlow.setValue(Optional.ofNullable(song));
-        runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
         state.currentTrack = song;
@@ -1716,7 +1746,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             return;
         }
         currentTrackFlow.setValue(Optional.ofNullable(song));
-        runningMode = RUNNING_MODE.CONTROL;
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
         state.currentTrack = song;

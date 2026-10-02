@@ -1030,3 +1030,12 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
     - [ ] Known flaky (2026-10-02, predates 3c): NioHttpServerTest fails about 1 run in 16, a different test each time (Broken pipe on POST, connection closed before headers, missing Content-Length): the server closes a connection early. Not reproduced in 15 targeted runs; capture with the loop script and fix
     - [x] 3e. ALAC -> WAV via FFmpegKit (MediaExtractor reports ALAC as audio/unknown on this Samsung, so MediaCodec cannot be used); device: 16- and 24-bit ALAC identical to Apple afconvert, exact length, Range and time seek match
     - [x] 3f (FLAC; ALAC with 3e). DIDL for converted tracks (device: LG sees audio/wav .wav CI=1, BubbleUPnP the original; size is an estimate from the duration) advertises audio/wav, PCM size and OP for that client
+
+## Playback control vs monitor fixes (2026-10-02, from the playback review)
+- [x] 1. isControllable: only a DLNA renderer (DMRPlayer) that MusicMate was asked to drive (switchPlayer(..., controlled=true)); no side effect. Passive streams (browser, BubbleUPnP-driven renderer) are followed, never driven
+- [x] 2. Transport commands (next/previous/pause/resume/seek/stop) on a monitored stream do nothing instead of reaching the Android MediaController path
+- [ ] 3. External apps (UAPP, HiBy, Poweramp): when MusicMate sent the track and the app stops at its end, play the next queued track
+- [x] 4. Remove the unused RUNNING_MODE field; fix the stale "NO internal ExoPlayer" comment
+- [x] Verified on device: passive HTTP requests now produce nowPlaying/playbackState broadcasts (none before); pause on a monitored stream is ignored. Controlled DMR path not exercised (no renderer on this network)
+- [ ] Verify external continuation (fix 3) with HiBy/Poweramp on the phone
+- [ ] Decide: a passive stream (browser/TV fetching a song) currently becomes the current target and deactivates local playback; only a controlled DLNA renderer is protected
