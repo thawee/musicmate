@@ -18,6 +18,10 @@ object UiLayoutPolicy {
     fun showQueueDuration(windowWidthDp: Int): Boolean =
         windowWidthDp >= 400
 
+    /** Large text leaves no room for the track count beside labeled Play / Shuffle pills. */
+    fun iconOnlyPlayResultsPills(fontScale: Float): Boolean =
+        fontScale >= LargeTextScale
+
     fun stackChoiceControls(windowWidthDp: Int, fontScale: Float): Boolean =
         windowWidthDp <= StackedChoicesMaxWidthDp || fontScale >= LargeTextScale
 

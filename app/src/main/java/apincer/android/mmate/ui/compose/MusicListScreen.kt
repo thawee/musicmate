@@ -341,11 +341,12 @@ fun MusicListScreen(
                 )
             }
 
-            // Glassmorphism Go to Top FAB - sibling of Column, child of outer Box
+            // Glassmorphism Go to Top FAB - sibling of Column, child of outer Box.
+            // Centered: at the end it covered each row's ⋮ button and the fast-scroll thumb.
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 112.dp)
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 112.dp)
             ) {
                 AnimatedVisibility(
                     visible = showFab,

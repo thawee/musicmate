@@ -336,7 +336,7 @@ fun NowPlayingPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
-                                .fadingEdge(startWidth = 10.dp, endWidth = 14.dp)
+                                .fadingEdge(endWidth = 14.dp) // a start fade hid the first letter at rest
                                 .clickable(enabled = track != null) { onTrackClicked() }
                         )
 
@@ -353,7 +353,7 @@ fun NowPlayingPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                                .fadingEdge(startWidth = 8.dp, endWidth = 12.dp)
+                                .fadingEdge(endWidth = 12.dp)
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -799,6 +799,9 @@ fun NowPlayingPage(
                         modifier = Modifier.size(19.dp)
                     )
                 }
+                // Same thin family as the seek bar, in neutral white so the colored seek bar
+                // stays the primary control (the default Material slider looked unrelated).
+                @OptIn(ExperimentalMaterial3Api::class)
                 Slider(
                     value = state.volume.value.coerceIn(0f, 1f),
                     onValueChange = onVolumeChanged,
@@ -806,7 +809,26 @@ fun NowPlayingPage(
                         .weight(1f)
                         .semantics {
                             contentDescription = context.getString(R.string.cd_volume, volumePercent)
-                        }
+                        },
+                    thumb = {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(Color.White, CircleShape)
+                        )
+                    },
+                    track = { sliderState ->
+                        SliderDefaults.Track(
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = Color(0xB3FFFFFF),
+                                inactiveTrackColor = Color(0x26FFFFFF)
+                            ),
+                            sliderState = sliderState,
+                            drawStopIndicator = null,
+                            thumbTrackGapSize = 0.dp,
+                            modifier = Modifier.height(4.dp).clip(CircleShape)
+                        )
+                    }
                 )
                 IconButton(
                     onClick = onVolumeUp,

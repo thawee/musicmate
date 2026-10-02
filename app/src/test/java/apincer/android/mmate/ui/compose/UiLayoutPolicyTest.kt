@@ -32,6 +32,13 @@ class UiLayoutPolicyTest {
     }
 
     @Test
+    fun `play results pills drop their labels at large text`() {
+        assertFalse(UiLayoutPolicy.iconOnlyPlayResultsPills(fontScale = 1.0f))
+        assertTrue(UiLayoutPolicy.iconOnlyPlayResultsPills(fontScale = 1.3f))
+        assertTrue(UiLayoutPolicy.iconOnlyPlayResultsPills(fontScale = 2.0f))
+    }
+
+    @Test
     fun `choice controls stack for large text`() {
         assertFalse(UiLayoutPolicy.stackChoiceControls(windowWidthDp = 432, fontScale = 1.0f))
         assertTrue(UiLayoutPolicy.stackChoiceControls(windowWidthDp = 432, fontScale = 1.3f))

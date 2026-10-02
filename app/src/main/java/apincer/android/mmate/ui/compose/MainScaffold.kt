@@ -497,7 +497,9 @@ fun MainScaffold(
                     showMenuButton = !useExpandedNavigation,
                     statsText = state.headerStatsText.value,
                     // Containers (artists, genres, folders) are not playable as one list.
+                    // Hidden while selecting: they play the whole list, not the selection.
                     canPlayResults = !state.isPlaylistOverview.value &&
+                        state.selectedTracks.isEmpty() &&
                         state.tracks.firstOrNull()?.isContainer == false,
                     onPlayResults = { shuffle -> callbacks?.onPlayResults(shuffle) },
                     isPlaylistOverview = state.isPlaylistOverview.value,
@@ -916,9 +918,10 @@ private fun TopSearchBar(
                 if (isScanning) {
                     ScanningIndicator(scanProgressText)
                 } else if (canPlayResults) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play") { onPlayResults(false) }
-                        PlayResultsPill(R.drawable.ic_baseline_shuffle_24, "Shuffle") { onPlayResults(true) }
+                    val iconOnly = UiLayoutPolicy.iconOnlyPlayResultsPills(LocalDensity.current.fontScale)
+                    Row(horizontalArrangement = Arrangement.spacedBy(if (iconOnly) 0.dp else 8.dp)) {
+                        PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play", iconOnly) { onPlayResults(false) }
+                        PlayResultsPill(R.drawable.ic_baseline_shuffle_24, "Shuffle", iconOnly) { onPlayResults(true) }
                     }
                 }
             }
@@ -928,13 +931,16 @@ private fun TopSearchBar(
 
 // ── Play / Shuffle the current list ──────────────────────────────────────────
 @Composable
-private fun PlayResultsPill(iconRes: Int, label: String, onClick: () -> Unit) {
+private fun PlayResultsPill(iconRes: Int, label: String, iconOnly: Boolean = false, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .heightIn(min = 48.dp)
+            .then(if (iconOnly) Modifier.width(48.dp) else Modifier)
             .clip(RoundedCornerShape(24.dp))
             .clickable(role = Role.Button, onClickLabel = "$label all", onClick = onClick)
+            .then(if (iconOnly) Modifier.semantics { contentDescription = "$label all" } else Modifier)
             .padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
@@ -950,8 +956,10 @@ private fun PlayResultsPill(iconRes: Int, label: String, onClick: () -> Unit) {
                 tint = Color(0xFFFFD700),
                 modifier = Modifier.size(16.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = label, color = Color(0xFFFFD700), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+            if (!iconOnly) {
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = label, color = Color(0xFFFFD700), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+            }
         }
     }
 }
@@ -1124,7 +1132,7 @@ private fun FloatingMiniPlayerDock(
                         modifier = Modifier
                             .fillMaxWidth()
                             .basicMarquee(iterations = Int.MAX_VALUE, velocity = 28.dp)
-                            .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
+                            .fadingEdge(endWidth = 10.dp)
                     )
 
                     val cleanTarget = remember(outputTarget) { sanitizeTargetDeviceTitle(outputTarget) }
@@ -1162,7 +1170,7 @@ private fun FloatingMiniPlayerDock(
                         modifier = Modifier
                             .fillMaxWidth()
                             .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
-                            .fadingEdge(startWidth = 8.dp, endWidth = 10.dp)
+                            .fadingEdge(endWidth = 10.dp)
                     )
                 }
 

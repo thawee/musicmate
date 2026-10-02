@@ -18,8 +18,12 @@
 - [x] 10. Now Playing scrim and album line
 
 - [x] Device check (S25): speaker icon, queue fade and no 20/20, Server CONNECTED list (Chrome browser), "Phone Speaker" in picker and mini player, Now Playing "Queen • The Works"
-- [ ] Follow-up: scroll-to-top FAB covers the ⋮ button of the row under it
-- [ ] Follow-up: regenerate stale screenshot references
+- [x] Scroll-to-top FAB centered (verified on device)
+- [x] Screenshot references regenerated after inspecting renders (34/34 pass); found and fixed: 200% text pills, pills in selection mode, faded first letter
+- [x] Volume slider matches seek bar family
+- [ ] Decision needed: Delete in song page primary row (ADR-013)
+- [ ] Decision needed: Add to Playlist for single tracks (new feature)
+- [ ] Flaky: NioHttpServerTest midStreamDisconnect / stop_releases fail under full-suite load, pass alone
 
 ## Verification
 - [ ] Unit tests + assembleDebug; update screenshot references touched

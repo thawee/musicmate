@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Queue sources:** The source buttons fade at an edge that hides more (two of six were off screen with no hint), the selected source scrolls into view, and the unexplained "Downloads · 20/20" counter is gone.
 - **Server tab clients:** Connected clients are listed one per row under the counters, across the full card width; an IP address no longer splits across lines. Web browsers show as "Chrome browser", "Safari browser" and so on instead of "Mozilla", and Samsung Tizen and LG Web0S user agents are recognised as TVs.
 - **Phone output name:** The phone's own output shows as "Phone Speaker" (or "Wired Headphones") instead of the model code "SM-S931B", with "Plays on this phone" instead of "Direct Hardware Output".
+- **Scroll to top:** The button is centered above the mini player; at the right edge it covered the `⋮` button of the row under it and the fast-scroll thumb.
+- **Volume slider:** Matches the seek bar's thin style in neutral white, so the two no longer look unrelated (the volume used Material's default thick teal slider).
+- **First letter of titles:** Now Playing and the mini player no longer fade out the first letter of the title and artist ("So What" read as "o What"); only the end fades when text scrolls.
+- **Play / Shuffle at large text and while selecting:** At 130% text and above the pills show icons only, so the track count stays readable; they are hidden while tracks are selected, since they play the whole list.
 - **Now Playing readability:** A darker gradient and a soft text shadow keep the title and artist readable on bright covers, and the album now shows with the artist.
 
 ## [3.21.0] - 2026-10-02
