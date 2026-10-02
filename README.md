@@ -100,6 +100,36 @@ The app has one streaming engine, SonicNIO (`server-jupnp`, `NioWebServerImpl` o
 *   **Tests:** `NioHttpServerTest` (37 tests) drives a real socket: full and partial GETs (suffix, open-ended, clamped, 416), invalid and multi-range requests (200), `If-Range`, HEAD, keep-alive, `Connection: close`, HTTP/1.0 close, pipelined requests, `Expect: 100-continue`, the header-read deadline, a stream outliving that deadline, stalled readers, POST bodies split across packets, chunked bodies (501), request-pool integrity after disconnects, stream eviction, stop/teardown, and WebSocket handshake, ordering, close and oversized frames. `NioHttpServerSoakTest` and `NioHttpServerFuzzTest` add load and hostile input; `RateLimitingHandlerTest` covers the limit and the cover-art exemption.
 *   **Benchmark:** `tools/bench/stream-bench.sh <phone-ip> <track-id> [label]` measures single-stream throughput, seek latency, parallel throughput and app CPU from a computer on the same network.
 
+#### Performance Baseline
+
+Measured 2026-10-01. Rerun both after changing `NioHttpServer` and compare against these numbers.
+
+**On device** (`tools/bench/stream-bench.sh`; Galaxy S25 as Wi-Fi hotspot, MacBook client, 261 MB FLAC, 2-3 runs per figure):
+
+| Measure | SonicNIO |
+|:---|:---|
+| Single stream | 8.0-9.1 MB/s |
+| Seek, time to first byte (256 KB range) | p50 28-36 ms, p95 62-134 ms |
+| 4 parallel streams (total) | 7.7-8.4 MB/s |
+| App CPU while streaming | 5-6% |
+
+Throughput is capped by the Wi-Fi link, not the server: Netty measured the same on this setup (ADR-037). Even one stream is about 7x what 24-bit/192 kHz stereo needs uncompressed (about 1.15 MB/s; FLAC needs less), so time to first byte and CPU are the numbers that matter for playback.
+
+**On the JVM** (`NioHttpServerSoakTest`, loopback, Apple Silicon Mac, 16 clients for 8 s, mixed full files, ranges and keep-alive):
+
+| Measure | SonicNIO |
+|:---|:---|
+| Throughput | 560-750 MB/s |
+| Range time to first byte | p50 4.3-6.0 ms, p95 7-25 ms |
+| Errors / leaked streams or connections | 0 / 0 |
+
+This one has no network in the way, so it is the better regression check. Run it with:
+
+```bash
+./gradlew :core:testDebugUnitTest --tests '*NioHttpServerSoakTest' --rerun -i | grep SOAK
+# heavier: SOAK_CLIENTS=64 SOAK_SECONDS=20
+```
+
 ---
 
 ## 🛠 Tech Stack
