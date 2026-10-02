@@ -35,18 +35,29 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         return getItems(contentDirectory, name).size();
     }
 
+    // A browser serves one Browse request: the page and TotalMatches share one library scan
+    private List<Track> items;
+    private String itemsUuid;
+
     private List<Track> getItems(ContentDirectory contentDirectory, String uuid) {
-        List<Track> results = new ArrayList<>();
+        if (items != null && uuid.equals(itemsUuid)) {
+            return items;
+        }
         List<Track> list = tagRepos.getAllMusicsForPlaylist();
-        for(Track tag: list) {
-            if (CollectionsBrowser.ALL_SONGS.equals(uuid)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid) && TagUtils.isOnDownloadDir(tag)) {
-                results.add(tag);
-            }else if (PlaylistRepository.isSongInPlaylistUuid(tag, uuid)) {
-                results.add(tag);
+        List<Track> results;
+        if (CollectionsBrowser.ALL_SONGS.equals(uuid)) {
+            results = list;
+        } else {
+            java.util.function.Predicate<Track> member = CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid)
+                    ? TagUtils::isOnDownloadDir
+                    : PlaylistRepository.playlistFilterByUuid(uuid);
+            results = new ArrayList<>();
+            for (Track tag : list) {
+                if (member.test(tag)) results.add(tag);
             }
         }
+        items = results;
+        itemsUuid = uuid;
         return results;
     }
 

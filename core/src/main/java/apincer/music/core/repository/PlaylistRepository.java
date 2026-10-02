@@ -411,16 +411,23 @@ public class PlaylistRepository {
     }
 
     public static boolean isSongInPlaylistUuid(Track track, String playlistUuid) {
-        Optional<PlaylistEntry> playlistOpt = findPlaylistByUuid(playlistUuid);
-        if (playlistOpt.isEmpty()) { // || !TYPE_GROUPING.equalsIgnoreCase(playlistOpt.get().getType())) {
-            return false;
-        }
+        return playlistFilterByUuid(playlistUuid).test(track);
+    }
 
+    /**
+     * Membership test for one playlist, looked up once. Use it to filter many tracks; calling
+     * isSongInPlaylistUuid per track repeats the playlist lookup for every track.
+     */
+    public static java.util.function.Predicate<Track> playlistFilterByUuid(String playlistUuid) {
+        Optional<PlaylistEntry> playlistOpt = findPlaylistByUuid(playlistUuid);
+        if (playlistOpt.isEmpty()) {
+            return track -> false;
+        }
         PlaylistEntry entry = playlistOpt.get();
         if (!PlaylistEntry.TYPE_SMART.equalsIgnoreCase(entry.getType()) && entry.getRules() == null) {
-            return false;
+            return track -> false;
         }
-        return entry.isInPlaylist(track);
+        return entry::isInPlaylist;
     }
 
     public static PlaylistEntry getPlaylistByName(String playlistName) {

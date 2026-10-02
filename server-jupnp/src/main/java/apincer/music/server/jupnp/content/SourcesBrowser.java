@@ -32,32 +32,13 @@ public class SourcesBrowser extends AbstractContentBrowser {
     }
 
     public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
-       // Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
-        // return rootDIRs.size(); // +1; // +1 for Downloads folder
-        List<Container> result = new ArrayList<>();
-        Collection<Track> rootDIRs = tagRepos.getRootDIRs();
-
-        List<Track> songs = tagRepos.getAllMusicsForPlaylist();
-        for(Track tag: songs) {
-            for(Track dir: rootDIRs) {
-                if(tag.getPath().startsWith(dir.getUniqueKey())) {
-                    dir.increaseChildCount();
-                }
-            }
-        }
-
-        for(Track dir: rootDIRs) {
-            if(dir.getChildCount() > 0) {
-                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getTitle(), "", 0, null);
-                musicDir.setChildCount((int) dir.getChildCount());
-                result.add(musicDir);
-            }
-        }
-        return result.size();
+        return browseContainer(contentDirectory, myId, 0, 0, null).size();
     }
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+        // One library scan per Browse request: TotalMatches reuses the list built for the page
+        if (rootFolders != null) return rootFolders;
         List<Container> result = new ArrayList<>();
         Collection<Track> rootDIRs = tagRepos.getRootDIRs();
 
@@ -78,9 +59,10 @@ public class SourcesBrowser extends AbstractContentBrowser {
             }
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
-
+        rootFolders = result;
         return result;
     }
+    private List<Container> rootFolders;
 
     @Override
     public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {

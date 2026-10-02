@@ -88,8 +88,19 @@ public abstract class AbstractContentBrowser {
         return name;
     }
 
+    /**
+     * This server's address, looked up once per browser. Browsers are created per Browse
+     * request; getIpAddress() scans every network interface, and calling it two or three times
+     * per track made "All Songs" (8,000+ tracks) take about 16 s.
+     */
+    protected String serverHost() {
+        if (serverHost == null) serverHost = NetworkUtils.getIpAddress();
+        return serverHost;
+    }
+    private String serverHost;
+
     public String getUriString(ContentDirectory contentDirectory, Track tag) {
-        return "http://" + NetworkUtils.getIpAddress() + ":" +WEB_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
+        return "http://" + serverHost() + ":" +WEB_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, Track tag) {
@@ -99,7 +110,7 @@ public abstract class AbstractContentBrowser {
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, String name) {
         //String uri = key+".png";
         return URI.create("http://"
-                + NetworkUtils.getIpAddress() + ":"
+                + serverHost() + ":"
                 + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + name);
     }
 
@@ -164,7 +175,7 @@ public abstract class AbstractContentBrowser {
         // Add high-resolution audio indicator for compatible players
         if (tag.getAudioSampleRate() > 44100 || tag.getAudioBitsDepth() > 16) {
             musicTrack.addProperty(new DIDLObject.Property.UPNP.ARTIST_DISCO_URI(
-                    URI.create("http://" + NetworkUtils.getIpAddress() + ":" +
+                    URI.create("http://" + serverHost() + ":" +
                             WEB_SERVER_PORT + "/hires_badge")));
         }
 
