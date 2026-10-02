@@ -979,3 +979,12 @@ Decision: SonicNIO matched Netty on device (step 1b); Netty never actually ran b
 - [x] Remove PREF_SERVER_ENGINE/DEFAULT_SERVER_ENGINE; migration clears the stale preference
 - [x] Update tests (accessibility, screenshot) and docs (ADR-037, README, DESIGN, UI, USER_GUIDE, WEBUI, others, CHANGELOG)
 - [x] Verify: 215 unit tests, debug build, R8 release minify, androidTest compile; on device the Server header is SonicNIO and the saved "netty" preference was deleted. Rendered previews checked for Settings and the Server tab. Screenshot validation: the same 30 previews fail on unchanged HEAD (stale baselines), so no new failures; baselines not regenerated here
+
+## UPnP ContentDirectory fixes (2026-10-02)
+Found by an end-to-end check against the phone (description, SCPD, Browse, GetProtocolInfo, GENA all work; SSDP untestable from the Mac, its firewall drops the replies).
+- [x] Paging: in-memory browsers ignored StartingIndex/RequestedCount ("Recently Added" returned 615 for 20). Page centrally in AbstractContentBrowser.browseChildren; DB-paged folders (album, artist, genre) opt out. SourceFolderBrowser drops its own paging (it stopped at maxResults, not first+max, and never paged subfolders)
+- [x] Unknown ObjectID (or missing item metadata) returns error 701 No such object instead of an empty success
+- [x] UPnP port: unsupported method (HEAD) gets 405 with Allow, bad URI 400, instead of 500 with the exception text
+- [x] Root Browse: 843 ms cold, 20-50 ms cached (the 2 s was during a library scan). "All Songs" page 6.0 s -> 1.07 s by paging tracks before building DIDL items. Artists TotalMatches used a different query (2505 vs 2549 listed); fixed
+- [ ] Open: RequestedCount=0 on "All Songs" takes ~15.7 s (builds 8305 DIDL items); Sources root ~1.2 s; collection folders still load the whole library per request
+- [x] Unit tests (BrowsePagingTest 6, UpnpRequestCheckTest 3); on device: paging consistent in 8 folder types, 701 for unknown id, HEAD / -> 405

@@ -34,7 +34,8 @@ public class ArtistsBrowser extends AbstractContentBrowser {
     }
 
     public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
-        return tagRepos.getArtists().size();
+        // Same query as browseContainer, so TotalMatches agrees with the entries listed
+        return tagRepos.getArtistWithChildrenCount().size();
     }
 
     @Override

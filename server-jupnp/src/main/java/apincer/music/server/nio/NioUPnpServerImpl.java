@@ -53,6 +53,14 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                     return new NioHttpServer.HttpResponse().setStatus(400, "Bad Request");
                 }
 
+                int reject = rejectStatus(request.getMethod(), rawUri);
+                if (reject == 405) {
+                    return new NioHttpServer.HttpResponse().setStatus(405, "Method Not Allowed")
+                            .addHeader("Allow", ALLOWED_METHODS);
+                } else if (reject != 0) {
+                    return new NioHttpServer.HttpResponse().setStatus(400, "Bad Request");
+                }
+
                 StreamRequestMessage requestMessage = readRequestMessage(request);
                 ReceivingSync protocol = protocolFactory.createReceivingSync(requestMessage);
                 protocol.run();
@@ -124,6 +132,24 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
     }
 
     private static final String TAG = "NioUPnpServer";
+    private static final String ALLOWED_METHODS = "GET, POST, SUBSCRIBE, UNSUBSCRIBE, NOTIFY";
+
+    /**
+     * 0 when jUPnP can take the request, else the status to answer: 405 for a method UPnP does
+     * not use over HTTP (HEAD used to fail inside jUPnP and come back as 500), 400 for a bad URI.
+     */
+    static int rejectStatus(String method, String path) {
+        UpnpRequest.Method upnpMethod = UpnpRequest.Method.getByHttpName(method);
+        if (upnpMethod == UpnpRequest.Method.UNKNOWN || upnpMethod == UpnpRequest.Method.MSEARCH) {
+            return 405;
+        }
+        try {
+            URI.create(path);
+        } catch (IllegalArgumentException malformed) {
+            return 400;
+        }
+        return 0;
+    }
     private final Object serverLock = new Object();
     private NioHttpServer server;
 

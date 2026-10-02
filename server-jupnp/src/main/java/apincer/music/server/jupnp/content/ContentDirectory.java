@@ -355,14 +355,12 @@ public class ContentDirectory {
         if (contentBrowser != null) {
                 if (browseFlag == BrowseFlag.METADATA) {
                     didlObject = contentBrowser.browseMeta(this, objectID, firstResult, maxResults, orderby);
-                    if (didlObject != null) {
-                        didl.addObject(didlObject);
-                        childCount = 1;
-                        totalMatches = 1;
-                    } else {
-                        childCount = 0;
-                        totalMatches = 0;
+                    if (didlObject == null) {
+                        throw new ContentDirectoryException(ContentDirectoryErrorCode.NO_SUCH_OBJECT, objectID);
                     }
+                    didl.addObject(didlObject);
+                    childCount = 1;
+                    totalMatches = 1;
                 } else {
                     List<DIDLObject> children = contentBrowser.browseChildren(this, objectID, firstResult, maxResults, orderby);
                     for (DIDLObject child : children) {
@@ -393,8 +391,8 @@ public class ContentDirectory {
                         "Error while generating BrowseResult", e);
             }
         } else {
-            Log.w(TAG, "No browser found for objectID: " + objectID);
-            return new BrowseResult("", 0, 0);
+            // UPnP ContentDirectory error 701, not an empty success that looks like an empty folder
+            throw new ContentDirectoryException(ContentDirectoryErrorCode.NO_SUCH_OBJECT, objectID);
         }
     }
 

@@ -100,21 +100,15 @@ public class SourceFolderBrowser extends AbstractContentBrowser {
             id = id.substring(0, id.length()-ALL_SONGS.length()-1);
         }
 
+        // All tracks here; browseChildren pages subfolders and tracks together
         List<Track> list = tagRepos.findInPath(id);
         int idlength = id.length();
-        int currentCount = 0;
         for(Track tag: list) {
             String path = tag.getPath();
             int idx = path.indexOf("/", idlength+1); // for
             if(allSongs || (idx <= idlength)) {
                 // found music on t=current directory
-                if (maxResults== 0 || ((currentCount >= firstResult) && currentCount < (firstResult+maxResults))) {
-                    MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId());
-                    result.add(musicTrack);
-                }else if(currentCount >= maxResults){
-                    break;
-                }
-                currentCount++;
+                result.add(buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId()));
             }
         }
 

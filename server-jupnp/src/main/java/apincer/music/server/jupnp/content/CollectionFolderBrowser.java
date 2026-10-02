@@ -50,6 +50,12 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         return results;
     }
 
+    /** Pages the track list before building DIDL items; "All Songs" has thousands of tracks. */
+    @Override
+    protected boolean pagesChildren() {
+        return true;
+    }
+
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
@@ -62,7 +68,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String uuid = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
-        List<Track> tags = getItems(contentDirectory, uuid);
+        List<Track> tags = page(getItems(contentDirectory, uuid), firstResult, maxResults);
         for(Track tag: tags) {
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);

@@ -57,6 +57,12 @@ public class AlbumFolderBrowser extends AbstractContentBrowser {
         return tagRepos.findByAlbumAndAlbumArtist(album, albumArtist, 0, 0).size();
     }
 
+    /** Tracks are paged by the database query; there are no subfolders. */
+    @Override
+    protected boolean pagesChildren() {
+        return true;
+    }
+
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {

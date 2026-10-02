@@ -54,11 +54,33 @@ public abstract class AbstractContentBrowser {
 
     public abstract List<? extends Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
     public abstract Integer getTotalMatches(ContentDirectory contentDirectory, String myId);
+    /**
+     * Children of {@code myId}, paged by StartingIndex and RequestedCount. Browsers that build
+     * their lists in memory return everything and are paged here; ones that page in the
+     * database say so with {@link #pagesChildren()}.
+     */
     public List<DIDLObject> browseChildren(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<DIDLObject> result = new ArrayList<>();
-        result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
-        result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
-        return result;
+        if (pagesChildren()) {
+            result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
+            result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
+            return result;
+        }
+        result.addAll(browseContainer(contentDirectory, myId, 0, 0, orderby));
+        result.addAll(browseItem(contentDirectory, myId, 0, 0, orderby));
+        return page(result, firstResult, maxResults);
+    }
+
+    /** True when browseContainer and browseItem already apply StartingIndex and RequestedCount. */
+    protected boolean pagesChildren() {
+        return false;
+    }
+
+    /** UPnP paging: RequestedCount 0 means all remaining; a start past the end gives an empty page. */
+    static <T> List<T> page(List<T> all, long firstResult, long maxResults) {
+        int from = (int) Math.min(Math.max(firstResult, 0), all.size());
+        int to = maxResults <= 0 ? all.size() : (int) Math.min(from + maxResults, all.size());
+        return new ArrayList<>(all.subList(from, to));
     }
 
     public String extractName(String id, ContentDirectoryIDs prefix) {

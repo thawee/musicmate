@@ -37,6 +37,12 @@ public class GenreFolderBrowser extends AbstractContentBrowser {
         return tagRepos.findByGenre(name).size();
     }
 
+    /** Tracks are paged by the database query; there are no subfolders. */
+    @Override
+    protected boolean pagesChildren() {
+        return true;
+    }
+
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
