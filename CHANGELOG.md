@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Seeking by time (LG and Sony TVs):** FLAC and MP3 can now be seeked by time (DLNA `TimeSeekRange.dlna.org`), which LG webOS TVs from 2022 use exclusively and Sony TVs prefer; before, only byte-range seeking was offered, so seeking could fail on those TVs. FLAC uses the file's seek table (the stream starts exactly at a seek point); MP3 is proportional and aligned to a frame. Other formats keep byte-range seeking only and answer a time seek with 406.
 - **DLNA clients list:** The Server tab lists the TVs and apps that used the server in the last 10 minutes (Sony BRAVIA and LG webOS TVs are named by model or type), and each new client's request headers are logged once (logcat tag `DlnaClients`) to diagnose device-specific problems.
 - **Samsung TVs:** The media server answers Samsung's `X_GetFeatureList` (the TV's simple music view now opens at the library root) and its track-length request (`getMediaInfo.sec`, answered with `MediaInfo.sec: SEC_Duration`), which Samsung TVs use to show the length and seek bar. Only these Samsung features are advertised.
 - **Windows Media Player and Xbox:** The media server now offers Microsoft's `X_MS_MediaReceiverRegistrar` service, which Windows Media Player and Xbox require before they list a server. Every device is allowed, as for other clients.

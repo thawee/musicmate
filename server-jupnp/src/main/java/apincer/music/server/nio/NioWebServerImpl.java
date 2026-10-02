@@ -157,7 +157,33 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         String serverSignature = getServerSignature();
         String cachedDate = getCachedDate();
 
-        NioHttpServer.HttpResponse response = server.createFileResponse(audioFile, request);
+        // DLNA time-based seek (LG webOS 2022+ seeks only this way; Sony prefers it)
+        String timeSeekRange = request.getHeader("timeseekrange.dlna.org", null);
+        long startOffset = -1;
+        double startSeconds = 0;
+        if (timeSeekRange != null && !"HEAD".equalsIgnoreCase(request.getMethod())) {
+            double[] npt = apincer.music.server.jupnp.transport.TimeSeek.parseNpt(timeSeekRange);
+            if (npt == null) return createErrorResponse(400, "Bad TimeSeekRange");
+            if (npt[0] > 0) {
+                String format = DLNAHeaderHelper.timeSeekFormat(song);
+                if (format == null || song.getAudioDuration() <= 0) {
+                    return createErrorResponse(406, "Time seek not supported for this file"); // DLNA 7.4.40.4
+                }
+                apincer.music.server.jupnp.transport.TimeSeek.Position seekTo =
+                        apincer.music.server.jupnp.transport.TimeSeek.locate(audioFile, format, npt[0], song.getAudioDuration());
+                if (seekTo == null) return createErrorResponse(416, "Time out of range");
+                startOffset = seekTo.byteOffset;
+                startSeconds = seekTo.startSeconds;
+            }
+        }
+
+        NioHttpServer.HttpResponse response = server.createFileResponse(audioFile, request, startOffset);
+        if (timeSeekRange != null && song.getAudioDuration() > 0) {
+            // The time the stream really starts at (a FLAC seek point may be before the request)
+            String total = apincer.music.server.jupnp.transport.TimeSeek.npt(song.getAudioDuration());
+            response.addHeader("TimeSeekRange.dlna.org", "npt="
+                    + apincer.music.server.jupnp.transport.TimeSeek.npt(startSeconds) + "-" + total + "/" + total);
+        }
         response.addHeader("Cache-Control", "no-cache");
         response.addHeader("transferMode.dlna.org", "Streaming");
         if (dlnaFeatures != null) {

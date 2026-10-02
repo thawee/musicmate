@@ -32,6 +32,14 @@ final class FileResponse extends NioHttpServer.HttpResponse {
     private static final long CHUNK_SIZE = 262144; // 256KB chunks for smooth streaming
 
     FileResponse(File file, NioHttpServer.HttpRequest request, StreamSlots slots) throws IOException {
+        this(file, request, slots, -1);
+    }
+
+    /**
+     * @param startOffset when 0 or more, send the file from this byte as 200 (no Content-Range)
+     *                    and ignore any Range header: a DLNA time seek resolved to a position
+     */
+    FileResponse(File file, NioHttpServer.HttpRequest request, StreamSlots slots, long startOffset) throws IOException {
         super();
         this.slots = slots;
 
@@ -93,7 +101,9 @@ final class FileResponse extends NioHttpServer.HttpResponse {
             // unsupported (e.g. multi-range) Range header is ignored and the file is sent as 200
             boolean rangeApplied = false;
 
-            if (rangeHeader.startsWith("bytes=")) {
+            if (startOffset >= 0) {
+                tempStart = Math.min(startOffset, Math.max(0, fileSize - 1));
+            } else if (rangeHeader.startsWith("bytes=")) {
                 String ifRange = request.getHeader("if-range", null);
                 if (ifRange != null) {
                     rangeValid = ifRange.equals(etag);

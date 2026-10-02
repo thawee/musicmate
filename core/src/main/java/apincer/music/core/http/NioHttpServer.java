@@ -977,8 +977,13 @@ public class NioHttpServer implements Runnable {
     }
 
     public HttpResponse createFileResponse(File file, HttpRequest request) throws IOException {
+        return createFileResponse(file, request, -1);
+    }
+
+    /** As above, but from {@code startOffset} (a DLNA time seek's byte position) as 200; -1 for none. */
+    public HttpResponse createFileResponse(File file, HttpRequest request, long startOffset) throws IOException {
         try {
-            return new FileResponse(file, request, streamSlots);
+            return new FileResponse(file, request, streamSlots, startOffset);
         } catch (IOException e) {
             if (e.getMessage() != null && e.getMessage().startsWith("Service Unavailable")) {
                 return new HttpResponse()

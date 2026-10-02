@@ -2,6 +2,7 @@ package apincer.music.server.jupnp.transport;
 
 import static apincer.music.core.utils.TagUtils.isAACFile;
 import static apincer.music.core.utils.TagUtils.isLosslessFormat;
+import static apincer.music.core.utils.TagUtils.isFLACFile;
 import static apincer.music.core.utils.TagUtils.isMPegFile;
 
 import apincer.music.core.model.Track;
@@ -36,8 +37,17 @@ public class DLNAHeaderHelper {
      */
     public static String getDLNAContentFeatures(Track tag) {
         String profile = dlnaProfile(tag);
+        // OP: first digit time seek (TimeSeekRange.dlna.org), second byte-range seek
+        String op = timeSeekFormat(tag) != null ? "11" : "01";
         return (profile != null ? "DLNA.ORG_PN=" + profile + ";" : "")
-                + "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
+                + "DLNA.ORG_OP=" + op + ";DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
+    }
+
+    /** "flac" or "mp3" when the track can be seeked by time (see {@link TimeSeek}), else null. */
+    public static String timeSeekFormat(Track tag) {
+        if (isFLACFile(tag)) return "flac";
+        if (isMPegFile(tag)) return "mp3";
+        return null;
     }
 
     /**

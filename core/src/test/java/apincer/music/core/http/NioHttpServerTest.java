@@ -84,6 +84,10 @@ public class NioHttpServerTest {
                 if (request.getPath().startsWith("/big")) {
                     return server.createFileResponse(bigFile, request);
                 }
+                if (request.getPath().startsWith("/from500")) {
+                    // what a DLNA time seek resolves to: the file from a byte position, as 200
+                    return server.createFileResponse(trackFile, request, 500);
+                }
                 return server.createFileResponse(trackFile, request);
             } catch (IOException e) {
                 throw new IllegalStateException(e);
@@ -327,6 +331,22 @@ public class NioHttpServerTest {
             assertEquals(-1, n);
         }
         assertEquals(1, server.getStats().evictions);
+    }
+
+    @Test
+    public void startOffset_sendsTheRestOfTheFileAs200() throws Exception {
+        Response r = request("GET /from500 HTTP/1.1\r\nHost: test\r\n\r\n");
+        assertEquals(200, r.status); // DLNA time seek answers 200, not 206
+        assertEquals("500", r.header("content-length"));
+        assertNull(r.header("content-range"));
+        assertArrayEquals(Arrays.copyOfRange(content, 500, 1000), r.body);
+    }
+
+    @Test
+    public void startOffset_winsOverARangeHeader() throws Exception {
+        Response r = request("GET /from500 HTTP/1.1\r\nHost: test\r\nRange: bytes=0-9\r\n\r\n");
+        assertEquals(200, r.status);
+        assertArrayEquals(Arrays.copyOfRange(content, 500, 1000), r.body);
     }
 
     @Test

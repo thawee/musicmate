@@ -18,14 +18,16 @@ public class DidlValuesTest {
     }
 
     private static final String TAIL = "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
+    // OP=11: seek by time (TimeSeekRange.dlna.org) and by byte range; FLAC and MP3 only
+    private static final String TAIL_TIME_SEEK = "DLNA.ORG_OP=11;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
 
     @Test
     public void dlnaProfile_onlyForFormatsDlnaDefines() {
-        assertEquals("DLNA.ORG_PN=MP3;" + TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.mp3", "MPEG")));
+        assertEquals("DLNA.ORG_PN=MP3;" + TAIL_TIME_SEEK, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.mp3", "MPEG")));
         assertEquals("DLNA.ORG_PN=AAC_ISO;" + TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.m4a", "AAC")));
         assertEquals("DLNA.ORG_PN=AAC_ADTS;" + TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.aac", "AAC")));
         // DLNA has no FLAC, ALAC, DSD or WAV profile: an invented name makes strict renderers refuse the file
-        assertEquals(TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.flac", "FLAC")));
+        assertEquals(TAIL_TIME_SEEK, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.flac", "FLAC")));
         assertEquals(TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.m4a", "ALAC")));
         assertEquals(TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.dsf", "DSF")));
         assertEquals(TAIL, DLNAHeaderHelper.getDLNAContentFeatures(file("/m/a.wav", "WAVE")));
