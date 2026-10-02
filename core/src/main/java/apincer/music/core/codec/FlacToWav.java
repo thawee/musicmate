@@ -63,7 +63,12 @@ public final class FlacToWav {
 
     /** The 44-byte canonical WAV header (WAVE_FORMAT_PCM). */
     public byte[] header() {
-        long dataLength = numSamples * frameSize;
+        return wavHeader(sampleRate, channels, bitsPerSample, numSamples * frameSize);
+    }
+
+    /** A 44-byte WAVE_FORMAT_PCM header; sizes are capped at 4 GB, as the format requires. */
+    static byte[] wavHeader(int sampleRate, int channels, int bitsPerSample, long dataLength) {
+        int frameSize = channels * bitsPerSample / 8;
         ByteBuffer h = ByteBuffer.allocate(HEADER_SIZE).order(ByteOrder.LITTLE_ENDIAN);
         h.put(new byte[]{'R', 'I', 'F', 'F'}).putInt((int) Math.min(0xFFFFFFFFL, 36 + dataLength));
         h.put(new byte[]{'W', 'A', 'V', 'E', 'f', 'm', 't', ' '}).putInt(16);

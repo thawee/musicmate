@@ -197,7 +197,7 @@ public abstract class AbstractContentBrowser {
 
         // Create the resource (streaming URL) with technical metadata
         // A TV that cannot play FLAC is offered the same track as WAV, which the server converts
-        boolean asWav = clientProfile.convertsToPcm(tag) && TagUtils.isFLACFile(tag);
+        boolean asWav = clientProfile.convertsToPcm(tag); // FLAC or ALAC, converted while streaming
         ProtocolInfo protocolInfo = asWav
                 ? new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wav",
                         apincer.music.server.jupnp.transport.DLNAHeaderHelper.getConvertedPcmContentFeatures())

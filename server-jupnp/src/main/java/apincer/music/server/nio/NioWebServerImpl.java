@@ -160,8 +160,8 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         // A TV that cannot play this format gets it converted to WAV (lossless PCM)
         apincer.music.core.server.ClientFormatProfile profile = apincer.music.core.server.ClientFormatProfile.of(
                 request.getHeader("user-agent", null), request.getHeader("x-av-client-info", null));
-        if (profile.convertsToPcm(song) && TagUtils.isFLACFile(song)) {
-            NioHttpServer.HttpResponse converted = createFlacAsWavResponse(audioFile, song, request);
+        if (profile.convertsToPcm(song)) {
+            NioHttpServer.HttpResponse converted = createPcmWavResponse(audioFile, song, request);
             if (converted != null) return converted;
         }
 
@@ -220,11 +220,11 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
      * it is sent; supports byte Range (206) and DLNA time seek (200 + TimeSeekRange). Null if the
      * FLAC cannot be read, so the caller serves the original file.
      */
-    private NioHttpServer.HttpResponse createFlacAsWavResponse(File flac, Track song, NioHttpServer.HttpRequest request) {
-        apincer.music.core.codec.FlacToWav wav;
+    private NioHttpServer.HttpResponse createPcmWavResponse(File flac, Track song, NioHttpServer.HttpRequest request) {
+        PcmSource wav;
         try {
-            wav = apincer.music.core.codec.FlacToWav.open(flac);
-        } catch (IOException e) {
+            wav = PcmSource.open(getContext(), flac, song);
+        } catch (IOException | RuntimeException e) {
             Log.w(TAG, "Cannot convert " + flac + "; serving the original", e);
             return null;
         }
@@ -275,7 +275,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         } else {
             final long start = from;
             final long end = to;
-            final apincer.music.core.codec.FlacToWav source = wav;
+            final PcmSource source = wav;
             response = server.createStreamingResponse(status, statusText, end - start + 1,
                     sink -> source.write(flac, start, end, sink::write));
         }
@@ -290,6 +290,42 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         response.addHeader("Server", getServerSignature());
         response.addHeader("Date", getCachedDate());
         return response;
+    }
+
+    /** FLAC (FlacToWav, pure Java) or ALAC (AlacToWav, MediaCodec) as a WAV image. */
+    private static final class PcmSource {
+        final long numSamples;
+        final int sampleRate;
+        private final apincer.music.core.codec.FlacToWav flac;
+        private final apincer.music.core.codec.AlacToWav alac;
+
+        private PcmSource(apincer.music.core.codec.FlacToWav flac, apincer.music.core.codec.AlacToWav alac) {
+            this.flac = flac;
+            this.alac = alac;
+            this.numSamples = flac != null ? flac.numSamples : alac.numSamples;
+            this.sampleRate = flac != null ? flac.sampleRate : alac.sampleRate;
+        }
+
+        static PcmSource open(Context context, File file, Track song) throws IOException {
+            if (TagUtils.isFLACFile(song)) return new PcmSource(apincer.music.core.codec.FlacToWav.open(file), null);
+            if (TagUtils.isALACFile(song)) {
+                return new PcmSource(null, apincer.music.core.codec.AlacToWav.open(context, file, song.getAudioBitsDepth()));
+            }
+            throw new IOException("No PCM conversion for " + song.getAudioEncoding());
+        }
+
+        long wavLength() {
+            return flac != null ? flac.wavLength() : alac.wavLength();
+        }
+
+        long byteAtSeconds(double seconds) {
+            return flac != null ? flac.byteAtSeconds(seconds) : alac.byteAtSeconds(seconds);
+        }
+
+        void write(File file, long from, long to, apincer.music.core.codec.FlacToWav.ByteSink sink) throws IOException {
+            if (flac != null) flac.write(file, from, to, sink);
+            else alac.write(file, from, to, sink);
+        }
     }
 
     private String getCachedDate() {
