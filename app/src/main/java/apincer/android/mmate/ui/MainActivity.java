@@ -1463,6 +1463,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 syncQueueState();
                 android.widget.Toast.makeText(MainActivity.this, "Added to queue", android.widget.Toast.LENGTH_SHORT).show();
             }
+        } else if (actionId == R.id.action_add_to_playlist) {
+            AddToPlaylistDialog.show(this, track, () -> {
+                // Showing a playlist's songs: the new song belongs on screen
+                if (SearchCriteria.TYPE.PLAYLIST.equals(currentCriteria.getType())) {
+                    viewModel.loadMusicItems(currentCriteria);
+                }
+            });
         } else if (actionId == R.id.action_go_to_artist) {
             doShowFilteredLibrary(Constants.FILTER_TYPE_ARTIST, track.getArtist());
         } else if (actionId == R.id.action_go_to_album) {
@@ -2033,6 +2040,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             int id = item.getItemId();
             if (id == R.id.action_edit_metadata) {
                 doShowEditActivity(getSelections());
+                mode.finish();
+                return true;
+            } else if (id == R.id.action_add_to_playlist) {
+                AddToPlaylistDialog.show(MainActivity.this, new java.util.ArrayList<>(getSelections()), null);
                 mode.finish();
                 return true;
             } else if (id == R.id.action_transfer_file) {

@@ -298,6 +298,16 @@ fun TrackListItem(
                             HorizontalDivider(color = Color(0x1AFFFFFF))
                         }
                         // Browse group
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.playlist_add_menu), color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.rounded_playlist_add_24), contentDescription = null, tint = Color.White)
+                            },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_add_to_playlist)
+                            }
+                        )
                         if (!track.artist.isNullOrBlank()) {
                             DropdownMenuItem(
                                 text = { Text("Go to Artist", color = Color.White, fontSize = 15.sp) },

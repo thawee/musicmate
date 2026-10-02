@@ -4,6 +4,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Group 0: Collect -->
+    <group android:id="@+id/group_collect">
+        <item
+            android:id="@+id/action_add_to_playlist"
+            android:icon="@drawable/rounded_playlist_add_24"
+            android:title="@string/playlist_add_menu"
+            app:showAsAction="never" />
+    </group>
+
     <!-- Group 1: Metadata Automation & Curation -->
     <group android:id="@+id/group_tag_automation">
         <item
@@ -40,6 +49,15 @@
             android:id="@+id/action_web_search"
             android:icon="@drawable/ic_search_24dp"
             android:title="@string/find_online"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 4: Destructive, last and apart (still confirms before deleting) -->
+    <group android:id="@+id/group_destructive">
+        <item
+            android:id="@+id/action_delete_file"
+            android:icon="@drawable/rounded_delete_24"
+            android:title="@string/button_delete"
             app:showAsAction="never" />
     </group>
 

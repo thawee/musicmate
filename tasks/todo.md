@@ -21,8 +21,9 @@
 - [x] Scroll-to-top FAB centered (verified on device)
 - [x] Screenshot references regenerated after inspecting renders (34/34 pass); found and fixed: 200% text pills, pills in selection mode, faded first letter
 - [x] Volume slider matches seek bar family
-- [ ] Decision needed: Delete in song page primary row (ADR-013)
-- [ ] Decision needed: Add to Playlist for single tracks (new feature)
+- [x] Delete moved into song page More… (last, red, batch count); verified on device
+- [x] Add to Playlist: track menu, song page More…, multi-select; persisted in custom_playlists.json; verified on device (create, add, duplicate skipped, survives restart)
+- [ ] Cleanup: test playlist "UX Test" left on the S25 for the user to remove
 - [ ] Flaky: NioHttpServerTest midStreamDisconnect / stop_releases fail under full-suite load, pass alone
 
 ## Verification

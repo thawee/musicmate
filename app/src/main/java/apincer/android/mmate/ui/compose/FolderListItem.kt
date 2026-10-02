@@ -104,8 +104,8 @@ fun FolderListItem(
                 val count = track.childCount
                 val durStr = if (track.audioDuration > 0) apincer.music.core.utils.StringUtils.formatDuration(track.audioDuration, true) else ""
                 val statsText = when {
-                    count > 0 && durStr.isNotEmpty() -> "$count tracks • $durStr"
-                    count > 0 -> "$count tracks"
+                    count > 0 && durStr.isNotEmpty() -> "$count ${if (count == 1L) "track" else "tracks"} • $durStr"
+                    count > 0 -> "$count ${if (count == 1L) "track" else "tracks"}"
                     count == 0L && track.isContainer -> "0 tracks"
                     durStr.isNotEmpty() -> durStr
                     else -> track.artist ?: ""

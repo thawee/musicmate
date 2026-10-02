@@ -301,6 +301,19 @@
     <string name="label_audio_quality">Sound Quality</string>
     <string name="label_file_quality">File Quality</string>
     <string name="cancel">Cancel</string>
+    <string name="playlist_add_title">Add to Playlist</string>
+    <string name="playlist_add_menu">Add to Playlist…</string>
+    <string name="playlist_new">New playlist…</string>
+    <string name="playlist_name_hint">Playlist name</string>
+    <string name="playlist_new_title">New Playlist</string>
+    <string name="playlist_create_and_add">Create &amp; Add</string>
+    <string name="playlist_added">Added to %1$s</string>
+    <string name="playlist_already_in">Already in %1$s</string>
+    <plurals name="playlist_added_songs">
+        <item quantity="one">Added %1$d song to %2$s</item>
+        <item quantity="other">Added %1$d songs to %2$s</item>
+    </plurals>
+    <string name="playlist_name_unavailable">That name belongs to a built-in playlist</string>
     <string name="ok">OK</string>
     <string name="save">Save</string>
     <string name="scan">Scan</string>

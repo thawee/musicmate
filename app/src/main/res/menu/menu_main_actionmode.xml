@@ -11,6 +11,13 @@
         android:title="Edit Tags"
         app:showAsAction="always" />
 
+    <!-- Collect the selection into a playlist -->
+    <item
+        android:id="@+id/action_add_to_playlist"
+        android:icon="@drawable/rounded_playlist_add_24"
+        android:title="@string/playlist_add_title"
+        app:showAsAction="always" />
+
     <!-- File operations -->
     <item
         android:id="@+id/action_transfer_file"

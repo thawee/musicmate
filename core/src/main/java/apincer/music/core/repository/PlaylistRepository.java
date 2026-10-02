@@ -44,6 +44,7 @@ import apincer.music.core.utils.ApplicationUtils;
 public class PlaylistRepository {
     private static final String TAG = "PlaylistRepository";
     private static List<PlaylistEntry> playlists = new ArrayList<>();
+    private static final String CUSTOM_UUID_PREFIX = "custom-";
 
     public static synchronized void loadPlaylists(Context context) {
         if (!playlists.isEmpty()) return; // Early exit
@@ -165,6 +166,62 @@ public class PlaylistRepository {
         writeCustomPlaylistsToDisk(context);
     }
 
+    /** Song-list playlists the user made with "Add to Playlist" (not the bundled ones). */
+    public static synchronized List<PlaylistEntry> getUserSongPlaylists() {
+        List<PlaylistEntry> result = new ArrayList<>();
+        for (PlaylistEntry p : playlists) {
+            if (isUserSongPlaylist(p)) result.add(p);
+        }
+        result.sort((a, b) -> safe(a.getName()).compareToIgnoreCase(safe(b.getName())));
+        return result;
+    }
+
+    private static boolean isUserSongPlaylist(PlaylistEntry p) {
+        return PlaylistEntry.TYPE_TITLE.equalsIgnoreCase(p.getType())
+                && p.getUuid() != null && p.getUuid().startsWith(CUSTOM_UUID_PREFIX);
+    }
+
+    /**
+     * Creates an empty song-list playlist. Returns the user's existing playlist of that name, or
+     * null when the name belongs to a bundled playlist (the library opens playlists by name).
+     */
+    public static synchronized PlaylistEntry createSongPlaylist(Context context, String name) {
+        String trimmed = name == null ? "" : name.trim();
+        if (trimmed.isEmpty() || context == null) return null;
+        Optional<PlaylistEntry> existing = findPlaylistByName(trimmed);
+        if (existing.isPresent()) return isUserSongPlaylist(existing.get()) ? existing.get() : null;
+        PlaylistEntry entry = new PlaylistEntry();
+        entry.setName(trimmed);
+        entry.setUuid(CUSTOM_UUID_PREFIX + java.util.UUID.randomUUID());
+        entry.setType(PlaylistEntry.TYPE_TITLE);
+        entry.setRules(new ArrayList<>());
+        playlists.add(entry);
+        writeCustomPlaylistsToDisk(context);
+        return entry;
+    }
+
+    /**
+     * Adds a track (matched by title and artist, like the bundled playlists) to a song-list
+     * playlist. Returns false when it is already there or the playlist does not exist.
+     */
+    public static synchronized boolean addTrackToPlaylist(Context context, String playlistUuid, Track track) {
+        if (context == null || track == null) return false;
+        Optional<PlaylistEntry> opt = findPlaylistByUuid(playlistUuid);
+        if (opt.isEmpty() || !isUserSongPlaylist(opt.get())) return false;
+        PlaylistEntry entry = opt.get();
+        if (entry.isInPlaylist(track)) return false;
+        PlaylistRule rule = new PlaylistRule();
+        rule.setTitle(track.getTitle());
+        rule.setArtist(track.getArtist());
+        rule.setAlbum(track.getAlbum());
+        List<PlaylistRule> rules = entry.getRules() == null ? new ArrayList<>() : new ArrayList<>(entry.getRules());
+        rules.add(rule);
+        entry.setRules(rules);
+        entry.compileRules();
+        writeCustomPlaylistsToDisk(context);
+        return true;
+    }
+
     public static synchronized void deleteCustomPlaylist(Context context, String uuid) {
         if (uuid == null || context == null) return;
         playlists.removeIf(p -> uuid.equalsIgnoreCase(p.getUuid()));
@@ -176,7 +233,24 @@ public class PlaylistRepository {
             File file = new File(context.getFilesDir(), "custom_playlists.json");
             org.json.JSONArray arr = new org.json.JSONArray();
             for (PlaylistEntry p : playlists) {
-                if (PlaylistEntry.TYPE_SMART.equalsIgnoreCase(p.getType()) &&
+                if (isUserSongPlaylist(p)) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    obj.put("name", p.getName());
+                    obj.put("uuid", p.getUuid());
+                    obj.put("type", p.getType());
+                    org.json.JSONArray rules = new org.json.JSONArray();
+                    if (p.getRules() != null) {
+                        for (PlaylistRule r : p.getRules()) {
+                            org.json.JSONObject ruleObj = new org.json.JSONObject();
+                            ruleObj.put("title", r.getTitle());
+                            ruleObj.put("artist", r.getArtist());
+                            ruleObj.put("album", r.getAlbum());
+                            rules.put(ruleObj);
+                        }
+                    }
+                    obj.put("rules", rules);
+                    arr.put(obj);
+                } else if (PlaylistEntry.TYPE_SMART.equalsIgnoreCase(p.getType()) &&
                     !UUID_SMART_DR12.equalsIgnoreCase(p.getUuid()) &&
                     !UUID_SMART_HIRES.equalsIgnoreCase(p.getUuid()) &&
                     !UUID_SMART_DSD.equalsIgnoreCase(p.getUuid()) &&
@@ -231,6 +305,20 @@ public class PlaylistRepository {
                 entry.setLosslessOnly(entryObj.optBoolean("losslessOnly", false));
                 entry.setMinBitDepth(entryObj.optInt("minBitDepth", 0));
                 entry.setMinSampleRate(entryObj.optLong("minSampleRate", 0L));
+                org.json.JSONArray rulesArray = entryObj.optJSONArray("rules");
+                if (PlaylistEntry.TYPE_TITLE.equalsIgnoreCase(entry.getType()) && rulesArray != null) {
+                    List<PlaylistRule> rules = new ArrayList<>();
+                    for (int j = 0; j < rulesArray.length(); j++) {
+                        org.json.JSONObject ruleObj = rulesArray.getJSONObject(j);
+                        PlaylistRule rule = new PlaylistRule();
+                        rule.setTitle(ruleObj.optString("title", null));
+                        rule.setArtist(ruleObj.optString("artist", null));
+                        rule.setAlbum(ruleObj.optString("album", null));
+                        rules.add(rule);
+                    }
+                    entry.setRules(rules);
+                    entry.compileRules();
+                }
                 if (entryList.stream().noneMatch(p -> entry.getUuid() != null && entry.getUuid().equalsIgnoreCase(p.getUuid()))) {
                     entryList.add(entry);
                 }

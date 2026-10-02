@@ -102,7 +102,8 @@ Focused strictly on **quick playback actions** and **file-level utility** for on
 │  ⏭  Play Next           │ Playback Group│
 │  ➕  Add to Queue        ┘               │
 │  ───────────────────────────────────────│
-│  👤  Go to Artist       ┐ Browse Group  │
+│  🎶  Add to Playlist…   ┐ Browse Group  │
+│  👤  Go to Artist       │               │
 │  💿  Go to Album        ┘               │
 │  ───────────────────────────────────────│
 │  🔁  Convert Format     ┐ File Ops      │
@@ -110,6 +111,7 @@ Focused strictly on **quick playback actions** and **file-level utility** for on
 └─────────────────────────────────────────┘
 ```
 
+- **Add to Playlist…** (`action_add_to_playlist`): `AddToPlaylistDialog` lists the user's own song playlists plus **New playlist…** (name it, then **Create & Add**). Tracks are matched by title and artist, like the bundled playlists, and saved with their rules in `custom_playlists.json`. A name that belongs to a bundled playlist is refused, since the library opens playlists by name.
 - **Browse Group:** Go to Artist / Go to Album narrow the current library view with the same artist/album filter the song page's provenance links use. Each is hidden when the track has no artist or album.
 
 - **Dynamic Visibility:** The playback group (`R.id.group_playback`) is hidden dynamically (`setGroupVisible(false)`) when no playback service/device is bound.
@@ -126,54 +128,48 @@ Focused exclusively on **batch tag management and file operations**.
 
 ```
 +-----------------------------------------------------------------+
-| [✓ 5 selected]    [🏷 Edit]  [📁 Move]  [🔁 Convert]  [🗑]  [☑] |
+| [✓ 5 selected]  [🏷 Edit] [🎶 Playlist] [📁 Move] [🔁] [🗑] [☑] |
 +-----------------------------------------------------------------+
 ```
 
 - **Action Items:**
   1. 🏷 **Edit Tags** (`action_edit_metadata`): Open `TagsActivity` in bulk edit mode for all selected items.
-  2. 📁 **Move Files** (`action_transfer_file`): Relocate selected media files.
-  3. 🔁 **Convert Files** (`action_encoding_file`): Batch audio re-encoding.
-  4. 🗑 **Delete** (`action_delete`): Batch file deletion with confirmation.
-  5. ☑ **Select All** (`action_select_all`): Select / clear selection toggle.
+  2. 🎶 **Add to Playlist** (`action_add_to_playlist`): Add every selected track to one song playlist (`AddToPlaylistDialog`).
+  3. 📁 **Move Files** (`action_transfer_file`): Relocate selected media files.
+  4. 🔁 **Convert Files** (`action_encoding_file`): Batch audio re-encoding.
+  5. 🗑 **Delete** (`action_delete`): Batch file deletion with confirmation.
+  6. ☑ **Select All** (`action_select_all`): Select / clear selection toggle.
 - **Excluded Items:** Playback controls (`Play Now`, `Play Next`, `Add to Queue`). Batch queueing is handled within the dedicated Queue tab of the master sheet (`AudioHubSheet.kt`).
 
 ---
 
 ### C. Tag Activity "More Actions" Menu (`tag_more_actions_menu.xml`)
 
-Organized into four functional groups with Material vector icons and visual group dividers (API 28+):
+Organized into five functional groups with Material vector icons and visual group dividers (API 28+):
 
 ```
 ┌─────────────────────────────────────────┐
-│  ▶  Play Track Now          ┐ Playback  │
-│  ➕  Add to Playing Queue    ┘ & Queue   │
+│  🎶  Add to Playlist…        Collect    │
 │  ───────────────────────────────────────│ ← Group Divider
-│  ✨  Auto-Tag (MusicBrainz)  ┐ Metadata  │
-│  🔍  Search & Match Tags    │ Automation│
-│  🪄  Smart Clean & Format   ┘ & Cleanup │
-│  ───────────────────────────────────────│ ← Group Divider
-│  🎼  Lossless Spectrum Verifier (Audio) │
-│  ───────────────────────────────────────│ ← Group Divider
-│  📁  Show in File Manager    ┐ File &   │
-│  🌐  Search Song on Web      │ Sharing  │
-│  📤  Share Audio File        ┘          │
+│  🔍  Search & Match Tags    ┐ Metadata  │
+│  🪄  Smart Clean & Format   ┘ Curation  │
+│  ───────────────────────────────────────│
+│  🎼  Verify Lossless Quality            │
+│  ───────────────────────────────────────│
+│  📁  Show in File Manager   ┐ File      │
+│  🌐  Search Song on Web     ┘ Utilities │
+│  ───────────────────────────────────────│
+│  🗑  Delete (n)              Destructive│ ← red
 └─────────────────────────────────────────┘
 ```
 
-1. **Playback & Queue Group (`group_playback`):**
-   - ▶ `Play Track Now` (`action_play_now`): Immediate direct playback via `PlaybackService`.
-   - ➕ `Add to Playing Queue` (`action_add_to_queue`): Append track(s) to active playing queue.
-2. **Metadata Automation & Curation Group (`group_tag_automation`):**
-   - ✨ `Auto-Tag (MusicBrainz)` (`action_auto_tag`): Automated online metadata fetching and audio fingerprinting (AcoustID).
-   - 🔍 `Search & Match Tags` (`action_search_match_tags`): Text-based search and tag matching dialog.
-   - 🪄 `Smart Clean & Format` (`action_smart_clean_format`): 1-tap master pipeline combining junk noise stripping, title casing, and Thai encoding recovery.
-3. **Audio Analysis & Verification Group (`group_audio_analysis`):**
-   - 🎼 `Lossless Spectrum Verifier` (`action_spectrum`): High-resolution spectrogram analysis up to 48kHz frequency ceiling.
-4. **File System & Sharing Utilities (`group_file_utils`):**
-   - 📁 `Show in File Manager` (`action_open_folder`): Launch system file manager at file location.
-   - 🌐 `Search Song on Web` (`action_web_search`): Search song online in default web browser.
-   - 📤 `Share Audio File` (`action_share`): Direct system share sheet for single or batch audio files via `MusicFileProvider`.
+1. **Collect (`group_collect`):** 🎶 `Add to Playlist…` (`action_add_to_playlist`) adds the song, or every song in a batch edit, to a song playlist.
+2. **Metadata Curation (`group_tag_automation`):** 🔍 `Search & Match Tags` (`action_search_match_tags`); 🪄 `Smart Clean & Format` (`action_smart_clean_format`), the 1-tap pipeline combining junk stripping, title casing, and Thai encoding recovery.
+3. **Audio Analysis (`group_audio_analysis`):** 🎼 `Verify Lossless Quality` (`action_spectrum`).
+4. **File Utilities (`group_file_utils`):** 📁 `Show in File Manager` (`action_open_folder`); 🌐 `Search Song on Web` (`action_web_search`).
+5. **Destructive (`group_destructive`):** 🗑 `Delete` (`action_delete_file`), last, in red, with the batch count (`Delete (3)`). It moved here from the dock (2026-10-02): beside Organize it was one mis-tap from a common action. It still confirms before deleting.
+
+Playback is not in this menu: the gold Play button on the cover plays the song (long-press plays it next).
 
 ---
 
@@ -381,7 +377,7 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 ### B. Tag Activity Studio Command Dock (`shape_studio_command_dock`)
 
 - **Identity:** An opaque charcoal console surface (`#1E2226`) with 24dp rounded top corners, a subtle hairline top border, and 16dp side padding. The underlying page matches the preview background at the rounded corners; the dock extends into the navigation inset.
-- **Row 1 (Console Utilities):** Delete, Organize, and More share equal thirds with minimum 48dp height and quiet separators. Each centered icon-label pair uses a 20dp vector icon and 13sp text. Delete uses muted coral (`#D69A9A`); Organize and More share neutral text/icon coloring (`#BCC5CF`).
+- **Row 1 (Console Utilities):** Organize and More share equal halves with minimum 48dp height and a quiet separator. Each centered icon-label pair uses a 20dp vector icon and 13sp text in neutral `#BCC5CF`. Delete moved into More (last, red) on 2026-10-02 so a destructive action no longer sits beside Organize.
 - **Row 2 (65/35 Split):** Graphite Edit Song Info retains white text and a blue icon; Save reserves 30dp trailing padding for its status indicator. Both center their icon-label pairs, use 14dp corners, and grow above their 52dp minimum height when text wraps.
 - **Save Status Indicator (recording-desk language):**
   - No changes: graphite button, muted label and icon, unlit indicator ring.

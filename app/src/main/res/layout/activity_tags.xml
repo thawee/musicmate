@@ -259,31 +259,7 @@
                 android:gravity="center_vertical"
                 android:baselineAligned="false">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_delete"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:layout_weight="1"
-                    android:minWidth="0dp"
-                    android:paddingHorizontal="8dp"
-                    android:text="@string/button_delete"
-                    android:textColor="#FFD69A9A"
-                    android:textSize="13sp"
-                    android:letterSpacing="0.02"
-                    app:cornerRadius="14dp"
-                    app:icon="@drawable/rounded_delete_24"
-                    app:iconTint="#FFD69A9A"
-                    app:iconGravity="textStart"
-                    app:iconPadding="6dp"
-                    app:iconSize="20dp" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:background="#16FFFFFF"
-                    android:importantForAccessibility="no" />
+                <!-- Delete lives in More… (last, in red): beside Organize it was one mis-tap away -->
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_organize"

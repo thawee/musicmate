@@ -571,13 +571,11 @@ public class TagsActivity extends AppCompatActivity {
         android.widget.LinearLayout editorToggleGroup = findViewById(R.id.editor_action_group);
         android.widget.LinearLayout techToggleGroup = findViewById(R.id.tech_action_group);
 
-        MaterialButton btnDelete = findViewById(R.id.button_delete);
         MaterialButton btnOrganize = findViewById(R.id.button_organize);
         MaterialButton btnMore = findViewById(R.id.button_more);
         MaterialButton actionEditor = findViewById(R.id.action_editor);
 
         // Tooltips for accessibility
-        TooltipCompat.setTooltipText(btnDelete, "Delete selected file(s)");
         TooltipCompat.setTooltipText(btnOrganize, "Organize / Move media file(s)");
         TooltipCompat.setTooltipText(btnMore, "More actions");
         TooltipCompat.setTooltipText(actionEditor, "Open metadata editor");
@@ -585,22 +583,16 @@ public class TagsActivity extends AppCompatActivity {
         // Batch count dynamic updates
         int itemCount = getEditItems().size();
         if (itemCount > 1) {
-            btnDelete.setText(getString(R.string.button_delete) + " (" + itemCount + ")");
             btnOrganize.setText(getString(R.string.button_organize) + " (" + itemCount + ")");
         } else {
-            btnDelete.setText(R.string.button_delete);
             btnOrganize.setText(R.string.button_organize);
         }
 
-        for (View dockButton : new View[]{btnDelete, btnOrganize, btnMore, actionEditor}) {
+        for (View dockButton : new View[]{btnOrganize, btnMore, actionEditor}) {
             applyDockPressFeedback(dockButton);
         }
         applyDockPressFeedback(findViewById(R.id.action_preview_save));
 
-        btnDelete.setOnClickListener(v -> {
-            performHapticClick(v);
-            doDeleteMediaItems();
-        });
         btnOrganize.setOnClickListener(v -> {
             performHapticClick(v);
             doMoveMediaItemsAfterSave();
@@ -730,6 +722,22 @@ public class TagsActivity extends AppCompatActivity {
         }
         apincer.android.mmate.utils.UIUtils.makePopForceShowIcon(popup);
 
+        // Delete: red, with the batch count ("Delete (3)") the dock button used to show
+        android.view.MenuItem deleteItem = popup.getMenu().findItem(R.id.action_delete_file);
+        if (deleteItem != null) {
+            int itemCount = getEditItems().size();
+            String label = itemCount > 1 ? getString(R.string.button_delete) + " (" + itemCount + ")" : getString(R.string.button_delete);
+            int red = 0xFFFF6E6E;
+            android.text.SpannableString title = new android.text.SpannableString(label);
+            title.setSpan(new android.text.style.ForegroundColorSpan(red), 0, label.length(), 0);
+            deleteItem.setTitle(title);
+            if (deleteItem.getIcon() != null) {
+                android.graphics.drawable.Drawable icon = deleteItem.getIcon().mutate();
+                icon.setTint(red);
+                deleteItem.setIcon(icon);
+            }
+        }
+
         popup.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.action_search_match_tags) {
@@ -746,6 +754,16 @@ public class TagsActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.action_web_search) {
                 ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
+                return true;
+            } else if (itemId == R.id.action_add_to_playlist) {
+                List<Track> items = getEditItems();
+                if (items.isEmpty() && viewModel.displayTag.getValue() != null) {
+                    items = java.util.Collections.singletonList(viewModel.displayTag.getValue());
+                }
+                AddToPlaylistDialog.show(this, items, null);
+                return true;
+            } else if (itemId == R.id.action_delete_file) {
+                doDeleteMediaItems();
                 return true;
             }
             return false;

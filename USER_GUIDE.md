@@ -94,6 +94,7 @@ Focused on **quick actions for one track**. The playback group is automatically 
 | ▶ **Play Now** | Player active |
 | ⏭ **Play Next** | Player active |
 | ➕ **Add to Queue** | Player active |
+| 🎶 **Add to Playlist…** | Always |
 | 👤 **Go to Artist** | Track has an artist |
 | 💿 **Go to Album** | Track has an album |
 | 🔁 **Convert Format** | Always |
@@ -106,6 +107,7 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 | Action | Description |
 |---|---|
 | 🏷 **Edit Tags** | Open TagsActivity with all selected tracks |
+| 🎶 **Add to Playlist** | Add all selected tracks to one of your playlists |
 | 📁 **Move Files** | Relocate selected files to another folder |
 | 🔁 **Convert Files** | Re-encode selected files to a target format |
 | 🗑 **Delete** | Permanently delete selected files |
@@ -139,7 +141,10 @@ Focused exclusively on **batch tag management and file operations**. Playback ac
 
 ## 3. Editing Tags & Technical Details (TagsActivity)
 
-Selecting a song from the list opens the **Tags Editor**. The expanded preview has **Back** (top-left) and an icon-only **Change Cover** control (top-right), with the title on a separate surface below the artwork, followed by quality badges, a Genre chip when available, and artist/album/folder provenance. A gold **Play** button at the cover's lower right plays the song; long-press it to play the song next. Scrolling down (or tapping **Edit Song Info**) opens the detail workspace with the **Song Info / Tech Info** switcher. **Save** dims when there are no unsaved changes.
+Selecting a song from the list opens the **Tags Editor**. The expanded preview has **Back** (top-left) and an icon-only **Change Cover** control (top-right), with the title on a separate surface below the artwork, followed by quality badges, a Genre chip when available, and artist/album/folder provenance. A gold **Play** button at the cover's lower right plays the song; long-press it to play the song next. The bottom dock has **Organize** and **More…**; **More…** holds **Add to Playlist…**, tag tools, file utilities and, last in red, **Delete**, which asks before deleting.
+
+### Your Own Playlists
+Choose **Add to Playlist…** from a song's `⋮` menu, from **More…** on the song page, or from multi-select. Pick one of your playlists, or **New playlist…** to name one and add the song to it. Your playlists appear under **Playlists** with the built-in ones; songs are matched by title and artist, so a song stays in the playlist after you move or re-encode the file. Scrolling down (or tapping **Edit Song Info**) opens the detail workspace with the **Song Info / Tech Info** switcher. **Save** dims when there are no unsaved changes.
 
 ### Tab A: Song Info (Metadata Editor)
 This tab allows you to edit standard fields including:
