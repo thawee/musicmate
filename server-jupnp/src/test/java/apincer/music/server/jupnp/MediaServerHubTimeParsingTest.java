@@ -59,9 +59,9 @@ public class MediaServerHubTimeParsingTest {
         String features128 = apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures(tag);
         org.junit.Assert.assertTrue(features128.contains("DLNA.ORG_PN=MP3;"));
 
-        // 320 kbps = 320000 bps
+        // 320 kbps is still the DLNA "MP3" profile; "MP3_320" is not a DLNA profile name
         tag.setAudioBitRate(320000);
         String features320 = apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures(tag);
-        org.junit.Assert.assertTrue(features320.contains("DLNA.ORG_PN=MP3_320;"));
+        org.junit.Assert.assertTrue(features320.contains("DLNA.ORG_PN=MP3;"));
     }
 }

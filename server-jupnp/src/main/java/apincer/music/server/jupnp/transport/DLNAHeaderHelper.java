@@ -1,13 +1,8 @@
 package apincer.music.server.jupnp.transport;
 
 import static apincer.music.core.utils.TagUtils.isAACFile;
-import static apincer.music.core.utils.TagUtils.isALACFile;
-import static apincer.music.core.utils.TagUtils.isDSDFile;
-import static apincer.music.core.utils.TagUtils.isFLACFile;
 import static apincer.music.core.utils.TagUtils.isLosslessFormat;
 import static apincer.music.core.utils.TagUtils.isMPegFile;
-import static apincer.music.core.utils.TagUtils.isPCM;
-import static apincer.music.core.utils.TagUtils.isWavFile;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.utils.MimeTypeUtils;
@@ -33,60 +28,25 @@ public class DLNAHeaderHelper {
     private static final String DLNA_FLAGS_GAPLESS = "01780000000000000000000000000000";
 
     /**
-     * Generate DLNA content features string based on audio format
-     * Enhanced for audiophile quality streaming with format-specific profiles
+     * The DLNA 4th field for a track, used for both the contentFeatures.dlna.org header and the
+     * DIDL-Lite protocolInfo so the two always agree. DLNA.ORG_PN is sent only for profiles DLNA
+     * defines (MP3, AAC_ISO, AAC_ADTS). DLNA has none for FLAC, ALAC, DSD, WAV or AIFF; an
+     * invented name ("FLAC_HD", "DSD") lets strict renderers refuse the file, so those omit it.
+     * OP=01: seeking by byte range only.
      */
     public static String getDLNAContentFeatures(Track tag) {
-        //String flags = tag.isGapless() ? DLNA_FLAGS_GAPLESS : DLNA_FLAGS_STREAMING_LOSSLESS;
-        String flags = DLNA_FLAGS_STREAMING_LOSSLESS;
+        String profile = dlnaProfile(tag);
+        return (profile != null ? "DLNA.ORG_PN=" + profile + ";" : "")
+                + "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + DLNA_FLAGS_STREAMING_LOSSLESS;
+    }
 
-        if (isMPegFile(tag)) {
-            long bitrate = tag.getAudioBitRate();
-            if (bitrate >= 320000 || (bitrate >= 320 && bitrate <= 1000)) {
-                return "DLNA.ORG_PN=MP3_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isFLACFile(tag)) {
-            if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-                return "DLNA.ORG_PN=FLAC_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=FLAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isWavFile(tag)) {
-            if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-               // return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-                return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            } else {
-               // return "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-                return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isAACFile(tag)) {
-            long bitrate = tag.getAudioBitRate();
-            if (bitrate >= 320000 || (bitrate >= 320 && bitrate <= 1000)) {
-                return "DLNA.ORG_PN=AAC_ADTS_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=AAC_ADTS;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isALACFile(tag)) {
-            if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-                return "DLNA.ORG_PN=ALAC_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=ALAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            }
-        } else if (isDSDFile(tag)) {
-            // DSD support for audiophiles
-            return "DLNA.ORG_PN=DSD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-        } else if (isPCM(tag) || isLosslessFormat(tag)) {
-            if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
-                return "DLNA.ORG_PN=LPCM_HD;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            } else {
-                return "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
-            }
+    private static String dlnaProfile(Track tag) {
+        if (isMPegFile(tag)) return "MP3";
+        if (isAACFile(tag)) {
+            String path = tag.getPath() == null ? "" : tag.getPath().toLowerCase(java.util.Locale.ROOT);
+            return path.endsWith(".aac") ? "AAC_ADTS" : "AAC_ISO"; // raw ADTS stream vs MP4 container
         }
-
-        // Default profile
-        return "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+        return null;
     }
 
     /**

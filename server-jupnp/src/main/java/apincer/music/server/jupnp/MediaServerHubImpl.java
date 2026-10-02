@@ -1309,7 +1309,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      * @param durationInMillis The duration in milliseconds.
      * @return A formatted string e.g., "0:04:33.000"
      */
-    static String formatDurationForDidl(long durationInMillis) {
+    public static String formatDurationForDidl(long durationInMillis) {
         long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) % 60;
         long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) % 60;

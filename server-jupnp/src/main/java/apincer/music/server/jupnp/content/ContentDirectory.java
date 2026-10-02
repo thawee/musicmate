@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import apincer.music.core.repository.TagRepository;
+import apincer.music.core.model.Track;
 
 /**
  * UPnP Content Directory Service
@@ -307,13 +308,40 @@ public class ContentDirectory {
             @UpnpInputArgument(name = "SortCriteria") String orderBy)
             throws ContentDirectoryException {
 
-        // This is a placeholder implementation - in a full implementation
-        // you would implement proper search logic based on the criteria
-        Log.d(TAG, "Search request received - containerId: " + containerId + ", criteria: " + searchCriteria);
+        java.util.function.Predicate<Track> matches;
+        try {
+            matches = UpnpSearch.parse(searchCriteria);
+        } catch (IllegalArgumentException invalid) {
+            // UPnP ContentDirectory error 708: unsupported or invalid search criteria
+            throw new ContentDirectoryException(708, "Invalid search criteria: " + invalid.getMessage());
+        }
+        try {
+            // Searches the whole library whatever the ContainerID; results are tracks only
+            List<Track> found = new java.util.ArrayList<>();
+            for (Track track : tagRepos.getAllMusicsForPlaylist()) {
+                if (matches.test(track)) found.add(track);
+            }
+            List<Track> page = AbstractContentBrowser.page(found, firstResult.getValue(), maxResults.getValue());
+            String allSongsId = ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + CollectionsBrowser.ALL_SONGS;
+            MusicItemBrowser builder = new MusicItemBrowser(getContext(), tagRepos,
+                    ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
+            DIDLContent didl = new DIDLContent();
+            for (Track track : page) {
+                didl.addItem(builder.buildMusicTrack(this, track, allSongsId,
+                        ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId()));
+            }
+            markReadOnly(didl);
+            return new BrowseResult(new DIDLParser().generate(didl, false), page.size(), found.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Search failed for criteria: " + searchCriteria, e);
+            throw new ContentDirectoryException(ContentDirectoryErrorCode.CANNOT_PROCESS, e.toString());
+        }
+    }
 
-        // TODO Convert search criteria into a filter that can be used by a browser
-        // For now, return an empty result
-        return new BrowseResult("", 0, 0);
+    /** This server does not create, change or delete objects: everything is restricted="1". */
+    private static void markReadOnly(DIDLContent didl) {
+        for (DIDLObject object : didl.getContainers()) object.setRestricted(true);
+        for (DIDLObject object : didl.getItems()) object.setRestricted(true);
     }
 
 
@@ -371,6 +399,7 @@ public class ContentDirectory {
                 }
 
             try {
+                markReadOnly(didl);
                 // Generate output with nested items
                 String didlXml = new DIDLParser().generate(didl, false);
                 BrowseResult result = new BrowseResult(didlXml, childCount, totalMatches);

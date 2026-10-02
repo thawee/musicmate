@@ -88,6 +88,21 @@ public abstract class AbstractContentBrowser {
         return name;
     }
 
+    /** dc:date as an ISO date: "2023-06-09" kept, "1959" -> "1959-01-01", anything else null. */
+    static String didlDate(String year) {
+        if (year == null) return null;
+        String y = year.trim();
+        if (y.matches("\\d{4}-\\d{2}-\\d{2}")) return y;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d{4})\\b").matcher(y);
+        return m.find() ? m.group(1) + "-01-01" : null;
+    }
+
+    /** res@bitrate is bytes per second; tags hold bits per second (or kbps in older entries). */
+    static long didlBitrate(long bitrate) {
+        if (bitrate <= 0) return 0;
+        return bitrate < 10_000 ? bitrate * 1000 / 8 : bitrate / 8;
+    }
+
     /**
      * This server's address, looked up once per browser. Browsers are created per Browse
      * request; getIpAddress() scans every network interface, and calling it two or three times
@@ -126,19 +141,23 @@ public abstract class AbstractContentBrowser {
         String uri = getUriString(contentDirectory, tag);
         Res resource = new Res(protocolInfo, tag.getFileSize(), uri);
         // Add technical metadata for streaming optimization
-        resource.setBitrate(tag.getAudioBitRate());
+        resource.setBitrate(didlBitrate(tag.getAudioBitRate()));
         resource.setBitsPerSample((long) tag.getAudioBitsDepth());
         resource.setSampleFrequency(tag.getAudioSampleRate());
         resource.setNrAudioChannels((long) TagUtils.getChannels(tag));
-        resource.setDuration(StringUtils.formatDuration(tag.getAudioDuration(), false));
+        // UPnP res@duration is H+:MM:SS[.F+]; "04:23" was rejected or ignored by renderers
+        resource.setDuration(apincer.music.server.jupnp.MediaServerHubImpl.formatDurationForDidl(
+                (long) (tag.getAudioDuration() * 1000)));
 
         // Create the MusicTrack with required ID and title
+        String artist = StringUtils.trim(tag.getArtist(),"-");
         MusicTrack musicTrack = new MusicTrack(itemPrefix + id,
                 parentId, // Parent container ID
-                escapeXml(title), // Track title
-                creator,
-                escapeXml(StringUtils.trim(tag.getAlbum(),"-")), // Album name
-                escapeXml(StringUtils.trim(tag.getArtist(),"-")), // Artist name
+                title, // Track title (DIDLParser escapes XML)
+                // dc:creator: clients show it as the artist; it used to be "MusicMate"
+                isEmpty(artist) ? creator : artist,
+                StringUtils.trim(tag.getAlbum(),"-"), // Album name
+                artist, // Artist name
                 resource);
 
         // Add album art - critical for mConnectHD display
@@ -168,15 +187,9 @@ public abstract class AbstractContentBrowser {
             musicTrack.addProperty(new DIDLObject.Property.DC.CONTRIBUTOR(new Person(tag.getComposer())));
         }
 
-        if (!isEmpty(tag.getYear())) {
-            musicTrack.addProperty(new DIDLObject.Property.DC.DATE(tag.getYear() + "-01-01"));
-        }
-
-        // Add high-resolution audio indicator for compatible players
-        if (tag.getAudioSampleRate() > 44100 || tag.getAudioBitsDepth() > 16) {
-            musicTrack.addProperty(new DIDLObject.Property.UPNP.ARTIST_DISCO_URI(
-                    URI.create("http://" + serverHost() + ":" +
-                            WEB_SERVER_PORT + "/hires_badge")));
+        String date = didlDate(tag.getYear());
+        if (date != null) {
+            musicTrack.addProperty(new DIDLObject.Property.DC.DATE(date));
         }
 
         return musicTrack;
@@ -204,106 +217,17 @@ public abstract class AbstractContentBrowser {
     }
 
     private ProtocolInfo getProtocolInfo(Track tag) {
-        // DLNA parameters for streaming optimization - enabling seeking and other features
-        String formatSuffix = ";DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
-
-        // AIFF files
-        if(TagUtils.isAIFFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/x-aiff",
-                    "DLNA.ORG_PN=AIFF" + formatSuffix
-            );
-        }
-
-        // MP3 files
-        else if(TagUtils.isMPegFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/mpeg",
-                    "DLNA.ORG_PN=MP3" + formatSuffix
-            );
-        }
-
-        // FLAC files - RoPieeeXL has excellent FLAC support
-        else if(TagUtils.isFLACFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/flac",  // Updated from audio/x-flac for better compatibility
-                    "DLNA.ORG_PN=FLAC" + formatSuffix
-            );
-        }
-
-        // ALAC files (Apple Lossless)
-        else if(TagUtils.isALACFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/mp4", // Changed from audio/x-mp4
-                    "DLNA.ORG_PN=AAC_ISO_320" + formatSuffix // Best match for ALAC in DLNA
-            );
-        }
-
-        // MP4/AAC files
-        else if(TagUtils.isMp4File(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/mp4",
-                    "DLNA.ORG_PN=AAC_ISO" + formatSuffix
-            );
-        }
-
-        // WAV files
-        else if(TagUtils.isWavFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/wav",  // Changed from audio/x-wav for better compatibility
-                    "DLNA.ORG_PN=WAV" + formatSuffix
-            );
-        }
-
-        // AAC files - added explicit handling
-        else if(TagUtils.isAACFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/aac",
-                    "DLNA.ORG_PN=AAC_ADTS" + formatSuffix
-            );
-        }
-
-        // DSD/DSF high-res audio - added for completeness
-        else if(TagUtils.isDSDFile(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/x-dsd",
-                    "DLNA.ORG_PN=DSF" + formatSuffix
-            );
-        }
-
-        // Default fallback for unknown types
-        else {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/" + MimeType.WILDCARD,
-                    formatSuffix.substring(1)
-            );
-        }
-    }
-
-    private String escapeXml(String input) {
-        if (input == null) return "";
-        return //input.replace("&", "&amp;")
-                input.replace("<", "&lt;")
-                .replace(">", "&gt;");
-                //.replace("\"", "&quot;");
-                //.replace("'", "&apos;");
+        String mime;
+        if (TagUtils.isAIFFile(tag)) mime = "audio/x-aiff";
+        else if (TagUtils.isMPegFile(tag)) mime = "audio/mpeg";
+        else if (TagUtils.isFLACFile(tag)) mime = "audio/flac";
+        else if (TagUtils.isWavFile(tag)) mime = "audio/wav";
+        else if (TagUtils.isDSDFile(tag)) mime = "audio/x-dsd";
+        else if (TagUtils.isAACFile(tag) && tag.getPath() != null && tag.getPath().toLowerCase(java.util.Locale.ROOT).endsWith(".aac")) mime = "audio/aac";
+        else if (TagUtils.isMp4File(tag)) mime = "audio/mp4"; // AAC or ALAC in an MP4 container
+        else mime = "audio/" + MimeType.WILDCARD;
+        // Same DLNA parameters as the stream's contentFeatures.dlna.org header
+        return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, mime,
+                apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures(tag));
     }
 }

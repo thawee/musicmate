@@ -203,13 +203,12 @@ public class MediaServerDevice extends LocalDevice {
             private static final String MANUFACTURER_URL = "https://github.com/thawee/musicmate";
             private static final ManufacturerDetails MANUFACTURER_DETAILS = new ManufacturerDetails(MANUFACTURER_NAME, MANUFACTURER_URL);
             private static final DLNADoc[] DLNA_DOCS = new DLNADoc[]{new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
-            // Replace the empty DLNA_CAPS with these capabilities
-            private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[]{
-                    "image-upload", "audio-upload", "connection-stalling", "time-seek",
-                    "range", "limited-operations", "rw", "search"
-            });
+            // Advertise only what this server does: no uploads, no create/destroy, no time-based
+            // seeking (byte ranges only). Clients used to be told it accepted uploads and time seeks.
+            private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[]{});
             private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
-            private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
+            // Samsung extensions (subtitles, getMediaInfo.sec, getCaptionInfo.sec) are not implemented
+            private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{});
 
             @Override
             public DeviceDetails provide(RemoteClientInfo info) {

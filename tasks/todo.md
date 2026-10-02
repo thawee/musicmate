@@ -998,3 +998,16 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] Speed (device, 8305 tracks): server address resolved once per request instead of 2-3 network-interface scans per track ("All Songs" whole list 15.7 s -> 4.8 s); playlist looked up once per request instead of per track and one library scan shared by page and TotalMatches (collection page 0.65-1.8 s -> 0.5-0.7 s); Sources one scan instead of two (1.1 s -> 0.6 s)
 - [ ] Open (low priority): uncached root Browse 0.8-1.6 s (each child folder's count loads the library; 30 s browse cache hides repeats); whole "All Songs" list still 4.8 s
 - [x] Unit tests (BrowsePagingTest 6, UpnpRequestCheckTest 3); on device: paging consistent in 8 folder types, 701 for unknown id, HEAD / -> 405
+
+## DLNA compliance batch (2026-10-02, from the DLNA server review)
+- [x] 1. Search: implement ContentDirectory.Search (UPnP criteria: and/or/parentheses; =, !=, contains, doesNotContain, derivedfrom, exists; dc:title, upnp:artist, dc:creator, upnp:album, upnp:genre, upnp:class); "*" and audioItem class return all tracks; paged; unit-tested parser
+- [x] 2. res@duration in H:MM:SS.mmm (was "04:23")
+- [x] 3. dc:date: valid ISO date from the year field (was "2023-06-09-01-01")
+- [x] 4. Advertise only real capabilities: X_DLNACAP and Samsung ProductCap
+- [x] 5. DLNA.ORG_PN only for real DLNA profiles (MP3), same in DIDL and contentFeatures header
+- [x] 6. res@bitrate in bytes per second
+- [x] 7. dc:creator = artist
+- [x] 8. Remove artistDiscographyURI -> /hires_badge (404)
+- [x] 9. restricted="1" (read-only server)
+- [x] Verify: 244 unit tests (UpnpSearchTest 10, DidlValuesTest 3); device: DIDL item fields, Search (383 for "love", 10 for audio by Miles, 8305 all audio, 0 for album class, 708 for malformed), empty caps, contentFeatures without PN for FLAC
+- [ ] Later (review items 10, 11, 13): standard Server header with UPnP/1.0, modelName "MusicMate", albumArtURI dlna:profileID; Windows/Xbox MediaReceiverRegistrar and Samsung X_GetFeatureList only if a client needs them
