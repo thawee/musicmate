@@ -130,7 +130,8 @@ fun MediaServerPage(
                         if (state.isServerRunning && state.diagnostics.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = state.diagnostics,
+                                // Wrap only between values ("6 requests" stays together)
+                                text = state.diagnostics.split(" • ").joinToString(" • ") { it.replace(' ', '\u00A0') },
                                 color = Color(0xFF888888),
                                 fontSize = 10.sp,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
