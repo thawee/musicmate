@@ -55,7 +55,6 @@ public class MediaServerDevice extends LocalDevice {
         this.deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
         ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
         ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
-       // this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
     }
 
     private static DeviceDetails createDetails(Context context) {
@@ -79,7 +78,7 @@ public class MediaServerDevice extends LocalDevice {
         List<LocalService<?>> services = new ArrayList<>();
         services.add(createServerConnectionManagerService());
         services.add(createContentDirectoryService(context, tagRepos));
-       // services.add(createMediaReceiverRegistrarService());
+        services.add(createMediaReceiverRegistrarService());
         return services.toArray(new LocalService[]{});
     }
 
@@ -106,6 +105,13 @@ public class MediaServerDevice extends LocalDevice {
         return service;
     }
 
+
+    /** Windows Media Player and Xbox list only servers that offer X_MS_MediaReceiverRegistrar. */
+    private static LocalService<MediaReceiverRegistrarService> createMediaReceiverRegistrarService() {
+        LocalService<MediaReceiverRegistrarService> service = MediaReceiverRegistrarService.bind();
+        service.setManager(new DefaultServiceManager<>(service, MediaReceiverRegistrarService.class));
+        return service;
+    }
 
     private static ProtocolInfos getSourceProtocolInfos() {
         return new ProtocolInfos(

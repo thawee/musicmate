@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Windows Media Player and Xbox:** The media server now offers Microsoft's `X_MS_MediaReceiverRegistrar` service, which Windows Media Player and Xbox require before they list a server. Every device is allowed, as for other clients.
 - **Cover thumbnails for DLNA TVs:** Tracks and albums now also offer a 160×160 JPEG cover tagged with the DLNA `JPEG_TN` profile, for renderers (some Sony and Samsung TVs) that show no art without it. The full-size cover stays first, so other renderers are unchanged. Thumbnails are made on the phone when first requested and cached.
 - **Server diagnostics:** The Music Center Server tab shows a live line while the server runs: active streams, throughput, total requests, and any evicted, refused or rate-limited requests (for example "2 streams • 9.0 MB/s • 1,204 requests"). SonicNIO now logs to logcat under the `NioHttpServer` tag instead of printing to standard output, and its high-load warnings appear once instead of every second.
 

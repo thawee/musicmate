@@ -1012,4 +1012,5 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] Verify: 244 unit tests (UpnpSearchTest 10, DidlValuesTest 3); device: DIDL item fields, Search (383 for "love", 10 for audio by Miles, 8305 all audio, 0 for album class, 708 for malformed), empty caps, contentFeatures without PN for FLAC
 - [x] 10/11 (2026-10-02): Server header "Android/16 UPnP/1.0 MusicMate/<ver> [SonicNIO/2.2]" (ServerHeaderTest); modelName "MusicMate". Verified on device on both ports
 - [x] 13 (2026-10-02, user chose thumbnails): second albumArtURI /coverart/tn_<key> tagged JPEG_TN (CoverThumbnails, 3 tests); full-size cover stays first. Device: 160x160 JPEG, 86 ms first / 25 ms cached; missing cover gives a default thumbnail
-- [ ] Windows/Xbox MediaReceiverRegistrar and Samsung X_GetFeatureList only if a client needs them
+- [x] Windows/Xbox X_MS_MediaReceiverRegistrar:1 (2026-10-02): MediaReceiverRegistrarService on jUPnP's base class, bound with the Microsoft service type (jUPnP's annotation type was wrong); test 2; device: listed, IsAuthorized/IsValidated return 1. Not tried with a real Windows PC or Xbox
+- [ ] Samsung X_GetFeatureList only if a Samsung TV needs it
