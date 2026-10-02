@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Handles HEAD, ETag/If-None-Match (304), If-Range and RFC 7233 ranges (invalid ranges are ignored).
  * Each open file holds a {@link StreamSlots} slot until {@link #close()}.
  */
-final class FileResponse extends NioHttpServer.HttpResponse {
+final class FileResponse extends NioHttpServer.HttpResponse implements StreamBody {
     private final StreamSlots slots;
     private final FileChannel fileChannel;
     private final long fileSize;

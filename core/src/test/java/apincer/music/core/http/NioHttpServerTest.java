@@ -41,6 +41,9 @@ public class NioHttpServerTest {
     private File trackFile;
     private File bigFile;
     private final AtomicReference<String> lastPostBody = new AtomicReference<>();
+    private static final long GENERATED = 3L * 1024 * 1024;
+    private final java.util.concurrent.CountDownLatch producerPaused = new java.util.concurrent.CountDownLatch(1);
+    private final java.util.concurrent.CountDownLatch producerStopped = new java.util.concurrent.CountDownLatch(1);
     private final List<Integer> wsSequence = Collections.synchronizedList(new ArrayList<>());
     private final List<String> wsEvents = Collections.synchronizedList(new ArrayList<>());
 
@@ -83,6 +86,43 @@ public class NioHttpServerTest {
                 }
                 if (request.getPath().startsWith("/big")) {
                     return server.createFileResponse(bigFile, request);
+                }
+                if (request.getPath().startsWith("/generated")) {
+                    // 3 MB made on another thread, like audio decoded to PCM while streaming
+                    return server.createStreamingResponse(200, "OK", GENERATED, sink -> {
+                        byte[] chunk = new byte[37_000];
+                        for (long sent = 0; sent < GENERATED; ) {
+                            int n = (int) Math.min(chunk.length, GENERATED - sent);
+                            for (int i = 0; i < n; i++) chunk[i] = (byte) ((sent + i) % 251);
+                            sink.write(chunk, 0, n);
+                            sent += n;
+                        }
+                    });
+                }
+                if (request.getPath().startsWith("/pausegen")) {
+                    // one byte, a 1.5 s pause (queue empty), then the rest
+                    return server.createStreamingResponse(200, "OK", 1000, sink -> {
+                        sink.write(new byte[]{0}, 0, 1);
+                        producerPaused.countDown();
+                        Thread.sleep(1500);
+                        sink.write(new byte[999], 0, 999);
+                    });
+                }
+                if (request.getPath().startsWith("/failgen")) {
+                    return server.createStreamingResponse(200, "OK", 1_000_000, sink -> {
+                        sink.write(new byte[1000], 0, 1000);
+                        throw new IllegalStateException("decoder failed");
+                    });
+                }
+                if (request.getPath().startsWith("/endlessgen")) {
+                    return server.createStreamingResponse(200, "OK", Long.MAX_VALUE / 2, sink -> {
+                        byte[] chunk = new byte[65536];
+                        try {
+                            while (true) sink.write(chunk, 0, chunk.length);
+                        } finally {
+                            producerStopped.countDown();
+                        }
+                    });
                 }
                 if (request.getPath().startsWith("/from500")) {
                     // what a DLNA time seek resolves to: the file from a byte position, as 200
@@ -331,6 +371,67 @@ public class NioHttpServerTest {
             assertEquals(-1, n);
         }
         assertEquals(1, server.getStats().evictions);
+    }
+
+    @Test
+    public void streamingResponse_deliversEveryByteInOrder() throws Exception {
+        Response r = request("GET /generated HTTP/1.1\r\nHost: test\r\n\r\n");
+        assertEquals(200, r.status);
+        assertEquals(String.valueOf(GENERATED), r.header("content-length"));
+        assertEquals(GENERATED, r.body.length);
+        for (int i = 0; i < r.body.length; i++) {
+            if (r.body[i] != (byte) (i % 251)) throw new AssertionError("wrong byte at " + i);
+        }
+        awaitCounter("activeStreams", 0);
+    }
+
+    @Test
+    public void streamingResponse_slowProducer_doesNotSpinTheSelector() throws Exception {
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /pausegen HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            assertTrue(producerPaused.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            Thread.sleep(200); // the queued byte is sent; the queue is now empty
+            int before = counter("writeCalls");
+            Thread.sleep(1000);
+            int calls = counter("writeCalls") - before;
+            // the socket stays writable: a busy OP_WRITE loop would call handleWrite thousands of times
+            assertTrue("handleWrite ran " + calls + " times while the producer was idle", calls < 10);
+            InputStream in = socket.getInputStream();
+            readResponseHead(in);
+            byte[] body = in.readNBytes(1000);
+            assertEquals(1000, body.length);
+        }
+    }
+
+    @Test
+    public void streamingResponse_producerFailure_closesTheConnection() throws Exception {
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /failgen HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            InputStream in = socket.getInputStream();
+            readResponseHead(in);
+            byte[] body;
+            try {
+                body = in.readAllBytes(); // ends early: the client sees a truncated body, not a hang
+            } catch (java.net.SocketException reset) {
+                body = new byte[0];
+            }
+            assertTrue(body.length < 1_000_000);
+        }
+        awaitCounter("activeStreams", 0);
+    }
+
+    @Test
+    public void streamingResponse_clientDisconnect_stopsTheProducer() throws Exception {
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /endlessgen HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            socket.getOutputStream().flush();
+            socket.getInputStream().read(new byte[4096]);
+        }
+        assertTrue("producer kept running after the client left",
+                producerStopped.await(10, java.util.concurrent.TimeUnit.SECONDS));
+        awaitCounter("activeStreams", 0);
     }
 
     @Test

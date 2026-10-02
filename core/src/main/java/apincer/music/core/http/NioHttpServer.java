@@ -23,6 +23,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -95,6 +96,8 @@ public class NioHttpServer implements Runnable {
     private boolean streamsHighLogged;  // selector thread only
 
     private final AtomicInteger activeStreams = new AtomicInteger(0);
+    // handleWrite calls; a parked streaming response must not keep this climbing (tests)
+    private final AtomicInteger writeCalls = new AtomicInteger(0);
     // Totals since start, for getStats(); incremented on the selector or worker threads
     private final java.util.concurrent.atomic.AtomicLong requestCount = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong bytesSentCount = new java.util.concurrent.atomic.AtomicLong();
@@ -146,6 +149,14 @@ public class NioHttpServer implements Runnable {
     private final Set<SelectionKey> streamingKeys = java.util.concurrent.ConcurrentHashMap.newKeySet();
     // Connections to close on the selector thread: evicted streams and forceClose() from any thread.
     private final Queue<SelectionKey> pendingCloses = new ConcurrentLinkedQueue<>();
+    // Streaming responses whose producer queued data after the connection was parked (any thread)
+    private final Queue<SelectionKey> pendingWrites = new ConcurrentLinkedQueue<>();
+    // Producer threads for StreamingResponse bodies (e.g. FLAC/ALAC decoded to PCM)
+    private final ExecutorService streamProducers = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "nio-stream-producer");
+        t.setDaemon(true);
+        return t;
+    });
 
 
     public NioHttpServer(int port) {
@@ -228,6 +239,25 @@ public class NioHttpServer implements Runnable {
     /**
      * Registers OP_WRITE for WebSockets with pending outgoing frames.
      */
+    /** Any thread: asks the selector thread to resume writing a parked streaming response. */
+    void requestWrite(SelectionKey key) {
+        pendingWrites.add(key);
+        Selector current = selector;
+        if (current != null) current.wakeup();
+    }
+
+    /** Selector thread: turns OP_WRITE back on for streaming responses with new data. */
+    private void processPendingWrites() {
+        SelectionKey key;
+        while ((key = pendingWrites.poll()) != null) {
+            try {
+                if (key.isValid()) key.interestOps(SelectionKey.OP_WRITE);
+            } catch (java.nio.channels.CancelledKeyException e) {
+                // closed concurrently
+            }
+        }
+    }
+
     private void processWebSocketWrites() {
         NioWebSocketConnection conn;
         while ((conn = pendingWebSocketWrites.poll()) != null) {
@@ -298,6 +328,7 @@ public class NioHttpServer implements Runnable {
                     while (isRunning) {
                         processResponseQueue();
                         processWebSocketWrites();
+                        processPendingWrites();
                         processPendingCloses();
 
                         long selectStart = System.currentTimeMillis();
@@ -388,6 +419,7 @@ public class NioHttpServer implements Runnable {
 
         // Final cleanup when isRunning is set to false.
         if (workerPool != null && !workerPool.isShutdown()) workerPool.shutdownNow();
+        streamProducers.shutdownNow();
         LOG.info("Server on port " + port + " stopped");
     }
 
@@ -415,7 +447,7 @@ public class NioHttpServer implements Runnable {
                     }
 
                     // Count active file streams
-                    if (attachment.response instanceof FileResponse) {
+                    if (attachment.response instanceof StreamBody) {
                         activeFileStreams++;
                     }
 
@@ -470,7 +502,7 @@ public class NioHttpServer implements Runnable {
             if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
                 attachment.response = task.response;
                 attachment.upgradeHandler = task.wsHandler; // Carry over the handler for handshake
-                if (task.response instanceof FileResponse) {
+                if (task.response instanceof StreamBody) {
                     streamingKeys.add(key);
                 }
                 key.interestOps(SelectionKey.OP_WRITE);
@@ -740,6 +772,7 @@ public class NioHttpServer implements Runnable {
 
 
     private void handleWrite(SelectionKey key) throws IOException {
+        writeCalls.incrementAndGet();
         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
         attachment.lastActivityTime = System.currentTimeMillis();
 
@@ -752,6 +785,12 @@ public class NioHttpServer implements Runnable {
 
         SocketChannel clientChannel = (SocketChannel) key.channel();
         bytesSentCount.addAndGet(attachment.response.write(clientChannel));
+        // A streaming body whose producer is behind: stop asking for OP_WRITE until it has data
+        if (!attachment.response.isFullySent() && attachment.response instanceof StreamingResponse streaming
+                && streaming.park(() -> requestWrite(key))) {
+            key.interestOps(0);
+            return;
+        }
 
         if (attachment.response.isFullySent()) {
 
@@ -974,6 +1013,20 @@ public class NioHttpServer implements Runnable {
     public Stats getStats() {
         return new Stats(activeConnections.get(), activeStreams.get(), requestCount.get(), bytesSentCount.get(),
                 evictionCount.get(), rejectedCount.get(), timeoutCount.get(), idleCloseCount.get());
+    }
+
+    /**
+     * A response whose body {@code producer} makes on another thread while it is sent, with a
+     * known length. Takes a stream slot (may evict the least recently active stream); 503 if none.
+     */
+    public HttpResponse createStreamingResponse(int status, String statusText, long contentLength,
+                                                StreamingResponse.Producer producer) {
+        if (!streamSlots.acquire()) {
+            return new HttpResponse().setStatus(503, "Service Unavailable").addHeader("Retry-After", "5");
+        }
+        StreamingResponse response = new StreamingResponse(status, statusText, contentLength, streamSlots);
+        response.start(streamProducers, producer);
+        return response;
     }
 
     public HttpResponse createFileResponse(File file, HttpRequest request) throws IOException {

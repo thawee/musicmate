@@ -1025,7 +1025,7 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [ ] 3. Formats a TV cannot play (user chose: convert FLAC/ALAC to PCM, hide DSD)
     - [x] 3a. ClientFormatProfile (5 tests; named so it does not clash with the existing, unused ProfileManager/ClientProfile) from User-Agent / X-AV-Client-Info: Sony TV (plays FLAC; convert ALAC), LG TV (FLAC only on 2022+ and the UA cannot tell the year: convert FLAC and ALAC), Toshiba TV (no evidence yet: hide DSD only); other clients unchanged
     - [x] 3b. Hide DSD for TV profiles (device: LG UA sees 8299 of 8305 in All Songs and Search, 0 DSD; BubbleUPnP all 8305; browse cache keyed by profile; container childCount still counts DSD) in Browse and Search, with paging and TotalMatches consistent (RemoteClientInfo injected into the actions)
-    - [ ] 3c. NioHttpServer streaming body (producer thread, bounded buffer, write interest paused while empty, no busy loop), tested
+    - [x] 3c. NioHttpServer streaming body (StreamingResponse; 4 tests incl. a no-busy-loop check that fails with parking removed; ADR-036 rule 7) (producer thread, bounded buffer, write interest paused while empty, no busy loop), tested
     - [ ] 3d. FLAC -> WAV (native bit depth and rate) with the pure-Java FlacDecoder; exact Content-Length from STREAMINFO; byte Range and time seek by sample-accurate seek; proof: MD5 of the WAV data equals the FLAC STREAMINFO MD5
     - [ ] 3e. ALAC -> WAV (MediaCodec where available, FFmpegKit otherwise); bit depth checked
     - [ ] 3f. DIDL for converted tracks advertises audio/wav, PCM size and OP for that client
