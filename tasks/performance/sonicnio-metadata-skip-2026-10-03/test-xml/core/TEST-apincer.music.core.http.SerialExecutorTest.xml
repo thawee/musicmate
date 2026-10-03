@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.SerialExecutorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.668Z" hostname="KB-XXAXXW9TX4" time="0.006">
+  <properties/>
+  <testcase name="overflow_reservesCloseAfterAdmittedMessages" classname="apincer.music.core.http.SerialExecutorTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

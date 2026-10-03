@@ -1,0 +1,101 @@
+--- before/NioHttpServer.java
++++ after/NioHttpServer.java
+@@ -729,9 +729,9 @@
+             }
+             // Headers are in: the deadline ends here, or it would cut off a response streaming for minutes
+             attachment.requestStartTime = 0;
+-            byte[] requestBytes = attachment.requestData.toByteArray();
++            byte[] requestBytes = attachment.requestData.copyRange(0, headerEnd);
+             HttpRequest request = new HttpRequest();
+-            request.parse(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
++            request.parseHeaders(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
+             beginRequest(attachment, request);
+ 
+             // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
+@@ -761,11 +761,11 @@
+             attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
+             attachment.request = request;
+             attachment.requestLength = headerEnd + contentLength; // bytes after this belong to the next request
+-            if (requestBytes.length < attachment.requestLength) {
++            if (attachment.requestData.size() < attachment.requestLength) {
+                 attachment.state = ConnectionAttachment.ParseState.READING_BODY;
+                 attachment.bodyReadStartTime = nowMillis();
+                 // RFC 9110 §10.1.1: tell a waiting client to send the body now
+-                if (requestBytes.length == headerEnd
++                if (attachment.requestData.size() == headerEnd
+                         && "100-continue".equalsIgnoreCase(request.getHeader("expect", ""))) {
+                     clientChannel.write(ByteBuffer.wrap(CONTINUE_100));
+                 }
+@@ -781,8 +781,7 @@
+     /** All of the request is buffered: take its body (exactly Content-Length bytes) and dispatch it. */
+     private void completeRequest(SelectionKey key, ConnectionAttachment attachment) {
+         HttpRequest request = attachment.request;
+-        byte[] allBytes = attachment.requestData.toByteArray();
+-        request.setBody(Arrays.copyOfRange(allBytes, request.getHeaderEnd(), attachment.requestLength));
++        request.setBody(attachment.requestData.copyRange(request.getHeaderEnd(), attachment.requestLength));
+         attachment.bodyReadStartTime = 0;
+         dispatch(key, attachment, request);
+     }
+@@ -1316,8 +1315,7 @@
+         /** Bytes already read beyond the current request: the start of a pipelined next request. */
+         byte[] bytesAfterRequest() {
+             if (requestData == null || requestLength <= 0 || requestData.size() <= requestLength) return new byte[0];
+-            byte[] all = requestData.toByteArray();
+-            return Arrays.copyOfRange(all, requestLength, all.length);
++            return requestData.copyRange(requestLength, requestData.size());
+         }
+ 
+         /** The 101 has been written: switch to WebSocket framing. */
+@@ -1330,9 +1328,8 @@
+             // onOpen first, so it runs ahead of any message, including frames pipelined below
+             ws.open();
+             if (requestData != null && wsUpgradeHeaderEnd > 0) {
+-                byte[] fullData = requestData.toByteArray();
+-                if (fullData.length > wsUpgradeHeaderEnd) {
+-                    ws.parse(ByteBuffer.wrap(fullData, wsUpgradeHeaderEnd, fullData.length - wsUpgradeHeaderEnd));
++                if (requestData.size() > wsUpgradeHeaderEnd) {
++                    ws.parse(ByteBuffer.wrap(requestData.copyRange(wsUpgradeHeaderEnd, requestData.size())));
+                 }
+             }
+             request = null;
+@@ -1461,10 +1458,16 @@
+ 
+         // The parsing logic is moved here.
+         public void parse(byte[] requestBytes, int headerEnd, String remoteHost) {
++            parseHeaders(requestBytes, headerEnd, remoteHost);
++            this.body = Arrays.copyOfRange(requestBytes, headerEnd, requestBytes.length);
++        }
++
++        /** Selector parses headers before body completion; the worker gets one exact body copy later. */
++        void parseHeaders(byte[] requestBytes, int headerEnd, String remoteHost) {
+             this.remoteHost = remoteHost;
+             this.headerEnd = headerEnd;
+             String headerPart = new String(requestBytes, 0, headerEnd, StandardCharsets.US_ASCII);
+-            this.body = Arrays.copyOfRange(requestBytes, headerEnd, requestBytes.length);
++            this.body = null;
+             String[] headerLines = headerPart.split("\r\n");
+             String[] requestLine = headerLines[0].split(" ");
+             if (requestLine.length < 2) {
+--- before/BoundedByteArrayOutputStream.java
++++ after/BoundedByteArrayOutputStream.java
+@@ -3,6 +3,7 @@
+ import androidx.annotation.NonNull;
+ 
+ import java.io.ByteArrayOutputStream;
++import java.util.Arrays;
+ 
+ /** Request/frame buffer with a hard size limit; also scans for the end of the HTTP headers in place. */
+ final class BoundedByteArrayOutputStream extends ByteArrayOutputStream {
+@@ -23,6 +24,12 @@
+         return -1;
+     }
+ 
++    /** Copies only the owned request/body segment, never the unused capacity or a following request. */
++    synchronized byte[] copyRange(int from, int to) {
++        if (from < 0 || to < from || to > count) throw new IndexOutOfBoundsException();
++        return Arrays.copyOfRange(buf, from, to);
++    }
++
+     @Override
+     public synchronized void write(@NonNull byte[] b, int off, int len) {
+         if (count + len > maxSize) {

@@ -1,0 +1,21 @@
+DESC 200 
+SCPD upnp-org/ConnectionManager 200 3412
+SCPD upnp-org/ContentDirectory 200 6639
+SCPD microsoft.com/X_MS_MediaReceiverRegistrar 200 3153
+ACTION Browse 200 2205 bytes
+ACTION GetSearchCapabilities 200 423 bytes
+ACTION GetSortCapabilities 200 390 bytes
+ACTION GetSystemUpdateID 200 336 bytes
+ACTION GetProtocolInfo 200 2252 bytes
+ACTION GetCurrentConnectionIDs 200 371 bytes
+ACTION GetCurrentConnectionInfo 200 556 bytes
+ACTION IsAuthorized 200 350 bytes
+ACTION IsValidated 200 348 bytes
+Browse childCounts ['573', '8289', '2544', '70', '10', '2']
+installed 204049ad15bc6bbb82e0f596fbe7c6cd6b3ece98ef5d47b51ef4c9efd9ba0f96 signed 204049ad15bc6bbb82e0f596fbe7c6cd6b3ece98ef5d47b51ef4c9efd9ba0f96
+    versionCode=142 minSdk=36 targetSdk=37
+    versionName=3.23.0-261003
+    lastUpdateTime=2026-10-03 22:59:29
+      firstInstallTime=2026-09-29 09:56:55
+      firstInstallTime=1970-01-01 07:00:00
+Server: Android/16 UPnP/1.0 MusicMate/3.23.0-261003

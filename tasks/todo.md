@@ -1,3 +1,233 @@
+# SonicNIO external server research (2026-10-03)
+
+## Release 3.23.0
+
+Objective: publish the retained changes as 3.23.0 / version code 142, push the code and tag, and verify the GitHub release asset. User confirmed retained changes only; lazy FLAC workspace allocation and the combined parser/copy experiment stay excluded.
+
+### 1. Lock release scope and preserve evidence
+- [x] Inspect the existing tag-triggered release workflow and preserve the experimental candidate.
+- [x] Exclude both held experiments from active production code and their experiment-specific tests; retain archived sources/results.
+- [x] Set version 3.23.0 / code 142 and draft CHANGELOG.md and RELEASE_NOTES.md.
+
+### 2. Resolve optimized APK startup failure
+- [x] Reproduce the failure in the correctly signed optimized APK without uninstalling or resetting app data.
+- [x] Identify the missing reflected String constructor, datatype generic signatures and CSV generic signatures through diagnostic logs and R8 mapping.
+- [x] Add targeted jUPnP consumer rules and retain warning/error logs in normal release builds.
+- [x] Confirm the latest normal release build succeeds; inspect mapping/DEX for retained reflective members and generic signatures.
+- [x] Install a scratch-signed copy of that exact optimized APK, start a fresh process and confirm UPnP initializes without listener shutdown.
+- [x] If startup fails, capture the retained error, update this plan and fix the demonstrated cause before proceeding. (Startup passed; the CSV-signature build is runtime-clean for UPnP.)
+
+### 2b. Fix jaudiotagger reflection in optimized builds (user approved for 3.23.0)
+Found via newly retained error logs: ASF chunk readers fail `Class.newInstance()` (constructors removed) and ID3 frame bodies are looked up with `Class.forName("org.jaudiotagger.tag.id3.framebody.FrameBody" + id)`, but R8 renamed or removed them (only 26 survive, renamed). 3.22.0 shipped the same configuration.
+- [x] Reproduce: ASF reader instantiation errors observed at runtime (33). ID3 confirmed statically: only 26/108 frame bodies survive, renamed. A phone MP3 tag read was not triggered (reads need a library scan or the tag editor), and the library has no WMA files, so synthetic files were not added.
+- [x] Add targeted keep rules in library/jaudiotagger-android/consumer-rules.pro for every reflective lookup (frame bodies by name and copy constructor, ASF chunk readers).
+- [x] Rebuild release; verify mapping/DEX keeps the original frame-body names and constructors; rerun JVM suites. (108/108 names and all constructors kept; ASF readers keep `<init>()`; 219 JVM cases pass.)
+- [x] Reinstall (data preserved) and confirm no jaudiotagger reflection errors in the scenario that produced them. (Zero errors.)
+
+### 3. Prove retained-only release correctness
+- [x] Pass core, UPnP and Room JVM suites: 219 cases, zero failures/errors.
+- [x] Pass all three Android Room index/migration cases.
+- [x] Pass the optimized APK's full converted-audio SHA-256 check and all 352 measured HEAD/header/seek requests. (CSV-fixed APK; rerun on the final APK.)
+- [x] Verify UPnP description and representative control actions, including ContentDirectory and ConnectionManager, on the optimized APK. (CSV-fixed APK; rerun on the final APK.)
+- [x] Confirm the installed app version, process identity and APK provenance; preserve live app data and database version 3. (Indirect: install -r, firstInstallTime unchanged, Browse reports 8,289 tracks; run-as is unavailable on the release build.)
+- [x] Repeat startup, streaming, UPnP and provenance gates on the final APK with the jaudiotagger rules. (352/352, SHA-256 OK, 9 SOAP actions 200, installed hash matches.)
+
+### 4. Finalize documentation and review the commit
+- [x] Archive successful and failed release checks, APK/source hashes and descriptive latency results in the release report.
+- [x] Add the final release scope and verification results to PERFORMANCE.md; distinguish historical candidate comparisons from this release's correctness check. Claim no new throughput or Netty advantage.
+- [x] Finalize changelog/release notes, including the reflection fix and held changes; verify release workflow uses the notes.
+- [ ] Stage only intended code, tests, documentation and curated evidence. Exclude caches, private database fixtures, signing keys and scratch APKs.
+- [ ] Review the staged diff against the previous release/default branch, check archive integrity and run git diff --check.
+
+### 5. Publish and verify
+- [ ] Create the release commit and annotated v3.23.0 tag after all runtime gates pass.
+- [ ] Push master and v3.23.0 atomically to origin; never force-push.
+- [ ] Verify GitHub Actions completes and the v3.23.0 release contains its expected APK and release notes.
+- [ ] Report the release URL, commit, version and verification totals.
+
+Status: all runtime gates pass on the final APK (jUPnP + jaudiotagger rules). No release commit, tag or push has been made. Evidence redaction is done (device serial replaced, manifest hashes cascaded); the user chose to commit all evidence, including the large raw traces.
+
+## Streaming metadata skipping
+
+- [x] Preserve current sources/APK and add a streaming metadata API that skips unused payloads without weakening existing validation.
+- [x] Verify malformed/truncated metadata, mixed APIs, seeking and byte-identical PCM; measure large-metadata CPU/allocation against preserved baseline.
+- [x] Build and compare baseline/candidate on Android with reversed order and verified ranges; archive every result and restore candidate.
+
+Result: [metadata-skip implementation/results](performance/sonicnio-metadata-skip-2026-10-03/REPORT.md). Two production files add/use a streaming-specific API; 228 core/UPnP tests pass. Host 1 MiB unused metadata allocation −99.17%; metadata time −96.13%, with no STREAMINFO-only timing improvement. Eight phone runs/5,632 requests pass; combined idle seeks median 16.738→10.255 ms (−38.7%), p95 19.600→12.248 ms, max 23.012→16.701 ms, direction repeats in reversed order. Candidate restored; retain this optimization candidate while earlier release holds remain.
+
+## Idle seek attribution
+
+- [x] Capture idle seek timestamps and scheduling/frequency traces on the current candidate, without changing server behavior.
+- [x] Attribute slow requests using device monotonic clock snapshots; distinguish running, runnable and sleeping time.
+- [x] Confirm the leading cause with a bounded stack/event measurement if needed, archive evidence and state the next justified change.
+
+Result: [idle seek attribution](performance/sonicnio-idle-seek-2026-10-03/REPORT.md). Nine invocations verify 3,168 requests; four traces align 1,408 intervals with device clocks/client markers. Confirmation median 13.871 ms includes 8.818 ms worker CPU; CPU stacks identify FLAC metadata reading/CRC before headers. Traced medians differ from ~18 ms controls, so no optimization gain is claimed. Initial worker PID metadata is incomplete; validated confirmation inventories recover all eight workers. Next independently test unused metadata skipping, preserving validation/seek offsets/audio. Production unchanged, candidate restored, release holds remain.
+
+## Room path index and Android validation
+
+- [x] Preserve version-2 schema/APK/database evidence and implement a non-unique path index with migration 2→3.
+- [x] Verify fresh creation and migration chains from versions 1/2, duplicate paths and listening-history preservation on Android.
+- [x] Build/install the candidate after preservation checks; compare Android path lookup and controlled streaming contention without downgrading the live database.
+- [x] Archive every measurement, validation and limitation; update the performance decision and restore the candidate.
+
+Result: [Android index results](performance/sonicnio-path-index-2026-10-03/REPORT.md). Implemented migration/index; 226 correctness cases pass, live 8,289 tracks/704 history rows preserved exactly. Native lookup 51.3× faster, fixed-work worker CPU −98.2%, storage +1.164 MiB. All 2,112 requests pass; idle/indexed seeks ~18 ms versus busy unindexed ~5 ms, confirmed in reversed order. Retain as database candidate without streaming gain; existing release holds remain. Next profile idle/backoff delays. Candidate installed/restored.
+
+## Busy-worker attribution
+
+- [x] Verify device stack-capture capabilities and preserve the installed APK identity.
+- [x] Capture bounded worker stacks and correlate their functions with the prior CPU trace.
+- [x] Measure the identified path lookup on isolated database copies, without changing the live database.
+- [x] Record evidence, instrumentation limits and the next controlled streaming measurement; verify production sources remain unchanged.
+
+Result: [worker attribution](performance/sonicnio-worker-profile-2026-10-03/REPORT.md). 528 verified requests and three CPU-stack captures identify library scanning/SQLite path lookup. Phone DB copy has 8,289 tracks and no path index; host indexed lookup is 130–226× faster with identical results and +1.164 MiB storage. Scan completion confounds foreground/background comparison; Android benefit remains unmeasured. Next candidate: non-unique path index with preserving Room migration. Production/live schema unchanged; candidate restored; release holds remain.
+
+## Seek-tail and memory profiling
+
+- [x] Verify available Android tracing, GC and scheduling telemetry without changing streaming behavior.
+- [x] Capture matched baseline/candidate workloads with profiling controls, preserve traces and validate bodies/APK identity.
+- [x] Document attributable differences and limits, verify evidence and leave the candidate APK restored.
+
+Result: [profile report](performance/sonicnio-seek-profile-2026-10-03/REPORT.md). All 1,408 comparative requests passed, five traces archived including pilot. Captured GC cycles 18 → 7; recorded suspension scopes ≤1.12 ms. PSS increase not consistently reproduced; unnamed pool workers dominate CPU and ±24 ms clock alignment prevents reliable request attribution. Release hold remains; production hashes unchanged, candidate APK restored.
+
+## Lazy FLAC physical-phone comparison
+
+- [x] Preserve baseline/candidate sources and build APKs differing only in lazy decoder allocation; verify connected device and workload.
+- [x] Run interleaved, warmed-up phone comparisons with body/range verification, converted seeks, metadata-only latency and available memory/GC telemetry.
+- [x] Analyze every run, preserve APK hashes/raw evidence and document limits; leave candidate source/APK restored.
+
+Result: [phone report](performance/sonicnio-lazy-flac-2026-10-03/PHONE_RESULTS.md). Twelve external-only app runs plus six intrusive instrumentation-control runs, failed unpaced attempt preserved, and eighteen isolated ART samples. ART allocation −99.1%; app throughput −0.3%, median converted-seek run maxima +6.6%, sampled maximum PSS +14.1%. Pooled seek p99 improves; latency is mixed and exact app GC activity is unmeasured. Hold lazy decoder change from release pending profiling; candidate source/build/APK restored, no rollback performed.
+
+## Lazy FLAC decoder scratch allocation
+
+- [x] Defer FrameDecoder construction until the first audio read/seek, preserving metadata readiness and closed-state checks.
+- [x] Verify metadata-only reads avoid scratch allocation, decoder reuse and byte-identical PCM/ranges with core/UPnP tests.
+- [x] Measure isolated metadata allocation before/after and document results and remaining runtime limits.
+
+Result: [PERFORMANCE section 14](../PERFORMANCE.md#14-lazy-flac-decoder-scratch-allocation), [full methods and evidence](performance/sonicnio-lazy-flac-2026-10-03/REPORT.md). Metadata probe allocation 1,057,392 → 8,752 bytes (−99.2%) in both host series; 222 core/UPnP tests pass. Audio workspace is still allocated once when decoding begins. Android follow-up is now complete in the phone report above; release recommendation is hold pending profiling.
+
+## Streaming allocation audit
+
+- [x] Inspect file, generated-audio and decoder allocation sites and their frequency.
+- [x] Identify ownership-safe reductions and distinguish already measured savings from unmeasured candidates.
+- [x] Record prioritized findings with source locations; do not change streaming behavior during this audit.
+
+Result: [allocation audit](sonicnio-streaming-allocations-2026-10-03.md). First candidate is lazy FLAC frame-decoder initialization: metadata-only scanning currently creates two 65,536-element long buffers (1 MiB element storage). Other candidates include metadata skipping, seek workspace reuse, PCM chunk recycling and response-bound callbacks. No production changes or new performance claims.
+
+## one-nio source review
+
+- [x] Inspect a pinned one-nio revision, license, runtime/native requirements and benchmark scope.
+- [x] Compare transfer, write queues, readiness handling and HTTP parsing with SonicNIO; identify Android-compatible ideas and measured-risk constraints.
+- [x] Record source-linked recommendations and validation gates without changing production code or claiming unmeasured gains.
+
+Result: [one-nio source review](sonicnio-one-nio-research-2026-10-03.md). Profile seek tails and selector backoff first; then independently measure a bounded selector-owned immediate-write experiment. Native transport replacement, body parser and shared buffers are deferred. No new benchmark results or production changes.
+
+Context: encoding and metadata changes are recommended for retention; the combined parser/copy change is held from release pending investigation of higher phone seek maxima. Those changes remain in the working tree/test APK.
+
+## Request framing and copy reduction follow-up
+
+- [x] Preserve current source/APK baseline and establish parser benchmarks with small headers and large buffered bodies.
+- [x] Remove redundant full-buffer/body copies; retain existing incremental header scanning and public parse behavior.
+- [x] Validate repeated Content-Length and Transfer-Encoding combinations against RFC 9112, with fragmentation and socket regression coverage.
+- [x] Measure copy-only and final variants independently, run core/UPnP tests and device checks, and document results and compatibility changes.
+
+Policy: normalize repeated identical Content-Length values; reject conflicting/invalid lengths and TE+CL with 400 and close. Chunked remains unsupported. No broad parser replacement.
+
+Result: [PERFORMANCE.md §13](../PERFORMANCE.md#13-request-framing-and-copy-reduction), [full report and evidence](performance/sonicnio-parser-2026-10-03/REPORT.md). 360 extraction and 24 host transfer samples; twelve interleaved phone runs after an adverse initial latency result; 219 unit/socket cases and seventeen Android framing probes pass. Staged 1 MiB allocation falls 66.8%. Bulk throughput stays essentially unchanged. Phone seek maximum rises 25.3% across both series, despite a lower median; retain correctness/copy savings without claiming an end-to-end speedup. Final APK installed and verified.
+
+- [ ] Follow-up: profile the repeated Android seek-tail regression (read/parse, worker wait, metadata, first successful write, client/header timing and GC) before further throughput tuning. Empty-request micro timings also vary substantially; identify runtime effects instead of treating the favorable model as proof.
+
+## Next experiment: one file-metadata read per response
+
+- [x] Preserve the optimized-encoding baseline and add a constructor-focused comparison that works with both variants.
+- [x] Read size/mtime together once per FileResponse; derive ETag and Last-Modified from that snapshot. Verify unchanged stable-file responses and fresh metadata after replacement.
+- [x] Run interleaved host preparation/transfer measurements, core/UPnP regression tests, debug build and matched phone checks; retain only supported behavior and publish all results.
+
+Scope: remove repeated filesystem metadata calls without a cross-request cache. Preserve the prior encoding optimization and streaming settings.
+
+Result: [PERFORMANCE.md §12](../PERFORMANCE.md#12-file-metadata-snapshot-follow-up), [report and all evidence](performance/sonicnio-stat-2026-10-03/REPORT.md). Conditional/range preparation medians fall 76.7%/21.9%, with +144 allocated bytes per response. Phone seek median falls 14.679 → 9.539 ms, while the seek maximum rises 6.3%; throughput stays unchanged. Initial host tail regression prompted 18 additional confirmation samples; no consistent tail advantage is established. All 209 tests, build, body/metadata checks and installed-APK verification pass. Tested APK remains installed.
+
+- [x] Inspect hella-http and yelmach/http-server source, project requirements and stated reuse licenses.
+- [x] Compare concrete transfer, buffering, parser and event-loop implementations with current SonicNIO; identify useful patterns and compatibility/correctness constraints.
+- [x] Record source-linked recommendations, implementation sketches and measurement gates; distinguish research from implemented or benchmarked gains.
+
+Delivery: [source review and implementation proposals](sonicnio-http-server-research-2026-10-03.md), pinned to both reviewed revisions. Priorities: ETag/date/header allocation, framing-header validation and incremental scanning, then PCM buffer reuse only if profiling supports it. Research/documentation only; no new throughput or Netty advantage claimed.
+
+# SonicNIO throughput experiments (2026-10-03)
+
+- [x] Capture a repeatable current-code host baseline and preserve source/evidence before tuning.
+- [x] Implement configurable, contention-aware file write budgets and bounded PCM batching; test bytes, partial writes, short/failing producers and cancellation ownership.
+- [x] Compare repeated identical host workloads, including seek contention; retain supported defaults and run core/UPnP checks and debug build. Existing socket coverage checks HTTP overload with active WebSocket control.
+- [x] Update PERFORMANCE.md with methods, measurements, decisions and device/Netty verification limits.
+
+Result: PCM batching enabled; shared/solo file budgets retain 256 KiB defaults because 512 KiB/1 MiB experiments did not establish benefit. 99 complete host measurements, nine matched-content phone runs, exact byte/range checks and 162 core + 43 UPnP cases pass. Synthetic 4 KiB generated-body throughput median 169.054 → 1,070.370 MiB/s (6.33×); phone WAV duration 0.852291 → 0.830846 s, with no substantial throughput gain established. Some native host medians were 2.8–5.1% lower; preserve this limitation and require controlled profiling rather than claiming a native speedup. A discovered queue-space/partial-buffer race was diagnosed and regressed. Final APK installed and its SHA-256 verified. Details and artifacts: [PERFORMANCE.md §10](../PERFORMANCE.md#10-throughput-follow-up), [205 individual test results](performance/sonicnio-throughput-2026-10-03/TEST_RESULTS.md).
+
+# SonicNIO performance documentation (2026-10-03)
+
+- [x] Inventory design decisions, benchmark scripts, retained device measurements and individual JUnit results; identify missing evidence and comparison limits.
+- [x] Create a durable performance document with concepts, implementation approach, methodology, per-test results, before/after and historical Netty comparisons, reproducible commands and outstanding measurements.
+- [x] Validate totals, calculations, source links and documentation diffs; link the report from the existing streaming summary.
+
+Delivery: [PERFORMANCE.md](../PERFORMANCE.md), [199 individual test results](performance/sonicnio-2026-10-03/TEST_RESULTS.md), four device JSON artifacts, normalized JUnit/repeat evidence, source/evidence digests and five archived session harnesses. Verified 35 suites / 199 passing cases, 40 repeat runs / 2,160 executions, before/after percentage calculations, local links and manifest digests. Documentation-only work; benchmarks were not rerun. Netty attribution, unmatched Wi-Fi and missing raw artifacts remain explicitly qualified.
+
+# SonicNIO streaming reliability plan (2026-10-03)
+
+Objective: improve playback continuity, seek responsiveness and bounded resource use using Grizzly's lifecycle, backpressure and monitoring patterns. Implementation and validation results: [sonicnio-streaming-2026-10-03.md](sonicnio-streaming-2026-10-03.md). Reliability/resource changes are implemented; the unexplained intermittent header failure and physical-renderer checks remain open.
+
+Constraints: preserve ADR-036 selector ownership, serial WebSocket callbacks, exact response framing and non-blocking stop. Keep the existing file transfer path and bounded producer queue. No additional HTTP engine dependency. The earlier HiBy/MQA dropout remains an independent, unconfirmed report; these changes must not be presented as its fix without reproduction.
+
+## Phase 1 — Establish evidence and diagnose connection closures
+- [x] Add lightweight per-response lifecycle measurements: request/connection identifier, first successful write, last successful write, declared body length, body bytes sent, terminal outcome and close reason. Distinguish header bytes from body bytes and transport completion from playback completion.
+- [x] Preserve producer failure causes in StreamingResponse; emit one terminal event per response and one close event per connection, including disconnect, eviction, shutdown and failure. Bound diagnostic storage and avoid per-chunk logging.
+- [x] Measure selector-turn duration, worker queue depth/wait and generated-buffer occupancy. Use monotonic elapsed time for new measurements.
+- [ ] Reproduce the known premature-close test failures (including midStreamDisconnect and stop_releases under suite load), capture fresh reports and fix the demonstrated cause with a regression before optimizing.
+- [ ] Capture a device baseline: original FLAC/MP3, FLAC/ALAC converted to WAV, single and concurrent streams, seek during artwork/browse bursts. Record bytes received, transfer failures, first-byte/seek p50 and p95, CPU, memory and GC activity.
+
+Acceptance: every exercised terminal path has a distinguishable outcome; diagnostics do not retain tracks or connections indefinitely; repeated lifecycle tests pass and observed failures have explained causes. A bounded repeat run is evidence, not proof that all races are eliminated.
+
+## Phase 2 — Progress deadlines and fair generated writes
+- [x] Separate header/body-read, handler, keep-alive, socket-write-stall and producer-stall states/deadlines. Update write progress only when bytes are transmitted; do not reset it merely because OP_WRITE fires.
+- [x] Include parked producers in deadline evaluation without rearming OP_WRITE. Distinguish an empty producer queue from a full queue awaiting a slow reader; cancel and release resources exactly once on expiry.
+- [x] Make stall limits configurable and choose defaults from baseline renderer behavior. Use monotonic elapsed time; healthy streams may run longer than any stall limit.
+- [x] Apply a per-selector-turn byte budget to StreamingResponse.write(), initially matching FileResponse's 256 KB budget. Preserve pending buffer offsets, producer parking/wakeup and partial header writes.
+- [x] Test a zero-progress writer, stalled producer, slow but progressing reader, producer wakeup races, long healthy stream and two concurrent streams plus a small response. Use controlled clocks/channel doubles or latches instead of timing-sensitive sleeps where feasible.
+
+Acceptance: stalled work is reclaimed, successful slow playback survives, parked producers do not spin, response bytes remain identical, and a continuously replenished producer yields predictably.
+
+## Phase 3 — Bound overload and protect active playback
+- [x] Replace the unbounded HTTP worker queue with configurable bounded admission. Handle rejection on the selector with a self-delimiting 503 response; release request/response resources and handle shutdown races. Audit shared SerialExecutor/WebSocket submission so saturation cannot strand callbacks or suppress cleanup.
+- [x] Audit artwork versus audio stream-slot admission and concurrent acquire/eviction. Prefer refusing excess new work over interrupting healthy audio; define explicit treatment for artwork and seek replacement requests, with bounded total connections/file descriptors.
+- [x] Enforce an aggregate generated-audio buffer budget in addition to the existing 16 x 64 KB per-response queue. Include pending buffers and producer-held chunks; keep producer concurrency bounded and reclaim budget on all terminal paths.
+- [x] Test request bursts, artwork while audio slots are occupied, concurrent admission, slow readers, overload during stop and WebSocket callback ordering/rejection. Verify excess work gets a controlled response and admitted playback continues.
+
+Acceptance: queue, producer and buffer usage stay within configured bounds; overload cannot silently close a healthy audio stream or leak slots, descriptors or callbacks.
+
+## Phase 4 — Measurement-gated optimizations
+- [ ] Evaluate a bounded reusable pool for generated-audio chunks only if allocation/GC measurements justify it. Define ownership from producer through queue/pending write to release; test partial writes, cancellation and failure. Retain only if device comparisons show a useful improvement.
+- [ ] Measure cold-file and slow-storage transferTo latency on the selector. Add a bounded file-reader fallback only if measured stalls harm other requests; workers read files, selector still writes sockets, and byte-range behavior remains exact.
+
+Acceptance: any retained optimization improves the measured target without worsening transfer correctness, memory bounds or seek latency. Record a decision to defer when evidence does not justify added complexity.
+
+## Verification and delivery checkpoints
+- [x] After each phase, run relevant core socket/streaming/diagnostics tests; repeat only to investigate changes or unresolved races. Final coverage includes NioHttpServerTest, NioHttpServerFuzzTest, NioHttpServerSoakTest and ServerDiagnosticsTest, plus impacted UPnP tests and assembleDebug.
+- [x] Review scoped diffs against main and run git diff --check. Keep existing unrelated task entries and worktree changes intact.
+- [ ] Repeat the baseline device scenarios with tools/bench/stream-bench.sh and byte/hash verification for original/ranged/converted content. Exercise disconnect/reconnect, seek bursts and artwork/browse bursts; compare latency, CPU, memory, GC and failed transfers with the baseline under comparable network conditions.
+- [ ] Verify playback on available real renderers; record unavailable renderer checks as outstanding. Network transfer success alone does not establish audible playback continuity.
+- [x] Update DESIGN.md/ADR-036 and CHANGELOG for implemented behavior and limits; summarize results and deferred optimizations. Deliver each phase as a separately reviewable change.
+
+Current verification: 156 core + 43 UPnP tests pass; 32-client soak passes. After an initial unexplained HTTP/1.0 failure, 20 trace-enabled and 20 ordinary socket-suite repetitions plus 5,000 focused close exchanges pass. Device original/converted bytes, FLAC/ALAC independent PCM references, MP3 ranges and artwork bursts pass. Keep the premature-close investigation open; defer pooling/storage isolation and broad renderer tuning until evidence is available.
+
+# DLNA interruption when cover art loads; possibly MQA (2026-10-03)
+
+- [x] Trace artwork requests and audio writes for shared blocking work or stream contention.
+- [ ] Identify the affected track and verify its actual format/encoded rate (initially reported as 24/192; user now suspects MQA), then reproduce before choosing a diagnostic comparison.
+- [ ] Once the cause is established, add a focused regression and implement the smallest supported fix.
+- [ ] Run relevant tests/build, review scoped diffs against main, and verify runtime behavior where available.
+- [ ] Record findings and any remaining physical-renderer verification.
+
+User update: cannot locate the track now; it may have been MQA. Format and cause remain unconfirmed. Keep playback code unchanged pending reproduction; artwork appearing at the dropout is correlation, not proof of image-decoding contention.
+
+Investigation: user confirmed HiBy renderer, started from MusicMate. `MediaServerHubImpl.createDidlLiteMetadata()` sends no albumArtURI on this route; `NioWebServerImpl.createSongResponse()` serves the original file for HiBy. Embedded-art decoding on the renderer is a hypothesis, not confirmed. `schedulePreloadNextTrack()` also immediately pre-warms up to 4 MB of the next track for HiBy; phone logs show that work at track start. Recent logs do not capture the reported dropout and show the selected HiBy unavailable. No playback code changed: need the affected track to distinguish renderer image decoding from host/network contention before choosing a fix. Browser artwork uses a separate worker for resolution/thumbnail decoding, though file writes share the selector and stream slots with audio.
+
 # UX/UI improvements (review: tasks/ux-review-2026-10-02.md)
 
 ## Batch 1: P1 quick wins
@@ -342,7 +572,7 @@ Elevate the Smart Queue UI/UX from a plain utility list into an immersive, audio
 - [x] Implement `appIconCache` in `PlayerPickerDialog.kt`
 - [x] Record pattern in `tasks/lessons.md`
 - [x] Update `UI.md` and `CHANGELOG.md`
-- [x] Run unit tests and deploy debug build to physical device (`RFCY21CLTDY`)
+- [x] Run unit tests and deploy debug build to physical device (`<device-serial>`)
 
 ---
 
@@ -1086,3 +1316,13 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 - [x] Now Playing trackId 0 for an external app's song: TrackEntity.copy() did not copy the id (findMusic returns a copy). Fixed; TrackEntityTest fails without the fix
 - [x] Device check: Now Playing shows the library id for an external app's song (trackId 2873483536, was 0)
 - [x] A paused external app that resumes was not followed (no active-session change): per-session state watchers. Device: Poweramp paused, MusicMate started (local), Poweramp resumed -> followed
+# SonicNIO metadata optimization and measurements (2026-10-03)
+
+- [x] Preserve current FileResponse/runtime/APK baseline and add reproducible metadata and request benchmarks.
+- [x] Replace unnecessary ETag hexadecimal formatting and per-response date formatter construction; verify byte identity, concurrency and existing HTTP behavior.
+- [x] Run interleaved before/after host measurements and available phone checks; record all samples, allocation, throughput and latency without implying a Netty comparison.
+- [x] Run core/UPnP tests and debug build, inspect the incremental diff and publish results in PERFORMANCE.md with evidence links.
+
+Scope: implement the research report's first metadata optimization. Header-token caching, parser changes and buffer pooling remain separate experiments so measurements can be attributed to this change.
+
+Result: [PERFORMANCE.md §11](../PERFORMANCE.md#11-metadata-encoding-follow-up), [complete report/evidence](performance/sonicnio-metadata-2026-10-03/REPORT.md). ETag/date allocation medians fall 94.3%/86.8%; 304/206 preparation times fall 13.1%/5.5%. Six interleaved phone samples show seek median 16.282 → 7.804 ms with essentially unchanged 39.43 MiB/s four-stream throughput. Host bulk throughput is unchanged. All 207 core/UPnP cases and debug build pass; bytes, metadata and installed APK identity verified. Optimized APK remains installed. Small-sample latency gains and absent Netty comparison remain explicit.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.jupnp.content.BrowseSortTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.666Z" hostname="KB-XXAXXW9TX4" time="0.006">
+  <properties/>
+  <testcase name="unsupportedOrEmptyCriteria_meanNoSort" classname="apincer.music.server.jupnp.content.BrowseSortTest" time="0.002"/>
+  <testcase name="tracks_sortTheSameWay" classname="apincer.music.server.jupnp.content.BrowseSortTest" time="0.003"/>
+  <testcase name="artistThenTitle_andAlbum" classname="apincer.music.server.jupnp.content.BrowseSortTest" time="0.001"/>
+  <testcase name="title_ascendingAndDescending_ignoringCase" classname="apincer.music.server.jupnp.content.BrowseSortTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

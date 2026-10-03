@@ -1,0 +1,14 @@
+{
+  "before": {
+    "samples": 9,
+    "processes": 3,
+    "bytes_per_op": 1057392.0,
+    "nanos_per_op": 200575.195
+  },
+  "after": {
+    "samples": 9,
+    "processes": 3,
+    "bytes_per_op": 8752.0,
+    "nanos_per_op": 128375.656
+  }
+}

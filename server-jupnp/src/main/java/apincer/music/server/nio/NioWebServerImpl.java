@@ -139,7 +139,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         // Content-Type comes from FileResponse, which reads the image's bytes. The extension is often
         // wrong (JPEG covers named .png, embedded PNG art saved as Cover.jpg), and strict DLNA
         // renderers reject a mismatched type.
-        NioHttpServer.HttpResponse response = server.createFileResponse(filePath, request);
+        NioHttpServer.HttpResponse response = server.createResourceResponse(filePath, request);
         response.addHeader("Cache-Control", "public, max-age=604800");
         return response;
     }
@@ -338,7 +338,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         File file = new File(content.getFilePath());
         String contentType = content.getContentType();
 
-        NioHttpServer.HttpResponse response = server.createFileResponse(file, request);
+        NioHttpServer.HttpResponse response = server.createResourceResponse(file, request);
         if (contentType != null) {
             response.addHeader("Content-Type", contentType);
         }

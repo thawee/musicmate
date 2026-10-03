@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-03T11:43:52" hostname="localhost">
+  <testsuite name="apincer.music.room.PathIndexMigrationTest" tests="3" failures="0" errors="0" skipped="0" time="0.018" timestamp="2026-10-03T11:43:52" hostname="localhost">
+    <properties>
+      <property name="device" value="<device-serial>" />
+    </properties>
+    <testcase name="versionOneMigrationChainPreservesTracksAndCreatesEmptyHistory" classname="apincer.music.room.PathIndexMigrationTest" time="0.001" />
+    <testcase name="versionTwoMigrationPreservesEveryTrackAndHistoryField" classname="apincer.music.room.PathIndexMigrationTest" time="0.003" />
+    <testcase name="freshDatabaseUsesNonUniqueIndexAndKeepsSharedPaths" classname="apincer.music.room.PathIndexMigrationTest" time="0.014" />
+  </testsuite>
+</testsuites>

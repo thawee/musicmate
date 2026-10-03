@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.repository.TagRepositoryPaginationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:17:26.978Z" hostname="KB-XXAXXW9TX4" time="0.0">
+  <properties/>
+  <testcase name="unpagedFolderOrPlaylistReturnsOnlyRequestedPage" classname="apincer.music.core.repository.TagRepositoryPaginationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

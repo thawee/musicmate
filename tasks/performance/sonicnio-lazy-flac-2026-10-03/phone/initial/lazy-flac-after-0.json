@@ -1,0 +1,22 @@
+{
+  "label": "lazy-flac-after-0",
+  "single": {
+    "size": 9940667,
+    "ttfb_ms": 27.442416991107166,
+    "seconds": 0.2573994999984279,
+    "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+    "status": 200
+  },
+  "seek_p50_ms": 9.510395466350019,
+  "seek_p95_ms": 23.96424999460578,
+  "parallel_MB_s": 39.746623236257406,
+  "converted": {
+    "size": 29529404,
+    "ttfb_ms": 7.846666965633631,
+    "seconds": 0.8089700000127777,
+    "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+    "status": 200
+  },
+  "range_checks": 16,
+  "parallel_hash_matches": 4
+}

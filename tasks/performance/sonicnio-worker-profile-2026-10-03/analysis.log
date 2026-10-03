@@ -1,0 +1,168 @@
+[
+  {
+    "phase": "foreground-first",
+    "samples_recorded": 3626,
+    "samples_lost": 0,
+    "sampled_task_clock_event_s": 18.22110325,
+    "pool_7_share_percent": 68.61555432984005,
+    "thread_shares_percent": {
+      "pool-7-thread-4": 17.8157749586321,
+      "pool-7-thread-1": 17.457253171538888,
+      "pool-7-thread-3": 17.264202978488694,
+      "pool-7-thread-2": 16.078323221180362,
+      "apincer.android.mmate": 14.50634307777165,
+      "RenderThread": 8.632101489244347,
+      "nio-stream-prod": 2.9509100937672366,
+      "NIO-Worker": 1.4340871483728626,
+      "HeapTaskDaemon": 0.7997793712079426,
+      "DefaultDispatch": 0.6067291781577496,
+      "Jit thread pool": 0.5791505791505791,
+      "nio-webserver-r": 0.441257584114727,
+      "binder:1306_1": 0.3033645890788748,
+      "jupnp-7": 0.1654715940430226,
+      "jupnp-4": 0.1654715940430226,
+      "jupnp-11": 0.13789299503585217,
+      "jupnp-12": 0.13789299503585217,
+      "FinalizerDaemon": 0.0827357970215113,
+      "ReferenceQueueD": 0.0827357970215113,
+      "jupnp-16": 0.0827357970215113,
+      "jupnp-3": 0.0827357970215113,
+      "jupnp-14": 0.05515719801434087,
+      "jupnp-5": 0.05515719801434087,
+      "jupnp-8": 0.05515719801434087,
+      "jupnp-10": 0.027578599007170437
+    },
+    "scan_worker_in_callgraph": true,
+    "latency": {
+      "head": {
+        "n": 64,
+        "median_ms": 10.8746255,
+        "p95_ms": 15.1293563,
+        "p99_ms": 18.48320333,
+        "max_ms": 18.827
+      },
+      "header": {
+        "n": 64,
+        "median_ms": 10.358167,
+        "p95_ms": 14.796175049999999,
+        "p99_ms": 15.239029999999998,
+        "max_ms": 15.936125
+      },
+      "seek": {
+        "n": 48,
+        "median_ms": 11.160062499999999,
+        "p95_ms": 16.0442183,
+        "p99_ms": 19.173448020000002,
+        "max_ms": 20.2445
+      }
+    }
+  },
+  {
+    "phase": "background",
+    "samples_recorded": 613,
+    "samples_lost": 0,
+    "sampled_task_clock_event_s": 3.080401625,
+    "pool_7_share_percent": 0.0,
+    "thread_shares_percent": {
+      "NIO-Worker": 40.94616639477977,
+      "nio-stream-prod": 37.52039151712888,
+      "nio-webserver-r": 5.383360522022838,
+      "HeapTaskDaemon": 3.262642740619902,
+      "apincer.android.mmate": 1.794453507340946,
+      "RenderThread": 1.631321370309951,
+      "Jit thread pool": 1.3050570962479608,
+      "jupnp-2": 1.1419249592169658,
+      "jupnp-6": 0.8156606851549755,
+      "jupnp-8": 0.6525285481239804,
+      "pool-8-thread-2": 0.6525285481239804,
+      "jupnp-17": 0.48939641109298526,
+      "jupnp-10": 0.48939641109298526,
+      "jupnp-12": 0.48939641109298526,
+      "jupnp-4": 0.48939641109298526,
+      "jupnp-5": 0.48939641109298526,
+      "pool-8-thread-1": 0.48939641109298526,
+      "pool-8-thread-3": 0.48939641109298526,
+      "pool-8-thread-4": 0.48939641109298526,
+      "jupnp-18": 0.3262642740619902,
+      "ReferenceQueueD": 0.1631321370309951,
+      "jupnp-11": 0.1631321370309951,
+      "jupnp-14": 0.1631321370309951,
+      "jupnp-15": 0.1631321370309951
+    },
+    "scan_worker_in_callgraph": false,
+    "latency": {
+      "head": {
+        "n": 64,
+        "median_ms": 18.819833,
+        "p95_ms": 21.4349062,
+        "p99_ms": 21.78306354,
+        "max_ms": 21.889875
+      },
+      "header": {
+        "n": 64,
+        "median_ms": 18.502521,
+        "p95_ms": 21.57121885,
+        "p99_ms": 22.490612709999997,
+        "max_ms": 23.1865
+      },
+      "seek": {
+        "n": 48,
+        "median_ms": 10.9549375,
+        "p95_ms": 20.5967875,
+        "p99_ms": 21.482918490000003,
+        "max_ms": 21.93075
+      }
+    }
+  },
+  {
+    "phase": "foreground-restored",
+    "samples_recorded": 1342,
+    "samples_lost": 0,
+    "sampled_task_clock_event_s": 6.74371775,
+    "pool_7_share_percent": 0.0,
+    "thread_shares_percent": {
+      "RenderThread": 37.77943368107303,
+      "apincer.android.mmate": 24.96274217585693,
+      "NIO-Worker": 16.76602086438152,
+      "nio-stream-prod": 12.295081967213115,
+      "nio-webserver-r": 2.9806259314456036,
+      "HeapTaskDaemon": 1.1922503725782414,
+      "binder:1306_1": 0.819672131147541,
+      "binder:1306_3": 0.5216095380029807,
+      "binder:1306_4": 0.44709388971684055,
+      "Jit thread pool": 0.37257824143070045,
+      "jupnp-2": 0.29806259314456035,
+      "pool-8-thread-1": 0.29806259314456035,
+      "pool-8-thread-2": 0.29806259314456035,
+      "pool-8-thread-3": 0.29806259314456035,
+      "Profile Saver": 0.22354694485842028,
+      "pool-8-thread-4": 0.22354694485842028,
+      "jupnp-9": 0.14903129657228018,
+      "ReferenceQueueD": 0.07451564828614009
+    },
+    "scan_worker_in_callgraph": false,
+    "latency": {
+      "head": {
+        "n": 64,
+        "median_ms": 20.239874999999998,
+        "p95_ms": 24.45629375,
+        "p99_ms": 26.75823792,
+        "max_ms": 27.238875
+      },
+      "header": {
+        "n": 64,
+        "median_ms": 20.568062500000003,
+        "p95_ms": 24.877856249999997,
+        "p99_ms": 25.93350108,
+        "max_ms": 26.189334
+      },
+      "seek": {
+        "n": 48,
+        "median_ms": 15.736312999999999,
+        "p95_ms": 23.1749817,
+        "p99_ms": 24.466612760000004,
+        "max_ms": 25.19525
+      }
+    }
+  }
+]

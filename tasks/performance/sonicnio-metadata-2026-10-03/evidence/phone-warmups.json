@@ -1,0 +1,134 @@
+[
+  {
+    "label": "metadata-controlled-after-0-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 30.98962502554059,
+      "seconds": 0.2682689579669386,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 7.369791506789625,
+    "seek_p95_ms": 13.950458029285073,
+    "parallel_MB_s": 39.65595851606488,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 122.76604189537466,
+      "seconds": 1.247064666938968,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-controlled-before-1-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 36.46516602020711,
+      "seconds": 0.27148175006732345,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 17.17660401482135,
+    "seek_p95_ms": 21.73112495802343,
+    "parallel_MB_s": 38.95164134943027,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 121.05937500018626,
+      "seconds": 1.1114957500249147,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-controlled-before-2-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 36.46429197397083,
+      "seconds": 0.27481937501579523,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 14.457874989602715,
+    "seek_p95_ms": 20.571916946209967,
+    "parallel_MB_s": 39.50915340325881,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 101.60295898094773,
+      "seconds": 1.0728425839915872,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-controlled-after-3-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 67.06670892890543,
+      "seconds": 0.27513262489810586,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 16.21206250274554,
+    "seek_p95_ms": 19.777834066189826,
+    "parallel_MB_s": 38.883500862690845,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 104.37091696076095,
+      "seconds": 1.0921775420429185,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-controlled-before-4-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 38.431665976531804,
+      "seconds": 0.26782804098911583,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 17.327333567664027,
+    "seek_p95_ms": 22.814958007074893,
+    "parallel_MB_s": 39.54859029792866,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 124.84329205472022,
+      "seconds": 1.1067620840622112,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-controlled-after-5-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 41.99666704516858,
+      "seconds": 0.272351042018272,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 15.887874993495643,
+    "seek_p95_ms": 18.897500005550683,
+    "parallel_MB_s": 38.91487458474313,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 114.82766596600413,
+      "seconds": 1.1124779999954626,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  }
+]

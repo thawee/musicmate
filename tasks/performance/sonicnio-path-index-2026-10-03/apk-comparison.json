@@ -1,0 +1,8 @@
+{
+  "before_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+  "after_sha256": "4ea87bafc3e90f24cf6d257cbd4665b9cb6e8d1facc94490e646bff8bf200d16",
+  "changed_entries": [
+    "classes3.dex",
+    "classes4.dex"
+  ]
+}

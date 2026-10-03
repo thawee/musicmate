@@ -1,0 +1,14 @@
+{
+  "version": 3,
+  "tables": {
+    "musictag": {
+      "count": 8289,
+      "all_fields_sha256": "dbe66c5ae86a54c0c3b572088dceb0ece895dcdf5574d7b6ea5d2eb58e63c819"
+    },
+    "listening_history": {
+      "count": 704,
+      "all_fields_sha256": "b33dec9002ae0b079774be57fcf095f15efb6cf660d1087e6f2eb2bf561e97fb"
+    }
+  },
+  "path_index": "CREATE INDEX `index_musictag_path` ON `musictag` (`path`)"
+}

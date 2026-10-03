@@ -1,0 +1,17 @@
+[
+  {
+    "file": "background.data.gz",
+    "raw_bytes": 3103456,
+    "raw_sha256": "d7c463e6a59b327325897b5c64e1426f5613a4b949ba6083e15df5b727c6a999"
+  },
+  {
+    "file": "foreground-restored.data.gz",
+    "raw_bytes": 3487545,
+    "raw_sha256": "f5a3511df49f8c3b9297e5e9c71d034211cfdf183b37106ab419b03c4f31ee48"
+  },
+  {
+    "file": "foreground-first.data.gz",
+    "raw_bytes": 6132753,
+    "raw_sha256": "cd98fbf315a0aa2429694c7d7ed15bfb846c44b58b15c57cd7643201c6d504d4"
+  }
+]

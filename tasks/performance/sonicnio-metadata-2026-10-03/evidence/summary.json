@@ -1,0 +1,200 @@
+{
+  "micro": {
+    "conditional-headers": {
+      "ns_per_op": {
+        "before_median": 38916.925,
+        "after_median": 33811.238,
+        "change_percent": -13.119451241330104,
+        "before_min": 38056.442,
+        "before_max": 59975.746,
+        "after_min": 33097.479,
+        "after_max": 35889.804,
+        "samples_per_phase": 15
+      },
+      "bytes_per_op": {
+        "before_median": 18000.0,
+        "after_median": 2744.0,
+        "change_percent": -84.75555555555556,
+        "before_min": 17968.0,
+        "before_max": 18024.0,
+        "after_min": 2719.714,
+        "after_max": 2869.049,
+        "samples_per_phase": 15
+      }
+    },
+    "date": {
+      "ns_per_op": {
+        "before_median": 1108.45,
+        "after_median": 346.75,
+        "change_percent": -68.7175786007488,
+        "before_min": 677.454,
+        "before_max": 1436.45,
+        "after_min": 226.817,
+        "after_max": 514.242,
+        "samples_per_phase": 15
+      },
+      "bytes_per_op": {
+        "before_median": 2920.0,
+        "after_median": 383.993,
+        "change_percent": -86.84955479452054,
+        "before_min": 2920.0,
+        "before_max": 2944.0,
+        "after_min": 383.993,
+        "after_max": 406.212,
+        "samples_per_phase": 15
+      }
+    },
+    "etag": {
+      "ns_per_op": {
+        "before_median": 24518.625,
+        "after_median": 19878.954,
+        "change_percent": -18.92304727528562,
+        "before_min": 23852.029,
+        "before_max": 26457.729,
+        "after_min": 19654.408,
+        "after_max": 20385.554,
+        "samples_per_phase": 15
+      },
+      "bytes_per_op": {
+        "before_median": 13576.032,
+        "after_median": 776.0,
+        "change_percent": -94.28404411539395,
+        "before_min": 13576.0,
+        "before_max": 13671.437,
+        "after_min": 776.0,
+        "after_max": 776.013,
+        "samples_per_phase": 15
+      }
+    },
+    "range-headers": {
+      "ns_per_op": {
+        "before_median": 126173.233,
+        "after_median": 119260.729,
+        "change_percent": -5.478581974672858,
+        "before_min": 124140.863,
+        "before_max": 170462.488,
+        "after_min": 116899.638,
+        "after_max": 198451.25,
+        "samples_per_phase": 15
+      },
+      "bytes_per_op": {
+        "before_median": 18960.0,
+        "after_median": 3712.0,
+        "change_percent": -80.42194092827005,
+        "before_min": 18928.0,
+        "before_max": 18984.0,
+        "after_min": 3680.0,
+        "after_max": 3774.986,
+        "samples_per_phase": 15
+      }
+    }
+  },
+  "host": {
+    "file-four": {
+      "MiB_s": {
+        "before_median": 1447.4675,
+        "after_median": 1453.1664999999998,
+        "change_percent": 0.3937221388390366,
+        "before_min": 1354.233,
+        "before_max": 1468.124,
+        "after_min": 1432.502,
+        "after_max": 1477.434,
+        "samples_per_phase": 6
+      },
+      "seek_p95_ms": {
+        "before_median": 3.2714999999999996,
+        "after_median": 2.875,
+        "change_percent": -12.119822711294503,
+        "before_min": 2.9,
+        "before_max": 6.185,
+        "after_min": 2.406,
+        "after_max": 3.426,
+        "samples_per_phase": 6
+      }
+    },
+    "file-single": {
+      "MiB_s": {
+        "before_median": 685.138,
+        "after_median": 685.595,
+        "change_percent": 0.06670189071398269,
+        "before_min": 640.81,
+        "before_max": 713.099,
+        "after_min": 642.575,
+        "after_max": 686.785,
+        "samples_per_phase": 6
+      }
+    }
+  },
+  "phone": {
+    "seek_p50_ms": {
+      "before_median": 16.281540971249342,
+      "after_median": 7.804229506291449,
+      "change_percent": -52.06700938152906,
+      "before_min": 14.465999964158982,
+      "before_max": 17.106708546634763,
+      "after_min": 7.072771026287228,
+      "after_max": 15.041958016809076,
+      "samples_per_phase": 3
+    },
+    "seek_p95_ms": {
+      "before_median": 23.624083027243614,
+      "after_median": 14.967167051509023,
+      "change_percent": -36.64445289051565,
+      "before_min": 17.449709004722536,
+      "before_max": 25.03808308392763,
+      "after_min": 14.80683300178498,
+      "after_max": 20.337959052994847,
+      "samples_per_phase": 3
+    },
+    "parallel_MB_s": {
+      "before_median": 39.43651405365417,
+      "after_median": 39.429290241714135,
+      "change_percent": -0.018317572212922517,
+      "before_min": 39.340468778360496,
+      "before_max": 39.505718217715426,
+      "after_min": 39.33460447089297,
+      "after_max": 39.43811703230331,
+      "samples_per_phase": 3
+    },
+    "single.seconds": {
+      "before_median": 0.2638277920195833,
+      "after_median": 0.2616451670182869,
+      "change_percent": -0.8272915391470126,
+      "before_min": 0.2632538339821622,
+      "before_max": 0.27084400004241616,
+      "after_min": 0.2612707079388201,
+      "after_max": 0.2703794159460813,
+      "samples_per_phase": 3
+    },
+    "single.ttfb_ms": {
+      "before_median": 55.395874893292785,
+      "after_median": 29.40937492530793,
+      "change_percent": -46.910532630889534,
+      "before_min": 53.8773339940235,
+      "before_max": 61.04216701351106,
+      "after_min": 28.208958101458848,
+      "after_max": 36.3379999762401,
+      "samples_per_phase": 3
+    },
+    "converted.seconds": {
+      "before_median": 0.8552615829976276,
+      "after_median": 0.8406155409757048,
+      "change_percent": -1.7124634513091874,
+      "before_min": 0.7857574999798089,
+      "before_max": 0.8857645839452744,
+      "after_min": 0.8312145409872755,
+      "after_max": 0.8785019998904318,
+      "samples_per_phase": 3
+    },
+    "converted.ttfb_ms": {
+      "before_median": 19.30208399426192,
+      "after_median": 12.21225003246218,
+      "change_percent": -36.730924826082976,
+      "before_min": 16.57437498215586,
+      "before_max": 19.937874982133508,
+      "after_min": 11.370375053957105,
+      "after_max": 18.5049579013139,
+      "samples_per_phase": 3
+    }
+  }
+}

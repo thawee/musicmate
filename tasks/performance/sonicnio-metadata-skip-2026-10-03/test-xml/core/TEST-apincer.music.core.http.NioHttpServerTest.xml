@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.NioHttpServerTest" tests="58" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:27.767Z" hostname="KB-XXAXXW9TX4" time="18.885">
+  <properties/>
+  <testcase name="streamingResponse_clientDisconnect_stopsTheProducer" classname="apincer.music.core.http.NioHttpServerTest" time="0.066"/>
+  <testcase name="responseCreatedAfterStop_isClosedInsteadOfLeftInTheQueue" classname="apincer.music.core.http.NioHttpServerTest" time="0.066"/>
+  <testcase name="multipleRanges_areServedAsWholeFile" classname="apincer.music.core.http.NioHttpServerTest" time="0.067"/>
+  <testcase name="chunkedRequestBody_isRejected" classname="apincer.music.core.http.NioHttpServerTest" time="0.063"/>
+  <testcase name="webSocket_protocolErrorAfterAQueuedReply_stillClosesTheConnection" classname="apincer.music.core.http.NioHttpServerTest" time="0.069"/>
+  <testcase name="clientConnectionClose_isHonoured" classname="apincer.music.core.http.NioHttpServerTest" time="0.078"/>
+  <testcase name="stop_returnsPromptlyWhileAHandlerIsBusy" classname="apincer.music.core.http.NioHttpServerTest" time="0.278"/>
+  <testcase name="handlerDeadline_startsAfterTheRequestBodyArrives" classname="apincer.music.core.http.NioHttpServerTest" time="1.587"/>
+  <testcase name="webSocket_serverClose_sendsCloseFrameAndClosesSocket" classname="apincer.music.core.http.NioHttpServerTest" time="0.029"/>
+  <testcase name="streamingResponse_producerFailure_closesTheConnection" classname="apincer.music.core.http.NioHttpServerTest" time="0.019"/>
+  <testcase name="jpegBehindAPngName_isServedAsJpeg" classname="apincer.music.core.http.NioHttpServerTest" time="0.08"/>
+  <testcase name="webSocket_framePipelinedWithUpgrade_isHandledAfterOnOpen" classname="apincer.music.core.http.NioHttpServerTest" time="0.106"/>
+  <testcase name="midStreamDisconnect_releasesStreamAndConnection" classname="apincer.music.core.http.NioHttpServerTest" time="0.084"/>
+  <testcase name="stop_releasesOpenStreamsAndConnections" classname="apincer.music.core.http.NioHttpServerTest" time="0.445"/>
+  <testcase name="startOffset_sendsTheRestOfTheFileAs200" classname="apincer.music.core.http.NioHttpServerTest" time="0.035"/>
+  <testcase name="ifRangeMismatch_returnsWholeFile" classname="apincer.music.core.http.NioHttpServerTest" time="0.02"/>
+  <testcase name="stopBeforeRun_keepsTheServerStopped" classname="apincer.music.core.http.NioHttpServerTest" time="0.067"/>
+  <testcase name="startOffset_winsOverARangeHeader" classname="apincer.music.core.http.NioHttpServerTest" time="0.024"/>
+  <testcase name="stalledReader_isClosedAfterTheWriteStallTimeout" classname="apincer.music.core.http.NioHttpServerTest" time="2.134"/>
+  <testcase name="streamingResponse_deliversEveryByteInOrder" classname="apincer.music.core.http.NioHttpServerTest" time="0.106"/>
+  <testcase name="producerLimit_refusesNewConversionAndReleasesItsSlot" classname="apincer.music.core.http.NioHttpServerTest" time="1.631"/>
+  <testcase name="suffixRange_returnsLastBytes" classname="apincer.music.core.http.NioHttpServerTest" time="0.095"/>
+  <testcase name="stats_countRequestsBytesAndConnections" classname="apincer.music.core.http.NioHttpServerTest" time="0.154"/>
+  <testcase name="imageMimeType_comesFromContentNotExtension" classname="apincer.music.core.http.NioHttpServerTest" time="0.08"/>
+  <testcase name="post_bodyInSamePacket_isCutToContentLength" classname="apincer.music.core.http.NioHttpServerTest" time="0.095"/>
+  <testcase name="pipelinedRequests_areAnsweredInOrder" classname="apincer.music.core.http.NioHttpServerTest" time="0.094"/>
+  <testcase name="keepAlive_servesTwoRequestsOnOneConnection" classname="apincer.music.core.http.NioHttpServerTest" time="0.031"/>
+  <testcase name="streamingResponse_slowProducer_doesNotSpinTheSelector" classname="apincer.music.core.http.NioHttpServerTest" time="1.523"/>
+  <testcase name="webSocket_oversizedFrame_isNotDeliveredAsAMessage" classname="apincer.music.core.http.NioHttpServerTest" time="0.093"/>
+  <testcase name="workerOverload_returns503AndDoesNotStarveAnUpgradedWebSocket" classname="apincer.music.core.http.NioHttpServerTest" time="0.095"/>
+  <testcase name="get_returnsWholeFile" classname="apincer.music.core.http.NioHttpServerTest" time="0.075"/>
+  <testcase name="head_returnsLengthWithoutBody_andConnectionStaysUsable" classname="apincer.music.core.http.NioHttpServerTest" time="0.076"/>
+  <testcase name="webSocket_forceClose_closesSocketAndReleasesConnection" classname="apincer.music.core.http.NioHttpServerTest" time="0.077"/>
+  <testcase name="rangeStartPastEof_416EndsCleanly_andConnectionIsReusable" classname="apincer.music.core.http.NioHttpServerTest" time="0.024"/>
+  <testcase name="webSocket_messagesFromOneConnection_areHandledInOrder" classname="apincer.music.core.http.NioHttpServerTest" time="0.177"/>
+  <testcase name="streamingResponse_parkedProducer_hasAStallDeadline" classname="apincer.music.core.http.NioHttpServerTest" time="1.061"/>
+  <testcase name="expectContinue_gets100BeforeTheBody" classname="apincer.music.core.http.NioHttpServerTest" time="0.089"/>
+  <testcase name="oversizedLength_returns413BeforeBodyIsSent" classname="apincer.music.core.http.NioHttpServerTest" time="0.026"/>
+  <testcase name="notModified_doesNotEvictAnActiveStream" classname="apincer.music.core.http.NioHttpServerTest" time="0.908"/>
+  <testcase name="range_returnsSlice" classname="apincer.music.core.http.NioHttpServerTest" time="0.029"/>
+  <testcase name="duplicateIdenticalLengths_preserveBodyAndPipelinedNextRequest" classname="apincer.music.core.http.NioHttpServerTest" time="0.078"/>
+  <testcase name="ambiguousOrInvalidFraming_returns400ClosesAndNeverDispatches" classname="apincer.music.core.http.NioHttpServerTest" time="0.04"/>
+  <testcase name="handlerStall_hasADistinctCloseReason" classname="apincer.music.core.http.NioHttpServerTest" time="1.074"/>
+  <testcase name="webSocket_handshakeAndEcho" classname="apincer.music.core.http.NioHttpServerTest" time="0.031"/>
+  <testcase name="validChunkedFraming_isUnsupportedAndCloses" classname="apincer.music.core.http.NioHttpServerTest" time="0.018"/>
+  <testcase name="streamingResponse_producerPause_doesNotUseSocketStallDeadline" classname="apincer.music.core.http.NioHttpServerTest" time="1.515"/>
+  <testcase name="http10WithoutKeepAlive_closesAfterTheResponse" classname="apincer.music.core.http.NioHttpServerTest" time="0.035"/>
+  <testcase name="post_bodyArrivingAfterHeaders_reachesHandlerComplete" classname="apincer.music.core.http.NioHttpServerTest" time="0.227"/>
+  <testcase name="slowHeaders_areCutOffAtTheHeaderDeadline" classname="apincer.music.core.http.NioHttpServerTest" time="1.452"/>
+  <testcase name="diagnostics_keepAliveResponses_haveDistinctIdsAndExactBodyCounts" classname="apincer.music.core.http.NioHttpServerTest" time="0.098"/>
+  <testcase name="simultaneousAdmission_neverExceedsMediaSlots" classname="apincer.music.core.http.NioHttpServerTest" time="0.038"/>
+  <testcase name="bodylessResponse_hasZeroContentLength_andConnectionIsReusable" classname="apincer.music.core.http.NioHttpServerTest" time="0.067"/>
+  <testcase name="rangeEndPastEof_isClampedToLastByte" classname="apincer.music.core.http.NioHttpServerTest" time="0.013"/>
+  <testcase name="streamLimit_refusesNewAudioAndAllowsArtworkWithoutEvictingPlayback" classname="apincer.music.core.http.NioHttpServerTest" time="0.075"/>
+  <testcase name="openEndedRange_returnsTail" classname="apincer.music.core.http.NioHttpServerTest" time="0.067"/>
+  <testcase name="rangeStartPastEof_returns416" classname="apincer.music.core.http.NioHttpServerTest" time="0.073"/>
+  <testcase name="malformedRange_isIgnored" classname="apincer.music.core.http.NioHttpServerTest" time="0.026"/>
+  <testcase name="longStream_outlivesHeaderAndWriteStallDeadlines" classname="apincer.music.core.http.NioHttpServerTest" time="2.093"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 03, 2026 8:33:27 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55842 stopped
+Oct 03, 2026 8:33:27 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55846 stopped
+Oct 03, 2026 8:33:27 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55850 stopped
+Oct 03, 2026 8:33:28 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55854 stopped
+Oct 03, 2026 8:33:28 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55858 stopped
+Oct 03, 2026 8:33:28 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55862 stopped
+Oct 03, 2026 8:33:28 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55866 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55870 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55877 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55880 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55883 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55886 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55890 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55893 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55897 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55900 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55903 stopped
+Oct 03, 2026 8:33:30 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55908 stopped
+Oct 03, 2026 8:33:33 PM apincer.music.core.http.StreamDiagnostics response
+INFO: Response stalled: ResponseEvent[connectionId=2, requestId=1, method=GET, path=/big, status=200, expectedBodyBytes=8388608, bodyBytesSent=1046912, firstByteMillis=9, durationMillis=2013, outcome=WRITE_STALL, failure=]
+Oct 03, 2026 8:33:33 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55911 stopped
+Oct 03, 2026 8:33:33 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55915 stopped
+Oct 03, 2026 8:33:33 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55919 stopped
+Oct 03, 2026 8:33:34 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55919 stopped
+Oct 03, 2026 8:33:34 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55926 stopped
+Oct 03, 2026 8:33:35 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55931 stopped
+Oct 03, 2026 8:33:35 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55936 stopped
+Oct 03, 2026 8:33:35 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55939 stopped
+Oct 03, 2026 8:33:35 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55943 stopped
+Oct 03, 2026 8:33:35 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55947 stopped
+Oct 03, 2026 8:33:36 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55950 stopped
+Oct 03, 2026 8:33:36 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55956 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55959 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55959 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55968 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55972 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55976 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55983 stopped
+Oct 03, 2026 8:33:37 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55986 stopped
+Oct 03, 2026 8:33:38 PM apincer.music.core.http.StreamDiagnostics response
+INFO: Response stalled: ResponseEvent[connectionId=2, requestId=1, method=GET, path=/pausegen, status=200, expectedBodyBytes=1000, bodyBytesSent=1, firstByteMillis=0, durationMillis=1001, outcome=PRODUCER_STALL, failure=]
+Oct 03, 2026 8:33:38 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55990 stopped
+Oct 03, 2026 8:33:38 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55993 stopped
+Oct 03, 2026 8:33:38 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 55997 stopped
+Oct 03, 2026 8:33:39 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56000 stopped
+Oct 03, 2026 8:33:39 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56015 stopped
+Oct 03, 2026 8:33:39 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56018 stopped
+Oct 03, 2026 8:33:39 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56022 stopped
+Oct 03, 2026 8:33:40 PM apincer.music.core.http.StreamDiagnostics response
+INFO: Response stalled: ResponseEvent[connectionId=2, requestId=1, method=GET, path=/slow, status=0, expectedBodyBytes=-1, bodyBytesSent=0, firstByteMillis=-1, durationMillis=1000, outcome=HANDLER_TIMEOUT, failure=]
+Oct 03, 2026 8:33:40 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56036 stopped
+Oct 03, 2026 8:33:40 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56047 stopped
+Oct 03, 2026 8:33:40 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56052 stopped
+Oct 03, 2026 8:33:42 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56056 stopped
+Oct 03, 2026 8:33:42 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56059 stopped
+Oct 03, 2026 8:33:42 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56063 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56066 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56072 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56076 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56078 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56085 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56088 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56092 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56096 stopped
+Oct 03, 2026 8:33:44 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56100 stopped
+Oct 03, 2026 8:33:46 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 56103 stopped
+]]></system-err>
+</testsuite>

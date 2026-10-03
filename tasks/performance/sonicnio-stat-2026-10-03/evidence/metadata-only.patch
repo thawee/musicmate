@@ -1,0 +1,57 @@
+--- before/FileResponse.java
++++ after/FileResponse.java
+@@ -6,6 +6,8 @@
+ import java.nio.channels.FileChannel;
+ import java.nio.channels.SocketChannel;
+ import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.attribute.BasicFileAttributes;
+ import java.security.MessageDigest;
+ import java.security.NoSuchAlgorithmException;
+ import java.text.SimpleDateFormat;
+@@ -55,7 +57,9 @@
+         this.media = media;
+         this.slots = slots;
+ 
+-        long fileLen = file.length();
++        BasicFileAttributes metadata = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
++        long fileLen = metadata.size();
++        long lastModified = metadata.lastModifiedTime().toMillis();
+ 
+         // HEAD request → no streaming, no stream count
+         if ("HEAD".equalsIgnoreCase(request.getMethod())) {
+@@ -73,9 +77,9 @@
+ 
+         this.addHeader("Content-Type", FileContentTypes.readContentForMime(file));
+ 
+-        String etag = generateETag(file);
++        String etag = generateETag(file, fileLen, lastModified);
+         this.addHeader("ETag", etag);
+-        this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
++        this.addHeader("Last-Modified", formatHttpDate(lastModified));
+ 
+         long tempStart = 0;
+         long tempEnd = fileLen - 1;
+@@ -190,18 +194,18 @@
+         }
+     }
+ 
+-    private String generateETag(File file) {
+-        String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
++    private String generateETag(File file, long length, long lastModified) {
++        String value = file.getAbsolutePath() + "-" + length + "-" + lastModified;
+ 
+         try {
+             MessageDigest md = MessageDigest.getInstance("SHA-256");
+             byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
+             return "\"" + etagPrefix(hash) + "-" +
+-                    Long.toHexString(file.length()) + "\"";
++                    Long.toHexString(length) + "\"";
+         } catch (NoSuchAlgorithmException e) {
+             int hash = value.hashCode();
+             return "\"" + Integer.toHexString(hash) + "-" +
+-                    Long.toHexString(file.length()) + "\"";
++                    Long.toHexString(length) + "\"";
+         }
+     }
+ 

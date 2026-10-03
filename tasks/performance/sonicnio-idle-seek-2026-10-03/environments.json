@@ -1,0 +1,263 @@
+[
+  {
+    "name": "pilot-0-trace",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 284,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 284,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 284,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "compare-0-control",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "compare-1-trace",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "compare-2-trace",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "compare-3-control",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "confirm-0-trace",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "confirm-1-control",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "offcpu",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  },
+  {
+    "name": "oncpu",
+    "phases": [
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        }
+      },
+      {
+        "before": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "3"
+        },
+        "after": {
+          "battery_temperature_tenths_c": 299,
+          "thermal_status": 0,
+          "benchmark_process_gc_count": "4"
+        }
+      }
+    ]
+  }
+]

@@ -17,6 +17,6 @@
   public static *** v(...);
   public static *** d(...);
   public static *** i(...);
-  public static *** w(...);
-  public static *** e(...);
 }
+# Retain warnings and errors so optimized-build startup and streaming failures
+# remain diagnosable; routine verbose/debug/info calls are still removed.

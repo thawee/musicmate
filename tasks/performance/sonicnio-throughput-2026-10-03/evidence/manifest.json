@@ -1,0 +1,37 @@
+{
+  "source_head": "0d28ca052df66e23032d2c0afc0e3e6ba4e979bf",
+  "source_state": "Dirty worktree; cumulative prior changes preserved. baseline-to-retained.patch isolates the three production files for this experiment.",
+  "baseline_source_sha256": {
+    "FileResponse": "7898cc8e99fed3ba6ea650c07c9cb2dd7ea66077ed4e1b83f8528497190b86aa",
+    "StreamingResponse": "743d88f5e4743f0625ea8ebdb63ea249643ef5d6473da28beb932065877ca5eb",
+    "NioHttpServer": "21a96b38858de12589e12c714b19322cdf32fb94309b57b5980abc0e682b6ba5",
+    "AudioBufferBudget": "182d3321e3c3b4107b55c49ad100ec0ac8fc3cfb6f532345a0c654b9b26615f9"
+  },
+  "host_platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "host_machine": "arm64",
+  "java_version": "openjdk version \"25.0.4\" 2026-07-21 LTS\nOpenJDK Runtime Environment Temurin-25.0.4+7 (build 25.0.4+7-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.4+7 (build 25.0.4+7-LTS, mixed mode, sharing)",
+  "phone_apk_sha256": {
+    "before": "8fb0161d1b80348e3a57c1af1558e0512b427d6d408e590d7a6639ec558069d1",
+    "first-after": "1cb7170fddae294df04d05de0260d7daff6f4a3aec6a01defcc980a5168b4ddf",
+    "retained-after": "e08d4932e0cbc7b599903a3b8aae6e779dfae68286790ab1424be0cd2d4d7ce6"
+  },
+  "source_and_artifact_sha256": {
+    "core/src/main/java/apincer/music/core/http/AudioBufferBudget.java": "182d3321e3c3b4107b55c49ad100ec0ac8fc3cfb6f532345a0c654b9b26615f9",
+    "core/src/main/java/apincer/music/core/http/FileResponse.java": "1a14c69759942082f3b387b7baf388b4263b3766cdf3236368b14df684a85a39",
+    "core/src/main/java/apincer/music/core/http/NioHttpServer.java": "68d261b2d9b15228e9d26a4fcf9596499fcd47b2a08fb1e5dd2da42056dabf15",
+    "core/src/main/java/apincer/music/core/http/StreamingResponse.java": "45f8bf9d5fdcfbd2cc77f777c920badb67d72beaf2a40e07d727e12e1ae62bcf",
+    "core/src/test/java/apincer/music/core/http/FileResponseTest.java": "98a4b946154c98dacbcd40b52319caeea7bae0c9c05b8aa451145b2c8b986eab",
+    "core/src/test/java/apincer/music/core/http/StreamingResponseTest.java": "047f3ed53aebe1b10f5d2045c24d10983e347e73db91cd55237e8aa4eb8be486",
+    "tasks/performance/sonicnio-throughput-2026-10-03/TEST_RESULTS.md": "bf8ec1f938839c0468f640e8161d18faf8b0c6f3afe4a838bcba59817b9745b0",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/baseline-to-retained.patch": "0a00e9fb672e4263302863cc84a65839ad0f760190d588a72599d3d3818ddccc",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/failed-experiment.json": "b4a711f9120aa9ebf7f48ae08b62a5df8e0f26da1ece822b0d1924887510b8e7",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/host-results.json": "f8dac5d5b2c386a59af703651256b87a519e2df1b723a098de7ea262a1a60dba",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/junit-results.json": "5c00f3df5b671e21b0de6e487a15f9aa81bbb3b22ca29850c67e4dbaa4b450a0",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/phone-results.json": "57be2cf2478f405348083faa795e5febd4e56ea74ea14e311fd1284d49a4c9fd",
+    "tasks/performance/sonicnio-throughput-2026-10-03/evidence/summary.json": "580270928ff3585dc12f4422ed5e8a7560c68a0f1ae1aa6e9cb6404c382930d4",
+    "tools/bench/README.md": "773459d2c38180dc6b440e1c3966e2690a447353cb13c26a00f5ff1a4a851e12",
+    "tools/bench/ThroughputBenchmark.java": "f7877a7db1e479ebbb0db338aadb6b89b497995d951a331c6eecf82aa4370482",
+    "tools/bench/stream-bench.sh": "eb1af35ce09c677bcc48787e9537dd8406ad9eccf5fd63d507e167baee910abc",
+    "tools/bench/test-classpath.gradle": "a73d08b338eb3abd1942a5b72408afb46608644e21b2421939854464b21a59e8"
+  }
+}

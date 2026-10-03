@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.utils.ThaiEncodingUtilsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.858Z" hostname="KB-XXAXXW9TX4" time="0.003">
+  <properties/>
+  <testcase name="testFixThaiEncoding_plainEnglishUnchanged" classname="apincer.music.core.utils.ThaiEncodingUtilsTest" time="0.0"/>
+  <testcase name="testFixThaiEncoding_recoversGarbledText" classname="apincer.music.core.utils.ThaiEncodingUtilsTest" time="0.003"/>
+  <testcase name="testHasHighAscii_standardAscii" classname="apincer.music.core.utils.ThaiEncodingUtilsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

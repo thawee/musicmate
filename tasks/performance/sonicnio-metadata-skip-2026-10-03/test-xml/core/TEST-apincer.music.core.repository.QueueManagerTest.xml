@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.repository.QueueManagerTest" tests="36" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.772Z" hostname="KB-XXAXXW9TX4" time="0.07">
+  <properties/>
+  <testcase name="addPlayNext_currentTrack_preservesCurrentIndex" classname="apincer.music.core.repository.QueueManagerTest" time="0.007"/>
+  <testcase name="getRandomTrack_singleTrack_returnsThatTrack" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="unplayedUsesHistoryQueryAndPersistsSource" classname="apincer.music.core.repository.QueueManagerTest" time="0.002"/>
+  <testcase name="containsTrack_checksIndexMapCorrectly" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="removeTrack_thenPlaybackMoves_normalNavigationResumes" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="playlistSourceStateAndPersistence" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="getRandomTrack_multipleTracks_returnsValidTrackFromQueue" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="smartQueue_removedSuggestionsDoNotReturnAfterRestart" classname="apincer.music.core.repository.QueueManagerTest" time="0.002"/>
+  <testcase name="removeTrack_followerAlsoRemoved_nextMovesOn" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="shuffle_removeOrMoveOtherTrack_keepsNextTrack" classname="apincer.music.core.repository.QueueManagerTest" time="0.004"/>
+  <testcase name="smartQueue_downloadPredicateAndMissingFilesAreRespected" classname="apincer.music.core.repository.QueueManagerTest" time="0.005"/>
+  <testcase name="shuffle_enqueue_keepsPlayedTracksOutAndPlaysNewOnes" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="addPlayingQueue_existingTrack_movesToEndWithoutDuplicate" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="queueChangeListener_firesOnEditsAndModes_notOnNavigation" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="shuffle_playNext_isNextAndPlayedTracksDoNotReturn" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="removeTrack_playingTrack_thenPlayNext_playsItThenFollower" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="getNextTrack_repeatModeOne_loopsOnNaturalEnd_advancesOnUserSkip" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="removeTrack_playingLastTrack_queueEnds" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="removeTrack_playingLastTrack_repeatAllWraps" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="loadPlayingQueue_temporarilyUnavailableStorage_preservesQueueAndPersistence" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="shuffleOrder_preservesSequenceAcrossPlaybackTransitions" classname="apincer.music.core.repository.QueueManagerTest" time="0.002"/>
+  <testcase name="removeTrack_playingTrackReportedAgain_isNotReEnqueued" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="removeTrack_playingTrack_nextIsItsFollower" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="addPlayingQueue_currentTrack_updatesCurrentIndexToEnd" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="removeTrack_otherTrack_doesNotDetachPlayback" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="moveTrack_preservesActiveCurrentTrackIndex" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="rediscoverUsesThirtyDayCutoffAndRetainsOldestFirstOrder" classname="apincer.music.core.repository.QueueManagerTest" time="0.002"/>
+  <testcase name="smartQueue_preservesNextAndPrioritizesManualChoice" classname="apincer.music.core.repository.QueueManagerTest" time="0.004"/>
+  <testcase name="getRandomTrack_emptyQueue_returnsNull" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="setPlaybackTrack_unknownTrack_autoEnqueuesAndSetsPlaybackIndex" classname="apincer.music.core.repository.QueueManagerTest" time="0.003"/>
+  <testcase name="removeTrack_lastPlayingTrack_thenEnqueue_playsNewTrack" classname="apincer.music.core.repository.QueueManagerTest" time="0.0"/>
+  <testcase name="smartQueue_restoresAnchorAndManualFreezesRefill" classname="apincer.music.core.repository.QueueManagerTest" time="0.003"/>
+  <testcase name="smartQueue_clearDuringLookupCannotRepopulateQueue" classname="apincer.music.core.repository.QueueManagerTest" time="0.002"/>
+  <testcase name="removeTrack_playingFirstTrack_nextIsNewFirst" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="emptyPlayingQueue_resetsAllState" classname="apincer.music.core.repository.QueueManagerTest" time="0.001"/>
+  <testcase name="smartQueue_boundsRefillAndAppendsNewCandidates" classname="apincer.music.core.repository.QueueManagerTest" time="0.017"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

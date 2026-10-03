@@ -1,0 +1,12 @@
+{
+  "verified_at_utc": "2026-10-03T10:41:40.898119+00:00",
+  "installed_candidate_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+  "build_output_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+  "production_sources_unchanged_during_phone_comparison": 871,
+  "tests": 222,
+  "test_failures": 0,
+  "test_errors": 0,
+  "test_skips": 0,
+  "release_recommendation": "hold pending app memory/latency profiling",
+  "rolled_back": false
+}

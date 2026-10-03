@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.jupnp.transport.TimeSeekTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.688Z" hostname="KB-XXAXXW9TX4" time="0.034">
+  <properties/>
+  <testcase name="npt_isHMMSSmmm" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.004"/>
+  <testcase name="flac_usesTheSeekPointAtOrBeforeTheTime" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.01"/>
+  <testcase name="pastTheEnd_orUnsupportedFormat_isNull" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.003"/>
+  <testcase name="parseNpt_rejectsOtherForms" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.0"/>
+  <testcase name="parseNpt_secondsAndClockForms" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.001"/>
+  <testcase name="flac_withoutSeekTable_isProportional_alignedToTheNextFrame" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.008"/>
+  <testcase name="mp3_isProportionalAfterTheId3Tag_alignedToAFrame" classname="apincer.music.server.jupnp.transport.TimeSeekTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

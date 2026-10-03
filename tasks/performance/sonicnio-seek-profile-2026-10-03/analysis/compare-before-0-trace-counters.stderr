@@ -1,0 +1,6 @@
+
+Loading trace: 0.00 MB
+
+Loading trace: 29.89 MB
+[975.357]     common_flags.cc:525 Trace loaded: 29.89 MB in 0.53s (56.7 MB/s)
+[975.404]            query.cc:191 Query execution time: 46 ms

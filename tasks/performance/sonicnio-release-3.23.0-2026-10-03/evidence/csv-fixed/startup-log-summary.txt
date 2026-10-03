@@ -1,0 +1,15 @@
+Startup log summary: optimized 3.23.0 APK, fresh process pid 2693, launched 2026-10-03 22:37:00 +07
+Fatal/startup failures (MediaServerHub Start failed, ClassCastException, 'No built-in UPnP datatype', FATAL, SQLite/Room/migration): 0 of 377 app log lines
+Error/warning tags present:
+  33 E org.jaudiotabgger.audio
+  24 W MediaCodec-JNI
+   7 W UPnP
+   6 W MusicAnalyser
+   6 W AudioDecoder
+   5 W r.android.mmate
+   1 E r.android.mmate
+   1 E BufferQueueProducer
+   1 E ashmem
+   1 E Adreno-AppProfiles
+UPnP warning: remote DIAL/Cast TV (SkyworthDigital SKWAMX5M) device description failed; its SCPDURL /ssdp/notfound returns HTTP 404, so jUPnP rejects that remote device. Unrelated to R8.
+Listening sockets owned by app UID 10662: UDP 1900, TCP 49152 (UPnP), TCP 9000 (HTTP).

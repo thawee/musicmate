@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.NioHttpServerFuzzTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:53.776Z" hostname="KB-XXAXXW9TX4" time="7.082">
+  <properties/>
+  <testcase name="randomWebSocketFrames_neverBreakTheServer" classname="apincer.music.core.http.NioHttpServerFuzzTest" time="6.241"/>
+  <testcase name="mutatedRequests_neverBreakTheServer" classname="apincer.music.core.http.NioHttpServerFuzzTest" time="0.74"/>
+  <testcase name="hostileRequests_neverBreakTheServer" classname="apincer.music.core.http.NioHttpServerFuzzTest" time="0.101"/>
+  <system-out><![CDATA[FUZZ ws seed=761634626734041 cases=40
+FUZZ seed=761640834370708 cases=1500
+]]></system-out>
+  <system-err><![CDATA[Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 59240 stopped
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:998)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.RuntimeException: Client frame must be masked
+	at apincer.music.core.http.WebSocket$FrameParser.processHeader(WebSocket.java:189)
+	at apincer.music.core.http.WebSocket$FrameParser.parse(WebSocket.java:109)
+	at apincer.music.core.http.WebSocketSession.parse(WebSocketSession.java:57)
+	at apincer.music.core.http.NioHttpServer$ConnectionAttachment.upgradeToWebSocket(NioHttpServer.java:1357)
+	at apincer.music.core.http.NioHttpServer.handleWrite(NioHttpServer.java:980)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:467)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 59292 stopped
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+WARNING: Error handling connection; closing it
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders(NioHttpServer.java:1505)
+	at apincer.music.core.http.NioHttpServer.processBufferedHttp(NioHttpServer.java:735)
+	at apincer.music.core.http.NioHttpServer.handleRead(NioHttpServer.java:715)
+	at apincer.music.core.http.NioHttpServer.run(NioHttpServer.java:465)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+Oct 03, 2026 4:17:00 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 60815 stopped
+]]></system-err>
+</testsuite>

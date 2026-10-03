@@ -1,0 +1,195 @@
+--- before/NioHttpServer.java
++++ after/NioHttpServer.java
+@@ -19,6 +19,7 @@
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.Map;
++import java.util.Locale;
+ import java.util.Queue;
+ import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.concurrent.ExecutorService;
+@@ -734,8 +735,28 @@
+             request.parseHeaders(requestBytes, headerEnd, ((InetSocketAddress) clientChannel.getRemoteAddress()).getAddress().getHostAddress());
+             beginRequest(attachment, request);
+ 
++            if (request.malformedHeaders) {
++                rejectFraming(key, attachment, HTTP_BAD_REQUEST, "Bad Request", "Invalid header field");
++                return;
++            }
++
+             // Chunked request bodies are not supported; misreading them would turn the chunks into a bogus next request
+-            if (request.getHeader("transfer-encoding", "").toLowerCase().contains("chunked")) {
++            String transferEncoding = request.getHeader("transfer-encoding", null);
++            if (transferEncoding != null && request.getHeader("content-length", null) != null) {
++                rejectFraming(key, attachment, HTTP_BAD_REQUEST, "Bad Request", "Ambiguous request framing");
++                return;
++            }
++            if (transferEncoding != null) {
++                String[] codings = transferEncoding.split(",", -1);
++                boolean finalChunked = codings[codings.length - 1].trim().equalsIgnoreCase("chunked")
++                        && !"HTTP/1.0".equals(request.getVersion());
++                for (int i = 0; i < codings.length - 1; i++) {
++                    if (codings[i].trim().isEmpty() || codings[i].trim().equalsIgnoreCase("chunked")) finalChunked = false;
++                }
++                if (!finalChunked) {
++                    rejectFraming(key, attachment, HTTP_BAD_REQUEST, "Bad Request", "Invalid Transfer-Encoding");
++                    return;
++                }
+                 attachment.response = new HttpResponse()
+                         .setStatus(501, "Not Implemented")
+                         .addHeader("Connection", "close")
+@@ -745,22 +766,20 @@
+             }
+ 
+             // Validate content length
+-            int contentLength = Integer.parseInt(request.getHeader("content-length", "0"));
+-            if (contentLength < 0 || contentLength > maxRequestSize) {
+-                attachment.response = contentLength < 0
+-                        ? new HttpResponse().setStatus(HTTP_BAD_REQUEST, "Bad Request")
+-                                .addHeader("Connection", "close")
+-                                .setBody("Invalid Content-Length".getBytes())
+-                        : new HttpResponse().setStatus(HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large")
+-                                .addHeader("Connection", "close")
+-                                .setBody("Content-Length exceeds limit".getBytes());
+-                key.interestOps(SelectionKey.OP_WRITE);
++            long contentLength;
++            try { contentLength = request.contentLength(); }
++            catch (IllegalArgumentException invalidLength) {
++                rejectFraming(key, attachment, HTTP_BAD_REQUEST, "Bad Request", "Invalid Content-Length");
++                return;
++            }
++            if (contentLength > maxRequestSize - headerEnd) {
++                rejectFraming(key, attachment, HTTP_PAYLOAD_TOO_LARGE, "Payload Too Large", "Content-Length exceeds limit");
+                 return;
+             }
+ 
+             attachment.wsUpgradeHeaderEnd = headerEnd; // Save before worker recycles the request
+             attachment.request = request;
+-            attachment.requestLength = headerEnd + contentLength; // bytes after this belong to the next request
++            attachment.requestLength = headerEnd + (int) contentLength; // bytes after this belong to the next request
+             if (attachment.requestData.size() < attachment.requestLength) {
+                 attachment.state = ConnectionAttachment.ParseState.READING_BODY;
+                 attachment.bodyReadStartTime = nowMillis();
+@@ -776,6 +795,12 @@
+             return;
+         }
+         completeRequest(key, attachment);
++    }
++
++    private void rejectFraming(SelectionKey key, ConnectionAttachment attachment, int status, String text, String reason) {
++        attachment.response = new HttpResponse().setStatus(status, text)
++                .addHeader("Connection", "close").setBody(reason.getBytes(StandardCharsets.US_ASCII));
++        key.interestOps(SelectionKey.OP_WRITE);
+     }
+ 
+     /** All of the request is buffered: take its body (exactly Content-Length bytes) and dispatch it. */
+@@ -1451,6 +1476,9 @@
+         private final Map<String, String> headers = new HashMap<>(); // Reused
+         private byte[] body;
+         private int headerEnd;
++        private boolean malformedHeaders;
++        private boolean invalidContentLength;
++        private long parsedContentLength = -1;
+ 
+         public HttpRequest() {
+ 
+@@ -1464,6 +1492,11 @@
+ 
+         /** Selector parses headers before body completion; the worker gets one exact body copy later. */
+         void parseHeaders(byte[] requestBytes, int headerEnd, String remoteHost) {
++            headers.clear();
++            malformedHeaders = false;
++            invalidContentLength = false;
++            parsedContentLength = -1;
++            version = null;
+             this.remoteHost = remoteHost;
+             this.headerEnd = headerEnd;
+             String headerPart = new String(requestBytes, 0, headerEnd, StandardCharsets.US_ASCII);
+@@ -1483,10 +1516,60 @@
+                 String line = headerLines[i];
+                 if (line.isEmpty()) continue;
+                 int separator = line.indexOf(":");
+-                if (separator != -1) {
+-                    headers.put(line.substring(0, separator).trim().toLowerCase(), line.substring(separator + 1).trim());
+-                }
+-            }
++                if (separator <= 0) { malformedHeaders = true; continue; }
++                boolean validName = true;
++                for (int j = 0; j < separator; j++) {
++                    char c = line.charAt(j);
++                    if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9')
++                            && "!#$%&'*+-.^_`|~".indexOf(c) < 0) validName = false;
++                }
++                if (!validName) { malformedHeaders = true; continue; }
++                String name = line.substring(0, separator).toLowerCase(Locale.ROOT);
++                String value = line.substring(separator + 1).trim();
++                if (name.equals("content-length")) {
++                    boolean repeated = headers.containsKey(name);
++                    try {
++                        long length = parseContentLengthValue(value);
++                        if (parsedContentLength >= 0 && parsedContentLength != length) invalidContentLength = true;
++                        parsedContentLength = length;
++                        if (repeated || value.indexOf(',') >= 0) value = Long.toString(length);
++                    } catch (IllegalArgumentException invalid) { invalidContentLength = true; }
++                    headers.put(name, value);
++                } else if (name.equals("transfer-encoding")) {
++                    if (headers.putIfAbsent(name, value) != null) malformedHeaders = true;
++                } else headers.put(name, value);
++            }
++        }
++
++        /** Repeated/comma-separated lengths must be decimal and numerically identical. */
++        long contentLength() {
++            if (malformedHeaders || invalidContentLength) throw new IllegalArgumentException("Invalid request framing");
++            return parsedContentLength < 0 ? 0 : parsedContentLength;
++        }
++
++        private static long parseContentLengthValue(String value) {
++            long expected = -1;
++            int start = 0;
++            while (start <= value.length()) {
++                int end = value.indexOf(',', start);
++                if (end < 0) end = value.length();
++                int first = start, last = end;
++                while (first < last && (value.charAt(first) == ' ' || value.charAt(first) == '\t')) first++;
++                while (last > first && (value.charAt(last - 1) == ' ' || value.charAt(last - 1) == '\t')) last--;
++                if (first == last) throw new IllegalArgumentException("Empty length");
++                long length = 0;
++                for (int i = first; i < last; i++) {
++                    int digit = value.charAt(i) - '0';
++                    if (digit < 0 || digit > 9 || length > (Long.MAX_VALUE - digit) / 10)
++                        throw new IllegalArgumentException("Invalid length");
++                    length = length * 10 + digit;
++                }
++                if (expected >= 0 && expected != length) throw new IllegalArgumentException("Conflicting lengths");
++                expected = length;
++                if (end == value.length()) return expected;
++                start = end + 1;
++            }
++            throw new IllegalArgumentException("Invalid length");
+         }
+ 
+         // A method to clean the object for reuse.
+@@ -1494,9 +1577,13 @@
+             headers.clear();
+             method = null;
+             path = null;
++            version = null;
+             remoteHost = null;
+             body = null;
+             headerEnd = 0;
++            malformedHeaders = false;
++            invalidContentLength = false;
++            parsedContentLength = -1;
+         }
+ 
+         public String getMethod() {
+@@ -1521,7 +1608,7 @@
+         }
+ 
+         public String getHeader(String name, String defaultValue) {
+-            return headers.getOrDefault(name.toLowerCase(), defaultValue);
++            return headers.getOrDefault(name.toLowerCase(Locale.ROOT), defaultValue);
+         }
+ 
+         public byte[] getBody() {

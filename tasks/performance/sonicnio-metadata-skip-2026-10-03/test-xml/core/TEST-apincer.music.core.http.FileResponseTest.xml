@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.FileResponseTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:09.999Z" hostname="KB-XXAXXW9TX4" time="0.23">
+  <properties/>
+  <testcase name="metadataEncoding_preservesLegacyValidatorsAndDates" classname="apincer.music.core.http.FileResponseTest" time="0.076"/>
+  <testcase name="missingMetadata_doesNotAcquireOrReleaseAStreamSlot" classname="apincer.music.core.http.FileResponseTest" time="0.006"/>
+  <testcase name="replacedFile_hasFreshValidatorsAndRangeLengthWithoutCachedMetadata" classname="apincer.music.core.http.FileResponseTest" time="0.022"/>
+  <testcase name="metadataDateFormatter_isSafeAcrossWorkers" classname="apincer.music.core.http.FileResponseTest" time="0.076"/>
+  <testcase name="changingTurnBudget_preservesFileOffsetsAndExactTail" classname="apincer.music.core.http.FileResponseTest" time="0.05"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

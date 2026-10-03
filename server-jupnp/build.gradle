@@ -11,6 +11,7 @@ android {
     defaultConfig {
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        consumerProguardFiles 'consumer-rules.pro'
     }
     compileOptions {
         sourceCompatibility = JavaLanguageVersion.of(17)

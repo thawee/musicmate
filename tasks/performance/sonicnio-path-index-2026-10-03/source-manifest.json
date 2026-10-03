@@ -1,0 +1,18 @@
+{
+  "db-room/src/androidTest/AndroidManifest.xml": "bee4f0238c96fa9bd717797b1c8fd2d17f1c7a4d6eb5c8f08bfa1ca4910e60b5",
+  "db-room/src/main/java/apincer/music/room/RoomDbHelper.java": "f236a7af5f00638c22f798b4835bcb62d72bbccc81a2596a5319bc40e961016d",
+  "db-room/src/main/java/apincer/music/room/MusicRoomDatabase.java": "0ccf509ccf6d27ea816e00fbc936a71e7f4f64d3c4367a7e80eac802963f0f2b",
+  "db-room/src/main/java/apincer/music/room/DatabaseModule.java": "cec7201a5312540dfc24f1eb53b7a8f2ae686ecd0e519e8d376b2e6cef11a5b0",
+  "db-room/src/main/java/apincer/music/room/entity/ListeningHistoryEntity.java": "7f2e208311e0732f999d1b8eaf5fa482b8f175f203070a61bab50f37fb251a6a",
+  "db-room/src/main/java/apincer/music/room/entity/TrackEntity.java": "9f6d772e9d7ed6a53139ed05189ac7fd6eabd63887646d0859799bfcefc29d2c",
+  "db-room/src/main/java/apincer/music/room/dao/SearchStats.java": "098c76b31356325d3874f6d9351f46af300fda8ab2aeea1e51d3f49ba6e58270",
+  "db-room/src/main/java/apincer/music/room/dao/AlbumStats.java": "18e5a5654a7fa481d6dfe3360ca295298803b10d8e52cbd5e1686a4fbd669853",
+  "db-room/src/main/java/apincer/music/room/dao/GenreStats.java": "fdbd29360f64a8fed8d8c618fa36ba6b7889bf7fde91c41306094a61dc0e50a8",
+  "db-room/src/main/java/apincer/music/room/dao/TrackDao.java": "8caf911d767da2e12e399fd699fdb1dcf94fc294672289ac5d3f8906a2e64951",
+  "db-room/src/main/java/apincer/music/room/dao/ArtistStats.java": "7db7b15fe66928e13de2cbe71b0cf8a34f16d71080851ddbe3b28fb5b9a00878",
+  "db-room/src/main/java/apincer/music/room/dao/ListeningHistoryDao.java": "e4755bd990c2b81c000e784cf58c814ed62ac029b8b99eb9ee09b49193a890ca",
+  "db-room/src/test/java/apincer/music/room/entity/TrackEntityTest.java": "a1d39a9f0d10ca2fcac2111da31aba69f6b647479e1de8e2a1f4a2d6ec54975f",
+  "db-room/src/androidTest/assets/room-v2.sql": "ed53c30e0e45c8de5f3a0b387c8c8c392169aa40bffa49b4d52f4d71b6914f16",
+  "db-room/src/androidTest/java/apincer/music/room/PathIndexPhoneBenchmark.java": "e3e83fcf36ca88a1df5d6634bb8307c2b11414897e89bfdc0db4dc3e1a749038",
+  "db-room/src/androidTest/java/apincer/music/room/PathIndexMigrationTest.java": "c12101150d12915da8d7548aea029f932b7a80d9788979f77cfa4e8c1f7a0e54"
+}

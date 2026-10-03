@@ -1,0 +1,2 @@
+a78b79e1c28c45cf169039008cef3c3514e691bd102636908d5e0db11bf4e756  <build>/app-release-unsigned.apk
+204049ad15bc6bbb82e0f596fbe7c6cd6b3ece98ef5d47b51ef4c9efd9ba0f96  <scratch>/final-smoke.apk

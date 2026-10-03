@@ -1,0 +1,9 @@
+compare-before-0-control: 176 requests verified; external PSS 226216 → 227254 KiB
+compare-before-0-trace: 176 requests verified; external PSS 228412 → 239386 KiB
+compare-after-1-trace: 176 requests verified; external PSS 230218 → 224281 KiB
+compare-after-1-control: 176 requests verified; external PSS 234430 → 233555 KiB
+compare-after-2-control: 176 requests verified; external PSS 236638 → 224890 KiB
+compare-after-2-trace: 176 requests verified; external PSS 226410 → 232565 KiB
+compare-before-3-trace: 176 requests verified; external PSS 224266 → 222477 KiB
+compare-before-3-control: 176 requests verified; external PSS 228678 → 223784 KiB
+Candidate installed and hash verified

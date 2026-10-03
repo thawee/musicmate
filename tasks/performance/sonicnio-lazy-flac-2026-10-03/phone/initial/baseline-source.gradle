@@ -1,0 +1,11 @@
+gradle.projectsEvaluated {
+    def p = gradle.rootProject.project(':library:JustFLAC')
+    p.tasks.named('compileDebugJavaWithJavac').configure { task ->
+        def original = task.source.files
+        if (original.count { it.name == 'FlacDecoder.java' } != 1) {
+            throw new GradleException('Expected exactly one FlacDecoder source')
+        }
+        task.setSource(p.files(original.findAll { it.name != 'FlacDecoder.java' },
+            new File('/private/tmp/musicmate-lazy-flac-phone-20261003/baseline/FlacDecoder.java')))
+    }
+}

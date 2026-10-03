@@ -1,0 +1,3 @@
+gradle.projectsEvaluated {
+    gradle.rootProject.project(':db-room').android.sourceSets.androidTest.assets.srcDir('/private/tmp/musicmate-path-index-20261003/assets')
+}

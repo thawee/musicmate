@@ -1,0 +1,9 @@
+{
+  "library/JustFLAC/src/java/io/nayuki/flac/decode/FlacDecoder.java": "d014f4126f980a83e6d1f478cb32aaf5373d5ddb83a67c47cc074a47002ad2a2",
+  "core/src/main/java/apincer/music/core/codec/FlacToWav.java": "0791353cb6eb287fe6c9eae15deee13908efd8a38c93e0b9a9794fc413216901",
+  "core/src/test/java/apincer/music/core/codec/FlacToWavTest.java": "03e5db29e57fdc90548d8faf49ba006093a8f45f926f23cf47a245828a35fb08",
+  "tools/bench/FlacMetadataSkipBenchmark.java": "d18ab363ad7b0f24ba011b1f2d9b73c836135c9f0d53cabb41acd34fa4a89f04",
+  "tools/bench/run-metadata-skip-comparison.py": "35791609a04c9d86aac9011225aabe8458921f53998b69aa226c4fa6b6d2735f",
+  "tools/bench/run-metadata-skip-phone.py": "c14cf0312230d5b8e4caddb6dad9cbad5caab5394a209db989e8c89c08d221c8",
+  "tools/bench/analyze-metadata-skip-phone.py": "f48d074db6b3078f989d77611b1ce3da07c4fdb880fb94e9f57ed5153edcee15"
+}

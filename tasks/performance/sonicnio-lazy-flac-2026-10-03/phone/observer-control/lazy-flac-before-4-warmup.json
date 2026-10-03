@@ -1,0 +1,22 @@
+{
+  "label": "lazy-flac-before-4-warmup",
+  "single": {
+    "size": 9940667,
+    "ttfb_ms": 28.828750015236437,
+    "seconds": 0.2595640829531476,
+    "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+    "status": 200
+  },
+  "seek_p50_ms": 7.461999950464815,
+  "seek_p95_ms": 15.818290994502604,
+  "parallel_MB_s": 40.238204933122816,
+  "converted": {
+    "size": 29529404,
+    "ttfb_ms": 113.58370899688452,
+    "seconds": 1.1228233340661973,
+    "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+    "status": 200
+  },
+  "range_checks": 16,
+  "parallel_hash_matches": 4
+}

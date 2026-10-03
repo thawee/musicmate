@@ -6,21 +6,27 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Streams a file (or a byte range of it) with {@code FileChannel.transferTo()}, 256 KB per write.
+ * Streams a file or range with {@code FileChannel.transferTo()} and a bounded per-turn allowance.
  * Handles HEAD, ETag/If-None-Match (304), If-Range and RFC 7233 ranges (invalid ranges are ignored).
  * Each open file holds a {@link StreamSlots} slot until {@link #close()}.
  */
 final class FileResponse extends NioHttpServer.HttpResponse implements StreamBody {
     private final StreamSlots slots;
+    private final boolean media;
     private final FileChannel fileChannel;
     private final long fileSize;
     private long bytesSent = 0;
@@ -30,6 +36,9 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
     private final AtomicBoolean hasClosed = new AtomicBoolean(false);
 
     private static final long CHUNK_SIZE = 262144; // 256KB chunks for smooth streaming
+    private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
+    private static final DateTimeFormatter HTTP_DATE = DateTimeFormatter
+            .ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US).withZone(ZoneOffset.UTC);
 
     FileResponse(File file, NioHttpServer.HttpRequest request, StreamSlots slots) throws IOException {
         this(file, request, slots, -1);
@@ -40,10 +49,17 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
      *                    and ignore any Range header: a DLNA time seek resolved to a position
      */
     FileResponse(File file, NioHttpServer.HttpRequest request, StreamSlots slots, long startOffset) throws IOException {
+        this(file, request, slots, startOffset, true);
+    }
+
+    FileResponse(File file, NioHttpServer.HttpRequest request, StreamSlots slots, long startOffset, boolean media) throws IOException {
         super();
+        this.media = media;
         this.slots = slots;
 
-        long fileLen = file.length();
+        BasicFileAttributes metadata = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        long fileLen = metadata.size();
+        long lastModified = metadata.lastModifiedTime().toMillis();
 
         // HEAD request → no streaming, no stream count
         if ("HEAD".equalsIgnoreCase(request.getMethod())) {
@@ -61,9 +77,9 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
 
         this.addHeader("Content-Type", FileContentTypes.readContentForMime(file));
 
-        String etag = generateETag(file);
+        String etag = generateETag(file, fileLen, lastModified);
         this.addHeader("ETag", etag);
-        this.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
+        this.addHeader("Last-Modified", formatHttpDate(lastModified));
 
         long tempStart = 0;
         long tempEnd = fileLen - 1;
@@ -79,8 +95,7 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
             return;
         }
 
-        // Only a request that will stream the file takes a slot (not HEAD or 304); acquiring may
-        // evict the least recently active stream
+        // Only a request that will send a body takes a slot (not HEAD or 304).
         if (!slots.acquire()) {
             throw new IOException("Service Unavailable - max concurrent streams reached");
         }
@@ -179,30 +194,36 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
         }
     }
 
-    private String generateETag(File file) {
-        String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
+    private String generateETag(File file, long length, long lastModified) {
+        String value = file.getAbsolutePath() + "-" + length + "-" + lastModified;
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
-            return "\"" + bytesToHex(hash).substring(0, 16) + "-" +
-                    Long.toHexString(file.length()) + "\"";
+            return "\"" + etagPrefix(hash) + "-" +
+                    Long.toHexString(length) + "\"";
         } catch (NoSuchAlgorithmException e) {
             int hash = value.hashCode();
             return "\"" + Integer.toHexString(hash) + "-" +
-                    Long.toHexString(file.length()) + "\"";
+                    Long.toHexString(length) + "\"";
         }
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+    private static String etagPrefix(byte[] bytes) {
+        char[] hex = new char[16];
+        for (int i = 0; i < 8; i++) {
+            int value = bytes[i] & 0xff;
+            hex[i * 2] = HEX_DIGITS[value >>> 4];
+            hex[i * 2 + 1] = HEX_DIGITS[value & 0x0f];
         }
-        return sb.toString();
+        return new String(hex);
     }
 
     private String formatHttpDate(long timestamp) {
+        // Preserve the old Gregorian cutover and unsigned year formatting for unusual timestamps.
+        if (timestamp >= -12219292800000L && timestamp <= 253402300799999L) {
+            return HTTP_DATE.format(Instant.ofEpochMilli(timestamp));
+        }
         SimpleDateFormat df = new SimpleDateFormat(
                 "EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -211,6 +232,10 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
 
     @Override
     public long write(SocketChannel channel) throws IOException {
+        return write(channel, (int) CHUNK_SIZE);
+    }
+
+    long write(SocketChannel channel, int writeBudget) throws IOException {
         if (headerBuffer == null) buildHeaders();
         long sent = 0;
 
@@ -226,10 +251,10 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
             long position = rangeStart + bytesSent;
             long remaining = rangeLength - bytesSent;
 
-            int maxTries = 1; // Yield after each chunk to ensure other HTTP requests (like cover art or metadata) aren't starved
+            int maxTries = 1; // One bounded transfer; the server lowers the allowance under contention.
 
             while (remaining > 0 && maxTries-- > 0) {
-                long chunk = Math.min(remaining, CHUNK_SIZE);
+                long chunk = Math.min(remaining, writeBudget);
 
                 long written = fileChannel.transferTo(position, chunk, channel);
 
@@ -254,6 +279,12 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
         }
         return headersSent && (fileChannel == null || bytesSent >= rangeLength);
     }
+
+    @Override
+    public boolean isMedia() { return media; }
+
+    @Override
+    long bodyBytesSent() { return bytesSent; }
 
     @Override
     public void close() throws IOException {

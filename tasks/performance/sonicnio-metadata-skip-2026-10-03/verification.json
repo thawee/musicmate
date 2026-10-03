@@ -1,0 +1,27 @@
+{
+  "passed_core_upnp_tests": 228,
+  "phone_invocations_passed": 8,
+  "phone_measured_requests_verified": 5632,
+  "phone_phases": 32,
+  "host_micro_processes": 12,
+  "host_micro_samples": 36,
+  "production_changed_files": [
+    "library/JustFLAC/src/java/io/nayuki/flac/decode/FlacDecoder.java",
+    "core/src/main/java/apincer/music/core/codec/FlacToWav.java"
+  ],
+  "other_previously_recorded_files_unchanged": 884,
+  "candidate_apk_sha256": "71ba2ccd4fd269db33d15adc6bd5728af569ab1394800a7c88172097435e0e78",
+  "apk_uncompressed_changes": [
+    "classes11.dex",
+    "classes13.dex"
+  ],
+  "python_syntax": "pass",
+  "scoped_whitespace": "pass",
+  "main_diff_review": "Main lacks these current classes; inspected main stat and preserved production.patch plus old-source hashes for precise scope",
+  "candidate_activity_restored": true,
+  "recomputed_phone_summary": "identical JSON and CSV",
+  "recomputed_micro_summary": "all four fixture/variant medians match raw samples",
+  "baseline_sources_match_preceding_candidate": true,
+  "report_local_links": "pass",
+  "source_manifests": "pass"
+}

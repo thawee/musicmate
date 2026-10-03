@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.server.ClientRegistryTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.850Z" hostname="KB-XXAXXW9TX4" time="0.002">
+  <properties/>
+  <testcase name="sony_fromXAvClientInfo" classname="apincer.music.core.server.ClientRegistryTest" time="0.0"/>
+  <testcase name="unknown_usesTheFirstToken" classname="apincer.music.core.server.ClientRegistryTest" time="0.001"/>
+  <testcase name="lg_fromUserAgent" classname="apincer.music.core.server.ClientRegistryTest" time="0.0"/>
+  <testcase name="firstSighting_isReportedOnce_perAddressAndName" classname="apincer.music.core.server.ClientRegistryTest" time="0.0"/>
+  <testcase name="otherKnownClients" classname="apincer.music.core.server.ClientRegistryTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

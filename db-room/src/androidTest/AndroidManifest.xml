@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The opt-in benchmark connects to the phone's local HTTP streaming server. -->
+    <application android:usesCleartextTraffic="true" />
+</manifest>

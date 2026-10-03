@@ -22,6 +22,7 @@
 package io.nayuki.flac.decode;
 
 import java.io.File;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Objects;
 import io.nayuki.flac.common.FrameInfo;
@@ -96,6 +97,17 @@ public final class FlacDecoder implements AutoCloseable {
 	// of this object to reflect the new data seen, and throws exceptions for situations such as
 	// not starting with a stream info metadata block or encountering duplicates of certain blocks.
 	public Object[] readAndHandleMetadataBlock() throws IOException {
+		return readAndHandleMetadataBlock(true);
+	}
+
+	// Consumes metadata needed for audio decoding without retaining unused payloads.
+	// The block-returning API remains available for callers that inspect tags/artwork.
+	public void readMetadataForAudio() throws IOException {
+		while (metadataEndPos == -1)
+			readAndHandleMetadataBlock(false);
+	}
+
+	private Object[] readAndHandleMetadataBlock(boolean returnData) throws IOException {
 		if (metadataEndPos != -1)
 			return null;  // All metadata already consumed
 		
@@ -103,8 +115,18 @@ public final class FlacDecoder implements AutoCloseable {
 		boolean last = input.readUint(1) != 0;
 		int type = input.readUint(7);
 		int length = input.readUint(24);
-		byte[] data = new byte[length];
-		input.readFully(data);
+		byte[] data = null;
+		if (returnData || type == 0 || type == 3) {
+			data = new byte[length];
+			input.readFully(data);
+		} else {
+			long end = input.getPosition() + length;
+			// RandomAccessFile.seek permits seeking past EOF; retain truncation checks.
+			if (end > input.getLength())
+				throw new EOFException();
+			if (length != 0)
+				input.seekTo(end);
+		}
 		
 		// Handle recognized block
 		if (type == 0) {
@@ -125,7 +147,7 @@ public final class FlacDecoder implements AutoCloseable {
 			metadataEndPos = input.getPosition();
 			frameDec = new FrameDecoder(input, streamInfo.sampleDepth);
 		}
-		return new Object[]{type, data};
+		return returnData ? new Object[]{type, data} : null;
 	}
 	
 	
@@ -134,8 +156,7 @@ public final class FlacDecoder implements AutoCloseable {
 	// started at the end of stream, or a number in the range [1, 65536] for a valid block.
 	// All metadata blocks must be read before starting to read audio blocks.
 	public int readAudioBlock(int[][] samples, int off) throws IOException {
-		if (frameDec == null)
-			throw new IllegalStateException("Metadata blocks not fully consumed yet");
+		requireFrameDecoder();
 		FrameInfo frame = frameDec.readFrame(samples, off);
 		if (frame == null)
 			return 0;
@@ -151,8 +172,7 @@ public final class FlacDecoder implements AutoCloseable {
 	// In theory this method subsumes the functionality of readAudioBlock(), but seeking can be
 	// an expensive operation so readAudioBlock() should be used for ordinary contiguous streaming.
 	public int seekAndReadAudioBlock(long pos, int[][] samples, int off) throws IOException {
-		if (frameDec == null)
-			throw new IllegalStateException("Metadata blocks not fully consumed yet");
+		requireFrameDecoder();
 		
 		long[] sampleAndFilePos = getBestSeekPoint(pos);
 		if (pos - sampleAndFilePos[0] > 300000) {
@@ -178,6 +198,12 @@ public final class FlacDecoder implements AutoCloseable {
 	}
 	
 	
+	private void requireFrameDecoder() {
+		if (frameDec == null)
+			throw new IllegalStateException("Metadata blocks not fully consumed yet");
+	}
+
+
 	private long[] getBestSeekPoint(long pos) {
 		long samplePos = 0;
 		long filePos = 0;

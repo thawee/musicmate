@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.provider.MissingFileTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.761Z" hostname="KB-XXAXXW9TX4" time="0.008">
+  <properties/>
+  <testcase name="accessibleParentWithAbsentLeafConfirmsDeletion" classname="apincer.music.core.provider.MissingFileTest" time="0.002"/>
+  <testcase name="existingTrackIsNotMissing" classname="apincer.music.core.provider.MissingFileTest" time="0.004"/>
+  <testcase name="missingParentIsUnavailableRatherThanConfirmedDeletion" classname="apincer.music.core.provider.MissingFileTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

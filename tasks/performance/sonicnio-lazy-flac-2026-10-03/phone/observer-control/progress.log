@@ -1,0 +1,7 @@
+1/6 after: hashes/ranges verified; HEAD 17.241 ms, converted seek p99 24.362 ms, visible metadata GC 4
+2/6 before: hashes/ranges verified; HEAD 11.765 ms, converted seek p99 24.928 ms, visible metadata GC 4
+3/6 before: hashes/ranges verified; HEAD 11.384 ms, converted seek p99 21.759 ms, visible metadata GC 4
+4/6 after: hashes/ranges verified; HEAD 12.996 ms, converted seek p99 23.622 ms, visible metadata GC 4
+5/6 before: hashes/ranges verified; HEAD 12.312 ms, converted seek p99 20.744 ms, visible metadata GC 4
+6/6 after: hashes/ranges verified; HEAD 14.017 ms, converted seek p99 21.865 ms, visible metadata GC 4
+Candidate APK installed and hash verified

@@ -1,0 +1,7 @@
+{
+  "sources": {
+    "NioHttpServer.java": "68d261b2d9b15228e9d26a4fcf9596499fcd47b2a08fb1e5dd2da42056dabf15",
+    "BoundedByteArrayOutputStream.java": "9ca0c1c0176891715ecf337a355b5cdb964bd9648dc7e12611506afc5f33fba7"
+  },
+  "apk_sha256": "eb7473fc47c12b288df96122f38b2bdb32c845c7f25034c204af946371a82d39"
+}

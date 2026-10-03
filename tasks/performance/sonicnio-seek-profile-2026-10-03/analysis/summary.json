@@ -1,0 +1,1458 @@
+{
+  "phases": [
+    {
+      "name": "compare-before-0-control",
+      "variant": "before",
+      "phase": "control",
+      "memory_before": {
+        "pid": 28215,
+        "pss_kib": 226216,
+        "java_heap_pss_kib": 30364
+      },
+      "memory_after": {
+        "pid": 28215,
+        "pss_kib": 227254,
+        "java_heap_pss_kib": 33108
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 12.9856665,
+          "p95_ms": 18.9692643,
+          "p99_ms": 19.87445592,
+          "max_ms": 20.408958
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 12.364229,
+          "p95_ms": 20.675212499999994,
+          "p99_ms": 22.288766789999997,
+          "max_ms": 23.286792
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 12.452875,
+          "p95_ms": 18.89974595,
+          "p99_ms": 20.4704645,
+          "max_ms": 20.555417
+        }
+      }
+    },
+    {
+      "name": "compare-before-0-trace",
+      "variant": "before",
+      "phase": "trace",
+      "memory_before": {
+        "pid": 28215,
+        "pss_kib": 228412,
+        "java_heap_pss_kib": 34236
+      },
+      "memory_after": {
+        "pid": 28215,
+        "pss_kib": 239386,
+        "java_heap_pss_kib": 45124
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 12.921958,
+          "p95_ms": 19.452434849999996,
+          "p99_ms": 20.761390419999994,
+          "max_ms": 22.179625
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 12.5229795,
+          "p95_ms": 19.9749955,
+          "p99_ms": 22.32364104,
+          "max_ms": 22.424625
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 11.164292,
+          "p95_ms": 19.2451103,
+          "p99_ms": 22.167976530000004,
+          "max_ms": 23.520167
+        }
+      }
+    },
+    {
+      "name": "compare-after-1-trace",
+      "variant": "after",
+      "phase": "trace",
+      "memory_before": {
+        "pid": 28972,
+        "pss_kib": 230218,
+        "java_heap_pss_kib": 34252
+      },
+      "memory_after": {
+        "pid": 28972,
+        "pss_kib": 224281,
+        "java_heap_pss_kib": 28928
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 13.10075,
+          "p95_ms": 19.885985649999995,
+          "p99_ms": 24.299738539999993,
+          "max_ms": 25.991
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 13.5784375,
+          "p95_ms": 23.415148149999997,
+          "p99_ms": 25.440238039999993,
+          "max_ms": 27.503042
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 13.161874999999998,
+          "p95_ms": 22.226552299999998,
+          "p99_ms": 24.40301873,
+          "max_ms": 24.948708
+        }
+      }
+    },
+    {
+      "name": "compare-after-1-control",
+      "variant": "after",
+      "phase": "control",
+      "memory_before": {
+        "pid": 28972,
+        "pss_kib": 234430,
+        "java_heap_pss_kib": 38168
+      },
+      "memory_after": {
+        "pid": 28972,
+        "pss_kib": 233555,
+        "java_heap_pss_kib": 38044
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 11.551291500000001,
+          "p95_ms": 20.764000049999993,
+          "p99_ms": 23.443569789999998,
+          "max_ms": 24.07525
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 12.151812,
+          "p95_ms": 20.162582999999994,
+          "p99_ms": 21.439466789999997,
+          "max_ms": 21.774417
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 13.199104,
+          "p95_ms": 19.99645635,
+          "p99_ms": 20.94416952,
+          "max_ms": 21.249709
+        }
+      }
+    },
+    {
+      "name": "compare-after-2-control",
+      "variant": "after",
+      "phase": "control",
+      "memory_before": {
+        "pid": 29559,
+        "pss_kib": 236638,
+        "java_heap_pss_kib": 38376
+      },
+      "memory_after": {
+        "pid": 29559,
+        "pss_kib": 224890,
+        "java_heap_pss_kib": 26864
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 12.971229,
+          "p95_ms": 20.693083099999996,
+          "p99_ms": 22.63085125,
+          "max_ms": 22.694875
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 12.120917,
+          "p95_ms": 19.874395649999997,
+          "p99_ms": 22.13028228999999,
+          "max_ms": 24.219625
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 13.896771000000001,
+          "p95_ms": 23.686371049999998,
+          "p99_ms": 26.622396530000003,
+          "max_ms": 28.128042
+        }
+      }
+    },
+    {
+      "name": "compare-after-2-trace",
+      "variant": "after",
+      "phase": "trace",
+      "memory_before": {
+        "pid": 29559,
+        "pss_kib": 226410,
+        "java_heap_pss_kib": 28288
+      },
+      "memory_after": {
+        "pid": 29559,
+        "pss_kib": 232565,
+        "java_heap_pss_kib": 34932
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 14.807749999999999,
+          "p95_ms": 24.42165795,
+          "p99_ms": 28.528022289999996,
+          "max_ms": 29.9335
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 16.529249999999998,
+          "p95_ms": 24.03910434999999,
+          "p99_ms": 26.41271929,
+          "max_ms": 27.058417
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 12.8950625,
+          "p95_ms": 23.7665023,
+          "p99_ms": 25.227628250000002,
+          "max_ms": 26.166042
+        }
+      }
+    },
+    {
+      "name": "compare-before-3-trace",
+      "variant": "before",
+      "phase": "trace",
+      "memory_before": {
+        "pid": 30065,
+        "pss_kib": 224266,
+        "java_heap_pss_kib": 28756
+      },
+      "memory_after": {
+        "pid": 30065,
+        "pss_kib": 222477,
+        "java_heap_pss_kib": 27948
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 16.276,
+          "p95_ms": 25.795570449999996,
+          "p99_ms": 28.768948209999998,
+          "max_ms": 29.366083
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 15.360562999999999,
+          "p95_ms": 25.1491786,
+          "p99_ms": 28.89736387,
+          "max_ms": 29.254417
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 14.937771,
+          "p95_ms": 24.271731249999995,
+          "p99_ms": 27.935781490000004,
+          "max_ms": 29.112583
+        }
+      }
+    },
+    {
+      "name": "compare-before-3-control",
+      "variant": "before",
+      "phase": "control",
+      "memory_before": {
+        "pid": 30065,
+        "pss_kib": 228678,
+        "java_heap_pss_kib": 34220
+      },
+      "memory_after": {
+        "pid": 30065,
+        "pss_kib": 223784,
+        "java_heap_pss_kib": 27800
+      },
+      "latency": {
+        "head": {
+          "n": 64,
+          "median_ms": 14.6095205,
+          "p95_ms": 25.172465199999994,
+          "p99_ms": 26.61767587,
+          "max_ms": 26.854084
+        },
+        "header": {
+          "n": 64,
+          "median_ms": 15.874166500000001,
+          "p95_ms": 25.5308794,
+          "p99_ms": 26.967598579999997,
+          "max_ms": 27.758459
+        },
+        "seek": {
+          "n": 48,
+          "median_ms": 14.85875,
+          "p95_ms": 24.745904499999998,
+          "p99_ms": 25.97169274,
+          "max_ms": 26.531208
+        }
+      }
+    }
+  ],
+  "traces": [
+    {
+      "name": "compare-before-0-trace",
+      "gc": {
+        "Background concurrent mark compact GC": {
+          "n": 5,
+          "total_ms": 260.470469,
+          "max_ms": 56.121407
+        },
+        "Background young concurrent mark compact GC": {
+          "n": 5,
+          "total_ms": 144.665625,
+          "max_ms": 31.305885
+        },
+        "Mutator threads suspended for ScopedPause": {
+          "n": 10,
+          "total_ms": 5.997449,
+          "max_ms": 0.838177
+        }
+      },
+      "counters": {
+        "Heap size (KB)": {
+          "n": 4030,
+          "min": 20325.0,
+          "max": 67009.0
+        },
+        "JNI Global Refs": {
+          "n": 4,
+          "min": 463.0,
+          "max": 484.0
+        },
+        "JNI Weak Global Refs": {
+          "n": 5,
+          "min": 113.0,
+          "max": 129.0
+        },
+        "Majflt-GC": {
+          "n": 50,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "Minflt-GC": {
+          "n": 50,
+          "min": 8959.0,
+          "max": 13349.0
+        },
+        "freed_bytes": {
+          "n": 10,
+          "min": 38662176.0,
+          "max": 46870528.0
+        },
+        "freed_large_object_bytes": {
+          "n": 10,
+          "min": 14868480.0,
+          "max": 39391232.0
+        },
+        "freed_normal_object_bytes": {
+          "n": 10,
+          "min": 3399680.0,
+          "max": 23793696.0
+        },
+        "mem.locked": {
+          "n": 99,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "mem.rss": {
+          "n": 99,
+          "min": 292626432.0,
+          "max": 317894656.0
+        },
+        "mem.rss.anon": {
+          "n": 99,
+          "min": 102756352.0,
+          "max": 127266816.0
+        },
+        "mem.rss.file": {
+          "n": 99,
+          "min": 157634560.0,
+          "max": 158683136.0
+        },
+        "mem.rss.shmem": {
+          "n": 99,
+          "min": 31735808.0,
+          "max": 33038336.0
+        },
+        "mem.rss.watermark": {
+          "n": 99,
+          "min": 382169088.0,
+          "max": 382169088.0
+        },
+        "mem.swap": {
+          "n": 99,
+          "min": 18595840.0,
+          "max": 18595840.0
+        },
+        "mem.virt": {
+          "n": 99,
+          "min": 19796160512.0,
+          "max": 19856617472.0
+        },
+        "oom_score_adj": {
+          "n": 99,
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "quality": [],
+      "clock_uncertainty_ms": 24.168525,
+      "clock_offset_drift_ms": 1.282881,
+      "top_seeks": [
+        {
+          "kind": "seek",
+          "range": "bytes=10340165-10405700",
+          "ttfb_ms": 23.520167,
+          "trace_start_ns": 1419272234582118,
+          "trace_headers_ns": 1419272258103118,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.630105,
+          "nio-webserver-r_runnable_ms": 0.196875,
+          "nio-stream-prod_running_ms": 14.678541,
+          "nio-stream-prod_runnable_ms": 0.199688,
+          "NIO-Worker_running_ms": 2.026787,
+          "NIO-Worker_runnable_ms": 0.019271
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=5953447-6018982",
+          "ttfb_ms": 20.643166,
+          "trace_start_ns": 1419271501610118,
+          "trace_headers_ns": 1419271522253118,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.445469,
+          "nio-webserver-r_runnable_ms": 0.027656,
+          "nio-stream-prod_running_ms": 19.217748,
+          "nio-stream-prod_runnable_ms": 0.6562990000000001,
+          "NIO-Worker_running_ms": 0.0,
+          "NIO-Worker_runnable_ms": 0.0
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=3446751-3512286",
+          "ttfb_ms": 19.402625,
+          "trace_start_ns": 1419271080500118,
+          "trace_headers_ns": 1419271099902118,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.433542,
+          "nio-webserver-r_runnable_ms": 0.049531,
+          "nio-stream-prod_running_ms": 11.460194000000001,
+          "nio-stream-prod_runnable_ms": 0.334739,
+          "NIO-Worker_running_ms": 0.0,
+          "NIO-Worker_runnable_ms": 0.0
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=14726883-14792418",
+          "ttfb_ms": 18.952583,
+          "trace_start_ns": 1419272974905118,
+          "trace_headers_ns": 1419272993858118,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.0,
+          "nio-webserver-r_runnable_ms": 0.0,
+          "nio-stream-prod_running_ms": 18.848834,
+          "nio-stream-prod_runnable_ms": 0.104166,
+          "NIO-Worker_running_ms": 0.0,
+          "NIO-Worker_runnable_ms": 0.0
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=14100209-14165744",
+          "ttfb_ms": 18.473041,
+          "trace_start_ns": 1419272868577118,
+          "trace_headers_ns": 1419272887049118,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.0,
+          "nio-webserver-r_runnable_ms": 0.0,
+          "nio-stream-prod_running_ms": 18.445125,
+          "nio-stream-prod_runnable_ms": 0.026875,
+          "NIO-Worker_running_ms": 0.0,
+          "NIO-Worker_runnable_ms": 0.0
+        }
+      ],
+      "app_cpu": [
+        {
+          "name": "pool-7-thread-3",
+          "n": "81484",
+          "cpu_ms": "6857.995714",
+          "max_slice_ms": "4.821615"
+        },
+        {
+          "name": "pool-7-thread-4",
+          "n": "82795",
+          "cpu_ms": "6823.948149",
+          "max_slice_ms": "7.421250"
+        },
+        {
+          "name": "pool-7-thread-2",
+          "n": "84088",
+          "cpu_ms": "6791.163203",
+          "max_slice_ms": "7.328281"
+        },
+        {
+          "name": "pool-7-thread-1",
+          "n": "82953",
+          "cpu_ms": "6756.196989",
+          "max_slice_ms": "5.587239"
+        },
+        {
+          "name": "r.android.mmate",
+          "n": "2813",
+          "cpu_ms": "2342.099594",
+          "max_slice_ms": "8.020938"
+        },
+        {
+          "name": "RenderThread",
+          "n": "2480",
+          "cpu_ms": "1539.069841",
+          "max_slice_ms": "7.185157"
+        },
+        {
+          "name": "nio-stream-prod",
+          "n": "747",
+          "cpu_ms": "797.901059",
+          "max_slice_ms": "22.213593"
+        },
+        {
+          "name": "NIO-Worker",
+          "n": "2029",
+          "cpu_ms": "691.613239",
+          "max_slice_ms": "6.468073"
+        },
+        {
+          "name": "pool-4-thread-1",
+          "n": "1406",
+          "cpu_ms": "621.252911",
+          "max_slice_ms": "383.583437"
+        },
+        {
+          "name": "HeapTaskDaemon",
+          "n": "114",
+          "cpu_ms": "400.760000",
+          "max_slice_ms": "28.242187"
+        },
+        {
+          "name": "nio-webserver-r",
+          "n": "1100",
+          "cpu_ms": "194.765275",
+          "max_slice_ms": "1.086406"
+        },
+        {
+          "name": "binder:28215_1",
+          "n": "2429",
+          "cpu_ms": "126.129486",
+          "max_slice_ms": "0.532813"
+        }
+      ]
+    },
+    {
+      "name": "compare-after-1-trace",
+      "gc": {
+        "Background concurrent mark compact GC": {
+          "n": 2,
+          "total_ms": 115.61052099999999,
+          "max_ms": 67.35125
+        },
+        "Background young concurrent mark compact GC": {
+          "n": 2,
+          "total_ms": 70.480469,
+          "max_ms": 44.493907
+        },
+        "Mutator threads suspended for ScopedPause": {
+          "n": 4,
+          "total_ms": 2.885678,
+          "max_ms": 1.066406
+        }
+      },
+      "counters": {
+        "Heap size (KB)": {
+          "n": 2550,
+          "min": 22101.0,
+          "max": 74813.0
+        },
+        "Majflt-GC": {
+          "n": 20,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "Minflt-GC": {
+          "n": 20,
+          "min": 3750.0,
+          "max": 6581.0
+        },
+        "freed_bytes": {
+          "n": 4,
+          "min": 46694400.0,
+          "max": 51253248.0
+        },
+        "freed_large_object_bytes": {
+          "n": 4,
+          "min": 19562496.0,
+          "max": 41160704.0
+        },
+        "freed_normal_object_bytes": {
+          "n": 4,
+          "min": 5533696.0,
+          "max": 29179904.0
+        },
+        "mem.locked": {
+          "n": 98,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "mem.rss": {
+          "n": 98,
+          "min": 294285312.0,
+          "max": 342667264.0
+        },
+        "mem.rss.anon": {
+          "n": 98,
+          "min": 104763392.0,
+          "max": 153178112.0
+        },
+        "mem.rss.file": {
+          "n": 98,
+          "min": 157913088.0,
+          "max": 157913088.0
+        },
+        "mem.rss.shmem": {
+          "n": 98,
+          "min": 31313920.0,
+          "max": 31707136.0
+        },
+        "mem.rss.watermark": {
+          "n": 98,
+          "min": 373661696.0,
+          "max": 373661696.0
+        },
+        "mem.swap": {
+          "n": 98,
+          "min": 18526208.0,
+          "max": 18526208.0
+        },
+        "mem.virt": {
+          "n": 98,
+          "min": 19852148736.0,
+          "max": 19880222720.0
+        },
+        "oom_score_adj": {
+          "n": 98,
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "quality": [],
+      "clock_uncertainty_ms": 23.933281,
+      "clock_offset_drift_ms": 2.131288,
+      "top_seeks": [
+        {
+          "kind": "seek",
+          "range": "bytes=10966839-11032374",
+          "ttfb_ms": 24.948708,
+          "trace_start_ns": 1419294770645250,
+          "trace_headers_ns": 1419294795593250,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.714375,
+          "nio-webserver-r_runnable_ms": 0.199636,
+          "nio-stream-prod_running_ms": 14.031095,
+          "nio-stream-prod_runnable_ms": 0.808176,
+          "NIO-Worker_running_ms": 3.6027620000000002,
+          "NIO-Worker_runnable_ms": 0.205729
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=10653502-10719037",
+          "ttfb_ms": 23.787667,
+          "trace_start_ns": 1419294718025250,
+          "trace_headers_ns": 1419294741813250,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.642084,
+          "nio-webserver-r_runnable_ms": 0.047916,
+          "nio-stream-prod_running_ms": 6.492656,
+          "nio-stream-prod_runnable_ms": 0.325887,
+          "NIO-Worker_running_ms": 2.93224,
+          "NIO-Worker_runnable_ms": 0.1275
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=10026828-10092363",
+          "ttfb_ms": 22.380042,
+          "trace_start_ns": 1419294607616250,
+          "trace_headers_ns": 1419294629996250,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.256198,
+          "nio-webserver-r_runnable_ms": 0.010989,
+          "nio-stream-prod_running_ms": 19.847457,
+          "nio-stream-prod_runnable_ms": 0.258386,
+          "NIO-Worker_running_ms": 2.002177,
+          "NIO-Worker_runnable_ms": 0.028282
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=14100209-14165744",
+          "ttfb_ms": 21.9415,
+          "trace_start_ns": 1419295292362250,
+          "trace_headers_ns": 1419295314302250,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.696666,
+          "nio-webserver-r_runnable_ms": 0.153803,
+          "nio-stream-prod_running_ms": 13.766147,
+          "nio-stream-prod_runnable_ms": 1.086978,
+          "NIO-Worker_running_ms": 1.3520109999999999,
+          "NIO-Worker_runnable_ms": 0.11057299999999999
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=7833469-7899004",
+          "ttfb_ms": 20.486167,
+          "trace_start_ns": 1419294245138250,
+          "trace_headers_ns": 1419294265624250,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.474259,
+          "nio-webserver-r_runnable_ms": 0.105991,
+          "nio-stream-prod_running_ms": 18.976187,
+          "nio-stream-prod_runnable_ms": 0.581511,
+          "NIO-Worker_running_ms": 0.704761,
+          "NIO-Worker_runnable_ms": 0.034636
+        }
+      ],
+      "app_cpu": [
+        {
+          "name": "pool-7-thread-3",
+          "n": "81795",
+          "cpu_ms": "7053.390846",
+          "max_slice_ms": "5.870312"
+        },
+        {
+          "name": "pool-7-thread-4",
+          "n": "82707",
+          "cpu_ms": "7016.528449",
+          "max_slice_ms": "5.403646"
+        },
+        {
+          "name": "pool-7-thread-1",
+          "n": "84293",
+          "cpu_ms": "7004.818792",
+          "max_slice_ms": "6.568282"
+        },
+        {
+          "name": "pool-7-thread-2",
+          "n": "81810",
+          "cpu_ms": "6990.880208",
+          "max_slice_ms": "5.654375"
+        },
+        {
+          "name": "r.android.mmate",
+          "n": "3090",
+          "cpu_ms": "2828.523513",
+          "max_slice_ms": "10.313281"
+        },
+        {
+          "name": "RenderThread",
+          "n": "2550",
+          "cpu_ms": "1583.264616",
+          "max_slice_ms": "3.280625"
+        },
+        {
+          "name": "nio-stream-prod",
+          "n": "824",
+          "cpu_ms": "796.282550",
+          "max_slice_ms": "19.742552"
+        },
+        {
+          "name": "NIO-Worker",
+          "n": "2068",
+          "cpu_ms": "696.564737",
+          "max_slice_ms": "3.777084"
+        },
+        {
+          "name": "nio-webserver-r",
+          "n": "1196",
+          "cpu_ms": "216.715415",
+          "max_slice_ms": "1.854740"
+        },
+        {
+          "name": "HeapTaskDaemon",
+          "n": "51",
+          "cpu_ms": "183.768495",
+          "max_slice_ms": "22.801563"
+        },
+        {
+          "name": "Jit thread pool",
+          "n": "580",
+          "cpu_ms": "181.925618",
+          "max_slice_ms": "2.082292"
+        },
+        {
+          "name": "binder:28972_3",
+          "n": "2405",
+          "cpu_ms": "127.785926",
+          "max_slice_ms": "0.507916"
+        }
+      ]
+    },
+    {
+      "name": "compare-after-2-trace",
+      "gc": {
+        "Background concurrent mark compact GC": {
+          "n": 1,
+          "total_ms": 54.287135,
+          "max_ms": 54.287135
+        },
+        "Background young concurrent mark compact GC": {
+          "n": 2,
+          "total_ms": 83.30849,
+          "max_ms": 55.082448
+        },
+        "Mutator threads suspended for ScopedPause": {
+          "n": 3,
+          "total_ms": 2.062344,
+          "max_ms": 0.860156
+        }
+      },
+      "counters": {
+        "Heap size (KB)": {
+          "n": 1924,
+          "min": 21729.0,
+          "max": 72005.0
+        },
+        "JNI Global Refs": {
+          "n": 1,
+          "min": 464.0,
+          "max": 464.0
+        },
+        "Majflt-GC": {
+          "n": 15,
+          "min": 1.0,
+          "max": 1.0
+        },
+        "Minflt-GC": {
+          "n": 15,
+          "min": 6833.0,
+          "max": 8590.0
+        },
+        "freed_bytes": {
+          "n": 3,
+          "min": 43159552.0,
+          "max": 51220480.0
+        },
+        "freed_large_object_bytes": {
+          "n": 3,
+          "min": 16277504.0,
+          "max": 40796160.0
+        },
+        "freed_normal_object_bytes": {
+          "n": 3,
+          "min": 4841472.0,
+          "max": 26882048.0
+        },
+        "mem.locked": {
+          "n": 98,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "mem.rss": {
+          "n": 98,
+          "min": 295809024.0,
+          "max": 337293312.0
+        },
+        "mem.rss.anon": {
+          "n": 98,
+          "min": 105586688.0,
+          "max": 147070976.0
+        },
+        "mem.rss.file": {
+          "n": 98,
+          "min": 157917184.0,
+          "max": 158179328.0
+        },
+        "mem.rss.shmem": {
+          "n": 98,
+          "min": 31911936.0,
+          "max": 32436224.0
+        },
+        "mem.rss.watermark": {
+          "n": 98,
+          "min": 376901632.0,
+          "max": 376901632.0
+        },
+        "mem.swap": {
+          "n": 98,
+          "min": 18501632.0,
+          "max": 18501632.0
+        },
+        "mem.virt": {
+          "n": 98,
+          "min": 19792359424.0,
+          "max": 19855618048.0
+        },
+        "oom_score_adj": {
+          "n": 98,
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "quality": [],
+      "clock_uncertainty_ms": 23.714879,
+      "clock_offset_drift_ms": 1.135692,
+      "top_seeks": [
+        {
+          "kind": "seek",
+          "range": "bytes=1253392-1318927",
+          "ttfb_ms": 26.166042,
+          "trace_start_ns": 1419335663381557,
+          "trace_headers_ns": 1419335689547557,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.722291,
+          "nio-webserver-r_runnable_ms": 0.185678,
+          "nio-stream-prod_running_ms": 9.95,
+          "nio-stream-prod_runnable_ms": 0.589634,
+          "NIO-Worker_running_ms": 3.944582,
+          "NIO-Worker_runnable_ms": 0.327032
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=2506740-2572275",
+          "ttfb_ms": 24.169417,
+          "trace_start_ns": 1419335880272557,
+          "trace_headers_ns": 1419335904441557,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.230104,
+          "nio-webserver-r_runnable_ms": 0.015209,
+          "nio-stream-prod_running_ms": 20.476687,
+          "nio-stream-prod_runnable_ms": 0.371249,
+          "NIO-Worker_running_ms": 2.974554,
+          "NIO-Worker_runnable_ms": 0.13302
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=6893458-6958993",
+          "ttfb_ms": 23.795042,
+          "trace_start_ns": 1419336615160557,
+          "trace_headers_ns": 1419336638954557,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.704949,
+          "nio-webserver-r_runnable_ms": 0.333958,
+          "nio-stream-prod_running_ms": 10.391093,
+          "nio-stream-prod_runnable_ms": 0.382709,
+          "NIO-Worker_running_ms": 2.859678,
+          "NIO-Worker_runnable_ms": 0.083385
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=11593513-11659048",
+          "ttfb_ms": 23.7135,
+          "trace_start_ns": 1419337400870557,
+          "trace_headers_ns": 1419337424583557,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.824375,
+          "nio-webserver-r_runnable_ms": 0.04224,
+          "nio-stream-prod_running_ms": 21.017646,
+          "nio-stream-prod_runnable_ms": 0.286093,
+          "NIO-Worker_running_ms": 2.286136,
+          "NIO-Worker_runnable_ms": 0.0925
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=7833469-7899004",
+          "ttfb_ms": 23.442625,
+          "trace_start_ns": 1419336773853557,
+          "trace_headers_ns": 1419336797295557,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.2425,
+          "nio-webserver-r_runnable_ms": 0.011771,
+          "nio-stream-prod_running_ms": 20.292195,
+          "nio-stream-prod_runnable_ms": 0.636461,
+          "NIO-Worker_running_ms": 2.25173,
+          "NIO-Worker_runnable_ms": 0.018646
+        }
+      ],
+      "app_cpu": [
+        {
+          "name": "pool-7-thread-1",
+          "n": "78129",
+          "cpu_ms": "7058.232879",
+          "max_slice_ms": "4.882500"
+        },
+        {
+          "name": "pool-7-thread-2",
+          "n": "78187",
+          "cpu_ms": "7020.593675",
+          "max_slice_ms": "5.529062"
+        },
+        {
+          "name": "pool-7-thread-3",
+          "n": "78745",
+          "cpu_ms": "6993.180957",
+          "max_slice_ms": "7.047031"
+        },
+        {
+          "name": "pool-7-thread-4",
+          "n": "77529",
+          "cpu_ms": "6955.979498",
+          "max_slice_ms": "4.800938"
+        },
+        {
+          "name": "r.android.mmate",
+          "n": "3063",
+          "cpu_ms": "2400.012973",
+          "max_slice_ms": "9.893750"
+        },
+        {
+          "name": "RenderThread",
+          "n": "2507",
+          "cpu_ms": "1642.113915",
+          "max_slice_ms": "2.768698"
+        },
+        {
+          "name": "nio-stream-prod",
+          "n": "731",
+          "cpu_ms": "802.616196",
+          "max_slice_ms": "12.984480"
+        },
+        {
+          "name": "NIO-Worker",
+          "n": "1990",
+          "cpu_ms": "754.530174",
+          "max_slice_ms": "3.916250"
+        },
+        {
+          "name": "nio-webserver-r",
+          "n": "1101",
+          "cpu_ms": "218.451891",
+          "max_slice_ms": "0.824375"
+        },
+        {
+          "name": "HeapTaskDaemon",
+          "n": "38",
+          "cpu_ms": "136.840054",
+          "max_slice_ms": "25.536510"
+        },
+        {
+          "name": "DefaultDispatch",
+          "n": "301",
+          "cpu_ms": "114.930200",
+          "max_slice_ms": "2.985938"
+        },
+        {
+          "name": "Jit thread pool",
+          "n": "281",
+          "cpu_ms": "106.946564",
+          "max_slice_ms": "2.900781"
+        }
+      ]
+    },
+    {
+      "name": "compare-before-3-trace",
+      "gc": {
+        "Background concurrent mark compact GC": {
+          "n": 4,
+          "total_ms": 251.888647,
+          "max_ms": 71.805313
+        },
+        "Background young concurrent mark compact GC": {
+          "n": 4,
+          "total_ms": 155.062448,
+          "max_ms": 41.107343
+        },
+        "Mutator threads suspended for ScopedPause": {
+          "n": 8,
+          "total_ms": 6.099531,
+          "max_ms": 1.119427
+        }
+      },
+      "counters": {
+        "Heap size (KB)": {
+          "n": 2934,
+          "min": 20193.0,
+          "max": 70577.0
+        },
+        "JNI Global Refs": {
+          "n": 1,
+          "min": 466.0,
+          "max": 466.0
+        },
+        "JNI Weak Global Refs": {
+          "n": 3,
+          "min": 108.0,
+          "max": 121.0
+        },
+        "Majflt-GC": {
+          "n": 40,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "Minflt-GC": {
+          "n": 40,
+          "min": 4562.0,
+          "max": 8322.0
+        },
+        "freed_bytes": {
+          "n": 8,
+          "min": 43663360.0,
+          "max": 51617792.0
+        },
+        "freed_large_object_bytes": {
+          "n": 8,
+          "min": 35045376.0,
+          "max": 47308800.0
+        },
+        "freed_normal_object_bytes": {
+          "n": 8,
+          "min": 4308992.0,
+          "max": 12791808.0
+        },
+        "mem.locked": {
+          "n": 99,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "mem.rss": {
+          "n": 99,
+          "min": 292413440.0,
+          "max": 308629504.0
+        },
+        "mem.rss.anon": {
+          "n": 99,
+          "min": 103096320.0,
+          "max": 119164928.0
+        },
+        "mem.rss.file": {
+          "n": 99,
+          "min": 157728768.0,
+          "max": 157859840.0
+        },
+        "mem.rss.shmem": {
+          "n": 99,
+          "min": 30949376.0,
+          "max": 31735808.0
+        },
+        "mem.rss.watermark": {
+          "n": 99,
+          "min": 377278464.0,
+          "max": 377278464.0
+        },
+        "mem.swap": {
+          "n": 99,
+          "min": 18780160.0,
+          "max": 18780160.0
+        },
+        "mem.virt": {
+          "n": 99,
+          "min": 19840729088.0,
+          "max": 19869626368.0
+        },
+        "oom_score_adj": {
+          "n": 99,
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "quality": [],
+      "clock_uncertainty_ms": 23.656619,
+      "clock_offset_drift_ms": 0.505965,
+      "top_seeks": [
+        {
+          "kind": "seek",
+          "range": "bytes=10340165-10405700",
+          "ttfb_ms": 29.112583,
+          "trace_start_ns": 1419359540834689,
+          "trace_headers_ns": 1419359569946689,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.98922,
+          "nio-webserver-r_runnable_ms": 0.065676,
+          "nio-stream-prod_running_ms": 12.691927,
+          "nio-stream-prod_runnable_ms": 0.365989,
+          "NIO-Worker_running_ms": 4.254429,
+          "NIO-Worker_runnable_ms": 0.225414
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=2193403-2258938",
+          "ttfb_ms": 26.60875,
+          "trace_start_ns": 1419358166347689,
+          "trace_headers_ns": 1419358192956689,
+          "pause_overlap_ms": 1.119427,
+          "possible_pause_overlap_with_clock_uncertainty": true,
+          "concurrent_gc_overlap_ms": 18.338286,
+          "nio-webserver-r_running_ms": 0.564792,
+          "nio-webserver-r_runnable_ms": 0.217499,
+          "nio-stream-prod_running_ms": 16.47198,
+          "nio-stream-prod_runnable_ms": 2.196405,
+          "NIO-Worker_running_ms": 3.482342,
+          "NIO-Worker_runnable_ms": 0.48646
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=9713491-9779026",
+          "ttfb_ms": 25.04825,
+          "trace_start_ns": 1419359421814689,
+          "trace_headers_ns": 1419359446863689,
+          "pause_overlap_ms": 0.546041,
+          "possible_pause_overlap_with_clock_uncertainty": true,
+          "concurrent_gc_overlap_ms": 18.271224,
+          "nio-webserver-r_running_ms": 0.305938,
+          "nio-webserver-r_runnable_ms": 0.20624900000000002,
+          "nio-stream-prod_running_ms": 17.634767,
+          "nio-stream-prod_runnable_ms": 0.494374,
+          "NIO-Worker_running_ms": 3.003402,
+          "NIO-Worker_runnable_ms": 0.288802
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=1880066-1945601",
+          "ttfb_ms": 22.829625,
+          "trace_start_ns": 1419358112739689,
+          "trace_headers_ns": 1419358135569689,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.7780199999999999,
+          "nio-webserver-r_runnable_ms": 0.029167,
+          "nio-stream-prod_running_ms": 8.816822,
+          "nio-stream-prod_runnable_ms": 0.223959,
+          "NIO-Worker_running_ms": 0.920485,
+          "NIO-Worker_runnable_ms": 0.062031
+        },
+        {
+          "kind": "seek",
+          "range": "bytes=10966839-11032374",
+          "ttfb_ms": 21.972292,
+          "trace_start_ns": 1419359644096689,
+          "trace_headers_ns": 1419359666069689,
+          "pause_overlap_ms": 0.0,
+          "possible_pause_overlap_with_clock_uncertainty": false,
+          "concurrent_gc_overlap_ms": 0.0,
+          "nio-webserver-r_running_ms": 0.962865,
+          "nio-webserver-r_runnable_ms": 0.139063,
+          "nio-stream-prod_running_ms": 14.9975,
+          "nio-stream-prod_runnable_ms": 0.393593,
+          "NIO-Worker_running_ms": 0.291557,
+          "NIO-Worker_runnable_ms": 0.018385
+        }
+      ],
+      "app_cpu": [
+        {
+          "name": "pool-7-thread-4",
+          "n": "74276",
+          "cpu_ms": "7101.462908",
+          "max_slice_ms": "7.555469"
+        },
+        {
+          "name": "pool-7-thread-3",
+          "n": "74229",
+          "cpu_ms": "7041.234594",
+          "max_slice_ms": "6.290313"
+        },
+        {
+          "name": "pool-7-thread-2",
+          "n": "74761",
+          "cpu_ms": "7023.962507",
+          "max_slice_ms": "9.582500"
+        },
+        {
+          "name": "pool-7-thread-1",
+          "n": "74432",
+          "cpu_ms": "7011.763450",
+          "max_slice_ms": "5.021250"
+        },
+        {
+          "name": "r.android.mmate",
+          "n": "3276",
+          "cpu_ms": "3145.954963",
+          "max_slice_ms": "11.985105"
+        },
+        {
+          "name": "RenderThread",
+          "n": "2579",
+          "cpu_ms": "1755.323548",
+          "max_slice_ms": "3.695729"
+        },
+        {
+          "name": "nio-stream-prod",
+          "n": "737",
+          "cpu_ms": "859.129890",
+          "max_slice_ms": "24.684375"
+        },
+        {
+          "name": "NIO-Worker",
+          "n": "2090",
+          "cpu_ms": "791.188793",
+          "max_slice_ms": "3.307136"
+        },
+        {
+          "name": "HeapTaskDaemon",
+          "n": "141",
+          "cpu_ms": "398.734941",
+          "max_slice_ms": "59.094531"
+        },
+        {
+          "name": "nio-webserver-r",
+          "n": "1226",
+          "cpu_ms": "245.608800",
+          "max_slice_ms": "1.645157"
+        },
+        {
+          "name": "Jit thread pool",
+          "n": "561",
+          "cpu_ms": "196.845842",
+          "max_slice_ms": "3.353750"
+        },
+        {
+          "name": "binder:30065_4",
+          "n": "1215",
+          "cpu_ms": "124.979417",
+          "max_slice_ms": "0.707917"
+        }
+      ]
+    }
+  ],
+  "pooled": {
+    "before": {
+      "control": {
+        "head": {
+          "n": 128,
+          "median_ms": 13.516396,
+          "p95_ms": 23.7393353,
+          "p99_ms": 26.41655318,
+          "max_ms": 26.854084
+        },
+        "header": {
+          "n": 128,
+          "median_ms": 14.224979000000001,
+          "p95_ms": 24.074618199999996,
+          "p99_ms": 26.43054009,
+          "max_ms": 27.758459
+        },
+        "seek": {
+          "n": 96,
+          "median_ms": 13.524771000000001,
+          "p95_ms": 23.281312500000002,
+          "p99_ms": 25.400272899999997,
+          "max_ms": 26.531208
+        }
+      },
+      "trace": {
+        "head": {
+          "n": 128,
+          "median_ms": 14.355,
+          "p95_ms": 23.4329193,
+          "p99_ms": 27.75657018000001,
+          "max_ms": 29.366083
+        },
+        "header": {
+          "n": 128,
+          "median_ms": 14.0875,
+          "p95_ms": 23.24605,
+          "p99_ms": 27.789342520000012,
+          "max_ms": 29.254417
+        },
+        "seek": {
+          "n": 96,
+          "median_ms": 12.337104499999999,
+          "p95_ms": 22.18662525,
+          "p99_ms": 26.733941649999995,
+          "max_ms": 29.112583
+        }
+      }
+    },
+    "after": {
+      "control": {
+        "head": {
+          "n": 128,
+          "median_ms": 12.101625,
+          "p95_ms": 20.9538853,
+          "p99_ms": 22.970601840000004,
+          "max_ms": 24.07525
+        },
+        "header": {
+          "n": 128,
+          "median_ms": 12.133125,
+          "p95_ms": 20.15090175,
+          "p99_ms": 21.63086691,
+          "max_ms": 24.219625
+        },
+        "seek": {
+          "n": 96,
+          "median_ms": 13.3319995,
+          "p95_ms": 20.762146,
+          "p99_ms": 25.084716049999994,
+          "max_ms": 28.128042
+        }
+      },
+      "trace": {
+        "head": {
+          "n": 128,
+          "median_ms": 13.8591875,
+          "p95_ms": 23.40991655,
+          "p99_ms": 27.240455590000007,
+          "max_ms": 29.9335
+        },
+        "header": {
+          "n": 128,
+          "median_ms": 14.781437,
+          "p95_ms": 23.700873249999997,
+          "p99_ms": 26.781689410000002,
+          "max_ms": 27.503042
+        },
+        "seek": {
+          "n": 96,
+          "median_ms": 13.0872915,
+          "p95_ms": 23.73204175,
+          "p99_ms": 25.009574699999998,
+          "max_ms": 26.166042
+        }
+      }
+    }
+  },
+  "interpretation": "Request overlaps are nominal estimates, not causal attribution. Calibration uncertainty is comparable to seek latency. CPU is aggregated by Linux thread name; NIO-Worker may include multiple servers. GC counts cover whole captures, including boundary sampling."
+}

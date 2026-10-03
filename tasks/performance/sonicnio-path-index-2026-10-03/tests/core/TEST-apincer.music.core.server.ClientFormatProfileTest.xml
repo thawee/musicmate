@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.server.ClientFormatProfileTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:17:26.982Z" hostname="KB-XXAXXW9TX4" time="0.0">
+  <properties/>
+  <testcase name="toshiba_onlyHidesDsd_untilWeHaveEvidence" classname="apincer.music.core.server.ClientFormatProfileTest" time="0.0"/>
+  <testcase name="otherClients_seeEverythingAsIs" classname="apincer.music.core.server.ClientFormatProfileTest" time="0.0"/>
+  <testcase name="detection" classname="apincer.music.core.server.ClientFormatProfileTest" time="0.0"/>
+  <testcase name="sony_playsFlac_convertsAlac_hidesDsd" classname="apincer.music.core.server.ClientFormatProfileTest" time="0.0"/>
+  <testcase name="lg_convertsFlacAndAlac_hidesDsd" classname="apincer.music.core.server.ClientFormatProfileTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,24 @@
+1/6 before: ART allocation/GC samples saved
+2/6 after: ART allocation/GC samples saved
+3/6 after: ART allocation/GC samples saved
+4/6 before: ART allocation/GC samples saved
+5/6 before: ART allocation/GC samples saved
+6/6 after: ART allocation/GC samples saved
+{
+  "before": {
+    "samples": 9,
+    "processes": 3,
+    "measured_gc_count": 7,
+    "measured_gc_time_ms": 69,
+    "bytes_per_op": 1066240.0,
+    "nanos_per_op": 35684.406
+  },
+  "after": {
+    "samples": 9,
+    "processes": 3,
+    "measured_gc_count": 0,
+    "measured_gc_time_ms": 0,
+    "bytes_per_op": 9184.0,
+    "nanos_per_op": 18210.445
+  }
+}

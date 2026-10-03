@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.SettingsDefaultsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:08.172Z" hostname="KB-XXAXXW9TX4" time="0.003">
+  <properties/>
+  <testcase name="new installs default to listener mode" classname="apincer.music.core.SettingsDefaultsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

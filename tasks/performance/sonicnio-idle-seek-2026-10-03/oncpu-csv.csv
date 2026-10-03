@@ -1,0 +1,404 @@
+Cmdline: /system/bin/simpleperf record --app apincer.android.mmate --add-meta-info app_type=debuggable --in-app --tracepoint-events /data/local/tmp/tracepoint_events --out-fd 3 --stop-signal-fd 4 -p 12989 --duration 30 -g -e task-clock:u -f 199
+Arch: arm64
+Event: task-clock:u (type 1, config 1)
+Samples: 1588
+Event count: 7979898500
+
+Overhead,Sample,Command,Pid,Tid,Shared Object,Symbol,EventCount,EventName
+10.64%,169,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FrameDecoder.restoreLpc,849246125,task-clock:u
+6.36%,101,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,507537625,task-clock:u
+4.72%,75,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,376884375,task-clock:u
+4.35%,69,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readRiceSignedInts,346733625,task-clock:u
+4.22%,67,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FrameDecoder.checkBitDepth,336683375,task-clock:u
+3.84%,61,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FrameDecoder.decodeSubframes,306532625,task-clock:u
+2.64%,42,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.fillBitBuffer,211055250,task-clock:u
+2.46%,39,nio-stream-prod,12989,25990,[JIT app cache],apincer.music.core.codec.FlacToWav.write,195979875,task-clock:u
+1.83%,29,NIO-Worker,12989,26000,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,145728625,task-clock:u
+1.83%,29,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,145728625,task-clock:u
+1.70%,27,NIO-Worker,12989,26002,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,135678375,task-clock:u
+1.64%,26,NIO-Worker,12989,26003,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,130653250,task-clock:u
+1.51%,24,NIO-Worker,12989,25997,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,120603000,task-clock:u
+1.39%,22,NIO-Worker,12989,25989,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,110552750,task-clock:u
+1.39%,22,NIO-Worker,12989,25999,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,110552750,task-clock:u
+1.32%,21,NIO-Worker,12989,25998,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,105527625,task-clock:u
+1.32%,21,NIO-Worker,12989,26001,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint,105527625,task-clock:u
+1.26%,20,NIO-Worker,12989,25998,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,100502500,task-clock:u
+1.26%,20,NIO-Worker,12989,26003,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,100502500,task-clock:u
+1.20%,19,NIO-Worker,12989,25989,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,95477375,task-clock:u
+1.13%,18,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::gc::collector::MarkCompact::MarkRoots(art::VisitRootFlags),90452250,task-clock:u
+1.13%,18,NIO-Worker,12989,25999,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,90452250,task-clock:u
+1.01%,16,NIO-Worker,12989,26000,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,80402000,task-clock:u
+0.94%,15,NIO-Worker,12989,25997,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,75376875,task-clock:u
+0.94%,15,NIO-Worker,12989,26001,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,75376875,task-clock:u
+0.94%,15,NIO-Worker,12989,26001,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,75376875,task-clock:u
+0.88%,14,NIO-Worker,12989,25989,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,70351750,task-clock:u
+0.88%,14,NIO-Worker,12989,26002,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,70351750,task-clock:u
+0.76%,12,NIO-Worker,12989,25997,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,60301500,task-clock:u
+0.76%,12,NIO-Worker,12989,25998,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,60301500,task-clock:u
+0.69%,11,NIO-Worker,12989,25999,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,55276375,task-clock:u
+0.69%,11,NIO-Worker,12989,26002,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,55276375,task-clock:u
+0.69%,11,NIO-Worker,12989,26003,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs,55276375,task-clock:u
+0.63%,10,NIO-Worker,12989,25997,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,50251250,task-clock:u
+0.63%,10,NIO-Worker,12989,26000,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying,50251250,task-clock:u
+0.63%,10,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,50251250,task-clock:u
+0.63%,10,nio-stream-prod,12989,25990,[JIT app cache],java.util.Arrays.fill,50251250,task-clock:u
+0.57%,9,nio-stream-prod,12989,25990,[JIT app cache],java.lang.Math.min,45226125,task-clock:u
+0.50%,8,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::ArtMethod::VisitRoots<(art::ReadBarrierOption)1, true, art::gc::collector::MarkCompact::RefFieldsVisitor const>(art::gc::collector::MarkCompact::RefFieldsVisitor const&, art::PointerSize)",40201000,task-clock:u
+0.38%,6,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::jit::JitCodeCache::SweepRootTables(art::IsMarkedVisitor*),30150750,task-clock:u
+0.38%,6,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::gc::accounting::SpaceBitmap<8ul>::VisitMarkedRange<false, void art::gc::collector::MarkCompact::UpdateNonMovingPage<true, true>(art::mirror::Object*, unsigned char*, long, art::gc::accounting::SpaceBitmap<8ul>*)::'lambda'(art::mirror::Object*)&>(unsigned long, unsigned long, void art::gc::collector::MarkCompact::UpdateNonMovingPage<true, true>(art::mirror::Object*, unsigned char*, long, art::gc::accounting::SpaceBitmap<8ul>*)::'lambda'(art::mirror::Object*)&) const",30150750,task-clock:u
+0.38%,6,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readByte,30150750,task-clock:u
+0.31%,5,NIO-Worker,12989,25999,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,25125625,task-clock:u
+0.31%,5,NIO-Worker,12989,26002,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,25125625,task-clock:u
+0.31%,5,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,25125625,task-clock:u
+0.25%,4,NIO-Worker,12989,25999,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,20100500,task-clock:u
+0.25%,4,NIO-Worker,12989,26000,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,20100500,task-clock:u
+0.25%,4,NIO-Worker,12989,26001,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,20100500,task-clock:u
+0.25%,4,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",20100500,task-clock:u
+0.25%,4,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",20100500,task-clock:u
+0.25%,4,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,20100500,task-clock:u
+0.19%,3,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::gc::collector::MarkCompact::RunPhases(),15075375,task-clock:u
+0.19%,3,NIO-Worker,12989,25999,[JIT app cache],art_jni_trampoline,15075375,task-clock:u
+0.19%,3,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::jni::LocalReferenceTable::Add(art::ObjPtr<art::mirror::Object>, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*)",15075375,task-clock:u
+0.19%,3,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::mirror::Class::FindInstanceField(std::__1::basic_string_view<char, std::__1::char_traits<char>>, std::__1::basic_string_view<char, std::__1::char_traits<char>>)",15075375,task-clock:u
+0.19%,3,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,15075375,task-clock:u
+0.19%,3,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetIntField(_JNIEnv*, _jobject*, _jfieldID*)",15075375,task-clock:u
+0.19%,3,nio-webserver-r,12989,13082,[JIT app cache],art_jni_trampoline,15075375,task-clock:u
+0.13%,2,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::gc::collector::MarkCompact::ProcessMarkStack(),10050250,task-clock:u
+0.13%,2,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"art::gc::collector::MarkCompact::VisitRoots(art::mirror::Object***, unsigned long, art::RootInfo const&)",10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25989,[JIT app cache],art_jni_trampoline,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25989,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25997,[JIT app cache],java.lang.String.equals,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25998,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,25998,[JIT app cache],art_jni_trampoline,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,art::gc::Heap::IsValidObjectAddress(void const*) const,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,26002,[JIT app cache],android.database.sqlite.SQLiteCursor.getColumnNames,10050250,task-clock:u
+0.13%,2,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",10050250,task-clock:u
+0.13%,2,jupnp-416,12989,25616,/apex/com.android.art/lib64/libart.so,"art::Thread::GetCurrentMethod(unsigned int*, bool, bool) const::$_0::operator()(art::StackVisitor const*) const (.__uniq.112444171608964125319761912539055931073)",10050250,task-clock:u
+0.13%,2,jupnp-430,12989,26068,[JIT app cache],art_jni_trampoline,10050250,task-clock:u
+0.13%,2,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::CodeInfo::CodeInfo(unsigned char const*, unsigned long*)",10050250,task-clock:u
+0.13%,2,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,art_quick_invoke_stub,10050250,task-clock:u
+0.13%,2,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,.tiny_end,10050250,task-clock:u
+0.13%,2,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.checkByteAligned,10050250,task-clock:u
+0.13%,2,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FrameDecoder.readResiduals,10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetCurrentQuickFrameInfo() const,10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::mirror::Object* art::gc::Heap::AllocObjectWithAllocator<true, true, art::mirror::SetStringCountAndBytesVisitor>(art::Thread*, art::ObjPtr<art::mirror::Class>, unsigned long, art::gc::AllocatorType, art::mirror::SetStringCountAndBytesVisitor const&)",10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*),10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,[JIT app cache],apincer.music.core.http.NioHttpServer.handleIdleConnections,10050250,task-clock:u
+0.13%,2,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.ConcurrentLinkedQueue.poll,10050250,task-clock:u
+0.13%,2,pool-8-thread-1,12989,14574,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,10050250,task-clock:u
+0.13%,2,pool-8-thread-2,12989,14580,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::tryLock(),10050250,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::CodeInfo::DecodeGcMasksOnly(art::OatQuickMethodHeader const*),5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"art::InternTable::VisitRoots(art::RootVisitor*, art::VisitRootFlags)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"art::gc::collector::MarkCompact::InitNonMovingFirstObjects(unsigned long, unsigned long, art::gc::accounting::SpaceBitmap<8ul>*, art::mirror::CompressedReference<art::mirror::Object>*)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::gc::collector::MarkCompact::MarkObject(art::mirror::Object*),5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::gc::collector::MarkCompact::ThreadFlipVisitor::Run(art::Thread*),5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"art::gc::collector::MarkCompact::VisitRoots(art::mirror::CompressedReference<art::mirror::Object>**, unsigned long, art::RootInfo const&)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,art::jit::JitCodeCache::GetJniStubCode(art::ArtMethod*),5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"unsigned long art::gc::collector::MarkCompact::UpdateRefsForCompaction<false, true, (art::VerifyObjectFlags)0, art::gc::collector::MarkCompact::RefsUpdateVisitor<true, false, true>>(art::mirror::Object*, art::gc::collector::MarkCompact::RefsUpdateVisitor<true, false, true> const&, art::MemberOffset, art::MemberOffset)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::ClassTable::VisitClassesIfConditionMet<art::gc::collector::MarkCompact::UpdateClassTableClasses(art::Runtime*, bool)::$_0, art::gc::collector::MarkCompact::ClassLoaderRootsUpdater>(art::gc::collector::MarkCompact::UpdateClassTableClasses(art::Runtime*, bool)::$_0&, art::gc::collector::MarkCompact::ClassLoaderRootsUpdater&) (.__uniq.183374210292502823066086304110507471210)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::ClassTable::VisitRoots<art::gc::accounting::AddToReferenceArrayVisitor>(art::gc::accounting::AddToReferenceArrayVisitor const&, bool)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::ClassTable::VisitRoots<art::gc::collector::MarkCompact::RefFieldsVisitor>(art::gc::collector::MarkCompact::RefFieldsVisitor const&, bool)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::gc::accounting::SpaceBitmap<8ul>::VisitMarkedRange<false, art::gc::collector::MarkCompact::ScanObjectVisitor const&>(unsigned long, unsigned long, art::gc::collector::MarkCompact::ScanObjectVisitor const&) const",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::gc::accounting::SpaceBitmap<8ul>::VisitMarkedRange<false, void art::gc::collector::MarkCompact::UpdateNonMovingPage<true, true>(art::mirror::Object*, unsigned char*, long, art::gc::accounting::SpaceBitmap<8ul>*)::'lambda'(art::mirror::Object*) const&>(unsigned long, unsigned long, void art::gc::collector::MarkCompact::UpdateNonMovingPage<true, true>(art::mirror::Object*, unsigned char*, long, art::gc::accounting::SpaceBitmap<8ul>*)::'lambda'(art::mirror::Object*) const&) const",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.art/lib64/libart.so,"void art::mirror::DexCache::VisitNativeRoots<(art::VerifyObjectFlags)0, (art::ReadBarrierOption)0, art::gc::accounting::AddToReferenceArrayVisitor, void art::mirror::Object::FastVisitReferences<true, (art::VerifyObjectFlags)0, (art::ReadBarrierOption)0, art::gc::accounting::AddToReferenceArrayVisitor, art::VoidFunctor>(art::gc::accounting::AddToReferenceArrayVisitor const&, art::VoidFunctor const&)::'lambda'(void*)>(art::gc::accounting::AddToReferenceArrayVisitor const&, art::gc::accounting::AddToReferenceArrayVisitor const&)",5025125,task-clock:u
+0.06%,1,HeapTaskDaemon,12989,12997,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::unlock(),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,@plt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,"art::JValue art::InvokeVirtualOrInterfaceWithVarArgs<_jmethodID*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jmethodID*, std::__va_list)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,"art::JniDecodeReferenceResult(_jobject*, art::Thread*)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.art/lib64/libart.so,art::mirror::Class::AllocObject(art::Thread*),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.i18n/lib64/libicuuc.so,icu_76::UMemory::operator new(unsigned long),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.runtime/lib64/bionic/libc.so,.tiny_end,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,/system/lib64/libandroid_runtime.so,"android::nativeGetColumnName(_JNIEnv*, _jclass*, long, long, int)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],android.database.sqlite.SQLiteCursor.getColumnNames,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],androidx.room.util.SQLiteStatementUtil__StatementUtilKt.columnIndexOfCommon,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],apincer.music.core.codec.FlacToWav.<init>,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],java.lang.Long.hashCode,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],java.lang.String.equals,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],java.util.concurrent.atomic.AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl.get,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25989,[JIT app cache],java.util.concurrent.locks.LockSupport.setBlocker,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,"art::IndirectReferenceTable::IsValidReference(void*, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*) const",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetMethod() const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,"art::Thread_currentThread(_JNIEnv*, _jclass*) (.__uniq.300150332875289415499171563183413458937)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,art::gc::space::ContinuousSpace::Contains(art::mirror::Object const*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,artImplicitSuspendFromCode,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.art/lib64/libart.so,void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::deallocate(void*, scudo::Chunk::Origin, unsigned long, unsigned long)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::tryLock(),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],android.database.sqlite.SQLiteConnectionPool.releaseConnection,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],android.util.LruCache.get,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],java.lang.CaseMapper.toLowerCase,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],java.util.concurrent.locks.ReentrantLock.lock,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],jdk.internal.misc.Unsafe.putReferenceOpaque,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25997,[JIT app cache],kotlin.jvm.internal.Intrinsics.areEqual,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.art/lib64/libart.so,art::BuildQuickShadowFrameVisitor::Visit(),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.art/lib64/libart.so,"art::JniDecodeReferenceResult(_jobject*, art::Thread*)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.art/lib64/libart.so,"art::String_charAt(_JNIEnv*, _jobject*, int) (.__uniq.211321754789976184382062795672362477106)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.i18n/lib64/libicui18n.so,"icu_76::RegexMatcher::MatchChunkAt(int, signed char, UErrorCode&)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.runtime/lib64/bionic/libc.so,.tiny_end,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/apex/com.android.runtime/lib64/bionic/libc.so,malloc,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,/system/lib64/libsqlite.so,sqlite3_step,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],android.database.sqlite.SQLiteConnectionPool.finishAcquireConnectionLocked,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],java.io.ByteArrayInputStream.<init>,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],java.util.Arrays.fill,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],java.util.concurrent.locks.ReentrantLock.unlock,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],kotlinx.coroutines.EventLoopKt.createEventLoop,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25998,[JIT app cache],kotlinx.coroutines.JobSupport.getCompletedInternal$kotlinx_coroutines_core,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::CheckJNI::NewObjectV(_JNIEnv*, _jclass*, _jmethodID*, std::__va_list) (.__uniq.99033978352804627313491551960229047428.llvm.8973975735480776547)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::(anonymous namespace)::ScopedCheck::InstanceKind, _jobject*, bool) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetIntArrayElements(_JNIEnv*, _jintArray*, unsigned char*)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.art/lib64/libart.so,"art::String_fillBytesLatin1(_JNIEnv*, _jobject*, _jbyteArray*, int) (.__uniq.211321754789976184382062795672362477106)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.runtime/lib64/bionic/libc.so,@plt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::allocate(unsigned long, scudo::Chunk::Origin, unsigned long, bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,/system/lib64/libsqlite.so,sqlite3VdbeExec(Vdbe*) (.__uniq.309426955368013975012700285756637552939),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],androidx.sqlite.driver.SupportSQLiteStatement$RowSQLiteStatement.ensureCursor,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],androidx.sqlite.driver.SupportSQLiteStatement$RowSQLiteStatement.throwIfNoRow,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],apincer.music.core.http.RateLimitingHandler.handle,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],java.lang.Character.isHighSurrogate,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],java.lang.Enum.equals,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],java.lang.Integer.valueOf,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],java.lang.String.indexOf,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[JIT app cache],kotlin.coroutines.ContinuationInterceptor$DefaultImpls.get,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,25999,[vdso],__kernel_clock_gettime,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,@plt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,art::(anonymous namespace)::CheckAttachedThread(char const*) (.__uniq.99033978352804627313491551960229047428),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetCurrentQuickFrameInfo() const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,"art::gc::collector::MarkCompact::ConcurrentlyProcessLinearAllocPage(unsigned char*, bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,art_quick_invoke_static_stub,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.i18n/lib64/libicui18n.so,icu_76::RegexCompile::stripNOPs(),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.runtime/lib64/bionic/libc.so,__memset_aarch64_nt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::allocate(unsigned long, scudo::Chunk::Origin, unsigned long, bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,/system/lib64/libutils.so,"android::allocFromUTF8(char const*, unsigned long) (.__uniq.127352576819942258758204067426398432904)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],android.database.sqlite.SQLiteCursor.getColumnNames,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],androidx.sqlite.driver.SupportSQLiteStatement$RowSQLiteStatement.getText,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],art_jni_trampoline,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.lang.Class.getComponentType,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.lang.ThreadLocal.get,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.time.format.DateTimeTextProvider$LocaleStore.getText,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.util.Arrays.fill,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.util.concurrent.ConcurrentLinkedQueue.offer,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],java.util.concurrent.locks.AbstractOwnableSynchronizer.getExclusiveOwnerThread,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26000,[JIT app cache],kotlinx.coroutines.JobSupport.getState$kotlinx_coroutines_core,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,__aarch64_cas4_acq_rel,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,art::(anonymous namespace)::CheckAttachedThread(char const*) (.__uniq.99033978352804627313491551960229047428),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::(anonymous namespace)::ScopedCheck::InstanceKind, _jobject*, bool) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetIntField(_JNIEnv*, _jobject*, _jfieldID*)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,"art::Thread::GetCurrentMethod(unsigned int*, bool, bool) const::$_0::operator()(art::StackVisitor const*) const (.__uniq.112444171608964125319761912539055931073)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,art::Thread::IsJniTransitionReference(_jobject*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,artUnlockObjectFromCode,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,art_quick_imt_conflict_trampoline,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.i18n/lib64/libicui18n.so,"icu_76::RegexMatcher::MatchChunkAt(int, signed char, UErrorCode&)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.runtime/lib64/bionic/libc.so,.tiny_end,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat,QuickImtConflictTrampoline,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/system/lib64/libsqlite.so,"sqlite3BtreeTableMoveto(BtCursor*, long long, int, int*) (.__uniq.309426955368013975012700285756637552939)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/system/lib64/libsqlite.so,sqlite3VdbeExec(Vdbe*) (.__uniq.309426955368013975012700285756637552939),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,/system/lib64/libutils.so,"android::String16::String16(char const*, unsigned long)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],android.database.sqlite.SQLiteConnectionPool.recycleConnectionLocked,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],java.lang.Class.isInterface,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],java.lang.Object.<init>,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],java.util.ArrayList$Itr.<init>,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],kotlin.jvm.internal.Intrinsics.checkNotNull,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26001,[JIT app cache],kotlin.jvm.internal.TypeIntrinsics.isFunctionOfArity,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libandroidio.so,async_close_monitor_destroy,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,art::JniTransitionReferenceVisitor<true>::VisitFrame(),5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,"art::String_charAt(_JNIEnv*, _jobject*, int) (.__uniq.211321754789976184382062795672362477106)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,art::gc::Heap::IsValidObjectAddress(void const*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,art::gc::space::ContinuousSpace::Contains(art::mirror::Object const*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,"art::mirror::Object* art::gc::Heap::AllocObjectWithAllocator<true, true, art::mirror::SetStringCountAndBytesVisitor>(art::Thread*, art::ObjPtr<art::mirror::Class>, unsigned long, art::gc::AllocatorType, art::mirror::SetStringCountAndBytesVisitor const&)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,"art::mirror::Object* art::gc::Heap::AllocObjectWithAllocator<true, true, art::mirror::SetStringCountAndValueVisitorFromCharArray>(art::Thread*, art::ObjPtr<art::mirror::Class>, unsigned long, art::gc::AllocatorType, art::mirror::SetStringCountAndValueVisitorFromCharArray const&)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,/system/lib64/libsqlite.so,"columnMem(sqlite3_stmt*, int) (.__uniq.309426955368013975012700285756637552939)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],android.database.AbstractCursor.getColumnCount,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],android.database.sqlite.SQLiteDatabase.tryWalBackgroundCheckpoint,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],apincer.music.room.dao.TrackDao_Impl.lambda$findById$0,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],art_jni_trampoline,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],java.io.UnixFileSystem.getLength,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],java.lang.Long.toString,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],java.lang.String.length,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],java.util.concurrent.ThreadPoolExecutor.runStateAtLeast,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],java.util.concurrent.atomic.AtomicInteger.getAndIncrement,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],kotlin.coroutines.intrinsics.IntrinsicsKt__IntrinsicsKt.getCOROUTINE_SUSPENDED,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],kotlin.jvm.internal.Intrinsics.checkNotNullParameter,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26002,[JIT app cache],kotlinx.coroutines.EventLoop.processUnconfinedEvent,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::NewString(_JNIEnv*, unsigned short const*, int)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,"art::Reference_refersTo0(_JNIEnv*, _jobject*, _jobject*) (.__uniq.253148291500730731607008926596911728915)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,"art::Thread_currentThread(_JNIEnv*, _jclass*) (.__uniq.300150332875289415499171563183413458937)",5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,art::gc::Heap::IsValidObjectAddress(void const*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,art::gc::space::ContinuousSpace::Contains(art::mirror::Object const*) const,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,artAllocStringObjectTLAB,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,[JIT app cache],android.database.sqlite.SQLiteClosable.acquireReference,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,[JIT app cache],android.database.sqlite.SQLiteSession.executeForCursorWindow,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,[JIT app cache],java.lang.Long.getChars,5025125,task-clock:u
+0.06%,1,NIO-Worker,12989,26003,[JIT app cache],java.nio.channels.spi.AbstractSelectionKey.isValid,5025125,task-clock:u
+0.06%,1,ReferenceQueueD,12989,12998,/apex/com.android.runtime/lib64/bionic/libc.so,free,5025125,task-clock:u
+0.06%,1,ReferenceQueueD,12989,12998,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::quarantineOrDeallocateChunk(scudo::Options const&, void*, scudo::Chunk::UnpackedHeader*, unsigned long)",5025125,task-clock:u
+0.06%,1,ReferenceQueueD,12989,12998,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::tryLock(),5025125,task-clock:u
+0.06%,1,ReferenceQueueD,12989,12998,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::unlock(),5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,/apex/com.android.runtime/lib64/bionic/libc.so,__memset_aarch64_nt,5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,[JIT app cache],java.lang.AbstractStringBuilder.ensureCapacityInternal,5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,[JIT app cache],java.lang.StringLatin1.canEncode,5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,[JIT app cache],java.util.ArrayList$Itr.<init>,5025125,task-clock:u
+0.06%,1,jupnp-2,12989,13076,[JIT app cache],org.jupnp.http.Headers.readLine,5025125,task-clock:u
+0.06%,1,jupnp-392,12989,24897,/apex/com.android.art/lib64/libart.so,NterpGetMethod,5025125,task-clock:u
+0.06%,1,jupnp-392,12989,24897,/apex/com.android.art/lib64/libart.so,"art::Class_getDeclaredConstructorInternal(_JNIEnv*, _jobject*, _jobjectArray*) (.__uniq.181829539739573773940154555818377431209)",5025125,task-clock:u
+0.06%,1,jupnp-4,12989,13089,/apex/com.android.art/lib64/libart.so,__aarch64_cas4_acq_rel,5025125,task-clock:u
+0.06%,1,jupnp-4,12989,13089,/apex/com.android.art/lib64/libart.so,art::Thread::CheckSuspend(bool),5025125,task-clock:u
+0.06%,1,jupnp-4,12989,13089,/apex/com.android.art/lib64/libart.so,"art::Unsafe_compareAndSetInt(_JNIEnv*, _jobject*, _jobject*, long, int, int) (.__uniq.319429422067363160645159987129209045680)",5025125,task-clock:u
+0.06%,1,jupnp-409,12989,25038,/apex/com.android.art/lib64/libart.so,art::(anonymous namespace)::CheckAttachedThread(char const*) (.__uniq.99033978352804627313491551960229047428),5025125,task-clock:u
+0.06%,1,jupnp-409,12989,25038,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetStringChars(_JNIEnv*, _jstring*, unsigned char*)",5025125,task-clock:u
+0.06%,1,jupnp-409,12989,25038,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,jupnp-409,12989,25038,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::unlock(),5025125,task-clock:u
+0.06%,1,jupnp-409,12989,25038,[JIT app cache],java.util.ArrayList.grow,5025125,task-clock:u
+0.06%,1,jupnp-415,12989,25548,/apex/com.android.art/lib64/libart.so,art::Thread::CreateInternalStackTrace(art::ScopedObjectAccessAlreadyRunnable const&) const,5025125,task-clock:u
+0.06%,1,jupnp-415,12989,25548,/apex/com.android.art/lib64/libart.so,art_quick_imt_conflict_trampoline,5025125,task-clock:u
+0.06%,1,jupnp-415,12989,25548,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::tryLock(),5025125,task-clock:u
+0.06%,1,jupnp-416,12989,25616,/apex/com.android.art/lib64/libart.so,artIsAssignableFromCode,5025125,task-clock:u
+0.06%,1,jupnp-416,12989,25616,/apex/com.android.i18n/lib64/libicui18n.so,"icu_76::RegexMatcher::MatchChunkAt(int, signed char, UErrorCode&)",5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetDexPc(bool) const,5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,/apex/com.android.art/lib64/libart.so,artQuickGenericJniTrampoline,5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,/apex/com.android.i18n/lib64/libicuuc.so,icu_76::BMPSet::contains(int) const,5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,[JIT app cache],java.net.URL.isValidProtocol,5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,[JIT app cache],java.util.concurrent.ScheduledThreadPoolExecutor.delayedExecute,5025125,task-clock:u
+0.06%,1,jupnp-417,12989,25617,[JIT app cache],java.util.concurrent.atomic.AtomicLong.getAndIncrement,5025125,task-clock:u
+0.06%,1,jupnp-418,12989,25724,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::CheckJNI::ReleaseStringCharsInternal(char const*, _JNIEnv*, _jstring*, void const*, bool, bool) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,jupnp-418,12989,25724,/apex/com.android.art/lib64/libart.so,"art::JniDecodeReferenceResult(_jobject*, art::Thread*)",5025125,task-clock:u
+0.06%,1,jupnp-418,12989,25724,/apex/com.android.runtime/lib64/bionic/libc.so,__strcmp_aarch64,5025125,task-clock:u
+0.06%,1,jupnp-422,12989,25732,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetDexPc(bool) const,5025125,task-clock:u
+0.06%,1,jupnp-422,12989,25732,/apex/com.android.i18n/lib64/libicui18n.so,@plt,5025125,task-clock:u
+0.06%,1,jupnp-425,12989,25749,/apex/com.android.art/lib64/libart.so,"art::JNI<true>::GetStringChars(_JNIEnv*, _jstring*, unsigned char*)",5025125,task-clock:u
+0.06%,1,jupnp-425,12989,25749,/apex/com.android.i18n/lib64/libicuuc.so,icu_76::UVector::elementAti(int) const,5025125,task-clock:u
+0.06%,1,jupnp-425,12989,25749,/apex/com.android.runtime/lib64/bionic/libc.so,malloc,5025125,task-clock:u
+0.06%,1,jupnp-425,12989,25749,[JIT app cache],java.lang.AbstractStringBuilder.putStringAt,5025125,task-clock:u
+0.06%,1,jupnp-426,12989,26061,/apex/com.android.art/lib64/libart.so,artDeliverExceptionFromCode,5025125,task-clock:u
+0.06%,1,jupnp-426,12989,26061,/apex/com.android.i18n/lib64/libicuuc.so,@plt,5025125,task-clock:u
+0.06%,1,jupnp-426,12989,26061,[JIT app cache],java.lang.String.toLowerCase,5025125,task-clock:u
+0.06%,1,jupnp-427,12989,26062,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::CheckJNI::GetPrimitiveArrayElements(char const*, art::Primitive::Type, _JNIEnv*, _jarray*, unsigned char*) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,jupnp-427,12989,26062,/apex/com.android.art/lib64/libart.so,art::QuickExceptionHandler::SetCatchEnvironmentForOptimizedHandler(art::StackVisitor*),5025125,task-clock:u
+0.06%,1,jupnp-427,12989,26062,/apex/com.android.i18n/lib64/libicui18n.so,icu_76::RegexCompile::setEval(int),5025125,task-clock:u
+0.06%,1,jupnp-427,12989,26062,[JIT app cache],jdk.internal.misc.Unsafe.getReferenceAcquire,5025125,task-clock:u
+0.06%,1,jupnp-428,12989,26063,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,jupnp-428,12989,26063,/apex/com.android.art/lib64/libart.so,art_quick_generic_jni_trampoline,5025125,task-clock:u
+0.06%,1,jupnp-428,12989,26063,/apex/com.android.runtime/lib64/bionic/libc.so,__aarch64_cas4_acq,5025125,task-clock:u
+0.06%,1,jupnp-428,12989,26063,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::allocate(unsigned long, scudo::Chunk::Origin, unsigned long, bool)",5025125,task-clock:u
+0.06%,1,jupnp-428,12989,26063,/data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat,QuickImtConflictTrampoline,5025125,task-clock:u
+0.06%,1,jupnp-429,12989,26064,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,jupnp-429,12989,26064,/apex/com.android.runtime/lib64/bionic/libc.so,malloc,5025125,task-clock:u
+0.06%,1,jupnp-429,12989,26064,[JIT app cache],art_jni_trampoline,5025125,task-clock:u
+0.06%,1,jupnp-430,12989,26068,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::MethodEntered(art::Thread*, art::ArtMethod*)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::CheckMethodArguments(art::JavaVMExt*, art::ArtMethod*, unsigned int*) (.__uniq.245181933781456475607640333933569312899.llvm.8516106446952981427)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::CheckVarArgs(art::ScopedObjectAccess&, art::(anonymous namespace)::VarArgs const*) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,art::FetchStackTraceVisitor::VisitFrame(),5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,art::StackVisitor::GetCurrentQuickFrameInfo() const,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,art::Thread::IsJniTransitionReference(_jobject*) const,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::gc::space::FreeListSpace::Alloc(art::Thread*, unsigned long, unsigned long*, unsigned long*, unsigned long*)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::interpreter::GetFieldInfo(art::Thread*, art::ShadowFrame&, unsigned short const*, bool, bool, art::mirror::Class**, bool*, art::MemberOffset*) (.__uniq.113072803961313432437294106468273961305)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::MethodEntered(art::Thread*, art::ArtMethod*)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::PrepareForOsr(art::ArtMethod*, unsigned int, unsigned int*)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,"art::mirror::Object* art::gc::Heap::AllocObjectWithAllocator<true, true, art::mirror::SetLengthVisitor>(art::Thread*, art::ObjPtr<art::mirror::Class>, unsigned long, art::gc::AllocatorType, art::mirror::SetLengthVisitor const&)",5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.art/lib64/libart.so,art_quick_to_interpreter_bridge,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,__memset_aarch64_nt,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,__strlen_aarch64,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,android_fdsan_exchange_owner_tag,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/apex/com.android.runtime/lib64/bionic/libc.so,pthread_mutex_unlock,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,/data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat,QuickImtConflictTrampoline,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],apincer.music.core.http.StreamingResponse.flushProducerBuffer,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.AbstractFlacLowLevelInput.positionChanged,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FlacDecoder.getNextFrameOffsets,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],io.nayuki.flac.decode.FrameDecoder.decodeSubframe,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],java.io.RandomAccessFile.readBytes,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],java.io.RandomAccessFile.seek,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],java.util.ArrayList.add,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],java.util.concurrent.locks.AbstractOwnableSynchronizer.setExclusiveOwnerThread,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],jdk.internal.misc.Unsafe.putReferenceOpaque,5025125,task-clock:u
+0.06%,1,nio-stream-prod,12989,25990,[JIT app cache],libcore.io.IoTracker.trackIo,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,NterpGetInstanceFieldOffset,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::CheckFieldAccess(art::ScopedObjectAccess&, _jobject*, _jfieldID*, bool, art::Primitive::Type) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::ClassLinker::ResolveString(art::dex::StringIndex, art::ArtMethod*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::JniDecodeReferenceResult(_jobject*, art::Thread*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::Object_identityHashCodeNative(_JNIEnv*, _jclass*, _jobject*) (.__uniq.93429965329032005513714586366871002690)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::Thread::GetCurrentMethod(unsigned int*, bool, bool) const::$_0::operator()(art::StackVisitor const*) const (.__uniq.112444171608964125319761912539055931073)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::Unsafe_getShortJ(_JNIEnv*, _jobject*, long) (.__uniq.319429422067363160645159987129209045680)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,art::gc::Heap::IsValidObjectAddress(void const*) const,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::MethodEntered(art::Thread*, art::ArtMethod*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libart.so,"void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.art/lib64/libopenjdk.so,System_nanoTime,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.i18n/lib64/libicu_jni.so,"MatcherState::updateInput(_JNIEnv*, _jstring*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.i18n/lib64/libicui18n.so,icu_76::RegexMatcher::findUsingChunk(UErrorCode&),5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.i18n/lib64/libicui18n.so,icu_76::RegexStaticSets::initGlobals(UErrorCode*),5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.i18n/lib64/libicuuc.so,"shallowTextClone(UText*, UText const*, UErrorCode*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,.tiny_end,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,clock_gettime,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,getenv,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::allocate(unsigned long, scudo::Chunk::Origin, unsigned long, bool)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/apex/com.android.runtime/lib64/bionic/libc.so,"scudo::Allocator<scudo::AndroidNormalConfig, &scudo_malloc_postinit>::deallocate(void*, scudo::Chunk::Origin, unsigned long, unsigned long)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat,QuickImtConflictTrampoline,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,/system/lib64/libnetd_client.so,"FwmarkClient::send(FwmarkCommand*, int, FwmarkConnectInfo*)",5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],apincer.music.core.http.NioHttpServer$HttpRequest.parseHeaders,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],apincer.music.core.http.NioHttpServer.handleWrite,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],apincer.music.core.http.NioHttpServer.processResponseQueue,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],apincer.music.core.http.NioHttpServer.run,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],dalvik.system.BlockGuard$1.onNetwork,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.lang.StringBuilder.append,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.lang.Thread.isVirtual,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.lang.ThreadLocal$ThreadLocalMap.-$$Nest$mgetEntry,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.nio.MappedByteBuffer.position,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.ConcurrentLinkedQueue.updateHead,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.ThreadPoolExecutor.isShutdown,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.atomic.AtomicInteger.get,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.atomic.AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl.getAndSet,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.concurrent.locks.ReentrantLock$Sync.lock,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],java.util.logging.Logger.fine,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.misc.Cleaner.create,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.nio.ch.AbstractPollSelectorImpl.implRegister,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.nio.ch.IOUtil.write,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.nio.ch.SelectionKeyImpl.channel,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.nio.ch.SelectorImpl.select,5025125,task-clock:u
+0.06%,1,nio-webserver-r,12989,13082,[JIT app cache],sun.nio.ch.Util$BufferCache.offerFirst,5025125,task-clock:u
+0.06%,1,pool-11-thread-,12989,13073,[JIT app cache],java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.canReacquire,5025125,task-clock:u
+0.06%,1,pool-8-thread-1,12989,14574,/apex/com.android.art/lib64/libc++.so,operator new[](unsigned long),5025125,task-clock:u
+0.06%,1,pool-8-thread-1,12989,14574,[JIT app cache],java.lang.String.equals,5025125,task-clock:u
+0.06%,1,pool-8-thread-1,12989,14574,[JIT app cache],java.util.concurrent.locks.AbstractQueuedLongSynchronizer.hasQueuedPredecessors,5025125,task-clock:u
+0.06%,1,pool-8-thread-1,12989,14574,[JIT app cache],org.jupnp.model.meta.DeviceIdentity.hashCode,5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,/apex/com.android.art/lib64/libart.so,void art::interpreter::ExecuteSwitchImplCpp<false>(art::interpreter::SwitchImplContext*),5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,/apex/com.android.runtime/lib64/bionic/libc.so,@plt,5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,/apex/com.android.runtime/lib64/bionic/libc.so,__memcpy_aarch64_nt,5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,[JIT app cache],art_jni_trampoline,5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,[JIT app cache],java.util.HashMap.resize,5025125,task-clock:u
+0.06%,1,pool-8-thread-2,12989,14580,[JIT app cache],java.util.regex.Pattern.fastSplit,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,/apex/com.android.art/lib64/libart.so,"art::interpreter::Execute(art::Thread*, art::CodeItemDataAccessor const&, art::ShadowFrame&, art::JValue, bool, bool) (.__uniq.112435418011751916792819755956732575238.llvm.8613519112829971472)",5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::PrepareForOsr(art::ArtMethod*, unsigned int, unsigned int*)",5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,/apex/com.android.art/lib64/libart.so,artQuickToInterpreterBridge,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,/apex/com.android.i18n/lib64/libicuuc.so,utext_openUChars_76,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,/apex/com.android.i18n/lib64/libicuuc.so,utext_setup_76,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,[JIT app cache],art_jni_trampoline,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,[JIT app cache],java.lang.String.indexOf,5025125,task-clock:u
+0.06%,1,pool-8-thread-3,12989,14582,[JIT app cache],org.jupnp.model.meta.Device.hashCode,5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.art/lib64/libart.so,"art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.art/lib64/libart.so,"art::ObjPtr<art::mirror::Class> art::GetClassRoot<art::mirror::String, (art::ReadBarrierOption)0>()",5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.art/lib64/libart.so,"art::jit::Jit::MethodEntered(art::Thread*, art::ArtMethod*)",5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.art/lib64/libart.so,artQuickGenericJniTrampoline,5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.runtime/lib64/bionic/libc.so,__memset_aarch64_nt,5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,/apex/com.android.runtime/lib64/bionic/libc.so,scudo::HybridMutex::unlock(),5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,[JIT app cache],java.lang.Class.isAssignableFrom,5025125,task-clock:u
+0.06%,1,pool-8-thread-4,12989,14584,[JIT app cache],java.util.HashMap.hash,5025125,task-clock:u

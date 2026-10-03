@@ -1,0 +1,56 @@
+{
+  "production_source_files_unchanged": 886,
+  "passed_invocations": [
+    {
+      "name": "pilot-0-trace",
+      "verified_requests": 352
+    },
+    {
+      "name": "compare-0-control",
+      "verified_requests": 352
+    },
+    {
+      "name": "compare-1-trace",
+      "verified_requests": 352
+    },
+    {
+      "name": "compare-2-trace",
+      "verified_requests": 352
+    },
+    {
+      "name": "compare-3-control",
+      "verified_requests": 352
+    },
+    {
+      "name": "confirm-0-trace",
+      "verified_requests": 352
+    },
+    {
+      "name": "confirm-1-control",
+      "verified_requests": 352
+    },
+    {
+      "name": "offcpu",
+      "verified_requests": 352
+    },
+    {
+      "name": "oncpu",
+      "verified_requests": 352
+    }
+  ],
+  "measured_requests_verified": 3168,
+  "clock_marker_verified_requests": 1408,
+  "trace_capture_count": 4,
+  "server_apk_sha256": "4ea87bafc3e90f24cf6d257cbd4665b9cb6e8d1facc94490e646bff8bf200d16",
+  "previous_tests": "226 cases passed for unchanged production sources; test APK build succeeds and nine opt-in invocations pass",
+  "main_diff_review": "main lacks current server/database classes; inspected scoped main diff and verified preserved source hashes instead of attributing earlier changes to this step",
+  "test_harness_scope": "idleOnly and clientTrace options only; no server production changes",
+  "compressed_binary_roundtrip": "all four traces and both Simpleperf recordings pass",
+  "python_syntax": "pass",
+  "processor_sha256": "d29864d1ba3b36855527bb1b0ca3aa7f703cdce338b9680bb922c5c151b358fa",
+  "recomputed_latency_distributions": "all 27 distributions match parsed records",
+  "report_local_links": "pass",
+  "scoped_whitespace": "pass",
+  "confirmed_worker_ownership": "eight workers verified with PID/TID inventories",
+  "final_server_state": "PID 12989, original candidate APK hash verified, MainActivity restored"
+}

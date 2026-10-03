@@ -1,0 +1,322 @@
+[
+  {
+    "mode": "FINE trace",
+    "run": 1,
+    "tests": 54,
+    "junit_seconds": 18.319,
+    "result": "PASS",
+    "original_log_sha256": "60b063d4a3ee26e34e64f0b8cb4df8da08de36442f1ee26ab0fe73a174156fb3"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 2,
+    "tests": 54,
+    "junit_seconds": 23.194,
+    "result": "PASS",
+    "original_log_sha256": "94ce67c84abfd4103476fda399fa8cd7f9c27f0cb9ec5f9d52c328892af39269"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 3,
+    "tests": 54,
+    "junit_seconds": 23.317,
+    "result": "PASS",
+    "original_log_sha256": "2afd41c85361897bffd24c9c8676210f099a82f6ff772022fddf8e7b09698fa1"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 4,
+    "tests": 54,
+    "junit_seconds": 18.761,
+    "result": "PASS",
+    "original_log_sha256": "434bc7febe548daabd2c53db8b38ec495f64591baa99f2531179101a290ba0a5"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 5,
+    "tests": 54,
+    "junit_seconds": 16.21,
+    "result": "PASS",
+    "original_log_sha256": "1528e9c277acb305934eb141af9d55f6917317151f309bd20d6f79330ee0b789"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 6,
+    "tests": 54,
+    "junit_seconds": 16.537,
+    "result": "PASS",
+    "original_log_sha256": "d9faa92bd882a6dcbb4ece61ab799815b29cb0c042ae26d339035e85d7ea8b7b"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 7,
+    "tests": 54,
+    "junit_seconds": 16.383,
+    "result": "PASS",
+    "original_log_sha256": "6c7b733a6f7696cd0e4decd04caab730f1ea3371e68f4bd91697c3a7caa8cc99"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 8,
+    "tests": 54,
+    "junit_seconds": 16.302,
+    "result": "PASS",
+    "original_log_sha256": "ddfcb8895cd9ecdad2552b7a38a35590076f7915a5148acf6e099d4cc9c63890"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 9,
+    "tests": 54,
+    "junit_seconds": 16.07,
+    "result": "PASS",
+    "original_log_sha256": "d2e8e15e061ad69557cceb60ac478ee9427183b7f134484a60da0bc9d1f6e7bc"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 10,
+    "tests": 54,
+    "junit_seconds": 16.197,
+    "result": "PASS",
+    "original_log_sha256": "59ca9916fa6e237d47f13ef07c376c0a538fe4991e66bf775ff1ff599692856b"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 11,
+    "tests": 54,
+    "junit_seconds": 16.133,
+    "result": "PASS",
+    "original_log_sha256": "b7fe627e4ccfe6207f78470a8a367f3c2ef6725d891dc1c4306af863ac22f6ef"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 12,
+    "tests": 54,
+    "junit_seconds": 16.381,
+    "result": "PASS",
+    "original_log_sha256": "51e2dc4b7fefe0829975d7853c15171f72c48128c502903d62f953c251e197e6"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 13,
+    "tests": 54,
+    "junit_seconds": 16.109,
+    "result": "PASS",
+    "original_log_sha256": "754ca3f2c9c0fec4ad5b5956088a72d78fbfc0605490110fcb008ddb9b83c275"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 14,
+    "tests": 54,
+    "junit_seconds": 16.343,
+    "result": "PASS",
+    "original_log_sha256": "d7284c91108b3da98654746411d0a09b54d01455c555237fffa7cc38d6b22c9d"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 15,
+    "tests": 54,
+    "junit_seconds": 16.351,
+    "result": "PASS",
+    "original_log_sha256": "1f8bb0e49b3bb9bba1572be31da4e5387e5af1576538f70c27b166378e9ffc01"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 16,
+    "tests": 54,
+    "junit_seconds": 16.319,
+    "result": "PASS",
+    "original_log_sha256": "c7d6006f50c04407148c6592519111af87a79dfa13df43f35ed4eb12ba01d14b"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 17,
+    "tests": 54,
+    "junit_seconds": 17.189,
+    "result": "PASS",
+    "original_log_sha256": "8277317c52eb43d1e5f95c193c90be99f84668dec0323cc893d1530a74f41c38"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 18,
+    "tests": 54,
+    "junit_seconds": 16.357,
+    "result": "PASS",
+    "original_log_sha256": "7c77566be8f37c590f028710a6719901bd48755798d076b9791c07fedd7b8b6d"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 19,
+    "tests": 54,
+    "junit_seconds": 16.289,
+    "result": "PASS",
+    "original_log_sha256": "e0d4bf8bfd8752e97f5c6078a200bed51a5015f5a475dece19bd75dcaad1926e"
+  },
+  {
+    "mode": "FINE trace",
+    "run": 20,
+    "tests": 54,
+    "junit_seconds": 16.394,
+    "result": "PASS",
+    "original_log_sha256": "898bca9e07acf1cb585ccf1195acf279d6ca8990239abb7678d77785c05a9168"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 1,
+    "tests": 54,
+    "junit_seconds": 16.284,
+    "result": "PASS",
+    "original_log_sha256": "ca0e4de1b2599915a5946674b53961090d378f74c17517072cfbbf258c8af601"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 2,
+    "tests": 54,
+    "junit_seconds": 16.399,
+    "result": "PASS",
+    "original_log_sha256": "0c7a508e31f180444ee2734569363dbde1355630f184d359ec3b97c66b4cf707"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 3,
+    "tests": 54,
+    "junit_seconds": 16.199,
+    "result": "PASS",
+    "original_log_sha256": "60632edaefd5e10eab233de48d8c3c481449582dfd688071f9d1e0ee27cd27d0"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 4,
+    "tests": 54,
+    "junit_seconds": 16.226,
+    "result": "PASS",
+    "original_log_sha256": "c7abe39165c50dd66759ab831b1c98486532e932c37212a44fe5c5fe723e71f2"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 5,
+    "tests": 54,
+    "junit_seconds": 17.326,
+    "result": "PASS",
+    "original_log_sha256": "f90032f9910ebfde01d38f8b2199514e0c5d676d89d5a8f1179ef9acfb8f4bd0"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 6,
+    "tests": 54,
+    "junit_seconds": 17.07,
+    "result": "PASS",
+    "original_log_sha256": "89afddfa1fb5f5090ff69a3cb66a10424391507b947438bbb432e1216375c554"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 7,
+    "tests": 54,
+    "junit_seconds": 16.023,
+    "result": "PASS",
+    "original_log_sha256": "a7940498a8f8983cf58a6e4f263ed2a50edff14dd5c89237e3a9c43efeeea3d6"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 8,
+    "tests": 54,
+    "junit_seconds": 17.085,
+    "result": "PASS",
+    "original_log_sha256": "676a2d0aa88b2c3c6d708333c8141bf3ac4913ae5829dc799809042d4207787e"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 9,
+    "tests": 54,
+    "junit_seconds": 16.088,
+    "result": "PASS",
+    "original_log_sha256": "7542829ec923c4c8ce3d2de4f85e81992f444d0a35eec7ea87aee094e9792875"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 10,
+    "tests": 54,
+    "junit_seconds": 16.103,
+    "result": "PASS",
+    "original_log_sha256": "9758a70c22aec48350acb7f5f045a3b321d540721642faf3578dfd238f7d5ce0"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 11,
+    "tests": 54,
+    "junit_seconds": 16.179,
+    "result": "PASS",
+    "original_log_sha256": "cf42bb69c38dd0f686f902d1c831091e5b9462c113e4d653d6d242884696122d"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 12,
+    "tests": 54,
+    "junit_seconds": 18.147,
+    "result": "PASS",
+    "original_log_sha256": "e1ee8eeb0a7c18dc3bebb0eee890b43c926d79fc730862fc23dbbbb17a8d9e03"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 13,
+    "tests": 54,
+    "junit_seconds": 16.458,
+    "result": "PASS",
+    "original_log_sha256": "5ae501585f60c4161e78f39882b146a16ea4aea0d92c3613ed1e85d74ea784b7"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 14,
+    "tests": 54,
+    "junit_seconds": 16.29,
+    "result": "PASS",
+    "original_log_sha256": "40a4d6621118b22b978c4012f9de05c3d3cdb45d60baa5f177b612d75ed49d94"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 15,
+    "tests": 54,
+    "junit_seconds": 16.205,
+    "result": "PASS",
+    "original_log_sha256": "8b4ce060438e9a7fa1010235b750aaeb03fe5e8f620c5682a9fd9bd789186cf5"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 16,
+    "tests": 54,
+    "junit_seconds": 16.672,
+    "result": "PASS",
+    "original_log_sha256": "e48f232626dbdcb3ab0db8334570d8a5b241c66e238732f7c994347957aa613f"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 17,
+    "tests": 54,
+    "junit_seconds": 16.773,
+    "result": "PASS",
+    "original_log_sha256": "511a42ae479378b5a8dd5da34b7114472353341cbd69401b123acd19a462c46a"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 18,
+    "tests": 54,
+    "junit_seconds": 16.064,
+    "result": "PASS",
+    "original_log_sha256": "f3449edb6386430a19ff0d22731700e47d9eb06989f6a241acec766494542a64"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 19,
+    "tests": 54,
+    "junit_seconds": 16.281,
+    "result": "PASS",
+    "original_log_sha256": "f0939965884a88dd8741f3063624384e691f9d6e91d2bf1036138256cec32349"
+  },
+  {
+    "mode": "ordinary logging",
+    "run": 20,
+    "tests": 54,
+    "junit_seconds": 16.054,
+    "result": "PASS",
+    "original_log_sha256": "81df6b79cba51ce98cae157e4011b4f7f2a2139bc00bc1aec76098e6997d9dda"
+  }
+]

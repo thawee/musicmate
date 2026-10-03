@@ -1,0 +1,10 @@
+{
+  "apk_sha256": {
+    "before": "4ea87bafc3e90f24cf6d257cbd4665b9cb6e8d1facc94490e646bff8bf200d16",
+    "after": "71ba2ccd4fd269db33d15adc6bd5728af569ab1394800a7c88172097435e0e78"
+  },
+  "changed_uncompressed_entries": [
+    "classes11.dex",
+    "classes13.dex"
+  ]
+}

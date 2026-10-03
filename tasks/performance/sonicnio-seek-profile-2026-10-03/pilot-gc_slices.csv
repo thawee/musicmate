@@ -1,0 +1,19 @@
+"name","n","total_ms","max_ms"
+"Background young concurrent mark compact GC",3,128.681042,61.510000
+"Background concurrent mark compact GC",2,120.844793,65.252761
+"FullSuspendCheck",18,14.911250,3.026562
+"Mutator threads suspended for ScopedPause",5,2.645105,0.570625
+"void art::gc::Heap::TrimIndirectReferenceTables(Thread *)",1,0.561250,0.561250
+"JIT compiling java.lang.Object androidx.compose.animation.core.SuspendAnimationKt$$ExternalSyntheticLambda2.invoke(java.lang.Object) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk",1,0.456719,0.456719
+"JIT compiling boolean kotlinx.coroutines.channels.BufferedChannel.shouldSendSuspend(long) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk!classes31.dex",1,0.453072,0.453072
+"JIT compiling kotlin.Unit androidx.compose.animation.core.SuspendAnimationKt.animate$lambda$6(kotlin.jvm.internal.Ref$ObjectRef, float, androidx.compose.animation.core.Animation, androidx.compose.animation.core.AnimationState, kotlin.jvm.functions.Function1, long) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk",1,0.437969,0.437969
+"JIT compiling void androidx.compose.animation.core.SuspendAnimationKt.doAnimationFrameWithScale(androidx.compose.animation.core.AnimationScope, long, float, androidx.compose.animation.core.Animation, androidx.compose.animation.core.AnimationState, kotlin.jvm.functions.Function1) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk",1,0.393125,0.393125
+"JIT compiling java.lang.Object androidx.compose.animation.core.SuspendAnimationKt.callWithFrameNanos(androidx.compose.animation.core.Animation, kotlin.jvm.functions.Function1, kotlin.coroutines.Continuation) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk",1,0.337500,0.337500
+"SuspendPlatformOrVirtualThread suspended nio-webserver-runner for tid=26267",35,0.334169,0.014740
+"Suspending mutator threads",5,0.262814,0.073073
+"ThreadFlipSuspendAll",5,0.241665,0.072187
+"JIT compiling java.lang.Object kotlinx.coroutines.flow.StateFlowImpl$collect$1.invokeSuspend(java.lang.Object) (kind=Baseline) from /data/app/~~ufcUgqrwwiR1nsU6RPvRnA==/apincer.android.mmate-SusBt7CZ_UqwTRHrxSkpsg==/base.apk!classes31.dex",1,0.189270,0.189270
+"Lock contention on thread suspend count lock (owner tid: 26060)",7,0.128490,0.054480
+"JIT compiling void java.nio.HeapCharBuffer.<init>(int, int, boolean) (kind=Baseline) from /apex/com.android.art/javalib/core-oj.jar",1,0.103281,0.103281
+"JIT compiling void java.nio.HeapCharBuffer.<init>(int, int) (kind=Baseline) from /apex/com.android.art/javalib/core-oj.jar",1,0.089479,0.089479
+"void art::gc::Heap::TrimSpaces(Thread *)",1,0.004687,0.004687

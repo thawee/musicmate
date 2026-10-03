@@ -61,7 +61,7 @@ final class WebSocketSession implements WebSocket.FrameParser.FrameDataHandler {
     void notifyClosed(int code, String reason) {
         if (closeNotified) return;
         closeNotified = true;
-        tasks.execute(() -> {
+        tasks.executeClose(() -> {
             try {
                 handler.onClose(connection, code, reason);
             } catch (Exception ignored) {

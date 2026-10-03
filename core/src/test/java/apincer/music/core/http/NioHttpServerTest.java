@@ -37,6 +37,7 @@ public class NioHttpServerTest {
 
     private NioHttpServer server;
     private int port;
+    private Thread serverThread;
     private byte[] content;
     private File trackFile;
     private File bigFile;
@@ -69,8 +70,13 @@ public class NioHttpServerTest {
         }
     }
 
-    private void launchServer() {
+    private void launchServer() { launchServer(128, 8); }
+
+    private void launchServer(int queueLimit, int producerLimit) {
         server = new NioHttpServer(port);
+        server.setMaxThread(2);
+        server.setMaxQueuedRequests(queueLimit);
+        server.setMaxProducers(producerLimit);
         server.registerHttpHandler(request -> {
             try {
                 if ("POST".equals(request.getMethod())) {
@@ -83,6 +89,9 @@ public class NioHttpServerTest {
                 }
                 if (request.getPath().startsWith("/missing")) {
                     return new NioHttpServer.HttpResponse().setStatus(404, "Not Found"); // no body, like the UPnP adapter
+                }
+                if (request.getPath().startsWith("/cover")) {
+                    return server.createResourceResponse(trackFile, request);
                 }
                 if (request.getPath().startsWith("/big")) {
                     return server.createFileResponse(bigFile, request);
@@ -136,12 +145,21 @@ public class NioHttpServerTest {
         server.registerWebSocketHandler(new EchoHandler());
         Thread thread = new Thread(server, "nio-test-server");
         thread.setDaemon(true);
+        serverThread = thread;
         thread.start();
     }
 
     @After
-    public void stopServer() {
+    public void stopServer() throws InterruptedException {
         server.stop();
+        serverThread.join(5000);
+        assertTrue("selector did not stop", !serverThread.isAlive());
+    }
+
+    private void restartWithLimits(int queue, int producers) throws Exception {
+        stopServer();
+        launchServer(queue, producers);
+        assertTrue(awaitListening());
     }
 
     @Test
@@ -344,33 +362,149 @@ public class NioHttpServerTest {
     }
 
     @Test
-    public void streamLimit_newStreamEvictsTheIdleOne() throws Exception {
+    public void streamLimit_refusesNewAudioAndAllowsArtworkWithoutEvictingPlayback() throws Exception {
         server.setMaxConcurrentStreams(1);
         try (Socket first = connect(); Socket second = connect()) {
             first.setReceiveBufferSize(4096);
             first.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
-            first.getOutputStream().flush();
-            first.getInputStream().read(new byte[1024]); // stream is open and stalls on our full buffer
-            Thread.sleep(300);
-
-            Response r = exchange(second, get("bytes=0-3"), true);
-            assertEquals(206, r.status); // admitted, not 503
-
-            // the idle stream is closed by the server: end of stream, or a reset (timing-dependent)
-            InputStream in = first.getInputStream();
-            byte[] drain = new byte[65536];
-            long deadline = System.currentTimeMillis() + 5000;
-            int n;
-            try {
-                do {
-                    n = in.read(drain);
-                } while (n >= 0 && System.currentTimeMillis() < deadline);
-            } catch (java.net.SocketException reset) {
-                n = -1;
-            }
-            assertEquals(-1, n);
+            readResponseHead(first.getInputStream());
+            Response excess = exchange(second, get("bytes=0-3"), true);
+            assertEquals(503, excess.status);
+            Response cover = exchange(second, "GET /cover HTTP/1.1\r\nHost: test\r\n\r\n", true);
+            assertEquals(200, cover.status);
+            assertArrayEquals(content, cover.body);
+            assertEquals(1, server.getStats().streams);
+            assertEquals(0, server.getStats().evictions);
+            assertTrue(first.getInputStream().read(new byte[1024]) > 0);
         }
-        assertEquals(1, server.getStats().evictions);
+        awaitCounter("activeStreams", 0);
+    }
+
+    @Test
+    public void workerOverload_returns503AndDoesNotStarveAnUpgradedWebSocket() throws Exception {
+        restartWithLimits(1, 8);
+        java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(2);
+        java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+        try (Socket ws = connect(); Socket first = connect(); Socket second = connect(); Socket queued = connect()) {
+            upgrade(ws);
+            server.registerHttpHandler(request -> {
+                entered.countDown();
+                try { release.await(5, java.util.concurrent.TimeUnit.SECONDS); }
+                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+                return new NioHttpServer.HttpResponse().setBody(new byte[]{1});
+            });
+            byte[] raw = "GET /blocked HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
+            first.getOutputStream().write(raw);
+            second.getOutputStream().write(raw);
+            assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            queued.getOutputStream().write(raw);
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            while (server.getResourceUsage().queuedHandlers() != 1 && System.nanoTime() < deadline) Thread.yield();
+            assertEquals(1, server.getResourceUsage().queuedHandlers());
+            assertEquals(503, request(new String(raw, StandardCharsets.ISO_8859_1)).status);
+            sendMaskedText(ws, "seq:42");
+            while (wsSequence.isEmpty() && System.nanoTime() < deadline) Thread.yield();
+            assertEquals(Collections.singletonList(42), new ArrayList<>(wsSequence));
+            release.countDown();
+            for (Socket socket : Arrays.asList(first, second, queued)) {
+                assertEquals(200, readResponseHead(socket.getInputStream()).status);
+                assertEquals(1, socket.getInputStream().read());
+            }
+        } finally {
+            release.countDown();
+        }
+    }
+
+    @Test
+    public void producerLimit_refusesNewConversionAndReleasesItsSlot() throws Exception {
+        restartWithLimits(128, 1);
+        try (Socket first = connect()) {
+            first.getOutputStream().write("GET /pausegen HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            assertTrue(producerPaused.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(503, request("GET /generated HTTP/1.1\r\nHost: test\r\n\r\n").status);
+            assertEquals(1, server.getStats().streams);
+            readResponseHead(first.getInputStream());
+            assertEquals(1000, first.getInputStream().readNBytes(1000).length);
+        }
+        awaitCounter("activeStreams", 0);
+        assertEquals(0, server.getResourceUsage().bufferedAudioBytes());
+    }
+
+    @Test
+    public void responseCreatedAfterStop_isClosedInsteadOfLeftInTheQueue() throws Exception {
+        java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch returned = new java.util.concurrent.CountDownLatch(1);
+        server.registerHttpHandler(request -> {
+            entered.countDown();
+            try {
+                release.await(5, java.util.concurrent.TimeUnit.SECONDS);
+                return server.createFileResponse(bigFile, request);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            } finally {
+                returned.countDown();
+            }
+        });
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /late HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            stopServer();
+            release.countDown();
+            assertTrue(returned.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            // The handler signals before publication; wait for its response to be disposed.
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            while (server.getStats().streams != 0 && System.nanoTime() < deadline) Thread.yield();
+            assertEquals(0, server.getStats().streams);
+            assertEquals(0, server.getStats().connections);
+        } finally {
+            release.countDown();
+        }
+    }
+
+    @Test
+    public void simultaneousAdmission_neverExceedsMediaSlots() throws Exception {
+        server.setMaxConcurrentStreams(2);
+        java.util.concurrent.ExecutorService callers = java.util.concurrent.Executors.newFixedThreadPool(16);
+        List<java.util.concurrent.Future<NioHttpServer.HttpResponse>> results = new ArrayList<>();
+        List<NioHttpServer.HttpResponse> responses = new ArrayList<>();
+        try {
+            for (int i = 0; i < 16; i++) {
+                results.add(callers.submit(() -> server.createFileResponse(bigFile, new NioHttpServer.HttpRequest())));
+            }
+            for (java.util.concurrent.Future<NioHttpServer.HttpResponse> result : results) responses.add(result.get());
+            assertEquals(2, responses.stream().filter(r -> r.statusCode == 200).count());
+            assertEquals(14, responses.stream().filter(r -> r.statusCode == 503).count());
+            assertEquals(2, server.getStats().streams);
+        } finally {
+            for (NioHttpServer.HttpResponse response : responses) response.close();
+            callers.shutdownNow();
+        }
+        assertEquals(0, server.getStats().streams);
+    }
+
+    @Test
+    public void handlerDeadline_startsAfterTheRequestBodyArrives() throws Exception {
+        server.setHandlerTimeout(100);
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("POST /track HTTP/1.1\r\nHost: test\r\nContent-Length: 5\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            Thread.sleep(1500); // spans a timeout sweep; still in the body-read phase
+            socket.getOutputStream().write("hello".getBytes(StandardCharsets.UTF_8));
+            assertEquals(200, readResponseHead(socket.getInputStream()).status);
+            assertEquals("hello", lastPostBody.get());
+            assertEquals(0, server.getStats().timeouts);
+        }
+    }
+
+    @Test
+    public void handlerStall_hasADistinctCloseReason() throws Exception {
+        server.setHandlerTimeout(100);
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /slow HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            assertEquals(-1, socket.getInputStream().read());
+        }
+        assertTrue(server.getDiagnostics().closes().stream()
+                .anyMatch(e -> e.reason() == StreamDiagnostics.CloseReason.HANDLER_TIMEOUT));
     }
 
     @Test
@@ -383,6 +517,24 @@ public class NioHttpServerTest {
             if (r.body[i] != (byte) (i % 251)) throw new AssertionError("wrong byte at " + i);
         }
         awaitCounter("activeStreams", 0);
+    }
+
+    @Test
+    public void diagnostics_keepAliveResponses_haveDistinctIdsAndExactBodyCounts() throws Exception {
+        try (Socket socket = connect()) {
+            exchange(socket, "GET /track HTTP/1.1\r\nHost: test\r\n\r\n", true);
+            exchange(socket, get("bytes=10-19"), true);
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            while (server.getDiagnostics().completed() < 2 && System.nanoTime() < deadline) Thread.yield();
+            List<StreamDiagnostics.ResponseEvent> events = server.getDiagnostics().responses();
+            assertEquals(2, events.size());
+            assertEquals(events.get(0).connectionId(), events.get(1).connectionId());
+            assertTrue(events.get(0).requestId() != events.get(1).requestId());
+            assertEquals(1000, events.get(0).bodyBytesSent());
+            assertEquals(10, events.get(1).bodyBytesSent());
+            assertEquals(10, events.get(1).expectedBodyBytes());
+            assertTrue(events.get(0).firstByteMillis() >= 0);
+        }
     }
 
     @Test
@@ -420,6 +572,34 @@ public class NioHttpServerTest {
             assertTrue(body.length < 1_000_000);
         }
         awaitCounter("activeStreams", 0);
+        StreamDiagnostics.ResponseEvent failure = server.getDiagnostics().responses().get(0);
+        assertEquals("IO_FAILURE", failure.outcome());
+        assertTrue(failure.failure().contains("decoder failed"));
+        assertTrue(failure.bodyBytesSent() < failure.expectedBodyBytes());
+    }
+
+    @Test
+    public void streamingResponse_parkedProducer_hasAStallDeadline() throws Exception {
+        server.setProducerStallTimeout(100);
+        try (Socket socket = connect()) {
+            socket.getOutputStream().write("GET /pausegen HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            assertTrue(producerPaused.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            InputStream in = socket.getInputStream();
+            readResponseHead(in);
+            assertEquals(1, in.readAllBytes().length);
+        }
+        awaitCounter("activeStreams", 0);
+        assertTrue(server.getDiagnostics().closes().stream()
+                .anyMatch(e -> e.reason() == StreamDiagnostics.CloseReason.PRODUCER_STALL));
+    }
+
+    @Test
+    public void streamingResponse_producerPause_doesNotUseSocketStallDeadline() throws Exception {
+        server.setWriteStallTimeout(100);
+        // /pausegen intentionally produces nothing for 1.5 s; its producer deadline is separate.
+        Response response = request("GET /pausegen HTTP/1.1\r\nHost: test\r\n\r\n");
+        assertEquals(1000, response.body.length);
+        assertEquals(0, server.getStats().timeouts);
     }
 
     @Test
@@ -715,7 +895,7 @@ public class NioHttpServerTest {
     public void http10WithoutKeepAlive_closesAfterTheResponse() throws Exception {
         try (Socket socket = connect()) {
             Response r = exchange(socket, "GET /track HTTP/1.0\r\nRange: bytes=0-3\r\n\r\n", true);
-            assertEquals("close", r.header("connection"));
+            assertEquals("wire=" + r.rawHeaders + " diagnostics=" + server.getDiagnostics(), "close", r.header("connection"));
             assertEquals(-1, socket.getInputStream().read());
         }
     }
@@ -753,9 +933,10 @@ public class NioHttpServerTest {
     }
 
     @Test
-    public void longStream_outlivesTheHeaderDeadline() throws Exception {
+    public void longStream_outlivesHeaderAndWriteStallDeadlines() throws Exception {
         // A renderer plays a track over minutes on one connection; the header deadline must not cut it
         server.setHeaderReadTimeout(500);
+        server.setWriteStallTimeout(500);
         try (Socket socket = connect()) {
             socket.setReceiveBufferSize(64 * 1024);
             socket.setSoTimeout(5000);
@@ -781,8 +962,8 @@ public class NioHttpServerTest {
     }
 
     @Test
-    public void stalledReader_isClosedAfterTheIdleTimeout() throws Exception {
-        server.setKeepAliveTimeout(1000);
+    public void stalledReader_isClosedAfterTheWriteStallTimeout() throws Exception {
+        server.setWriteStallTimeout(1000);
         try (Socket socket = connect()) {
             socket.setReceiveBufferSize(4096);
             socket.getOutputStream().write("GET /big HTTP/1.1\r\nHost: test\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
@@ -792,6 +973,8 @@ public class NioHttpServerTest {
             long deadline = System.currentTimeMillis() + 6000;
             while (counter("activeStreams") != 0 && System.currentTimeMillis() < deadline) Thread.sleep(100);
             assertEquals(0, counter("activeStreams"));
+            assertTrue(server.getDiagnostics().closes().stream()
+                    .anyMatch(e -> e.reason() == StreamDiagnostics.CloseReason.WRITE_STALL));
         }
     }
 
@@ -883,6 +1066,7 @@ public class NioHttpServerTest {
         }
         String[] lines = head.toString(StandardCharsets.ISO_8859_1.name()).split("\r\n");
         Response response = new Response();
+        response.rawHeaders = head.toString(StandardCharsets.ISO_8859_1.name());
         response.status = Integer.parseInt(lines[0].split(" ")[1]);
         for (int i = 1; i < lines.length; i++) {
             int colon = lines[i].indexOf(':');
@@ -901,6 +1085,7 @@ public class NioHttpServerTest {
 
     private static final class Response {
         int status;
+        String rawHeaders;
         final Map<String, String> headers = new LinkedHashMap<>();
         byte[] body = new byte[0];
 

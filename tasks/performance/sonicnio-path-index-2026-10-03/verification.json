@@ -1,0 +1,25 @@
+{
+  "correctness_tests_passed": 226,
+  "benchmark_invocations_passed": 2,
+  "measured_streaming_requests_verified": 2112,
+  "full_reference_sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+  "native_lookup_samples": 12,
+  "loaded_query_phases": 8,
+  "lookup_operations_completed": 65536,
+  "live_tracks_preserved_exactly": 8289,
+  "live_history_rows_preserved_exactly": 704,
+  "live_database_versions": [
+    2,
+    3
+  ],
+  "candidate_sha256": "4ea87bafc3e90f24cf6d257cbd4665b9cb6e8d1facc94490e646bff8bf200d16",
+  "previous_manifest_covered_sources_unchanged": 871,
+  "production_changes": "Only TrackEntity path index and MusicRoomDatabase version/migration; old 871-file manifest does not cover db-room",
+  "recomputed_analysis": "identical",
+  "source_copies_and_python_syntax": "pass",
+  "scoped_whitespace": "pass",
+  "build": "app debug APK and test APK builds successful",
+  "main_diff_review": "db-room production classes absent from main; surgical HEAD and archived v2 comparisons reviewed",
+  "v1_fixture_limit": "reconstructed pre-history schema from preserved v2 DDL, not exported v1 release schema",
+  "performance_limit": "fixed-work lookup contention, not full file scan; no streaming latency gain claimed"
+}

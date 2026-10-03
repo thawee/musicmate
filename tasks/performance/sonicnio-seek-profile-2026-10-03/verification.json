@@ -1,0 +1,15 @@
+{
+  "comparative_requests": 1408,
+  "pilot_requests": 352,
+  "gzip_traces_validated": 5,
+  "trace_quality_noninfo_nonzero_rows": 0,
+  "analysis_recomputed_and_compared": true,
+  "all_archived_sql_csv_match_recomputation": true,
+  "benchmark_scripts_syntax_and_whitespace": "pass",
+  "local_report_links": "pass",
+  "production_file_hashes_unchanged": 871,
+  "candidate_installed_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+  "scoped_git_diff_check": "pass",
+  "main_diff_review": "main lacks these production classes; preserved source manifest verifies no production changes in this profiling step",
+  "tests": "222 core/UPnP cases passed in preceding candidate verification; not rerun because production code unchanged"
+}

@@ -1,0 +1,73 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1281591964 Realtime: 1416343544
+
+** MEMINFO in pid 11635 [apincer.android.mmate] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    26654    26640       12        9    29136    39328    19170    16056
+  Dalvik Heap    18635    15460     2980        5    22036    40864    13622    27242
+ Dalvik Other    17556    10452        0        0    25156                           
+        Stack     3900     3900        0        0     3908                           
+       Ashmem        4        0        0        0      580                           
+    Other dev       14        0       12        0     1496                           
+     .so mmap     3711      248     1496        1    36128                           
+    .jar mmap     3774        0     1508        0    49972                           
+    .apk mmap    61325        0    60728        0    64864                           
+    .ttf mmap       82        0       44        0      312                           
+    .dex mmap        2        0        0        0      748                           
+    .oat mmap       13        0        0        0     1472                           
+    .art mmap     9454     8256      988        8    23252                           
+   Other mmap     5430      708      856        0    10328                           
+    GL mtrack     6764     6764        0        0     6764                           
+      Unknown     1009      620      372        1     1896                           
+        TOTAL   158351    73048    68996       24   278048    80192    32792    43298
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    24704                          45288
+         Native Heap:    26640                          29136
+                Code:    64444                         168124
+               Stack:     3900                           3908
+            Graphics:     6764                           6764
+       Private Other:    15592
+              System:    16307
+             Unknown:                                   24828
+ 
+           TOTAL PSS:   158351            TOTAL RSS:   278048       TOTAL SWAP PSS:       24
+ 
+ Objects
+               Views:       10         ViewRootImpl:        1
+         AppContexts:        8           Activities:        1
+              Assets:       36        AssetManagers:        0
+       Local Binders:       37        Proxy Binders:       75
+       Parcel memory:       22         Parcel count:       88
+    Death Recipients:        2             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+   Bitmap (malloced):       42                             69
+    Other (malloced):      658                             61
+ Other (nonmalloced):      152                            104
+ 
+ SQL
+         MEMORY_USED:     1215
+  PAGECACHE_OVERFLOW:      423          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4      104            118   887   565    25  /data/user/0/apincer.android.mmate/no_backup/androidx.work.workdb
+         4        8                    0     0     0    (attached) temp
+         4      104            110    18    39    10  /data/user/0/apincer.android.mmate/no_backup/androidx.work.workdb (1)
+         4    11896            123  6027    82     8  /data/user/0/apincer.android.mmate/databases/musixmate_room.db
+         4        8                    0     0     0    (attached) temp
+         4    11896            123 13715    57     3  /data/user/0/apincer.android.mmate/databases/musixmate_room.db (3)
+         4    11896            123 13847    55     4  /data/user/0/apincer.android.mmate/databases/musixmate_room.db (2)
+         4    11896            123 13570    37    10  /data/user/0/apincer.android.mmate/databases/musixmate_room.db (1)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+            905           608            35  /data/user/0/apincer.android.mmate/no_backup/androidx.work.workdb
+          47159           237            25  /data/user/0/apincer.android.mmate/databases/musixmate_room.db

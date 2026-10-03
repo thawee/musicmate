@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.server.CoverThumbnailsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.853Z" hostname="KB-XXAXXW9TX4" time="0.0">
+  <properties/>
+  <testcase name="fit_neverEnlarges" classname="apincer.music.core.server.CoverThumbnailsTest" time="0.0"/>
+  <testcase name="fit_keepsAspectRatio_withinTheBox" classname="apincer.music.core.server.CoverThumbnailsTest" time="0.0"/>
+  <testcase name="sampleSize_isTheLargestPowerOfTwoThatStaysAboveTheTarget" classname="apincer.music.core.server.CoverThumbnailsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

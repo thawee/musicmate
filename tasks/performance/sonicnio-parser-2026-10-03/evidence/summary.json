@@ -1,0 +1,732 @@
+{
+  "micro": {
+    "0": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 1278.346,
+          "min": 757.656,
+          "max": 2389.954,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 1160.919,
+          "min": 692.735,
+          "max": 3144.681,
+          "samples": 15
+        },
+        "after": {
+          "median": 955.196,
+          "min": 715.079,
+          "max": 4533.667,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -25.278758645937792
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 2712.0,
+          "min": 2712.0,
+          "max": 2845.627,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 2368.0,
+          "min": 2368.0,
+          "max": 2505.026,
+          "samples": 15
+        },
+        "after": {
+          "median": 2384.0,
+          "min": 2382.398,
+          "max": 2507.556,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -12.094395280235993
+      }
+    },
+    "4096": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 1192.808,
+          "min": 1014.442,
+          "max": 1680.017,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 775.017,
+          "min": 644.217,
+          "max": 1691.483,
+          "samples": 15
+        },
+        "after": {
+          "median": 780.025,
+          "min": 673.658,
+          "max": 1168.75,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -34.6059885580915
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 23216.0,
+          "min": 23216.0,
+          "max": 23216.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 6464.0,
+          "min": 6464.0,
+          "max": 6464.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 6480.0,
+          "min": 6480.0,
+          "max": 6480.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -72.0882150241213
+      }
+    },
+    "262144": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 34614.166,
+          "min": 32421.5,
+          "max": 36690.832,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 7584.418,
+          "min": 7005.918,
+          "max": 12742.916,
+          "samples": 15
+        },
+        "after": {
+          "median": 7450.082,
+          "min": 6614.084,
+          "max": 7817.25,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -78.47678317599794
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 1313464.0,
+          "min": 1313464.0,
+          "max": 1313464.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 264528.0,
+          "min": 264528.0,
+          "max": 264528.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 264544.0,
+          "min": 264544.0,
+          "max": 264544.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -79.85905970776511
+      }
+    },
+    "1048576": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 139406.664,
+          "min": 135086.0,
+          "max": 146653.336,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 29887.664,
+          "min": 25997.0,
+          "max": 62924.664,
+          "samples": 15
+        },
+        "after": {
+          "median": 29377.664,
+          "min": 23092.0,
+          "max": 51280.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -78.92664299032361
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 5245624.0,
+          "min": 5245624.0,
+          "max": 5245624.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 1050960.0,
+          "min": 1050960.0,
+          "max": 1050960.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 1050976.0,
+          "min": 1050976.0,
+          "max": 1050976.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -79.96470963225728
+      }
+    }
+  },
+  "staged": {
+    "0": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 1332.267,
+          "min": 713.367,
+          "max": 3125.231,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 1254.735,
+          "min": 718.948,
+          "max": 4065.731,
+          "samples": 15
+        },
+        "after": {
+          "median": 1728.129,
+          "min": 688.369,
+          "max": 3815.652,
+          "samples": 15
+        },
+        "baseline_to_final_percent": 29.713413302288494
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 2712.0,
+          "min": 2712.0,
+          "max": 2847.949,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 2368.0,
+          "min": 2368.0,
+          "max": 2502.971,
+          "samples": 15
+        },
+        "after": {
+          "median": 2384.0,
+          "min": 2312.0,
+          "max": 2515.659,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -12.094395280235993
+      }
+    },
+    "4096": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 1268.367,
+          "min": 1023.933,
+          "max": 3541.55,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 801.125,
+          "min": 655.45,
+          "max": 1321.725,
+          "samples": 15
+        },
+        "after": {
+          "median": 812.25,
+          "min": 695.15,
+          "max": 1807.3,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -35.96096397966835
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 23216.0,
+          "min": 23216.0,
+          "max": 23216.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 6464.0,
+          "min": 6464.0,
+          "max": 6464.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 6480.0,
+          "min": 6408.0,
+          "max": 6480.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -72.0882150241213
+      }
+    },
+    "262144": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 23509.0,
+          "min": 21616.082,
+          "max": 25979.834,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 7512.334,
+          "min": 6211.584,
+          "max": 17312.418,
+          "samples": 15
+        },
+        "after": {
+          "median": 7635.666,
+          "min": 7144.75,
+          "max": 12350.584,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -67.52024331107236
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 805320.0,
+          "min": 805320.0,
+          "max": 805320.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 264528.0,
+          "min": 264528.0,
+          "max": 264528.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 264544.0,
+          "min": 264472.0,
+          "max": 264544.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -67.15044951075349
+      }
+    },
+    "1048576": {
+      "ns_per_op": {
+        "baseline": {
+          "median": 84775.336,
+          "min": 76694.0,
+          "max": 92465.672,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 29679.672,
+          "min": 25193.0,
+          "max": 144532.328,
+          "samples": 15
+        },
+        "after": {
+          "median": 30824.0,
+          "min": 26237.664,
+          "max": 79877.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -63.640368231628116
+      },
+      "bytes_per_op": {
+        "baseline": {
+          "median": 3164616.0,
+          "min": 3164616.0,
+          "max": 3164616.0,
+          "samples": 15
+        },
+        "copy-only": {
+          "median": 1050960.0,
+          "min": 1050960.0,
+          "max": 1050960.0,
+          "samples": 15
+        },
+        "after": {
+          "median": 1050976.0,
+          "min": 1050904.0,
+          "max": 1050976.0,
+          "samples": 15
+        },
+        "baseline_to_final_percent": -66.7897779699022
+      }
+    }
+  },
+  "host": {
+    "file-four": {
+      "MiB_s": {
+        "before": {
+          "median": 1462.7955000000002,
+          "min": 1377.712,
+          "max": 1487.711,
+          "samples": 6
+        },
+        "after": {
+          "median": 1466.103,
+          "min": 1429.937,
+          "max": 1481.335,
+          "samples": 6
+        },
+        "change_percent": 0.22610816071009232
+      },
+      "seek_p95_ms": {
+        "before": {
+          "median": 3.2439999999999998,
+          "min": 2.437,
+          "max": 3.886,
+          "samples": 6
+        },
+        "after": {
+          "median": 3.4234999999999998,
+          "min": 2.822,
+          "max": 4.069,
+          "samples": 6
+        },
+        "change_percent": 5.533292231812581
+      }
+    },
+    "file-single": {
+      "MiB_s": {
+        "before": {
+          "median": 693.0045,
+          "min": 639.286,
+          "max": 704.955,
+          "samples": 6
+        },
+        "after": {
+          "median": 684.6659999999999,
+          "min": 659.619,
+          "max": 688.112,
+          "samples": 6
+        },
+        "change_percent": -1.20323894000689
+      }
+    }
+  },
+  "phone": {
+    "initial": {
+      "seek_p50_ms": {
+        "before": {
+          "median": 16.135417041368783,
+          "min": 12.771520996466279,
+          "max": 16.853333567269146,
+          "samples": 3
+        },
+        "after": {
+          "median": 13.512270990759134,
+          "min": 11.974645487498492,
+          "max": 15.254374942742288,
+          "samples": 3
+        },
+        "change_percent": -16.2570700458767
+      },
+      "seek_p95_ms": {
+        "before": {
+          "median": 19.677083007991314,
+          "min": 17.296292004175484,
+          "max": 21.424250095151365,
+          "samples": 3
+        },
+        "after": {
+          "median": 23.98462500423193,
+          "min": 22.94983295723796,
+          "max": 31.310708029195666,
+          "samples": 3
+        },
+        "change_percent": 21.891161380430347
+      },
+      "parallel_MB_s": {
+        "before": {
+          "median": 39.19865001323917,
+          "min": 38.74435307213962,
+          "max": 39.62773532901095,
+          "samples": 3
+        },
+        "after": {
+          "median": 39.56710660958829,
+          "min": 39.53352739467374,
+          "max": 39.757185235673596,
+          "samples": 3
+        },
+        "change_percent": 0.9399726679992337
+      },
+      "single.seconds": {
+        "before": {
+          "median": 0.26949733402580023,
+          "min": 0.25333183305338025,
+          "max": 0.277915749931708,
+          "samples": 3
+        },
+        "after": {
+          "median": 0.2663365410408005,
+          "min": 0.2604849999770522,
+          "max": 0.2672116670291871,
+          "samples": 3
+        },
+        "change_percent": -1.172847589170256
+      },
+      "single.ttfb_ms": {
+        "before": {
+          "median": 40.28095898684114,
+          "min": 25.509250001050532,
+          "max": 42.23141702823341,
+          "samples": 3
+        },
+        "after": {
+          "median": 55.123916012234986,
+          "min": 27.717416058294475,
+          "max": 59.12020802497864,
+          "samples": 3
+        },
+        "change_percent": 36.848569147131506
+      },
+      "converted.seconds": {
+        "before": {
+          "median": 0.8904639580287039,
+          "min": 0.884229417075403,
+          "max": 0.8951780420029536,
+          "samples": 3
+        },
+        "after": {
+          "median": 0.8228305829688907,
+          "min": 0.7239248750265688,
+          "max": 0.8596434170613065,
+          "samples": 3
+        },
+        "change_percent": -7.5952961880163095
+      },
+      "converted.ttfb_ms": {
+        "before": {
+          "median": 17.846041941083968,
+          "min": 16.408500028774142,
+          "max": 20.388583070598543,
+          "samples": 3
+        },
+        "after": {
+          "median": 11.703417054377496,
+          "min": 9.078791947104037,
+          "max": 16.052457969635725,
+          "samples": 3
+        },
+        "change_percent": -34.42009666336898
+      }
+    },
+    "confirmation": {
+      "seek_p50_ms": {
+        "before": {
+          "median": 15.217624488286674,
+          "min": 12.250312487594783,
+          "max": 15.753083571325988,
+          "samples": 3
+        },
+        "after": {
+          "median": 11.821000021882355,
+          "min": 10.05468750372529,
+          "max": 16.589249949902296,
+          "samples": 3
+        },
+        "change_percent": -22.320333038962637
+      },
+      "seek_p95_ms": {
+        "before": {
+          "median": 20.071541075594723,
+          "min": 19.576249993406236,
+          "max": 21.73104102257639,
+          "samples": 3
+        },
+        "after": {
+          "median": 25.831707986071706,
+          "min": 20.78700007405132,
+          "max": 26.039291988126934,
+          "samples": 3
+        },
+        "change_percent": 28.69817962050185
+      },
+      "parallel_MB_s": {
+        "before": {
+          "median": 39.34373755386684,
+          "min": 39.21874460506885,
+          "max": 39.777380372082526,
+          "samples": 3
+        },
+        "after": {
+          "median": 39.66429757880265,
+          "min": 39.45958196148105,
+          "max": 39.933571768518995,
+          "samples": 3
+        },
+        "change_percent": 0.8147675967412171
+      },
+      "single.seconds": {
+        "before": {
+          "median": 0.26561175007373095,
+          "min": 0.2630636249668896,
+          "max": 0.2690545000368729,
+          "samples": 3
+        },
+        "after": {
+          "median": 0.2554403329268098,
+          "min": 0.25500579096842557,
+          "max": 0.2618978749960661,
+          "samples": 3
+        },
+        "change_percent": -3.8294304164246062
+      },
+      "single.ttfb_ms": {
+        "before": {
+          "median": 53.766166092827916,
+          "min": 39.3207500455901,
+          "max": 58.75520908739418,
+          "samples": 3
+        },
+        "after": {
+          "median": 28.78654096275568,
+          "min": 20.869791973382235,
+          "max": 49.3048329371959,
+          "samples": 3
+        },
+        "change_percent": -46.45974772860802
+      },
+      "converted.seconds": {
+        "before": {
+          "median": 0.8682334999321029,
+          "min": 0.8362723749596626,
+          "max": 0.893858416005969,
+          "samples": 3
+        },
+        "after": {
+          "median": 0.8323322499636561,
+          "min": 0.7720044580055401,
+          "max": 0.8998085419880226,
+          "samples": 3
+        },
+        "change_percent": -4.134976359614583
+      },
+      "converted.ttfb_ms": {
+        "before": {
+          "median": 19.490625010803342,
+          "min": 15.98233391996473,
+          "max": 21.49304107297212,
+          "samples": 3
+        },
+        "after": {
+          "median": 14.864832977764308,
+          "min": 9.821583051234484,
+          "max": 17.68525002989918,
+          "samples": 3
+        },
+        "change_percent": -23.733420711111265
+      }
+    },
+    "combined": {
+      "seek_p50_ms": {
+        "before": {
+          "median": 15.48535402980633,
+          "min": 12.250312487594783,
+          "max": 16.853333567269146,
+          "samples": 6
+        },
+        "after": {
+          "median": 12.743458239128813,
+          "min": 10.05468750372529,
+          "max": 16.589249949902296,
+          "samples": 6
+        },
+        "change_percent": -17.706381044953158
+      },
+      "seek_p95_ms": {
+        "before": {
+          "median": 19.87431204179302,
+          "min": 17.296292004175484,
+          "max": 21.73104102257639,
+          "samples": 6
+        },
+        "after": {
+          "median": 24.908166495151818,
+          "min": 20.78700007405132,
+          "max": 31.310708029195666,
+          "samples": 6
+        },
+        "change_percent": 25.328446301805442
+      },
+      "parallel_MB_s": {
+        "before": {
+          "median": 39.28124107946785,
+          "min": 38.74435307213962,
+          "max": 39.777380372082526,
+          "samples": 6
+        },
+        "after": {
+          "median": 39.61570209419547,
+          "min": 39.45958196148105,
+          "max": 39.933571768518995,
+          "samples": 6
+        },
+        "change_percent": 0.8514522594919915
+      },
+      "single.seconds": {
+        "before": {
+          "median": 0.26733312505530193,
+          "min": 0.25333183305338025,
+          "max": 0.277915749931708,
+          "samples": 6
+        },
+        "after": {
+          "median": 0.26119143748655915,
+          "min": 0.25500579096842557,
+          "max": 0.2672116670291871,
+          "samples": 6
+        },
+        "change_percent": -2.29739115475206
+      },
+      "single.ttfb_ms": {
+        "before": {
+          "median": 41.256188007537276,
+          "min": 25.509250001050532,
+          "max": 58.75520908739418,
+          "samples": 6
+        },
+        "after": {
+          "median": 39.04568694997579,
+          "min": 20.869791973382235,
+          "max": 59.12020802497864,
+          "samples": 6
+        },
+        "change_percent": -5.357986678647187
+      },
+      "converted.seconds": {
+        "before": {
+          "median": 0.8873466875520535,
+          "min": 0.8362723749596626,
+          "max": 0.8951780420029536,
+          "samples": 6
+        },
+        "after": {
+          "median": 0.8275814164662734,
+          "min": 0.7239248750265688,
+          "max": 0.8998085419880226,
+          "samples": 6
+        },
+        "change_percent": -6.735278547177104
+      },
+      "converted.ttfb_ms": {
+        "before": {
+          "median": 18.668333475943655,
+          "min": 15.98233391996473,
+          "max": 21.49304107297212,
+          "samples": 6
+        },
+        "after": {
+          "median": 13.284125016070902,
+          "min": 9.078791947104037,
+          "max": 17.68525002989918,
+          "samples": 6
+        },
+        "change_percent": -28.84139854696156
+      }
+    }
+  }
+}

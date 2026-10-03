@@ -1,0 +1,7 @@
+{
+  "candidate_sha256": "4ea87bafc3e90f24cf6d257cbd4665b9cb6e8d1facc94490e646bff8bf200d16",
+  "pid": "12989",
+  "activity_launch": "Starting: Intent { cmp=apincer.android.mmate/.ui.MainActivity }\nWarning: Activity not started, its current task has been brought to the front\nStatus: ok\nLaunchState: HOT\nActivity: apincer.android.mmate/.ui.MainActivity\nTotalTime: 113\nWaitTime: 113\nComplete",
+  "benchmark_test_apk_sha256": "cba0754831c0aca87f9fc08bc7d970a4e3bc2296458fd31c6d584b056f920d82",
+  "database_fixture_sha256": "b7a87fff180bcd0e43e07dc44b359ce356953c9871a60a61068549665c01998d"
+}

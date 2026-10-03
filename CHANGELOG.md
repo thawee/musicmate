@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.23.0] - 2026-10-03
+
+### Performance
+- **FLAC-to-WAV streaming:** Unused FLAC metadata payloads are skipped while preserving audio parameters, seek tables and validation. Earlier matched candidate tests reduced idle seek median by 38.7%; those candidate APKs also contained experiments excluded from this release, so that percentage is not a measurement of 3.23.0. See [PERFORMANCE.md section 16](PERFORMANCE.md#16-streaming-flac-metadata-skipping).
+- **Library path lookup:** A non-unique path index and preserving Room 2→3 migration retain tracks and listening history. Native Android lookup is 51.3× faster with 1.164 MiB additional storage; streaming improvement was not demonstrated. See [PERFORMANCE.md section 15](PERFORMANCE.md#15-non-unique-room-path-index-and-android-validation).
+- **File metadata:** Size and modification time are read together per response, reducing conditional/range preparation time with a small allocation increase. Throughput remains unchanged and tail latency is mixed; see PERFORMANCE.md section 12.
+- **File response preparation:** ETag encoding and Last-Modified formatting allocate less memory while preserving response values. Matched phone runs showed lower seek latency and essentially unchanged bulk throughput; methods and evidence are in PERFORMANCE.md section 11.
+
+### Fixed
+- **Optimized release startup:** Retain jUPnP constructors, result getters, enum values and datatype/CSV generic signatures used through reflection, preventing UPnP initialization failure and interrupted streaming in the minified APK. Release builds now keep warning and error logs.
+- **Tag reading in release builds:** Keep jaudiotagger's ID3 frame-body classes and constructors (looked up by name) and the ASF/WMA chunk readers it instantiates reflectively. Earlier minified releases could not create most ID3 frame bodies by name or read WMA metadata. See [the release report](tasks/performance/sonicnio-release-3.23.0-2026-10-03/REPORT.md).
+- **Streaming under load:** Artwork and WebUI transfers have separate capacity from audio. When audio capacity is full, new requests receive 503 instead of interrupting an existing stream. Handler work, conversion concurrency and generated-audio buffers are bounded.
+- **Stalled streams:** Separate progress deadlines reclaim stuck readers and decoders, including parked conversions, while healthy long transfers stay connected. Generated audio yields between 256 KB writes, and stale producer wakeups cannot affect later requests on the same connection. Late responses created after server shutdown are released.
+
+### Added
+- **Streaming diagnostics:** Bounded response/connection history records first-byte latency, exact body-byte counts, close reasons and decoder failure details for investigating interrupted playback.
+- **Streaming throughput experiments:** Generated audio batches small producer writes while publishing startup and partial data promptly, within the existing shared memory limit. File write budgets are configurable; the default remains 256 KiB. A reproducible host benchmark and measured comparisons are documented in PERFORMANCE.md; real-phone throughput and Netty superiority are not established.
+
 ## [3.22.0] - 2026-10-02
 
 ### Added

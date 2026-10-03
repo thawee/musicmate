@@ -1,0 +1,70 @@
+{
+  "scope": "Host SQLite on copied phone data; no live database changes or app speedup claim",
+  "sqlite": "3.53.4",
+  "tracks": 8289,
+  "distinct_paths": 8289,
+  "query": "SELECT * FROM musictag WHERE path = ?",
+  "hits_per_batch": 48,
+  "misses_per_batch": 16,
+  "operations_per_sample": 128,
+  "warmup_operations_per_sample": 64,
+  "samples": [
+    {
+      "variant": "before",
+      "us_per_lookup": 1770.1009140625
+    },
+    {
+      "variant": "indexed",
+      "us_per_lookup": 13.9674453125
+    },
+    {
+      "variant": "indexed",
+      "us_per_lookup": 10.378578125
+    },
+    {
+      "variant": "before",
+      "us_per_lookup": 1810.33984375
+    },
+    {
+      "variant": "before",
+      "us_per_lookup": 2352.979171875
+    },
+    {
+      "variant": "indexed",
+      "us_per_lookup": 17.08040625
+    }
+  ],
+  "before": {
+    "plan": [
+      [
+        2,
+        0,
+        216,
+        "SCAN musictag"
+      ]
+    ],
+    "page_count": 2974,
+    "page_size": 4096,
+    "free_pages": 0,
+    "results_match": true,
+    "database_bytes_after_close": 12181504,
+    "median_us_per_lookup": 1810.33984375
+  },
+  "indexed": {
+    "plan": [
+      [
+        3,
+        0,
+        61,
+        "SEARCH musictag USING INDEX index_musictag_path (path=?)"
+      ]
+    ],
+    "page_count": 3272,
+    "page_size": 4096,
+    "free_pages": 0,
+    "results_match": true,
+    "database_bytes_after_close": 13402112,
+    "median_us_per_lookup": 13.9674453125
+  },
+  "probe_results_sha256": "d9b4622ff6c774a052b2725f32942a43ac259a12efad0aa3a58e0960be553763"
+}

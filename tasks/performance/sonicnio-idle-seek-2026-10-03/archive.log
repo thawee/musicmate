@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/private/tmp/musicmate-idle-seek-20261003/archive.py", line 10, in <module>
+    assert digest(workspace / name) == sha, name
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: db-room/src/androidTest/java/apincer/music/room/PathIndexPhoneBenchmark.java

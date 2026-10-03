@@ -1,0 +1,4 @@
+         1791022127.107 11635 11770 I r.android.mmate: Explicit concurrent mark compact GC freed 9524KB AllocSpace bytes, 45(16MB) LOS objects, 66% free, 17MB/53MB, paused 278us,1.209ms total 39.916ms
+         1791022130.754 11635 11770 I r.android.mmate: Explicit concurrent mark compact GC freed 8736KB AllocSpace bytes, 51(18MB) LOS objects, 66% free, 18MB/54MB, paused 476us,2.189ms total 59.258ms
+         1791022134.409 11635 11770 I r.android.mmate: Explicit concurrent mark compact GC freed 7212KB AllocSpace bytes, 48(17MB) LOS objects, 66% free, 17MB/53MB, paused 517us,2.562ms total 75.920ms
+         1791022138.078 11635 11657 I r.android.mmate: Explicit concurrent mark compact GC freed 12MB AllocSpace bytes, 19(6644KB) LOS objects, 66% free, 13MB/40MB, paused 361us,2.278ms total 60.502ms

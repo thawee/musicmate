@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.652Z" hostname="KB-XXAXXW9TX4" time="0.009">
+  <properties/>
+  <testcase name="testFormatDurationForDidl" classname="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" time="0.007"/>
+  <testcase name="testParseTimeToSeconds_fractionalSeconds" classname="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" time="0.001"/>
+  <testcase name="testDLNAContentFeatures_bitrateThresholds" classname="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" time="0.001"/>
+  <testcase name="testParseTimeToSeconds_standardFormats" classname="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" time="0.0"/>
+  <testcase name="testParseTimeToSeconds_edgeCases" classname="apincer.music.server.jupnp.MediaServerHubTimeParsingTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

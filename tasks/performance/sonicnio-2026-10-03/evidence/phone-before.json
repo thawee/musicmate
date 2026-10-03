@@ -1,0 +1,22 @@
+{
+  "label": "before",
+  "single": {
+    "size": 9940667,
+    "ttfb_ms": 58.18166700191796,
+    "seconds": 0.27418274991214275,
+    "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+    "status": 200
+  },
+  "seek_p50_ms": 19.56656202673912,
+  "seek_p95_ms": 21.63208299316466,
+  "parallel_MB_s": 39.89835334793292,
+  "converted": {
+    "size": 29529404,
+    "ttfb_ms": 30.42358299717307,
+    "seconds": 2.5927523750578985,
+    "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+    "status": 200
+  },
+  "range_checks": 16,
+  "parallel_hash_matches": 4
+}

@@ -1,0 +1,5 @@
+compare-0-control: 352 requests verified; app PID unchanged
+compare-1-trace: 352 requests verified; app PID unchanged
+compare-2-trace: 352 requests verified; app PID unchanged
+compare-3-control: 352 requests verified; app PID unchanged
+Server candidate identity/activity restored

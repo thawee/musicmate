@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.jupnp.content.DidlValuesTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.674Z" hostname="KB-XXAXXW9TX4" time="0.0">
+  <properties/>
+  <testcase name="samsungMediaInfo_isTheDurationInMilliseconds" classname="apincer.music.server.jupnp.content.DidlValuesTest" time="0.0"/>
+  <testcase name="didlBitrate_isBytesPerSecond" classname="apincer.music.server.jupnp.content.DidlValuesTest" time="0.0"/>
+  <testcase name="didlDate_isAnIsoDate" classname="apincer.music.server.jupnp.content.DidlValuesTest" time="0.0"/>
+  <testcase name="dlnaProfile_onlyForFormatsDlnaDefines" classname="apincer.music.server.jupnp.content.DidlValuesTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

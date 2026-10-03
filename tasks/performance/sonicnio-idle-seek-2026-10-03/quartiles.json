@@ -1,0 +1,22 @@
+{
+  "fastest_24": {
+    "ttfb_ms": 7.695494500000001,
+    "workers_running_ms": 4.6285145,
+    "workers_runnable_ms": 0.2512755,
+    "workers_running_frequency_khz": 1475340.8960225992,
+    "selector_running_ms": 0.7564580000000001,
+    "selector_runnable_ms": 0.3717965,
+    "client_running_ms": 1.1430465,
+    "recorded_gc_pause_overlap_ms": 0.0
+  },
+  "slowest_24": {
+    "ttfb_ms": 18.506719,
+    "workers_running_ms": 11.788881,
+    "workers_runnable_ms": 0.7836974999999999,
+    "workers_running_frequency_khz": 556800.0,
+    "selector_running_ms": 1.584817,
+    "selector_runnable_ms": 0.658776,
+    "client_running_ms": 2.449479,
+    "recorded_gc_pause_overlap_ms": 0.0
+  }
+}
