@@ -565,11 +565,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         String statText = "";
         if (!isEmpty(currentCriteria.getKeyword())) {
             if (count > 0) {
-                statText = StringUtils.formatSongSize(count) + " Songs";
+                statText = StringUtils.formatSongSize(count) + (count == 1 ? " Song" : " Songs");
             }
 
             if (isEmpty(currentCriteria.getFilterType()) && count > 0) {
-                statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
+                statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration) + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
             }
         } else {
             if (count > 0) {
@@ -581,11 +581,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
                     unitTitle = count == 1 ? "Genre" : "Genres";
                 } else {
-                    unitTitle = "Tracks";
+                    unitTitle = count == 1 ? "Track" : "Tracks";
                 }
                 statText = StringUtils.formatSongSize(count) + " " + unitTitle;
                 if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
-                    statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize) + SYMBOL_ENC_SEP + StringUtils.formatDuration(totalDuration, true);
+                    statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration) + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
                 }
             }
         }
@@ -605,6 +605,14 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 SearchCriteria.TYPE.PLAYLIST.equals(type) && isEmpty(currentCriteria.getKeyword()));
         apincer.android.mmate.ui.compose.MainScaffoldState.updateBackVisible(hasActiveFilter || currentCriteria.isSearchMode()
                 || !SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
+    }
+
+    /**
+     * "22.9 Days of Music": a bare "22.9 Days" did not read as total playing time.
+     * It comes before the storage size, so truncation drops the size first.
+     */
+    private static String playtimeLabel(double totalSeconds) {
+        return StringUtils.formatDuration(totalSeconds, true) + " of Music";
     }
 
     private String getFilterLabel() {

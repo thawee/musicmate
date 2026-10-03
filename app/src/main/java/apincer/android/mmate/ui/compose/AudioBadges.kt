@@ -492,13 +492,29 @@ private fun ProvenanceDivider() {
 }
 
 @Composable
-fun NewBadge(track: Track?, modifier: Modifier = Modifier) {
+fun NewBadge(track: Track?, modifier: Modifier = Modifier, dotOnly: Boolean = false) {
     if (track == null || track.isManaged) return
 
     val isDownload = TagUtils.isOnDownloadDir(track)
     val accentColor = if (isDownload) Color(0xFF64B5F6) else Color(0xFFFFD700)
     val borderColor = if (isDownload) Color(0x5564B5F6) else Color(0x55FFD700)
     val bgBase = Color(0xD9141414)
+    val description = if (isDownload) "Downloaded track" else "New track"
+
+    // Over album art a labelled pill hid the cover; a ringed dot marks it instead
+    if (dotOnly) {
+        Box(
+            modifier = modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(bgBase)
+                .padding(2.dp)
+                .clip(CircleShape)
+                .background(accentColor)
+                .semantics { contentDescription = description }
+        )
+        return
+    }
 
     Box(
         modifier = modifier
@@ -506,7 +522,7 @@ fun NewBadge(track: Track?, modifier: Modifier = Modifier) {
             .background(bgBase)
             .border(0.5.dp, borderColor, CircleShape)
             .padding(horizontal = 6.dp, vertical = 2.dp)
-            .semantics { contentDescription = if (isDownload) "Downloaded track" else "New track" },
+            .semantics { contentDescription = description },
         contentAlignment = Alignment.Center
     ) {
         Row(

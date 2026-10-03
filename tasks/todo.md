@@ -6,6 +6,7 @@
 - [x] On-device check (optimized build signed with the phone key, data kept): one Play pill shows; shuffle off starts at the first result; shuffle on gave three different random starts. Shuffle was turned back off and playback paused.
 - [x] Main-screen UX fixes, tested on the phone: opaque mini player, solid scroll-to-top button, marquee only while playing, and compact badges at large text (duration inline at 1.3x). 109 app unit tests pass.
 - [x] Changelog/UI.md updated and committed.
+- [x] Follow-up, tested on the phone: NEW/DL badge becomes a dot on list artwork (spoken label kept), menu mark on the logo, equaliser icon for Music Center, "Days of Music" with playtime before size, and singular "1 Track"/"1 Song".
 
 # SonicNIO external server research (2026-10-03)
 

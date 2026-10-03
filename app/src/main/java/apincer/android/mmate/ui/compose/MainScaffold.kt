@@ -20,6 +20,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -753,12 +754,19 @@ private fun TopSearchBar(
                         onClick = onMenuClick,
                         modifier = Modifier.size(48.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
-                            contentDescription = stringResource(R.string.nav_content_description),
-                            tint = drawerGold,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Box {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
+                                contentDescription = stringResource(R.string.nav_content_description),
+                                tint = drawerGold,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            MenuHintBadge(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .offset(x = 5.dp, y = 5.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                 }
@@ -873,7 +881,8 @@ private fun TopSearchBar(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.rounded_speaker_24),
+                            // Equaliser bars read as "now playing"; the speaker looked like an output picker
+                            painter = painterResource(id = R.drawable.ic_graphic_eq_black_24dp),
                             contentDescription = stringResource(R.string.cd_open_music_center),
                             tint = if (isPlaybackTargetActive) drawerGold else Color(0xE5FFFFFF),
                             modifier = Modifier.size(20.dp)
@@ -922,6 +931,29 @@ private fun TopSearchBar(
                     val iconOnly = UiLayoutPolicy.iconOnlyPlayResultsPills(LocalDensity.current.fontScale)
                     PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play", iconOnly) { onPlayResults() }
                 }
+            }
+        }
+    }
+}
+
+// Three-line badge on the logo so it reads as the menu button
+@Composable
+private fun MenuHintBadge(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(13.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF2A2A2A))
+            .border(0.75.dp, Color(0x40FFFFFF), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(1.5.dp)) {
+            repeat(3) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 6.dp, height = 1.dp)
+                        .background(Color(0xE5FFFFFF))
+                )
             }
         }
     }

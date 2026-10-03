@@ -154,12 +154,13 @@ fun TrackListItem(
                     )
                 }
 
-                // New badge top-right
+                // New/downloaded dot top-right
                 NewBadge(
                     track = track,
+                    dotOnly = true,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(4.dp)
+                        .padding(5.dp)
                 )
 
                 // Audiophile Now Playing Indicator - Floating micro-badge at bottom-right
