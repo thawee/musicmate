@@ -1168,9 +1168,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
-    public void onPlayResults(boolean shuffle) {
+    public void onPlayResults() {
         if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCurrentResults(null, playbackService, shuffle);
+            viewModel.playCurrentResults(null, playbackService);
         }
     }
 

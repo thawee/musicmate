@@ -210,7 +210,10 @@ fun TrackListItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 val screenWidthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
-                val isCompact = screenWidthDp < 390
+                val isCompact = UiLayoutPolicy.compactTrackBadges(
+                    screenWidthDp,
+                    androidx.compose.ui.platform.LocalDensity.current.fontScale
+                )
 
                 FlowRow(
                     itemVerticalAlignment = Alignment.CenterVertically,

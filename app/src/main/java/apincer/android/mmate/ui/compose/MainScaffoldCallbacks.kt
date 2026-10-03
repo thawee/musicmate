@@ -19,7 +19,7 @@ interface MainScaffoldCallbacks {
     fun onTrackMenuAction(track: Track, position: Int, actionId: Int)
     fun onTrackQuickPlayClick(track: Track)
     /** Plays every track in the current list or search results, in order or shuffled. */
-    fun onPlayResults(shuffle: Boolean)
+    fun onPlayResults()
     fun onFolderPlayClick(track: Track)
     fun onFolderEnqueueClick(track: Track)
     fun onDockPlayPauseClick()

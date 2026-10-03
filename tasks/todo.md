@@ -1,3 +1,12 @@
+# Main screen: single Play button (2026-10-03)
+
+- [x] Replace the Play + Shuffle pills beside the search stats with one Play pill; shuffle stays in the now-playing controls.
+- [x] When shuffle mode is on, start results playback at a random track (shuffle mode keeps the starting track first).
+- [x] Remove the unused shuffle parameter from onPlayResults/playCurrentResults; add a view-model test (10/10 MainViewModelTest, UiLayoutPolicyTest pass).
+- [x] On-device check (optimized build signed with the phone key, data kept): one Play pill shows; shuffle off starts at the first result; shuffle on gave three different random starts. Shuffle was turned back off and playback paused.
+- [x] Main-screen UX fixes, tested on the phone: opaque mini player, solid scroll-to-top button, marquee only while playing, and compact badges at large text (duration inline at 1.3x). 109 app unit tests pass.
+- [x] Changelog/UI.md updated and committed.
+
 # SonicNIO external server research (2026-10-03)
 
 ## Release 3.23.0
@@ -36,14 +45,14 @@ Found via newly retained error logs: ASF chunk readers fail `Class.newInstance()
 - [x] Archive successful and failed release checks, APK/source hashes and descriptive latency results in the release report.
 - [x] Add the final release scope and verification results to PERFORMANCE.md; distinguish historical candidate comparisons from this release's correctness check. Claim no new throughput or Netty advantage.
 - [x] Finalize changelog/release notes, including the reflection fix and held changes; verify release workflow uses the notes.
-- [ ] Stage only intended code, tests, documentation and curated evidence. Exclude caches, private database fixtures, signing keys and scratch APKs.
-- [ ] Review the staged diff against the previous release/default branch, check archive integrity and run git diff --check.
+- [x] Stage only intended code, tests, documentation and curated evidence. Exclude caches, private database fixtures, signing keys and scratch APKs.
+- [x] Review the staged diff against the previous release/default branch, check archive integrity and run git diff --check. (Archived CRLF CSVs left untouched because they are hash-pinned.)
 
 ### 5. Publish and verify
-- [ ] Create the release commit and annotated v3.23.0 tag after all runtime gates pass.
-- [ ] Push master and v3.23.0 atomically to origin; never force-push.
-- [ ] Verify GitHub Actions completes and the v3.23.0 release contains its expected APK and release notes.
-- [ ] Report the release URL, commit, version and verification totals.
+- [x] Create the release commit and annotated v3.23.0 tag after all runtime gates pass. (eb6fbed3; a clean worktree reproduced the tested DEX byte for byte.)
+- [x] Push master and v3.23.0 atomically to origin; never force-push.
+- [x] Verify GitHub Actions completes and the v3.23.0 release contains its expected APK and release notes. (Run 37135807310 succeeded. The CI DEX differs only in obfuscated names; it keeps all reflection targets, and the shipped APK passed startup, 352/352 streaming requests and the UPnP description check on the phone.)
+- [x] Report the release URL, commit, version and verification totals.
 
 Status: all runtime gates pass on the final APK (jUPnP + jaudiotagger rules). No release commit, tag or push has been made. Evidence redaction is done (device serial replaced, manifest hashes cascaded); the user chose to commit all evidence, including the large raw traces.
 

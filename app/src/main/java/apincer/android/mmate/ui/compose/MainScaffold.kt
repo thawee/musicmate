@@ -501,7 +501,7 @@ fun MainScaffold(
                     canPlayResults = !state.isPlaylistOverview.value &&
                         state.selectedTracks.isEmpty() &&
                         state.tracks.firstOrNull()?.isContainer == false,
-                    onPlayResults = { shuffle -> callbacks?.onPlayResults(shuffle) },
+                    onPlayResults = { callbacks?.onPlayResults() },
                     isPlaylistOverview = state.isPlaylistOverview.value,
                     isScanning = state.isScanning.value,
                     scanProgressText = state.scanProgressText.value,
@@ -709,7 +709,7 @@ private fun TopSearchBar(
     showMenuButton: Boolean,
     statsText: String,
     canPlayResults: Boolean = false,
-    onPlayResults: (shuffle: Boolean) -> Unit = {},
+    onPlayResults: () -> Unit = {},
     isPlaylistOverview: Boolean,
     isScanning: Boolean,
     scanProgressText: String,
@@ -920,17 +920,14 @@ private fun TopSearchBar(
                     ScanningIndicator(scanProgressText)
                 } else if (canPlayResults) {
                     val iconOnly = UiLayoutPolicy.iconOnlyPlayResultsPills(LocalDensity.current.fontScale)
-                    Row(horizontalArrangement = Arrangement.spacedBy(if (iconOnly) 0.dp else 8.dp)) {
-                        PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play", iconOnly) { onPlayResults(false) }
-                        PlayResultsPill(R.drawable.ic_baseline_shuffle_24, "Shuffle", iconOnly) { onPlayResults(true) }
-                    }
+                    PlayResultsPill(R.drawable.ic_baseline_play_arrow_24, "Play", iconOnly) { onPlayResults() }
                 }
             }
         }
     }
 }
 
-// ── Play / Shuffle the current list ──────────────────────────────────────────
+// ── Play the current list (shuffle mode applies) ─────────────────────────────
 @Composable
 private fun PlayResultsPill(iconRes: Int, label: String, iconOnly: Boolean = false, onClick: () -> Unit) {
     Row(
@@ -1014,10 +1011,13 @@ private fun FloatingMiniPlayerDock(
     val haptic = LocalHapticFeedback.current
     val currentScrollToPlaying by rememberUpdatedState(onScrollToPlaying)
     val currentOpenAudioHub by rememberUpdatedState(onOpenAudioHub)
+    // Long text scrolls only while playing; paused text rests at its start
+    val marqueeIterations = if (isPlaying) Int.MAX_VALUE else 0
 
     Surface(
         shape = RoundedCornerShape(20.dp), // DESIGN.md §6A: 20dp corner radius
-        color = Color(0xEB1E1E1E),
+        // Opaque: list text scrolling underneath showed through the title and subtitle
+        color = Color(0xFF1E1E1E),
         modifier = Modifier
             .fillMaxWidth()
             .height(76.dp)
@@ -1132,7 +1132,7 @@ private fun FloatingMiniPlayerDock(
                         maxLines = 1,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .basicMarquee(iterations = Int.MAX_VALUE, velocity = 28.dp)
+                            .basicMarquee(iterations = marqueeIterations, velocity = 28.dp)
                             .fadingEdge(endWidth = 10.dp)
                     )
 
@@ -1170,7 +1170,7 @@ private fun FloatingMiniPlayerDock(
                         maxLines = 1,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
+                            .basicMarquee(iterations = marqueeIterations, velocity = 24.dp)
                             .fadingEdge(endWidth = 10.dp)
                     )
                 }

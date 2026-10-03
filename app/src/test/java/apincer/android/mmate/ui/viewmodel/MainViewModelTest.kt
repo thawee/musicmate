@@ -200,6 +200,38 @@ class MainViewModelTest {
     }
 
     @Test
+    fun playResultsStartsFirstInOrderAndAtRandomInShuffleMode() = runTest(testDispatcher) {
+        val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY)
+        val allTracks = tracks(1, 50)
+        every { tagRepository.findMusic(criteria, 0L, 500L) } returns allTracks
+        every { tagRepository.findMusic(criteria, 0L, Long.MAX_VALUE) } returns allTracks
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        val service = mockk<apincer.music.core.playback.spi.PlaybackService>(relaxed = true)
+        val queue = mockk<apincer.music.core.repository.QueueManager>(relaxed = true)
+        val started = mutableListOf<Track>()
+        var queued: List<Track> = emptyList()
+        every { service.queueManager } returns queue
+        every { service.playSong(any()) } answers { started += firstArg<Track>(); Unit }
+        every { queue.setPlayingQueue(any()) } answers { queued = firstArg(); Unit }
+        every { queue.songs } answers { queued }
+
+        every { queue.isShuffle } returns false
+        viewModel.playCurrentResults(null, service)
+        advanceUntilIdle()
+        assertEquals(allTracks[0], started.single())
+        assertEquals(allTracks, queued)
+
+        every { queue.isShuffle } returns true
+        repeat(20) {
+            viewModel.playCurrentResults(null, service)
+            advanceUntilIdle()
+        }
+        assertEquals(allTracks, queued)
+        assertTrue(started.drop(1).any { it != allTracks[0] })
+    }
+
+    @Test
     fun failedQuickPlayLookupLeavesExistingQueueUntouchedAndReportsError() = runTest(testDispatcher) {
         val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY)
         every { tagRepository.findMusic(criteria, 0L, 500L) } returns tracks(1, 2)

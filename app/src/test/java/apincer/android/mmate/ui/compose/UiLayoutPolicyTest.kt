@@ -32,6 +32,13 @@ class UiLayoutPolicyTest {
     }
 
     @Test
+    fun `track badges compact on narrow screens and at large text`() {
+        assertFalse(UiLayoutPolicy.compactTrackBadges(screenWidthDp = 411, fontScale = 1.0f))
+        assertTrue(UiLayoutPolicy.compactTrackBadges(screenWidthDp = 389, fontScale = 1.0f))
+        assertTrue(UiLayoutPolicy.compactTrackBadges(screenWidthDp = 411, fontScale = 1.3f))
+    }
+
+    @Test
     fun `play results pills drop their labels at large text`() {
         assertFalse(UiLayoutPolicy.iconOnlyPlayResultsPills(fontScale = 1.0f))
         assertTrue(UiLayoutPolicy.iconOnlyPlayResultsPills(fontScale = 1.3f))

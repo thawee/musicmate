@@ -18,7 +18,11 @@ object UiLayoutPolicy {
     fun showQueueDuration(windowWidthDp: Int): Boolean =
         windowWidthDp >= 400
 
-    /** Large text leaves no room for the track count beside labeled Play / Shuffle pills. */
+    /** Narrow screens and large text use the single combined badge, so duration stays on the badge line. */
+    fun compactTrackBadges(screenWidthDp: Int, fontScale: Float): Boolean =
+        screenWidthDp < 390 || fontScale >= LargeTextScale
+
+    /** Large text leaves no room for the track count beside a labeled Play pill. */
     fun iconOnlyPlayResultsPills(fontScale: Float): Boolean =
         fontScale >= LargeTextScale
 

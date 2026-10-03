@@ -344,7 +344,7 @@ fun MusicListScreen(
                 )
             }
 
-            // Glassmorphism Go to Top FAB - sibling of Column, child of outer Box.
+            // Go to Top FAB - sibling of Column, child of outer Box.
             // Centered: at the end it covered each row's ⋮ button and the fast-scroll thumb.
             Box(
                 modifier = Modifier
@@ -360,8 +360,8 @@ fun MusicListScreen(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(Color(0x80000000))
-                            .background(Color(0x1AFFFFFF))
+                            // Solid so row badges underneath do not show through
+                            .background(Color(0xFF262626))
                             .border(1.5.dp, Color(0x4DFFFFFF), CircleShape)
                             .clickable {
                                 coroutineScope.launch {

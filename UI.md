@@ -368,10 +368,10 @@ MusicMate's layout hierarchy is anchored by a persistent main list paired with f
 - **Geometry:** `MaterialCardView` with `20dp` corner radius, `12dp` horizontal / `8dp` bottom margins so the dock floats cleanly above the list edge with insets margin (`systemBars.bottom + 8dp`).
 - **Layout Architecture (Left-to-Right Hierarchy):**
   - **Far Left:** Mini Album Artwork thumbnail (`bar_album_art`, 44dp × 44dp), serving as the primary visual anchor for the playing track (tap opens Music Center).
-  - **Center:** Docked Playback Bar with marquee scrolling track title (`bar_track_title`), target output player subtitle (`bar_target_subtitle`), and Play/Pause & Next transport controls. Fullscreen Studio Console is available through the Audio Hub header rather than a separate dock icon.
+  - **Center:** Docked Playback Bar (opaque) with a track title (`bar_track_title`) that marquee-scrolls only while playing, target output player subtitle (`bar_target_subtitle`), and Play/Pause & Next transport controls. Fullscreen Studio Console is available through the Audio Hub header rather than a separate dock icon.
   - **Far Right:** Collections / Navigation Menu button (`navigation_collections`, 48dp × 48dp), positioned on the right edge in the primary reach zone for effortless one-handed thumb navigation.
 - **Idle State:** Displays idle audio icon, app title ("MusicMate"), and target player prompt.
-- **Playing State:** Dynamically embeds live album artwork, marquee scrolling title, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
+- **Playing State:** Dynamically embeds live album artwork, a title that marquee-scrolls while playing and rests at its start when paused, and target player subtitle (e.g. `HiBy R3 • DLNA Renderer`).
 - **Interactions:**
   - **Single Tap (Title/Art):** Opens the 3-Tab master sheet **`AudioHubSheet.kt`** at the last-viewed tab (sticky session state, see §7C).
   - **Single Tap (Menu Button):** Opens the Library Collections drawer / navigation sheet (`doShowLeftMenus()`).
