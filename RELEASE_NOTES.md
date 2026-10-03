@@ -1,13 +1,9 @@
-# MusicMate 3.23.0
+# MusicMate 3.23.1
 
-Streaming now bounds handler work, conversion concurrency and audio buffers, isolates artwork/control traffic, and preserves active audio when new requests exceed capacity. Progress deadlines reclaim stalled streams, and bounded diagnostics record interruptions.
+Fixes a crash in 3.23.0: opening a song's Tech Info, or anything else that uses FFmpeg, closed the app. The release build had removed methods that FFmpeg's native library looks up by name. Earlier releases had the same build setup and were very likely affected too.
 
-FLAC-to-WAV opening skips unused metadata. File response preparation allocates less, and a non-unique library path index speeds lookup while preserving tracks and listening history through Room migration 2→3.
+The main screen now has a single Play button that follows the shuffle setting in Now Playing. The mini player is opaque, its title scrolls only while music plays, new tracks are marked with a dot on the album art, and the header reads "22.9 Days of Music". Total library size has moved to About.
 
-Targeted retention rules preserve jUPnP members and generic signatures used through reflection, so the optimized APK can start its UPnP services. They also keep the jaudiotagger ID3 frame bodies and WMA chunk readers that earlier minified releases removed or renamed, which could break MP3 ID3 and WMA tag reading. Release builds now keep warning and error logs.
+The song preview and tag editor are clearer. Save lights up as soon as you edit a field, Back from the editor returns to the song preview, and the form no longer leaves a blank band above the keyboard. Tech Info has plain section names and labelled cover-art actions. In selection mode, the bar now shows how many songs are selected.
 
-The final APK passed startup, 352 device-local streaming requests with byte/hash checks, and UPnP description and control checks on a Galaxy S25 (Android 16).
-
-The release excludes the lazy FLAC workspace and combined request-parser/copy experiments because their phone results were mixed. Historical candidate measurements are documented in [PERFORMANCE.md](https://github.com/thawee/musicmate/blob/v3.23.0/PERFORMANCE.md); they are not measurements of this retained-only release or proof of higher throughput than Netty.
-
-Version code: 142. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.23.0/CHANGELOG.md) for details.
+Version code: 143. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.23.1/CHANGELOG.md) for details.

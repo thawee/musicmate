@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.23.1] - 2026-10-04
+
 ### Fixed
 - **Tech Info crash in release builds:** Opening a song's Tech Info (or any other FFmpeg use) crashed the minified app because R8 removed methods FFmpegKit's native library registers and calls by name. The `core` module now ships keep rules for them.
 
@@ -17,10 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Main screen Play:** One Play button replaces Play and Shuffle beside the track count. It follows the shuffle setting in Now Playing; with shuffle on, playback starts on a random track.
 - **Readability:** The mini player is opaque, so list text no longer shows through it, and its title scrolls only while music plays. The scroll-to-top button is solid. At large text sizes, track rows use the compact quality badge so the duration stays on the badge line.
 - **Main screen header and badges:** The MusicMate logo carries a small menu mark, and the Music Center button shows equaliser bars instead of a speaker. New and downloaded tracks are marked with a small dot on the album art instead of a label covering it. Library stats read "22.9 Days of Music". The main header no longer shows total library size, which was nearly always cut off beside Play; search results still show their size, and About shows the library's playtime and size (also in Share Library Snapshot). A single result reads "1 Track" or "1 Song".
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.23.0] - 2026-10-03
 

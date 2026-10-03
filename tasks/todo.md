@@ -1,3 +1,9 @@
+# Release 3.23.1 (2026-10-04)
+
+- [x] Version 3.23.1 / code 143; changelog and release notes.
+- [x] 328 JVM tests; optimized APK on the phone: startup clean, Tech Info opens, 352/352 streaming requests with full-WAV SHA-256, UPnP description 200, no crashes.
+- [ ] Tag v3.23.1, push master and tag atomically, verify CI asset/notes and the shipped DEX (FFmpegKit members kept).
+
 # Song preview / tag editor UX fixes (2026-10-04)
 
 Crash fix committed separately (96ea1785, FFmpegKit keep rules). Remaining review items:
