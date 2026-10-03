@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Tech Info crash in release builds:** Opening a song's Tech Info (or any other FFmpeg use) crashed the minified app because R8 removed methods FFmpegKit's native library registers and calls by name. The `core` module now ships keep rules for them.
+
 ### Changed
 - **Main screen Play:** One Play button replaces Play and Shuffle beside the track count. It follows the shuffle setting in Now Playing; with shuffle on, playback starts on a random track.
 - **Readability:** The mini player is opaque, so list text no longer shows through it, and its title scrolls only while music plays. The scroll-to-top button is solid. At large text sizes, track rows use the compact quality badge so the duration stays on the badge line.
