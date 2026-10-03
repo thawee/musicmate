@@ -6,7 +6,7 @@ Crash fix committed separately (96ea1785, FFmpegKit keep rules). Remaining revie
 - [x] 3. Selection mode shows "N Selected" (Move/Convert/Remove/Select All moved to overflow). Correction: the long-press label was already right; the review wrongly assumed listener tap mode, but this phone uses edit mode.
 - [x] 4. Editor form fills the space above the keyboard (adjustResize + overlap-only IME padding) and restores after it closes.
 - [x] 5. "Year" label reads "Year / Date".
-- [x] 6. Bottom panel padding/margins tightened (modest). Hiding Organize/More in the editor needs a product decision.
+- [x] 6. Bottom panel padding/margins tightened (modest). User decision (2026-10-04): keep Organize/More in the editor.
 - [x] 7. Discard and Remove-art dialogs: opaque dark panel, light Cancel, red destructive button. Remaining: a brown band over the button area is drawn above the app's views (persists with the panel painted solid); it existed before.
 - [x] 8. Back from the editor returns to the preview; Discard resets text edits in place (other pending drafts keep close-and-discard).
 - [x] 9. Section headings use the app's gold accent.
