@@ -2,7 +2,8 @@
 
 - [x] Version 3.23.1 / code 143; changelog and release notes.
 - [x] 328 JVM tests; optimized APK on the phone: startup clean, Tech Info opens, 352/352 streaming requests with full-WAV SHA-256, UPnP description 200, no crashes.
-- [ ] Tag v3.23.1, push master and tag atomically, verify CI asset/notes and the shipped DEX (FFmpegKit members kept).
+- [x] Tag v3.23.1, push master and tag atomically, verify CI asset/notes and the shipped DEX (FFmpegKit members kept). Published; all six previously missing FFmpegKit members present in the CI APK.
+- [ ] Follow-up: 3.23.1 still crashes scanning WAV files (fixed in bf56925e, unreleased); WAV embedded tags/art not read (to investigate).
 
 # Song preview / tag editor UX fixes (2026-10-04)
 
