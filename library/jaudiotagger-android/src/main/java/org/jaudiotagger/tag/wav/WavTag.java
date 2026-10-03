@@ -43,7 +43,8 @@ import java.util.logging.Logger;
  */
 public class WavTag implements Tag, Id3SupportingTag
 {
-    private static final Logger logger = Logger.getLogger(WavTag.class.getPackage().getName());
+    // A literal name: R8 can move this class to the unnamed package, where getPackage() is null
+    private static final Logger logger = Logger.getLogger("org.jaudiotagger.tag.wav");
     
     private static final String NULL = "\0";
 

@@ -113,7 +113,7 @@ public class MusicInfoRepository {
 
             Request request = new Request.Builder()
                     .url(url)
-                    .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion())
+                    .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + okhttp3.OkHttp.VERSION)
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {
@@ -167,7 +167,7 @@ public class MusicInfoRepository {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion())
+                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + okhttp3.OkHttp.VERSION)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
@@ -223,7 +223,7 @@ public class MusicInfoRepository {
         // Format: <App Name>/<Version> (<Contact Info, e.g., email or website>) <Library>/<Version>
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion()) // Replace with your app info
+                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + okhttp3.OkHttp.VERSION) // Replace with your app info
                 .build(); // No Authorization needed for Wikipedia
 
         try (Response response = httpClient.newCall(request).execute()) {
@@ -298,7 +298,7 @@ public class MusicInfoRepository {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion()) // Replace with your app info
+                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + okhttp3.OkHttp.VERSION) // Replace with your app info
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
@@ -382,7 +382,7 @@ public class MusicInfoRepository {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + OkHttpClient.class.getPackage().getImplementationVersion()) // Replace with your app info
+                .header("User-Agent", "MusicMate/1.0 (thaweemail@gmail.com) OkHttp/" + okhttp3.OkHttp.VERSION) // Replace with your app info
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
