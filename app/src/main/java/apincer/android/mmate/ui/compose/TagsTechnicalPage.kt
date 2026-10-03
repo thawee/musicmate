@@ -27,6 +27,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -139,17 +140,13 @@ fun TagsTechnicalPage(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            Button(
+            // Secondary action: a quiet text button rather than the page's most prominent control
+            TextButton(
                 onClick = {
                     copyDiagnostics(context, track, techData, musicMatePath)
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0x33FFD700),
-                    contentColor = Color(0xFFFFD700)
-                ),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xB3FFFFFF)),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_round_content_copy_24),
@@ -160,24 +157,24 @@ fun TagsTechnicalPage(
                 Text(
                     text = "Copy Diagnostics",
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
 
-        TechCard(title = "METADATA HEALTH AUDITOR") {
+        TechCard(title = "TAG CHECK") {
             MetadataHealthCard(track = track, coverArtInfo = techData.coverArtInfo)
         }
 
-        TechCard(title = "REPLAYGAIN LOUDNESS TELEMETRY") {
+        TechCard(title = "LOUDNESS (REPLAYGAIN)") {
             ReplayGainCard(info = techData.replayGainInfo)
         }
 
-        TechCard(title = "EMBEDDED COVER ART INSPECTOR") {
+        TechCard(title = "EMBEDDED COVER ART") {
             CoverArtInspector(info = techData.coverArtInfo)
         }
 
-        TechCard(title = "FILE STORAGE") {
+        TechCard(title = "FILE LOCATION") {
             Text(
                 text = "Current Path:\n${track.path}\n\nMusicMate Path:\n$musicMatePath",
                 fontSize = 12.sp,
@@ -185,11 +182,11 @@ fun TagsTechnicalPage(
             )
         }
 
-        TechCard(title = "EMBEDDED METADATA") {
+        TechCard(title = "ALL EMBEDDED TAGS") {
             MetadataTable(techData.parsedFields)
         }
 
-        TechCard(title = "AUDIO DIAGNOSTICS (FFMPEG)") {
+        TechCard(title = "AUDIO STREAM (FFMPEG)") {
             Text(
                 text = techData.ffmpegInfo,
                 fontSize = 12.sp,
@@ -489,9 +486,10 @@ fun TechCard(title: String, content: @Composable () -> Unit) {
         ) {
             Text(
                 text = title,
-                color = Color(0xFFBB86FC), // Primary
+                color = Color(0xFFFFB300), // App gold accent (matches About and the library headings)
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                fontSize = 12.sp,
+                letterSpacing = 1.sp,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             content()

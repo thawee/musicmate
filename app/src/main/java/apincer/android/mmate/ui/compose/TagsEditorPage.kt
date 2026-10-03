@@ -11,6 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -139,7 +147,7 @@ fun TagsEditorPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
+            .imePaddingWithinWindow()
             .verticalScroll(scrollState)
             .padding(8.dp)
     ) {
@@ -212,7 +220,7 @@ fun TagsEditorPage(
                 EditorTextField(
                     value = state.year,
                     onValueChange = { state.year = it; state.yearModified = true },
-                    label = "Year",
+                    label = "Year / Date",
                     modifier = Modifier.weight(1f),
                     keyboardType = KeyboardType.Number
                 )
@@ -376,4 +384,23 @@ fun EditorDropdownField(
             }
         }
     }
+}
+
+/**
+ * Pads only the part of the keyboard that overlaps this layout. The editor page ends above the
+ * bottom action dock, so plain imePadding() reserved the dock's height twice and left a blank band.
+ */
+@Composable
+private fun Modifier.imePaddingWithinWindow(): Modifier {
+    val density = LocalDensity.current
+    val rootView = LocalView.current.rootView
+    var gapBelow by remember { mutableIntStateOf(0) }
+    val imeBottom = WindowInsets.ime.getBottom(density)
+    val overlap = with(density) { (imeBottom - gapBelow).coerceAtLeast(0).toDp() }
+    return this
+        .onGloballyPositioned { coords ->
+            val bottomInWindow = coords.positionInWindow().y + coords.size.height
+            gapBelow = (rootView.height - bottomInWindow).roundToInt().coerceAtLeast(0)
+        }
+        .padding(bottom = overlap)
 }

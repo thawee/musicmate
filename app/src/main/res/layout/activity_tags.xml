@@ -123,7 +123,7 @@
                             app:strokeColor="#FF747478"
                             app:strokeWidth="0dp"
                             app:cornerRadius="24dp"
-                            app:icon="@drawable/ic_round_image_24"
+                            app:icon="@drawable/ic_baseline_add_photo_alternate_24"
                             app:iconTint="@android:color/white"
                             app:iconGravity="textStart"
                             app:iconPadding="0dp"
@@ -232,7 +232,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         app:cardCornerRadius="28dp"
         app:cardElevation="24dp"
@@ -245,9 +245,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="12dp"
+            android:paddingTop="6dp"
             android:paddingHorizontal="16dp"
-            android:paddingBottom="12dp"
+            android:paddingBottom="8dp"
             android:background="@android:color/transparent">
 
             <!-- Row 1: Understated console utilities with hairline separators -->
@@ -463,46 +463,41 @@
                         android:id="@+id/btn_reload_tag"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_reload"
-                        android:contentDescription="Reload from file"
-                        app:cornerRadius="18dp"
-                        app:icon="@drawable/round_restore_page_24"
-                        app:iconPadding="4dp"
-                        app:iconSize="18dp" />
+                        android:contentDescription="Reload tags from file"
+                        app:cornerRadius="18dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_extract_coverart"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_extract_art"
-                        android:contentDescription="Extract cover art"
-                        app:cornerRadius="18dp"
-                        app:icon="@drawable/ic_round_image_24"
-                        app:iconPadding="4dp"
-                        app:iconSize="18dp" />
+                        android:contentDescription="Save cover art to folder"
+                        app:cornerRadius="18dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_remove_coverart"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_remove_art"
-                        android:contentDescription="Remove cover art"
-                        app:cornerRadius="18dp"
-                        app:icon="@drawable/ic_round_hide_image_24"
-                        app:iconPadding="4dp"
-                        app:iconSize="18dp" />
+                        android:contentDescription="Remove embedded cover art"
+                        android:textColor="#FFFF6E6E"
+                        app:cornerRadius="18dp" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>

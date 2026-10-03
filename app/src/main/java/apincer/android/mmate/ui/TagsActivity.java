@@ -160,6 +160,16 @@ public class TagsActivity extends AppCompatActivity {
         updateSaveButtonStates();
     }
 
+    /** Typing in the editor marks only the editor state, so Save must check it too. */
+    private boolean hasPendingEdits() {
+        return isDirty || (viewModel != null && viewModel.getEditorState().isAnyModified());
+    }
+
+    /** Called by the editor page whenever its modified state changes. */
+    public void onEditorModifiedChanged() {
+        updateSaveButtonStates();
+    }
+
     // Studio Command Dock save states.
     private static final int SAVE_IDLE = 0;
     private static final int SAVE_DIRTY = 1;
@@ -171,12 +181,13 @@ public class TagsActivity extends AppCompatActivity {
     private static final int DOCK_AMBER_ON = 0xFF1A1D21;
     private static final int DOCK_ON_GRAPHITE = 0xFFEEEEEE;
     private static final int DOCK_MUTED = 0xFFBCC5CF;
+    private static final int DESTRUCTIVE_RED = 0xFFFF6E6E;
 
     private int saveVisualState = SAVE_IDLE;
     private final Handler saveIndicatorHandler = new Handler(Looper.getMainLooper());
     private final Runnable saveConfirmReset = () -> {
         if (saveVisualState == SAVE_CONFIRMED) {
-            saveVisualState = isDirty ? SAVE_DIRTY : SAVE_IDLE;
+            saveVisualState = hasPendingEdits() ? SAVE_DIRTY : SAVE_IDLE;
             applySaveVisualState();
         }
     };
@@ -184,14 +195,14 @@ public class TagsActivity extends AppCompatActivity {
     private void updateSaveButtonStates() {
         MaterialButton editorSave = findViewById(R.id.action_save);
         if (editorSave != null) {
-            editorSave.setAlpha(isDirty ? 1f : 0.45f);
+            editorSave.setAlpha(hasPendingEdits() ? 1f : 0.45f);
         }
         if (saveVisualState == SAVE_IN_PROGRESS) return;
-        if (saveVisualState == SAVE_CONFIRMED && !isDirty) {
+        if (saveVisualState == SAVE_CONFIRMED && !hasPendingEdits()) {
             applySaveVisualState();
             return;
         }
-        saveVisualState = isDirty ? SAVE_DIRTY : SAVE_IDLE;
+        saveVisualState = hasPendingEdits() ? SAVE_DIRTY : SAVE_IDLE;
         applySaveVisualState();
     }
 
@@ -216,6 +227,8 @@ public class TagsActivity extends AppCompatActivity {
 
         boolean saving = saveVisualState == SAVE_IN_PROGRESS;
         previewSave.setEnabled(!saving);
+        // Dimmed like the editor's Save when there is nothing to save
+        previewSave.setAlpha(saveVisualState == SAVE_IDLE ? 0.45f : 1f);
         progress.setVisibility(saving ? View.VISIBLE : View.GONE);
         indicator.setVisibility(saving || saveVisualState == SAVE_CONFIRMED ? View.INVISIBLE : View.VISIBLE);
         if (saveVisualState == SAVE_CONFIRMED) {
@@ -231,7 +244,7 @@ public class TagsActivity extends AppCompatActivity {
 
     public void setSaveInProgress(boolean inProgress) {
         saveIndicatorHandler.removeCallbacks(saveConfirmReset);
-        saveVisualState = inProgress ? SAVE_IN_PROGRESS : (isDirty ? SAVE_DIRTY : SAVE_IDLE);
+        saveVisualState = inProgress ? SAVE_IN_PROGRESS : (hasPendingEdits() ? SAVE_DIRTY : SAVE_IDLE);
         applySaveVisualState();
     }
 
@@ -431,7 +444,7 @@ public class TagsActivity extends AppCompatActivity {
                         bottomPanel.getPaddingLeft(),
                         bottomPanel.getPaddingTop(),
                         bottomPanel.getPaddingRight(),
-                        systemBars.bottom + (int) dpToPx(this, 8)
+                        systemBars.bottom + (int) dpToPx(this, 4)
                     );
                 }
                 return insets;
@@ -1460,14 +1473,13 @@ public class TagsActivity extends AppCompatActivity {
     public void doRemoveEmbedCoverart() {
         List<Track> items = new ArrayList<>(getEditItems());
         if (items.isEmpty()) return;
-        new MaterialAlertDialogBuilder(this)
+        showDestructiveDialog(new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setTitle("Remove embedded cover art?")
                 .setMessage(items.size() == 1
                         ? "The picture stored inside this file will be permanently removed."
                         : "The pictures stored inside " + items.size() + " files will be permanently removed.")
-                .setPositiveButton("Remove", (dialog, which) -> runRemoveEmbedCoverart(items))
-                .setNegativeButton("Cancel", null)
-                .show();
+                .setPositiveButton("Remove", (d, which) -> runRemoveEmbedCoverart(items))
+                .setNegativeButton("Cancel", null));
     }
 
     private void runRemoveEmbedCoverart(List<Track> items) {
@@ -2089,17 +2101,53 @@ public class TagsActivity extends AppCompatActivity {
                 currentFocus.clearFocus();
             }
 
+            // From the editor, back returns to the preview. Only text edits can be reset in
+            // place; other pending drafts (e.g. a cover change) keep the old close-and-discard.
+            boolean editing = !previewState;
             if (hasUnsavedEdits()) {
-                new MaterialAlertDialogBuilder(TagsActivity.this)
-                        .setTitle("Discard changes?")
-                        .setMessage("You have unsaved edits. Discard them?")
-                        .setPositiveButton("Discard", (dialog, which) -> finish())
-                        .setNegativeButton("Cancel", null)
-                        .show();
+                boolean resetInPlace = editing && !isDirty && !viewModel.getDraftsDirty();
+                confirmDiscard(resetInPlace ? TagsActivity.this::discardEditorEditsAndShowPreview : TagsActivity.this::finish);
+            } else if (editing) {
+                showPreview();
             } else {
                 finish();
             }
         }
+    }
+
+    private void confirmDiscard(Runnable onDiscard) {
+        showDestructiveDialog(new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
+                .setTitle("Discard changes?")
+                .setMessage("You have unsaved edits. Discard them?")
+                .setPositiveButton("Discard", (d, which) -> onDiscard.run())
+                .setNegativeButton("Cancel", null));
+    }
+
+    /** Opaque dock-coloured panel, light Cancel and red destructive button. */
+    private void showDestructiveDialog(MaterialAlertDialogBuilder builder) {
+        android.graphics.drawable.GradientDrawable panel = new android.graphics.drawable.GradientDrawable();
+        panel.setColor(DOCK_GRAPHITE);
+        panel.setCornerRadius(dpToPx(this, 28));
+        panel.setStroke((int) dpToPx(this, 1), 0x26FFFFFF);
+        androidx.appcompat.app.AlertDialog dialog = builder.setBackground(panel).show();
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setTextColor(DESTRUCTIVE_RED);
+        dialog.getButton(android.content.DialogInterface.BUTTON_NEGATIVE).setTextColor(DOCK_ON_GRAPHITE);
+    }
+
+    private void discardEditorEditsAndShowPreview() {
+        for (androidx.fragment.app.Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof TagsEditorFragment editor && f.isAdded()) {
+                editor.populateEditorInputs(getEditItems());
+            }
+        }
+        showPreview();
+    }
+
+    private void showPreview() {
+        previewState = true;
+        setupActionButtons(0);
+        appBarLayout.setExpanded(true, true);
+        viewModel.refreshDisplayTag();
     }
 
     private void updatePreviewCoverSize() {

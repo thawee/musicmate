@@ -409,8 +409,8 @@
     <string name="btn_format">Format</string>
     <string name="btn_read">From File</string>
     <string name="btn_save">Save</string>
-    <string name="btn_reload">Reload</string>
-    <string name="btn_extract_art">Extract</string>
+    <string name="btn_reload">Reload Tags</string>
+    <string name="btn_extract_art">Save Art</string>
     <string name="btn_remove_art">Remove Art</string>
 
     <!-- Server Management -->

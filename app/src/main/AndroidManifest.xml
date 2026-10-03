@@ -146,7 +146,7 @@
         <activity
             android:name="apincer.android.mmate.ui.TagsActivity"
             android:parentActivityName="apincer.android.mmate.ui.MainActivity"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="adjustResize"
             android:launchMode = "singleInstance"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>

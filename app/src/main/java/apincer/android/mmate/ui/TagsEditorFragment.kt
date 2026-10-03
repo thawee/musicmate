@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -58,6 +59,12 @@ class TagsEditorFragment : Fragment() {
                         if (editItems.isNotEmpty() && !editorState.isAnyModified()) {
                             populateEditorInputs(editItems)
                         }
+                    }
+
+                    // Light up Save as soon as a field is edited (typing does not call setDirty)
+                    LaunchedEffect(Unit) {
+                        snapshotFlow { editorState.isAnyModified() }
+                            .collect { tagsActivity.onEditorModifiedChanged() }
                     }
 
                     val albumArtistOptions = remember(track) { buildAlbumArtistOptions(track) }
