@@ -7,6 +7,7 @@
 - [x] Main-screen UX fixes, tested on the phone: opaque mini player, solid scroll-to-top button, marquee only while playing, and compact badges at large text (duration inline at 1.3x). 109 app unit tests pass.
 - [x] Changelog/UI.md updated and committed.
 - [x] Follow-up, tested on the phone: NEW/DL badge becomes a dot on list artwork (spoken label kept), menu mark on the logo, equaliser icon for Music Center, "Days of Music" with playtime before size, and singular "1 Track"/"1 Song".
+- [x] Library size removed from the main header (kept for search results); About shows "22.9 Days of Music • 286.68 GB" and includes it in the share text. Verified on the phone.
 
 # SonicNIO external server research (2026-10-03)
 

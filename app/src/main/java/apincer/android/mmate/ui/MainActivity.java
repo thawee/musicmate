@@ -585,7 +585,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 }
                 statText = StringUtils.formatSongSize(count) + " " + unitTitle;
                 if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
-                    statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration) + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
+                    statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration);
+                    // Whole-library size was nearly always cut off beside Play, so About shows it;
+                    // search results are short enough to keep theirs
+                    if (currentCriteria.isSearchMode()) {
+                        statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
+                    }
                 }
             }
         }
@@ -609,7 +614,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     /**
      * "22.9 Days of Music": a bare "22.9 Days" did not read as total playing time.
-     * It comes before the storage size, so truncation drops the size first.
+     * In search results it comes before the storage size, so truncation drops the size first.
      */
     private static String playtimeLabel(double totalSeconds) {
         return StringUtils.formatDuration(totalSeconds, true) + " of Music";

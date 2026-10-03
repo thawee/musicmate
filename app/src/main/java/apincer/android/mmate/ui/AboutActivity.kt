@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import apincer.android.mmate.R
@@ -18,6 +19,7 @@ import apincer.music.core.Constants
 import apincer.music.core.repository.TagRepository
 import apincer.music.core.utils.ApplicationUtils
 import apincer.music.core.utils.MusicMateExecutors
+import apincer.music.core.utils.StringUtils
 import apincer.music.core.utils.TagUtils
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -29,6 +31,7 @@ class AboutActivity : ComponentActivity() {
     lateinit var tagRepos: TagRepository
 
     private val pieEntries = mutableStateListOf<PieEntry>()
+    private val librarySummary = mutableStateOf("")
 
     companion object {
         @JvmStatic
@@ -50,6 +53,7 @@ class AboutActivity : ComponentActivity() {
                 AboutScreen(
                     appVersion = appVersion,
                     pieEntries = pieEntries,
+                    librarySummary = librarySummary.value,
                     storageStatusText = "",
                     onBackClick = { finish() }
                 )
@@ -62,10 +66,19 @@ class AboutActivity : ComponentActivity() {
     private fun loadQualityStats() {
         MusicMateExecutors.execute {
             val encList = mutableMapOf<String, Int>()
+            var trackCount = 0
+            var totalSize = 0L
+            var totalSeconds = 0.0
             tagRepos.processAllMusics { tag ->
                 val enc = TagUtils.getEncodingTypeShort(tag)
                 encList[enc] = (encList[enc] ?: 0) + 1
+                trackCount++
+                totalSize += tag.fileSize
+                if (tag.audioDuration > 0) totalSeconds += tag.audioDuration
             }
+            // The main header no longer shows library size, so it lives here
+            val summary = if (trackCount == 0) "" else
+                StringUtils.formatDuration(totalSeconds, true) + " of Music • " + StringUtils.formatStorageSize(totalSize)
 
             val mappedColors = mapOf(
                 Constants.LEGEND_MQA to ContextCompat.getColor(this, R.color.quality_mqa_background),
@@ -83,6 +96,7 @@ class AboutActivity : ComponentActivity() {
             runOnUiThread {
                 pieEntries.clear()
                 pieEntries.addAll(entries)
+                librarySummary.value = summary
             }
         }
     }

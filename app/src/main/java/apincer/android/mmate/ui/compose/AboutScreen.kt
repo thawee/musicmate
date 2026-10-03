@@ -56,6 +56,7 @@ import apincer.music.core.Constants
 fun AboutScreen(
     appVersion: String,
     pieEntries: List<PieEntry>,
+    librarySummary: String = "",
     storageStatusText: String = "",
     onBackClick: () -> Unit
 ) {
@@ -173,6 +174,14 @@ fun AboutScreen(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
                         )
+                        if (librarySummary.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = librarySummary,
+                                color = Color(0x99FFFFFF),
+                                fontSize = 12.sp
+                            )
+                        }
                         Spacer(modifier = Modifier.height(12.dp))
                         QualityPieChart(
                             entries = pieEntries,
@@ -192,6 +201,7 @@ fun AboutScreen(
                                     appendLine("🎼 My Audiophile Collection on MusicMate v$appVersion")
                                     appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                                     appendLine("📊 Total Tracks: $totalTracks")
+                                    if (librarySummary.isNotEmpty()) appendLine("💾 $librarySummary")
                                     appendLine(breakdown)
                                     appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                                     appendLine("⚡ Clean up your music library, inspect audio quality, and stream your collection to your Hi-Fi.")
