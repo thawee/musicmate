@@ -1,5 +1,8 @@
 package apincer.android.mmate.ui
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.produceState
 import apincer.music.core.utils.TagVocabulary
 import android.os.Bundle
 import android.util.Log
@@ -69,9 +72,15 @@ class TagsEditorFragment : Fragment() {
                     }
 
                     val albumArtistOptions = remember(track) { buildAlbumArtistOptions(track) }
-                    val artistOptions = remember(track) { buildArtistOptions(track) }
                     val genreOptions = remember { buildGenreOptions() }
-                    val genreLibraryOptions = remember(track) { buildGenreLibraryOptions(genreOptions) }
+                    // Library lists come from the database: load them off the main thread (a query
+                    // during composition can freeze the editor on large libraries)
+                    val artistOptions by produceState(initialValue = emptyList<String>(), track) {
+                        value = withContext(Dispatchers.IO) { buildArtistOptions(track) }
+                    }
+                    val genreLibraryOptions by produceState(initialValue = emptyList<String>(), track) {
+                        value = withContext(Dispatchers.IO) { buildGenreLibraryOptions(genreOptions) }
+                    }
                     val styleOptions = remember { buildStyleOptions() }
                     val originOptions = remember { buildOriginOptions() }
                     val moodOptions = remember { buildMoodOptions() }

@@ -4,7 +4,7 @@
 - [x] NIO request handler also catches LinkageError (e.g. ExceptionInInitializerError) and answers 500.
 - [x] Media server: wake lock (4 h timeout) renewed every 30 s while RUNNING; lock methods synchronized; periodic discovery, renderer sync monitor and position poll chain survive exceptions.
 - [x] Local playback: onPlayerError skips to the next track (once per bad item), stops after 3 failures in a row. Verified on the emulator with a corrupt file.
-- [ ] Follow-up (not done): Room allows main-thread queries (ANR risk); audit UI-thread DB access.
+- [x] Main-thread DB audit: debug builds now reject main-thread Room queries (release still allows them as a safety net). Emulator sweep of launch, drawer screens, play, preview, editor, Tech Info, Music Center and search found 5 violations in 3 places, all fixed: editor Artist and genre-library lists (now loaded on IO), servers' fallback QueueManager (now lazy), shared QueueManager load at service start (background when constructed on the main thread; whenLoaded() publishes queue, shuffle and repeat). Final sweep: 0 violations.
 
 # Genre / mood / style / origin presets (2026-10-04)
 

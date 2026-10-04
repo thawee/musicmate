@@ -182,11 +182,15 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
             if (playbackService.getQueueManager() != null) {
                 apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
-                apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
-                nps.isShuffle().setValue(qm.isShuffle());
-                int rMode = qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ALL ? 1
-                        : qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE ? 2 : 0;
-                nps.getRepeatMode().setValue(rMode);
+                // Shuffle/repeat and the queue are restored from the database in the background
+                qm.whenLoaded(() -> runOnUiThread(() -> {
+                    apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+                    nps.isShuffle().setValue(qm.isShuffle());
+                    int rMode = qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ALL ? 1
+                            : qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE ? 2 : 0;
+                    nps.getRepeatMode().setValue(rMode);
+                    syncQueueState();
+                }));
             }
             updateVolumeState();
             syncQueueState();

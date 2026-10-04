@@ -37,15 +37,19 @@ public abstract class MusicRoomDatabase extends RoomDatabase {
         if (INSTANCE == null) {
             synchronized (MusicRoomDatabase.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(
+                    RoomDatabase.Builder<MusicRoomDatabase> builder = Room.databaseBuilder(
                             context.getApplicationContext(),
                             MusicRoomDatabase.class,
                             "musixmate_room.db"
                     )
-                    .allowMainThreadQueries()
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                    .fallbackToDestructiveMigration()
-                    .build();
+                    .fallbackToDestructiveMigration();
+                    // Main-thread queries can freeze the UI (ANR). Debug builds reject them so they
+                    // surface during development; release builds still allow them as a safety net.
+                    boolean debuggable = (context.getApplicationInfo().flags
+                            & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                    if (!debuggable) builder.allowMainThreadQueries();
+                    INSTANCE = builder.build();
                 }
             }
         }

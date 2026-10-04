@@ -572,7 +572,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         // Load queue from database
         if(queueManager != null) {
-            playingQueueFlow.setValue(queueManager.getSongs());
+            // The saved queue loads in the background; publish it once it is ready
+            queueManager.whenLoaded(() -> playingQueueFlow.setValue(new java.util.ArrayList<>(queueManager.getSongs())));
             smartQueueWorker.scheduleWithFixedDelay(() -> {
                 try {
                     if (queueManager.refreshSmartQueue()) {

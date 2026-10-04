@@ -493,7 +493,40 @@ public class QueueManager {
     public QueueManager(TagRepository tagRepos) {
         this.tagRepos = tagRepos;
         this.dbHelper = tagRepos.getDbHelper();
+        // Hilt builds this while the service starts, on the main thread: load the saved queue in
+        // the background there (a database read on the main thread can freeze the UI). Elsewhere,
+        // including unit tests, load immediately as before.
+        android.os.Looper main = android.os.Looper.getMainLooper();
+        if (main != null && android.os.Looper.myLooper() == main) {
+            apincer.music.core.utils.MusicMateExecutors.execute(this::initialLoad);
+        } else {
+            initialLoad();
+        }
+    }
+
+    private boolean initialLoadDone;
+    private final List<Runnable> whenLoadedCallbacks = new ArrayList<>();
+
+    private void initialLoad() {
         loadPlayingQueue();
+        List<Runnable> callbacks;
+        synchronized (this) {
+            initialLoadDone = true;
+            callbacks = new ArrayList<>(whenLoadedCallbacks);
+            whenLoadedCallbacks.clear();
+        }
+        for (Runnable callback : callbacks) callback.run();
+    }
+
+    /** Runs the callback once the saved queue has been loaded (immediately if it already has). */
+    public void whenLoaded(Runnable callback) {
+        synchronized (this) {
+            if (!initialLoadDone) {
+                whenLoadedCallbacks.add(callback);
+                return;
+            }
+        }
+        callback.run();
     }
 
     /**

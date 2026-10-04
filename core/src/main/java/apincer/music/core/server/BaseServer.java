@@ -81,7 +81,9 @@ public class BaseServer {
     private final List<String> libInfos = new ArrayList<>();
 
     private PlaybackCallback playbackCallback;
-    private final QueueManager queueManager;
+    // Fallback only, used before the playback service binds. Created on first use: building it
+    // loads the saved queue from the database, which ran on the main thread at startup.
+    private QueueManager fallbackQueueManager;
 
     AutoCloseable nowPlayingSubscription;
     AutoCloseable playbackSubscription;
@@ -93,7 +95,6 @@ public class BaseServer {
         this.context = context;
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
-        this.queueManager = new QueueManager(tagRepos);
 
         this.appVersion = ApplicationUtils.getVersionNumber(context);
         this.osVersion = Build.VERSION.RELEASE;
@@ -118,7 +119,10 @@ public class BaseServer {
         if (playbackService != null && playbackService.getQueueManager() != null) {
             return playbackService.getQueueManager();
         }
-        return this.queueManager;
+        synchronized (this) {
+            if (fallbackQueueManager == null) fallbackQueueManager = new QueueManager(tagRepos);
+            return fallbackQueueManager;
+        }
     }
 
     private PlaybackService playbackService;
