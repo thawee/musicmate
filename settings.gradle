@@ -1,0 +1,35 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = 'https://jitpack.io' }
+    }
+}
+
+rootProject.name = 'musicmate'
+
+// Application & Core Modules
+include ':app'
+include ':core'
+include ':db-room'
+
+// Media Server & UPnP Engines
+include ':server-jupnp'
+
+// Local Libraries & Audio Subsystems
+include ':library:library'
+include ':library:justdsd'
+include ':library:JustFLAC'
+include ':library:crashreporter'
+include ':library:jaudiotagger-android'

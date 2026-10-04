@@ -1,0 +1,3 @@
+Exception in thread "main" java.lang.AssertionError: Repeated metadata read moved input
+	at FlacMetadataSkipBenchmark.scan(FlacMetadataSkipBenchmark.java:59)
+	at FlacMetadataSkipBenchmark.main(FlacMetadataSkipBenchmark.java:88)

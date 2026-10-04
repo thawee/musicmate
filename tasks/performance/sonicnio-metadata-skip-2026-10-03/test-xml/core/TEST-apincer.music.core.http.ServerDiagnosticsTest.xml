@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.ServerDiagnosticsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.676Z" hostname="KB-XXAXXW9TX4" time="0.001">
+  <properties/>
+  <testcase name="rate_comesFromBytesSinceTheLastCall" classname="apincer.music.core.http.ServerDiagnosticsTest" time="0.001"/>
+  <testcase name="counterReset_afterRestart_doesNotShowANegativeRate" classname="apincer.music.core.http.ServerDiagnosticsTest" time="0.0"/>
+  <testcase name="firstCall_hasNoRateYet" classname="apincer.music.core.http.ServerDiagnosticsTest" time="0.0"/>
+  <testcase name="problems_areListedOnlyWhenPresent" classname="apincer.music.core.http.ServerDiagnosticsTest" time="0.0"/>
+  <testcase name="idle_saysSo" classname="apincer.music.core.http.ServerDiagnosticsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

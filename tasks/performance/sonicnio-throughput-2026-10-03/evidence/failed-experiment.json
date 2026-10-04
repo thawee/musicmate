@@ -1,0 +1,8 @@
+{
+  "phase": "prototype; rejected run",
+  "configuration": "fixed-no-batch",
+  "failure": "NullPointerException: producerBuffer was cleared by selector while producer waited for queue space; producer then called flip on null",
+  "expected_body_bytes": 16777216,
+  "reported_prefix_bytes": 69632,
+  "decision": "Abort comparison, inspect response diagnostics, fix ownership handoff, add selectorDrainingWhileProducerWaitsForQueueSpace_preservesEveryByte regression, rerun checks. Partial timings excluded from successful datasets."
+}

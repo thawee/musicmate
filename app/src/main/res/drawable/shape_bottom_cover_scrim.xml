@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Smooth bottom gradient scrim for cover art title & subtitle overlay -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#00000000"
+        android:centerColor="#800A0A0A"
+        android:endColor="#E60A0A0A"
+        android:angle="270" />
+</shape>

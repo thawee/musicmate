@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <size android:height="60dp" android:width="@dimen/dimen_32_dp"/>
+            <solid android:color="@color/black_transparent_50"/>
+            <corners android:radius="@dimen/dimen_4_dp"/>
+        </shape>
+    </item>
+    <item
+        android:top="@dimen/dimen_1_dp"
+        android:bottom="@dimen/dimen_4_dp"
+        android:drawable="@drawable/ic_baseline_keyboard_arrow_up"
+        android:gravity="top"/>
+    <item
+        android:gravity="center"
+        android:left="@dimen/dimen_4_dp"
+        android:right="@dimen/dimen_4_dp"
+        android:drawable="@drawable/ic_round_amp_stories_24"/>
+    <item
+        android:bottom="@dimen/dimen_1_dp"
+        android:top="@dimen/dimen_4_dp"
+        android:drawable="@drawable/ic_round_keyboard_arrow_down_24"
+        android:gravity="bottom"/>
+</layer-list>

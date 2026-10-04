@@ -1,0 +1,44 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace = 'org.jaudiotagger'
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation libs.slf4j.api
+    implementation libs.square.okio
+    implementation libs.jetbrains.annotations
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
+    implementation libs.androidx.concurrent
+
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+}
+
+tasks.register('testClasses') {
+    doLast {
+        println 'This is a dummy testClasses task'
+    }
+}

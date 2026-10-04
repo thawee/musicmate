@@ -1,0 +1,9 @@
+{
+  "audio_transfers": 4,
+  "artwork_transfers": 32,
+  "seconds": 1.4558447080198675,
+  "audio_hashes_match": true,
+  "artwork_bytes": 293656,
+  "mp3_bytes": 7518635,
+  "mp3_range_checks": 3
+}

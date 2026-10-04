@@ -1,0 +1,290 @@
+{
+  "host": {
+    "adaptive-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1518.298,
+        "median_run_seek_p95_ms": 3.039,
+        "max_run_seek_p95_ms": 10.214,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 665.576,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 1034.911,
+        "median_run_seek_p95_ms": 3.799,
+        "max_run_seek_p95_ms": 3.861,
+        "peak_audio_reservation_bytes": 4718592
+      }
+    },
+    "adaptive-no-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1557.584,
+        "median_run_seek_p95_ms": 3.141,
+        "max_run_seek_p95_ms": 3.548,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 627.371,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 174.448,
+        "median_run_seek_p95_ms": 4.233,
+        "max_run_seek_p95_ms": 5.05,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "baseline": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1549.693,
+        "median_run_seek_p95_ms": 3.233,
+        "max_run_seek_p95_ms": 3.354,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 651.133,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 171.059,
+        "median_run_seek_p95_ms": 3.672,
+        "max_run_seek_p95_ms": 7.105,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "baseline-repeat": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1560.144,
+        "median_run_seek_p95_ms": 4.989,
+        "max_run_seek_p95_ms": 8.9,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 694.172,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 174.065,
+        "median_run_seek_p95_ms": 3.582,
+        "max_run_seek_p95_ms": 10.342,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "final-baseline": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1593.753,
+        "median_run_seek_p95_ms": 2.596,
+        "max_run_seek_p95_ms": 2.64,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 678.124,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 174.704,
+        "median_run_seek_p95_ms": 3.954,
+        "max_run_seek_p95_ms": 4.662,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "final-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1586.809,
+        "median_run_seek_p95_ms": 2.876,
+        "max_run_seek_p95_ms": 2.879,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 644.882,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 1084.195,
+        "median_run_seek_p95_ms": 4.118,
+        "max_run_seek_p95_ms": 7.814,
+        "peak_audio_reservation_bytes": 4718592
+      }
+    },
+    "fixed-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1535.689,
+        "median_run_seek_p95_ms": 2.577,
+        "max_run_seek_p95_ms": 3.298,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 673.794,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 1037.05,
+        "median_run_seek_p95_ms": 3.856,
+        "max_run_seek_p95_ms": 3.889,
+        "peak_audio_reservation_bytes": 4718592
+      }
+    },
+    "fixed-no-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1525.731,
+        "median_run_seek_p95_ms": 2.952,
+        "max_run_seek_p95_ms": 11.023,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 680.352,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 168.225,
+        "median_run_seek_p95_ms": 5.476,
+        "max_run_seek_p95_ms": 7.358,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "retained-baseline": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1581.892,
+        "median_run_seek_p95_ms": 3.113,
+        "max_run_seek_p95_ms": 3.195,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 686.701,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 169.054,
+        "median_run_seek_p95_ms": 3.961,
+        "max_run_seek_p95_ms": 4.711,
+        "peak_audio_reservation_bytes": 278528
+      }
+    },
+    "retained-batch": {
+      "file-four": {
+        "samples": 3,
+        "median_MiB_s": 1509.709,
+        "median_run_seek_p95_ms": 3.184,
+        "max_run_seek_p95_ms": 3.414,
+        "peak_audio_reservation_bytes": 0
+      },
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 651.484,
+        "median_run_seek_p95_ms": 0.0,
+        "max_run_seek_p95_ms": 0.0,
+        "peak_audio_reservation_bytes": 0
+      },
+      "pcm-four": {
+        "samples": 3,
+        "median_MiB_s": 1070.37,
+        "median_run_seek_p95_ms": 3.656,
+        "max_run_seek_p95_ms": 4.016,
+        "peak_audio_reservation_bytes": 4718592
+      }
+    },
+    "single-confirm-baseline": {
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 694.21,
+        "median_run_seek_p95_ms": 0,
+        "max_run_seek_p95_ms": 0,
+        "peak_audio_reservation_bytes": 0
+      }
+    },
+    "single-confirm-batch": {
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 674.564,
+        "median_run_seek_p95_ms": 0,
+        "max_run_seek_p95_ms": 0,
+        "peak_audio_reservation_bytes": 0
+      }
+    },
+    "solo-512k": {
+      "file-single": {
+        "samples": 3,
+        "median_MiB_s": 676.141,
+        "median_run_seek_p95_ms": 0,
+        "max_run_seek_p95_ms": 0,
+        "peak_audio_reservation_bytes": 0
+      }
+    }
+  },
+  "phone": {
+    "before": {
+      "original_seconds": 0.26471379201393574,
+      "original_start_ms": 31.990542076528072,
+      "seek_median_ms": 15.072520996909589,
+      "seek_maximum_ms": 24.132999940775335,
+      "parallel_MiB_s": 39.28443020362852,
+      "converted_seconds": 0.8522905419813469,
+      "converted_start_ms": 22.203334025107324
+    },
+    "first-after": {
+      "original_seconds": 0.2646319579798728,
+      "original_start_ms": 57.166083017364144,
+      "seek_median_ms": 16.425999929197133,
+      "seek_maximum_ms": 20.380209083668888,
+      "parallel_MiB_s": 39.55156888320853,
+      "converted_seconds": 0.8725819160463288,
+      "converted_start_ms": 16.871374915353954
+    },
+    "retained-after": {
+      "original_seconds": 0.2664245000341907,
+      "original_start_ms": 37.425416987389326,
+      "seek_median_ms": 11.150041478686035,
+      "seek_maximum_ms": 21.62862499244511,
+      "parallel_MiB_s": 39.95338699987474,
+      "converted_seconds": 0.8308457500534132,
+      "converted_start_ms": 26.391000021249056
+    }
+  }
+}

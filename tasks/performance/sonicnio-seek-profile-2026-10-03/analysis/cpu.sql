@@ -1,0 +1,1 @@
+SELECT t.name,COUNT(*) AS n,SUM(s.dur)/1e6 AS cpu_ms,MAX(s.dur)/1e6 AS max_slice_ms FROM sched s JOIN thread t USING(utid) JOIN process p USING(upid) WHERE p.name='apincer.android.mmate' AND s.dur>0 GROUP BY t.name ORDER BY cpu_ms DESC;

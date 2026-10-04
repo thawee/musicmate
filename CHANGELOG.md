@@ -1,0 +1,1245 @@
+# CHANGELOG
+
+All notable changes to the **MusicMate** project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Fixed
+- **Track analysis after a scan:** Measuring dynamic range for every track ran inside the scan job without progress, so the header stayed at "Scanning: 8302/8302 files" for hours. Android stops long jobs after a few minutes, and each restart repeated the whole folder scan before analysis continued. Analysis now runs as its own background work after the scan, shows "Analyzing: x/y tracks", and resumes with the tracks still missing DR when it is restarted. Starting a new scan pauses analysis until the scan finishes.
+- **Faster track analysis:** Up to 4 tracks are analyzed at once (half the CPU cores), about 2 to 3 times faster on a Galaxy S25 (1.8 to 5.1 tracks per second).
+- **ALAC temp files in music folders:** Analyzing an ALAC track wrote `temp_pcm.raw` into the album's folder, with the same name for every track. It now uses a unique file in the app cache and always deletes it.
+- **Tips stayed after "Don't show these tips again":** The library and queue tips saved the choice but stayed on screen until the app restarted. They now disappear at once.
+- **DR badge color:** The badge rounded the DR value for its label but truncated it for its color, so a 12.6 read "DR13" in the DR12 color while a 13.2 was green. Both now use the rounded value.
+
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.24.0] - 2026-10-04
+
+### Fixed
+- **GitHub release APK would not install:** Releases 3.21.0 to 3.23.2 published `app-release-unsigned.apk`, which Android rejects ("App not installed", `INSTALL_PARSE_FAILED_NO_CERTIFICATES`). The release workflow now signs the APK with the MusicMate release key, verifies the signature, publishes it as `MusicMate-v<version>.apk`, and fails instead of publishing when the signing secrets are missing. A copy installed from Android Studio or another key must be uninstalled once before installing this release.
+- **Renderers on the phone's hotspot:** With Wi-Fi and the hotspot both on, renderers connected to the hotspot (e.g. a HiBy) were not found until MusicMate restarted. The server now rebinds when its network interfaces change (checked on hotspot and network events and every 30 s, deferred while streaming), and the player list keeps renderers on any network the server listens on instead of only the Wi-Fi subnet. Restarting the server in-process also no longer leaves discovery broken: each restart gets a fresh UPnP configuration, because shutting down the old stack stopped its shared worker threads.
+- **Player picker updates live:** Renderers that answered discovery after the picker opened never appeared until it was reopened, and the "Rescan for DLNA players" action could not show them either (the open list never recomputed). The open picker now refreshes every second, and the Rescan action is removed.
+- **UI freezes from database reads:** The saved play queue (loaded up to three times at startup) and the tag editor's Artist and genre lists were read on the main thread. They now load in the background; debug builds reject main-thread queries so new ones are caught early.
+- **Playback stops on a bad file:** An unreadable or corrupt track now skips to the next one instead of stopping the queue; after three failures in a row playback stops.
+- **Long DLNA sessions:** The server's wake lock expired after 4 hours and was never renewed, so streams could stop with the screen off. It is renewed while the server runs. Renderer sync timers and discovery no longer stop for good after a single error.
+- **Background task crashes:** An error in any background task (scan, analysis, file operations) is logged instead of closing the app; the HTTP server answers 500 for handler errors such as class-initialisation failures.
+- **Genre presets saved as two genres:** Presets containing "/" ("R&B / Soul", "Electronic / EDM") were written as two values and read back as "R&B, Soul". Presets now use single names (R&B, Hip-Hop, Electronic, Acoustic, Soundtrack, Alternative; moods Chill, Melancholy, Dark, Focus; styles Live, Audiophile Vocal; origins Western, Other Asian), and older values are mapped to them on rescan and when saving.
+- **Genre playlists:** Rules now match each of a track's genres ("Pop, Rock" matches a Pop playlist) and accept the older preset names.
+- **DR12+ playlist:** Silent audio stored an infinite dynamic range (~9.2e16), so it passed every DR filter. Silence now has no DR, and DR filters and Now Playing ignore implausible stored values.
+- **Keyboard on launch:** The search box no longer takes focus and opens the keyboard when the app starts; it focuses when tapped (and stays reachable with TalkBack).
+
+### Changed
+- **Tag editor choices:** Genre, Style, Mood and Origin open with the full list (current value ticked) and filter only as you type. Presets come first, then genres already in your library without duplicates. Every field has "Clear" and a one-line hint. The Origin list is simplified.
+- **First run:** System Access has a back arrow and a Continue (or Not now) button. The folder dialog is opaque, shows readable locations ("Internal storage › Music"), labels its button "Add folder" and marks default folders.
+- **Library:** Category screens count "Categories", CD and Compressed get category art, playlist cover badges no longer break words at large text, artists and genres show coloured initials, and Similar Tracks explains an empty result.
+- **Settings and Music Center:** Off switches have a visible outline, the console is consistently called the Studio Console, the stopped server shows a neutral "Server Off", and queue actions use one neutral colour with tooltips. The empty queue's Playlists button uses the gold accent. The drawer moves long badges below their title.
+
+## [3.23.2] - 2026-10-04
+
+### Fixed
+- **WAV genre and cover art:** WAV files lost their genre (shown as "Unknown") because a custom `TXXX:GENRE` lookup replaced the standard ID3 genre even when absent; the standard genre is now kept. Embedded covers in WAV/AIFF files are now read through the tag library when Android's metadata retriever finds none.
+- **Null-safety:** Guard the song screen's file type, library category image names and the server QR-code dialog (which could read a cleared bitmap after the server stopped).
+- **Library scan crash in release builds:** Scanning a folder with WAV files crashed the minified app. R8 moved jaudiotagger's `WavTag` into the unnamed package, so `getPackage()` returned null in its static initializer. Online metadata requests had the same pattern for OkHttp's version (now `OkHttp.VERSION`).
+
+## [3.23.1] - 2026-10-04
+
+### Fixed
+- **Tech Info crash in release builds:** Opening a song's Tech Info (or any other FFmpeg use) crashed the minified app because R8 removed methods FFmpegKit's native library registers and calls by name. The `core` module now ships keep rules for them.
+
+### Changed
+- **Song preview and tag editor:** Save is dimmed until there is something to save and lights up as soon as a field is edited. Back from the editor returns to the song preview; Discard resets the edits there. The editor form no longer leaves a blank band above the keyboard. Change Cover uses an add-photo icon, "Year" reads "Year / Date", headings use the app's gold accent, and the Discard and Remove-art dialogs are opaque with a red destructive button. The bottom panel is slightly more compact.
+- **Tech Info:** Plain section names (Tag Check, Loudness, Embedded Cover Art, File Location, All Embedded Tags, Audio Stream), a quieter Copy Diagnostics, and cover actions labelled "Reload Tags", "Save Art" and "Remove Art" (red).
+- **Selection mode:** The bar shows "N Selected"; Move, Convert, Remove and Select All are in its overflow menu.
+- **Main screen Play:** One Play button replaces Play and Shuffle beside the track count. It follows the shuffle setting in Now Playing; with shuffle on, playback starts on a random track.
+- **Readability:** The mini player is opaque, so list text no longer shows through it, and its title scrolls only while music plays. The scroll-to-top button is solid. At large text sizes, track rows use the compact quality badge so the duration stays on the badge line.
+- **Main screen header and badges:** The MusicMate logo carries a small menu mark, and the Music Center button shows equaliser bars instead of a speaker. New and downloaded tracks are marked with a small dot on the album art instead of a label covering it. Library stats read "22.9 Days of Music". The main header no longer shows total library size, which was nearly always cut off beside Play; search results still show their size, and About shows the library's playtime and size (also in Share Library Snapshot). A single result reads "1 Track" or "1 Song".
+
+## [3.23.0] - 2026-10-03
+
+### Performance
+- **FLAC-to-WAV streaming:** Unused FLAC metadata payloads are skipped while preserving audio parameters, seek tables and validation. Earlier matched candidate tests reduced idle seek median by 38.7%; those candidate APKs also contained experiments excluded from this release, so that percentage is not a measurement of 3.23.0. See [PERFORMANCE.md section 16](docs/technical/PERFORMANCE.md#16-streaming-flac-metadata-skipping).
+- **Library path lookup:** A non-unique path index and preserving Room 2→3 migration retain tracks and listening history. Native Android lookup is 51.3× faster with 1.164 MiB additional storage; streaming improvement was not demonstrated. See [PERFORMANCE.md section 15](docs/technical/PERFORMANCE.md#15-non-unique-room-path-index-and-android-validation).
+- **File metadata:** Size and modification time are read together per response, reducing conditional/range preparation time with a small allocation increase. Throughput remains unchanged and tail latency is mixed; see PERFORMANCE.md section 12.
+- **File response preparation:** ETag encoding and Last-Modified formatting allocate less memory while preserving response values. Matched phone runs showed lower seek latency and essentially unchanged bulk throughput; methods and evidence are in PERFORMANCE.md section 11.
+
+### Fixed
+- **Optimized release startup:** Retain jUPnP constructors, result getters, enum values and datatype/CSV generic signatures used through reflection, preventing UPnP initialization failure and interrupted streaming in the minified APK. Release builds now keep warning and error logs.
+- **Tag reading in release builds:** Keep jaudiotagger's ID3 frame-body classes and constructors (looked up by name) and the ASF/WMA chunk readers it instantiates reflectively. Earlier minified releases could not create most ID3 frame bodies by name or read WMA metadata. See [the release report](tasks/performance/sonicnio-release-3.23.0-2026-10-03/REPORT.md).
+- **Streaming under load:** Artwork and WebUI transfers have separate capacity from audio. When audio capacity is full, new requests receive 503 instead of interrupting an existing stream. Handler work, conversion concurrency and generated-audio buffers are bounded.
+- **Stalled streams:** Separate progress deadlines reclaim stuck readers and decoders, including parked conversions, while healthy long transfers stay connected. Generated audio yields between 256 KB writes, and stale producer wakeups cannot affect later requests on the same connection. Late responses created after server shutdown are released.
+
+### Added
+- **Streaming diagnostics:** Bounded response/connection history records first-byte latency, exact body-byte counts, close reasons and decoder failure details for investigating interrupted playback.
+- **Streaming throughput experiments:** Generated audio batches small producer writes while publishing startup and partial data promptly, within the existing shared memory limit. File write budgets are configurable; the default remains 256 KiB. A reproducible host benchmark and measured comparisons are documented in PERFORMANCE.md; real-phone throughput and Netty superiority are not established.
+
+## [3.22.0] - 2026-10-02
+
+### Added
+- **Play or shuffle a whole list:** The track count line in the library and in search results now has **Play** and **Shuffle** buttons. Before, search results ("queen": 35 tracks) could only be played one track at a time.
+- **Play from the song page:** The song page has a gold Play button on the cover again; long-press plays the song next. 3.19.8 removed the cover play button, which left the page with no way to play the song.
+- **Your own playlists:** **Add to Playlist…** in the track `⋮` menu, the song page's **More…** menu and multi-select adds songs to a playlist you name ("New playlist…") or one you made before. Playlists appear under Playlists, match songs by title and artist like the built-in ones, and are saved in `custom_playlists.json` with the smart playlists. Inside one of your playlists, the `⋮` menu has **Remove from Playlist**; long-press a playlist you made (song or smart) to delete it. Both confirm first and never touch the music files. Before, a smart playlist you created could not be deleted at all.
+- **Go to Artist and Go to Album:** The track `⋮` menu can narrow the library to the track's artist or album.
+- **Filter label:** A list narrowed to one artist, album, genre or folder now says so first on the track count line ("Artist: Queen • 21 Tracks"); before, only "21 Tracks" showed.
+
+### Changed
+- **Delete on the song page:** Moved from the bottom dock into **More…** (last, in red, with the batch count), so it is no longer one tap from Organize. It still asks before deleting.
+
+### Fixed
+- **Version in the menu:** The navigation drawer showed a hardcoded "v3.20.1"; it now shows the installed version.
+- **Player app names:** External player apps show by name only ("Poweramp" instead of "Poweramp • v1031") in the mini player, Now Playing and the output picker.
+- **Track menu icon:** "Open in External App" now has an icon and lines up with the other items.
+- **Music Center button:** Uses a speaker icon instead of the bar chart that the Audio Quality menu item also uses.
+- **Queue sources:** The source buttons fade at an edge that hides more (two of six were off screen with no hint), the selected source scrolls into view, and the unexplained "Downloads · 20/20" counter is gone.
+- **Server tab clients:** Connected clients are listed one per row under the counters, across the full card width; an IP address no longer splits across lines. Web browsers show as "Chrome browser", "Safari browser" and so on instead of "Mozilla", and Samsung Tizen and LG Web0S user agents are recognised as TVs.
+- **Phone output name:** The phone's own output shows as "Phone Speaker" (or "Wired Headphones") instead of the model code "SM-S931B", with "Plays on this phone" instead of "Direct Hardware Output".
+- **Scroll to top:** The button is centered above the mini player; at the right edge it covered the `⋮` button of the row under it and the fast-scroll thumb.
+- **Volume slider:** Matches the seek bar's thin style in neutral white, so the two no longer look unrelated (the volume used Material's default thick teal slider).
+- **First letter of titles:** Now Playing and the mini player no longer fade out the first letter of the title and artist ("So What" read as "o What"); only the end fades when text scrolls.
+- **Play / Shuffle at large text and while selecting:** At 130% text and above the pills show icons only, so the track count stays readable; they are hidden while tracks are selected, since they play the whole list.
+- **Now Playing readability:** A darker gradient and a soft text shadow keep the title and artist readable on bright covers, and the album now shows with the artist.
+
+## [3.21.0] - 2026-10-02
+
+### Added
+- **FLAC and ALAC on Sony and LG TVs:** TVs that cannot play a format now get it converted to WAV while it streams, at the original sample rate and bit depth: FLAC for LG (which plays FLAC only on 2022 and later models) and ALAC for Sony and LG. The conversion is bit-perfect (FLAC: the converted audio's MD5 matches the MD5 stored in the file; ALAC: identical to Apple's own decoder), with byte-range and time seeking. Other clients still get the original files. DSD is no longer listed for Sony, LG and Toshiba TVs, which cannot play it.
+- **Seeking by time (LG and Sony TVs):** FLAC and MP3 can now be seeked by time (DLNA `TimeSeekRange.dlna.org`), which LG webOS TVs from 2022 use exclusively and Sony TVs prefer; before, only byte-range seeking was offered, so seeking could fail on those TVs. FLAC uses the file's seek table (the stream starts exactly at a seek point); MP3 is proportional and aligned to a frame. Other formats keep byte-range seeking only and answer a time seek with 406.
+- **DLNA clients list:** The Server tab lists the TVs and apps that used the server in the last 10 minutes (Sony BRAVIA and LG webOS TVs are named by model or type), and each new client's request headers are logged once (logcat tag `DlnaClients`) to diagnose device-specific problems.
+- **Samsung TVs:** The media server answers Samsung's `X_GetFeatureList` (the TV's simple music view now opens at the library root) and its track-length request (`getMediaInfo.sec`, answered with `MediaInfo.sec: SEC_Duration`), which Samsung TVs use to show the length and seek bar. Only these Samsung features are advertised.
+- **Windows Media Player and Xbox:** The media server now offers Microsoft's `X_MS_MediaReceiverRegistrar` service, which Windows Media Player and Xbox require before they list a server. Every device is allowed, as for other clients.
+- **Cover thumbnails for DLNA TVs:** Tracks and albums now also offer a 160×160 JPEG cover tagged with the DLNA `JPEG_TN` profile, for renderers (some Sony and Samsung TVs) that show no art without it. The full-size cover stays first, so other renderers are unchanged. Thumbnails are made on the phone when first requested and cached.
+- **Server diagnostics:** The Music Center Server tab shows a live line while the server runs: active streams, throughput, total requests, and any evicted, refused or rate-limited requests (for example "2 streams • 9.0 MB/s • 1,204 requests"). SonicNIO now logs to logcat under the `NioHttpServer` tag instead of printing to standard output, and its high-load warnings appear once instead of every second.
+
+### Removed
+- **Netty engine and the engine setting:** Removed the Netty engine (`:server-jupnp-netty`), the "Server engine" choice in Settings and the Music Center Server tab, and the engine-switching layer (ADR-037). On-device benchmarks showed Netty no faster than SonicNIO, and choosing Netty had never taken effect: a missing packaged file made it fail at startup and the app quietly kept using SonicNIO. Everyone now streams with SonicNIO; a saved engine choice is cleared at startup. The app is about 3.5 MB smaller.
+- **CoreHTTP engine:** Removed the Apache HttpCore engine (`:server-jupnp-httpcore`), its build-time bytecode patch and the HttpCore and ASM dependencies (ADR-035). A saved CoreHTTP choice switches to SonicNIO automatically.
+- **Dead server code:** Deleted the unbuilt Jetty 12, Undertow and HttpCore 5.4 engine modules (not in `settings.gradle`, and their catalog entries no longer existed), the unused `MediaServerHubImplOld`, and Netty's unused `NettyUPnpServerImpl`/`UpnpContentHolder` (UPnP control always runs on SonicNIO). About 8,400 lines; no behaviour change. Engine docs updated to match, including stale notes about shadowed HttpCore classes.
+
+### Changed
+- **Player priority:** Music you are listening to is no longer interrupted by another device. Before, a TV or browser playing a song from MusicMate took over as the current player and stopped local playback. Now nothing automatic interrupts what is playing, and when the current player is idle, whatever starts playing takes over (so a song started in Poweramp shows in Now Playing even while a TV renderer is selected but idle). When two start at once, a DLNA stream (TV, browser) wins over a DLNA renderer, then local playback, then an external player app. Choosing a player yourself always wins. On start, MusicMate picks the last player you chose, else a DLNA renderer, then local, then an external app.
+- **SonicNIO is the streaming engine:** Every install now streams with the built-in SonicNIO engine, which needs no third-party HTTP library and already handles UPnP control.
+- **Audio headers:** SonicNIO now sends the `X-Audio-*` headers (sample rate, bit depth, bitrate, format, Bit-Perfect) from one shared helper.
+
+### Fixed
+- **Now Playing for songs played in other apps:** A song playing in an external app (Poweramp, UAPP…) was shown with no library id, so WebUI actions on it (tags, playlists) did not work. Library tracks copied in the app now keep their id.
+- **Following a resumed external app:** A song resumed in an external app (Poweramp, UAPP…) that was already open but paused was not followed, because MusicMate only checked apps when one opened or closed. It now watches each app's play state.
+- **Playing the queue in another app:** When MusicMate plays its queue in an external player (UAPP, HiBy, Poweramp), it now sends the next track when the current one ends; the app only receives one file at a time, so playback used to stop after the first track. Stopping in the app, or choosing another song there, is respected.
+- **Now Playing for browsers and other control apps:** When a browser (WebUI) or a renderer driven by another app (such as BubbleUPnP) plays a song from MusicMate, Now Playing follows it again; every such request was ignored as if MusicMate were driving a DLNA renderer. Play controls (pause, next, seek…) no longer try to act on those streams, which MusicMate cannot control.
+- **DLNA sorting, search and refresh:** Control apps and TVs can now sort folders and search results by title, artist, album or date (sorting was advertised but ignored). The library root is marked searchable and the search capabilities list everything Search supports, so clients show their search box. When the library changes (tracks added, removed or edited), `SystemUpdateID` now changes so clients refresh their view; it stayed at 1.
+- **Server identity:** The `Server` header now has the standard UPnP form (`Android/16 UPnP/1.0 MusicMate/3.20.2 SonicNIO/2.2`; it lacked the `UPnP/1.0` token that some TVs and Xbox check), and the device's model name is `MusicMate` instead of the phone model, so clients can recognise the server.
+- **DLNA metadata and search:** Control apps can now search the library (title, artist, album, genre, or all audio); Search used to return nothing while the server advertised it. Track entries now carry the real artist as `dc:creator` (it said "MusicMate"), a valid duration (`0:04:23.000`, was `04:23`), a valid date, the bitrate in bytes per second (it was 8x too high), and are marked read-only. FLAC, ALAC, DSD and WAV no longer carry invented DLNA profile names, and the track list and the stream header now agree. The server no longer claims upload, time-seek or Samsung subtitle support it does not have, and a dead `/hires_badge` link is gone.
+- **Album art type for DLNA and the WebUI:** Cover images are now sent with the type of their actual content. Many covers are JPEG files named `.png` (or PNG art saved as `Cover.jpg`); 146 of 315 covers checked on a device were sent with the wrong type, which strict DLNA renderers can refuse. Covers without art still get the default image.
+- **Default cover image:** The "no cover" picture is read straight from the app instead of a copy in the cache, so an interrupted first copy can no longer leave a broken placeholder for good. The app no longer copies its bundled covers (about 2 MB) into the cache at startup; nothing read those copies.
+- **Large text and full screen layout:** At 200% text the audio details' VU meter no longer collapses to its title, its scale numbers no longer overlap, and values such as "-4.2 dB" move to the next line whole instead of splitting. In full screen the VU dials show their whole -20 to +3 scale instead of being cropped, and at large text the output chip shortens so the brightness and full-screen buttons stay on screen.
+- **DLNA browsing (ContentDirectory):** Folders now honour the page a control app asks for. "Recently Added", "All Songs", playlists, Artists, Genres and source folders used to return every entry at once (614 items when 20 were asked for), and source folders returned nothing from the third page on. A page of "All Songs" now takes about 0.5 s instead of 6 s, the whole list (8,300 tracks) 4.8 s instead of 16 s, and Sources 0.6 s instead of 1.2 s. The Artists count matches the artists listed, an unknown folder or track gets the standard "no such object" error (701) instead of looking like an empty folder, and unsupported HTTP methods on the UPnP port get 405 instead of 500.
+- **SonicNIO HTTP/1.1 conformance:** Clients that send `Expect: 100-continue` now get `100 Continue` and can send the body instead of waiting. Pipelined requests on one connection are all answered, in order, instead of the extra requests being dropped. HTTP/1.0 clients without `Connection: keep-alive` get their connection closed after the response, as HTTP/1.0 expects. A client that trickles header bytes is cut off 30 seconds after its request started (it used to reset the idle timer with every byte), and idle connections are checked every second.
+- **SonicNIO request bodies:** A POST body that arrives after the headers (common for UPnP SOAP actions and renderer GENA event messages) now reaches the handler complete instead of truncated or empty, and bodies are cut to `Content-Length`.
+- **SonicNIO request reuse:** A client dropping a stream mid-file (renderers do this on every seek) no longer puts the same request object back into the pool twice, which could let two connections share or wipe one request. A negative `Content-Length` now gets `400` and an oversized one no longer leaks its pooled request.
+- **HttpCore 5.5-beta3:** Updated HttpCore and commons-lang3. HttpCore's blocked Android hidden-API calls are now stripped from the upstream jar at build time (ADR-032) instead of shipping edited copies of its classes, which no longer matched beta3.
+- **Tag write failures:** Measure DR no longer saves to the library or reports Success when writing tags to the file fails, keeping the database and file in sync.
+- **Search & Match cover art:** The matched cover is staged like a picked image and replaces the folder `Cover.jpg` only on Save; Discard leaves the original untouched. Cover downloads write to a temporary file and rename, so a failed transfer never truncates an existing image.
+- **Organize with unsaved edits:** Organize now asks to save pending edits first, instead of moving files and persisting unsaved values to the library.
+- **Embedded cover art actions:** Remove asks for confirmation; Extract asks before replacing an existing `Cover.jpg`, never overwrites it when a file has no art, and both report the real result (including partial results across a selection).
+- **Batch file operations:** Delete, Move and Convert list any files that failed after the progress dialog closes. Deleting from the tag editor no longer closes the editor when nothing was removed.
+- **Batch completion:** Delete, Move and Measure DR now finish exactly once, after every file has reported its result, so the failure summary is complete and Organize no longer starts DR analysis twice. Measure DR analyses a copy, so a failed tag write leaves the displayed values unchanged, and Organize's completion runs on the UI thread.
+- **Removing the playing track:** Removing the track that is playing from the queue no longer skips the track after it. Next continues with that track (or stops, or wraps under Repeat All, when it was last), and a DLNA status update for the removed track no longer adds it back. Deleting the playing file when it is last in the queue now stops instead of replaying the previous track.
+- **Shuffle and queue edits:** With shuffle on, editing the queue no longer reshuffles it (ADR-033). Play Next plays right after the current track, added tracks go in among those not yet played, and played tracks do not come back. Play Next and Add to Queue after removing the playing track continue from the right place.
+- **Gapless next track after queue edits:** When the queue, Repeat or Shuffle changes after the next track was handed to the player, the player now gets the new next track, or none when the queue ends here. DLNA renderers are cleared with an empty `SetNextAVTransportURI`.
+- **Local gapless playback:** Preloading the next track no longer removes the playing track from ExoPlayer after an automatic transition, which could cut a track off from the second gapless transition onward.
+- **Sleep timer "end of track":** A manual Next no longer pauses playback; the timer stays set for the new track. While it is set, no gapless next track is handed to the player, so local and DLNA playback pause when the track actually ends, and the DLNA fallback timer pauses instead of starting the next track.
+- **Notification and headset controls:** Next and Previous from the notification, lock screen and wired or Bluetooth headsets now follow the MusicMate queue on local playback (ADR-034). Previously Next only worked when a gapless track was preloaded and did not update the queue.
+- **Play after switching target while paused:** Switching to another player while paused and then pressing Play now starts the track on the new player at the paused position. Before, it sent "resume" to a renderer with nothing loaded, showed Playing, and later skipped to the next track.
+- **Media server Stop:** A stopped server now stays stopped when Wi-Fi reconnects or the network changes; only a server stopped by network loss restarts with the network. Stop pressed while the server is starting, and Start pressed while it is stopping, now take effect. A failed start reports an error instead of silently stopping.
+- **Media server status:** The server panel now shows the server's real state: Starting while it starts, then Running or Error, and Stopped when Wi-Fi loss stops it. Previously it showed Running as soon as a start was requested.
+- **Library load errors:** A failed library query now shows "Couldn't load music" with Retry instead of an empty "No tracks" list, and a failure in the related-tracks sheet shows a message instead of crashing.
+- **Library paging during a scan:** Scrolling a large library while a scan runs no longer risks duplicate rows or a crash. Paged results are ordered with an id tiebreaker, and each new page skips tracks already shown.
+- **Sleep timer chip:** The Now Playing sleep chip now counts down ("12m", then seconds in the last minute) and clears itself when the timer fires.
+- **Sleep timer fade on DLNA renderers:** The fade now starts from the renderer's actual volume instead of assuming 50, so it can no longer get louder, and the volume is restored after pausing so the next Play is not silent.
+- **Library scans at startup:** Opening the app no longer cancels a scan that is queued or running, including a pending full rescan. A full rescan still replaces the current scan; a folder-change scan runs after it.
+- **Media server opt-in:** The media server no longer starts on first launch. It starts automatically only after you have started it yourself; Start and Stop are remembered. Existing installs that never used Start or Stop need to start it once.
+- **Scan status:** A queued or blocked scan now shows "Scan waiting to start…", and a failed scan shows a message instead of looking like a successful one.
+- **Convert keeps cover art:** Converted files keep the embedded cover. If a target format rejects the picture, the conversion is retried without it instead of failing.
+- **Picked cover for several folders:** When the edited tracks span several folders, a picked cover now applies to all of them (after a confirmation), so every saved track gets it. Previously only the shown track's folder changed while the toast reported all tracks saved.
+- **Fast scroll:** The fast-scroll thumb now stays in the right place as more pages load, and dragging it moves from where the drag started instead of jumping.
+- **Selection and artwork taps:** Tapping a track's artwork while selecting tracks now toggles that track like a row tap, instead of replacing the play queue.
+- **Folder Play and Queue feedback:** Playing or queueing a folder reports the real result after it finishes (number of tracks, nothing playable, or an error) instead of announcing success up front, and says when no player is connected instead of doing nothing.
+- **List scroll position:** Opening a collection now starts at the top of its list, and Back returns to where you were, instead of carrying one scroll position across all lists.
+- **Track menu:** The track ⋮ menu offers Convert Format again, and hides Play Now, Play Next and Add to Queue while no playback service is connected instead of showing actions that do nothing.
+- **Storage access for scanning:** After granting storage access from the folder picker, the app returns to the picker instead of leaving the scan request behind.
+- **Library position after rotation:** The open collection, filter and search are kept when the screen rotates, the theme or font size changes, or Android recreates the app in the background.
+- **Accessibility:** Folder Play and Queue buttons have 48dp touch targets and name the folder for screen readers, and track rows announce what tap and long-press do in the current mode (Listener: play/edit; Curator: edit/select; select or deselect while selecting).
+- **SonicNIO invalid ranges:** A malformed or multi-range `Range` header is now ignored and the file is served as `200 OK`, instead of a `206 Partial Content` that claimed the whole file as a partial range (RFC 7233).
+- **SonicNIO bodyless responses:** Responses without a body (416 Range Not Satisfiable, and bare 400/404 errors from the UPnP handler) now send `Content-Length: 0`, so keep-alive clients such as renderers no longer wait for a body that never comes.
+- **SonicNIO WebSocket close:** Closing a WebUI connection from the server (for example when the server is full) now sends the close frame and ends the connection, instead of leaving it open until the idle timeout. Closing connections during shutdown no longer skips cleanup.
+- **SonicNIO stream limit:** When the concurrent-stream limit is reached, the oldest idle stream is now closed on the server's I/O thread instead of from a request thread, removing a race that could corrupt connection state; the new stream is admitted instead of getting 503 while the old one closes.
+- **WebUI command order:** Commands sent quickly from the WebUI (for example repeated Next or volume steps) are now handled in the order they were sent; each connection's messages and its open/close callbacks run one at a time.
+- **SonicNIO start/stop race:** Stopping the web server right after starting it (for example during a quick restart) now stops it; before, the stop could be missed and the server kept running on its port.
+- **WebUI cover art and rate limiting:** Cover art no longer counts toward the 50-requests-per-second limit, so a WebUI page loading a grid of covers from one browser no longer gets broken images (429). Streams and other requests keep the limit.
+- **SonicNIO cleanup on stop and recovery:** Stopping the server, or recovering from an internal network error, now closes open file streams and resets the connection counters; before, they stayed counted and later streams could be refused with 503.
+- **SonicNIO protocol cleanups:** `Connection: close` from a client is honoured; chunked request bodies get `501` instead of being misread; cover art served under the wrong extension gets its real image type; an oversized WebUI message is rejected with a close frame instead of delivering a partial message; stopping the server no longer blocks the caller for up to 10 seconds; and force-closed WebSocket connections are fully released.
+- **SonicNIO WebSocket protocol errors:** A malformed WebUI frame arriving after a frame that needed a reply (for example a ping) no longer leaves the connection open forever; the server always ends it with a close frame (1002). Found by the new fuzz tests.
+- **SonicNIO revalidation:** A request answered with `304 Not Modified` no longer evicts another listener's stream when the concurrent-stream limit is reached; only requests that actually stream a file take a slot.
+- **WebUI first message:** A WebUI message sent in the same packet as the connection upgrade is now handled after the connection is opened, not before.
+- **Repeat One on natural completion:** A track that finishes on its own now repeats under Repeat One on local and DLNA targets. Only an explicit Next (dock, notification, Music Center, server control) advances past it, and only explicit skips are recorded as skips in listening history.
+- **Cover art lazy extraction:** Files without an embedded picture are remembered (keyed by path and modification time), so Coil and the technical page no longer re-open them with `MediaMetadataRetriever` on every cover load. Retagging a file re-enables extraction.
+- **Build:** Updated worker call sites for the static `FileRepository.isManagedInLibrary(Context, Track)` introduced in 3.20.2.
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **MQA identity and accents:** Preserve MQA labels on compact 24-bit/Hi-Res tracks, retain `MQA STUDIO` in expanded fallback badges and full-screen player verdicts, and consistently use the MQA magenta accent.
+- **MQA resolution details:** Show separately labeled encoded resolution and known original sample rate in player details and badge accessibility descriptions. Ignore stale original-rate metadata on non-MQA tracks and omit unknown rates.
+- **Large-text audio metadata:** Wrap library metadata and full-screen specification chips to keep MQA badges and adjacent details readable.
+
+### Verification
+- 94 app unit tests pass, including 11 badge tests; debug APK assembly succeeds. Eight MQA previews render and were visually inspected, including 200% text. The debug APK installed and launched on a connected phone; a real MQA Studio track preview confirmed the corrected badge and encoded-rate accessibility description. New screenshot references and the remaining live-player matrix are pending.
+
+## [3.20.2] - 2026-09-30
+
+### Improved
+- **Cover Art Pipeline (ADR-030)**: Replaced FFmpeg embedded cover extraction with Android's native hardware-accelerated `MediaMetadataRetriever` for instantaneous, low-power extraction.
+- **Lazy Cover Art Trigger**: Wired lazy extraction into Coil's UI pipeline (`FileRepository.getCoverArt()`) ensuring missing embedded artworks actually trigger extraction instead of silently falling back to defaults.
+
+## [3.20.1] - 2026-09-29
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Music Center backdrop:** Disabled the platform dialog window's additional dim layer and retained one consistent 32% Compose scrim, keeping the song library visibly dimmed behind Music Center while blocking background interaction.
+- **Smart Queue capacity layout:** Moved the `20/20` capacity indicator and replenish action from the crowded summary header to the selected Smart Queue source, preventing the capacity text from wrapping vertically on compact phones.
+
+### Changed
+- **Version:** Bumped Android `versionCode` to `138` and `versionName` to `3.20.1-<build date>`; the drawer label now reads `v3.20.1`.
+
+### Verification
+- App unit tests and debug APK assembly passed. The patched debug build was installed on a Samsung Android 16 device; final visual confirmation requires reopening Music Center after unlocking the device.
+
+## [3.20.0] - 2026-09-29
+
+### Added
+- **Contextual System Access:** Added one status-driven screen for required full-storage access and optional external-player access. Capability state refreshes silently on launch/resume, folder scans focus storage recovery only when needed, and the player picker remains usable while offering optional external-player integration.
+- **Playlist loading & smart auto-refill (`PlaylistPickerDialog`):** Direct playback replacement ("Play All"), upcoming queue appending ("+ Queue"), or continuous smart auto-refill (`Source.PLAYLIST`) from any built-in (Audiophile Sanctuary DR12+, Studio Masters Hi-Res, Pure DSD, Lossless Vault) or custom user playlist.
+- **Smart Queue sources:** Select Manual, New (existing unorganized category), Downloads (all tracks matching the existing download classifier), Unplayed Discoveries (tracks with zero recorded completed listens), Rediscover (previously completed tracks unplayed for >= 30 days, oldest first), or Playlist (refills from selected playlist criteria). Background auto-fill appends suggestions without replacing current playback; manual additions take priority. Source, queue anchor, active playlist name, and session exclusions persist across restarts. Manual freezes the list; Clear ends the session. Includes loading/error and caught-up messaging.
+- **Listening history & playback accounting:** Durable history storage (`listening_history` table) with non-destructive Room migration (1 → 2). Tracks completed listens (≥ 90% actual playtime, excluding paused periods and seek jumps), distinct skips, and session idempotence without inflating counts from jitter or renderer transitions. Dedicated single-thread worker safely drains events during service destruction.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Stale batch selection after changing library destination:** Selecting tracks, opening the MusicMate menu, and switching category left the previous category's tracks selected and eligible for Edit, Move, Convert, or Delete even after they were no longer visible. Multi-selection is now keyed by track identity instead of row position, so a refreshed, re-sorted, or replaced list can never retarget a batch action at a track you did not select: selections follow their track, and selections whose track is gone are dropped. Changing a library destination also ends selection outright.
+- **Back button with the MusicMate menu open:** System Back now closes the navigation drawer first, instead of running underlying library navigation (which could re-open the drawer or change filters behind it).
+- **Compose `painterResource` AnimatedVectorDrawable crash:** Resolved fatal `java.lang.IllegalArgumentException: Only VectorDrawables and rasterized asset types are supported` in `QueuePage` when attempting to load `<animated-vector>` (`ic_equalizer_active`) via `painterResource`. Replaced with high-performance, native Compose `AnimatedEqualizerBars` canvas rendering 60fps amber-gold bars.
+- **Tag preview launch crash:** The Studio Command Dock passed a color value to `setIconTintResource`, which expects a resource ID and crashed `TagsActivity` on open. Icon tinting now uses a `ColorStateList`.
+- **Tag preview layout:** Scroll the complete cover and metadata above the action dock, eliminating fixed-height clipping. Match and center the 48dp cover controls; retain all five bottom actions.
+- **Playback output switching:** Select the new playback destination before sending handoff playback and seek commands.
+- **Cover-art editing:** Image selections remain unsaved drafts until Save. Discard preserves the original image, failed copies report an error, and atomic replacement keeps existing artwork intact if saving fails. Saved selections resolve directly instead of falling back to an older cached image.
+- **Quick Play:** Build the replacement queue from the complete current query, including tracks beyond the loaded page; report lookup failures without clearing the existing queue.
+- **Search navigation:** Keep the visible query consistent with active search criteria when changing categories or stepping back through filters.
+- **Music folders:** Keep additions and removals in the same draft and persist only when a scan is confirmed. The folder dialog now uses a lifecycle-aware Compose host.
+
+### Changed
+- **System Access navigation:** Replaced separate Storage Access and Notification Access drawer shortcuts with one summary row (`Ready`, `Storage needed`, or `Optional access off`). Settings open only after an explicit user action, and returning synchronizes external-player monitoring without restarting MusicMate.
+- **MusicMate menu labels:** Renamed drawer entries to match what they actually open — Discover Similar → Similar Tracks (finds matching titles, not recommendations), Sound Grade → Audio Quality, Manage Library → Music Folders & Scan, and Notifications → Notification Access (opens Android notification-listener settings for integrating other players). Copy now comes from string resources so it can be translated.
+- **MusicMate menu accessibility:** Drawer entries now expose their selected state to assistive technology and meet the 48dp minimum interaction target, matching Material 3 navigation-drawer behavior.
+- **Ultra-compact Smart Queue header (68% vertical space reduction):** Consolidated the stacked Top Toolbar and Live Engine HUD into a unified 34dp header bar with jewel status LED, track count & duration, inline lookahead slot badge (`[18/20]`), manual refresh button, and dedicated action triggers (Load Playlist, Focus Now Playing, Clear Queue). Replaced bulky 52dp 2-line cards with single-line 28dp micro-capsules (`Manual`, `New`, `Downloads`, `Discover`, `Rediscover`, `Playlist ▾`), and eliminated the static 40dp info banner box, reducing total header height from 192dp to 60dp to maximize visible queue tracks in the 65% sheet.
+- **Preview polish:** Quieter cover controls, a text-style genre control, lighter metadata dividers, and neutral utilities put focus on artwork and Edit/Save. Dock icon-label pairs are centered; Save reserves space for its status indicator, and buttons can grow with text size.
+- **Studio Command Dock (tag preview):** Replaced the frosted action bar with a charcoal console surface using 24dp top corners, hairline separators between evenly spaced utility actions, and a 65/35 split between a graphite Edit control and an amber Save control. Save now signals idle, unsaved, saving, and saved states through an indicator, progress spinner, and checkmark, announced via accessibility state descriptions. All five actions are retained with press feedback and existing long-press shortcuts.
+- **Compact tag preview:** Center and size artwork to the available preview viewport (up to 280dp), combine genre with wrapping audio badges, and group artist/album/folder into one divided panel. A continuous title/details surface and reduced spacing expose more metadata on the first screen while preserving scrolling and all five bottom actions.
+- **Preview metadata:** Use labeled artist, album, and folder rows with explicit track counts, consistent vector icons and blue navigation accents. Wrap audio badges on narrow screens and brighten the preview dynamic-range meter on a uniform dark surface.
+- **Library recovery:** Empty-library, no-results, empty-collection, and load-error screens offer Choose folders / Scan, Clear search and filters, Browse all songs, and Retry respectively.
+- **Queue clearing:** Require confirmation before removing a nonempty queue in both Music Center hosts.
+- **Smart Queue console & visual discovery:** Replaced the plain dropdown with an audiophile segmented source deck (Manual, New, Downloads, Discover, Rediscover, Playlist) featuring accent gradients, jewel borders, and haptics. Added a live Engine HUD with pulsing jewel status LED, lookahead slot counter, and manual replenish trigger. Track items now render 42dp squircle album art, animated playing equalizers, audiophile `QualityBadge`s, and provenance micro-pills (`NOW PLAYING`, `PLAY NEXT`, `SMART`), organized with visual queue zoning dividers.
+
+### Verification
+- System Access unit tests, debug APK assembly, screenshot verification, and focused permission/drawer Compose tests passed on an Android 16 device. Live grant/revoke journeys remain pending. The repository-wide core test gate is currently blocked by the unrelated untracked `FileRepositoryCoverArtTest.java`, and project lint currently reports 33 pre-existing errors.
+- App/core/server unit tests: 118 passed (51 core, 51 app, 16 server), plus 3 SQLite migration/query tests; debug APK assembled cleanly. Device playback and visual journey verification remain pending.
+
+## [3.19.8] - 2026-09-25
+
+### Added
+- **Tag preview cover affordances (`activity_tags.xml`, `TagsActivity.java`):** Kept the cover back button and made Change Cover a 48dp icon button; removed the redundant cover play button.
+
+### Changed
+- **Mini-player dock:** Removed the fullscreen shortcut to give track details and playback controls more room. Fullscreen Studio Console remains available from the Audio Hub header.
+- **Tag preview:** Hid both the Song Info / Tech Info switcher and editor fields in the expanded cover preview; they appear when the detail editor opens.
+- **Tag preview typography & hierarchy:** Removed duplicate artist/album text and placed the title below the cover art; discography exploration remains in the interactive Compose provenance capsules.
+- **Tag menu hygiene:** Cleaned up obsolete commented-out action groups in the Tag Activity overflow menu.
+- **Tag preview header layout (`activity_tags.xml`):** Moved the title into its own surface below the cover art and placed the audiophile badge strip directly under the cover, eliminating the empty blur band on tall aspect ratios.
+- **Tag preview mode transition (`TagsActivity.java`):** Header height (82% preview / 72% edit) now animates over 220ms with a decelerate interpolator instead of snapping.
+- **Preview taxonomy and provenance (`AudioBadges.kt`):** Show genre alone in the compact taxonomy row; keep the folder location visible in the provenance section even when its name matches the artist or album.
+- **Change Cover placement:** Replaced the hardcoded `52dp` top margin with `16dp`; status-bar insets are already applied to the AppBar, so the old value double-counted the inset.
+- **Quality badge shape (`AudioBadges.kt`):** Unified `QualityBadge` to `CircleShape` so it matches `ResolutionBadge`, `DynamicRangeMeter`, and taxonomy chips (was a rounded rectangle in expanded mode).
+- **Save dirty feedback (`TagsActivity.java`):** Save buttons mute to 45% alpha when there are no unsaved changes; all dirty-state writes go through `setDirty()` so the UI stays in sync. Save remains always visible (More... menu can dirty state without opening the editor).
+- **Version:** Bumped Android `versionCode` to `136` and `versionName` to `3.19.8-<build date>`; the drawer label now reads `v3.19.8`.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Save feedback:** Finish the preview indicator on editor-delegated success/failure, retain the brief success checkmark across refreshes, announce saving/saved distinctly, and cancel delayed feedback on activity destruction.
+- **Tag editing:** Search & Match and auto-tag now mark successfully applied metadata as unsaved so Back prompts before discarding it.
+- **Large collections:** Folder, playlist, album-filtered, and other full-result queries now honor the requested 500-track page rather than appending the same tracks again on scroll.
+- **Library navigation:** Switching categories clears an earlier related-track filter; an empty Playlists category still exposes New Smart Playlist.
+- **Empty queue:** Browse Library now closes Music Center and opens All Songs instead of doing nothing.
+- **Accessibility:** Mini-player and Now Playing detail gestures expose labeled screen-reader actions; Studio Console scrubber and volume fader expose adjustable semantics and keyboard arrow controls.
+- **Media server:** An explicit Stop remains in effect when the main activity is recreated or reopened, until Start is chosen; pending starts are cancelled on Stop.
+- **Tag preview tab bleed-through (`TagsActivity.java`):** The Song Info / Tech Info pill switcher could appear in the expanded cover preview because `setupActionButtons(0)` ran before `tabLayout` was resolved. The tab pill is now looked up before the first mode application so preview mode reliably hides it.
+- **Tag preview tab/action-dock collision (`TagsActivity.java`):** Mode switches (preview vs edit) previously only fired at exact fully-expanded / fully-collapsed offsets, leaving an intermediate scroll band where the tab pill rode under the fixed bottom dock. Switches now use hysteresis (`ENTER_EDIT_RATIO = 0.72`, `EXIT_EDIT_RATIO = 0.40`).
+- **Compose dialog lifecycle crash:** Replaced framework `android.app.Dialog` with `androidx.activity.ComponentDialog` and explicitly attached `ViewTreeLifecycleOwner`, `ViewTreeSavedStateRegistryOwner`, and `ViewTreeViewModelStoreOwner` in `DialogInterop.kt` (`showSearchQueryDialog`, `showSearchResultsDialog`), eliminating the `IllegalStateException` on attach.
+- **Player picker icon caching:** Added in-memory `LruCache` for external music app icon bitmaps in `PlayerPickerDialog.kt` to eliminate GC churn and repeated `PackageManager` lookups during target selection.
+- **Tag detail layout:** Sized the editor above the measured action dock, allowing fields to scroll clear of the actions.
+- **Library and file safety:** Full rescans retain stable track IDs and queue references; unavailable removable storage no longer causes records to be pruned. Move/import operations avoid overwriting existing files, and conversions save to their resolved output path.
+- **Library browsing:** Added 500-track paging and stale-search protection so large libraries load incrementally and older query results cannot replace current results.
+- **Tag editing:** Unsaved changes survive refresh and recreation, failed writes keep drafts available, and blank batch fields preserve each track's existing value. Filename parsing and cover-art actions are accessible from the editor.
+- **Remote and streaming responses:** Escape metadata rendered in the web remote, return an empty response for commands without payloads, and report unsatisfiable byte ranges correctly.
+- **Release build:** Corrected release assembly and packaging issues, including duplicate module resources and optional R8 warning suppression.
+
+### Documentation
+- Updated `USER_GUIDE.md`, `README.md`, and `UI.md` for the current preview controls, collection/queue navigation, accessibility paths, and server start/stop behavior. The debug build and core/app unit tests pass; on-device UI verification is pending. Existing unrelated lint errors remain.
+- Updated [`DESIGN.md`](docs/technical/DESIGN.md) with ADR-029 for stable library identity, safe storage reconciliation, bounded paging, and collision-safe file operations.
+- Updated [`UI.md`](docs/technical/UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title separation, and Compose dialog lifecycle interop.
+- Updated [`UI.md`](docs/technical/UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover Back/Change Cover controls, and Save dirty-state feedback.
+
+## [3.19.7] - 2026-09-21
+
+### Added
+- **External Music Player Companion Controller Architecture (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`, `ExternalAndroidPlayer.java`, `MusicFileProvider.java`)**:
+  - **MediaSession Binder IPC Handoff:** Transitioned external music player integration (Poweramp, USB Audio Player PRO, Neutron, HiBy Music, Foobar2000) from track-by-track `ACTION_VIEW` URL pushes to resilient Android `MediaSession` Binder IPC (`MediaController.getTransportControls()`).
+  - **Eliminated Window/Focus Theft & DAC Lock Resets:** Eliminated background track-end heuristics that repeatedly popped external player windows to the foreground, wiped external playlists, or interrupted direct USB DAC hardware locks (preventing DAC relay clicks/pops).
+  - **Resilient Dynamic Controller Binding:** Added `ensureMediaController()` across all transport controls (`skipToNext`, `skipToPrevious`, `pause`, `resume`, `seekTo`, `stopPlaying`) to dynamically re-bind dropped or lazily initialized `MediaController` instances.
+  - **Target-Scoped Safety Timers:** Gated `scheduleFallback()` gapless transition timers to run strictly on controllable DLNA/UPnP streaming renderers (`activePlayer.isStreaming() && isControllable(activePlayer)`), bypassing Local ExoPlayer and external Android music apps.
+  - **ContentProvider OpenableColumns & MIME Robustness (`MusicFileProvider.java`):** Fixed `query()` to handle `projection == null` using standard `OpenableColumns` (`_display_name`, `_size`, `_data`) without throwing `UnsupportedOperationException`, and updated `getType()` to delegate to `MimeTypeUtils` for accurate audiophile MIME types (`.flac`, `.dsf`, `.dff`, `.ape`, `.wv`).
+  - **Semantic Player Iconography (`MainActivity.java`):** Updated player picker dialog to render the music note vector icon (`rounded_music_note_24`) for external player apps, visually distinguishing local apps from remote Wi-Fi streamers.
+- **Dual-Mode Network Streaming Architecture (`DESIGN.md` §2.D, ADR-026)**:
+  - **Mode A (Integrated DMS + DMC):** Fully documented MusicMate as simultaneous Media Server and Control Point pushing audio via UPnP AVTransport (`SetAVTransportURI` / `SetNextAVTransportURI`) to remote renderers with target-scoped safety timers.
+  - **Mode B (Standalone DMS Only):** Documented standalone media server operation allowing external audiophile controllers (BubbleUPnP, mconnect, WiiM Home, Audirvana) to browse the virtual `ContentDirectory` hierarchy (`LibraryBrowser`, `AlbumsBrowser`, `ArtistsBrowser`, `GenresBrowser`, `CollectionsBrowser`, `SourcesBrowser`) and stream via RFC 7233 byte-range HTTP.
+  - **Passive Stream Observation & Active DMR Collision Guard:** Documented `onAccessMediaTrack()` collision guard suppressing incoming external stream access notifications during active DMR playback while passively displaying metadata when idle.
+- **Decoupled UI/UX Design System (`UI.md`, `DESIGN.md`, `README.md`)**:
+  - **Created `UI.md` (716 lines):** Established an authoritative reference for the Obsidian-Glass Design System, OLED color tokens, tactile gestures (Dual Persona "Listener vs. Curator"), decoupled menu architectures, layout geometries (`CardView 20dp` floating dock, 65% bottom sheet height, 2-row tag command dock), 48dp minimum touch targets, and 19 UI Architectural Decision Records (ADR-001 through ADR-025).
+  - **Refocused `DESIGN.md` (359 lines):** Restructured into a dedicated Technical & System Architecture Specification covering module topology, multi-target playback routing, 32-bit Float PCM, bit-perfect USB DAC discovery, dual-mode streaming, metadata engines, and 7 backend/system ADRs (ADR-007 through ADR-026).
+  - **Documentation Cross-Indexing:** Updated `README.md` and `tasks/lessons.md` with bi-directional documentation links and ADR cross-reference tables.
+
+### Changed
+- **Queue Layout Density Optimization (`QueuePage.kt`, `UI.md`)**: Streamlined upcoming queue list item height to ~50dp (via 7dp vertical padding, compact 13.5sp/11.5sp line heights, 40dp action icons, and 52f reorder drag threshold), increasing visible track capacity in the 65% height sheet by ~40% (displaying 6–7 tracks simultaneously) while preserving Material 3 48dp minimum touch bounds.
+- **Bumped version to `3.19.7` (versionCode `135`) in `app/build.gradle`**.
+
+## [3.19.6] - 2026-09-20
+
+### Added
+- **Dual-Mode Audiophile Audio Telemetry (`AudioLevelProcessor.kt`, `AudioTelemetryManager.kt`, `ReelToReelTapeDeck.kt`, `AnalogVUMeter.kt`, `NowPlayingPage.kt`)**:
+  - **Real-Time PCM Stereo Audio Processor:** Implemented `AudioLevelProcessor` using Media3 `BaseAudioProcessor` in `AndroidPlayerController.java` to extract sample-accurate Left and Right channel RMS decibels ($20 \log_{10}(\text{RMS})$) and true peak levels from decoded PCM audio buffers. Operates in-process without requiring `RECORD_AUDIO` permission or triggering the Android microphone privacy indicator.
+  - **Live Ballistic VU Meter Dynamics:** Wired real PCM telemetry into `AnalogVUMeter.kt`, driving the ANSI ballistic spring-damper needles to live audio transients, bass hits, and vocal dynamics, with automatic fallback to dynamic range modulation when playing on external renderers.
+  - **Vintage Reel-to-Reel Tape Deck Widget (`ReelToReelTapeDeck.kt`):** Built a pure Jetpack Compose Canvas tape deck widget emulating iconic studio master tape machines (Studer A820 / Revox B77). Features dual rotating 3-hole NAB precision aluminum reels, dynamic supply & take-up tape pack radii tracking track progress, mechanical differential angular velocity ($\omega = v/r$), tape ribbon path, tape counter, and glowing RUN/PAUSE status lamp.
+  - **Smart Dual-Mode Switching:** Automatically detects active playback target in `NowPlayingPage.kt` (`isDLNA == true` -> defaults to Reel-to-Reel Tape Deck; `isDLNA == false` -> defaults to Analog VU Meter), paired with an interactive 1-tap capsule switcher (`[VU METER]` ↔ `[TAPE DECK]`) to manually toggle widgets at any time.
+- **Fullscreen Landscape Studio Console ("Hi-Fi Desk Mode") (`FullscreenStudioConsole.kt`, `MainScaffold.kt`, `MainScaffoldState.kt`, `AudioHubSheet.kt`, `AndroidManifest.xml`)**:
+  - **Audiophile Split-Bay Landscape Architecture:** Built an immersive 50/50 horizontal listening console for desk stands, audio racks, car mounts, and tablets.
+    - **Left Bay (Visualizer Deck):** Houses a grand visualizer with smooth animated crossfading (`AnimatedContent`) between Grand Analog VU Meter (live PCM stereo telemetry), Grand Reel-to-Reel Tape Deck (dynamic tape pack radii and differential angular velocity), and Grand Vinyl / Album Cover Art, with an interactive floating 1-tap switcher pill.
+    - **Right Bay (Master Studio Telemetry & Transport Deck):** Features sound quality verdict badges, interactive hardware output target selector chip with live color status dots (`Bit-Perfect Direct USB`, `DLNA Cast`, `Bluetooth`, `Local Audio`), full-width title marquee (`basicMarquee`), monospace technical diagnostics strip (Codec, 24-bit/96kHz, DR12, ReplayGain), high-precision time scrubber with monospace time readouts, tactile studio transport controls (Shuffle, Previous, Master Play/Pause, Next, Repeat), master volume fader bar, and "Up Next" queue preview capsule.
+  - **Zero-Interruption Orientation & Dynamic Screen Wake Lock:** Added `android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"` to `MainActivity` so rotating to landscape never destroys the Activity or resets background playback/DLNA subscriptions. Programmatically locks to landscape upon entry, restores portrait upon exit, and cleanly intercepts Android system back gestures via `BackHandler`.
+  - **1-Tap "Keep Screen Awake" Quick Toggle & Settings Preference (`rounded_wb_sunny_24.xml`, `rounded_bedtime_24.xml`, `Settings.java`, `SettingsScreen.kt`):**
+    - Added an illuminated 1-tap quick toggle button in the console header next to the exit button: glowing gold sun icon (`rounded_wb_sunny_24`) when awake (`FLAG_KEEP_SCREEN_ON` actively held), or subtle sleep moon icon (`rounded_bedtime_24`) when off (allowing standard Android screen timeout).
+    - Dynamically updates `activity.window` flags on the fly and persists `PREF_STUDIO_KEEP_SCREEN_ON` to `Settings`.
+    - Added "Keep Screen Awake in Fullscreen" toggle switch under the User Interface category in `SettingsScreen.kt`.
+  - **Quick Entry Points:** Integrated dedicated expand `[⛶]` icon button and long-press gesture on `FloatingMiniPlayerDock`, plus an expand button in the `AudioHubSheet` header.
+  - **10/10 Luxury Audiophile Refinement (`FullscreenStudioConsole.kt`, `ReelToReelTapeDeck.kt`, `AnalogVUMeter.kt`)**:
+    - **Dynamic Studio Ambilight:** Implemented ambient backlight extracted from album cover art via `Palette` with `clampToDarkroomObsidian()` (luminance clamped at 18%) and smooth $900\text{ms}$ cross-fading, giving an organic breathing backdrop without washing out instrument dials.
+    - **True Immersive Mode:** Configured `WindowInsetsControllerCompat` to hide status and navigation bars upon entry, preventing OS clock/battery collision with the console header, and added an integrated retro studio digital clock.
+    - **Symmetrical Dual-Chassis Bezels:** Housed Left (Visualizer) and Right (Master Control) bays in matching smoked-glass recessed bezels with hairline gold strokes and depth shadows.
+    - **De-cluttered Visualizer Bay:** Docked the `[ VU METER | TAPE DECK | ALBUM ART ]` switcher in a dedicated row below the canvas inside a `Column`, completely eliminating visual overlap with tape heads and rollers, and made `ReelToReelTapeDeck` and `AnalogVUMeter` scale dynamically via `defaultMinSize(minHeight = 118.dp)`.
+    - **Bespoke Audiophile Sliders:** Replaced stock Material 3 sliders with custom-drawn `StudioHiFiScrubber` (3dp illuminated track, amber gradient, and machined brass knurled thumb pip) and `StudioLinearVolumeFader` (calibrated dB attenuator).
+    - **Machined Master Transport & Clean Telemetry:** Designed concentric brushed-brass Play/Pause button with tactile depression, sanitized output target titles to strip raw IP addresses (`HiBy R3 (DLNA)`), and unified sound quality verdicts into leading diagnostic chips.
+    - **Track Identity Mini-Sleeve:** Added an interactive 46dp album art jacket in the Right Bay metadata row when in VU Meter or Tape Deck mode, featuring 1-tap expansion to full Cover Art mode and automatic collapse (`shrinkHorizontally`) when in Cover Art mode.
+- **Mini-Player Dock UX Enhancements & Quick Jump (`MainScaffold.kt`, `MainActivity.java`, `MainScaffoldCallbacks.kt`)**:
+  - **1-Touch Direct Jump to Active Track:** Added long-press gesture on the floating mini-player dock (both album artwork thumbnail and title/artist column) that smoothly locates, pages, and centers the currently playing song in the music list with tactile `HapticFeedbackType.LongPress` feedback.
+  - **Zero-Latency Single Tap:** Decoupled `detectTapGestures` from double-tap detection to eliminate the standard 300ms tap evaluation delay, making mini-player tap to open the Audio Hub sheet instantaneous.
+  - **Frictionless Swipe Navigation:** Integrated horizontal drag gesture detection (swipe left for Next, swipe right for Previous) and upward swipe gesture to smoothly expand the Audio Hub sheet.
+  - **Tactile Circular Transport:** Upgraded mini-dock Play/Pause control to a 40dp circular button with semi-transparent frosted background and gold accent rim.
+- **Unit Test Suite Expansion (`AudioLevelProcessorTest.kt`, `FullscreenStudioConsoleTest.kt`, `NetworkUtilsTest.java`, `QueueManagerTest.java`, `AudioTagTest.java`)**:
+  - Added unit test coverage verifying RMS-to-dB conversion, dBFS-to-VU logarithmic normalization, `AudioTelemetryManager` thread-safe lifecycle and resets, and `AudioLevelProcessor` PCM audio format configuration.
+  - Added unit test coverage in `FullscreenStudioConsoleTest.kt` verifying progress fraction calculations, visualizer mode states, `MainScaffoldState` fullscreen toggle state, `PREF_STUDIO_KEEP_SCREEN_ON` preference constant and toggle simulation, `testSanitizeTargetDeviceTitle()`, and `testClampToDarkroomObsidian()`.
+  - Added unit test coverage in `NetworkUtilsTest.java` verifying virtual/VPN tunnel interface filtering (`isVirtualOrVpnInterface`).
+  - Added unit test coverage in `QueueManagerTest.java` verifying unknown track auto-enqueuing in `setPlaybackTrack`, duplicate prevention in `addPlayingQueue`, insert ordering in `addPlayNext`, and index pointer preservation when relocating active tracks.
+  - Added unit test coverage in `AudioTagTest.java` verifying clone completeness across all metadata fields (`mood`, `style`, `origin`, `bpm`, `fileLastModified`).
+
+### Changed
+- **Global Output Device Title Sanitization & Non-Destructive Subtitles (`MainScaffold.kt`, `FullscreenStudioConsole.kt`)**:
+  - Sanitized target device names across all surfaces to strip raw internal IP addresses and technical transport prefixes (e.g., `HiBy R3 (DLNA)`), keeping UI clean and readable.
+  - Formatted mini-player metadata row as `Artist • Output Target` using styled annotated spans (off-white for artist, semi-bold gold for target) so streaming context never replaces primary musical identity.
+- **Safe-by-Default Gapless Preload Disabling (`MediaServerHubImpl.java`)**:
+  - Disabled UPnP `SetNextAVTransportURI` across remote DLNA renderers by default. Discrete track handover combined with host RAM pre-buffering (`AudioStreamCacheManager`) eliminates DAC buffer flushes and premature track truncation on portable DAPs.
+- **Cursor-Paged Library Processing (`RoomDbHelper.java`, `TrackDao.java`)**:
+  - Replaced bulk full-table loading in `processAllMusics()` and `cleanInvalidTag()` with paginated queries (`getTracksPaged(limit, offset)` in chunks of 500), eliminating OutOfMemoryError crashes when scanning massive music libraries.
+- **Now Playing Card Title Row Streamlining (`NowPlayingPage.kt`)**:
+  - Removed redundant Info icon beside track title in favor of the full-surface 3D card flip gesture, expanding the title marquee across the full available card width.
+- **Fluid Audiophile Glass Pill Tab Switcher (`AudioHubSheet.kt`)**:
+  - Replaced static segmented buttons with real-time 1:1 finger-tracking sliding indicator pill in deep obsidian glass and champagne gold gradient.
+  - Replaced raw string emojis (`Server 🟢`) with an authentic hardware emerald jewel LED status diode.
+  - Replaced raw parenthesis count text (`Queue (X)`) with a dedicated monospace count badge chip.
+- **Tag Editor Fluid Glass Pill Tab Switcher (`TagsTabPillSwitcher.kt`, `activity_tags.xml`, `TagsActivity.java`)**:
+  - Replaced legacy XML `TabLayout` with a Jetpack Compose fluid sliding glass pill indicator (`[ Song Info | Tech Info ]`) with 1:1 `ViewPager2` drag tracking, champagne gold gradient glow, metallic hairline border, and haptic feedback via `TagsTabPillBridge`.
+- **Online Tag Search & Match Compose Dialogs (`SearchMatchDialog.kt`, `DialogInterop.kt`, `TagsActivity.java`)**:
+  - Migrated online tag search query and candidate match selection from legacy `ListView` and XML layouts to pure Compose dialogs with `LazyColumn`, Coil 3 cover art loading, match percentage chips, and metadata difference highlighting.
+- **Tag Editor Action Dock Modernization (`activity_tags.xml`)**:
+  - Removed 1dp hairline vertical dividers between bottom dock actions and styled all buttons as rounded pills (`20dp` radius).
+- **Save & Batch Operation Progress Modal (`animated_progress_dialog_layout.xml`)**:
+  - Upgraded progress dialog to an obsidian glass card (`bg_dialog_dark_blur`) with `CircularProgressIndicator` tinted in champagne gold (`@color/colorGold`).
+- **Lossless Verifier & Audio Spectrum Dialog (`view_action_spectrum.xml`)**:
+  - Modernized into an obsidian glass studio inspector with a two-column telemetry card (Format details vs. Analytics details) and champagne gold verdict badge.
+- **Trash Confirmation Sheet (`view_action_trash_bottom_sheet_dialog.xml`)**:
+  - Upgraded to an obsidian glass bottom sheet with a red tonal warning container, delete icon, and pill buttons.
+- **Dependency Upgrades (`gradle/libs.versions.toml`)**:
+  - Upgraded Android Gradle Plugin to `9.4.1`, Room to `2.8.5`, Media3 Session to `1.11.1`, Jetpack Compose BOM to `2026.09.00`, and Netty Codec HTTP to `4.2.18.Final`.
+
+### Removed
+- **Dead Code & Obsolete XML Layouts (`UIUtils.java`, `progress_dialog_layout.xml`, `view_action_search_query_dialog.xml`, `view_action_search_results_dialog.xml`, `view_list_item_search_result.xml`, `view_storage_space.xml`, `view_storage_space_estimated.xml`)**:
+  - Deleted legacy View adapters (`SearchResultAdapter`), dead storage visualization methods (`buildStoragesUsed`, `buildStoragesUsedOld`, `buildStoragesStatus`, `formatCompactStorageText`, `setTextViewShading`), and 6 obsolete XML layout files.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **DLNA Premature Completion on Renderer Buffering Stalls (`MediaServerHubImpl.java`)**:
+  - Guarded GENA `STOPPED` events against premature completion during renderer initial buffering or transient Wi-Fi drops. Cross-referenced reported playback position against track duration, requiring effective position to be near track end ($\ge 90\%$ or within 5 seconds) before advancing the queue.
+- **Passive HTTP Pre-Fetch Hijacking Active DMR Sessions (`MusicMateServiceImpl.java`, `BaseServer.java`)**:
+  - Added active controlled DMR session guards in `onAccessMediaTrack()` and `BaseServer.notifyPlayback()`. Passive HTTP GET requests issued by pre-buffering renderers no longer overwrite `currentTrackFlow` or prematurely reset playback timers while the DAP is still playing the current track.
+- **HttpCore Async File Streaming Spin-Loops & FD Leaks (`PartialFileProducer.java`)**:
+  - Handled `read <= 0` cleanly with `channel.endStream()` and `releaseResources()` to prevent infinite CPU spin-loops.
+  - Rewound file channel position for unwritten bytes on partial socket writes to guarantee byte stream continuity.
+  - Wrapped `produce()` in `try-catch` to guarantee `releaseResources()` (closing `RandomAccessFile` and `FileChannel`) on any I/O or runtime exception.
+- **Netty HTTP 416 Range Not Satisfiable & Remote Address Resolution (`NettyWebServerImpl.java`)**:
+  - Added RFC-compliant HTTP 416 (`REQUESTED_RANGE_NOT_SATISFIABLE`) response when `Range` start header exceeds file length.
+  - Resolved remote client IP address from socket address or `X-Forwarded-For` header instead of misinterpreting the `Server` response header.
+- **Embedded Server Security & Path Traversal Guards (`JettyWebServerImpl.java`, `WebServerImpl.java`, `NioWebServerImpl.java`)**:
+  - Tightened Jetty `AliasCheck` to restrict resource access strictly to canonical paths within `/storage/` and `/data/`.
+  - Disabled symlink traversal (`followLinks = false`) in Undertow's `PathResourceManager`.
+  - Added explicit null/existence checks in `NioWebServerImpl` returning clean HTTP 404 responses for non-existent content.
+  - Ensured `destroy()` is called on server stop across all implementations to release background executors and service bindings.
+- **Virtual VPN & Tunnel Interface Filtering for Media Streaming (`NetworkUtils.java`)**:
+  - Filtered out virtual VPN and tunnel adapters (`tun*`, `tap*`, `wg*`, `p2p*`, `dummy*`, `ipsec*`) from media server IP address selection, prioritizing physical Wi-Fi, Hotspot, and Ethernet interfaces to ensure DLNA renderers can reliably connect.
+- **Bluetooth Disconnect Guard for Remote Playback (`MusicMateServiceImpl.java`)**:
+  - Gated auto-pause handlers for `ACTION_AUDIO_BECOMING_NOISY` and Bluetooth `ACTION_ACL_DISCONNECTED` behind `isLocalTarget()`, preventing smartwatch or automotive Bluetooth disconnections from interrupting active DLNA cast playback.
+- **QueueManager Persistence Redundancy & Safe Handling (`QueueManager.java`)**:
+  - Removed redundant `addToPlayingQueue(song)` database writes inside `addPlayingQueue` and `addPlayNext` prior to batch queue persistence.
+  - Filtered out missing or deleted files upon loading the playing queue and auto-persisted the cleaned queue.
+  - Auto-enqueued unknown tracks and synchronized playback index in `setPlaybackTrack()`.
+- **AudioTag In-Place Mutation Bug (`AudioTag.java`)**:
+  - Fixed `AudioTag.copy()` to instantiate and return a clean clone rather than returning and mutating the original instance.
+- **Accidental Storage Root Deletion Guard (`FileRepository.java`)**:
+  - Added `isStorageRootDirectory()` safety boundary to prevent recursive directory cleanups from ascending into `/storage/emulated/0`, `/sdcard`, or `Music/`.
+- **Tag Editor Threading & Unsaved Edits Detection (`TagsActivity.java`, `TagsEditorFragment.kt`)**:
+  - Ensured asynchronous completion toasts and progress bars execute safely on the UI thread.
+  - Audited all child fragments in `onBackPressed` for unsaved modifications across all tabs (including Tech Info).
+  - Added `onComplete` callback support to `doSaveMediaItemsDirectly` and `doSaveMediaItem`.
+- **Compose Accessibility Semantics (`AudioBadges.kt`, `TrackListItem.kt`)**:
+  - Added semantic `contentDescription` properties to download badges, new track badges, and rating indicators for improved screen-reader accessibility.
+- **Media3 `AudioProcessor` Input Buffer Consumption Contract (`AudioLevelProcessor.kt`)**:
+  - Removed erroneous `inputBuffer.position(posBefore)` rewind that violated Media3's `AudioProcessor` buffer consumption contract and caused audio sink output stalls.
+- **Reel-to-Reel Tape Deck Jitter & Physics State Resets (`ReelToReelTapeDeck.kt`)**:
+  - Decoupled `LaunchedEffect` from continuous playback progress changes via `rememberUpdatedState`, keying strictly on `isPlaying` to preserve rotational velocity and eliminate reel jitter.
+- **Deleted Track Infinite Replay Loop Under Repeat ONE (`MusicMateServiceImpl.java`)**:
+  - Reordered `onTrackDeleted(trackId)` to remove the deleted track from `QueueManager` before advancing the queue, preventing infinite replay loops of deleted files.
+- **Queue Pointer Synchronization on Track Relocation (`QueueManager.java`)**:
+  - Maintained `currentIndex` and `playbackIndex` pointers when `addPlayingQueue` or `addPlayNext` is called on the currently active track.
+- **Deterministic Paginated Database Iteration (`TrackDao.java`)**:
+  - Added explicit `ORDER BY id ASC` to `getTracksPaged(limit, offset)` to prevent skipped or repeated records during batch database operations.
+- **Complete Tag Metadata Field Preservation (`AudioTag.java`)**:
+  - Added missing fields (`mood`, `style`, `origin`, `bpm`, `fileLastModified`) to `AudioTag.copy()`.
+- **Collapsing Toolbar Scale Division by Zero (`TagsActivity.java`)**:
+  - Guarded against unmeasured `totalScrollRange <= 0` in `AppBarLayout.OnOffsetChangedListener` to prevent `-Infinity` scale calculations.
+- **Studio Console Gesture Stability & Clock Shift (`FullscreenStudioConsole.kt`)**:
+  - Wrapped gesture lambdas in `rememberUpdatedState` and initialized studio clock with current time to prevent startup layout shifts.
+
+
+## [3.19.5] - 2026-09-10
+
+### Added
+- **Pillar 1: Responsive Badge Synthesis & Screen Density (`AudioBadges.kt`, `DynamicRangeMeters.kt`, `TrackListItem.kt`)**:
+  - Implemented `UnifiedAudioBadge` fusing format tier, bit depth, and sampling rate into a single compact micro-capsule (`[● HI-RES 24/96]`, `[● CD 16/44.1]`, `[● DSD64]`, `[● 320k]`).
+  - Added `compact: Boolean = false` mode to `DynamicRangeMeter` to collapse bar graphics into clean text (`DR12`).
+  - Added responsive screen width detection (`screenWidthDp < 390`) in `TrackListItem`: automatically toggles unified badges and compact DR meter on compact viewports, liberating ~40dp of horizontal breathing room and completely eliminating title/artist ellipses truncation.
+- **Pillar 2: Dual Persona "Curator vs. Listener" Interaction Modes (`Settings.java`, `Constants.java`, `SettingsScreen.kt`, `MainActivity.java`)**:
+  - Added `PREF_TAP_ACTION_MODE` preference (`"listen"` vs `"curate"`).
+  - Added "INTERACTION MODE" card in `SettingsScreen.kt` with segmented switcher between `🎧 Listener Mode` and `🏷 Curator Mode`.
+  - In `Listener Mode`: single-tap row starts instant playback, long-press opens tag editor (`TagsActivity`).
+  - In `Curator Mode`: single-tap row opens `TagsActivity` (preserving existing power-curator workflows), while tapping cover art starts playback.
+- **Pillar 3: Visual "Audiophile Query Studio" (Custom Smart Playlists) (`CreateSmartPlaylistDialog.kt`, `PlaylistRepository.java`, `MainScaffold.kt`)**:
+  - Built interactive Compose query builder dialog with real-time matching track count & storage telemetry (`⚡ Live Match: X tracks • Y GB`), Dynamic Range (DR) threshold slider ($0\dots 16$), and audio tier chips (`Hi-Res`, `Lossless`, `DSD`, `24-bit Studio`).
+  - Added custom smart playlist creation, editing, and deletion in `PlaylistRepository` backed by `custom_playlists.json` persistence.
+  - Added "New Smart Playlist" top bar action button (`rounded_playlist_add_24.xml`) in `MainScaffold` when browsing playlists.
+- **Pillar 4: Vintage Analog Needle VU Meter & Studio Telemetry (`AnalogVUMeter.kt`, `NowPlayingPage.kt`)**:
+  - Built `AnalogVUMeter` in Compose Canvas with dual stereo channel dials (Left & Right), calibrated $-20\text{ dB} \dots +3\text{ dB}$ logarithmic arc scale, and red overload zone.
+  - Implemented ANSI standard ballistic spring-damper physics (300ms rise, ~1.5% overshoot) with stereo phase decorrelation, driven by playback state, track dynamic range (DR), volume, and ReplayGain true-peak telemetry.
+  - Supported 3 legendary audiophile color themes switchable by tapping the meter chassis: Accuphase Champagne Gold, McIntosh Ocean Blue, and Studio Slate Reference.
+  - Embedded into the Audio Anatomy flip card in `NowPlayingPage.kt`.
+- **Unit Test Coverage (`VUMeterAndBadgeTest.kt`)**:
+  - Added unit test suite verifying `VUMeterTheme` catalog and `getUnifiedBadgeText` formatting across Hi-Res FLAC, CD Lossless, DSD, and MP3.
+
+### Changed
+- **Audiophile "Now Playing" Cover Art Indicator Redesign (`TrackListItem.kt`)**:
+  - Eliminated the full-artwork dark scrim (`fillMaxSize().background(Color(0x33000000))`) and 36dp centered circular badge, allowing album cover artwork in the music list to remain 100% visible, bright, and un-occluded.
+  - Added an illuminated `1.5.dp` Gold accent border (`colorGold.copy(alpha = 0.85f)`) framing the 76dp cover art container for the currently playing track.
+  - Implemented `NowPlayingCoverBadge`: a floating obsidian frosted glass micro-capsule (`Color(0xE6101010)`) anchored at `Alignment.BottomEnd` with a subtle glass rim.
+  - Implemented `AnimatedEqualizerBars`: a zero-allocation 4-bar dynamic spectrum analyzer in champagne gold gradient (`#FFE082` to `#FFB300`) with rounded caps and staggered sinusoidal motion when actively playing.
+  - Implemented `PausedIndicatorBars`: two precision, centered gold pause bars when playback is paused, safely disposing infinite transitions during pause to eliminate CPU/battery drain.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Cover Art Gesture Collision & Pager Swiping Conflict (`NowPlayingPage.kt`)**:
+  - Removed conflicting horizontal drag gesture detector (`detectDragGestures`) from the playback screen's album art container.
+  - Eliminated accidental track skips caused by minute finger rolls during taps and resolved touch event cancellation for 3D card flips (`onTap`) and play/pause (`onDoubleTap`).
+  - Restored frictionless horizontal swiping across the entire playback viewport to navigate between the `[Playback]`, `[Queue]`, and `[Server]` tabs in `AudioHubSheet`'s `HorizontalPager`.
+- **DLNA Consequence Track 58-Second Truncation & Premature Advance (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`, `PartialFileProducer.java`, `DLNAHeaderHelper.java`)**:
+  - Unified DMR queue progression by refactoring `internalSkipToNextOnDMRPlayer` and `internalPreviousOnDMRPlayer` to delegate directly to `internalPlayOnDMRPlayer(playbackTarget, song)`, ensuring consecutive tracks receive full queue pointer synchronization, upcoming track preloading, and full duration safety fallback scheduling.
+  - Prevented passive HTTP GET requests (triggered by renderer pre-fetching the upcoming track) from hijacking active playback state. Added active controlled session guards in `onAccessMediaTrack()` and `BaseServer.notifyPlayback()` so pre-buffering requests do not overwrite `currentTrackFlow` or prematurely reset timers while the DAP is still playing the current track.
+  - Corrected inverted `supportsPreload` logic in `schedulePreloadNextTrack()`: safe conjunction `(instanceof DMRPlayer) && supportsPreload()` ensures non-DMR players and portable DAPs (HiBy R3) default to discrete handover with host memory caching instead of premature UPnP `SetNextAVTransportURI` calls that abort the playing stream.
+  - Added gapless preload state hygiene in `MediaServerHubImpl`: cleared `preloadedNextTrack` and `preloadedNextUrl` on every `internalPlaySong()` and `playerStop()`, preventing stale track references from matching subsequent URIs during GENA position polling and firing spurious track transitions.
+  - Corrected UPnP DIDL-Lite `<res>` bitrate calculation from `bps * 1024 / 8` to standard bytes-per-second (`bps / 8`), eliminating bogus 73MB/s bitrate metadata sent to renderers.
+  - Added explicit `<res size="...">` attribute and DLNA content features to DIDL-Lite `<res protocolInfo="...">`, providing portable DAPs (HiBy, Shanling, FiiO) with precise stream sizing upfront.
+  - Guarded position polling duration completion in `MediaServerHubImpl`: cross-referenced renderer reported duration against the authoritative database duration (`currentPlayingTrack.getAudioDuration()`), preventing renderers with finite hardware network FIFO buffers (reporting 58s from a 4MB buffer) from prematurely advancing tracks before the full audio duration has elapsed.
+  - Aligned HttpCore `PartialFileProducer.available()` with reactive backpressure by returning `Math.min(BUFFER_SIZE, remaining)` instead of the unbounded file length.
+  - Corrected bitrate threshold checks in `DLNAHeaderHelper` (`>= 320000`) to properly recognize bits-per-second values for MP3 and AAC profiles.
+- **Premature Track Skip at ~58s & DLNA Stream Truncation (`PartialFileProducer.java`, `MediaServerHubImpl.java`)**:
+  - Eliminated the 4MB in-memory buffer splicing bug in HttpCore's `PartialFileProducer` that caused HTTP streaming connections to abort prematurely at 4MB (which equals ~58 seconds of playback at typical bitrates), causing DLNA renderers to run out of data and skip.
+  - Re-architected `PartialFileProducer` to stream directly from `FileChannel` in 64KB chunks with OS kernel page cache warming via `AudioStreamCacheManager.preloadTrack()`.
+  - Corrected DIDL-Lite metadata track duration calculation in `MediaServerHubImpl`: converted `song.getAudioDuration()` (seconds) to milliseconds before calling `formatDurationForDidl()`, eliminating incorrect sub-second durations (`0:00:00.238` ➔ `0:03:58.000`).
+  - Added robust parsing for millisecond fractions (`HH:MM:SS.mmm`) and 2-part formats (`MM:SS`) in `parseTimeToSeconds()`, preventing `NumberFormatException` during renderer status polling.
+  - Added unit test suite `MediaServerHubTimeParsingTest` in `:server-jupnp`.
+- **RFC 7233 HTTP Range Request Clamping & HEAD Entity Cleanup (`HttpCoreWebServerImpl.java`)**:
+  - Clamped unbounded client range requests (`bytes=0-2147483647`) to `fileLength - 1`, preventing false stream truncation errors on DLNA renderers and mobile browsers.
+  - Implemented HTTP `416 Range Not Satisfiable` status with `Content-Range: bytes */fileLength` when requested start offset exceeds file size.
+  - Added support for suffix ranges (`bytes=-500`) and multi-part range headers.
+  - Corrected HTTP `HEAD` response handling by sending `Content-Length` and `Content-Type` headers without attaching an entity stream body.
+  - Added unit test suite `HttpRangeTest` in `:server-jupnp-httpcore`.
+- **DLNA Natural Completion Double-Skip Guard (`MediaServerHubImpl.java`)**:
+  - Stopped polling and latched `isUserInitiatedStop = true;` upon natural track duration completion and `STOPPED` GENA events, preventing recurring polling or duplicate event bursts from triggering double track skips.
+- **16MB JVM Heap Waste Elimination & Page Cache Warming (`AudioStreamCacheManager.java`)**:
+  - Replaced dead 16MB in-memory `byte[]` cache with an allocation-free direct buffer OS page cache warmer, liberating 16MB of JVM heap and eliminating 4MB GC churn during track transitions.
+  - Fixed executor cancellation race condition between current and next track preloads.
+- **Analog VU Meter Choreographer Animation Idling (`AnalogVUMeter.kt`)**:
+  - Added power-efficiency guard to break the 120Hz frame animation loop once needles settle to rest at 0 while playback is paused, preventing background battery and CPU consumption.
+
+## [3.19.4] - 2026-09-10
+
+### Added
+- **Active ReplayGain 2.0 / EBU R128 Playback Leveling Engine (`ReplayGainManager.java`, `AndroidPlayerController.java`)**:
+  - Real-time loudness normalization during local on-device playback using ExoPlayer linear volume scaling ($10^{\frac{\text{gainDb} + \text{preAmpDb}}{20}}$).
+  - Configurable playback modes: `Track Gain` (standard loudness matching), `Album Gain` (preserves album master volume progression), and `Off`.
+  - Configurable pre-amp gain $(-12 \text{ dB} \dots +12 \text{ dB})$ and anti-clipping true-peak limiter safeguard preventing digital clipping distortion ($scalar \times peak \le 1.0$).
+  - Seamless gapless audio transition support: ReplayGain volume scaling recalculates and applies dynamically on `onMediaItemTransition()`.
+  - Universal external player tag interoperability: writes standardized Vorbis Comments (`REPLAYGAIN_TRACK_GAIN`, `REPLAYGAIN_TRACK_PEAK`), ID3v2 TXXX, and MP4 tags to disk files, enabling Poweramp, Foobar2000, USB Audio Player PRO (UAPP), and Neutron to read loudness tags.
+- **Audiophile Playback Settings Card (`SettingsScreen.kt`, `SettingsActivity.kt`)**:
+  - Modern Jetpack Compose controls for ReplayGain mode selector, pre-amp slider steps, and anti-clipping true-peak limiter toggle.
+- **Audio Anatomy ReplayGain Telemetry (`NowPlayingPage.kt`, `TagsTechnicalPage.kt`, `NowPlayingState.kt`)**:
+  - Dynamic ReplayGain status pill (`RG -4.2 dB`) displayed on the Audio Anatomy flip card and dedicated technical diagnostics card in the tag editor.
+- **Dynamic Smart Playlists Engine (DR & Authenticity) (`PlaylistEntry.java`, `PlaylistRepository.java`, `playlists.json`)**:
+  - Dynamic rule matching engine evaluating on-device audio telemetry (`minDrScore`, `hiresOnly`, `dsdOnly`, `losslessOnly`, `minBitDepth`, `minSampleRate`).
+  - Added 4 flagship built-in audiophile smart playlists:
+    1. *Audiophile Sanctuary (DR12+)*: High dynamic range uncompressed masterings (DR12 and above).
+    2. *Studio Masters (Hi-Res)*: 24-bit studio quality and high sample rate masters (>= 24-bit / 48kHz).
+    3. *Pure DSD Archive*: 1-bit Direct Stream Digital recordings (DSD64, DSD128, DSD256).
+    4. *Lossless Master Vault*: Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD).
+  - Cross-platform availability: automatically evaluated across the Native Android UI, DLNA/UPnP Media Server, Web Remote UI, and M3U playlist exports.
+- **Unit Test Suite Expansion (`PlaylistEntrySmartTest.java`, `ReplayGainManagerTest.java`)**:
+  - Added unit test suites verifying smart playlist rules matching and ReplayGain dB-to-linear conversion with peak limiter clamping.
+
+### Changed
+- **Playlist Card Typography & Layout Density (`FolderListItem.kt`)**:
+  - Expanded playlist titles and descriptions to `maxLines = 2` with balanced line heights to eliminate aggressive ellipses truncation (`"Audiophile Sanct..."`, `"Lossless Master ..."`).
+  - Compacted action buttons to 36dp with 18dp icons to provide full horizontal breathing room.
+- **Audiophile Insignia Cover Art for Smart Playlists (`FolderListItem.kt`)**:
+  - Replaced plain placeholder grey boxes with custom gradient-rendered insignias and luxury typographic badges (`DR 12+ / AUDIOPHILE`, `24-BIT / STUDIO`, `DSD / 1-BIT DIRECT`, `VAULT / LOSSLESS`, `CLASSICAL / HERITAGE`, `REFERENCE / ARCHIVE`).
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Top Header Collection Counter Unit (`MainActivity.java`)**:
+  - Corrected header subtitle to dynamically display `"10 Playlists"` (or `"Artists"`, `"Genres"`) instead of erroneously defaulting to `"10 Tracks"` when viewing category collections.
+- **Empty Playlist Track Count Subtitle (`FolderListItem.kt`)**:
+  - Provided a clean `"0 tracks"` fallback instead of rendering an empty subtitle line for unpopulated smart playlists.
+
+## [3.19.3] - 2026-09-08
+
+### Added
+- **Local ExoPlayer Precision Seeking (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`)**:
+  - Implemented `seekTo(positionMs)` with main thread dispatch in `AndroidPlayerController`, connecting the UI seekbar to local audio playback.
+- **Defensive Seek Clamping (`MusicMateServiceImpl.java`)**:
+  - Bound seek requests between `0` and current track duration in milliseconds, preventing negative offsets or decoder overrun errors.
+- **ExoPlayer Gapless Preload & Auto-Advance Handover (`AndroidPlayerController.java`, `MusicMateServiceImpl.java`)**:
+  - Wired `setNextTrack()` directly into ExoPlayer's secondary media item queue for seamless on-device gapless playback; handled `MEDIA_ITEM_TRANSITION_REASON_AUTO` smoothly without redundant manual skip triggers.
+- **Lifecycle-Safe Activity State Subscriptions (`MainActivity.java`)**:
+  - Added `playbackStateSubscription` lifecycle tracking, properly closing scheduled 500ms executor subscriptions on rotation, service reconnect, and Activity destruction to prevent memory and scheduler leaks.
+- **Unit Test Coverage for Queue Resilience (`QueueManagerTest.java`)**:
+  - Added test cases covering shuffle stability across track changes, drag-and-drop index synchronization, in-place queue track selection, and queue clearing.
+
+### Changed
+- **Sound Grade & Codec Query Alignment (`RoomDbHelper.java`)**:
+  - Aligned dynamic SQL `buildWhereClause()` with `TrackDao` Room queries using `LOWER(audioEncoding)` and full support for all formats (`dsd`, `dsf`, `dff`, `sacd`, `aac`, `mpeg`, `mp3`, `m4a`, `ogg`, `opus`, `wma`, `flac`, `alac`, `aiff`, `aif`, `wave`, `wav`).
+  - Ensured accurate track counts and total durations across all sound grade categories.
+- **Directory Path Filtering & Normalization (`RoomDbHelper.java`)**:
+  - Normalized directory queries with trailing slash enforcement in `findInPath()` and mapped folder path filtering under `LIBRARY` criteria to prevent partial prefix sibling folder collisions and full-library query fallbacks.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Queue Track Rip-and-Append (`MusicMateServiceImpl.java`, `QueueManager.java`)**:
+  - Fixed issue where playing a track already in the queue removed it from its current position and re-appended it to the end; now selects track in-place via `setCurrentTrack()`, maintaining album sequence integrity.
+- **Pause / Resume State Preservation (`AndroidPlayerController.java`, `MediaServerHubImpl.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
+  - Added `resume()` to `AndroidPlayerController` (`internalExoPlayer.play()`) and `playerResume()` to DLNA streamer, preserving playback progress instead of restarting tracks from 0:00.
+- **Atomic File Move Backup Check (`FileSystem.java`)**:
+  - Guarded backup creation in `safeMove()` with `targetFile.exists()`, preventing file moves to new paths from failing due to nonexistent targets.
+- **Queue Shuffle Order Invariance (`QueueManager.java`)**:
+  - Preserved randomized `shuffleOrder` across track transitions instead of re-shuffling remaining tracks on every song change.
+- **Queue Drag-and-Drop Index Desynchronization (`QueueManager.java`)**:
+  - Synchronized `currentIndex` and `playbackIndex` to follow the active track during drag-and-drop reordering.
+- **Notification Play/Pause Button State (`MediaNotificationBuilder.java`, `MusicMateServiceImpl.java`)**:
+  - Fixed notification playback state synchronization to correctly display Pause when playing and Play when paused during local and casting sessions.
+- **ID3 Custom Taxonomy Writing for MP3 & DSF (`JThinkWriter.java`)**:
+  - Added `AbstractID3v2Tag` handling and modernized `addTxxx()` to write `STYLE`, `MOOD`, and `ORIGIN` frames across ID3v2 versions, ensuring edits to MP3 and DSF files persist correctly.
+- **Non-Interactive FFmpeg File Overwrite (`FFMpegHelper.java`, `FFMpegWriter.java`)**:
+  - Added global `-y` flag across all FFmpeg cover art extractions, removals, format conversions, and tag updates to prevent background process hangs on pre-existing files.
+- **Playing Queue Clearance & Thread Safety (`RoomDbHelper.java`, `QueueManager.java`)**:
+  - Synchronized `emptyPlayingQueue()` and reset shuffle/playback indices to prevent stale state retention.
+
+## [3.19.2] - 2026-08-30
+
+### Added
+- **Centralized Design Tokens Architecture (`MusicMateDesignTokens.kt`, `MusicMateTheme.kt`)**:
+  - Centralized design tokens across Surfaces (Obsidian `#121212`, Charcoal `#1E1E1E`, Elevated `#2C2C2C`, Glassmorphic Cards `#D9101010`), Brand Accents (Gold `#FFD700`, Warm Amber `#FFB300`, Acoustic Teal `#80CBC4`), Audio Provenance (DSD Cyan, Hi-Res Gold, MQA Magenta, CD Sky Blue, Lossy Slate), Dynamic Range Temperature Spectrum, and standard geometry tokens.
+- **Adaptive Chromatic Player & Tactile Haptics (`NowPlayingPage.kt`, `AudioBadges.kt`)**:
+  - Enhanced seekbar with dynamic active track ambient glow derived from the current album art palette with a dual-ring glowing halo thumb (colored halo + high-contrast white core).
+  - Added tactile micro-haptic feedback (`LocalHapticFeedback`) to Quick-Fix chips, seekbar scrubbing, and volume adjustment.
+- **Brand Identity & Network Asset Harmonization (`iconpng64.png`, `iconpng128.png`, `ic_notification_default.png`, `mipmap-*/ic_launcher.png`)**:
+  - **DMS Server DLNA/UPnP Icons:** Generated high-resolution 64×64 and 128×128 PNGs featuring the official Golden "M" emblem on dark radial obsidian, replacing legacy orange flame assets across all network control points (WiiM, BubbleUPnP, mconnect, Foobar2000).
+  - **Material 3 Status Bar Notification:** Replaced dated raster glyph with a crisp, pure white "M" brand silhouette on transparent background (`ic_notification_default.png`).
+  - **Legacy Launcher Fallbacks:** Re-rendered all mipmap densities (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi) to guarantee 100% brand consistency on legacy launchers and dialogs.
+- **Unified Immersive Hero Cover Art Layout (`activity_tags.xml`, `TagsActivity.java`, `shape_bottom_cover_scrim.xml`)**:
+  - Transformed the Tag Preview header to match the Now Playing playback experience with a clean 1:1 square artwork viewport free of top scrims.
+  - Grouped Song Title (`panel_title`) and dynamically formatted subtitle (`{Artist} • {Album}`) at the bottom of the cover art over a smooth cinematic dark gradient scrim (`shape_bottom_cover_scrim.xml`).
+  - Completely eliminated the redundant split `[ Artist | Album ]` two-column layout (`fragment_editor_preview.xml`) and disruptive text click listeners.
+- **4-Tier Audiophile Header Hierarchy & Telemetry Footer Strip (`AudioBadges.kt`, `RelatedTracksSheet.kt`, `TagsViewModel.kt`, `DialogInterop.kt`)**:
+  - Reorganized the Tag Preview Header into a clear 4-tier narrative: **Tier 1 (Fidelity Badges)** ➔ **Tier 2 (2-Line Provenance Capsules)** ➔ **Tier 3 (Musical Taxonomy Chips)** ➔ **Tier 4 (Technical Telemetry Footer)**.
+  - Relocated the monospace specs strip (`FLAC • 24/96 • 4608 kbps • Stereo • 05:54 • 198 MB`) to the bottom of the card with dedicated breathing room (`7.dp`), acting as a clean technical grounding baseline.
+  - Embedded a structured 2-line Studio Provenance block on `TagPreviewHeader`: Row 1 = `[ 👤 {Artist} • N ❯ ]` (Gold) + `[ 💿 {Album} • N ❯ ]` (Teal), Row 2 = `[ 📁 {Folder} • N ❯ ]` (Slate Blue) with live database track counts and tactile haptic feedback.
+  - Positioned a dedicated **Musical Taxonomy Tier** directly underneath Provenance with intuitive category glyphs: `[ 🎸 Genre ]`, `[ 🎭 Mood ]`, `[ 🎨 Style ]`, and `[ 🌏 Origin ]`.
+  - Implemented `RelatedTracksSheet` Compose modal bottom sheet for seamless, in-place discography browsing without exiting the tag editor, featuring real-time audiophile tier badges, 1-tap playback, `Play All`, `Queue All`, and `View in Library` actions.
+  - Fixed database scoping for `FILTER_TYPE_PATH`, `FILTER_TYPE_ARTIST`, `FILTER_TYPE_ALBUM` across `RoomDbHelper.buildWhereClause()` and `TagRepository.findByCriteria()`, and introduced `findByAlbum(album)` sorted by track sequence.
+- **Expanded "More..." Power Menu & Quick-Fix Actions (`tag_more_actions_menu.xml`, `AudioBadges.kt`, `DialogInterop.kt`)**:
+  - Added grouped Material 3 items across Playback (`Play Track Now`, `Add to Queue`), Tag Curation (`Auto-Tag MusicBrainz`, `Search Online`, `Smart Clean & Format`), Audio Auditing (`Lossless Spectrum Verifier`), and File Utilities (`Open in File Manager`, `Search on Web`, `Share Audio File`, `Reload Raw Tags`).
+  - Enabled expanded audiophile quality tier badges (`[● CD QUALITY]`, `[● HI-RES LOSSLESS]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`) on the Tag Preview Header to achieve 100% visual parity with the Now Playing playback sheet.
+- **Command Bar Micro-Labels & Accessibility Tooltips (`activity_tags.xml`, `strings.xml`, `TagsActivity.java`)**:
+  - Added clear text labels alongside vector icons on Row 2 (`[✨ Format]`, `[📄 From File]`, `[💾 Save]`, `[🔄 Reload]`, `[🖼️ Extract]`, `[🗑️ Remove Art]`) paired with descriptive `TooltipCompat` tooltips.
+- **Tactile Micro-Haptics & Pro Long-Press Shortcuts (`TagsActivity.java`)**:
+  - Added `performHapticFeedback` on all button taps and long-presses.
+  - Long-pressing `[Format]` triggers the **Full Clean Pipeline** (Junk noise removal + Title Case + Thai encoding repair in a single pass); long-pressing `[Save]` triggers **Save & Close**.
+- **Dynamic Multi-Track Batch Badging (`TagsActivity.java`)**:
+  - Dynamically displays selected track counts on buttons (`Delete (N)`, `Organize (N)`, `Save (N)`) when editing batches of songs.
+- **Embedded Artwork & Metadata Health Inspector (`TagsTechnicalPage.kt`)**:
+  - Added real-time artwork dimension readout (e.g. `1400x1400 px`), MIME type, file size in KB, and visual UHD / HD / Low-Res rating badge.
+  - Added an 8-point quality standard assessment (Title, Artist, Album, Year, Genre, Track#, Artwork, Lossless) with percentage health score.
+- **Direct Cover Art Interaction (`TagsActivity.java`)**:
+  - Added tap-on-artwork action sheet (Online Search, Gallery Photo Picker via `ActivityResultLauncher`, Extract to Folder, Remove Art).
+
+### Changed
+- **Accessible 2-Row Bottom Command Bar Architecture (`activity_tags.xml`, `TagsActivity.java`)**:
+  - Structured the bottom dock into two distinct functional tiers: Row 1 for permanent, high-frequency file operations (`[Delete]`, `[Organize]`, `[More...]`), and Row 2 for active fragment actions (`[Edit Song Info] | [Save]` in preview, `[Format] | [From File] | [Save]` in editor, `[Reload] | [Extract] | [Remove Art]` in tech info), maximizing thumb reach and touch accessibility.
+- **Unified Obsidian Preview Header (`TagPreviewHeader`, `AudioBadges.kt`)**:
+  - Replaced fragmented XML TextViews with a pure Compose obsidian header combining `QualityBadge`, `ResolutionBadge`, `DynamicRangeMeter`, `RatingBadge`, interactive Tag Pills (Origin, Genre, Mood, Style), and tabular monospace telemetry strip (`FLAC • 24/96 • 1411 kbps • Stereo • 04:23 • 45.2 MB`).
+- **Asynchronous Technical Diagnostics Extraction (`TagsTechnicalPage.kt`)**:
+  - Offloaded synchronous `TagReader.readFullTag`, `FFMPegReader.extractTagFromFile`, and reflection fields to `Dispatchers.IO` with `produceState`, eliminating UI frame drops during tab transitions.
+- **Elimination of On-Screen Volume Slider for Audiophile Bit-Perfect Clarity (`NowPlayingPage.kt`, `DESIGN.md`)**:
+  - Removed persistent on-screen horizontal volume slider row, preventing accidental seek touch collisions and UPnP SOAP volume command flooding on single-threaded DAPs.
+  - Reclaimed 40dp+ vertical viewport space for Album Artwork, chromatic glowing Seekbar, and primary transport controls. Local playback uses phone hardware volume buttons; streaming uses physical DAC/DAP analog dials for 100% bit-perfect output.
+- **Song Info Editor Reactive State Synchronization (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `TagsTechnicalFragment.kt`)**:
+  - Removed redundant `PREVIEW -> Unknown Title` box from `TagsEditorPage.kt` and wired reactive `StateFlow` collection with `LaunchedEffect` to populate all form fields immediately upon background database load.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **DLNA / UPnP DMR Seeking & Position Scrubbing on HiBy R3 (`MediaServerHubImpl.java`)**:
+  - Replaced millisecond duration formatting (`%d:%02d:%02d.%03d`) with strict standard `HH:MM:SS` format (`%02d:%02d:%02d`) for UPnP `Seek` actions, resolving seek failures and SOAP errors on HiBy R3 / HiBy OS and embedded DAP renderers.
+  - Resolved renderer lookup across UDN formats and prefix variations with `resolveRenderer()`.
+  - Maintained active 1-second position polling throughout active playback (`serverStatus == CAST`) and removed premature polling termination on sporadic GENA events.
+- **Safe-by-Default DLNA Queue Preload Allowlist (`MediaServerHubImpl.java`, `DMRPlayer.java`, `MusicMateServiceImpl.java`)**:
+  - Configured DLNA gapless preload (`SetNextAVTransportURI`) to be **opt-in only for verified hardware streamers** (`WiiM`, `Linkplay`, `Eversolo`, `Zidoo`, `Linn`, `Auralic`).
+  - All generic DLNA renderers, DAPs (`HiBy`, `Shanling`, `FiiO`, `Astell&Kern`), Sonos, and smart TVs default to `supportsPreload = false`, leveraging MusicMate's ultra-reliable RAM pre-caching (`AudioStreamCacheManager`) and event-driven discrete handover to eliminate decoder buffer lockups across all consumer renderers.
+  - Added natural track completion detection when renderers transition to `STOPPED` at end-of-track, immediately notifying `playbackCallback.onPlaybackCompleted()` to advance to the next track in the queue with a `durationMs + 1.5s` safety fallback timer.
+- **Lossless Spectrogram Resampling & Ultrasonic Nyquist Preservation (`SpectrogramGenerator.java`)**:
+  - Removed hardcoded `-ar 48000` downsampler that artificially truncated genuine 96kHz and 192kHz Studio Masters at 24kHz, preserving full ultrasonic frequencies up to 48kHz.
+- **Spectrogram Cache Collision & Concurrency Race Condition (`SpectrogramGenerator.java`)**:
+  - Replaced static `/spectrogram.jpg` path with dynamic per-track timestamped hash caching (`spectrogram_<hash>.jpg`) and automated stale file eviction.
+- **Case-Insensitive DSD/DSF Query Integration (`TrackDao.java`)**:
+  - Updated Room SQL queries to `LOWER(audioEncoding) IN ('dsd', 'dsf', 'dff', 'sacd')`, ensuring `.dsf` tracks (90%+ of DSD libraries) and mixed-case tags are correctly loaded in DSD smart playlists and duration/track counts.
+- **Room DAO Format Coverage & Case Normalization (`TrackDao.java`)**:
+  - Standardized Hi-Res (`alac`, `flac`, `aiff`, `aif`, `wave`, `wav`) and Compressed (`aac`, `mpeg`, `mp3`, `m4a`, `ogg`, `opus`, `wma`) queries to prevent undercounting.
+- **Unsaved Edits Back-Press Discard Dialog Sync (`TagsActivity.java`, `TagsEditorFragment.kt`)**:
+  - Connected Compose editor modification state with Activity `handleOnBackPressed()` to prevent accidental loss of user edits without confirmation.
+- **Redundant Duplicate Genre Display (`fragment_editor_preview.xml`, `TagsActivity.java`)**:
+  - Removed legacy XML `panel_genre` so `TagPreviewHeader`'s interactive Compose Genre pill is the single source of truth.
+- **Soft-Keyboard IME Insets & Scrolling Bottom Occlusion (`TagsEditorPage.kt`)**:
+  - Added `Modifier.imePadding()` and a bottom content spacer (`Spacer(modifier = Modifier.height(72.dp))`) to prevent form inputs from being hidden under the keyboard.
+- **Batch Multi-Value Placeholder Usability (`TagsEditorPage.kt`)**:
+  - Automatically clears `" - "` placeholder on field focus and edit to prevent accidental overwriting with literal placeholder text.
+- **Streaming Engine Zero Descriptor Leaks (`PartialFileProducer.java`)**:
+  - Enforced immediate closure of `RandomAccessFile` and `FileChannel` upon end-of-stream and EOF, preventing open file descriptor leaks over multi-hour playback sessions.
+- **Rapid Skip Cache Eviction (`AudioStreamCacheManager.java`)**:
+  - Added atomic task tracking in `AudioStreamCacheManager` to cancel obsolete background file reads when users quickly skip tracks in a queue.
+- **Queue Duplicate Key Crash Guard (`QueuePage.kt`)**:
+  - Replaced bare `uniqueKey` in `LazyColumn` with position-indexed composite key (`${index}_${track.uniqueKey ?: track.id}`), preventing app crashes when identical songs are enqueued multiple times.
+- **Duration Formatting Standardization for Long Audio (`NowPlayingPage.kt`, `QueuePage.kt`)**:
+  - Replaced raw integer division with `StringUtils.formatDuration(seconds, false)`, correctly rendering tracks, DJ sets, and mixes longer than 1 hour (e.g. `01:15:00` instead of `75:00`).
+- **Hardware Volume Routing to DLNA Renderers (`PlaybackService.java`, `MusicMateServiceImpl.java`, `MainActivity.java`)**:
+  - Implemented `setVolume(volumePercent)` and `adjustVolume(direction)` in `PlaybackService` and `MusicMateServiceImpl`.
+  - Routed Audio Hub volume gestures and sliders to UPnP `mediaHub.playerSetVolume` when streaming to remote DMR devices, with graceful fallback to local Android `AudioManager`.
+- **DLNA Position Polling Runaway Loop & Logcat Spam Fix (`MediaServerHubImpl.java`)**:
+  - Gated position polling strictly to active `CAST` state and terminated runaway 1-second loops when remote renderers stop responding, disconnect, or return SOAP 701 errors (`Current state of service prevents invoking that action`).
+  - Added failure counter with exponential backoff (2.5s) and automatic termination after 3 consecutive failures, transitioning server status to `RUNNING` and eliminating hundreds of failed SOAP queries per minute.
+- **Defensive Non-Null Collections in Repository (`TagRepository.java`)**:
+  - Guaranteed non-null empty list returns in `findByCriteria` when querying paths.
+
+## [3.19.1] - 2026-08-28
+
+### Added
+- **Spotify Connect-Style Seamless DLNA Position Handoff (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`, `MediaServerHub.java`)**:
+  - Implemented smart elapsed position capture on target switching (`currentPositionMs`).
+  - Added `playerActivateWithHandoff(...)` and precision post-play UPnP `Seek(HH:MM:SS)` execution to resume playback at the exact elapsed second when transferring an active song to an idle renderer.
+  - Added continuous playback handoff when switching from DLNA back to local Android audio output.
+- **Non-Destructive Live DLNA Session Adoption (`MediaServerHubImpl.java`, `MusicMateServiceImpl.java`)**:
+  - Selecting an active DLNA renderer now connects to the live stream, parses DIDL-Lite metadata (`Title`, `Artist`, `Album`), and adopts track progress and duration without stopping or restarting the song.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **DLNA Playback Stutter & Audio Interruption on Track Start (`MusicMateServiceImpl.java`, `MediaServerHubImpl.java`)**:
+  - Implemented 5-second post-start stabilization window for `SetNextAVTransportURI` gapless preloading, preventing FIFO buffer acquisition collisions on hardware DACs/renderers.
+  - Added DMR player collision guard in `switchPlayer()` to prevent uncontrolled incoming HTTP stream requests from resetting active DLNA sessions.
+  - Corrected stuck-playback recovery logic in `getAvTransportPosition()` to ignore initial 0-second buffer states and require $\ge 15$ stagnant polls before issuing recovery commands.
+- **Audio Anatomy Screen Refinement & Expanded Quality Badges (`NowPlayingPage.kt`, `AudioBadges.kt`)**:
+  - Enhanced the 3D flip Audio Anatomy card with comprehensive song metadata: Track Duration (`04:23`), Audio Channels (`Stereo (2.0)`, `Mono`, `5.1 Surround`), Dynamic Range, File Size, and Track # • Year • Genre telemetry.
+  - Removed redundant player/output device info from the flip side, consolidating output target management exclusively onto the front target pill and top bar cast picker.
+  - Upgraded front card quality indicator to an expanded, streaming-tier glass pill (`[● HI-RES LOSSLESS]`, `[● CD QUALITY]`, `[● 24-BIT STUDIO]`, `[● DSD AUDIO]`, `[● MQA MASTER]`, `[● STANDARD QUALITY]`) and removed duplicate codec/resolution strings from the front overlay.
+- **Queue Synchronization & Music Folder Enqueueing Fix (`MainActivity.java`, `MainViewModel.kt`, `QueueState.kt`, `TagRepository.java`)**:
+  - Fixed disconnect where Compose `QueueState` was never updated from `QueueManager` upon enqueueing, track change, removal, or playback.
+  - Resolved music folder / directory collection tracks querying in `playCollection` via `findInPath`, ensuring folder enqueueing and playback populate all songs.
+  - Connected reactive queue syncing across service connection, `setNowPlaying`, single-track popup "Add to Queue", "Play Next", swipe-to-dismiss, and queue clear.
+- **Repeat Mode & Audio Control Polish (`MainActivity.java`, `MusicMateServiceImpl.java`)**:
+  - Fixed Repeat Mode toggle by mapping string integers (`0`, `1`, `2`) to enum names (`OFF`, `ALL`, `ONE`) and adding tolerant numeric parsing in `MusicMateServiceImpl.setRepeatMode()`.
+  - Initialized shuffle and repeat states in Compose `NowPlayingState` upon service connection.
+  - Implemented `onAudioHubVolumeDown()`, `onAudioHubVolumeUp()`, and `onAudioHubVolumeChanged()` using system `AudioManager` (`STREAM_MUSIC`).
+- **Runtime Crashes & UI Polish**:
+  - Fixed `TagsActivity` inflation crash by replacing legacy `ReflectionContainer` with `FrameLayout`.
+  - Fixed `TagsViewModel` background thread assertion crash by switching LiveData mutations to `postValue()`.
+  - Corrected `mqaSampleRate` parameter passed to `TagUtils.formatResolution()`.
+  - Tuned marquee edge fading widths in `NowPlayingPage.kt` and `MainScaffold.kt`.
+- **Codebase & Library Pruning**:
+  - Pruned unused legacy library modules (`paralloid`, `placesAPI`, `slideDateTimePicker`, `spacetablayout`) and dead layout resources.
+
+## [3.19.0] - 2026-08-27
+
+### Added
+- **100% Pure Jetpack Compose Architecture**:
+  - Completed total migration from legacy XML views to pure Jetpack Compose across the entire application ecosystem (`MainActivity`, `AboutActivity`, `SettingsActivity`, `PermissionActivity`, and `TagsActivity`).
+  - Implemented `AboutScreen.kt` with dynamic audio tier donut distribution chart and interactive technical specs reference.
+  - Implemented `SettingsScreen.kt` with segmented streaming engine selector (`CoreHTTP`, `SonicNIO`, `Netty`) and library preferences.
+  - Implemented `PermissionScreen.kt` with audiophile onboarding cards and status chips.
+  - Replaced legacy `TagsActivity` header layout with `TagHeaderBadges` ComposeView.
+  - Safely removed legacy custom views (`BadgeView`, `DurationView`, `ResolutionView`, `QualityIndicatorView`, `DynamicRangeView`, `RatingIndicatorView`, `NewIndicatorView`, `TriangleLabelView`, `ReflectionContainer`) and 7 obsolete XML layout files.
+- **10/10 Flagship Audiophile UI/UX Elevation**:
+  - **Fading Edge Alpha Masks (`FadingEdge.kt`, `MainScaffold.kt`, `NowPlayingPage.kt`)**: Added smooth 8–10dp horizontal gradient alpha fade masks on scrolling marquee titles and artists, eliminating harsh text cutoff edges.
+  - **Dual-Layer Breathing Ambient Artwork Glow (`NowPlayingPage.kt`)**: Enhanced cover art backdrop with animated pulse scale and alpha oscillation driven by real-time `Palette` color extraction.
+  - **Rich Animated Empty States (`MusicListScreen.kt`, `QueuePage.kt`)**: Designed animated radar/pulse empty state with gold insignia and `"Refresh Library"` button for music lists, and interactive guidance card for empty playback queues.
+  - **Tactile Micro-Haptics (`NowPlayingPage.kt`)**: Integrated `LocalHapticFeedback` on transport buttons, volume step controls, and scrubber milestones.
+  - **Spring Motion Physics**: Tuned `Spring.DampingRatioMediumBouncy` on 3D perspective card flips and modal dialogs.
+- **Reactive Media Server Status & QR Synchronization (`MainActivity.java`, `BitmapHelper.java`)**:
+  - Added live observation of `MediaServerHub.ServerStatus` LiveData in `MainActivity`.
+  - Added on-the-fly QR code bitmap generation via ZXing in `BitmapHelper.generateQRCode()`.
+  - Connected immediate reactive UI feedback when starting, stopping, or switching streaming server engines.
+
+## [3.18.22] - 2026-08-22
+
+### Added
+- **Flagship Audiophile Provenance Metadata Hierarchy & Tabular Typography (`TrackListItem.kt`, `AudioBadges.kt`)**:
+  - Reordered track card metadata into the studio provenance flow: `[QualityBadge]` ➔ `[ResolutionBadge]` ➔ `[DynamicRangeMeter]` ➔ `[Duration]`.
+  - Added an 8% accent-tinted luminous aura and frosted glass borders (`38% alpha`) to quality capsules for tactile depth.
+  - Enforced OpenType Tabular Figures (`fontFeatureSettings = "tnum"`) on duration strings to prevent horizontal jitter during high-speed scrolling.
+- **Tactile Micro-Haptics & Ergonomic Fast-Scroller (`FastScrollbar.kt`, `NowPlayingPage.kt`)**:
+  - Integrated subtle micro-ticks (`HapticFeedbackType.TextHandleMove`) on drag initiation and alphabet letter transitions (`A` $\to$ `B` $\to$ `C`).
+  - Expanded the drag touch target to a comfortable **24dp hitbox** while preserving a minimalist **4.5dp visible gold indicator**.
+  - Added tactile haptic feedback to all transport controls (Play/Pause, Skip, Previous, Shuffle, Repeat).
+- **Skeleton Shimmer Loading States (`TrackListItemShimmer.kt`, `MusicListScreen.kt`)**:
+  - Built animated linear gradient shimmer placeholder cards for the track list during initial library scans and refresh operations.
+  - Enhanced empty states with brand insignia and typography.
+- **Pure Compose Audio Hub Bottom Sheet Container (`AudioHubSheet.kt`, `DialogInterop.kt`)**:
+  - Created a pure Jetpack Compose `ModalBottomSheet` + `HorizontalPager` container hosting *Playback*, *Queue*, and *Server* pages with unified 120Hz gesture tracking.
+- **Active Navigation Drawer Item Highlight (`MainScaffold.kt`, `DrawerInterop.kt`, `MainActivity.java`)**:
+  - Added dynamic active item highlighting in the navigation drawer with translucent gold background, border, and trailing gold status dot.
+  - Replaced the single music note icon in the sidebar header with the unified (M) brand insignia (`ic_nav_musicmate_menu`).
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Drawer Open Trigger & Bottom Dock Touch Target Z-Order (`DrawerInterop.kt`, `activity_main.xml`)**:
+  - Replaced `SharedFlow` with direct `SideEffect` binding of `drawerState` and `coroutineScope` to ensure 100% reliable execution of `DrawerInterop.openDrawer()`.
+  - Reordered the (M) menu button in `activity_main.xml` to top z-order with `elevation = 4dp` to eliminate touch interception by adjacent playback layouts.
+
+## [3.18.21] - 2026-08-21
+
+### Added
+- **Music Center Media Server Jetpack Compose Redesign (`MediaServerPage.kt`, `AudioHubBottomSheet.java`)**:
+  - Rebuilt the Media Server management page with a prominent top **Hero Status Card** featuring live Wi-Fi SSID connectivity chip, status LED indicator, and high-contrast **Start / Stop** server controls.
+  - Implemented an interactive tap-to-enlarge QR code modal dialog with high-contrast presentation for cross-room WebUI discovery.
+  - Added dynamic WebUI Endpoint card with 1-tap "Open WebUI in Browser" and "Copy URL" clipboard actions.
+  - Designed segmented engine switcher (`SonicNIO` / `CoreHTTP` / `Netty`) with live architecture performance specs and zero label truncation.
+  - Wrapped content in `verticalScroll` to guarantee zero layout clipping across all device aspect ratios and font scales.
+- **Audio Anatomy Technical Specs Card Upgrade (`NowPlayingPage.kt`)**:
+  - Added dedicated gold `ic_round_info_24` icon to the `AUDIO ANATOMY` header row on the flip side of the Now Playing card.
+  - Redesigned technical specs into compact audiophile telemetry rows (Codec, Resolution, Bitrate, Dynamic Range score, File Size) with `verticalScroll` to prevent vertical clipping on all screen sizes.
+- **Floating Bottom Dock Thumb Ergonomics Optimization (`activity_main.xml`, `MainActivity.java`)**:
+  - Swapped positions of Cover Art and Menu button: Album Art is anchored on the far left next to song title/subtitle for natural left-to-right visual hierarchy, while the (M) Collections / Navigation Menu button is on the far right in the primary thumb zone for effortless one-handed reach.
+
+- **Dynamic Artwork Ambient Glow & Floating Sleeve Backdrop (`NowPlayingPage.kt`, `TrackListItem.kt`)**:
+  - Integrated `androidx.palette.graphics.Palette` to extract dynamic primary vibrant/dominant and secondary colors from the active album art.
+  - Rendered a smooth, 700ms animated multi-stop ambient gradient backlight behind the Now Playing hero container and a diffused radial ambient glow behind the album art.
+  - Added gradient hairline rim lighting and floating sleeve borders (`0.75dp`) to elevate cover art presentation to luxury audiophile standards.
+
+- **Precision Audiophile Telemetry & Quality Indicators (`AudioBadges.kt`, `TrackListItem.kt`, `NowPlayingPage.kt`)**:
+  - Redesigned `QualityBadge` into an 85% frosted obsidian glass capsule (`Color(0xD9121212)`) with a 4dp luminous status dot (Gold for Hi-Res, Cyan for DSD, Purple for MQA, Sky Blue for CD Lossless, Grey for MP3) and monospace typography.
+  - Added new `ResolutionBadge` (`24/96`, `16/44.1`, `DSD64`, `320k`) in song list items for comprehensive studio library metadata scanning.
+  - Enhanced output target indicators with luminous audio pipeline status dots (Emerald for Bit-Perfect Direct USB, Cyan for DLNA Network Streamer, Sky Blue for Bluetooth, Gold for Local DAC).
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Cover Art Indicator Redesign & Glassmorphism Micro-Pill (`AudioBadges.kt`)**:
+  - Replaced bulky, flat brownish `NEW` / `DL` stickers with ultra-premium **85% deep frosted obsidian glass micro-pills** featuring a glowing 4dp status dot, hairline accent stroke (`#FFD700` gold / `#64B5F6` cyan), and tracked typography (`8.5sp`).
+- **Tag Editor Autocomplete Dropdown Restoration & Catalog Expansion (`TagsEditorPage.kt`, `TagsEditorFragment.kt`, `arrays.xml`)**:
+  - Restored Material 3 `ExposedDropdownMenuBox` dropdown selectors for **Genre**, **Style**, **Origin**, **Mood**, **Publisher**, and **Artist** with live type-to-filter suggestions, height bounding (`280dp`), and comprehensive global/audiophile preset catalogs.
+- **DLNA Renderer Discovery, SSDP Multi-Target Bursts & Ghost Target Pruning (`MediaServerHubImpl`, `SimpleRegistryListener`, `MusicMateServiceImpl`, `MediaServerAddressFactory`)**:
+  - Broadcast multi-target SSDP queries (`ssdp:all`, `urn:schemas-upnp-org:device:MediaRenderer:1`, and `urn:schemas-upnp-org:service:AVTransport:1`) in 2 burst pulses (0s and 1.5s) to eliminate discovery misses on devices that ignore `ssdp:all` or drop UDP packets.
+  - Enhanced renderer detection to identify all devices exposing the `AVTransport` service even if custom device types are used (e.g. Sonos, Heos, custom streamers).
+  - Wired `SimpleRegistryListener` to `MediaServerHub.setOnRenderersChangedListener()` to immediately notify `MusicMateServiceImpl` when devices are discovered, updated, or removed.
+  - Added dynamic target reconciliation in `MusicMateServiceImpl` to automatically upgrade placeholder startup targets (`"Scanning for players…"`) to live discovered `DMRPlayer` objects.
+  - Implemented an 8-second safety fallback timeout: if the previously selected DLNA renderer does not appear on the network within 8s, the app gracefully falls back to the local player instead of getting stuck on a ghost player.
+  - Fixed `RegistrationException: URI namespace conflict` in `MediaServerConfiguration` where overriding `getDevicePath()` to return `""` collapsed all discovered devices' event callback URIs to the same path, causing the second discovered renderer (e.g. `HiBy Music HiBy MediaRender`) to be rejected when `Ropieee` was already registered.
+  - Sanitized `MediaServerAddressFactory` to exclude cellular network interfaces from UPnP multicast, preventing multicast socket binding failures.
+  - Added subnet & reachability validation in `isDeviceValidAndReachable()` to filter out stale renderers on disparate subnets from previous Wi-Fi connections.
+- **Media Server Lifecycle Command Execution & Status Observation (`AudioHubBottomSheet.java`, `MediaServerManager.java`)**:
+  - Fixed missing `observeServerStatus()` registration in `AudioHubBottomSheet.java` so Compose state immediately reflects server start/stop transitions.
+  - Routed Start/Stop commands directly to the active `MusicMateServiceImpl` instance with seamless fallback to `MediaServerViewModel`.
+  - Fixed detached `MediaServerManager.stopServer()` intent dispatch to use `context.startService(intent)` instead of `stopService(intent)`, ensuring `ACTION_STOP_SERVER` commands are properly handled by `onStartCommand()`.
+- **MediaSession Active Sessions Self-Package Filtering (`MusicMateServiceImpl.java`, `ExternalAndroidPlayer.java`)**:
+  - Guarded against `MediaSessionManager.getActiveSessions()` returning MusicMate's own package, eliminating redundant `"Music Mate • v3.18.20"` duplicate entries in player pickers.
+
+## [3.18.20] - 2026-08-14
+
+### Added
+- **Premium Scroll & Fast-Scroller Unification (`MainActivity`, `activity_main.xml`)**:
+  - Re-engineered the scroll-to-top interaction by placing a meticulously styled 36dp "Go to top" frosted glass FAB securely aligned with the right-edge `FastScroller`.
+  - Color-matched the new compact FAB with the obsidian deep glass of the bottom navigation dock for a seamless visual flow.
+- **Custom Native Quality Pie Chart & MPAndroidChart Removal (`QualityPieChartView`, `AboutActivity`)**:
+  - Completely stripped out the heavy, unmaintained `MPAndroidChart` bloatware (~2MB savings).
+  - Designed a 150-line, 0-dependency lightweight custom Android `View` (`QualityPieChartView`) utilizing direct native Canvas APIs to mathematically render the premium audiophile encoding chart on the About page.
+- **Enhanced Recursive DLNA Renderer Discovery (`MediaServerHubImpl`)**:
+  - Refactored UPnP service resolution to traverse deeply nested/embedded UPnP renderers.
+  - Removed rigid version enforcing (e.g. `MediaRenderer:1`) to gracefully discover newer generation AVTransport (V2/V3) rendering control clients.
+- **Incoming Tracks Triage (`TrackDao`, etc)**:
+  - Renamed "Recently Added" to "Incoming Tracks" across the mobile app, database DAO, and WebUI / UPnP server routing to reflect unmanaged audio triage.
+  - Updated DAO query ordering to group tracks naturally by artist, album, and track sequence: `ORDER BY artist ASC, album ASC, CAST(track AS INTEGER) ASC, title ASC`.
+- **Music Center Server Panel UI/UX Refinements (`AudioHubBottomSheet`, `view_action_server_management_bottom_sheet.xml`)**:
+  - Added direct 1-tap "Open in Browser" action (`rounded_open_in_new_24`) next to the server URL to immediately preview/control the WebUI on the host device.
+  - Added dynamic streaming engine explainer captions under the `SonicNIO / CoreHTTP / Netty` toggle group describing real-time architecture advantages.
+  - Added DLNA 1.5 / UPnP AV active broadcast service badge with port indication.
+  - Modernized "Stop MediaServer" with Material 3 destructive tonal styling and translucent crimson background.
+- **Discover Music Folders Dialog UI/UX Modernization (`MainActivity`, `view_action_directories.xml`, `view_action_listview_item.xml`)**:
+  - Replaced crude default programmatic buttons with sleek Material 3 Tonal storage chips (`+ Primary`, `+ SD Card`) featuring folder icons and gold accents.
+  - Replaced rigid 220dp list height with dynamic auto-sizing (`setListViewHeightBasedOnChildren`) so the list card perfectly hugs the directory items with no empty black void.
+  - Enhanced directory rows with folder icons, middle-ellipsized 2-line path visibility, and red ripple delete icon buttons.
+  - Polished checkboxes and action buttons ("Cancel" / "Start Scan") with gold Material 3 filled styling.
+- **WebUI Now Playing Screen & Waveform Experience Upgrade (`index.html`, `MusicInfoRepository`)**:
+  - Added full playback transport controls (Shuffle, Previous, large Play/Pause, Next, Repeat) directly inside the fullscreen Now Playing modal.
+  - Added click-to-seek support on the waveform visualizer to scrub tracks directly by clicking the waveform bars.
+  - Styled waveform with radiant gold linear gradients (`#FFE082` -> `#FFB300`) on played bars and crisp translucent white on unplayed bars.
+  - Replaced raw "No artist biography found" / "No album information found" placeholders with a rich, glassmorphism **Audiophile Technical Specifications** grid (Container, Format, Resolution, Dynamic Range Score, Channel Mode, Bitrate, Track #, Source Path).
+  - Made Now Playing instantly accessible by clicking the bottom bar album art, song title, artist text, or new expand button (`bi-arrows-angle-expand`), plus global hotkey `N` (open/close) and `Escape` (dismiss).
+- **100% Offline Self-Contained WebUI (`index.html`, `tailwindcss.min.js`)**:
+  - Bundled Tailwind CSS locally in `app/src/main/assets/webui/js/tailwindcss.min.js` and removed external CDN dependency (`https://cdn.tailwindcss.com`), allowing full WebUI functionality on standalone Wi-Fi hotspots and offline local networks without internet access.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Android 13+ Bluetooth Codec Reflection & Cache Invalidation (`AudioOutputHelper`, `MusicMateServiceImpl`)**:
+  - Guarded against hidden `BluetoothA2dp.getCodecStatus()` reflection invocations that throw `SecurityException` (`CDM association / BLUETOOTH_PRIVILEGED required`) on API 33+.
+  - Prevented `refreshBluetoothCodecStatus()` from clearing cached Bluetooth codec details on Android 13+, ensuring data received via `CODEC_CONFIG_CHANGED` broadcasts persists until explicit device disconnection.
+  - Registered broadcast receiver with `Context.RECEIVER_EXPORTED` and attached framework `ClassLoader` to ensure safe unmarshalling of `android.bluetooth.BluetoothCodecStatus` parcelables.
+- **MediaSessionManager Permission Guard (`MusicMateServiceImpl`)**:
+  - Replaced naked `mediaSessionManager.getActiveSessions(null)` calls with guarded `refreshExternalPlayersSafe()` using explicit `MediaNotificationListener` component checks to prevent `SecurityException: Missing permission to control media`.
+- **DLNA UPnP Auto-Rebind on Wi-Fi Roaming & Doze Wakeup (`MediaServerHubImpl`)**:
+  - Implemented `onLinkPropertiesChanged` and IP change tracking (`lastBoundIp`) in `MediaServerHubImpl` to detect DHCP renewals, Wi-Fi mesh AP roaming, and Doze wakeups.
+  - Added debounced auto-restart logic (`restart()`) so the jUPnP stack and HTTP Web Server seamlessly rebind to the new IP address without requiring the user to force-close and restart the app.
+  - Strengthened `acquireLocks()` with `isHeld()` validation to re-acquire `WifiManager.MulticastLock` and `WifiLock` dynamically on network restoration, preventing Android from dropping SSDP multicast packets (`239.255.255.250:1900`).
+- **HttpCore 5 Benign Client Disconnect Logging (`HttpCoreWebServerImpl`)**:
+  - Added `isClientDisconnect()` filtering in `HttpCoreWebServerImpl` to route normal client disconnects (`Connection reset by peer`, `Broken pipe`, `ClosedChannelException` during track seeking or browser tab close) to debug logs (`Log.d`) instead of generating full error stack traces (`Log.e`).
+- **Netty 4.2 Web Server 10/10 Architecture Upgrade (`NettyWebServerImpl`)**:
+  - Attached `ChannelFutureListener` on zero-copy `DefaultFileRegion` stream completion to guarantee `RandomAccessFile` / `FileChannel` cleanup, eliminating file descriptor leaks during rapid scrubbing.
+  - Implemented REST JSON POST/PUT command dispatch via `wsHandler.handleCommand()` with `Server: getServerSignature()` response injection.
+  - Added ETag caching with HTTP `304 NOT_MODIFIED` handling for lightning-fast WebUI asset and artwork loading.
+  - Filtered benign socket disconnects in `exceptionCaught` handlers across HTTP and WebSocket pipelines.
+- **WebUI Now Playing Stability & Null-Safety (`index.html`)**:
+  - Implemented strict null-checks (`currentPlaybackState || {}`) when interacting with the mini-player before the first WebSocket broadcast arrives, preventing `TypeError` crashes.
+  - Added `e.stopPropagation()` to cover art click listeners to prevent duplicate simultaneous popups caused by nested event bubbling.
+  - Fixed play/pause and repeat mode toggle visual desync by correctly mapping `shuffleMode`, `repeatMode`, and `state.state` properties.
+  - Cleaned redundant `-Bit` suffixes from Audiophile resolution specs to elegantly render as `16-Bit / 44.1kHz`.
+
+## [3.18.19] - 2026-08-14
+
+### Added
+- **Build System & Dependency Catalog Modernization (`libs.versions.toml`, `settings.gradle`, `build.gradle`)**:
+  - Completely audited and pruned ~60+ lines of legacy commented-out artifacts (old Jackson, RxJava, Guava, Skydoves, old Cling/UPnP forks, unreferenced Jetty/HttpCore54 entries).
+  - Cleaned `settings.gradle` by removing ~30+ lines of obsolete commented module includes.
+  - Removed duplicate subproject dependency declarations in `core/build.gradle` and cleaned obsolete migration comments across all module build scripts.
+  - Pruned unused transitive dependencies in `androidtagview` and `crashreporter`, modernizing `JustFLAC` and `justdsd` build scripts for faster, cleaner Gradle builds.
+
+### Changed
+- **Song Detail & Tag Editor UI/UX Hierarchy (`TagsActivity`, `activity_tags.xml`, `fragment_editor_preview.xml`)**:
+  - **Dynamic Tab Visibility:** In Preview mode with the header fully expanded, `TabLayout` is cleanly hidden to prevent visual collisions with the bottom action capsule (`Delete` | `Organize` | `More...`). When tapping `Edit Song Info` or scrolling, the tabs smoothly appear at the top under the action bar.
+  - **Metadata Deduplication:** Suppressed duplicate artist display when `Album Artist` equals `Artist`, cleanly rendering `Artist | Album` followed by `❖ Genre ❖` without redundant repetition.
+  - **Title Scrim & Contrast:** Enhanced `shape_background_main_header.xml` with a smooth dark top-down vignette gradient for high text contrast across all album covers.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Bluetooth Codec Propagation to UI Target Badges (`AudioOutputHelper`)**:
+  - Fixed `AudioOutputHelper.getOutputDevice()` to explicitly attach the cached Bluetooth codec string (`sCachedBtCodec`) to the output `Device` model, ensuring target labels accurately render `{Name} • {Codec}` (e.g. `Shanling UP4 • LDAC`).
+- **Telemetry Chip Space & Layout Balancing (`sheet_now_playing_queue.xml`)**:
+  - Rebalanced padding, margins, and text sizes across telemetry chips to prevent truncation of the `DIRECT` bit-perfect indicator badge on smaller screens.
+
+## [3.18.18] - 2026-08-14
+
+### Added
+- **Audiophile Dynamic Range (DR) Metrics Chip & Direct Bit-Perfect Badge (`AudioHubBottomSheet`, `sheet_now_playing_queue.xml`)**:
+  - Displays a dedicated amber Dynamic Range score chip (e.g. `[DR 14]`) on the Now Playing screen when DR mastering health data is available.
+  - Displays a glowing emerald `[DIRECT]` verification badge when lossless audio streams directly to DLNA renderers or bit-perfect local outputs.
+- **1-Tap 3D Flip Technical Specs Card (`AudioHubBottomSheet`, `sheet_now_playing_queue.xml`)**:
+  - Tapping the album artwork or the top-right `(i)` badge triggers a 3D Y-axis card flip animation (`rotationY 90° ➔ -90° ➔ 0°`), revealing a dark glassmorphic Audio Anatomy drawer with Format, Bitrate, Dynamic Range, and physical File Size.
+- **Dual-Engine True Gapless Playback (`AndroidPlayerController`, `MediaServerHubImpl`, `MusicMateServiceImpl`)**:
+  - Implemented double-buffered `setNextTrack()` with `onMediaItemTransition(MEDIA_ITEM_TRANSITION_REASON_AUTO)` in ExoPlayer for 100% gapless transitions on on-device playback.
+  - Unified with DLNA `SetNextAVTransportURI` preloading for Wi-Fi streamers (WiiM, Eversolo, HiBy).
+- **Audiophile DSD & Integer Resampling Pipeline (`FFMpegHelper`)**:
+  - Transcodes DSD (DSF/DFF) files using exact 32x integer multiples (88.2 kHz / 176.4 kHz) with an 8th-order 30 kHz lowpass filter (`-af "lowpass=30000, volume=6dB"`) to eliminate quantization noise without non-integer jitter.
+- **Universal Queue Deduplication (`QueueManager`)**:
+  - Enforces strict single-instance track uniqueness across `addPlayingQueue`, `addPlayNext`, `savePlayingQueue`, and `loadPlayingQueue` with index pointer synchronization.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Bluetooth A2DP Output Audio Quality (`AndroidPlayerController`, `AudioOutputHelper`)**:
+  - Reverted forced float PCM in favor of auto-negotiated 16-bit / 24-bit integer PCM, eliminating distortion and crackling over Bluetooth A2DP.
+  - Removed aggressive reflection-based codec overrides to allow natural, stable Bluetooth HAL profile negotiation.
+
+## [3.18.17] - 2026-08-14
+
+### Added
+- **Automatic Bluetooth Audio Optimization & Real-Time Reflection Engine (`AudioOutputHelper`, `MusicMateServiceImpl`, `AudioHubBottomSheet`, `MainActivity`)**:
+  - **Automatic Background Codec Optimization:** MusicMate automatically requests the highest possible codec (`LDAC 24-bit / 96 kHz` or `aptX HD`) silently in the background whenever Bluetooth headphones connect via reflection on `BluetoothA2dp.setCodecConfigPreference()`, eliminating manual configuration buttons.
+  - **Real-Time Codec Telemetry:** Hooked `BluetoothProfile.A2DP` proxy service listener and `CODEC_CONFIG_CHANGED` / `ACTION_ACL_CONNECTED` broadcast receivers to immediately reflect active codec and sample rate telemetry across the app.
+  - **Direct System Audio / Bluetooth Routing:** Tapping the Step 3 output card in the Music Center directly opens Android's native Media Output panel or Bluetooth settings with zero modal dialog friction.
+  - **Compact Naming Format:** Added `AudioOutputHelper.getCompactLabel()` to unify Bluetooth device naming across the player selection dropdown, Floating Dock, and Music Center bottom sheet using `{Name} • BT ({Codec})` (e.g. `Sony WH-1000XM5 • BT (LDAC)`).
+  - **Title Cased Audio Output Descriptors:** Standardized output types into clean Title Case (`"Bluetooth Audio"`, `"USB DAC"`, `"Wired Headphones"`, `"Phone Speaker"`).
+- **Dual-Chunk WAV Audio Tagging (`JThinkWriter`)**:
+  - Writes standard RIFF `WavInfoTag` chunks for legacy hardware / car stereos alongside standard ID3v2.4 chunks for modern audiophile software.
+- **Embedded Cover Art Tag Writing (`JThinkWriter`)**:
+  - Integrated `ArtworkFactory` to write embedded album art binary frames directly into audio files during tag saving.
+
+### Changed
+- **Standardized Playback Renderer Naming Pattern**:
+  - Replaced legacy parenthesis notation `(Bluetooth Audio)` with unified bullet delimiter `•` across the entire app (`{Name} • BT ({Codec})`, `{Name} • USB DAC`, `{Name} • {IP}`, `{Name} • {Version}`).
+- **Tag Editor Sequential Disk I/O Throttling (`TagsEditorFragment`)**:
+  - Replaced unbounded parallel futures with sequential execution on background worker threads during batch tag updates to prevent micro-SD card lockups.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Audio Route Path Bluetooth Badge (`AudioHubBottomSheet`)**:
+  - Fixed Step 3 (Target Audio Output) route badge to properly display `BLUETOOTH A2DP` and `Active Bluetooth A2DP Wireless Stream` with detected codec info instead of falling back to `DIRECT SYSTEM OUTPUT`.
+- **Persistent "Discard changes?" Popup Bug (`TagsEditorFragment`, `TagsActivity`)**:
+  - Added `isBindingInputs` guard flag to suppress `TextWatcher.afterTextChanged()` callbacks during programmatic `setText()` population on initial load and post-save refreshes.
+  - Fixed duplicate `TextWatcher` attachments and ensured `tagsActivity.setDirty(false)` and `modifiedFields.clear()` are executed after saving.
+- **Silent Tag Write Failures & Error Propagation (`TagWriter`, `FileRepository`)**:
+  - Updated `TagWriter.writeTag()` and `FileRepository.setMusicTag()` to return `boolean`, guaranteeing that the Room database is updated only when physical disk writes succeed.
+- **Multi-Value Tag Delimiter Normalization (`JThinkReader`, `StringUtils`)**:
+  - Normalized mixed delimiters (`/`, `;`, `&`, `,`) to clean comma-separated strings (`", "`) on read, while preserving band names like `AC/DC`.
+
+## [3.18.16] - 2026-08-12
+
+### Changed
+- **Now Playing Cover Art Overlay & Playing Indicators (`MusicTagAdapter`)**:
+  - **Scoped Overlay Visibility:** Replaced global dark overlay on all list items with dynamic, single-track cover art overlay (`shape_now_playing_cover_overlay.xml`) rendered exclusively on the currently playing song (`isNowPlaying`). Non-playing tracks retain clean, full-brightness artwork.
+  - **Animated Vector Equalizer:** Integrated real-time `AnimatedVectorDrawable` equalizer (`ic_equalizer_active`) on the cover art overlay when playing (`PLAYING`), and a Gold pause icon (`ic_baseline_pause_24`) when paused (`PAUSED`).
+  - **Active Track Title Highlight:** Highlighted active song titles in `@color/colorGold` and updated `MainActivity.java` to notify the adapter on play/pause state changes.
+  - **Single Indicator Surface:** Removed the duplicate `item_player` equalizer icon from the top-right status indicator bar to prevent UI clutter.
+- **Artwork Gesture Overlay Feedback & Micro-Pill Telemetry (`AudioHubBottomSheet`)**:
+  - **Gesture Overlay Animation:** Added central `ImageView` overlay (`sheet_gesture_feedback_icon`) on album art to flash 48dp action icons (`play`, `pause`, `skip_next`, `skip_previous`) during double-tap and horizontal fling gestures with a smooth scale-up (`0.7f` $\rightarrow$ `1.2f`) and fade-out animation.
+- **Unified Sparkle (✦) Symbol Badge System for NEW Tracks (`view_list_music_tag`, `NewIndicatorView`)**:
+  - Replaced yellow dot and yellow rectangular block indicators with a cohesive Sparkle/Starburst symbol badge system (`auto_awesome`).
+  - **Cover Art Thumbnail:** 14dp vector badge (`ic_new_sparkle_badge.xml` in Gold for unmanaged tracks, `ic_new_download_sparkle_badge.xml` in Cyan for downloads) anchored to the top-right corner of album art.
+  - **Tag Activity Header:** `NewIndicatorView` renders a `12dp` rounded pill chip containing a Sparkle icon + bold "NEW" text in dark amber (`#2E2712`) / dark cyan (`#0D2E3D`) chip backgrounds.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Player Picker Popup Menu Interleaving (`MainActivity.java`)**:
+  - Fixed menu item interleaving where Group 1 utility actions (*Rescan* and *Bluetooth Setup*) appeared between Group 0 playback targets. Offset Group 1 menu order values (`baseOrder = renderers.size() + 10`) so utility actions always remain strictly at the bottom below the group divider line.
+- **Cover Art Flickering During Playback Progress Updates (`MainActivity`, `MusicTagAdapter`)**:
+  - Suppressed full `RecyclerView` item rebinds (`adapter.notifyItemChanged`) and redundant Coil image loading requests on 1-second progress ticks during active playback.
+  - Added `imageView.setTag(song.getPath())` guards on `barAlbumArt` (bottom navbar) and `mCoverArtView` (music list) to prevent Coil from re-fetching bitmaps when the same track is already loaded.
+- **VectorDrawable Property Animation Crash (`ic_equalizer_active.xml`)**:
+  - Fixed runtime `java.lang.IllegalArgumentException: Property: scaleY is not supported for FullPath` by wrapping animated bar paths in individual `<group>` tags with pivot points (`pivotX`, `pivotY="12"`).
+
+## [3.18.15] - 2026-08-11
+
+### Added
+- **UI/UX Design Principles & ADRs (`DESIGN.md`)** — Added dedicated design documentation outlining product philosophy, gesture mapping, surface menu decoupling rules, player picker UX, and Architecture Decision Records (ADRs).
+
+### Changed
+- **Music List Interaction Model** — Redesigned item interactions to align with the app's core purpose (tag management):
+  - **Single tap (row)** now always opens `TagsActivity` unconditionally, regardless of playback state. Previously the behaviour was inconsistent — opening the tag editor only when no player was connected.
+  - **Cover art tap** is now the dedicated quick-play trigger. When a playback device is active, tapping the cover art immediately plays the track in context. When no device is available, a toast guides the user.
+  - **Cover art play indicator** — A subtle play icon overlay is shown on the album art only when a playback device is connected and active, acting as a dual signal: "tap to play" and "a player is ready".
+- **Menu Rationalization** — Split the shared action menu into two purpose-built menus:
+  - **`⋮` Popup (single track)** — Focuses on quick playback actions (`Play Now`, `Play Next`, `Add to Queue`) and file-level operations (`Convert Format`, `Open in External App`). The playback group is hidden entirely when no player device is active. `Song Info`, `Move`, and `Delete` removed — no longer needed since single-click opens tags directly.
+  - **Long-press Action Mode (multi-select)** — Focused exclusively on batch tag and file management: `Edit Tags`, `Move Files`, `Convert Files`, `Delete`, `Select All`. Playback actions removed to reduce clutter for bulk operations.
+  - Introduced `menu_track_popup.xml` as a dedicated single-item popup menu, decoupled from `menu_main_actionmode.xml`.
+- **Cast / Output Device Picker UX** — Resolved mixed affordances in the player selection popup:
+  - **Auto-scan on open** — M-SEARCH is triggered the moment the popup opens, so DLNA devices are already being discovered as the user reads the list. No manual tap required in the common case.
+  - **Visual group divider** — A horizontal divider (API 28+) now separates selectable player targets from utility actions, making it visually clear which items switch the output and which trigger system actions.
+  - **Logical item order** — "Rescan for DLNA players" moved above "Bluetooth / System Output…". Rescan adds items to the list above it; Bluetooth exits the app — these are fundamentally different and now ordered by proximity to their effect.
+  - **Empty state label** — When no players are discovered yet, shows a disabled "Scanning for players…" placeholder instead of a tappable "No players discovered" item.
+- **Tag Activity "More Actions" Menu UX** — Organized `tag_more_actions_menu.xml` into three functional groups with icons and visual group dividers (API 28+):
+  - **Tag Automation Group:** `Auto-Tag (MusicBrainz)` and `Search & Match Tags`.
+  - **Audio Analysis Group:** `Verify Lossless Quality`.
+  - **File & External Tools Group:** `Show in File Manager` and `Search Song on Web`.
+  - Enabled icon rendering (`UIUtils.makePopForceShowIcon`) and group dividers for instant scannability.
+- **Left & Right Slide Menu Architecture (`ResideMenu`)** — Refactored XML menu files into clean functional groups and removed deprecated legacy code:
+  - **Left Slide Menu (`menu_music_collection.xml`):** Dedicated to **Music Content & Library Filtering** (Browse: All/Artists/Genres, Curate: Collections, Discover: Recently Added/Similar, Quality Grade).
+  - **Right Slide Menu (`menu_music_mate.xml`):** Dedicated to **App System & Controls** (Manage Library, Settings, Storage & Notification Access Permissions, Diagnostics, About).
+
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Pre-existing `PlaybackService` API mismatches** — Corrected three stale method calls that prevented compilation:
+  - `PlaybackState.isPlaying()` → `playbackState.currentState == PlaybackState.State.PLAYING`
+  - `PlaybackService.pause()` → `pausePlayer()`
+  - `PlaybackService.play()` → `playSong(getNowPlayingSong())`
+  - `PlaybackService.skipToNext()` → `skipToNextInQueue()`
+
+---
+
+## [3.18.14] - 2026-08-09
+
+
+### Added
+- **Bluetooth Audio Playback Suite**:
+  - **Live Codec & Device Telemetry:** Detects active Bluetooth A2DP & BLE codecs (**LDAC**, **aptX**, **AAC**, **SBC**) and displays the Bluetooth device product name (e.g. `Sony WH-1000XM5`, `Bose QC45`) in the Audio Route Path.
+  - **1-Tap System Audio Output Switcher:** Added `Bluetooth / System Output...` action to target player selector, launching native Android Media Output panel.
+  - **Auto-Pause on Disconnect:** Registered `becomingNoisyReceiver` (`ACTION_AUDIO_BECOMING_NOISY` / `ACTION_ACL_DISCONNECTED`) to automatically pause local audio playback when wireless headphones or Bluetooth receivers disconnect.
+- **Audio Route Path Naming Standard**:
+  - Renamed legacy "Signal Path" to **Audio Route Path** across UI strings, resource files, menus, bottom sheets, and documentation for precise end-to-end audiophile route telemetry.
+
+### Changed
+- **Dedicated 3-Tab Architecture (`AudioHubBottomSheet`)**:
+  - Transitioned Music Center to a full-height **3-Tab Architecture** (**`[ Playback | Queue | Server ]`**).
+  - Dedicated **`Queue`** page provides full-height viewport displaying 8–12 upcoming tracks at once, complete with total remaining playback duration (`X tracks • Y min total`), drag-to-reorder, and swipe-to-remove.
+  - Dedicated **`Playback`** page gives maximum vertical space to artwork, transport controls, and Audio Route Path telemetry.
+- **Comprehensive Project Documentation Update**:
+  - Updated `README.md`, `USER_GUIDE.md`, and `NETWORK_RESILIENCE.md` with complete documentation for recent Music Center features, Audio Route Path telemetry, and system architecture.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **DLNA Target Activation & Auto-Transfer Stream**:
+  - Fixed output target switching in `switchPlayer()` when selecting a remote DLNA renderer: ensures `startServers()` is invoked to guarantee HTTP media server readiness, and automatically initiates stream transfer (`playSong(activeTrack)`) when selecting a target renderer.
+
+---
+
+## [3.18.13] - 2026-08-08
+
+### Added
+- **Custom Audiophile Signal Path Geometries**:
+  - Added 5 custom XML shape drawables (`shape_node_source.xml`, `shape_node_transport.xml`, `shape_node_target.xml`, `shape_node_target_bitperfect.xml`, `shape_node_connector.xml`) with asymmetric curves, chamfers, and HSL glowing strokes to visually distinguish pipeline stages.
+
+### Changed
+- **Playback Center Naming Symmetry**:
+  - Renamed master bottom sheet tabs to **`Audio Transport`** and **`Network Streamer`** for precise audiophile terminology.
+- **Full-Width 1-Line Signal Path Flow**:
+  - Redesigned the Now Playing card (`sheet_now_playing_queue.xml`) to move album art and track metadata to the top row, placing the 3-stage Signal Path widget across the full width (`100% width`) below.
+  - Streamlined signal path nodes to single 1-line chips (`FLAC 24/96` ➔ `Net Streamer` / `Local Transport` ➔ `USB Bit-Perfect ▾`) with compact padding and zero text truncation.
+
+### Removed
+- **Diagnostic Copy Button**:
+  - Removed the legacy "Copy Diagnostic Report" clipboard button from the Signal Path telemetry view for a cleaner UI.
+
+---
+
+## [3.18.12] - 2026-08-07
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Playback State Persistence**: Fixed a bug where Shuffle and Repeat modes were not remembered after restarting the app by persisting them using Android `SharedPreferences`.
+
+### Removed
+- **OrmLite Database Engine**: Fully deprecated and removed the legacy `db-ormlite` module.
+- **Build Flavors**: Removed the database flavor dimension. The app is now compiled exclusively with Google's modern `Room` database architecture, significantly reducing maintenance overhead, improving type safety, and reducing the final APK size.
+
+## [3.18.11] - 2026-08-07
+
+### Added
+- **Quick Action Buttons on Collections**:
+  - Replaced redundant chevron on folder cards (Artist, Genre, Playlist) with dedicated **Play** and **Add to Queue** icons for frictionless listening session management without opening folders.
+
+### Changed
+- **OLED UI Refinement & Borders Elimination**:
+  - Removed chunky `MaterialCardView` borders, excessive padding, and heavy shadows across remaining dialogs (`dialog_text_input.xml`, `dialog_item_list.xml`).
+  - Restyled Now Playing Mini-Player and Queue sheet clear button to seamlessly blend with the "Neon on Dark" true black UI aesthetic.
+- **Audio Hub Visibility**:
+  - Lowered `AudioHubBottomSheet` maximum peek height from 82% to 65% of the screen, allowing users to comfortably see and interact with 2-3 list items lingering dynamically in the background while the sheet is open.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **NPE in Quality Indicator**:
+  - Fixed `NullPointerException` thrown in `QualityIndicatorView.java` when attempting to tint a null drawable.
+
+---
+
+## [3.18.10] - 2026-08-06
+
+### Added
+- **Unified Audio Hub Bottom Sheet Architecture**:
+  - Consolidated `NowPlayingQueueSheet`, `SignalPathBottomSheet`, and `MediaServerManagementSheet` into a single, high-performance `AudioHubBottomSheet`.
+  - Integrated a top tab bar switcher (`MaterialButtonToggleGroup`) for instant 1-tap switching between **Now Playing & Queue**, **Audio Signal Path**, and **Media Server Management** without sheet dismiss animations.
+- **Unconditional Now Playing Queue Access & Target Player Selector**:
+  - Made the Audio Hub bottom sheet accessible at all times from the floating playback bar, even when no track is currently playing.
+  - Relocated target player picker and signal path buttons into the Audio Hub sheet header for clean, unified playback engine management.
+  - Added custom vinyl disc vector icon with gold accent ring and note (`ic_now_playing_idle.xml`) for idle playback state.
+- **Now Playing File Format Badge Styling**:
+  - Standardized file format badges (e.g., `FLAC`, `MP3`, `DSD`, `MQA`) on Now Playing cards to use `apincer.android.mmate.ui.view.BadgeView`.
+  - Applied identical codec styling and lossy/lossless background and text colors (`TagUtils.getCodecColor`, `TagUtils.getCodecBgColor`) as displayed in the song list (`MusicTagAdapter`).
+- **Custom Audiophile Navigation Icons**:
+  - Created `ic_nav_collections.xml` (stacked music library cards with note emblem) for opening the left Music Collections drawer.
+  - Created `ic_nav_musicmate_menu.xml` (matching card container, border, depth shadow, and 3-slider audio tools emblem) for opening the right MusicMate side menu.
+
+### Changed
+- **Premium UI/UX Dialog Standardization**:
+  - Refactored all 16 dialog and bottom sheet layouts to use a unified `RelativeLayout` header.
+  - Standardized dialogs with a top-center translucent drag handle (`shape_dot_indicator`) and a top-right close button.
+  - Enforced strong `24dp` elevation with pure black spot/ambient shadows to give blur-background dialogs true physical depth.
+- **Semantic Theme & Color Modernization**:
+  - Purged hardcoded `@color/white` and `@color/grey...` attributes across non-dialog layouts, migrating them to Material 3 semantic attributes (`?attr/colorOnSurface`, `?attr/colorOnSurfaceVariant`) for flawless DayNight theme switching.
+  - Upgraded Light Mode surface to crisp `#FFFFFF` (from sepia warm white) and Dark Mode surface to true OLED `#000000` (from brownish charcoal) for maximum album art contrast.
+  - Sharpened the glassmorphism edge on `bg_dialog_dark_blur` with a 30% white 1dp stroke and a 15% inner sheen gradient.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **Now Playing Queue List Vertical Scroll Gesture**:
+  - Disabled nested scrolling on the `ViewPager2` inner `RecyclerView` in `AudioHubBottomSheet` (`child.setNestedScrollingEnabled(false);`), allowing `BottomSheetBehavior` to correctly pass vertical scroll touch events to the Queue list (`sheet_queue_list`).
+- **DLNA / DMR Player Target Auto-Selection Controls**:
+  - Resolved issue where auto-selected DLNA renderer targets failed to accept transport actions (Next, Prev, Play, Pause, Stop) until manually re-selected in target picker popup.
+  - Updated `autoSelectBestPlayer()` and `switchPlayer()` to initialize `controlledPlayerTargetId` with `controlled = true`, and added self-healing `isControllable()` checks.
+- **Now Playing Queue Auto-Scroll & Swipe-to-Remove**:
+  - Added automatic scrolling to the currently playing song in the queue list upon opening the sheet or when track changes occur.
+  - Fixed empty space bug after swiping to remove songs from the queue by calling `adapter.notifyItemRangeChanged()` and handling empty state transitions.
+- **Lossless Quality & Audio Authenticity Engine**:
+  - **Quality Badge Color Reset**: Fixed default `upscaledScore` and `resampledScore` in `IconProviders.java` returning `1`, which previously forced quality badges to display red (`quality_scale_not_matched`) for all tracks.
+  - **AIFF IEEE 80-Bit Extended Precision Sample Rate Parser**: Fixed IEEE 754 80-bit float parsing in `AudioDecoder.java` to compute mantissa and exponent, correctly resolving AIFF sample rates (e.g., 44.1 kHz).
+  - **Fake Hi-Res & Upscaled Audio Verification**: Updated `AudioAuthenticityAnalyzer.java` to detect tracks with sample rates > 48 kHz but spectral rolloff ≤ 24 kHz or rolloff ratio < 0.75, accurately classifying upsampled CD content as `Upscaled Content`.
+  - **PCM Bit Depth Decoding Fallback**: Updated `AudioDecoder.getBitsPerSample` to safely default to 16-bit PCM rather than throwing unhandled `IllegalArgumentException` on unexpected encodings.
+- **TripMate Module Exception Handling**:
+  - Replaced over 200 silent empty catch blocks (`// TODO: handle exception`) and method stubs across `TripMate` activities and parsers with explicit error and warning logging (`Log.e` / `Log.w`).
+
+---
+
+## [3.18.9] - 2026-08-03
+
+### Added
+- **Audio Converter Sample Rate Downsampling**:
+  - Added ExposedDropdownMenu for target sample rate selection in Convert Files dialog (`Original`, `96 kHz`, `48 kHz`, `44.1 kHz`).
+  - Overloaded `FFMpegHelper.convert` and `FileOperationTask.encodeFiles` to support `-ar <sampleRate>` downsampling flag.
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **FFmpeg 24-Bit Encoding Error**:
+  - Fixed invalid `-sample_fmt s24` flag by replacing it with valid `-sample_fmt s32` for 24-bit FLAC/ALAC audio conversion.
+- **Converted Track Metadata Inheritance & Instant Library Indexing**:
+  - Updated `FileOperationTask.java` to copy track metadata (`Title`, `Artist`, `Album`, `AlbumArtist`, `Genre`, `Track`, `Year`, `Comment`, `Composer`, `Publisher`) from source track to newly converted track.
+  - Automatically writes metadata tags to disk via `TagWriter.writeTagToFile` and updates database, ensuring converted files (`_001.flac`) immediately match active Artist/Album view filters upon completion.
+- **Selection State & Playback Interruption**:
+  - Prevented selection mode from clearing during playback status updates or background dataset refreshes by guarding `isListFollowNowPlaying` / `scrollToSong()` with `(actionMode == null)` and preserving `SelectionTracker` selection keys.
+- **Action Dialog List View Layout & Icons**:
+  - Redesigned `view_action_listview_item.xml` layout to use a responsive `LinearLayout` (`layout_weight="1"` for track name with `ellipsize="end"`), fixing collapsed/hidden song names.
+  - Added `getTrackDisplayName()` fallback helper (`getSimpleName()` -> `getTitle()` -> `FileUtils.getFileName()`).
+  - Synchronized dialog header icons with context menu action bar icons for **Move Songs** (`rounded_drive_file_move_24`) and **Convert Files** (`rounded_swap_horiz_24`).
+
+## [3.18.8] - 2026-08-02
+
+### Added
+- **Split-Tap Zone on Song List Items**:
+  - Tapping the **Song Title / Details** plays the track immediately.
+  - Tapping the **Album Cover Art Thumbnail** directly opens **`TagsActivity`** (Metadata Editor) for fast 1-tap tag editing.
+- **Now Playing & Queue Bottom Sheet (`NowPlayingQueueSheet`)**:
+  - Implemented modern bottom sheet showing Now Playing album art, track details, technical format badge (e.g. `FLAC 352.8 kHz / 24bit`), active player badge, and scrollable queue list with current track gold highlighting.
+  - Added embedded **Previous**, **Play / Pause**, and **Next** transport controls inside the Now Playing card.
+  - Added **Play All** button in queue header to instantly enqueue all currently displayed library songs into the playback queue and begin playback.
+  - Added **Shuffle Toggle (🔀)** and **Repeat Mode Toggle (🔁)** controls.
+  - Added dedicated gold **Signal Path icon button** (`ic_baseline_audio_path_24`) in sheet header.
+  - Added **Tap-to-Scroll** list navigation: tapping the track card or any queue row dismisses the sheet and scrolls the main library list to that song's position.
+- **Top Header & Selection Mode Icon Audit & Alignment**:
+  - Replaced top header back button icon with standard left navigation arrow (`@drawable/ic_baseline_arrow_back_24`).
+  - Aligned selection mode contextual action bar icons: **Play Now** (`▶`), **Add to Queue** (`≡+`), and **Song Info** (`📝`).
+- **Top-Anchored Quick Player Picker (`showPlayerPickerPopup`)**:
+  - Introduced a top-right anchored popup menu triggered by the header cast button for fast 1-tap renderer switching right beneath the tap target.
+- **Dynamic Media Server Status Tint**:
+  - Bound `navigation_media_server` icon in bottom navigation bar to `MediaServerManager.getServerStatus()` LiveData to dynamically display active running status (Teal tint when server is active, Muted tint when offline).
+
+### Improved
+- **Unified Floating Navigation & Playback Dock**:
+  - Combined the floating playback bar and bottom navigation into a single, high-efficiency floating dock (`20dp` radius card).
+  - **Idle State**: Displays Library icon, default app title, dynamic Media Server status icon, and Menu.
+  - **Playback Active State**: Seamlessly expands to show mini album art, marquee track title, player target subtitle (e.g. `HiBy R3 • DLNA Renderer`), and clean gesture access.
+  - **Gestures**: Tapping track title or artwork opens `NowPlayingQueueSheet`; long-pressing opens `SignalPathBottomSheet`.
+  - Maximizes vertical list viewable area and eliminates double bar UI overlap.
+- **Single Web Server Engine Build**:
+  - Consolidated legacy Gradle `server` build flavor dimension into `src/main` with **HttpCore** as default engine. All 3 engines (`HttpCore`, `NIO`, `Netty`) remain dynamically switchable from App Settings in a single APK build.
+- **Streamlined Navigation & Signal Path Access**:
+  - Integrated direct transition from `NowPlayingQueueSheet` (via header icon button) to `SignalPathBottomSheet`.
+  - Added long-press shortcut on Floating Playback Bar to quickly open `SignalPathBottomSheet` for audiophiles and power users.
+  - Cleaned up bottom navigation bar by removing duplicate signal path label triggers.
+
+### Added
+- **Unified Player Target Display Formatting**:
+  - Added centralized 2-line and 1-line player label formatters in `PlayerNameUtils`.
+  - Display standardized titles and sub-metadata across Media Server Management Sheet, player selection dropdowns, and Signal Path Bottom Sheet.
+  - Distinct player target type labels: **DLNA Renderer** (e.g. `HiBy R3 (192.168.1.50 • DLNA Renderer)`), **Web Streaming**, and **Android App** (e.g. `Poweramp (com.maxmpz.audioplayer • Android App)`).
+- **Runtime Server Engine Selector (App Settings)**:
+  - Implemented `CompositeWebServer` proxy to allow users to switch HTTP streaming web server engines at runtime (**SonicNIO**, **CoreHTTP**, or **Netty**) directly from App Settings without rebuilding or restarting the application process.
+- **Full DLNA Controller (DMC) Transport Actions**:
+  - Implemented `playerPause()`, `playerSeek()`, and `playerSetVolume()` in `MediaServerHubImpl` to provide full control over remote DLNA renderers (`AVTransport` + `RenderingControl` UPnP services).
+- **IP Address Sanitization Utility**:
+  - Added `NetworkUtils.extractIpAddress()` to extract clean IPv4 addresses by stripping schemes, ports, leading slashes, and paths.
+
+### Improved
+- **Ultra High-Res (352.8 kHz / DXD) Streaming Optimizations**:
+  - Increased file streaming chunk size to **256 KB** and restored TCP socket send buffers (`SO_SNDBUF`) to **512 KB** across all engines (`SonicNIO`, `CoreHTTP`, and `Netty`) to prevent mid-track buffering and stalls during high-rate (>10 Mbps) FLAC streaming.
+
+
+### Fixed
+- **DSD consistency:** Unified DSD formatting across Compose and XML views. DSD badges now consistently use the cyan accent (`#00E5FF`) and display resolutions compactly (e.g. `DSD64`) instead of generic legacy colors (gold/grey). Cleaned up conflicting XML color tokens and updated TagUtils tiering.
+- **DLNA Renderer Name Resolution**:
+  - Fixed issue where incoming HTTP stream requests for discovered DLNA Renderers (like HiBy R3) were fallback-named as generic `"Streaming Player"` or `"Mozilla"`.
+  - Added automatic resolution in `MusicMateServiceImpl` to map incoming HTTP stream IP addresses to registered UPnP DMR device friendly names.
+- **HiBy User-Agent Parsing**:
+  - Added explicit HiBy player detection in `PlayerNameUtils.getFriendlyNameFromUserAgent()`.
+  - Filtered out generic `"Mozilla"` fallback labels for embedded DAP web browser user agents.
+- **DLNA Renderer Disappears After Device Reformat / Factory Reset**:
+  - Fixed issue where a DLNA device (e.g. HiBy M3) would no longer appear in the player picker after being reformatted or factory reset (new UDN / new IP address assigned).
+  - Added `refreshDiscovery()` to `MediaServerHub` SPI and `MediaServerHubImpl` (triggers immediate UPnP SSDP M-SEARCH).
+  - Exposed `refreshPlayerDiscovery()` in `PlaybackService` interface and implemented in `MusicMateServiceImpl`.
+  - Added **"🔄 Rescan for players"** action at the bottom of the Cast / Player Picker popup — triggers an immediate rescan and automatically reopens the picker after 2.5 s showing freshly discovered devices.
+
+---
+
+## [2026.06.0] - 2026-06-15
+
+### Added
+- **Network Resilience Layer**:
+  - Automatic media server pause/resume on Wi-Fi state loss and recovery (`ConnectivityManager.NetworkCallback`).
+  - Hotspot mode auto-binding (`WIFI_AP_STATE_CHANGED`).
+  - Wake locks, Wi-Fi locks, and Multicast locks for continuous background streaming.
+
+---
+
+## [2026.05.0] - 2026-05-31
+
+### Improved
+- **CoreHTTP Engine Production-Grade Optimization**:
+  - Memory footprint reduction to ~64 KB per connection using object pooling and `FileChannel.transferTo()` zero-copy streaming.
+  - Enhanced WebSocket handling and GC pause optimizations (<30 ms).

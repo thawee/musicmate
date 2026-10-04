@@ -1,0 +1,248 @@
+package apincer.music.server.nio;
+import android.content.Context;
+import android.util.Log;
+
+import org.jupnp.model.message.*;
+import org.jupnp.protocol.ProtocolFactory;
+import org.jupnp.protocol.ReceivingSync;
+import org.jupnp.transport.Router;
+
+import java.net.InetAddress;
+import java.net.URI;
+import java.util.*;
+
+import apincer.music.core.http.NioHttpServer;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
+import apincer.music.core.server.BaseServer;
+import apincer.music.core.server.spi.UpnpServer;
+
+public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
+    private final String serverSignature;
+
+    /**
+     * The Handler that bridges our NIO server with the jUPnP protocol stack.
+     */
+    class UpnpHandler implements NioHttpServer.Handler {
+        private final ProtocolFactory protocolFactory;
+        private volatile long lastDateUpdate = 0;
+        private volatile String cachedDateString = "";
+
+        public UpnpHandler(ProtocolFactory protocolFactory) {
+            this.protocolFactory = protocolFactory;
+        }
+
+        private String getCachedDate() {
+            long now = System.currentTimeMillis();
+            // Cache the formatted date for 1 second to reduce GC churn
+            if (now - lastDateUpdate > 1000) {
+                cachedDateString = formatDate(now);
+                lastDateUpdate = now;
+            }
+            return cachedDateString;
+        }
+
+        @Override
+        public NioHttpServer.HttpResponse handle(NioHttpServer.HttpRequest request) {
+            String rawUri = request.getPath();
+            apincer.music.core.server.ClientRegistry.observe(request.getRemoteHost(), request.getHeaders(), rawUri);
+            try {
+                // Basic Path Validation for UPnP
+                String normalizedPath = normalizePath(rawUri);
+                if (normalizedPath == null) {
+                    Log.w(TAG, "Security alert: Blocked suspicious UPnP path: " + rawUri);
+                    return new NioHttpServer.HttpResponse().setStatus(400, "Bad Request");
+                }
+
+                int reject = rejectStatus(request.getMethod(), rawUri);
+                if (reject == 405) {
+                    return new NioHttpServer.HttpResponse().setStatus(405, "Method Not Allowed")
+                            .addHeader("Allow", ALLOWED_METHODS);
+                } else if (reject != 0) {
+                    return new NioHttpServer.HttpResponse().setStatus(400, "Bad Request");
+                }
+
+                StreamRequestMessage requestMessage = readRequestMessage(request);
+                ReceivingSync protocol = protocolFactory.createReceivingSync(requestMessage);
+                protocol.run();
+                StreamResponseMessage responseMessage = protocol.getOutputMessage();
+
+                if (responseMessage != null) {
+                    return writeResponseMessage(responseMessage);
+                } else {
+                    return new NioHttpServer.HttpResponse().setStatus(404, "Not Found");
+                }
+            } catch (Exception t) {
+                Log.e(TAG, TAG+" - Exception occurred during UPnP stream processing: " + t.getMessage());
+                String errMsg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+                return new NioHttpServer.HttpResponse().setStatus(500, "Internal Server Error").setBody(errMsg.getBytes());
+            }
+        }
+
+        private NioHttpServer.HttpResponse writeResponseMessage(StreamResponseMessage responseMessage) {
+            NioHttpServer.HttpResponse response = new NioHttpServer.HttpResponse();
+            response.setStatus(responseMessage.getOperation().getStatusCode(), responseMessage.getOperation().getStatusMessage());
+
+            // Headers
+            for (Map.Entry<String, List<String>> entry : responseMessage.getHeaders().entrySet()) {
+                response.addHeader(entry.getKey(), entry.getValue().get(entry.getValue().size() - 1));
+            }
+
+            // override header
+            response.addHeader("Server", serverSignature);
+            response.addHeader("Date", getCachedDate());
+
+            // Body
+            if (responseMessage.hasBody()) {
+                response.setBody(responseMessage.getBodyBytes());
+            }
+
+            return response;
+        }
+
+        private StreamRequestMessage readRequestMessage(NioHttpServer.HttpRequest req) {
+            StreamRequestMessage requestMessage;
+            try {
+                requestMessage = new StreamRequestMessage(
+                        UpnpRequest.Method.getByHttpName(req.getMethod()),
+                        URI.create(req.getPath())
+                );
+            } catch (IllegalArgumentException ex) {
+                throw new RuntimeException("Invalid request URI: " + req.getPath(), ex);
+            }
+
+            if (requestMessage.getOperation().getMethod().equals(UpnpRequest.Method.UNKNOWN)) {
+                throw new RuntimeException("Method not supported: " + req.getMethod());
+            }
+
+            UpnpHeaders headers = new UpnpHeaders();
+            req.getHeaders().forEach(headers::add);
+            requestMessage.setHeaders(headers);
+
+            // Body
+            byte[] bodyBytes = req.getBody();
+            if (bodyBytes != null && bodyBytes.length > 0) {
+                if (requestMessage.isContentTypeMissingOrText()) {
+                    requestMessage.setBodyCharacters(bodyBytes);
+                } else {
+                    requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
+                }
+            }
+            return requestMessage;
+        }
+    }
+
+    private static final String TAG = "NioUPnpServer";
+    private static final String ALLOWED_METHODS = "GET, POST, SUBSCRIBE, UNSUBSCRIBE, NOTIFY";
+
+    /**
+     * 0 when jUPnP can take the request, else the status to answer: 405 for a method UPnP does
+     * not use over HTTP (HEAD used to fail inside jUPnP and come back as 500), 400 for a bad URI.
+     */
+    static int rejectStatus(String method, String path) {
+        UpnpRequest.Method upnpMethod = UpnpRequest.Method.getByHttpName(method);
+        if (upnpMethod == UpnpRequest.Method.UNKNOWN || upnpMethod == UpnpRequest.Method.MSEARCH) {
+            return 405;
+        }
+        try {
+            URI.create(path);
+        } catch (IllegalArgumentException malformed) {
+            return 400;
+        }
+        return 0;
+    }
+    private final Object serverLock = new Object();
+    private NioHttpServer server;
+
+    private Thread serverThread;
+
+    public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+        super(context, fileRepos, tagRepos);
+        //addLibInfo("SonicNIO",  "2.2");
+        serverSignature = getServerSignature();
+    }
+
+    @Override
+    public void restartServer(InetAddress bindAddress, Object router) {
+        synchronized (serverLock) {
+            Log.d(TAG, "Restarting SonicNIO UPnP Server...");
+
+            // 1. Full Stop
+            stopServer();
+
+            // 2. Small grace period for OS to release the socket
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignored) {}
+
+            // 3. Start New Instance
+            try {
+                initServer(bindAddress, router);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to restart server: " + e.getMessage());
+            }
+        }
+    }
+
+    public void initServer(InetAddress bindAddress, Object router) throws Exception {
+        synchronized (serverLock) {
+            if (serverThread != null && serverThread.isAlive()) {
+                Log.w(TAG, "initServer called while server is already running — ignoring.");
+                return;
+            }
+            Router router1 = (Router) router;
+            server = new NioHttpServer(getListenPort());
+
+            NioHttpServer.Handler upnpHandler = new UpnpHandler(router1.getProtocolFactory());
+            // Register the outermost layer as the fallback handler
+            server.registerHttpHandler(upnpHandler);
+            server.setMaxThread(2);
+
+            // UPnP messages are small SOAP XMLs, we don't need the default 2MB request size
+            server.setMaxRequestSize(64 * 1024); // 64KB is plenty for UPnP control messages
+            server.setClientReadBufferSize(4 * 1024); // 4KB read buffer per connection to save memory
+            server.setTcpNoDelay(true);
+
+            serverThread = new Thread(server);
+            serverThread.setName("nio-upnp-runner");
+            serverThread.start();
+            Log.i(TAG, TAG+" - SonicNIO UPnP Server running on " + bindAddress.getHostAddress() + ":" + getListenPort());
+        }
+    }
+
+    public void stopServer() {
+        synchronized (serverLock) {
+            if (server != null) {
+                try {
+                    server.stop();
+                    Log.i(TAG, "SonicNIO UPnP Server stopped successfully.");
+                } catch (Exception e) {
+                    Log.e(TAG, "Error during server shutdown", e);
+                }
+                // Join the reactor thread BEFORE nulling fields so that a subsequent
+                // initServer() call cannot start a new reactor while the old one is still
+                // alive and holding the port.
+                if (serverThread != null) {
+                    try {
+                        serverThread.join(5000);
+                        if (serverThread.isAlive()) {
+                            Log.w(TAG, "Server thread did not stop within 5s; forcing interrupt.");
+                            serverThread.interrupt();
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        Log.i(TAG, TAG + " - Interrupted while waiting for server thread to stop.");
+                    }
+                }
+                server = null;
+                serverThread = null;
+            }
+        }
+    }
+
+    @Override
+    public int getListenPort() {
+        return UPNP_SERVER_PORT;
+    }
+
+}

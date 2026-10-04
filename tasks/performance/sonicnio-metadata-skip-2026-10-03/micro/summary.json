@@ -1,0 +1,134 @@
+{
+  "streaminfo-only": {
+    "before": {
+      "processes": 3,
+      "samples": 9,
+      "process_medians": [
+        {
+          "bytes_per_op": 8784.0,
+          "nanos_per_op": 139252.273
+        },
+        {
+          "bytes_per_op": 8784.0,
+          "nanos_per_op": 130615.883
+        },
+        {
+          "bytes_per_op": 8784.0,
+          "nanos_per_op": 128749.352
+        }
+      ],
+      "bytes_per_op": 8784.0,
+      "nanos_per_op": 130615.883,
+      "sample_range": {
+        "bytes_per_op": [
+          8784.0,
+          9294.813
+        ],
+        "nanos_per_op": [
+          124918.945,
+          211470.703
+        ]
+      }
+    },
+    "after": {
+      "processes": 3,
+      "samples": 9,
+      "process_medians": [
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 140471.68
+        },
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 132319.656
+        },
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 131625.977
+        }
+      ],
+      "bytes_per_op": 8744.0,
+      "nanos_per_op": 132319.656,
+      "sample_range": {
+        "bytes_per_op": [
+          8744.0,
+          9512.875
+        ],
+        "nanos_per_op": [
+          117295.57,
+          175094.727
+        ]
+      }
+    },
+    "percent_reduction": {
+      "bytes_per_op": 0.45537340619308253,
+      "nanos_per_op": -1.3044148696678581
+    }
+  },
+  "unused-padding-1mib": {
+    "before": {
+      "processes": 3,
+      "samples": 9,
+      "process_medians": [
+        {
+          "bytes_per_op": 1057416.0,
+          "nanos_per_op": 5762680.664
+        },
+        {
+          "bytes_per_op": 1057416.0,
+          "nanos_per_op": 4882986.328
+        },
+        {
+          "bytes_per_op": 1057416.0,
+          "nanos_per_op": 4861735.031
+        }
+      ],
+      "bytes_per_op": 1057416.0,
+      "nanos_per_op": 4882986.328,
+      "sample_range": {
+        "bytes_per_op": [
+          1057416.0,
+          1057926.813
+        ],
+        "nanos_per_op": [
+          4803976.242,
+          6071680.992
+        ]
+      }
+    },
+    "after": {
+      "processes": 3,
+      "samples": 9,
+      "process_medians": [
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 189115.234
+        },
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 550140.953
+        },
+        {
+          "bytes_per_op": 8744.0,
+          "nanos_per_op": 180313.477
+        }
+      ],
+      "bytes_per_op": 8744.0,
+      "nanos_per_op": 189115.234,
+      "sample_range": {
+        "bytes_per_op": [
+          8744.0,
+          9512.375
+        ],
+        "nanos_per_op": [
+          129661.133,
+          570551.102
+        ]
+      }
+    },
+    "percent_reduction": {
+      "bytes_per_op": 99.17307852349501,
+      "nanos_per_op": 96.12705788432017
+    }
+  }
+}

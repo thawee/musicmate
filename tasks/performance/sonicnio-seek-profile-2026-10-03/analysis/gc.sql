@@ -1,0 +1,1 @@
+SELECT s.ts,s.dur,s.name FROM slice s JOIN thread_track tt ON s.track_id=tt.id JOIN thread t USING(utid) JOIN process p USING(upid) WHERE p.name='apincer.android.mmate' AND (s.name GLOB '*concurrent*GC' OR s.name='Mutator threads suspended for ScopedPause') ORDER BY s.ts;

@@ -1,0 +1,4 @@
+head: n=128 median=8.502 p95=12.193 max=13.667 ms
+header: n=128 median=11.108 p95=13.418 max=17.486 ms
+seek: n=96 median=30.025 p95=49.433 max=54.258 ms
+total 352 non-2xx 0

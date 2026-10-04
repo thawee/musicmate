@@ -1,0 +1,20 @@
+[
+  {
+    "track": 2122216336,
+    "reference": "Apple afconvert PCM",
+    "pcm_bytes": 29529360,
+    "channels": 2,
+    "bits": 16,
+    "rate": 44100,
+    "match": true
+  },
+  {
+    "track": 5563167,
+    "reference": "Apple afconvert PCM",
+    "pcm_bytes": 37355520,
+    "channels": 2,
+    "bits": 16,
+    "rate": 44100,
+    "match": true
+  }
+]

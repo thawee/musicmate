@@ -1,0 +1,18 @@
+.DS_Store
+*.iml
+*.iml
+*.iws
+*.ipr
+*.class
+.idea/
+.gradle/
+local.properties
+build/
+*/build/
+*/*/build/
+*~
+*.swp
+node_modules/
+
+# Python bytecode from tools/bench scripts
+__pycache__/

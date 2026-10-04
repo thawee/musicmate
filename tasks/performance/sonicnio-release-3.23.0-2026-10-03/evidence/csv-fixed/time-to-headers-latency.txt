@@ -1,0 +1,8 @@
+== csv-fixed-phone (time to headers)
+head: n=128 median=8.408 p95=12.083 max=13.506 ms
+header: n=128 median=10.251 p95=12.146 max=13.323 ms
+seek: n=96 median=10.231 p95=12.385 max=14.904 ms
+== csv-fixed-phone-quiet (time to headers)
+head: n=128 median=4.032 p95=5.710 max=6.195 ms
+header: n=128 median=3.872 p95=4.968 max=8.116 ms
+seek: n=96 median=3.880 p95=5.830 max=19.938 ms

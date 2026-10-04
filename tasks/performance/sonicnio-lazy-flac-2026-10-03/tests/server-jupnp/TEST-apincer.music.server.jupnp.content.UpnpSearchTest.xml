@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.jupnp.content.UpnpSearchTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.683Z" hostname="KB-XXAXXW9TX4" time="0.003">
+  <properties/>
+  <testcase name="artistAlbumGenre_andCreatorAsArtist" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.001"/>
+  <testcase name="star_matchesEverything" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="andBindsTighterThanOr_andParenthesesGroup" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="unknownProperty_matchesNothing" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="malformedCriteria_isRejected" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="contains_isCaseInsensitive" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="escapedQuotes_inValues" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="bubbleUpnpStyle_classAndTitle" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <testcase name="audioClass_matchesTracks_containerClass_matchesNothing" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.001"/>
+  <testcase name="negativeOperators_andExists" classname="apincer.music.server.jupnp.content.UpnpSearchTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

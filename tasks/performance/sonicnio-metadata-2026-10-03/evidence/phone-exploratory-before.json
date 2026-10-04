@@ -1,0 +1,68 @@
+[
+  {
+    "label": "metadata-before-1",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 32.38637500908226,
+      "seconds": 0.26988133299164474,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 16.98135450715199,
+    "seek_p95_ms": 24.520250037312508,
+    "parallel_MB_s": 39.98751666398002,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 18.90412496868521,
+      "seconds": 0.8584546248894185,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-before-2",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 87.44304196443409,
+      "seconds": 0.33322483394294977,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 16.950667079072446,
+    "seek_p95_ms": 25.002499925903976,
+    "parallel_MB_s": 37.48475158508619,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 8.929458097554743,
+      "seconds": 0.8056820830097422,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "metadata-before-3",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 37.591875065118074,
+      "seconds": 0.2589606250403449,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 15.929604007396847,
+    "seek_p95_ms": 18.918125075288117,
+    "parallel_MB_s": 40.44203610570637,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 21.01800008676946,
+      "seconds": 0.8206970000173897,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  }
+]

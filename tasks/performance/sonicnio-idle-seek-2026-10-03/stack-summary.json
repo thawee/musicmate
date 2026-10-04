@@ -1,0 +1,109 @@
+{
+  "all_event_period_ns": 7979898500,
+  "thread_event_period_ns": {
+    "nio-stream-prod": 3743718125,
+    "NIO-Worker": 3135678000,
+    "HeapTaskDaemon": 301507500,
+    "nio-webserver-r": 341708500,
+    "jupnp-416": 20100500,
+    "jupnp-430": 15075375,
+    "pool-8-thread-1": 30150750,
+    "pool-8-thread-2": 40201000,
+    "ReferenceQueueD": 20100500,
+    "jupnp-2": 30150750,
+    "jupnp-392": 10050250,
+    "jupnp-4": 15075375,
+    "jupnp-409": 25125625,
+    "jupnp-415": 15075375,
+    "jupnp-417": 30150750,
+    "jupnp-418": 15075375,
+    "jupnp-422": 10050250,
+    "jupnp-425": 20100500,
+    "jupnp-426": 15075375,
+    "jupnp-427": 20100500,
+    "jupnp-428": 25125625,
+    "jupnp-429": 15075375,
+    "pool-11-thread-": 5025125,
+    "pool-8-thread-3": 40201000,
+    "pool-8-thread-4": 40201000
+  },
+  "worker_event_period_ns": 3135678000,
+  "worker_top_self_symbols": [
+    {
+      "symbol": "io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUint",
+      "period_ns": 964824000,
+      "percent_of_worker": 30.76923076923077
+    },
+    {
+      "symbol": "io.nayuki.flac.decode.AbstractFlacLowLevelInput.updateCrcs",
+      "period_ns": 628140625,
+      "percent_of_worker": 20.032051282051285
+    },
+    {
+      "symbol": "io.nayuki.flac.decode.AbstractFlacLowLevelInput.readUnderlying",
+      "period_ns": 542713500,
+      "percent_of_worker": 17.307692307692307
+    },
+    {
+      "symbol": "io.nayuki.flac.decode.AbstractFlacLowLevelInput.readFully",
+      "period_ns": 160804000,
+      "percent_of_worker": 5.128205128205128
+    },
+    {
+      "symbol": "__strcmp_aarch64",
+      "period_ns": 45226125,
+      "percent_of_worker": 1.4423076923076923
+    },
+    {
+      "symbol": "art_jni_trampoline",
+      "period_ns": 45226125,
+      "percent_of_worker": 1.4423076923076923
+    },
+    {
+      "symbol": "void art::StackVisitor::WalkStack<(art::StackVisitor::CountTransitions)0, false>(bool)",
+      "period_ns": 40201000,
+      "percent_of_worker": 1.282051282051282
+    },
+    {
+      "symbol": "art::(anonymous namespace)::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::(anonymous namespace)::JniValueType*) (.__uniq.99033978352804627313491551960229047428)",
+      "period_ns": 20100500,
+      "percent_of_worker": 0.641025641025641
+    },
+    {
+      "symbol": "art::gc::Heap::IsValidObjectAddress(void const*) const",
+      "period_ns": 20100500,
+      "percent_of_worker": 0.641025641025641
+    },
+    {
+      "symbol": "android.database.sqlite.SQLiteCursor.getColumnNames",
+      "period_ns": 20100500,
+      "percent_of_worker": 0.641025641025641
+    },
+    {
+      "symbol": "java.lang.String.equals",
+      "period_ns": 15075375,
+      "percent_of_worker": 0.4807692307692308
+    },
+    {
+      "symbol": "@plt",
+      "period_ns": 15075375,
+      "percent_of_worker": 0.4807692307692308
+    },
+    {
+      "symbol": ".tiny_end",
+      "period_ns": 15075375,
+      "percent_of_worker": 0.4807692307692308
+    },
+    {
+      "symbol": "art::gc::space::ContinuousSpace::Contains(art::mirror::Object const*) const",
+      "period_ns": 15075375,
+      "percent_of_worker": 0.4807692307692308
+    },
+    {
+      "symbol": "__memcpy_aarch64_nt",
+      "period_ns": 15075375,
+      "percent_of_worker": 0.4807692307692308
+    }
+  ],
+  "selector_Thread_sleep_self_samples": []
+}

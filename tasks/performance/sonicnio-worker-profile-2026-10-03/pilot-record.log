@@ -1,0 +1,1 @@
+simpleperf E environment.cpp:340] Failed to SetProperty debug.perf_event_max_sample_rate to 100000

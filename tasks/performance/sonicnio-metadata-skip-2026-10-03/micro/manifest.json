@@ -1,0 +1,37 @@
+{
+  "description": "Host metadata micro test; synthetic metadata-only fixtures, no audio frames",
+  "baseline_original": "/private/tmp/musicmate-metadata-skip-20261003/before-FlacDecoder.java",
+  "candidate_original": "/Users/thawee.p/Workspaces/github/musicmate/library/JustFLAC/src/java/io/nayuki/flac/decode/FlacDecoder.java",
+  "order_per_fixture": [
+    "before",
+    "after",
+    "after",
+    "before",
+    "before",
+    "after"
+  ],
+  "warmups": 64,
+  "samples_per_process": 3,
+  "operations_per_sample": 128,
+  "processes_per_variant_per_fixture": 3,
+  "jvm_flags": [
+    "-Xms128m",
+    "-Xmx128m"
+  ],
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "limits": [
+    "Host JVM and filesystem cache, not Android runtime or phone playback",
+    "Three fresh JVMs per variant; 64 warmups may leave compilation noise",
+    "Timing includes open/close, reflection, and equal correctness checks",
+    "Padding payload only; not a representative distribution of music metadata"
+  ],
+  "sha256": {
+    "before/source/FlacDecoder.java": "06143402063ea1196beb5a8f69933d5af4ae37e5d05a2c89224c4f12d6ad984f",
+    "after/source/FlacDecoder.java": "d014f4126f980a83e6d1f478cb32aaf5373d5ddb83a67c47cc074a47002ad2a2",
+    "fixtures/streaminfo-only.flac": "95d9829e52157b4add7f1379f4ab13e86e4796bfdf263ac069c9bcb5be96e443",
+    "fixtures/unused-padding-1mib.flac": "e953a0168dd6d64be436c22f2c4bd66a0fc01b2cde568091dca830371c2f0163",
+    "FlacMetadataSkipBenchmark.java": "d18ab363ad7b0f24ba011b1f2d9b73c836135c9f0d53cabb41acd34fa4a89f04",
+    "run-metadata-skip-comparison.py": "35791609a04c9d86aac9011225aabe8458921f53998b69aa226c4fa6b6d2735f",
+    "classpath.txt": "440d040c9b5b49a613eae614ccddd5a368662e79355c49e3737cf31f1bb26b0a"
+  }
+}

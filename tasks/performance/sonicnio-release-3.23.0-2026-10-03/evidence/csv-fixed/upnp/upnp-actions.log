@@ -1,0 +1,13 @@
+SCPD upnp-org/ConnectionManager 200 3412
+SCPD upnp-org/ContentDirectory 200 6639
+SCPD microsoft.com/X_MS_MediaReceiverRegistrar 200 3153
+ACTION Browse 200 2205 bytes
+ACTION GetSearchCapabilities 200 423 bytes
+ACTION GetSortCapabilities 200 390 bytes
+ACTION GetSystemUpdateID 200 336 bytes
+ACTION GetProtocolInfo 200 2252 bytes
+ACTION GetCurrentConnectionIDs 200 371 bytes
+ACTION GetCurrentConnectionInfo 200 556 bytes
+ACTION IsAuthorized 200 <Result>1
+ACTION IsValidated 200 <Result>1
+NOTE first IsAuthorized attempt used wrong URN urn:microsoft.com (client error 401), corrected

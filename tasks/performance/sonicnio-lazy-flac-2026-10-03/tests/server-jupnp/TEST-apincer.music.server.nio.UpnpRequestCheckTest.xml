@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.server.nio.UpnpRequestCheckTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:16:51.723Z" hostname="KB-XXAXXW9TX4" time="0.002">
+  <properties/>
+  <testcase name="upnpMethods_areAccepted" classname="apincer.music.server.nio.UpnpRequestCheckTest" time="0.002"/>
+  <testcase name="otherMethods_get405" classname="apincer.music.server.nio.UpnpRequestCheckTest" time="0.0"/>
+  <testcase name="malformedPath_gets400" classname="apincer.music.server.nio.UpnpRequestCheckTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

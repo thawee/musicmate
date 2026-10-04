@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="24dp"
+    android:outlineSpotShadowColor="@color/black"
+    android:outlineAmbientShadowColor="@color/black"
+    android:clipToOutline="true"
+    android:outlineProvider="background"
+    android:layout_margin="12dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="20dp"
+    android:paddingHorizontal="20dp">
+
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/shape_dot_indicator"
+        android:backgroundTint="#55FFFFFF" />
+
+    <!-- Top Bar: Header Title + Top-Right Close Button -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/btn_close_trash_sheet"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/rounded_delete_24"
+                android:layout_marginEnd="10dp"
+                app:tint="@color/colorError" />
+
+            <TextView
+                android:id="@+id/bottom_sheet_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Remove track from Library?"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close_trash_sheet"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/round_close_24"
+            app:tint="?attr/colorOnSurfaceVariant" />
+    </RelativeLayout>
+
+    <!-- Single Prominent Primary Action Button (Red Warning Capsule) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_move_to_trash"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="12dp"
+        android:text="@string/move_to_trash"
+        app:cornerRadius="20dp"
+        app:icon="@drawable/rounded_delete_24"
+        app:iconGravity="textStart"
+        app:backgroundTint="?attr/colorErrorContainer"
+        android:textColor="?attr/colorOnErrorContainer"
+        app:iconTint="?attr/colorOnErrorContainer" />
+
+    <!-- Cancel Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_cancel_trash"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:paddingVertical="10dp"
+        app:cornerRadius="20dp"
+        android:text="@string/cancel"
+        android:textColor="?attr/colorOnSurfaceVariant"/>
+</LinearLayout>

@@ -1,0 +1,37 @@
+<resources>
+    <!-- Primary App Colors (Warm Sunset Amber / Gold) -->
+    <color name="colorPrimary">#FFB74D</color> <!-- Warm Sunset Amber -->
+    <color name="colorOnPrimary">#3E2723</color>
+    <color name="colorPrimaryContainer">#E65100</color>
+    <color name="colorOnPrimaryContainer">#FFE0B2</color>
+
+    <!-- Secondary / Accent (Warm Peach Coral) -->
+    <color name="colorSecondary">#FF8A65</color> <!-- Warm Peach / Coral -->
+    <color name="colorOnSecondary">#4E1500</color>
+    <color name="colorSecondaryContainer">#D84315</color>
+    <color name="colorOnSecondaryContainer">#FFCCBC</color>
+
+    <!-- Surface / Background (OLED True Black Base) -->
+    <color name="colorSurface">#000000</color>
+    <color name="colorOnSurface">#FFFFFF</color>
+    <color name="colorSurfaceVariant">#121212</color>
+    <color name="colorOnSurfaceVariant">#BDBDBD</color>
+
+    <!-- Outline / Divider -->
+    <color name="colorOutline">#7A6D67</color>
+    <color name="colorOutlineVariant">#3E3531</color>
+
+    <!-- Highlights (Warm Honey Ripple) -->
+    <color name="colorControlHighlight">#33FFB74D</color>
+    <color name="colorSurfaceContainerLowest">#201B18</color>
+
+    <!-- Player Indicator -->
+    <color name="colorPlayingIndicator">#FFA726</color>
+
+    <!-- Album Art Frame -->
+    <color name="colorArtFrame">#2D2623</color>
+
+    <color name="md_theme_surface">#000000</color>
+    <color name="md_theme_surface_variant">#121212</color>
+    <color name="md_theme_on_surface">#FFFFFF</color>
+</resources>

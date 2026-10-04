@@ -1,0 +1,1 @@
+SELECT p.pid,t.tid,t.name,s.ts,s.dur,s.state,s.cpu,s.blocked_function FROM thread_state s JOIN thread t USING(utid) LEFT JOIN process p USING(upid) WHERE (p.pid=12989 OR p.pid IN (SELECT DISTINCT p.pid FROM slice s JOIN thread_track tt ON s.track_id=tt.id JOIN thread t USING(utid) JOIN process p USING(upid) WHERE s.name='client-seek') OR t.tid IN (-1)) AND s.dur>0 ORDER BY s.ts;

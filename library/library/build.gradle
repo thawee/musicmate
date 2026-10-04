@@ -1,0 +1,39 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+    namespace = 'apincer.android.library'
+}
+
+dependencies {
+    implementation libs.androidx.core
+    implementation libs.androidx.appCompat
+    implementation libs.google.material
+    implementation libs.androidx.activity
+    implementation libs.androidx.recyclerView
+    implementation libs.androidx.annotation
+    implementation libs.jetbrains.annotations
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
+    implementation libs.slf4j.api
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
+}

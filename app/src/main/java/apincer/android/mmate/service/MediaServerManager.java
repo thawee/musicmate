@@ -1,0 +1,199 @@
+package apincer.android.mmate.service;
+
+import android.app.ForegroundServiceStartNotAllowedException;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import apincer.music.core.Constants;
+import apincer.music.core.server.spi.MediaServerHub;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
+/**
+ * A Singleton manager class that acts as the central point of control and information
+ * for the MediaServerHubService. It handles starting, stopping, and binding to the service,
+ * and exposes the service's status to the rest of the application via LiveData.
+ * This class is designed to be injected by Hilt into ViewModels.
+ */
+@Singleton
+public class MediaServerManager {
+    private static final String TAG = "MediaServerManager";
+
+    // Actions for service communication, ensures consistency
+    public static final String ACTION_START_SERVER = "apincer.android.mmate.action.START_SERVER";
+    public static final String ACTION_STOP_SERVER = "apincer.android.mmate.action.STOP_SERVER";
+
+    private final Context context;
+
+    private MusicMateServiceImpl service;
+    private boolean isBound = false;
+    private boolean toStartServer;
+
+    // LiveData to report the server's status to the UI
+    private final MutableLiveData<MediaServerHub.ServerStatus> serverStatusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
+
+    // These are used to observe the LiveData coming directly from the Service.
+    private LiveData<MediaServerHub.ServerStatus> serviceStatusLiveData;
+    private final Observer<MediaServerHub.ServerStatus> statusObserver = status -> {
+        if (status != null) {
+            serverStatusLiveData.postValue(status);
+        }
+    };
+
+    @Inject
+    public MediaServerManager(@ApplicationContext Context context) {
+        this.context = context;
+    }
+
+    /**
+     * The callback interface that receives results from the bindService call.
+     */
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        /**
+         * Called by the Android system when the connection to the service has been established.
+         * @param name The component name of the service that has been connected.
+         * @param serviceBinder The IBinder of the service, which we can use to get the service instance.
+         */
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
+            Log.d(TAG, "Service connected");
+            // We've bound to MediaServerHubService, cast the IBinder and get the instance.
+            MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) serviceBinder;
+            service = binder.getService();
+            isBound = true;
+
+            // CRITICAL: Once connected, start observing the LiveData from the service.
+            // This ensures the manager always reflects the service's true state.
+            serviceStatusLiveData = service.getStatusLiveData();
+            serviceStatusLiveData.observeForever(statusObserver);
+            if (serviceStatusLiveData.getValue() != null) {
+                serverStatusLiveData.postValue(serviceStatusLiveData.getValue());
+            }
+
+            if(toStartServer) {
+                service.startServers();
+                toStartServer = false;
+            }
+        }
+
+        /**
+         * Called when the connection with the service has been unexpectedly disconnected
+         * (i.e., its process crashed). This is NOT called when the client unbinds.
+         */
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.w(TAG, "Service disconnected unexpectedly");
+            service = null;
+            isBound = false;
+            serverStatusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
+        }
+    };
+
+    /**
+     * Initiates the binding process to the MediaServerHubService.
+     * This allows the manager to call methods directly on the service.
+     */
+    public void doBindService() {
+        // Prevent multiple binding attempts
+        if (isBound) {
+            return;
+        }
+
+        Log.d(TAG, "Binding to MediaServerService...");
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
+        // BIND_AUTO_CREATE will create the service if it's not already running.
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    /**
+     * Unbinds from the MediaServerHubService.
+     * This should be called when the UI is no longer visible to prevent memory leaks.
+     */
+    public void doUnbindService() {
+        if (isBound) {
+            Log.d(TAG, "Unbinding from MediaServerService");
+            // CRITICAL: Always remove the observer when unbinding to prevent leaks.
+            if (serviceStatusLiveData != null) {
+                serviceStatusLiveData.removeObserver(statusObserver);
+            }
+            context.unbindService(serviceConnection);
+            isBound = false;
+            service = null;
+        }
+    }
+
+    public void startServer() {
+        if(isBound && service != null) {
+            service.startServers();
+        }else {
+            toStartServer = true;
+            Intent intent = new Intent(context, MusicMateServiceImpl.class);
+            intent.setAction(ACTION_START_SERVER);
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent);
+                } else {
+                    context.startService(intent);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error sending start server intent", e);
+            }
+            doBindService();
+        }
+    }
+
+    public void stopServer() {
+        Log.d(TAG, "Requesting to stop MediaServerService");
+        toStartServer = false;
+        if(isBound && service != null) {
+            service.stopServers();
+        }else {
+            serverStatusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
+            Intent intent = new Intent(context, MusicMateServiceImpl.class);
+            intent.setAction(ACTION_STOP_SERVER);
+            try {
+                context.startService(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error sending stop server intent", e);
+            }
+        }
+    }
+
+    // --- Data Accessor Methods for the ViewModel ---
+
+    public LiveData<MediaServerHub.ServerStatus> getServerStatus() {
+        // A better implementation might involve the service itself pushing status updates
+        // to this manager, but for now, this reflects the start/stop commands.
+        return serverStatusLiveData;
+    }
+
+    public void restartServer() {
+        if (isBound && service != null) {
+            service.stopServers();
+            service.startServers();
+        }
+    }
+
+    public String getLibraryName() {
+        if (isBound && service != null) {
+            return service.getLibraryNames();
+        }
+        return Constants.NONE;
+    }
+
+    public String getServerLocationUrl() {
+        return Constants.getPresentationUrl();
+    }
+}

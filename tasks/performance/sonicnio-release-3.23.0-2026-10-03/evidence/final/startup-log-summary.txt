@@ -1,0 +1,13 @@
+Final APK (jUPnP + jaudiotagger rules), fresh process pid 9889, launched 2026-10-03 22:59 +07
+Startup/reflection failures (cannot be instantiated, ClassNotFound, MediaServerHub Start failed, ClassCastException, No built-in UPnP datatype, FATAL): 0 of 258 app log lines, including the benchmark run that produced 33 jaudiotagger ASF errors on the CSV-fixed APK
+Error/warning tags present:
+  24 W MediaCodec-JNI
+   7 W UPnP
+   6 W MusicAnalyser
+   6 W AudioDecoder
+   5 W r.android.mmate
+   1 E r.android.mmate
+   1 E BufferQueueProducer
+   1 E ashmem
+   1 E Adreno-AppProfiles
+UPnP warnings: remote DIAL/Cast TV whose SCPDURL /ssdp/notfound returns HTTP 404; unrelated to R8.

@@ -1,0 +1,4247 @@
+[
+  {
+    "phase": "foreground-first",
+    "pid": 1306,
+    "apk_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+    "samples": [
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.321959,
+        "duration_ms": 13.433042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.192291,
+        "duration_ms": 10.443541,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.893459,
+        "duration_ms": 11.082792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.024041,
+        "duration_ms": 12.153041,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.6905,
+        "duration_ms": 10.826833,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.210666,
+        "duration_ms": 8.369833,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.088875,
+        "duration_ms": 13.369375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.371542,
+        "duration_ms": 9.577209,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.827,
+        "duration_ms": 19.02725,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.943917,
+        "duration_ms": 14.110917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.490667,
+        "duration_ms": 11.666875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.309916,
+        "duration_ms": 11.530583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.779333,
+        "duration_ms": 8.013916,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.816375,
+        "duration_ms": 11.008416,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.855792,
+        "duration_ms": 11.041042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.719167,
+        "duration_ms": 10.001209,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.052958,
+        "duration_ms": 12.165666,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.33925,
+        "duration_ms": 13.512875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.859,
+        "duration_ms": 14.020292,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.193583,
+        "duration_ms": 10.427833,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.90125,
+        "duration_ms": 12.102584,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.127958,
+        "duration_ms": 14.354583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.064792,
+        "duration_ms": 15.236834,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.526875,
+        "duration_ms": 9.640333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.623708,
+        "duration_ms": 9.799083,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.010625,
+        "duration_ms": 8.208333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.762791,
+        "duration_ms": 8.902666,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.242625,
+        "duration_ms": 11.434792,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.018916,
+        "duration_ms": 15.14,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.194625,
+        "duration_ms": 9.482042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 6.685291,
+        "duration_ms": 6.863125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.986042,
+        "duration_ms": 10.101625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.110417,
+        "duration_ms": 9.191958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.4165,
+        "duration_ms": 11.536416,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.920875,
+        "duration_ms": 14.035667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 6.2265,
+        "duration_ms": 6.340208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.512834,
+        "duration_ms": 11.578792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.328042,
+        "duration_ms": 10.411417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.752375,
+        "duration_ms": 9.8935,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.87725,
+        "duration_ms": 11.241584,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.301083,
+        "duration_ms": 13.462458,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.767916,
+        "duration_ms": 8.932375,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.812583,
+        "duration_ms": 7.926541,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.19675,
+        "duration_ms": 9.337458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.347916,
+        "duration_ms": 13.529708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.829625,
+        "duration_ms": 14.986541,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.281291,
+        "duration_ms": 18.386416,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.414625,
+        "duration_ms": 12.625042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.616083,
+        "duration_ms": 12.792583,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.584125,
+        "duration_ms": 14.8,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.298209,
+        "duration_ms": 12.464459,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.81625,
+        "duration_ms": 15.018625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.890458,
+        "duration_ms": 14.070541,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.094042,
+        "duration_ms": 13.352875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.270875,
+        "duration_ms": 11.3695,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.086792,
+        "duration_ms": 9.250125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.758125,
+        "duration_ms": 12.912375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.2,
+        "duration_ms": 10.409333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.662291,
+        "duration_ms": 9.834958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.536541,
+        "duration_ms": 10.787375,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.835584,
+        "duration_ms": 11.031209,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 15.936125,
+        "duration_ms": 16.133167,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.575042,
+        "duration_ms": 9.733875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.610083,
+        "duration_ms": 8.794875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.14075,
+        "duration_ms": 15.347958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.388292,
+        "duration_ms": 10.644334,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.726666,
+        "duration_ms": 7.799541,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.9695,
+        "duration_ms": 9.125583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.963042,
+        "duration_ms": 10.1245,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.049833,
+        "duration_ms": 9.229458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.286125,
+        "duration_ms": 14.504625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.698208,
+        "duration_ms": 8.93125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.283,
+        "duration_ms": 8.365333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.564583,
+        "duration_ms": 12.737125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.180667,
+        "duration_ms": 14.346417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.055042,
+        "duration_ms": 9.235792,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.395917,
+        "duration_ms": 11.578959,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.569667,
+        "duration_ms": 8.746,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.806083,
+        "duration_ms": 10.976083,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.829084,
+        "duration_ms": 15.038292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.728167,
+        "duration_ms": 12.907958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.429125,
+        "duration_ms": 9.643,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.353292,
+        "duration_ms": 8.495542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.520333,
+        "duration_ms": 12.650417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.290167,
+        "duration_ms": 9.427167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.143666,
+        "duration_ms": 9.374458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.585792,
+        "duration_ms": 8.714959,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.207,
+        "duration_ms": 10.331708,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.941792,
+        "duration_ms": 15.084834,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.698417,
+        "duration_ms": 13.924084,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.92175,
+        "duration_ms": 10.126375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.682417,
+        "duration_ms": 14.911292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.735583,
+        "duration_ms": 15.858167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.696083,
+        "duration_ms": 10.833958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.176417,
+        "duration_ms": 9.369209,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.882583,
+        "duration_ms": 14.183083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.152625,
+        "duration_ms": 9.340416,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.6675,
+        "duration_ms": 8.894667,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.212125,
+        "duration_ms": 10.371875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.188125,
+        "duration_ms": 10.371834,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.715916,
+        "duration_ms": 11.864083,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.243167,
+        "duration_ms": 9.446208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.560333,
+        "duration_ms": 13.6965,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.65725,
+        "duration_ms": 10.910166,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.226416,
+        "duration_ms": 9.4325,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.738792,
+        "duration_ms": 12.026917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.818666,
+        "duration_ms": 10.996291,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.807833,
+        "duration_ms": 13.015625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.746875,
+        "duration_ms": 10.011791,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.088958,
+        "duration_ms": 9.253917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.082334,
+        "duration_ms": 14.335875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.287959,
+        "duration_ms": 9.460417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.245333,
+        "duration_ms": 12.431333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.215167,
+        "duration_ms": 10.434333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.71925,
+        "duration_ms": 9.881041,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.434834,
+        "duration_ms": 10.650334,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.044458,
+        "duration_ms": 8.118083,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.137375,
+        "duration_ms": 9.334875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.350959,
+        "duration_ms": 8.536084,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.136917,
+        "duration_ms": 12.322,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.7305,
+        "duration_ms": 9.862,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.108875,
+        "duration_ms": 12.325208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.678833,
+        "duration_ms": 10.851,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.491209,
+        "duration_ms": 12.691542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.383125,
+        "duration_ms": 10.589333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.198875,
+        "duration_ms": 12.426042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.090167,
+        "duration_ms": 14.312667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.190084,
+        "duration_ms": 10.39575,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=44-65579",
+        "ttfb_ms": 12.221209,
+        "duration_ms": 17.334917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=313381-378916",
+        "ttfb_ms": 11.188875,
+        "duration_ms": 21.85275,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=626718-692253",
+        "ttfb_ms": 8.924291,
+        "duration_ms": 24.232333,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=940055-1005590",
+        "ttfb_ms": 9.306875,
+        "duration_ms": 28.36025,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1253392-1318927",
+        "ttfb_ms": 10.075625,
+        "duration_ms": 18.646417,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1566729-1632264",
+        "ttfb_ms": 15.538584,
+        "duration_ms": 23.903042,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1880066-1945601",
+        "ttfb_ms": 9.257375,
+        "duration_ms": 16.417167,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2193403-2258938",
+        "ttfb_ms": 8.65275,
+        "duration_ms": 20.688875,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2506740-2572275",
+        "ttfb_ms": 14.4315,
+        "duration_ms": 29.464958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2820077-2885612",
+        "ttfb_ms": 12.60325,
+        "duration_ms": 43.996667,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3133414-3198949",
+        "ttfb_ms": 10.930708,
+        "duration_ms": 20.823291,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3446751-3512286",
+        "ttfb_ms": 11.818167,
+        "duration_ms": 22.34025,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3760088-3825623",
+        "ttfb_ms": 14.8715,
+        "duration_ms": 23.425125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4073425-4138960",
+        "ttfb_ms": 12.971791,
+        "duration_ms": 26.855875,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4386762-4452297",
+        "ttfb_ms": 9.178959,
+        "duration_ms": 28.129084,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4700099-4765634",
+        "ttfb_ms": 16.006166,
+        "duration_ms": 38.837958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5013436-5078971",
+        "ttfb_ms": 11.4415,
+        "duration_ms": 21.817417,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5326773-5392308",
+        "ttfb_ms": 16.064708,
+        "duration_ms": 21.720291,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5640110-5705645",
+        "ttfb_ms": 12.968291,
+        "duration_ms": 23.296,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5953447-6018982",
+        "ttfb_ms": 12.229541,
+        "duration_ms": 29.329708,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6266784-6332319",
+        "ttfb_ms": 8.36875,
+        "duration_ms": 27.973708,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6580121-6645656",
+        "ttfb_ms": 12.136125,
+        "duration_ms": 23.104917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6893458-6958993",
+        "ttfb_ms": 12.203125,
+        "duration_ms": 22.0125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7206795-7272330",
+        "ttfb_ms": 12.812917,
+        "duration_ms": 20.653542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7520132-7585667",
+        "ttfb_ms": 12.46825,
+        "duration_ms": 24.905375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7833469-7899004",
+        "ttfb_ms": 13.025708,
+        "duration_ms": 29.892458,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8146806-8212341",
+        "ttfb_ms": 9.736292,
+        "duration_ms": 29.507584,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8460143-8525678",
+        "ttfb_ms": 12.65925,
+        "duration_ms": 24.079542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8773480-8839015",
+        "ttfb_ms": 7.563208,
+        "duration_ms": 18.811458,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9086817-9152352",
+        "ttfb_ms": 9.231791,
+        "duration_ms": 19.445833,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9400154-9465689",
+        "ttfb_ms": 7.923833,
+        "duration_ms": 22.160791,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9713491-9779026",
+        "ttfb_ms": 9.784208,
+        "duration_ms": 27.841583,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10026828-10092363",
+        "ttfb_ms": 7.281792,
+        "duration_ms": 31.310125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10340165-10405700",
+        "ttfb_ms": 6.350625,
+        "duration_ms": 16.673542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10653502-10719037",
+        "ttfb_ms": 9.168834,
+        "duration_ms": 17.944209,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10966839-11032374",
+        "ttfb_ms": 11.13125,
+        "duration_ms": 30.108833,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11280176-11345711",
+        "ttfb_ms": 10.21825,
+        "duration_ms": 32.565125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11593513-11659048",
+        "ttfb_ms": 10.8445,
+        "duration_ms": 41.758125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11906850-11972385",
+        "ttfb_ms": 10.766708,
+        "duration_ms": 27.909458,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12220187-12285722",
+        "ttfb_ms": 9.965583,
+        "duration_ms": 24.036083,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12533524-12599059",
+        "ttfb_ms": 9.04225,
+        "duration_ms": 21.622667,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12846861-12912396",
+        "ttfb_ms": 8.393292,
+        "duration_ms": 28.475375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13160198-13225733",
+        "ttfb_ms": 20.2445,
+        "duration_ms": 45.808958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13473535-13539070",
+        "ttfb_ms": 12.07275,
+        "duration_ms": 49.551958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13786872-13852407",
+        "ttfb_ms": 13.727833,
+        "duration_ms": 26.816458,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14100209-14165744",
+        "ttfb_ms": 14.840708,
+        "duration_ms": 31.570792,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14413546-14479081",
+        "ttfb_ms": 9.331334,
+        "duration_ms": 24.646709,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14726883-14792418",
+        "ttfb_ms": 17.965666,
+        "duration_ms": 39.620708,
+        "status": 206,
+        "kind": "seek"
+      }
+    ]
+  },
+  {
+    "phase": "background",
+    "pid": 1306,
+    "apk_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+    "samples": [
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 16.142875,
+        "duration_ms": 16.333958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.232625,
+        "duration_ms": 9.393042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.659834,
+        "duration_ms": 10.814917,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.25225,
+        "duration_ms": 8.33625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.095167,
+        "duration_ms": 13.269417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.9085,
+        "duration_ms": 11.017792,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.548792,
+        "duration_ms": 13.714333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 10.878375,
+        "duration_ms": 11.077458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.983,
+        "duration_ms": 13.145542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.825167,
+        "duration_ms": 12.01075,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.727417,
+        "duration_ms": 12.891667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.871,
+        "duration_ms": 12.048708,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.300292,
+        "duration_ms": 12.465917,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.79,
+        "duration_ms": 12.09525,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.811041,
+        "duration_ms": 12.00325,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.72475,
+        "duration_ms": 11.95125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.704916,
+        "duration_ms": 11.870208,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.593166,
+        "duration_ms": 11.934583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.7785,
+        "duration_ms": 11.931167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.088875,
+        "duration_ms": 12.220416,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.670875,
+        "duration_ms": 12.832125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 16.331375,
+        "duration_ms": 16.436,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.597667,
+        "duration_ms": 20.768792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.081917,
+        "duration_ms": 22.280542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.68825,
+        "duration_ms": 21.915708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.541583,
+        "duration_ms": 17.713333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 16.604542,
+        "duration_ms": 16.831042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.95925,
+        "duration_ms": 21.146292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.430833,
+        "duration_ms": 21.522792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.103292,
+        "duration_ms": 20.839125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.071125,
+        "duration_ms": 19.144958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.486791,
+        "duration_ms": 19.707166,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.023417,
+        "duration_ms": 21.271333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.230084,
+        "duration_ms": 20.444709,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.793084,
+        "duration_ms": 17.961209,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.867625,
+        "duration_ms": 14.032375,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.11475,
+        "duration_ms": 21.358833,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.385125,
+        "duration_ms": 14.475458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.485834,
+        "duration_ms": 20.667042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.835917,
+        "duration_ms": 22.016167,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.264708,
+        "duration_ms": 19.425666,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.257042,
+        "duration_ms": 21.3265,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.913583,
+        "duration_ms": 12.068958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.475875,
+        "duration_ms": 21.581625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.160041,
+        "duration_ms": 7.230958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.7355,
+        "duration_ms": 19.820333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.377458,
+        "duration_ms": 19.504583,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.258,
+        "duration_ms": 19.330209,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.720333,
+        "duration_ms": 21.7915,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.14375,
+        "duration_ms": 18.267792,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.679833,
+        "duration_ms": 18.8145,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.160625,
+        "duration_ms": 19.346208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.790292,
+        "duration_ms": 15.923333,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.625625,
+        "duration_ms": 17.723875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 8.281708,
+        "duration_ms": 8.375417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.38525,
+        "duration_ms": 19.456125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.79425,
+        "duration_ms": 14.899708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.608083,
+        "duration_ms": 8.681417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.577459,
+        "duration_ms": 19.755709,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.581125,
+        "duration_ms": 21.737166,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 16.39525,
+        "duration_ms": 16.549,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.034083,
+        "duration_ms": 9.113333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.090125,
+        "duration_ms": 15.166875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.498,
+        "duration_ms": 9.591083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.435625,
+        "duration_ms": 21.62075,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.024167,
+        "duration_ms": 17.281292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.142583,
+        "duration_ms": 14.268958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.515084,
+        "duration_ms": 21.690042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.1965,
+        "duration_ms": 20.324625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.102084,
+        "duration_ms": 21.255292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.062625,
+        "duration_ms": 18.149084,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.82075,
+        "duration_ms": 20.922583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.430291,
+        "duration_ms": 19.662166,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.385584,
+        "duration_ms": 17.576334,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.05575,
+        "duration_ms": 20.223958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.7935,
+        "duration_ms": 17.936916,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.889875,
+        "duration_ms": 22.059334,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.1865,
+        "duration_ms": 23.386209,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.619333,
+        "duration_ms": 19.738583,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.678959,
+        "duration_ms": 20.868042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.078417,
+        "duration_ms": 19.230542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 16.704,
+        "duration_ms": 16.835083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.368167,
+        "duration_ms": 20.467667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.569458,
+        "duration_ms": 19.725083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.621125,
+        "duration_ms": 19.775667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.014542,
+        "duration_ms": 21.183167,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.996042,
+        "duration_ms": 20.156458,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.698125,
+        "duration_ms": 19.820833,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.853209,
+        "duration_ms": 16.0155,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.530167,
+        "duration_ms": 19.624583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.208375,
+        "duration_ms": 20.368417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.56825,
+        "duration_ms": 17.677917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.010042,
+        "duration_ms": 19.189542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.726833,
+        "duration_ms": 18.798875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 9.780459,
+        "duration_ms": 9.940125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.919292,
+        "duration_ms": 21.088542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.624,
+        "duration_ms": 20.8165,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.269667,
+        "duration_ms": 18.443292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.8725,
+        "duration_ms": 12.042167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.997959,
+        "duration_ms": 20.192292,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.686667,
+        "duration_ms": 20.885875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.293417,
+        "duration_ms": 8.563959,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 16.480875,
+        "duration_ms": 16.843792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.093666,
+        "duration_ms": 21.941875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.959833,
+        "duration_ms": 19.069125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.278209,
+        "duration_ms": 18.34925,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.450084,
+        "duration_ms": 18.508792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.115958,
+        "duration_ms": 20.275166,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.647125,
+        "duration_ms": 20.800042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.826083,
+        "duration_ms": 20.031208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.689,
+        "duration_ms": 20.781,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.667959,
+        "duration_ms": 19.776375,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.874541,
+        "duration_ms": 8.018625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 7.385083,
+        "duration_ms": 7.547875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 7.877125,
+        "duration_ms": 8.038625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 7.629083,
+        "duration_ms": 7.781875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.882042,
+        "duration_ms": 21.060459,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 15.73025,
+        "duration_ms": 15.896583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.629542,
+        "duration_ms": 19.795167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.093959,
+        "duration_ms": 20.489375,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.24925,
+        "duration_ms": 18.409833,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.459541,
+        "duration_ms": 20.044583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 15.672834,
+        "duration_ms": 15.743834,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.155,
+        "duration_ms": 17.333917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.868792,
+        "duration_ms": 21.036,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.459292,
+        "duration_ms": 20.648709,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.936292,
+        "duration_ms": 20.186542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.307167,
+        "duration_ms": 21.484084,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=44-65579",
+        "ttfb_ms": 20.977917,
+        "duration_ms": 40.927958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=313381-378916",
+        "ttfb_ms": 19.991875,
+        "duration_ms": 52.920042,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=626718-692253",
+        "ttfb_ms": 11.991417,
+        "duration_ms": 49.150792,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=940055-1005590",
+        "ttfb_ms": 9.750125,
+        "duration_ms": 46.831083,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1253392-1318927",
+        "ttfb_ms": 8.008417,
+        "duration_ms": 17.18775,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1566729-1632264",
+        "ttfb_ms": 18.72825,
+        "duration_ms": 39.366541,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1880066-1945601",
+        "ttfb_ms": 11.375958,
+        "duration_ms": 25.699375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2193403-2258938",
+        "ttfb_ms": 18.222,
+        "duration_ms": 55.105,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2506740-2572275",
+        "ttfb_ms": 10.364667,
+        "duration_ms": 45.955583,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2820077-2885612",
+        "ttfb_ms": 9.0645,
+        "duration_ms": 53.7755,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3133414-3198949",
+        "ttfb_ms": 8.798334,
+        "duration_ms": 23.078167,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3446751-3512286",
+        "ttfb_ms": 18.187417,
+        "duration_ms": 49.648625,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3760088-3825623",
+        "ttfb_ms": 10.188041,
+        "duration_ms": 25.697375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4073425-4138960",
+        "ttfb_ms": 17.84,
+        "duration_ms": 51.761584,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4386762-4452297",
+        "ttfb_ms": 9.5585,
+        "duration_ms": 40.934584,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4700099-4765634",
+        "ttfb_ms": 8.651,
+        "duration_ms": 35.45275,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5013436-5078971",
+        "ttfb_ms": 15.98775,
+        "duration_ms": 44.851125,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5326773-5392308",
+        "ttfb_ms": 9.890875,
+        "duration_ms": 22.301334,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5640110-5705645",
+        "ttfb_ms": 19.732625,
+        "duration_ms": 62.463708,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5953447-6018982",
+        "ttfb_ms": 8.432834,
+        "duration_ms": 46.266959,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6266784-6332319",
+        "ttfb_ms": 8.219875,
+        "duration_ms": 57.136208,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6580121-6645656",
+        "ttfb_ms": 8.839875,
+        "duration_ms": 24.949042,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6893458-6958993",
+        "ttfb_ms": 18.613542,
+        "duration_ms": 43.725917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7206795-7272330",
+        "ttfb_ms": 15.123417,
+        "duration_ms": 36.449625,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7520132-7585667",
+        "ttfb_ms": 20.349666,
+        "duration_ms": 54.09025,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7833469-7899004",
+        "ttfb_ms": 7.915584,
+        "duration_ms": 45.353875,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8146806-8212341",
+        "ttfb_ms": 8.486291,
+        "duration_ms": 58.203625,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8460143-8525678",
+        "ttfb_ms": 8.151833,
+        "duration_ms": 27.219333,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8773480-8839015",
+        "ttfb_ms": 21.93075,
+        "duration_ms": 50.354375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9086817-9152352",
+        "ttfb_ms": 10.373333,
+        "duration_ms": 36.813416,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9400154-9465689",
+        "ttfb_ms": 20.722,
+        "duration_ms": 63.971958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9713491-9779026",
+        "ttfb_ms": 11.086916,
+        "duration_ms": 43.606041,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10026828-10092363",
+        "ttfb_ms": 20.081875,
+        "duration_ms": 69.700917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10340165-10405700",
+        "ttfb_ms": 8.529458,
+        "duration_ms": 27.5625,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10653502-10719037",
+        "ttfb_ms": 19.213666,
+        "duration_ms": 31.057166,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10966839-11032374",
+        "ttfb_ms": 20.180167,
+        "duration_ms": 54.672584,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11280176-11345711",
+        "ttfb_ms": 10.700416,
+        "duration_ms": 49.651666,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11593513-11659048",
+        "ttfb_ms": 8.399208,
+        "duration_ms": 50.912083,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11906850-11972385",
+        "ttfb_ms": 10.822959,
+        "duration_ms": 37.035459,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12220187-12285722",
+        "ttfb_ms": 19.05375,
+        "duration_ms": 34.649542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12533524-12599059",
+        "ttfb_ms": 11.205583,
+        "duration_ms": 21.058583,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12846861-12912396",
+        "ttfb_ms": 17.990417,
+        "duration_ms": 55.867333,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13160198-13225733",
+        "ttfb_ms": 9.140459,
+        "duration_ms": 46.542459,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13473535-13539070",
+        "ttfb_ms": 7.735709,
+        "duration_ms": 59.583792,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13786872-13852407",
+        "ttfb_ms": 9.195375,
+        "duration_ms": 23.41,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14100209-14165744",
+        "ttfb_ms": 20.36425,
+        "duration_ms": 53.728208,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14413546-14479081",
+        "ttfb_ms": 10.307959,
+        "duration_ms": 31.19875,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14726883-14792418",
+        "ttfb_ms": 17.781916,
+        "duration_ms": 45.989625,
+        "status": 206,
+        "kind": "seek"
+      }
+    ]
+  },
+  {
+    "phase": "foreground-restored",
+    "pid": 1306,
+    "apk_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+    "samples": [
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.819417,
+        "duration_ms": 12.064875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 8.661959,
+        "duration_ms": 8.909834,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.308917,
+        "duration_ms": 11.5045,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.572125,
+        "duration_ms": 11.7545,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.405708,
+        "duration_ms": 12.517542,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 12.75025,
+        "duration_ms": 12.869875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.597083,
+        "duration_ms": 12.773792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.657541,
+        "duration_ms": 11.729833,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.284875,
+        "duration_ms": 11.388458,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.482792,
+        "duration_ms": 9.587792,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 12.621458,
+        "duration_ms": 12.761208,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.091,
+        "duration_ms": 11.173083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.599667,
+        "duration_ms": 13.665917,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.965458,
+        "duration_ms": 12.066708,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.828708,
+        "duration_ms": 11.994416,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 13.1955,
+        "duration_ms": 13.314667,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.017125,
+        "duration_ms": 13.132417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 15.139292,
+        "duration_ms": 15.35025,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.619333,
+        "duration_ms": 22.682708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.490583,
+        "duration_ms": 17.716,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.258625,
+        "duration_ms": 20.352708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.506583,
+        "duration_ms": 20.017833,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.144042,
+        "duration_ms": 17.294584,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.87875,
+        "duration_ms": 21.805083,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.138542,
+        "duration_ms": 19.311459,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.508042,
+        "duration_ms": 18.675417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.099333,
+        "duration_ms": 14.273,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 9.378708,
+        "duration_ms": 9.594666,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.221125,
+        "duration_ms": 20.403875,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.484,
+        "duration_ms": 20.767875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.826417,
+        "duration_ms": 22.009084,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.579959,
+        "duration_ms": 18.6785,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.022958,
+        "duration_ms": 21.091041,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.199459,
+        "duration_ms": 22.287917,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 24.462125,
+        "duration_ms": 24.531292,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 16.221917,
+        "duration_ms": 16.670042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 24.42325,
+        "duration_ms": 24.627708,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.543334,
+        "duration_ms": 18.830542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 24.542666,
+        "duration_ms": 24.693458,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.351167,
+        "duration_ms": 23.654334,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.076541,
+        "duration_ms": 21.248125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.273375,
+        "duration_ms": 22.364417,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.349959,
+        "duration_ms": 21.534209,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.093333,
+        "duration_ms": 21.167541,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.012709,
+        "duration_ms": 22.232834,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.411542,
+        "duration_ms": 21.576208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.958666,
+        "duration_ms": 22.15775,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 11.101416,
+        "duration_ms": 11.228958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.170459,
+        "duration_ms": 17.335125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 24.692875,
+        "duration_ms": 27.104709,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.9085,
+        "duration_ms": 18.976792,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 26.189334,
+        "duration_ms": 26.623125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 23.74425,
+        "duration_ms": 23.9795,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.922542,
+        "duration_ms": 25.0085,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 23.027416,
+        "duration_ms": 23.141375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.356583,
+        "duration_ms": 21.570458,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.581542,
+        "duration_ms": 22.6905,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 25.78325,
+        "duration_ms": 25.952542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.0015,
+        "duration_ms": 22.170375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 24.03975,
+        "duration_ms": 24.270625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 26.475959,
+        "duration_ms": 26.586,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 15.704458,
+        "duration_ms": 16.110333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.932667,
+        "duration_ms": 22.017417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 18.223625,
+        "duration_ms": 18.457875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.404084,
+        "duration_ms": 22.57225,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 14.105667,
+        "duration_ms": 14.265583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.565042,
+        "duration_ms": 17.776625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 24.9105,
+        "duration_ms": 25.138583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.354209,
+        "duration_ms": 21.550667,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.310958,
+        "duration_ms": 23.517666,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.380333,
+        "duration_ms": 22.560958,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.925208,
+        "duration_ms": 20.102583,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.166958,
+        "duration_ms": 18.348292,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.759792,
+        "duration_ms": 22.162958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.196458,
+        "duration_ms": 22.413583,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.990458,
+        "duration_ms": 24.328958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.074417,
+        "duration_ms": 20.250417,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.52,
+        "duration_ms": 22.609875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.379459,
+        "duration_ms": 19.576834,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.38775,
+        "duration_ms": 22.629125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.754417,
+        "duration_ms": 19.87525,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.094417,
+        "duration_ms": 23.268834,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.330208,
+        "duration_ms": 13.518042,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.569917,
+        "duration_ms": 21.799667,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 27.238875,
+        "duration_ms": 27.45625,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.711042,
+        "duration_ms": 20.884667,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 14.677833,
+        "duration_ms": 14.838041,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.674542,
+        "duration_ms": 25.983959,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 22.592834,
+        "duration_ms": 22.662959,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.112125,
+        "duration_ms": 22.33125,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.436125,
+        "duration_ms": 20.538375,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.380792,
+        "duration_ms": 21.492875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 13.352417,
+        "duration_ms": 13.505167,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.456042,
+        "duration_ms": 17.578542,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 23.358167,
+        "duration_ms": 23.509334,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 15.075709,
+        "duration_ms": 15.79225,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.290958,
+        "duration_ms": 20.355666,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.396917,
+        "duration_ms": 19.524208,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 23.632541,
+        "duration_ms": 23.762666,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 7.2475,
+        "duration_ms": 7.355167,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 16.56375,
+        "duration_ms": 16.67,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.12875,
+        "duration_ms": 19.213958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.709125,
+        "duration_ms": 21.7765,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.713625,
+        "duration_ms": 17.900166,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.5535,
+        "duration_ms": 17.710125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.789666,
+        "duration_ms": 23.852291,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.582958,
+        "duration_ms": 18.67,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 22.50875,
+        "duration_ms": 22.921,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 17.767875,
+        "duration_ms": 17.967084,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.839708,
+        "duration_ms": 20.943041,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 18.608833,
+        "duration_ms": 18.782458,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 24.96075,
+        "duration_ms": 25.170875,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 11.938541,
+        "duration_ms": 12.102208,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.293958,
+        "duration_ms": 20.497916,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.925792,
+        "duration_ms": 22.113208,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.709167,
+        "duration_ms": 21.954042,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.026584,
+        "duration_ms": 20.341959,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 20.652125,
+        "duration_ms": 20.896666,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 10.158792,
+        "duration_ms": 10.247459,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.120917,
+        "duration_ms": 20.727958,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 21.666084,
+        "duration_ms": 21.8405,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 21.207458,
+        "duration_ms": 22.155333,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.82225,
+        "duration_ms": 21.387125,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 17.780791,
+        "duration_ms": 17.923625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 20.534958,
+        "duration_ms": 20.662208,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 19.602084,
+        "duration_ms": 20.264709,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "HEAD",
+        "range": null,
+        "ttfb_ms": 19.689458,
+        "duration_ms": 19.7845,
+        "status": 200,
+        "kind": "head"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=0-43",
+        "ttfb_ms": 23.144458,
+        "duration_ms": 23.318625,
+        "status": 206,
+        "kind": "header"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=44-65579",
+        "ttfb_ms": 20.948333,
+        "duration_ms": 36.769083,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=313381-378916",
+        "ttfb_ms": 23.387417,
+        "duration_ms": 45.274292,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=626718-692253",
+        "ttfb_ms": 11.292541,
+        "duration_ms": 31.370375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=940055-1005590",
+        "ttfb_ms": 25.19525,
+        "duration_ms": 56.010083,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1253392-1318927",
+        "ttfb_ms": 8.739667,
+        "duration_ms": 18.632167,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1566729-1632264",
+        "ttfb_ms": 22.780459,
+        "duration_ms": 38.515209,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=1880066-1945601",
+        "ttfb_ms": 16.099042,
+        "duration_ms": 35.792208,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2193403-2258938",
+        "ttfb_ms": 19.501084,
+        "duration_ms": 46.759167,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2506740-2572275",
+        "ttfb_ms": 8.656292,
+        "duration_ms": 36.415542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=2820077-2885612",
+        "ttfb_ms": 17.585292,
+        "duration_ms": 46.126209,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3133414-3198949",
+        "ttfb_ms": 8.039459,
+        "duration_ms": 18.422709,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3446751-3512286",
+        "ttfb_ms": 21.498417,
+        "duration_ms": 38.214292,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=3760088-3825623",
+        "ttfb_ms": 14.318458,
+        "duration_ms": 33.817291,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4073425-4138960",
+        "ttfb_ms": 18.719709,
+        "duration_ms": 56.224084,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4386762-4452297",
+        "ttfb_ms": 10.62975,
+        "duration_ms": 38.970084,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=4700099-4765634",
+        "ttfb_ms": 9.772375,
+        "duration_ms": 31.92725,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5013436-5078971",
+        "ttfb_ms": 20.835875,
+        "duration_ms": 42.170166,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5326773-5392308",
+        "ttfb_ms": 13.357083,
+        "duration_ms": 23.73675,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5640110-5705645",
+        "ttfb_ms": 23.644958,
+        "duration_ms": 45.222875,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=5953447-6018982",
+        "ttfb_ms": 14.421167,
+        "duration_ms": 42.826084,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6266784-6332319",
+        "ttfb_ms": 16.344792,
+        "duration_ms": 56.914709,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6580121-6645656",
+        "ttfb_ms": 8.929542,
+        "duration_ms": 25.100917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=6893458-6958993",
+        "ttfb_ms": 21.588958,
+        "duration_ms": 36.376625,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7206795-7272330",
+        "ttfb_ms": 16.762,
+        "duration_ms": 29.936041,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7520132-7585667",
+        "ttfb_ms": 20.215708,
+        "duration_ms": 41.953833,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=7833469-7899004",
+        "ttfb_ms": 11.153084,
+        "duration_ms": 42.586042,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8146806-8212341",
+        "ttfb_ms": 9.448,
+        "duration_ms": 34.224958,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8460143-8525678",
+        "ttfb_ms": 20.996958,
+        "duration_ms": 34.262,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=8773480-8839015",
+        "ttfb_ms": 14.54275,
+        "duration_ms": 26.65175,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9086817-9152352",
+        "ttfb_ms": 13.315958,
+        "duration_ms": 29.207833,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9400154-9465689",
+        "ttfb_ms": 20.5395,
+        "duration_ms": 48.004292,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=9713491-9779026",
+        "ttfb_ms": 9.749541,
+        "duration_ms": 35.524666,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10026828-10092363",
+        "ttfb_ms": 9.218166,
+        "duration_ms": 50.381291,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10340165-10405700",
+        "ttfb_ms": 8.479625,
+        "duration_ms": 25.779583,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10653502-10719037",
+        "ttfb_ms": 19.685334,
+        "duration_ms": 29.181375,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=10966839-11032374",
+        "ttfb_ms": 20.643583,
+        "duration_ms": 43.6775,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11280176-11345711",
+        "ttfb_ms": 11.116083,
+        "duration_ms": 32.832042,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11593513-11659048",
+        "ttfb_ms": 18.0665,
+        "duration_ms": 59.361542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=11906850-11972385",
+        "ttfb_ms": 10.437667,
+        "duration_ms": 26.898542,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12220187-12285722",
+        "ttfb_ms": 21.983125,
+        "duration_ms": 40.637334,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12533524-12599059",
+        "ttfb_ms": 16.538458,
+        "duration_ms": 41.728333,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=12846861-12912396",
+        "ttfb_ms": 15.373584,
+        "duration_ms": 35.053917,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13160198-13225733",
+        "ttfb_ms": 9.67325,
+        "duration_ms": 30.645541,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13473535-13539070",
+        "ttfb_ms": 19.630625,
+        "duration_ms": 56.448417,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=13786872-13852407",
+        "ttfb_ms": 7.937084,
+        "duration_ms": 18.99025,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14100209-14165744",
+        "ttfb_ms": 21.319583,
+        "duration_ms": 45.232833,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14413546-14479081",
+        "ttfb_ms": 13.130042,
+        "duration_ms": 38.788084,
+        "status": 206,
+        "kind": "seek"
+      },
+      {
+        "method": "GET",
+        "range": "bytes=14726883-14792418",
+        "ttfb_ms": 14.856917,
+        "duration_ms": 39.206417,
+        "status": 206,
+        "kind": "seek"
+      }
+    ]
+  }
+]

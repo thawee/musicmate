@@ -1,0 +1,3 @@
+<companion-device-provider>
+    <bluetooth-device-filter />
+</companion-device-provider>

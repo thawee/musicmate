@@ -1,0 +1,366 @@
+package apincer.android.mmate.utils;
+
+import static apincer.music.core.Constants.LEGEND_CD;
+import static apincer.music.core.Constants.LEGEND_DSD;
+import static apincer.music.core.Constants.LEGEND_HIRES;
+import static apincer.music.core.Constants.LEGEND_MQA;
+import static apincer.music.core.Constants.LEGEND_STUDIO;
+import static apincer.music.core.Constants.TITLE_DSD;
+import static apincer.music.core.utils.StringUtils.isEmpty;
+import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.isDSD;
+import static apincer.music.core.utils.TagUtils.isDSD256;
+import static apincer.music.core.utils.TagUtils.isDSD64;
+import static apincer.music.core.utils.TagUtils.isHiRes;
+import static apincer.music.core.utils.TagUtils.isLossless;
+import static apincer.music.core.utils.TagUtils.isLossy;
+import static apincer.music.core.utils.TagUtils.isMQA;
+import static apincer.music.core.utils.TagUtils.isMQAStudio;
+import static apincer.music.core.utils.TagUtils.isPCM24Bits;
+
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.ContextCompat;
+
+import org.jetbrains.annotations.UnknownNullability;
+
+import java.util.Locale;
+
+import apincer.android.mmate.R;
+import apincer.music.core.Constants;
+import apincer.music.core.Settings;
+import apincer.music.core.model.Track;
+import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
+
+public class TagUIUtils {
+    private static final String TAG = "MusicTagUtils";
+
+    public static int getResolutionColor(Context context, Track tag) {
+        // DSD - DSD
+        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
+        // Lossless - >= 24 bits and >= 48 kHz
+        // High Quality - compress
+        if(isDSD(tag)) {
+            return context.getColor(R.color.quality_hd);
+        }else if(isHiRes(tag)) {
+            return context.getColor(R.color.quality_hd);
+        }else if(isPCM24Bits(tag)) {
+            return context.getColor(R.color.quality_h24bits);
+        }else if(isLossless(tag) || isMQA(tag)){
+            return context.getColor(R.color.quality_sd);
+        }else {
+            return context.getColor(R.color.quality_unknown);
+        }
+    }
+
+    public static Drawable getResolutionBackground(Context context, Track tag) {
+        // DSD - DSD
+        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
+        // Lossless - >= 24 bits and >= 48 kHz
+        // High Quality - compress
+        if(isDSD(tag) || isHiRes(tag)) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_hd);
+        }else if(isPCM24Bits(tag)) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_24bits);
+        }else if(isLossless(tag) || isMQA(tag)){
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_sd);
+        }else {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_unknown);
+        }
+    }
+
+    @Deprecated
+    public static Drawable getDynamicRangeDbBackground(Context context, Track tag) {
+        double drDb = tag.getDynamicRange();
+        boolean perfect = false;
+        if(tag.getAudioBitsDepth()==16) {
+            perfect = (drDb>=(96.60 * 0.9));
+        }else if(tag.getAudioBitsDepth()==24) {
+            perfect = (drDb>=(144.38*0.9));
+        }
+        if(tag.getDynamicRange() == 0.0) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_not_measured);
+        }else if(perfect) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_perfect);
+        }else {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_normal);
+        }
+    }
+
+    @Deprecated
+    public static int getDynamicRangeDbColor(Context context, Track tag) {
+        double drDb = tag.getDynamicRange();
+        boolean perfect = false;
+        if(tag.getAudioBitsDepth()==16) {
+            perfect = (drDb>=(96.60 * 0.9));
+        }else if(tag.getAudioBitsDepth()==24) {
+            perfect = (drDb>=(144.38*0.9));
+        }
+        if(tag.getDynamicRange() == 0.0) {
+            return ContextCompat.getColor(context, R.color.drdb_none);
+        }else if(perfect) {
+            return ContextCompat.getColor(context, R.color.drdb_perfect);
+        }else {
+            return ContextCompat.getColor(context, R.color.drdb_normal);
+        }
+    }
+
+
+    public static int getEncodingColor(Context context, Track tag) {
+        /* IFI DAC v2
+        yellow - pcm 44.1/48
+        white  - pcm >= 88.2
+        cyan   - dsd 64/128
+        red    - dsd 256
+        green  - MQA
+        blue   - MQA Studio
+        */
+
+        if(isMQAStudio(tag)){
+            return context.getColor(R.color.resolution_mqa_studio);
+        }else if(isMQA(tag)){
+            return context.getColor(R.color.resolution_mqa);
+        }else if(isHiRes(tag)) {
+            return context.getColor(R.color.resolution_pcm_96);
+        } else if(isDSD64(tag)) {
+                return context.getColor(R.color.badge_dsd_text);
+        } else if(isDSD256(tag)) {
+                return context.getColor(R.color.badge_dsd_text);
+        }else {
+            // 44.1 - 48
+            return context.getColor(R.color.resolution_pcm_44_48);
+        }
+    }
+
+    public static int getFileEncodingColor(Context context, Track tag) {
+        /* IFI DAC v2
+        yellow - pcm 44.1/48
+        white  - pcm >= 88.2
+
+        cyan   - lossy
+        red    - lossless
+        green  - MQA
+        blue   - MQA Studio
+        */
+
+        if(isMQAStudio(tag)){
+            return context.getColor(R.color.resolution_mqa_studio);
+        }else if(isMQA(tag)){
+            return context.getColor(R.color.resolution_mqa);
+        }else if(isDSD64(tag) || isDSD256(tag)) {
+            return context.getColor(R.color.badge_dsd_text);
+        } else if(isLossless(tag) || isHiRes(tag)) {
+            return context.getColor(R.color.resolution_pcm_96);
+        }else {
+            // 44.1 - 48
+            return context.getColor(R.color.resolution_lossy);
+        }
+    }
+
+    public static String getFormattedTitle(Context context, @UnknownNullability Track tag) {
+        String title =  trimToEmpty(tag.getTitle());
+        if(Settings.isShowTrackNumber(context)) {
+            String track = trimToEmpty(tag.getTrack());
+            if(track.startsWith("0")) {
+                track = track.substring(1);
+            }
+            if(track.indexOf("/")>0) {
+                track = track.substring(0,track.indexOf("/"));
+            }
+            if(!isEmpty(track)) {
+                title = track + StringUtils.SEP_TITLE + title;
+            }
+        }
+        return title;
+    }
+
+    public static String getFormattedSubtitle(Track tag) {
+        String album = StringUtils.getSimplifiedAlbum(tag); //StringUtils.trimTitle(tag.getAlbum());
+        String artist = StringUtils.trimTitle(tag.getArtist());
+        if (isEmpty(artist)) {
+            artist = StringUtils.trimTitle(tag.getAlbumArtist());
+        }
+        if (isEmpty(album) && isEmpty(artist)) {
+            return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + StringUtils.UNKNOWN_CAP;
+        } else if (isEmpty(album)) {
+            return artist;
+        } else if (isEmpty(artist)) {
+            return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + album;
+        }
+        return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
+    }
+
+    @Deprecated
+    public static String getDynamicRangeScore(Track tag) {
+        String text;
+        if(tag.getDrScore()==0.00) {
+            text = "";
+        }else {
+            text = String.format(Locale.US, "%.0f", tag.getDrScore());
+        }
+
+        return text;
+    }
+
+    @Deprecated
+    public static String getDynamicRange(Track tag) {
+        String text;
+        if(tag.getDynamicRange()==0.00) {
+            text = "";
+        }else {
+            text = String.format(Locale.US, "%.0f", tag.getDynamicRange());
+        }
+
+        return text;
+    }
+
+    @Deprecated
+    public static String getDynamicRangeAsString(Track tag) {
+        String text;
+        if(tag.getDynamicRange()==0.00) {
+            text = "";
+        }else {
+           // text = String.format(Locale.US, "%.2f dB", tag.getDynamicRange());
+            text = String.format(Locale.US, "%.0f dB", tag.getDynamicRange());
+        }
+
+        return text;
+    }
+
+    public static int getDRScoreColor(Context context, int drValue) {
+        if (drValue <= 0) return ContextCompat.getColor(context, R.color.dr_none);
+        else if (drValue < 8) return ContextCompat.getColor(context, R.color.dr_low);
+        else if (drValue < 13) return ContextCompat.getColor(context, R.color.dr_medium);
+        else return ContextCompat.getColor(context, R.color.dr_high);
+
+        // else return ContextCompat.getColor(context, R.color.grey200);
+    }
+
+    @Deprecated
+    public static Drawable getDRScoreBackgroundColor(Context context, int drValue) {
+        if (drValue == 0) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr);
+        else if (drValue < 8) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_low);
+        else if (drValue < 13) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_medium);
+        else return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_high);
+    }
+
+    public static int getSourceRescId(String letter) {
+        //String letter = item.getSource();
+        if (letter.equalsIgnoreCase(Constants.PUBLISHER_JOOX)) {
+            return R.drawable.icon_joox;
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_QOBUZ)) {
+            return R.drawable.icon_qobuz;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
+       //     return R.drawable.icon_cd;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_SACD)) {
+       //     return R.drawable.icon_sacd;
+       // } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_VINYL)) {
+       //     return R.drawable.icon_vinyl;
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_SPOTIFY)) {
+            return R.drawable.icon_spotify;
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_TIDAL)) {
+            return R.drawable.icon_tidal;
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_APPLE)) {
+            return R.drawable.icon_itune;
+       // } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_YOUTUBE)) {
+       //     return R.drawable.icon_youtube;
+        }
+
+        return -1;
+    }
+
+    public static String getDefaultAlbum(@UnknownNullability Track tag) {
+        // if album empty, add single
+        String defaultAlbum;
+        if(isEmpty(tag.getAlbum()) && !isEmpty(tag.getArtist())) {
+            defaultAlbum = getFirstArtist(tag.getArtist())+" - "+ Constants.DEFAULT_ALBUM_TEXT; //getFirstArtist(tag.getArtist())+" - Single";
+        }else {
+            defaultAlbum = trimToEmpty(tag.getAlbum());
+        }
+        return defaultAlbum;
+    }
+
+    public static String getFirstArtist(String artist) {
+        if(artist.indexOf(";")>0) {
+            return artist.substring(0,artist.indexOf(";"));
+        }
+        return artist;
+    }
+
+    public static int getQualityTextColor(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_unknown);
+
+        if(qualityInd.equals("MQA Studio")) {
+            return context.getColor(R.color.quality_mqa_studio_text);
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
+            return context.getColor(R.color.quality_mqa_text);
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return context.getColor(R.color.quality_cd_text);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return context.getColor(R.color.quality_cd_text);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
+            return context.getColor(R.color.quality_hr_text);
+        }else if(qualityInd.equals(LEGEND_DSD)) {
+            return context.getColor(R.color.quality_dsd_text);
+        }
+
+        return context.getColor(R.color.quality_lc_text);
+    }
+
+    public static int getQualityBgColor(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_lc_background);
+
+        if(qualityInd.equals("MQA Studio")) {
+            return context.getColor(R.color.quality_mqa_studio_background);
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
+            return context.getColor(R.color.quality_mqa_background);
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return context.getColor(R.color.quality_cd_background);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return context.getColor(R.color.quality_cd_background);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
+            return context.getColor(R.color.quality_hr_background);
+        }else if(qualityInd.equals(LEGEND_DSD)) {
+            return context.getColor(R.color.quality_dsd_background);
+        }
+
+        return context.getColor(R.color.quality_lc_background);
+    }
+
+    public static Drawable getQualityBackground(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_unkwon);
+        if(qualityInd.equals("MQA Studio")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa_studio);
+        } else if(qualityInd.startsWith(LEGEND_MQA)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa);
+        }else if(qualityInd.equals(LEGEND_CD)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_cd);
+        }else if(qualityInd.equals(LEGEND_STUDIO)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_cd_ext);
+        }else if(qualityInd.equals(LEGEND_HIRES)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_hr);
+        }else if(qualityInd.equals(LEGEND_DSD)) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_dsd);
+        }
+        return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_lc);
+    }
+
+    public static String getQualityIndFullString(Track song) {
+        String name = Constants.TITLE_CD_QUALITY;
+        if(isDSD(song)) {
+            name = TITLE_DSD;
+        }else if(isMQA(song)) {
+            name = Constants.TITLE_MQA_MASTER_QUALITY;
+        }else if(TagUtils.isHiRes48(song)) {
+            name = Constants.TITLE_CD_EXT_QUALITY;
+        }else if(isHiRes(song)) {
+            name = Constants.TITLE_HIRES_QUALITY;
+        }else if(isLossy(song)) {
+            name = Constants.TITLE_HIGH_QUALITY;
+        }
+        return name;
+    }
+}

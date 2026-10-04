@@ -1,0 +1,234 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+    alias libs.plugins.android.application
+    alias libs.plugins.devtools.ksp
+    alias libs.plugins.dagger.hilt
+    alias libs.plugins.kotlin.serialization
+    alias libs.plugins.kotlin.compose
+    alias libs.plugins.screenshot
+}
+
+android {
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+    //buildTools( libs.versions.buildTools.get())
+
+    defaultConfig {
+        applicationId = "apincer.android.mmate"
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        versionCode = 145
+        versionName  = "3.24.0-"+ getDate()
+        //noinspection ChromeOsAbiSupport
+        ndk.abiFilters = ['arm64-v8a']
+        multiDexEnabled = true
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+
+    compileOptions {
+        // jetty12 required java 17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+
+    tasks.withType(KotlinCompile).configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    // Release signing comes from the environment (CI secrets or a local shell); without it the APK is unsigned
+    def releaseKeystore = System.getenv("MUSICMATE_KEYSTORE")
+    signingConfigs {
+        if (releaseKeystore) {
+            release {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("MUSICMATE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MUSICMATE_KEY_ALIAS")
+                keyPassword = System.getenv("MUSICMATE_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (releaseKeystore) {
+                signingConfig = signingConfigs.release
+            }
+            minifyEnabled = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        dataBinding = false
+        compose = true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/library_release.kotlin_module',
+                         'META-INF/library-core_release.kotlin_module',
+                         'META-INF/LICENSE.md',
+                         'META-INF/NOTICE.md',
+                         'META-INF/AL2.0',
+                         'META-INF/LGPL2.1',
+                         'META-INF/INDEX.LIST']
+            pickFirsts += ['META-INF/DEPENDENCIES']
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
+    lint {
+        abortOnError = true
+    }
+
+    namespace = 'apincer.android.mmate'
+}
+
+dependencies {
+    // Project Modules
+    implementation project(':core')
+    implementation project(':db-room')
+
+    // AndroidX Core & UI
+    implementation libs.androidx.annotation
+    implementation libs.androidx.core
+    implementation libs.androidx.activity
+    implementation libs.androidx.recyclerView
+    implementation libs.androidx.recyclerView.selection
+    implementation libs.androidx.coordinatorlayout
+    implementation libs.androidx.appCompat
+    implementation libs.androidx.fragment
+    implementation libs.androidx.cardView
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
+    implementation libs.androidx.palette
+    implementation libs.androidx.preference
+    implementation libs.androidx.documentFile
+    implementation libs.androidx.work
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.loader
+    implementation libs.androidx.viewpager2
+    implementation libs.androidx.swiperefreshlayout
+
+    
+    // Jetpack Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.material3.adaptive.navigation3
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.navigation3.runtime
+    implementation libs.androidx.navigation3.ui
+    debugImplementation libs.androidx.compose.ui.tooling
+    debugImplementation libs.androidx.compose.ui.test.manifest
+
+    // Media & Playback Engine
+    implementation libs.androidx.media
+    implementation libs.androidx.media3.session
+    implementation libs.androidx.media3.exoplayer
+    implementation libs.androidx.media3.ui
+
+    // Kotlin & Serialization
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
+    implementation libs.kotlinx.serialization.core
+    implementation libs.kotlinx.serialization.json
+
+    // Google Material & Annotations
+    implementation libs.google.material
+    implementation libs.jetbrains.annotations
+
+    // Dependency Injection (Hilt)
+    implementation libs.dagger.hilt.android
+    ksp libs.dagger.hilt.compiler
+    implementation libs.androidx.hilt.lifecycle.viewmodel
+    ksp libs.androidx.hilt.compiler
+
+    // UI Enhancements & Audiophile Visualizers
+    implementation libs.androidfastscroll.kt
+    implementation libs.chrisbanes.photoview
+
+    implementation libs.tutorialsandroid.filepicker
+    implementation libs.zxing.core
+    implementation libs.markwon.core
+    implementation libs.markwon.html
+
+    // Image Loading
+    implementation libs.coilkt.coil3
+    implementation libs.coilkt.coil3.network
+    implementation libs.coilkt.coil3.compose
+
+    // Storage & Utilities
+    implementation libs.anggrayudi.storage
+    implementation libs.commons.lang3
+    implementation libs.commons.match3
+    implementation libs.slf4j.api
+    implementation libs.square.okhttp3
+
+    // UPnP & Web Server Engines
+    implementation libs.jupnp.android
+    implementation project(':server-jupnp')
+
+    // Local Submodules
+    implementation project(':library:library')
+    implementation project(':library:crashreporter')
+
+    // Testing
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.mockk
+    testImplementation libs.androidx.arch.core.testing
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    androidTestImplementation libs.androidx.compose.ui.test.junit4.accessibility
+    screenshotTestImplementation libs.screenshot.validation.api
+    screenshotTestImplementation libs.androidx.compose.ui.tooling
+}
+
+configurations.implementation {
+    exclude group: 'com.hazelcast', module: 'hazelcast'
+    //exclude group: 'org.jboss.logging', module: 'jboss-logging' // exclude latest 3.6.2 version, not work on android
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+//    exclude group: 'androidx.documentfile', module: 'documentfile'
+}
+
+static def getDate() {
+    def date = new Date()
+    return date.format('yyMMdd')
+}

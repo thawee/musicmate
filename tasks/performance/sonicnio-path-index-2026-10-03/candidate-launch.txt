@@ -1,0 +1,7 @@
+Starting: Intent { cmp=apincer.android.mmate/.ui.MainActivity }
+Status: ok
+LaunchState: WARM
+Activity: apincer.android.mmate/.ui.MainActivity
+TotalTime: 1120
+WaitTime: 1121
+Complete

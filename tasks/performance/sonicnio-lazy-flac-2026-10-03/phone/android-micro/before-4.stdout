@@ -1,0 +1,3 @@
+{"label":"before-4","sample":0,"operations":128,"bytes_per_op":279647.500,"nanos_per_op":23631.180,"gc_count_delta":0,"gc_time_ms_delta":0,"max_heap_bytes":268435456}
+{"label":"before-4","sample":1,"operations":128,"bytes_per_op":1867936.500,"nanos_per_op":19488.523,"gc_count_delta":1,"gc_time_ms_delta":15,"max_heap_bytes":268435456}
+{"label":"before-4","sample":2,"operations":128,"bytes_per_op":1066240.000,"nanos_per_op":149731.039,"gc_count_delta":1,"gc_time_ms_delta":15,"max_heap_bytes":268435456}

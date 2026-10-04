@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.playback.ReplayGainManagerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-03T09:17:26.817Z" hostname="KB-XXAXXW9TX4" time="0.004">
+  <properties/>
+  <testcase name="testParseGain" classname="apincer.music.core.playback.ReplayGainManagerTest" time="0.003"/>
+  <testcase name="testParsePeak" classname="apincer.music.core.playback.ReplayGainManagerTest" time="0.0"/>
+  <testcase name="testGainLinearCalculation" classname="apincer.music.core.playback.ReplayGainManagerTest" time="0.0"/>
+  <testcase name="testReplayGainInfoDisplay" classname="apincer.music.core.playback.ReplayGainManagerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

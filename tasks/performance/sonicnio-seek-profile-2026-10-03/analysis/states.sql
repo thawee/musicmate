@@ -1,0 +1,1 @@
+SELECT t.tid,t.name,s.ts,s.dur,s.state FROM thread_state s JOIN thread t USING(utid) JOIN process p USING(upid) WHERE p.name='apincer.android.mmate' AND t.name IN ('nio-webserver-r','nio-stream-prod','NIO-Worker') AND s.dur>0 ORDER BY s.ts;

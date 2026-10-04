@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TagsActivity "More Actions" Popup Menu.
+     Organized by functional groups: Playback -> Metadata Curation -> Artwork -> Audio Quality -> Storage & Sharing. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Group 0: Collect -->
+    <group android:id="@+id/group_collect">
+        <item
+            android:id="@+id/action_add_to_playlist"
+            android:icon="@drawable/rounded_playlist_add_24"
+            android:title="@string/playlist_add_menu"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 1: Metadata Automation & Curation -->
+    <group android:id="@+id/group_tag_automation">
+        <item
+            android:id="@+id/action_search_match_tags"
+            android:icon="@drawable/ic_search_24dp"
+            android:title="@string/search_match_tags"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_smart_clean_format"
+            android:icon="@drawable/ic_round_auto_fix_high_24"
+            android:title="@string/menu_smart_clean_format"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 2: Audio Analysis & Verification -->
+    <group android:id="@+id/group_audio_analysis">
+        <item
+            android:id="@+id/action_spectrum"
+            android:icon="@drawable/rounded_equalizer_24"
+            android:title="@string/lossless_verifier"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 3: File System Utilities -->
+    <group android:id="@+id/group_file_utils">
+        <item
+            android:id="@+id/action_open_folder"
+            android:icon="@drawable/rounded_folder_24"
+            android:title="@string/open_containing_folder"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_web_search"
+            android:icon="@drawable/ic_search_24dp"
+            android:title="@string/find_online"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- Group 4: Destructive, last and apart (still confirms before deleting) -->
+    <group android:id="@+id/group_destructive">
+        <item
+            android:id="@+id/action_delete_file"
+            android:icon="@drawable/rounded_delete_24"
+            android:title="@string/button_delete"
+            app:showAsAction="never" />
+    </group>
+
+</menu>

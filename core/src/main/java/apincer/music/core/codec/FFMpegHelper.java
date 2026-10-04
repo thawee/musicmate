@@ -1,0 +1,396 @@
+package apincer.music.core.codec;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.antonkarpenko.ffmpegkit.FFmpegKit;
+import com.antonkarpenko.ffmpegkit.FFmpegSession;
+import com.antonkarpenko.ffmpegkit.ReturnCode;
+import com.antonkarpenko.ffmpegkit.Session;
+
+import java.io.File;
+import java.util.Locale;
+
+import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
+import apincer.music.core.utils.LogHelper;
+import apincer.android.utils.FileUtils;
+
+public class FFMpegHelper {
+
+    private static final String TAG = "FFMpegHelper";
+
+    /**
+     * Extracts the embedded picture to {@code pathFile}. The target is replaced only when
+     * extraction produced an image, so a file without art never clobbers an existing cover.
+     * @return true if an image was written
+     */
+    public static boolean extractCoverArt(String path, File pathFile, GenerateCallback callback) {
+        File partial = new File(pathFile.getParentFile(), ".extract-" + pathFile.getName());
+        try {
+            Log.d(TAG, "extractCoverArt: from:"+path+", to:"+pathFile);
+            String targetPath = pathFile.getAbsolutePath();
+            String options = " -an -c:v copy -f image2 ";
+
+            String cmd = " -hide_banner -nostats -y -i \"" + path + "\" " + options + " \"" + partial.getAbsolutePath() + "\"";
+            LogHelper.setFFMpegOff();
+            Session session = FFmpegKit.execute(cmd); // do not clear the result
+            if (!ReturnCode.isSuccess(session.getReturnCode()) || partial.length() == 0) {
+                return false;
+            }
+            java.nio.file.Files.move(partial.toPath(), pathFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            if(callback != null) {
+                callback.onGenerated(targetPath, null,0,0);
+            }
+            return true;
+        }catch (Exception ex) {
+            Log.e(TAG, "extractCoverArt", ex);
+            return false;
+        } finally {
+            partial.delete();
+        }
+    }
+
+    /** @return true if the file was rewritten without embedded pictures */
+    public static boolean removeCoverArt(Context context, Track tag) {
+            String pathFile = tag.getPath();
+            String ext = FileUtils.getExtension(pathFile);
+            pathFile = pathFile.substring(0, pathFile.length() - ext.length() - 1) + "no_embed." + ext;
+            String options = " -vn -codec:a copy ";
+           // String options =" -map 0:V -y -codec copy ";
+
+            String cmd = " -hide_banner -nostats -y -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
+            LogHelper.setFFMpegOff();
+            Session session = FFmpegKit.execute(cmd); // do not clear the result
+            if (ReturnCode.isSuccess(session.getReturnCode())
+                    && FileSystem.safeMove(context, pathFile, tag.getPath(), true)) {
+                return true;
+            }
+            FileSystem.delete(pathFile);
+            return false;
+    }
+
+    public static final String KEY_BIT_RATE = "bit_rate";
+    public static final String KEY_START_TIME = "start_time";
+    public static final String KEY_DURATION = "duration";
+    public static final String KEY_TAG = "TAG:";
+   public static final String KEY_TAG_ARTIST = "ARTIST";
+    public static final String KEY_TAG_ALBUM = "ALBUM";
+    public static final String KEY_TAG_ALBUM_ARTIST = "album_artist";
+    public static final String KEY_TAG_COMPOSER = "COMPOSER";
+    public static final String KEY_TAG_COMMENT = "COMMENT";
+    public static final String KEY_TAG_COMPILATION = "COMPILATION";
+    public static final String KEY_TAG_DISC = "disc"; //"DISCNUMBER";
+    public static final String KEY_TAG_GENRE = "GENRE";
+    public static final String KEY_TAG_GROUPING = "GROUPING";
+    public static final String KEY_TAG_TRACK = "track";
+    public static final String KEY_TAG_PUBLISHER = "PUBLISHER";
+
+   // public static final String KEY_TAG_RATING = "RATING";
+   public static final String KEY_TAG_TITLE = "TITLE";
+    public static final String KEY_TAG_YEAR = "YEAR";
+
+    // WAVE file
+    //https://www.digitizationguidelines.gov/audio-visual/documents/listinfo.html
+    public static final String KEY_TAG_WAVE_ARTIST = "IART"; //artist
+    public static final String KEY_TAG_WAVE_ALBUM = "IPRD"; // album
+    public static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG"; // engineers
+    public static final String KEY_TAG_WAVE_GENRE = "IGNR"; //genre
+    public static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
+    public static final String KEY_TAG_WAVE_TITLE = "INAM"; //title
+    public static final String KEY_TAG_WAVE_YEAR = "date"; //""ICRD"; //date
+    //public static final String KEY_TAG_WAVE_MEDIA = "IMED";
+    public static final String KEY_TAG_WAVE_COMMENT = "ICMT"; // comment
+    public static final String KEY_TAG_WAVE_PUBLISHER = "ISRC"; // name of person or organization
+    public static final String KEY_TAG_WAVE_DISC = "ISRF"; // original form of material
+    public static final String KEY_TAG_WAVE_GROUP = "IKEY"; // list of keyword, saperated by semicolon
+    public static final String KEY_TAG_WAVE_COMPOSER = "ICMS"; // person who commision the subject
+    public static final String KEY_TAG_WAVE_QUALITY = "ISBJ"; // Describes the contents of the file
+
+    // AIF/AIFF
+    public static final String KEY_TAG_AIF_ARTIST = "ARTIST";
+    public static final String KEY_TAG_AIF_ALBUM = "ALBUM";
+    public static final String KEY_TAG_AIF_ALBUM_ARTIST = "album_artist";
+    public static final String KEY_TAG_AIF_COMPOSER = "COMPOSER";
+    public static final String KEY_TAG_AIF_COMMENT = "COMMENT";
+    public static final String KEY_TAG_AIF_COMPILATION = "COMPILATION";
+    public static final String KEY_TAG_AIF_DISC = "disc"; //"DISCNUMBER";
+    public static final String KEY_TAG_AIF_GENRE = "GENRE";
+    public static final String KEY_TAG_AIF_GROUPING = "GROUPING";
+    public static final String KEY_TAG_AIF_TRACK = "track";
+    public static final String KEY_TAG_AIF_PUBLISHER = "PUBLISHER";
+   public static final String KEY_TAG_AIF_QUALITY = "QUALITY";
+    public static final String KEY_TAG_AIF_TITLE = "TITLE";
+    public static final String KEY_TAG_AIF_YEAR = "YEAR";
+
+    // QuickTime/MOV/MP4/M4A
+    // https://wiki.multimedia.cx/index.php/FFmpeg_Metadata
+    public static final String KEY_TAG_MP4_ARTIST = "artist"; //for aac
+    public static final String KEY_TAG_MP4_AUTHOR = "author"; // for alac
+    public static final String KEY_TAG_MP4_ALBUM = "album"; // album
+    public static final String KEY_TAG_MP4_ALBUM_ARTIST = "album_artist";
+    public static final String KEY_TAG_MP4_GENRE = "genre"; //genre
+    public static final String KEY_TAG_MP4_TRACK = "track"; //track
+    public static final String KEY_TAG_MP4_TITLE = "title"; //title
+    public static final String KEY_TAG_MP4_YEAR = "year"; //date
+    public static final String KEY_TAG_MP4_COMPOSER = "composer";
+    public static final String KEY_TAG_MP4_GROUPING = "grouping";
+    public static final String KEY_TAG_MP4_COMMENT = "comment";  // comment
+    public static final String KEY_TAG_MP4_PUBLISHER = "copyright"; //copy right
+
+    //https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
+    public static final String KEY_TAG_MP3_ARTIST = "artist"; //artist
+    public static final String KEY_TAG_MP3_ALBUM = "album"; // album
+    public static final String KEY_TAG_MP3_ALBUM_ARTIST = "album_artist";
+    public static final String KEY_TAG_MP3_GENRE = "genre"; //genre
+    public static final String KEY_TAG_MP3_TRACK = "track"; //track
+    public static final String KEY_TAG_MP3_TITLE = "title"; //title
+    public static final String KEY_TAG_MP3_YEAR = "date"; //date
+    public static final String KEY_TAG_MP3_DISC = "disc";
+    public static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
+    public static final String METADATA_KEY = "-metadata";
+
+    /**
+     * Converts an audio file to a different format using FFmpeg.
+     *
+     * <p>This method handles the conversion of an audio file from {@code srcPath} to
+     * {@code targetPath} using the specified audio parameters. It supports special
+     * filtering for DSF input and applies specific bit depths and compression levels
+     * based on the target format.
+     *
+     * <p>The conversion is performed in a temporary directory. Only upon successful
+     * completion will the temporary file be moved to the final {@code targetPath}.
+     *
+     * <p><b>Format-Specific Logic:</b>
+     * <ul>
+     * <li><b>DSF Input:</b> A 24kHz lowpass filter and 6dB volume gain are applied.
+     * <li><b>FLAC Output:</b> Uses {@code cLevel} for compression (defaulting to 5)
+     * and {@code bitDept} for the sample format (s16, s24, s32).</li>
+     * <li><b>M4A (ALAC) Output:</b> Uses {@code bitDept} for the sample format
+     * (s16, s24, s32).</li>
+     * <li><b>AIFF (PCM) Output:</b> Uses {@code bitDept} to select the specific
+     * PCM codec (pcm_s16be, pcm_s24be, pcm_s32be).</li>
+     * <li><b>MP3 Output:</b> Ignores {@code bitDept} and encodes to 320k bitrate.</li>
+     * </ul>
+     *
+     * @param context    The Android {@link Context} used for file system operations.
+     * @param srcPath    The absolute file path of the source audio file to convert.
+     * @param targetPath The absolute file path where the converted file should be saved.
+     * If occupied, an unused numbered destination is selected.
+     * @param cLevel     The desired compression level. Primarily used for FLAC (0-12).
+     * An invalid value will result in a default (e.g., 5 for FLAC).
+     * @param bitDept    The desired output bit depth (16, 24, or 32). This is only
+     * applied to formats that support it (FLAC, ALAC, AIFF).
+     * @return the actual output path on success, {@code null} otherwise (e.g., FFmpeg failure,
+     * cancellation, or file I/O error).
+     */
+    public static String convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
+        return convert(context, srcPath, targetPath, cLevel, bitDept, 0);
+    }
+
+    public static String convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept, int sampleRate) {
+        String options = "";
+
+        if(bitDept ==1) {
+            bitDept = 24; // dsd
+        }
+
+        if (sampleRate > 0) {
+            options += " -ar " + sampleRate + " ";
+        }
+
+        // 1. Handle DSD (DSF/DFF) input filters with audiophile integer-multiple resampling
+        String srcLower = srcPath.toLowerCase(Locale.US);
+        if (srcLower.endsWith(".dsf") || srcLower.endsWith(".dff")) {
+            // High-precision DSD to PCM conversion: 30kHz lowpass to eliminate ultrasonic quantization noise + 6dB gain
+            int targetDsdRate = (sampleRate > 0) ? sampleRate : 88200; // 88.2kHz is native 32x integer divisor of DSD64 (2.8224MHz)
+            options += " -af \"lowpass=30000, volume=6dB\" -ar " + targetDsdRate + " ";
+        }
+
+        // 2. Determine the output sample format string based on bitDept
+        // This will be used for codecs that respect -sample_fmt (like FLAC and ALAC).
+        String sampleFmt = "";
+        if (bitDept == 16) {
+            sampleFmt = " -sample_fmt s16 ";
+        } else if (bitDept == 24 || bitDept == 32) {
+            sampleFmt = " -sample_fmt s32 ";
+        }
+        // If bitDept is 0 or another value, we don't pass the flag,
+        // letting FFmpeg choose a suitable default.
+
+        // 3. Set codec options based on target file extension
+        String targetExt = FileUtils.getExtension(targetPath.toLowerCase(Locale.US));
+
+        if (targetExt.endsWith("flac")) {
+            // FLAC respects -sample_fmt for bit depth.
+            // Use 5 as a default compression if cLevel is invalid.
+            int compression = (cLevel >= 0 && cLevel <= 12) ? cLevel : 5;
+            options += sampleFmt + " -y -vn -c:a flac -compression_level " + compression;
+
+        } else if (targetExt.endsWith("mp3")) {
+            // MP3 is lossy and doesn't have a PCM bit depth.
+            // We ignore `bitDept` and `sampleFmt`.
+            options += " -y -vn -c:a libmp3lame -b:a 320k ";
+
+        } else if (targetExt.endsWith("m4a")) {
+            // Assuming ALAC (Apple Lossless), which respects -sample_fmt.
+            // Your old code `pcm_s...be` was for raw PCM, not ALAC. This is correct.
+            options += sampleFmt + " -y -vn -c:a alac ";
+
+        } else if (targetExt.endsWith("aiff")) {
+            // For uncompressed PCM like AIFF, we set the bit depth
+            // by choosing the specific codec name. We ignore `sampleFmt`.
+            if (bitDept == 24) {
+                options += " -y -vn -c:a pcm_s24be "; // 24-bit Big Endian
+            } else if (bitDept == 32) {
+                options += " -y -vn -c:a pcm_s32be "; // 32-bit Big Endian
+            } else {
+                // Default to 16-bit for AIFF
+                options += " -y -vn -c:a pcm_s16be "; // 16-bit Big Endian
+            }
+        } else {
+            Log.e(TAG, "Unsupported target format: " + targetPath);
+            return null;
+        }
+
+        Log.i(TAG, "Converting: " + srcPath);
+
+        String ext = FileUtils.getExtension(srcPath);
+
+        String tmpTarget;
+        try {
+            File temporaryOutput = File.createTempFile("musicmate-convert-", "." + targetExt,
+                    new File(targetPath).getAbsoluteFile().getParentFile());
+            tmpTarget = temporaryOutput.getAbsolutePath();
+            if (!temporaryOutput.delete()) throw new java.io.IOException("Cannot prepare conversion output");
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Cannot create conversion output", e);
+            return null;
+        }
+
+        // Keep the embedded cover: map the attached picture as-is. "?" makes it optional, and if
+        // the target muxer rejects it the conversion is retried audio-only, as before.
+        String artOptions = " -map 0:a:0 -map 0:v:0? -c:v copy -disposition:v:0 attached_pic ";
+        if (targetExt.endsWith("mp3")) artOptions += " -id3v2_version 3 ";
+        if (targetExt.endsWith("aiff")) artOptions += " -write_id3v2 1 ";
+        String withArt = artOptions + options.replace(" -vn ", " ");
+
+        try {
+            LogHelper.setFFMpegOff();
+            if (runConversion(srcPath, withArt, tmpTarget)
+                    || runConversion(srcPath, options, tmpTarget)) {
+                Log.i(TAG, "Conversion successful: " + srcPath);
+                return FileSystem.moveToAvailablePath(tmpTarget, targetPath);
+            }
+            return null;
+        } catch (Exception e) {
+            Log.e(TAG, "FFmpeg execution threw an exception", e);
+            return null;
+        } finally {
+            // Also clean up the temp *target* file in case of failure
+            FileSystem.delete(tmpTarget);
+        }
+    }
+
+    /** Runs one FFmpeg conversion into {@code tmpTarget}; only a successful return code counts. */
+    private static boolean runConversion(String srcPath, String options, String tmpTarget) {
+        String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
+        Log.i(TAG, "Converting with cmd: " + cmd);
+        FFmpegSession session = FFmpegKit.execute(cmd);
+        if (ReturnCode.isSuccess(session.getReturnCode())) return true;
+        Log.w(TAG, String.format("Conversion attempt failed. RC: %s. Logs:\n%s",
+                session.getReturnCode(), session.getAllLogsAsString()));
+        FileSystem.delete(tmpTarget);
+        return false;
+    }
+
+    public static ReplayGainResult analyzeReplayGain(String path) {
+        String cmd = " -hide_banner -nostats -i \"" + path + "\" -filter:a ebur128 -f null -";
+
+        Log.i(TAG, "Analyzing ReplayGain: " + path);
+
+        FFmpegSession session = FFmpegKit.execute(cmd);
+
+        if (!ReturnCode.isSuccess(session.getReturnCode())) {
+            Log.e(TAG, "ReplayGain analysis failed: " + session.getAllLogsAsString());
+            return null;
+        }
+
+        String logs = session.getAllLogsAsString();
+
+        double integratedLufs = parseIntegratedLufs(logs);
+        double truePeak = parseTruePeak(logs);
+
+        if (Double.isNaN(integratedLufs)) {
+            return null;
+        }
+
+        // ReplayGain reference = -18 LUFS
+        double gain = -18.0 - integratedLufs;
+
+        return new ReplayGainResult(gain, truePeak);
+    }
+
+    private static double parseIntegratedLufs(String logs) {
+        try {
+            String[] lines = logs.split("\n");
+            for (String line : lines) {
+                if (line.contains("I:")) {
+                    // Example: I: -14.3 LUFS
+                    int idx = line.indexOf("I:");
+                    String sub = line.substring(idx + 2).trim();
+                    String value = sub.split(" ")[0];
+                    return Double.parseDouble(value);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "parseIntegratedLufs error", e);
+        }
+        return Double.NaN;
+    }
+
+    private static double parseTruePeak(String logs) {
+        try {
+            String[] lines = logs.split("\n");
+            for (String line : lines) {
+                if (line.contains("Peak:")) {
+                    // Example: Peak: -1.2 dBFS
+                    int idx = line.indexOf("Peak:");
+                    String sub = line.substring(idx + 5).trim();
+                    String value = sub.split(" ")[0];
+                    return Double.parseDouble(value);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "parseTruePeak error", e);
+        }
+        return Double.NaN;
+    }
+
+    // Update your interface to handle the new data
+    public interface GenerateCallback {
+        void onGenerated(String path, String qualityStatus, int realBits, double highFreqDb);
+        void onError(String error);
+    }
+
+    public static class ReplayGainResult {
+        public final double gainDb;
+        public final double peakDb;
+
+        public ReplayGainResult(double gainDb, double peakDb) {
+            this.gainDb = gainDb;
+            this.peakDb = peakDb;
+        }
+
+        public String getGainString() {
+            return String.format(Locale.US, "%.2f dB", gainDb);
+        }
+
+        public String getPeakString() {
+            // Convert dBFS → linear peak (ReplayGain standard)
+            double linear = Math.pow(10, peakDb / 20.0);
+            return String.format(Locale.US, "%.6f", linear);
+        }
+    }
+}

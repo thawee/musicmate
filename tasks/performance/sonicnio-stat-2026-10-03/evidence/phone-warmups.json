@@ -1,0 +1,134 @@
+[
+  {
+    "label": "stat-controlled-after-0-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 35.103832953609526,
+      "seconds": 0.269481125054881,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 9.05618752585724,
+    "seek_p95_ms": 15.644707949832082,
+    "parallel_MB_s": 39.17604292050236,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 154.33775004930794,
+      "seconds": 1.254853375023231,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "stat-controlled-before-1-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 38.53487502783537,
+      "seconds": 0.27171162504237145,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 15.083458041772246,
+    "seek_p95_ms": 23.149624932557344,
+    "parallel_MB_s": 39.24039771111004,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 110.21954205352813,
+      "seconds": 1.1436299999477342,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "stat-controlled-before-2-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 59.228666010312736,
+      "seconds": 0.2673161249840632,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 15.813916514161974,
+    "seek_p95_ms": 19.72125004976988,
+    "parallel_MB_s": 39.67835318020356,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 96.74729104153812,
+      "seconds": 1.0588563330238685,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "stat-controlled-after-3-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 32.73391700349748,
+      "seconds": 0.2641730000032112,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 10.001437563914806,
+    "seek_p95_ms": 14.636707957834005,
+    "parallel_MB_s": 39.78573581527828,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 156.98820806574076,
+      "seconds": 1.6486998330801725,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "stat-controlled-before-4-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 52.5243750307709,
+      "seconds": 0.2874000419396907,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 14.86579148331657,
+    "seek_p95_ms": 19.331332994624972,
+    "parallel_MB_s": 38.9786906978822,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 140.48375003039837,
+      "seconds": 1.1133718329947442,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  },
+  {
+    "label": "stat-controlled-after-5-warmup",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 24.628167040646076,
+      "seconds": 0.2566372079309076,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 13.773041544482112,
+    "seek_p95_ms": 18.459541955962777,
+    "parallel_MB_s": 39.839906129848686,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 142.12495798710734,
+      "seconds": 1.2283331250073388,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4
+  }
+]

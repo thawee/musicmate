@@ -1,0 +1,299 @@
+{
+  "initial": {
+    "native_seek_median_ms": {
+      "before": 15.03995805978775,
+      "after": 16.125687514431775,
+      "change_pct": 7.218965972697311
+    },
+    "native_seek_max_ms": {
+      "before": 20.984999951906502,
+      "after": 20.82937501836568,
+      "change_pct": -0.7416008286751596
+    },
+    "bulk_MiB_s": {
+      "before": 39.465471647060824,
+      "after": 39.56195007443819,
+      "change_pct": 0.24446287691723967
+    },
+    "native_single_s": {
+      "before": 0.26100320799741894,
+      "after": 0.26318937505129725,
+      "change_pct": 0.8376016029274069
+    },
+    "native_TTFB_ms": {
+      "before": 50.398875027894974,
+      "after": 52.27929202374071,
+      "change_pct": 3.7310693836022146
+    },
+    "WAV_s": {
+      "before": 0.8775734170340002,
+      "after": 0.8887831249739975,
+      "change_pct": 1.2773527231355386
+    },
+    "WAV_TTFB_ms": {
+      "before": 16.906667035073042,
+      "after": 18.818542012013495,
+      "change_pct": 11.308408528861724
+    },
+    "HEAD_median_ms": {
+      "before": 12.780937540810555,
+      "after": 19.167062477208674,
+      "change_pct": 49.9660131817929
+    },
+    "HEAD_p99_ms": {
+      "before": 24.633542052470148,
+      "after": 24.35050008352846,
+      "change_pct": -1.1490104360095676
+    },
+    "header_median_ms": {
+      "before": 13.251562544610351,
+      "after": 19.358145480509847,
+      "change_pct": 46.08198403276715
+    },
+    "header_p99_ms": {
+      "before": 25.80858301371336,
+      "after": 25.125750107690692,
+      "change_pct": -2.64575899288948
+    },
+    "converted_seek_median_ms": {
+      "before": 12.502499972470105,
+      "after": 14.16920853080228,
+      "change_pct": 13.33100229555837
+    },
+    "converted_seek_max_ms": {
+      "before": 20.660792011767626,
+      "after": 24.386208038777113,
+      "change_pct": 18.031332123607015
+    },
+    "sampled_PSS_max_MiB": {
+      "before": 225.4736328125,
+      "after": 255.259765625,
+      "change_pct": 13.21047274617233
+    },
+    "sampled_Java_heap_PSS_max_MiB": {
+      "before": 31.96484375,
+      "after": 56.67578125,
+      "change_pct": 77.30661126726139
+    },
+    "before_pooled_converted_seek": {
+      "n": 144,
+      "p95_ms": 21.036542020738125,
+      "p99_ms": 22.293291985988617,
+      "max_ms": 23.27616699039936
+    },
+    "before_conditions": {
+      "min_battery_C": 33.5,
+      "max_battery_C": 36.4,
+      "visible_metadata_gc": 0
+    },
+    "after_pooled_converted_seek": {
+      "n": 144,
+      "p95_ms": 22.451417054980993,
+      "p99_ms": 24.386208038777113,
+      "max_ms": 26.444958057254553
+    },
+    "after_conditions": {
+      "min_battery_C": 30.1,
+      "max_battery_C": 36.7,
+      "visible_metadata_gc": 0
+    }
+  },
+  "confirmation": {
+    "native_seek_median_ms": {
+      "before": 11.38535444624722,
+      "after": 16.210083500482142,
+      "change_pct": 42.376625839920365
+    },
+    "native_seek_max_ms": {
+      "before": 15.800541965290904,
+      "after": 24.466375005431473,
+      "change_pct": 54.84516328096105
+    },
+    "bulk_MiB_s": {
+      "before": 39.67336306118873,
+      "after": 39.16515534459485,
+      "change_pct": -1.280979673465199
+    },
+    "native_single_s": {
+      "before": 0.25704812502954155,
+      "after": 0.26890841603744775,
+      "change_pct": 4.614035214823353
+    },
+    "native_TTFB_ms": {
+      "before": 24.3520000949502,
+      "after": 34.5390000147745,
+      "change_pct": 41.83229254313592
+    },
+    "WAV_s": {
+      "before": 0.8562733340077102,
+      "after": 0.9028633330017328,
+      "change_pct": 5.44101949034923
+    },
+    "WAV_TTFB_ms": {
+      "before": 17.21958303824067,
+      "after": 16.529332962818444,
+      "change_pct": -4.008517940819722
+    },
+    "HEAD_median_ms": {
+      "before": 15.149666462093592,
+      "after": 14.177332981489599,
+      "change_pct": -6.418184077100941
+    },
+    "HEAD_p99_ms": {
+      "before": 26.04591695126146,
+      "after": 26.38145803939551,
+      "change_pct": 1.288267519096875
+    },
+    "header_median_ms": {
+      "before": 14.551104512065649,
+      "after": 15.40316647151485,
+      "change_pct": 5.8556514300524665
+    },
+    "header_p99_ms": {
+      "before": 25.965375010855496,
+      "after": 26.270167087204754,
+      "change_pct": 1.1738404556908222
+    },
+    "converted_seek_median_ms": {
+      "before": 14.621520531363785,
+      "after": 12.611291604116559,
+      "change_pct": -13.748425978920586
+    },
+    "converted_seek_max_ms": {
+      "before": 23.682416998781264,
+      "after": 24.943249998614192,
+      "change_pct": 5.32392027341555
+    },
+    "sampled_PSS_max_MiB": {
+      "before": 227.373046875,
+      "after": 259.4375,
+      "change_pct": 14.102134604647176
+    },
+    "sampled_Java_heap_PSS_max_MiB": {
+      "before": 31.44140625,
+      "after": 60.36328125,
+      "change_pct": 91.98658218412226
+    },
+    "before_pooled_converted_seek": {
+      "n": 144,
+      "p95_ms": 23.516083951108158,
+      "p99_ms": 26.70587506145239,
+      "max_ms": 27.07516704685986
+    },
+    "before_conditions": {
+      "min_battery_C": 33.8,
+      "max_battery_C": 38.1,
+      "visible_metadata_gc": 0
+    },
+    "after_pooled_converted_seek": {
+      "n": 144,
+      "p95_ms": 21.700124954804778,
+      "p99_ms": 24.943249998614192,
+      "max_ms": 25.064125075004995
+    },
+    "after_conditions": {
+      "min_battery_C": 36.7,
+      "max_battery_C": 38.2,
+      "visible_metadata_gc": 0
+    }
+  },
+  "combined": {
+    "native_seek_median_ms": {
+      "before": 14.140708517516032,
+      "after": 16.13701050519012,
+      "change_pct": 14.11741133905191
+    },
+    "native_seek_max_ms": {
+      "before": 20.777166937477887,
+      "after": 22.39681250648573,
+      "change_pct": 7.7953147986038696
+    },
+    "bulk_MiB_s": {
+      "before": 39.56941735412478,
+      "after": 39.451102311016726,
+      "change_pct": -0.2990062806565996
+    },
+    "native_single_s": {
+      "before": 0.2601032499806024,
+      "after": 0.2658059165114537,
+      "change_pct": 2.192462620623381
+    },
+    "native_TTFB_ms": {
+      "before": 35.454125492833555,
+      "after": 39.03508302755654,
+      "change_pct": 10.100256274680408
+    },
+    "WAV_s": {
+      "before": 0.867018667049706,
+      "after": 0.8917245209449902,
+      "change_pct": 2.8495181054582597
+    },
+    "WAV_TTFB_ms": {
+      "before": 17.063125036656857,
+      "after": 17.67393748741597,
+      "change_pct": 3.5797220582214573
+    },
+    "HEAD_median_ms": {
+      "before": 14.27404148853384,
+      "after": 16.672197729349136,
+      "change_pct": 16.80082156648981
+    },
+    "HEAD_p99_ms": {
+      "before": 25.54464602144435,
+      "after": 25.757646013516933,
+      "change_pct": 0.8338341893395995
+    },
+    "header_median_ms": {
+      "before": 13.901333528338,
+      "after": 17.38065597601235,
+      "change_pct": 25.028695560621706
+    },
+    "header_p99_ms": {
+      "before": 25.886979012284428,
+      "after": 25.547249999362975,
+      "change_pct": -1.3123548049397193
+    },
+    "converted_seek_median_ms": {
+      "before": 13.423780997982249,
+      "after": 12.874302512500435,
+      "change_pct": -4.093321289764829
+    },
+    "converted_seek_max_ms": {
+      "before": 23.14464602386579,
+      "after": 24.664729018695652,
+      "change_pct": 6.567752184511355
+    },
+    "sampled_PSS_max_MiB": {
+      "before": 225.62109375,
+      "after": 257.3486328125,
+      "change_pct": 14.06231063557195
+    },
+    "sampled_Java_heap_PSS_max_MiB": {
+      "before": 31.703125,
+      "after": 58.51953125,
+      "change_pct": 84.58600295712174
+    },
+    "before_pooled_converted_seek": {
+      "n": 288,
+      "p95_ms": 22.74849999230355,
+      "p99_ms": 26.216709055006504,
+      "max_ms": 27.07516704685986
+    },
+    "before_conditions": {
+      "min_battery_C": 33.5,
+      "max_battery_C": 38.1,
+      "visible_metadata_gc": 0
+    },
+    "after_pooled_converted_seek": {
+      "n": 288,
+      "p95_ms": 22.37733395304531,
+      "p99_ms": 24.943249998614192,
+      "max_ms": 26.444958057254553
+    },
+    "after_conditions": {
+      "min_battery_C": 30.1,
+      "max_battery_C": 38.2,
+      "visible_metadata_gc": 0
+    }
+  }
+}

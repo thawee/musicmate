@@ -1,0 +1,86 @@
+package apincer.music.server.jupnp.content;
+
+import android.content.Context;
+
+import org.jupnp.support.model.DIDLObject;
+import org.jupnp.support.model.SortCriterion;
+import org.jupnp.support.model.container.Container;
+import org.jupnp.support.model.container.MusicGenre;
+import org.jupnp.support.model.container.StorageFolder;
+import org.jupnp.support.model.item.Item;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.Track;
+import apincer.music.core.repository.PlaylistRepository;
+import apincer.music.core.model.PlaylistEntry;
+import apincer.music.core.repository.TagRepository;
+import musicmate.jupnp.nio.R;
+
+/**
+ * Browser  for the music playlist folder.
+ */
+public class CollectionsBrowser extends AbstractContentBrowser {
+    public static final String DOWNLOADS_SONGS = "** Recently Added";
+    public static final String ALL_SONGS = "All Songs";
+    public final List<PlaylistEntry> playlists = new ArrayList<>();
+    public CollectionsBrowser(Context context, TagRepository tagRepos) {
+        super(context, tagRepos);
+        PlaylistRepository.loadPlaylists(context);
+        playlists.addAll(PlaylistRepository.getPlaylists());
+    }
+
+    @Override
+    public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_dlna_collections), "mmate", getTotalMatches(contentDirectory, myId),
+                null);
+    }
+
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        return playlists.size();
+    }
+
+    @Override
+    public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+        List<Container> result = new ArrayList<>();
+
+        PlaylistRepository.loadPlaylists(getContext());
+
+        Map<String, Track> mapped = new HashMap<>();
+        for(PlaylistEntry pls: playlists) {
+            Track dir = new AudioTag(SearchCriteria.TYPE.PLAYLIST, pls.getName());
+            PlaylistEntry entry = PlaylistRepository.getPlaylistByName(pls.getName());
+            dir.setUniqueKey(entry.getUuid());
+            mapped.put(pls.getName(), dir);
+        }
+
+        tagRepos.processAllMusics(tag -> {
+            for (PlaylistEntry name : PlaylistRepository.getPlaylists()) {
+                if(PlaylistRepository.isSongInPlaylistName(tag, name.getName())) {
+                    Objects.requireNonNull(mapped.get(name.getName())).increaseChildCount();
+                }
+            }
+        });
+
+        for(Track group: mapped.values()) {
+            MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getUniqueKey(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getTitle(), "", 0);
+            musicAlbum.setChildCount((int)group.getChildCount());
+            result.add(musicAlbum);
+        }
+        result.sort(Comparator.comparing(DIDLObject::getTitle));
+        return result;
+    }
+
+    @Override
+    public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+        return new ArrayList<>();
+    }
+}

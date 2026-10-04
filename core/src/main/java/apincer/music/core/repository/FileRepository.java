@@ -1,0 +1,831 @@
+package apincer.music.core.repository;
+
+import static com.anggrayudi.storage.file.StorageId.PRIMARY;
+import static apincer.music.core.Constants.COVER_ARTS;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
+import static apincer.music.core.Constants.IMAGE_COVERS;
+import static apincer.music.core.Constants.LEGEND_CD;
+import static apincer.music.core.Constants.LEGEND_MQA;
+import static apincer.music.core.provider.FileSystem.copyRelatedFiles;
+import static apincer.music.core.utils.StringUtils.isEmpty;
+import static apincer.music.core.utils.StringUtils.trimToEmpty;
+
+import android.content.Context;
+import android.os.Environment;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+
+import com.anggrayudi.storage.file.DocumentFileCompat;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import apincer.music.core.Constants;
+import apincer.music.core.codec.FFMpegHelper;
+import apincer.music.core.codec.TagReader;
+import apincer.music.core.codec.TagWriter;
+import apincer.music.core.model.SearchCriteria;
+import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
+import apincer.music.core.utils.TagUtils;
+import apincer.music.core.utils.StringUtils;
+import apincer.android.utils.FileUtils;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
+/**
+ * Wrapper class for accessing media information via media store
+ * Created by e1022387 on 5/10/2017.
+ */
+@Singleton
+public class FileRepository {
+    private static final String TAG = "FileRepository";
+    /** Files known to have no embedded picture, keyed by path to lastModified, so lazy loads do not re-read them. */
+    private static final Map<String, Long> NO_EMBEDDED_ART = new ConcurrentHashMap<>();
+    private final Context context;
+    private final TagRepository tagRepos;
+
+    public static File getCoverArt(Context context, Track music) {
+        File cacheDir =  getCoverartDir(context);
+        //if(music instanceof MusicFolder folder) {
+        if(music.isContainer()) {
+            SearchCriteria.TYPE type = music.getContainerType();
+
+            File cover = switch (type) {
+                case ARTIST -> {
+                    File file = new File(DocumentFileCompat.buildAbsolutePath(context, PRIMARY, "Music"));
+                    File dir = findFileAnyCase(music.getTitle(), file.listFiles());
+                    File image = null;
+                    if(dir != null) {
+                        image = getFolderCoverArt(new File(dir, DEFAULT_COVERART));
+                    }
+                    if (image == null || !image.exists() || image.isDirectory()) {
+                        String artist = trimToEmpty(music.getTitle()).toLowerCase().replace("/", " ");
+                        image = new File(cacheDir, "/artist/" + artist + ".png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/artist/" + artist + ".png", image);
+                        }
+                        if (!image.exists()) {
+                            image = new File(cacheDir, "/artist/" + artist + ".jpg");
+                            if (!image.exists()) {
+                                copyAssetCover(context, "Covers/artist/" + artist + ".jpg", image);
+                            }
+                        }
+                        if (!image.exists()) {
+                            image = new File(cacheDir, "/artist/folder.png");
+                            if (!image.exists()) {
+                                copyAssetCover(context, "Covers/artist/folder.png", image);
+                            }
+                        }
+                    }
+                    if (image == null || !image.exists() || image.isDirectory()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
+                case GENRE -> {
+                    String genre = trimToEmpty(music.getTitle()).toLowerCase().replace("/", " ");
+                    File image = new File(cacheDir, "/genre/" + genre + ".png");
+                    if (!image.exists()) {
+                        copyAssetCover(context, "Covers/genre/" + genre + ".png", image);
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/genre/" + genre + ".jpg");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/genre/" + genre + ".jpg", image);
+                        }
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/genre/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/genre/folder.png", image);
+                        }
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
+                case SOUND_GRADE -> {
+                    String codec = trimToEmpty(music.getTitle()).replace("/", " ");
+                    File image = new File(cacheDir, "/sound_grade/" + codec + ".png");
+                    if (!image.exists()) {
+                        copyAssetCover(context, "Covers/sound_grade/" + codec + ".png", image);
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/sound_grade/" + codec + ".jpg");
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, "/sound_grade/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/sound_grade/folder.png", image);
+                        }
+                    }
+                    if (!image.exists()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
+                case PLAYLIST -> {
+                    File image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".png");
+                    if (!image.exists()) {
+                        copyAssetCover(context, "Covers/playlist/" + music.getUniqueKey() + ".png", image);
+                    }
+                    if(!image.exists()) {
+                        image = new File(cacheDir, "/playlist/"+music.getUniqueKey()+".jpg");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/playlist/" + music.getUniqueKey() + ".jpg", image);
+                        }
+                    }
+                    if(!image.exists()) {
+                        image = new File(cacheDir, "/playlist/folder.png");
+                        if (!image.exists()) {
+                            copyAssetCover(context, "Covers/playlist/folder.png", image);
+                        }
+                    }
+                    if(!image.exists()) {
+                        image = new File(cacheDir, music.getPath());
+                    }
+                    yield image;
+                }
+                default ->
+                    // Fallback, but it's better to throw an error
+                     new File(cacheDir, music.getPath());
+            };
+
+            return getFolderCoverArt(cover);
+        }else {
+            File cover = null;
+            String albumArtFilename = music.getAlbumArtFilename();
+            if (!isEmpty(albumArtFilename) && !DEFAULT_COVERART.equals(albumArtFilename)) {
+                File selectedCover = new File(albumArtFilename);
+                File cachedCover = selectedCover.isAbsolute() ? selectedCover : new File(cacheDir, albumArtFilename);
+                if (cachedCover.exists()) {
+                    cover = cachedCover;
+                }
+            }
+            if (cover == null) {
+                cover = getFolderCoverArt(music.getPath());
+            }
+            
+            // Phase 2: Lazy extraction trigger
+            if ((cover == null || !cover.exists()) && !isEmpty(albumArtFilename) && !DEFAULT_COVERART.equals(albumArtFilename)) {
+                extractEmbedCoverArt(context, music);
+                
+                // Re-evaluate after potential extraction
+                if (isManagedInLibrary(context, music)) {
+                    cover = getFolderCoverArt(music.getPath());
+                } else {
+                    File selectedCover = new File(albumArtFilename);
+                    File cachedCover = selectedCover.isAbsolute() ? selectedCover : new File(cacheDir, albumArtFilename);
+                    if (cachedCover.exists()) {
+                        cover = cachedCover;
+                    }
+                }
+            }
+            
+            return cover;
+        }
+    }
+
+   //also save albumArtName
+    private static String extractEmbedCoverArt(Context context, Track tag) {
+        try {
+            File dir = getCoverartDir(context);
+            String path = tag.getPath();
+            File pathFile;
+            String hexName;
+
+            if (isManagedInLibrary(context, tag)) {
+                File parentDir = new File(path).getParentFile();
+                if (parentDir == null) return null;
+                pathFile = new File(parentDir, "Cover.jpg");
+                hexName = apincer.music.core.utils.StringUtils.md5Hex(parentDir.getAbsolutePath());
+            } else {
+                hexName = apincer.music.core.utils.StringUtils.md5Hex(path);
+                pathFile = new File(dir, hexName + ".jpg");
+                apincer.android.utils.FileUtils.createParentDirs(pathFile);
+            }
+
+            if (!pathFile.exists()) {
+                long lastModified = new File(path).lastModified();
+                Long knownMissing = NO_EMBEDDED_ART.get(path);
+                if (knownMissing != null && knownMissing == lastModified) {
+                    return null;
+                }
+                try (android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever()) {
+                    retriever.setDataSource(path);
+                    byte[] art = retriever.getEmbeddedPicture();
+                    // MediaMetadataRetriever skips ID3 pictures inside WAV/AIFF files
+                    if (art == null) art = readTaggedArtwork(path);
+                    if (art != null) {
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(pathFile)) {
+                            fos.write(art);
+                        }
+                    } else {
+                        NO_EMBEDDED_ART.put(path, lastModified);
+                        return null; // No embedded art found
+                    }
+                }
+            }
+            
+            return isManagedInLibrary(context, tag) ? hexName : pathFile.getName();
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "extractCoverArt:", e);
+        }
+        return null;
+    }
+
+    /** First embedded picture via the tag library, or null if there is none or it cannot be read. */
+    private static byte[] readTaggedArtwork(String path) {
+        try {
+            org.jaudiotagger.tag.Tag tag = org.jaudiotagger.audio.AudioFileIO.read(new File(path)).getTag();
+            org.jaudiotagger.tag.images.Artwork artwork = tag == null ? null : tag.getFirstArtwork();
+            return artwork == null ? null : artwork.getBinaryData();
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "readTaggedArtwork: " + path, e);
+            return null;
+        }
+    }
+
+    public static boolean isManagedInLibrary(Context context, Track tag) {
+        String path = buildCollectionPath(context, tag, true);
+        return StringUtils.compare(path, tag.getPath());
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    @Inject // Hilt will now know how to create a TagRepository
+    public FileRepository(@ApplicationContext Context context, TagRepository tagRepos) {
+        super();
+        this.context = context;
+        this.tagRepos = tagRepos;
+        //String STORAGE_SECONDARY = getSecondaryId(context);
+    }
+
+    public File getCoverArtByAlbumartFilename(String albumArtFilename) {
+            File dir = getCoverartDir(context);
+            File selectedCover = new File(albumArtFilename);
+            File cover = selectedCover.isAbsolute() ? selectedCover : new File(dir, albumArtFilename);
+            if(!cover.exists()) {
+                // try to get folder cover art
+                Track song = tagRepos.getByAlbumArtFilename(albumArtFilename);
+                if(song != null) {
+                    File folderCover = getFolderCoverArt(song.getPath());
+                    if (folderCover != null && folderCover.exists()) {
+                        return folderCover;
+                    }
+                    
+                    // Lazy extract since it wasn't found
+                    extractEmbedCoverArt(getContext(), song);
+                    
+                    // Check again after extraction
+                    if (isManagedInLibrary(getContext(), song)) {
+                        folderCover = getFolderCoverArt(song.getPath());
+                        if (folderCover != null && folderCover.exists()) {
+                            return folderCover;
+                        }
+                    } else if (cover.exists()) {
+                        return cover;
+                    }
+                }
+            }
+        return cover;
+    }
+
+    public static File getFolderCoverArt(String musicPath) {
+        // try loading from folder
+        // front.png, front.jpg
+        // cover.png, cover.jpg
+
+        File mediaFile = new File(musicPath);
+        File coverFile = null;
+        File coverDir = mediaFile;
+        if(mediaFile.isFile()) {
+            coverDir = mediaFile.getParentFile();
+        }
+
+        // get cover file with same name as audio file
+        String ext = FileUtils.getExtension(mediaFile);
+        if(!(isEmpty(ext) && mediaFile.isDirectory())) {
+            String artFile = musicPath.replace("." + ext, ".jpg");
+            File cover = new File(artFile);
+            if (cover.exists()) {
+                coverFile = cover;
+            } else {
+                artFile = musicPath.replace("." + ext, ".png");
+                cover = new File(artFile);
+                if (cover.exists()) {
+                    coverFile = cover;
+                }
+            }
+        }
+
+        if(coverFile != null && coverFile.exists()) return coverFile;
+
+        if(coverDir == null) return null;
+
+        File[] files = coverDir.listFiles((file, s) -> IMAGE_COVERS.contains(s.toLowerCase()));
+
+        return (files!=null&&files.length>0)?files[0]:null;
+    }
+
+    public static File getCoverartDir(Context context) {
+        File coverartDir = context.getCacheDir();
+        return new File(coverartDir, COVER_ARTS);
+    }
+
+    /**
+     * Gets the cover art for a given folder with a specific priority.
+     *
+     * Priority 1: An image file with the *same name as the folder* (e.g., folder "AlbumName" contains "AlbumName.jpg").
+     * Priority 2: Standard cover art files (e.g., "cover.jpg", "front.png").
+     *
+     * @param file The directory to search in.
+     * @return The File object for the cover art, or null if no cover is found.
+     */
+    public static File getFolderCoverArt(File file) {
+        if (file == null) {
+            return null; // Not a valid file
+        }
+
+        //if file existed and image file, just return file
+        if(file.exists() && isImageFile(file)) {
+            return file;
+        }
+
+        File folder = file.getParentFile();
+
+        if(folder == null) return null;
+
+        File[] files = folder.listFiles();
+        if (files != null && files.length > 0) {
+            // --- Priority 1: Check for file matching the folder's name in same directory ---
+            String folderName = file.getName();
+            //Log.d(TAG, "Check for file matching in same directory: "+folder.getAbsolutePath());
+            // Check for folderName.png
+            File folderNamePng = findFileAnyCase(folderName + ".png", files);
+            if (folderNamePng != null) {
+                Log.d(TAG, "found: "+folderNamePng);
+                return folderNamePng;
+            }
+
+            // Check for folderName.jpg
+            File folderNameJpg = findFileAnyCase(folderName + ".jpg", files);
+            if (folderNameJpg != null) {
+                Log.d(TAG, "found: "+folderNameJpg);
+                return folderNameJpg;
+            }
+
+            // Check for folderName.jpeg as well, just in case
+            File folderNameJpeg = findFileAnyCase(folderName + ".jpeg", files);
+            if (folderNameJpeg != null) {
+                Log.d(TAG, "found: "+folderNameJpeg);
+                return folderNameJpeg;
+            }
+
+            // --- Priority 2: Check for standard cover names (e.g., cover.jpg) ---
+            //files = file.listFiles();
+            for (String priorityName : Constants.IMAGE_COVERS) {
+                //Log.d(TAG, "check : "+folder.getAbsolutePath()+" - "+priorityName);
+                File coverFile = findFileAnyCase(priorityName, files);
+                if (coverFile != null) {
+                    Log.d(TAG, "found: "+coverFile.getAbsolutePath());
+                    return coverFile; // Found a match
+                }
+            }
+        }
+
+        // 3. If we checked all priorities and found no file
+        return null; // Return null, not the original folder
+    }
+
+    private static boolean isImageFile(File file) {
+        String ext = FileUtils.getExtension(file);
+        return "png".equalsIgnoreCase(ext) || "jpg".equalsIgnoreCase(ext);
+    }
+
+    @Nullable
+    private static File findFileAnyCase(String priorityName, @org.jetbrains.annotations.Nullable File[] files) {
+        if(files == null) return null;
+
+        priorityName = StringUtils.formatFilePath(priorityName);
+       // Log.d(TAG, "findFileAnyCase: base dir - " + priorityName);
+        // 2. Check all files in the directory for a case-insensitive match
+        for (File file : files) {
+            String fileName = file.getName();
+            //Log.d(TAG, "findFileAnyCase: compare - " + priorityName +" == "+fileName);
+            if (fileName.equalsIgnoreCase(priorityName)) {
+                // Found a match! Since we're looping in order of
+                // priority, this is the best one we can find.
+                return file;
+            }
+        }
+        return null;
+    }
+
+    public boolean setMusicTag(Track item) {
+        if (item == null || item.getPath() == null) {
+            return false;
+        }
+
+       /* if(item.getOriginTag()==null) {
+            return false;
+        } */
+
+        item.setIsManaged(isManagedInLibrary(getContext(), item));
+
+        if (TagWriter.isSupportedFileFormat(item.getPath())) {
+            boolean written = TagWriter.writeTagToFile(getContext(), item);
+            if (written) {
+                tagRepos.saveTag(item);
+                return true;
+            } else {
+                Log.e("FileRepository", "Failed to write tags to file: " + item.getPath());
+                return false;
+            }
+        }
+
+        return false;
+
+    }
+
+    // Modify scanMusicFile to defer cover art extraction
+    public void scanMusicFile(File file, boolean forceRead) {
+        try {
+            String mediaPath = file.getAbsolutePath();
+            long lastModified = file.lastModified();
+            //if(file.length() == 0) {
+            if(file.length() < 1024) { // 1 kb
+               // Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
+                return;
+            }
+
+            List<Track> tags = tagRepos.getByPath(mediaPath);
+
+            forceRead = forceRead || tags == null || tags.isEmpty();
+
+            if(forceRead || tagRepos.isOutdated(tags.get(0), lastModified)) {
+                // Read minimal tag data first
+                Track basicTag = TagReader.readBasicTag(context, mediaPath);
+                if(basicTag != null && tags != null && !tags.isEmpty()) {
+                    // maintain id
+                    basicTag.setId(tags.get(0).getId());
+                }
+
+                if(basicTag != null) {
+                    // Save basic tag immediately
+                    basicTag.setIsManaged(isManagedInLibrary(getContext(), basicTag));
+                    saveCoverartToCache(basicTag); // must call before save tag, update albumArtName
+                   // basicTag.setOriginTag(null);
+                    tagRepos.saveTag(basicTag);
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "scanMusicFile", ex);
+        }
+    }
+
+    public void saveCoverartToCache(Track basicTag) {
+        try {
+            File folderCover = getFolderCoverArt(basicTag.getPath());
+            File file = new File(basicTag.getPath());
+            File parentFile = file.getParentFile();
+            String parentPath = parentFile != null ? parentFile.getAbsolutePath() : "";
+
+            if(folderCover != null && folderCover.exists()) {
+                //update filename, use folder for hex
+                String albumArtName = StringUtils.md5Hex(parentPath);
+                String ext = FileUtils.getExtension(folderCover);
+                basicTag.setAlbumArtFilename(albumArtName+"."+ext);
+            }else {
+                // if no folder album art, just set filename for lazy extraction later
+                if (isManagedInLibrary(getContext(), basicTag)) {
+                    String albumArtName = StringUtils.md5Hex(parentPath);
+                    basicTag.setAlbumArtFilename(albumArtName);
+                } else {
+                    String coverFilename = StringUtils.md5Hex(basicTag.getPath());
+                    basicTag.setAlbumArtFilename(coverFilename + ".jpg");
+                }
+            }
+        } catch(Exception e) {
+            Log.e(TAG, "Error generating cover art filename", e);
+        }
+    }
+
+    private String buildCollectionPath(Track metadata) {
+        return buildCollectionPath(getContext(), metadata, true);
+    }
+
+    public static String buildCollectionPath(Context context, @org.jetbrains.annotations.NotNull Track metadata, boolean includeStorageDir) {
+        // hierarchy directory
+        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc.)
+        // 2. hires, lossless, mqa, etc.
+        // 3. artist|albumArtist
+        // 4. album
+        // 5. file name <track no>-<artist>-<title>
+        // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
+        // /format/<album|albumartist|artist>/<track no> <artist>-<title>
+        // music/album artist/album (sound quality[HR/SQ/LC/DSD/MQA])/track - title.ext
+        try {
+            String musicPath = "Music/";
+            //getStorageIdFor(metadata);
+            String ext = FileUtils.getExtension(metadata.getPath());
+            StringBuilder filename = new StringBuilder(musicPath);
+
+            // albumArtist
+            // then artist
+            String firstArtist = StringUtils.formatFilePath(TagUtils.getFirstArtist(metadata.getArtist()));
+            String albumArtist = StringUtils.formatFilePath(metadata.getAlbumArtist());
+            if(!isEmpty(albumArtist)) {
+                filename.append(albumArtist).append(File.separator);
+            }else if (!isEmpty(firstArtist)) {
+                filename.append(firstArtist).append(File.separator);
+            }else {
+                filename.append(Constants.UNKNOWN).append(File.separator);
+            }
+
+            // album
+            String album = StringUtils.trimTitle(metadata.getAlbum());
+            String sqInd = trimToEmpty(metadata.getQualityInd());
+            if(StringUtils.isEmpty(album)) {
+                album = Constants.UNKNOWN;
+            }
+            if(!StringUtils.isEmpty(sqInd)) {
+                if (sqInd.contains(LEGEND_MQA)) {
+                    // use MQA for MQA and MQA Studio
+                    sqInd = LEGEND_MQA;
+                }
+
+                if (!sqInd.equals(LEGEND_CD)) {
+                    album = album + " (" + sqInd + ")";
+                }
+            }
+            filename.append(StringUtils.formatFilePath(album)).append(File.separator);
+
+            // track & disc number (multi-disc combined in single album folder)
+            String trackStr = metadata.getTrack();
+            if(!isEmpty(trackStr)) {
+                String trackNo = StringUtils.getWord(trackStr, "/", 0).trim();
+                if(trackNo.length() == 1 && Character.isDigit(trackNo.charAt(0))) {
+                    trackNo = "0" + trackNo;
+                }
+                filename.append(trackNo).append(" - ");
+            } else if(!isEmpty(firstArtist)) {
+                filename.append(StringUtils.formatFilePath(firstArtist)).append(" - ");
+            }
+
+            // title
+            String title = StringUtils.trimTitle(metadata.getTitle());
+            if (!StringUtils.isEmpty(title)) {
+                filename.append(StringUtils.formatFilePath(title));
+            } else {
+                filename.append(StringUtils.formatFilePath(FileUtils.getFileName(metadata.getPath())));
+            }
+
+            // Sanitize illegal path characters per component, leaving directory separators intact
+            String rawPath = filename.toString();
+            String[] parts = rawPath.split("/");
+            StringBuilder sanitizedPath = new StringBuilder();
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) sanitizedPath.append(File.separator);
+                String part = parts[i];
+                // Replace dots inside component names with spaces to prevent word merging, remove reserved chars
+                part = part.replaceAll("\\.", " ")
+                           .replaceAll("[?\\|\\\\*<\":>\\[\\]~#%^@]", "")
+                           .trim()
+                           .replaceAll("\\s+", " ");
+                sanitizedPath.append(part);
+            }
+
+            String newPath = sanitizedPath.toString() + "." + ext;
+            if(includeStorageDir) {
+                return DocumentFileCompat.buildAbsolutePath(context, PRIMARY, newPath);
+            }else {
+                return newPath;
+            }
+
+            //  return newPath;
+        } catch (Exception e) {
+            Log.e(TAG, "buildCollectionPath",e);
+        }
+        return metadata.getPath();
+    }
+
+    public static boolean isMediaFileExist(Track item) {
+        if(item == null || item.getPath()==null) {
+            return false;
+        }
+        return isMediaFileExist(item.getPath());
+    }
+
+    public static boolean isMediaFileExist(String path) {
+        if(StringUtils.isEmpty(path)) {
+            return false;
+        }
+        File file = new File(path);
+        if(file.exists() && file.length() == 0) {
+            return false;
+        }
+        return file.exists();
+    }
+
+    private boolean moveMusicFiles(Track tag) {
+            String newPath = buildCollectionPath(tag);
+            if(newPath.equalsIgnoreCase(tag.getPath())) {
+                tag.setIsManaged(true);
+                tagRepos.saveTag(tag);
+                return true;
+            }
+            if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
+                File originalFile = new File(tag.getPath());
+                tag.setPath(newPath);
+                tag.setIsManaged(true);
+                tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
+                tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
+                tag.setFileLastModified(new File(newPath).lastModified());
+                // Commit the new audio path before best-effort artwork/sidecar work.
+                tagRepos.saveTag(tag);
+                try {
+                    copyRelatedFiles(originalFile, new File(newPath));
+                    cleanCacheCover(tag);
+                    cleanMediaDirectory(originalFile.getParentFile());
+                    String coverart = extractEmbedCoverArt(getContext(), tag);
+                    if (!isEmpty(coverart)) tag.setAlbumArtFilename(coverart);
+                    tagRepos.saveTag(tag);
+                } catch (Exception ancillaryFailure) {
+                    Log.w(TAG, "Audio was imported but related artwork could not be moved", ancillaryFailure);
+                }
+                return true;
+            }
+        return false;
+    }
+
+    private void cleanMediaDirectory(File mediaDir) {
+        // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
+        if(mediaDir==null || (!mediaDir.exists())) return;
+
+        // BOUNDARY: Stop at known root paths to prevent accidental deletion
+        if(isStorageRootDirectory(mediaDir)) return;
+
+        if(mediaDir.isDirectory()) {
+           // boolean toClean = true;
+            List<File> toDelete = new ArrayList<>();
+            File[] files = mediaDir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if(f.isDirectory()) {
+                        // if contains folder quit
+                        return;
+                    }
+                    String ext = FileUtils.getExtension(f).toLowerCase();
+                    if(Constants.RELATED_FILE_TYPES.contains(ext)) {
+                        toDelete.add(f);
+                    }else {
+                       // toClean = false;
+                        // if contains music or any others files quit
+                        return;
+                    }
+                }
+            }
+
+            // directory is empty or no others media files
+            if(!toDelete.isEmpty()) {
+                    for (File file: toDelete) {
+                        FileSystem.delete(file);
+                    }
+            }
+
+            // trying delete parent folder
+            File parentFolder = mediaDir.getParentFile();
+            FileSystem.delete(mediaDir);
+            cleanMediaDirectory(parentFolder);
+        }
+     }
+
+    /**
+     * Boundary check to prevent recursive directory deletion from climbing
+     * past well-known root paths (e.g., /sdcard, /storage/emulated/0, Music/).
+     */
+    private boolean isStorageRootDirectory(File dir) {
+        if (dir == null) return true;
+        String path = dir.getAbsolutePath();
+        // Stop at standard Android storage roots
+        if ("/storage/emulated/0".equals(path) || "/sdcard".equals(path)) return true;
+        File extStorageDir = Environment.getExternalStorageDirectory();
+        if (extStorageDir != null && path.equals(extStorageDir.getAbsolutePath())) return true;
+        // Stop at standard Music directory
+        File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+        if (musicDir != null && path.equals(musicDir.getAbsolutePath())) return true;
+        // Safety net: never go above depth 4 (e.g., /storage/emulated/0/Music)
+        if (path.split("/").length <= 4) return true;
+        return false;
+    }
+
+    public boolean importAudioFile(Track item) {
+        boolean status;
+        try {
+            status = moveMusicFiles(item);
+        }catch(Exception|OutOfMemoryError ex) {
+            Log.e(TAG, "importAudioFile",ex);
+            status = false;
+        }
+
+        return status;
+    }
+
+    public boolean deleteMediaItem(Track item) {
+        boolean status = false;
+        try {
+            // more others tag shared same file, skip delete file
+            if(tagRepos.getByPath(item.getPath()).size()==1) {
+                status = FileUtils.delete(new File(item.getPath()));
+                if(!FileUtils.existed(item.getPath())) {
+                    cleanCacheCover(item);
+                    tagRepos.removeTag(item);
+                    File file = new File(item.getPath());
+                    cleanMediaDirectory(file.getParentFile());
+                    status = true;
+                }
+            }else {
+                // clan database only
+                tagRepos.removeTag(item);
+                status = true;
+            }
+        } catch (Exception|OutOfMemoryError ignored) {
+        }
+        return status;
+    }
+
+    private void cleanCacheCover(Track item) {
+        String covertName = item.getAlbumArtFilename();
+        if(isEmpty(covertName) || covertName.contains(DEFAULT_COVERART)) return;
+
+        File dir =  getCoverartDir(context);
+        File pathFile = new File(dir, covertName);
+        if(pathFile.exists()) {
+            FileSystem.delete(pathFile);
+        }
+    }
+
+    public void cleanCacheCovers() {
+        File dir =  getContext().getExternalCacheDir();
+        File pathFile = new File(dir, COVER_ARTS);
+        if(pathFile.exists()) {
+            File[] files = pathFile.listFiles();
+            if(files != null) {
+                for (File f : files) {
+                    FileSystem.delete(f);
+                }
+            }
+            FileSystem.delete(pathFile);
+        }
+    }
+
+    public static List<String> getDefaultMusicPaths(Context context) {
+        List<String> storageIds = DocumentFileCompat.getStorageIds(context);
+        List<String> files = new ArrayList<>();
+        for (String sid : storageIds) {
+            // path Music
+            File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
+            if (file.exists()) {
+                files.add(file.getAbsolutePath());
+            }
+
+            // path Download
+            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Download"));
+            if (file.exists()) {
+                files.add(file.getAbsolutePath());
+            }
+        }
+        return files;
+    }
+
+    private static void copyAssetCover(Context context, String assetPath, File destFile) {
+        try {
+            if (!destFile.getParentFile().exists()) {
+                destFile.getParentFile().mkdirs();
+            }
+            try (java.io.InputStream in = context.getAssets().open(assetPath);
+                 java.io.OutputStream out = new java.io.FileOutputStream(destFile)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+        } catch (java.io.IOException e) {
+            // Ignore if asset is not found (e.g. for custom genres/codecs without predefined images)
+        }
+    }
+}

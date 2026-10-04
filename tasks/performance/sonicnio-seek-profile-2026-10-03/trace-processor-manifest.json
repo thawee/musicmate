@@ -1,0 +1,11 @@
+{
+  "arch": "mac-arm64",
+  "file_name": "trace_processor_shell",
+  "file_size": 13597976,
+  "url": "https://commondatastorage.googleapis.com/perfetto-luci-artifacts/v58.2/mac-arm64/trace_processor_shell",
+  "sha256": "d29864d1ba3b36855527bb1b0ca3aa7f703cdce338b9680bb922c5c151b358fa",
+  "platform": "darwin",
+  "machine": [
+    "arm64"
+  ]
+}

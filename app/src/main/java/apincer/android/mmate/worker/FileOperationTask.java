@@ -1,0 +1,302 @@
+package apincer.android.mmate.worker;
+
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+import androidx.annotation.NonNull;
+
+
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.music.core.model.Track;
+import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.utils.MusicMateExecutors;
+import apincer.music.core.codec.FFMpegHelper;
+import apincer.music.core.codec.TagWriter;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.codec.MusicAnalyser;
+import apincer.music.core.repository.TagRepository;
+import apincer.android.utils.FileUtils;
+import apincer.music.core.utils.TagUtils;
+
+/**
+ * Utility class to handle file operations in background threads
+ * with progress reporting capabilities
+ */
+@Singleton
+public class FileOperationTask {
+    private static final String TAG = "FileOperationTask";
+    private static final double MAX_PROGRESS = 100.0;
+
+    final FileRepository fileRepos;
+    final TagRepository tagRepos;
+
+    @Inject
+    public FileOperationTask(FileRepository fileRepos, TagRepository tagRepos) {
+        this.fileRepos = fileRepos;
+        this.tagRepos = tagRepos;
+    }
+
+    /**
+     * Interface for reporting progress of file operations
+     */
+    public interface ProgressCallback {
+        /**
+         * Called when progress is made on a file operation
+         * @param tag The music tag being processed
+         * @param progress The progress value (0-100)
+         * @param status Status message
+         */
+        void onProgress(Track tag, int progress, String status);
+
+        /**
+         * Called when all operations are complete
+         */
+        void onComplete();
+    }
+
+    /** True for the terminal per-file statuses that mean the operation did not apply. */
+    public static boolean isFailureStatus(String status) {
+        return "Failed".equalsIgnoreCase(status) || "Error".equalsIgnoreCase(status);
+    }
+
+    /**
+     * Completes a parallel batch exactly once, after every item has posted its final status.
+     * Counting at the end of each item (not before its status) keeps the last status ahead of onComplete.
+     */
+    static void finishItem(AtomicInteger done, int total, ProgressCallback callback) {
+        if (done.incrementAndGet() == total) {
+            callback.onComplete();
+        }
+    }
+
+    /**
+     * Delete multiple media files
+     */
+    public void deleteFiles(@NonNull Context context,
+                                   @NonNull List<Track> selections,
+                                   @NonNull ProgressCallback callback) {
+
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
+        final double rate = MAX_PROGRESS / selections.size();
+
+        for (Track tag : selections) {
+            MusicMateExecutors.executeParallel(() -> {
+                try {
+                    skipToNext(context, tag);
+                    boolean status = fileRepos.deleteMediaItem(tag);
+                    //tagRepos.deleteMediaTag(tag);
+                    int progress = (int) Math.ceil(count.incrementAndGet() * rate);
+
+                    if (status) {
+                        callback.onProgress(tag, progress, "Deleted");
+                    } else {
+                        callback.onProgress(tag, progress, "Failed");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error deleting file", e);
+                    callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
+                } finally {
+                    finishItem(done, selections.size(), callback);
+                }
+            });
+        }
+    }
+
+    /**
+     * Move/import files to music directory
+     */
+    public void moveFiles(@NonNull Context context,
+                                 @NonNull List<Track> selections,
+                                 @NonNull ProgressCallback callback) {
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
+        final double rate = MAX_PROGRESS / selections.size();
+
+        for (Track tag : selections) {
+            MusicMateExecutors.executeParallel(() -> {
+                try {
+                    callback.onProgress(tag, (int)(count.get() * rate), "Moving");
+                    skipToNext(context, tag);
+                    boolean status = fileRepos.importAudioFile(tag);
+                    int progress = (int) Math.ceil(count.incrementAndGet() * rate);
+
+                    if (status) {
+                        callback.onProgress(tag, progress, "Done");
+                    } else {
+                        callback.onProgress(tag, progress, "Failed");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error moving file", e);
+                    callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
+                } finally {
+                    finishItem(done, selections.size(), callback);
+                }
+            });
+        }
+    }
+
+    private static void skipToNext(Context context, Track tag) {
+        // Create an Intent for the service
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
+
+        // Set the action and put the data as an extra
+        intent.setAction(PlaybackService.ACTION_SKIP_TO_NEXT);
+        intent.putExtra(PlaybackService.EXTRA_MUSIC_ID, tag.getId());
+
+        // Start the service
+        androidx.core.content.ContextCompat.startForegroundService(context, intent);
+    }
+
+    /**
+     * Encode audio files to different format
+     */
+    public void encodeFiles(@NonNull Context context,
+                                   @NonNull List<Track> selections,
+                                   @NonNull String targetFormat,
+                                   int compressionLevel,
+                                   @NonNull ProgressCallback callback) {
+        encodeFiles(context, selections, targetFormat, compressionLevel, 0, callback);
+    }
+
+    public void encodeFiles(@NonNull Context context,
+                                   @NonNull List<Track> selections,
+                                   @NonNull String targetFormat,
+                                   int compressionLevel,
+                                   int sampleRate,
+                                   @NonNull ProgressCallback callback) {
+        final AtomicInteger count = new AtomicInteger(0);
+        final double rate = MAX_PROGRESS / selections.size();
+
+        MusicMateExecutors.execute(() -> {
+            for (Track tag : selections) {
+                try {
+                    callback.onProgress(tag, (int)(count.get() * rate), "Encoding");
+
+                    String srcPath = tag.getPath();
+                    String filePath = FileUtils.removeExtension(tag.getPath());
+                    String targetExt = targetFormat.toLowerCase();
+                    String targetPath = filePath + "." + targetExt;
+                    int bitDepth = tag.getAudioBitsDepth();
+
+                    String outputPath = FFMpegHelper.convert(
+                            context,
+                            srcPath,
+                            targetPath,
+                            compressionLevel,
+                            bitDepth,
+                            sampleRate);
+
+                    int progress = (int) Math.ceil(count.incrementAndGet() * rate);
+
+                    if (outputPath != null) {
+                        targetPath = outputPath;
+                        // Re-scan the new file
+                        fileRepos.scanMusicFile(new File(targetPath), true);
+
+                        // Copy metadata from source track to newly converted target track
+                        List<Track> targetTags = tagRepos.getByPath(targetPath);
+                        if (targetTags != null && !targetTags.isEmpty()) {
+                            Track newTag = targetTags.get(0);
+                            if (newTag != null) {
+                                newTag.setTitle(tag.getTitle());
+                                newTag.setArtist(tag.getArtist());
+                                newTag.setAlbum(tag.getAlbum());
+                                newTag.setAlbumArtist(tag.getAlbumArtist());
+                                newTag.setGenre(tag.getGenre());
+                                newTag.setTrack(tag.getTrack());
+                                newTag.setYear(tag.getYear());
+                                newTag.setComment(tag.getComment());
+                                newTag.setComposer(tag.getComposer());
+                                newTag.setPublisher(tag.getPublisher());
+
+                                if (TagWriter.isSupportedFileFormat(targetPath)) {
+                                    TagWriter.writeTagToFile(context, newTag);
+                                }
+                                fileRepos.saveCoverartToCache(newTag);
+                                newTag.setQualityInd(TagUtils.getQualityIndicator(newTag));
+                                newTag.setIsManaged(FileRepository.isManagedInLibrary(context, newTag));
+                                tagRepos.saveTag(newTag);
+                            }
+                        }
+
+                        callback.onProgress(tag, progress, "Done");
+                    } else {
+                        callback.onProgress(tag, progress, "Failed");
+                    }
+
+                    if (count.get() == selections.size()) {
+                        callback.onComplete();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error encoding file", e);
+                    callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
+                    if (count.get() == selections.size()) {
+                        callback.onComplete();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Measure dynamic range for multiple files
+     */
+    public void measureDR(@NonNull Context context,
+                                 @NonNull List<Track> selections,
+                                 @NonNull ProgressCallback callback) {
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger done = new AtomicInteger(0);
+        final double rate = MAX_PROGRESS / selections.size();
+
+        for (Track tag : selections) {
+            MusicMateExecutors.execute(() -> {
+                try {
+                    callback.onProgress(tag, (int)(count.get() * rate), "Evaluating");
+
+                    // Analyse a copy so a failed write never leaves unsaved values on the displayed track
+                    Track measured = tag.copy();
+                    boolean success = MusicAnalyser.analyse(measured);
+                    int progress = (int) Math.ceil(count.incrementAndGet() * rate);
+
+                    if (success && !TagWriter.writeTagToFile(context, measured)) {
+                        // Keep DB and file consistent: never persist values the file did not accept
+                        Log.w(TAG, "measureDR: tag write failed for " + tag.getPath());
+                        callback.onProgress(tag, progress, "Failed");
+                    } else if (success) {
+                        fileRepos.saveCoverartToCache(measured); // must call before save tag, update albumArtName
+                        measured.setQualityInd(TagUtils.getQualityIndicator(measured));
+                        measured.setIsManaged(FileRepository.isManagedInLibrary(context, measured));
+                        // Update tag in repository
+                        tagRepos.saveTag(measured);
+
+                        callback.onProgress(tag, progress, "Success");
+                    } else {
+                        callback.onProgress(tag, progress, "Failed");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error measuring DR", e);
+                    callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
+                } finally {
+                    finishItem(done, selections.size(), callback);
+                }
+            });
+        }
+    }
+
+    /**
+     * Calculate initial progress value
+     * This provides a small initial progress value to show task has started
+     */
+    public static int getInitialProgress(int totalItems) {
+        // Give a small initial progress (1% of total)
+        return Math.max(1, (int)(MAX_PROGRESS / (totalItems * 100)));
+    }
+}

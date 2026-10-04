@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:summary="User Interface">
+        <!--
+        <SwitchPreferenceCompat
+            android:key="preference_night_mode_only"
+            android:summary="Display Night mode only."
+            android:title="Always on Night Mode"
+            android:defaultValue="false"/>
+            -->
+        <SwitchPreferenceCompat
+            android:key="preference_show_storage_space"
+            android:summary="Show Storage space on left menu."
+            android:title="Display Storage space"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_prefix_title_with_track_number"
+            android:summary="Prefix track number to song's title."
+            android:title="Show Track Number"
+            android:defaultValue="false"/>
+        <!--
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:summary="User Interface">
+        <SwitchPreferenceCompat
+            android:key="preference_preview_follows_now_playing"
+            android:summary="Always update preview screen to show currently listening song."
+            android:title="Preview follows now playing"
+            android:defaultValue="false"/>
+            -->
+        <SwitchPreferenceCompat
+            android:key="preference_list_follows_now_playing"
+            android:summary="Auto scroll to currently listening song."
+            android:title="Auto Scroll to now playing"
+            android:defaultValue="true"/>
+
+        <SwitchPreferenceCompat
+            android:key="preference_similar_songs_match_artist"
+            android:summary="Matches title and artist (Turn off for title-only matching)"
+            android:title="Artist-Aware Similar Songs"
+            android:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+
+    <!--
+    <PreferenceCategory
+        android:title="@string/preferences_sub_others"
+        android:summary="Misc. Settings">
+        <SwitchPreferenceCompat
+            android:key="preference_clear_cached"
+            android:summary="Clear cache and temp files."
+            android:title="Clear Cache"
+            android:defaultValue="false"/>
+            -->
+        <!--
+    <MultiSelectListPreference
+        android:entries="@array/MetaDataEncodingNames"
+        android:title="@string/MetaDataEncoding"
+        android:key="preference_matadata_encodings"
+        android:summary="@string/MetaDataEncodingSummary"
+        android:dialogTitle="@string/MetaDataEncoding"
+        android:entryValues="@array/MetaDataEncodingValues"
+        android:defaultValue="@array/MetaDataEncodingValues"/> -->
+    <!--
+    </PreferenceCategory>
+    -->
+</PreferenceScreen>

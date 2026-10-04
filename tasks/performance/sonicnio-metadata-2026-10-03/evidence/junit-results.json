@@ -1,0 +1,1451 @@
+[
+  {
+    "module": "core",
+    "class": "apincer.music.core.SettingsDefaultsTest",
+    "test": "new installs default to listener mode",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.AlacToWavTest",
+    "test": "sampleCount_fromFfprobeDurationAndTimeBase",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.FlacToWavTest",
+    "test": "wholeFile_16bit",
+    "seconds": 0.188,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.FlacToWavTest",
+    "test": "ranges_matchTheSameBytesOfTheWholeFile",
+    "seconds": 0.127,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.FlacToWavTest",
+    "test": "wholeFile_24bit_isAWavWhoseDataMatchesTheFlacMd5",
+    "seconds": 0.113,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.FileResponseTest",
+    "test": "metadataEncoding_preservesLegacyValidatorsAndDates",
+    "seconds": 0.032,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.FileResponseTest",
+    "test": "metadataDateFormatter_isSafeAcrossWorkers",
+    "seconds": 0.052,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.FileResponseTest",
+    "test": "changingTurnBudget_preservesFileOffsetsAndExactTail",
+    "seconds": 0.024,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerFuzzTest",
+    "test": "randomWebSocketFrames_neverBreakTheServer",
+    "seconds": 7.432,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerFuzzTest",
+    "test": "mutatedRequests_neverBreakTheServer",
+    "seconds": 0.899,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerFuzzTest",
+    "test": "hostileRequests_neverBreakTheServer",
+    "seconds": 0.206,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerSoakTest",
+    "test": "mixedLoad_leavesNoLeaksAndServesCorrectBytes",
+    "seconds": 8.035,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_clientDisconnect_stopsTheProducer",
+    "seconds": 0.067,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "responseCreatedAfterStop_isClosedInsteadOfLeftInTheQueue",
+    "seconds": 0.071,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "multipleRanges_areServedAsWholeFile",
+    "seconds": 0.073,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "chunkedRequestBody_isRejected",
+    "seconds": 0.075,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_protocolErrorAfterAQueuedReply_stillClosesTheConnection",
+    "seconds": 0.091,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "clientConnectionClose_isHonoured",
+    "seconds": 0.039,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "stop_returnsPromptlyWhileAHandlerIsBusy",
+    "seconds": 0.225,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "handlerDeadline_startsAfterTheRequestBodyArrives",
+    "seconds": 1.538,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_serverClose_sendsCloseFrameAndClosesSocket",
+    "seconds": 0.093,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_producerFailure_closesTheConnection",
+    "seconds": 0.039,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "jpegBehindAPngName_isServedAsJpeg",
+    "seconds": 0.032,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_framePipelinedWithUpgrade_isHandledAfterOnOpen",
+    "seconds": 0.049,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "midStreamDisconnect_releasesStreamAndConnection",
+    "seconds": 0.149,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "stop_releasesOpenStreamsAndConnections",
+    "seconds": 0.407,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "startOffset_sendsTheRestOfTheFileAs200",
+    "seconds": 0.035,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "ifRangeMismatch_returnsWholeFile",
+    "seconds": 0.025,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "stopBeforeRun_keepsTheServerStopped",
+    "seconds": 0.018,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "startOffset_winsOverARangeHeader",
+    "seconds": 0.022,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "stalledReader_isClosedAfterTheWriteStallTimeout",
+    "seconds": 1.156,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_deliversEveryByteInOrder",
+    "seconds": 0.088,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "producerLimit_refusesNewConversionAndReleasesItsSlot",
+    "seconds": 1.582,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "suffixRange_returnsLastBytes",
+    "seconds": 0.041,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "stats_countRequestsBytesAndConnections",
+    "seconds": 0.145,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "imageMimeType_comesFromContentNotExtension",
+    "seconds": 0.102,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "post_bodyInSamePacket_isCutToContentLength",
+    "seconds": 0.034,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "pipelinedRequests_areAnsweredInOrder",
+    "seconds": 0.076,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "keepAlive_servesTwoRequestsOnOneConnection",
+    "seconds": 0.022,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_slowProducer_doesNotSpinTheSelector",
+    "seconds": 1.525,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_oversizedFrame_isNotDeliveredAsAMessage",
+    "seconds": 0.094,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "workerOverload_returns503AndDoesNotStarveAnUpgradedWebSocket",
+    "seconds": 0.053,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "get_returnsWholeFile",
+    "seconds": 0.082,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "head_returnsLengthWithoutBody_andConnectionStaysUsable",
+    "seconds": 0.091,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_forceClose_closesSocketAndReleasesConnection",
+    "seconds": 0.089,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "rangeStartPastEof_416EndsCleanly_andConnectionIsReusable",
+    "seconds": 0.095,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_messagesFromOneConnection_areHandledInOrder",
+    "seconds": 0.256,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_parkedProducer_hasAStallDeadline",
+    "seconds": 1.04,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "expectContinue_gets100BeforeTheBody",
+    "seconds": 0.09,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "notModified_doesNotEvictAnActiveStream",
+    "seconds": 0.868,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "range_returnsSlice",
+    "seconds": 0.085,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "handlerStall_hasADistinctCloseReason",
+    "seconds": 1.03,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "webSocket_handshakeAndEcho",
+    "seconds": 0.096,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamingResponse_producerPause_doesNotUseSocketStallDeadline",
+    "seconds": 1.597,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "http10WithoutKeepAlive_closesAfterTheResponse",
+    "seconds": 0.096,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "post_bodyArrivingAfterHeaders_reachesHandlerComplete",
+    "seconds": 0.227,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "slowHeaders_areCutOffAtTheHeaderDeadline",
+    "seconds": 1.41,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "diagnostics_keepAliveResponses_haveDistinctIdsAndExactBodyCounts",
+    "seconds": 0.028,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "simultaneousAdmission_neverExceedsMediaSlots",
+    "seconds": 0.029,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "bodylessResponse_hasZeroContentLength_andConnectionIsReusable",
+    "seconds": 0.02,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "rangeEndPastEof_isClampedToLastByte",
+    "seconds": 0.022,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "streamLimit_refusesNewAudioAndAllowsArtworkWithoutEvictingPlayback",
+    "seconds": 0.089,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "openEndedRange_returnsTail",
+    "seconds": 0.03,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "rangeStartPastEof_returns416",
+    "seconds": 0.073,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "malformedRange_isIgnored",
+    "seconds": 0.022,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "test": "longStream_outlivesHeaderAndWriteStallDeadlines",
+    "seconds": 2.072,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.RateLimitingHandlerTest",
+    "test": "requestsOverTheLimit_get429",
+    "seconds": 0.009,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.RateLimitingHandlerTest",
+    "test": "exemptPaths_areNotCountedOrLimited",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.SerialExecutorTest",
+    "test": "overflow_reservesCloseAfterAdmittedMessages",
+    "seconds": 0.006,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "test": "rate_comesFromBytesSinceTheLastCall",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "test": "counterReset_afterRestart_doesNotShowANegativeRate",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "test": "firstCall_hasNoRateYet",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "test": "problems_areListedOnlyWhenPresent",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "test": "idle_saysSo",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamDiagnosticsTest",
+    "test": "historyIsBoundedWhileTotalsKeepCounting",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "shortProducer_flushesFirstBytesBeforePausingAndStillFailsLengthCheck",
+    "seconds": 0.003,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "selectorDrainingWhileProducerWaitsForQueueSpace_preservesEveryByte",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "sharedBudget_includesPendingBytesAndIsReleasedOnCancellation",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "continuouslyReadyBody_yieldsAfterBudgetAndPreservesPartialWrites",
+    "seconds": 0.007,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "pausedProducer_partialBatchIsDrainedBeforeParking",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "smallWrites_areBatchedWithoutChangingBytesOrFinalTail",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "test": "partialBatch_isReleasedWhenProducerFailsOrIsCancelled",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.AudioTagTest",
+    "test": "copy_createsDistinctCloneWithAllFieldsPreserved",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "test": "testHiResStudioMastersSmartPlaylist",
+    "seconds": 0.006,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "test": "testLosslessMasterVaultSmartPlaylist",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "test": "testDrScoreSmartPlaylist",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "test": "testPureDsdArchiveSmartPlaylist",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "unknownDurationNeedsNaturalEndAndDoesNotCompleteAfterSeek",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "subsecondDuplicatePositionsDoNotLoseWholeSeconds",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "skipRecordedOnceAndReplayGetsANewSession",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "ninetyPercentCountsOnceDespiteDuplicateCallbacks",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "seekToEndIsNotACompletedListen",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "unannouncedForwardSeekAndStalledClockCannotInflateListening",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "pauseAndSameTrackHandoffPreserveProgressWithoutCountingDowntime",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "test": "noProgressOrLongTelemetryGapDoesNotCountAsListening",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ReplayGainManagerTest",
+    "test": "testParseGain",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ReplayGainManagerTest",
+    "test": "testParsePeak",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ReplayGainManagerTest",
+    "test": "testGainLinearCalculation",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ReplayGainManagerTest",
+    "test": "testReplayGainInfoDisplay",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.FileSystemMoveTest",
+    "test": "occupiedDestinationPreservesBothRecordings",
+    "seconds": 0.029,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.FileSystemMoveTest",
+    "test": "unusedDestinationReceivesCompleteRecordingAndRemovesSource",
+    "seconds": 0.007,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.FileSystemMoveTest",
+    "test": "conversionSkipsOccupiedDestinationsAndReturnsActualOutputPath",
+    "seconds": 0.017,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.FileSystemMoveTest",
+    "test": "conversionUsesRequestedDestinationWhenAvailable",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.MissingFileTest",
+    "test": "accessibleParentWithAbsentLeafConfirmsDeletion",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.MissingFileTest",
+    "test": "existingTrackIsNotMissing",
+    "seconds": 0.003,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.MissingFileTest",
+    "test": "missingParentIsUnavailableRatherThanConfirmedDeletion",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "addPlayNext_currentTrack_preservesCurrentIndex",
+    "seconds": 0.008,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "getRandomTrack_singleTrack_returnsThatTrack",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "unplayedUsesHistoryQueryAndPersistsSource",
+    "seconds": 0.003,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "containsTrack_checksIndexMapCorrectly",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_thenPlaybackMoves_normalNavigationResumes",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "playlistSourceStateAndPersistence",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "getRandomTrack_multipleTracks_returnsValidTrackFromQueue",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_removedSuggestionsDoNotReturnAfterRestart",
+    "seconds": 0.003,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_followerAlsoRemoved_nextMovesOn",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "shuffle_removeOrMoveOtherTrack_keepsNextTrack",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_downloadPredicateAndMissingFilesAreRespected",
+    "seconds": 0.005,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "shuffle_enqueue_keepsPlayedTracksOutAndPlaysNewOnes",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "addPlayingQueue_existingTrack_movesToEndWithoutDuplicate",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "queueChangeListener_firesOnEditsAndModes_notOnNavigation",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "shuffle_playNext_isNextAndPlayedTracksDoNotReturn",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingTrack_thenPlayNext_playsItThenFollower",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "getNextTrack_repeatModeOne_loopsOnNaturalEnd_advancesOnUserSkip",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingLastTrack_queueEnds",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingLastTrack_repeatAllWraps",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "loadPlayingQueue_temporarilyUnavailableStorage_preservesQueueAndPersistence",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "shuffleOrder_preservesSequenceAcrossPlaybackTransitions",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingTrackReportedAgain_isNotReEnqueued",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingTrack_nextIsItsFollower",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "addPlayingQueue_currentTrack_updatesCurrentIndexToEnd",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_otherTrack_doesNotDetachPlayback",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "moveTrack_preservesActiveCurrentTrackIndex",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "rediscoverUsesThirtyDayCutoffAndRetainsOldestFirstOrder",
+    "seconds": 0.005,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_preservesNextAndPrioritizesManualChoice",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "getRandomTrack_emptyQueue_returnsNull",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "setPlaybackTrack_unknownTrack_autoEnqueuesAndSetsPlaybackIndex",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_lastPlayingTrack_thenEnqueue_playsNewTrack",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_restoresAnchorAndManualFreezesRefill",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_clearDuringLookupCannotRepopulateQueue",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "removeTrack_playingFirstTrack_nextIsNewFirst",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "emptyPlayingQueue_resetsAllState",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "test": "smartQueue_boundsRefillAndAppendsNewCandidates",
+    "seconds": 0.019,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.TagRepositoryPaginationTest",
+    "test": "unpagedFolderOrPlaylistReturnsOnlyRequestedPage",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.TagRepositoryQueryErrorTest",
+    "test": "findMusic_queryFailure_propagatesInsteadOfEmptyList",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "test": "toshiba_onlyHidesDsd_untilWeHaveEvidence",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "test": "otherClients_seeEverythingAsIs",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "test": "detection",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "test": "sony_playsFlac_convertsAlac_hidesDsd",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "test": "lg_convertsFlacAndAlac_hidesDsd",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "test": "sony_fromXAvClientInfo",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "test": "unknown_usesTheFirstToken",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "test": "lg_fromUserAgent",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "test": "firstSighting_isReportedOnce_perAddressAndName",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "test": "otherKnownClients",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.CoverThumbnailsTest",
+    "test": "fit_neverEnlarges",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.CoverThumbnailsTest",
+    "test": "fit_keepsAspectRatio_withinTheBox",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.CoverThumbnailsTest",
+    "test": "sampleSize_isTheLargestPowerOfTwoThatStaysAboveTheTarget",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ServerHeaderTest",
+    "test": "noLibraries_noTrailingSeparator",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ServerHeaderTest",
+    "test": "followsUpnpDeviceArchitecture_withEngineAsExtraToken",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.NetworkUtilsTest",
+    "test": "isVirtualOrVpnInterface_identifiesVpnTunnelsCorrectly",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.NetworkUtilsTest",
+    "test": "extractIpAddress_handlesVariousFormats",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.ThaiEncodingUtilsTest",
+    "test": "testFixThaiEncoding_plainEnglishUnchanged",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.ThaiEncodingUtilsTest",
+    "test": "testFixThaiEncoding_recoversGarbledText",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.ThaiEncodingUtilsTest",
+    "test": "testHasHighAscii_standardAscii",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaReceiverRegistrarServiceTest",
+    "test": "everyDeviceIsAuthorizedAndValidated",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaReceiverRegistrarServiceTest",
+    "test": "bindsAsTheMicrosoftRegistrar_withItsThreeActions",
+    "seconds": 0.024,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "test": "testFormatDurationForDidl",
+    "seconds": 0.007,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "test": "testParseTimeToSeconds_fractionalSeconds",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "test": "testDLNAContentFeatures_bitrateThresholds",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "test": "testParseTimeToSeconds_standardFormats",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "test": "testParseTimeToSeconds_edgeCases",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "startPastTheEnd_isEmpty",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "requestedCount_limitsThePage",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "hugeRequestedCount_doesNotOverflow",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "startingIndex_skipsEarlierEntries",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "lastPage_isShort",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "test": "requestedCountZero_meansEverythingFromTheStart",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "test": "unsupportedOrEmptyCriteria_meanNoSort",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "test": "tracks_sortTheSameWay",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "test": "artistThenTitle_andAlbum",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "test": "title_ascendingAndDescending_ignoringCase",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "test": "samsungMediaInfo_isTheDurationInMilliseconds",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "test": "didlBitrate_isBytesPerSecond",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "test": "didlDate_isAnIsoDate",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "test": "dlnaProfile_onlyForFormatsDlnaDefines",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.SamsungFeatureListTest",
+    "test": "contentDirectory_exposesXGetFeatureList",
+    "seconds": 0.005,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.SamsungFeatureListTest",
+    "test": "featureList_pointsSamsungBasicViewAtTheMusicRoot",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "artistAlbumGenre_andCreatorAsArtist",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "star_matchesEverything",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "andBindsTighterThanOr_andParenthesesGroup",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "unknownProperty_matchesNothing",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "malformedCriteria_isRejected",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "contains_isCaseInsensitive",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "escapedQuotes_inValues",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "bubbleUpnpStyle_classAndTitle",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "audioClass_matchesTracks_containerClass_matchesNothing",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "test": "negativeOperators_andExists",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "npt_isHMMSSmmm",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "flac_usesTheSeekPointAtOrBeforeTheTime",
+    "seconds": 0.006,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "pastTheEnd_orUnsupportedFormat_isNull",
+    "seconds": 0.003,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "parseNpt_rejectsOtherForms",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "parseNpt_secondsAndClockForms",
+    "seconds": 0.002,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "flac_withoutSeekTable_isProportional_alignedToTheNextFrame",
+    "seconds": 0.004,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "test": "mp3_isProportionalAfterTheId3Tag_alignedToAFrame",
+    "seconds": 0.005,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.nio.UpnpRequestCheckTest",
+    "test": "upnpMethods_areAccepted",
+    "seconds": 0.001,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.nio.UpnpRequestCheckTest",
+    "test": "otherMethods_get405",
+    "seconds": 0.0,
+    "outcome": "passed"
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.nio.UpnpRequestCheckTest",
+    "test": "malformedPath_gets400",
+    "seconds": 0.001,
+    "outcome": "passed"
+  }
+]

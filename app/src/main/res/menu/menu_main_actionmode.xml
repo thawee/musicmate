@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press multi-select action mode menu.
+     Focused on batch tag management and file operations — no playback clutter. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Primary: tag management — the app's core job -->
+    <item
+        android:id="@+id/action_edit_metadata"
+        android:icon="@drawable/ic_baseline_edit_note_24"
+        android:title="Edit Tags"
+        app:showAsAction="always" />
+
+    <!-- Collect the selection into a playlist -->
+    <item
+        android:id="@+id/action_add_to_playlist"
+        android:icon="@drawable/rounded_playlist_add_24"
+        android:title="@string/playlist_add_title"
+        app:showAsAction="always" />
+
+    <!-- File operations live in the overflow so the "N Selected" title has room -->
+    <item
+        android:id="@+id/action_transfer_file"
+        android:icon="@drawable/rounded_drive_file_move_24"
+        android:title="Move Files"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_encoding_file"
+        android:icon="@drawable/rounded_swap_horiz_24"
+        android:title="Convert Files"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@drawable/rounded_delete_24"
+        android:title="@string/action_delete"
+        app:showAsAction="never" />
+
+    <!-- Selection utility -->
+    <item
+        android:id="@+id/action_select_all"
+        android:icon="@drawable/rounded_select_all_24"
+        android:title="@string/action_select_all"
+        app:showAsAction="never" />
+
+</menu>

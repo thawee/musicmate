@@ -1,0 +1,571 @@
+package apincer.music.server.jupnp.content;
+
+import android.content.Context;
+import android.util.Log;
+
+import org.jupnp.binding.annotations.UpnpAction;
+import org.jupnp.binding.annotations.UpnpInputArgument;
+import org.jupnp.binding.annotations.UpnpOutputArgument;
+import org.jupnp.binding.annotations.UpnpService;
+import org.jupnp.binding.annotations.UpnpServiceId;
+import org.jupnp.binding.annotations.UpnpServiceType;
+import org.jupnp.binding.annotations.UpnpStateVariable;
+import org.jupnp.binding.annotations.UpnpStateVariables;
+import org.jupnp.internal.compat.java.beans.PropertyChangeSupport;
+import org.jupnp.model.types.ErrorCode;
+import org.jupnp.model.types.UnsignedIntegerFourBytes;
+import org.jupnp.model.types.csv.CSV;
+import org.jupnp.model.types.csv.CSVString;
+import org.jupnp.support.contentdirectory.ContentDirectoryErrorCode;
+import org.jupnp.support.contentdirectory.ContentDirectoryException;
+import org.jupnp.support.contentdirectory.DIDLParser;
+import org.jupnp.support.model.BrowseFlag;
+import org.jupnp.support.model.BrowseResult;
+import org.jupnp.support.model.DIDLContent;
+import org.jupnp.support.model.DIDLObject;
+import org.jupnp.support.model.SortCriterion;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
+
+import apincer.music.core.repository.TagRepository;
+import apincer.music.core.model.Track;
+
+/**
+ * UPnP Content Directory Service
+ * A content directory which exposes the music content of MusicMate via UPnP/DLNA.
+ * This class implements the standard ContentDirectory:1 service allowing DLNA clients
+ * to browse and search through the media library.
+ */
+@UpnpService(
+        serviceId = @UpnpServiceId("ContentDirectory"),
+        serviceType = @UpnpServiceType(value = "ContentDirectory", version = 1))
+@UpnpStateVariables({
+        @UpnpStateVariable(name = "A_ARG_TYPE_ContainerID", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_FeatureList", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_ObjectID", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_Result", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_SearchCriteria",sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_BrowseFlag", sendEvents = false, datatype = "string", allowedValuesEnum = BrowseFlag.class),
+        @UpnpStateVariable(name = "A_ARG_TYPE_Filter", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_SortCriteria", sendEvents = false, datatype = "string"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_Index", sendEvents = false, datatype = "ui4"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_Count", sendEvents = false, datatype = "ui4"),
+        @UpnpStateVariable(name = "A_ARG_TYPE_UpdateID", sendEvents = false, datatype = "ui4"),
+        @UpnpStateVariable(
+                name = "A_ARG_Type_TransferID",
+                sendEvents = false,
+                datatype = "uri"),
+        @UpnpStateVariable(
+                name = "A_ARG_Type_TransferStatus",
+                sendEvents = false,
+                datatype = "string",
+                allowedValuesEnum = TransferStatus.class),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TransferLength",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TransferTotal",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TagValueList",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_URI",
+                sendEvents = false,
+                datatype = "uri"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_PosSecond",
+                sendEvents = false,
+                datatype = "ui4"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_CategoryType",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_RID",
+                sendEvents = false,
+                datatype = "string")
+})
+public class ContentDirectory {
+    private static final String TAG = "ContentDirectory";
+    // What UpnpSearch and BrowseSort actually support
+    private static final List<String> CAPS_SEARCH = List.of("dc:title", "dc:creator", "upnp:artist", "upnp:album", "upnp:genre", "upnp:class");
+    private static final List<String> CAPS_SORT = BrowseSort.PROPERTIES;
+
+    // Cache for browse results to improve performance
+    private final Map<String, CachedBrowseResult> browseResultCache = new ConcurrentHashMap<>();
+    private final ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    private static final long CACHE_EXPIRATION_MS = 30000; // 30 seconds
+
+    private final Context context;
+    private final TagRepository tagRepos;
+    private final Map<String, Supplier<AbstractContentBrowser>> directBrowserRegistry = new HashMap<>();
+    private final Map<String, Supplier<AbstractContentBrowser>> prefixBrowserRegistry = new HashMap<>();
+
+    @UpnpStateVariable(sendEvents = false)
+    final CSV<String> searchCapabilities;
+    @UpnpStateVariable(sendEvents = false)
+    final CSV<String> sortCapabilities;
+    final private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
+            this);
+    @UpnpStateVariable(
+            sendEvents = true,
+            defaultValue = "0",
+            datatype = "ui4",
+            eventMaximumRateMilliseconds = 200)
+    private final UnsignedIntegerFourBytes systemUpdateID = new UnsignedIntegerFourBytes(
+            0);
+
+    /**
+     * Creates a new ContentDirectory service
+     *
+     * @param context The Android application context
+     */
+    public ContentDirectory(Context context, TagRepository tagRepos) {
+        TimerTask systemUpdateIdTask = new TimerTask() {
+            @Override
+            public void run() {
+                changeSystemUpdateID();
+            }
+        };
+        systemUpdateIdTask.run();
+        this.context = context;
+        this.searchCapabilities = new CSVString();
+        this.sortCapabilities = new CSVString();
+        this.searchCapabilities.addAll(CAPS_SEARCH);
+        this.sortCapabilities.addAll(CAPS_SORT);
+        this.tagRepos = tagRepos;
+
+        // Initialize browser registries
+        initBrowserRegistries();
+    }
+
+    /**
+     * Initialize the browser registries with direct matches and prefix-based matches
+     */
+    private void initBrowserRegistries() {
+        // Direct matches
+        directBrowserRegistry.put(null, () -> new LibraryBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put("", () -> new LibraryBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_FOLDER.getId(), () -> new LibraryBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), () -> new SourcesBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), () -> new GenresBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), () -> new AlbumsBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), () -> new ArtistsBrowser(getContext(),tagRepos));
+        //directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), () -> new GroupingsBrowser(getContext(),tagRepos));
+        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), () -> new CollectionsBrowser(getContext(),tagRepos));
+       // directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), () -> new ResolutionsBrowser(getContext(),tagRepos));
+
+        // Prefix matches
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId(), () -> new SourceFolderBrowser(getContext(),tagRepos));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(), () -> new AlbumFolderBrowser(getContext(),tagRepos));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(), () -> new ArtistFolderBrowser(getContext(),tagRepos));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(), () -> new GenreFolderBrowser(getContext(),tagRepos));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId(),
+                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId()));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId(),
+                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(), ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId()));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId(),
+                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(), ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId()));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), () -> new GroupingFolderBrowser(getContext(),tagRepos));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId(),
+        //        () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId()));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), () -> new CollectionFolderBrowser(getContext(),tagRepos));
+        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId(),
+                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId()));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), () -> new ResolutionFolderBrowser(getContext(),tagRepos));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId(),
+        //        () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId()));
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    // *******************************************************************
+
+    @UpnpAction(out = @UpnpOutputArgument(name = "SearchCaps"))
+    public CSV<String> getSearchCapabilities() {
+        return searchCapabilities;
+    }
+
+    @UpnpAction(out = @UpnpOutputArgument(name = "SortCaps"))
+    public CSV<String> getSortCapabilities() {
+        return sortCapabilities;
+    }
+
+    @UpnpAction(out = @UpnpOutputArgument(name = "Id"))
+    synchronized public UnsignedIntegerFourBytes getSystemUpdateID() {
+        checkLibraryChanged();
+        return systemUpdateID;
+    }
+
+    public PropertyChangeSupport getPropertyChangeSupport() {
+        return propertyChangeSupport;
+    }
+
+    /**
+     * Call this method after making changes to your content directory.
+     * <p>
+     * This will notify clients that their view of the content directory is
+     * potentially outdated and has to be refreshed.
+     * </p>
+     */
+    private String libraryVersion;
+    private long libraryCheckedAt;
+
+    /**
+     * Bumps SystemUpdateID (and clears the browse cache) when tracks were added, removed or
+     * edited since the last check, so clients refresh their cached view. Checked at most every
+     * 30 s, on Browse, Search and GetSystemUpdateID.
+     */
+    synchronized void checkLibraryChanged() {
+        long now = System.currentTimeMillis();
+        if (libraryVersion != null && now - libraryCheckedAt < 30_000) return;
+        libraryCheckedAt = now;
+        String current = tagRepos.getLibraryVersion();
+        if (libraryVersion != null && !libraryVersion.equals(current)) {
+            Log.i(TAG, "Library changed; SystemUpdateID bumped");
+            changeSystemUpdateID();
+        }
+        libraryVersion = current;
+    }
+
+    synchronized protected void changeSystemUpdateID() {
+        // The field, not getSystemUpdateID(): that runs the library check, which needs tagRepos
+        // (not yet set when the constructor calls this) and would re-enter this method
+        Long oldUpdateID = systemUpdateID.getValue();
+        systemUpdateID.increment(true);
+        getPropertyChangeSupport().firePropertyChange("SystemUpdateID",
+                oldUpdateID, systemUpdateID.getValue());
+
+        // Clear cache when content changes
+        cacheLock.writeLock().lock();
+        try {
+            browseResultCache.clear();
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Handles UPnP browse requests from DLNA clients
+     *
+     * @param objectId The ID of the container or item to browse
+     * @param browseFlag Whether to retrieve metadata of the object or list its children
+     * @param filter Property filter string
+     * @param firstResult Starting index for returned objects
+     * @param maxResults Maximum number of objects to return
+     * @param orderBy Sort criteria
+     * @return The browse results containing matching objects in DIDL-Lite format
+     * @throws ContentDirectoryException if the browse operation fails
+     */
+    @UpnpAction(out = {
+            @UpnpOutputArgument(name = "Result", stateVariable = "A_ARG_TYPE_Result", getterName = "getResult"),
+            @UpnpOutputArgument(name = "NumberReturned", stateVariable = "A_ARG_TYPE_Count", getterName = "getCount"),
+            @UpnpOutputArgument(name = "TotalMatches", stateVariable = "A_ARG_TYPE_Count", getterName = "getTotalMatches"),
+            @UpnpOutputArgument(name = "UpdateID", stateVariable = "A_ARG_TYPE_UpdateID", getterName = "getContainerUpdateID")})
+    public BrowseResult browse(
+            @UpnpInputArgument(name = "ObjectID", aliases = "ContainerID") String objectId,
+            @UpnpInputArgument(name = "BrowseFlag") String browseFlag,
+            @UpnpInputArgument(name = "Filter") String filter,
+            @UpnpInputArgument(name = "StartingIndex", stateVariable = "A_ARG_TYPE_Index") UnsignedIntegerFourBytes firstResult,
+            @UpnpInputArgument(name = "RequestedCount", stateVariable = "A_ARG_TYPE_Count") UnsignedIntegerFourBytes maxResults,
+            @UpnpInputArgument(name = "SortCriteria") String orderBy,
+            org.jupnp.model.profile.RemoteClientInfo remoteClientInfo)
+            throws ContentDirectoryException {
+
+        SortCriterion[] orderByCriteria;
+        try {
+            orderByCriteria = SortCriterion.valueOf(orderBy);
+        } catch (Exception ex) {
+            Log.e(TAG, "Invalid sort criteria: " + orderBy, ex);
+            throw new ContentDirectoryException(
+                    ContentDirectoryErrorCode.UNSUPPORTED_SORT_CRITERIA,
+                    ex.toString());
+        }
+
+        try {
+            return browse(objectId, BrowseFlag.valueOrNullOf(browseFlag),
+                    filter, firstResult.getValue(), maxResults.getValue(),
+                    orderByCriteria, profileOf(remoteClientInfo));
+        } catch (ContentDirectoryException ex) {
+            Log.e(TAG, "Browse failed for objectID: " + objectId + ", flag: " + browseFlag, ex);
+            throw ex;
+        } catch (Exception ex) {
+            Log.e(TAG, "Browse failed for objectID: " + objectId + ", flag: " + browseFlag, ex);
+            throw new ContentDirectoryException(ErrorCode.ACTION_FAILED,
+                    ex.toString());
+        }
+    }
+
+    /**
+     * Handles UPnP search requests from DLNA clients
+     *
+     * @param containerId The ID of the container to search within
+     * @param searchCriteria The search criteria
+     * @param filter Property filter string
+     * @param firstResult Starting index for returned objects
+     * @param maxResults Maximum number of objects to return
+     * @param orderBy Sort criteria
+     * @return The search results containing matching objects in DIDL-Lite format
+     * @throws ContentDirectoryException if the search operation fails
+     */
+    @UpnpAction(out = {
+            @UpnpOutputArgument(name = "Result", stateVariable = "A_ARG_TYPE_Result", getterName = "getResult"),
+            @UpnpOutputArgument(name = "NumberReturned", stateVariable = "A_ARG_TYPE_Count", getterName = "getCount"),
+            @UpnpOutputArgument(name = "TotalMatches", stateVariable = "A_ARG_TYPE_Count", getterName = "getTotalMatches"),
+            @UpnpOutputArgument(name = "UpdateID", stateVariable = "A_ARG_TYPE_UpdateID", getterName = "getContainerUpdateID")})
+    public BrowseResult search(
+            @UpnpInputArgument(name = "ContainerID", stateVariable = "A_ARG_TYPE_ContainerID") String containerId,
+            @UpnpInputArgument(name = "SearchCriteria", stateVariable = "A_ARG_TYPE_SearchCriteria") String searchCriteria,
+            @UpnpInputArgument(name = "Filter") String filter,
+            @UpnpInputArgument(name = "StartingIndex", stateVariable = "A_ARG_TYPE_Index") UnsignedIntegerFourBytes firstResult,
+            @UpnpInputArgument(name = "RequestedCount", stateVariable = "A_ARG_TYPE_Count") UnsignedIntegerFourBytes maxResults,
+            @UpnpInputArgument(name = "SortCriteria") String orderBy,
+            org.jupnp.model.profile.RemoteClientInfo remoteClientInfo)
+            throws ContentDirectoryException {
+
+        checkLibraryChanged();
+        java.util.function.Predicate<Track> matches;
+        try {
+            matches = UpnpSearch.parse(searchCriteria);
+        } catch (IllegalArgumentException invalid) {
+            // UPnP ContentDirectory error 708: unsupported or invalid search criteria
+            throw new ContentDirectoryException(708, "Invalid search criteria: " + invalid.getMessage());
+        }
+        try {
+            // Searches the whole library whatever the ContainerID; results are tracks only
+            List<Track> found = new java.util.ArrayList<>();
+            apincer.music.core.server.ClientFormatProfile profile = profileOf(remoteClientInfo);
+            for (Track track : tagRepos.getAllMusicsForPlaylist()) {
+                if (matches.test(track) && !profile.hides(track)) found.add(track);
+            }
+            java.util.Comparator<Track> sort = BrowseSort.tracks(SortCriterion.valueOf(orderBy));
+            if (sort != null) found.sort(sort);
+            List<Track> page = AbstractContentBrowser.page(found, firstResult.getValue(), maxResults.getValue());
+            String allSongsId = ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + CollectionsBrowser.ALL_SONGS;
+            MusicItemBrowser builder = new MusicItemBrowser(getContext(), tagRepos,
+                    ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
+            builder.setClientProfile(profile);
+            DIDLContent didl = new DIDLContent();
+            for (Track track : page) {
+                didl.addItem(builder.buildMusicTrack(this, track, allSongsId,
+                        ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId()));
+            }
+            markReadOnly(didl);
+            return new BrowseResult(new DIDLParser().generate(didl, false), page.size(), found.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Search failed for criteria: " + searchCriteria, e);
+            throw new ContentDirectoryException(ContentDirectoryErrorCode.CANNOT_PROCESS, e.toString());
+        }
+    }
+
+    /**
+     * Samsung TVs call X_GetFeatureList to find the starting folder of their simple "basic view"
+     * per media type. Audio only, at the root ("0"); no video or photo entries.
+     */
+    static final String SAMSUNG_FEATURE_LIST = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<Features xmlns=\"urn:schemas-upnp-org:av:avs\""
+            + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+            + " xsi:schemaLocation=\"urn:schemas-upnp-org:av:avs http://www.upnp.org/schemas/av/avs.xsd\">"
+            + "<Feature name=\"samsung.com_BASICVIEW\" version=\"1\">"
+            + "<container id=\"0\" type=\"object.item.audioItem\"/>"
+            + "</Feature></Features>";
+
+    @UpnpAction(name = "X_GetFeatureList",
+            out = @UpnpOutputArgument(name = "FeatureList", stateVariable = "A_ARG_TYPE_FeatureList"))
+    public String samsungFeatureList() {
+        return SAMSUNG_FEATURE_LIST;
+    }
+
+    /** This server does not create, change or delete objects: everything is restricted="1". */
+    private static void markReadOnly(DIDLContent didl) {
+        for (org.jupnp.support.model.container.Container container : didl.getContainers()) {
+            container.setRestricted(true);
+            // Search covers the whole library, so the root says it can be searched
+            if ("0".equals(container.getId())) container.setSearchable(true);
+        }
+        for (DIDLObject object : didl.getItems()) object.setRestricted(true);
+    }
+
+
+    /**
+     * Browses the content directory.
+     *
+     * @param objectID The ID of the object to browse
+     * @param browseFlag Whether to browse metadata or children
+     * @param filter Filter string limiting which properties should be returned
+     * @param firstResult The starting index (0-based) of the first object to return
+     * @param maxResults The maximum number of objects to return
+     * @param orderby Array of sort criteria
+     * @return A BrowseResult containing the requested objects
+     * @throws ContentDirectoryException If the browse operation cannot be completed
+     */
+    public BrowseResult browse(String objectID, BrowseFlag browseFlag,
+                               String filter, long firstResult, long maxResults,
+                               SortCriterion[] orderby) throws ContentDirectoryException {
+        return browse(objectID, browseFlag, filter, firstResult, maxResults, orderby,
+                apincer.music.core.server.ClientFormatProfile.DEFAULT);
+    }
+
+    /** The client's format profile (Sony/LG/Toshiba TVs), from its request headers. */
+    static apincer.music.core.server.ClientFormatProfile profileOf(org.jupnp.model.profile.RemoteClientInfo info) {
+        if (info == null) return apincer.music.core.server.ClientFormatProfile.DEFAULT;
+        String avClientInfo = info.getRequestHeaders() != null ? info.getRequestHeaders().getFirstHeader("X-AV-Client-Info") : null;
+        return apincer.music.core.server.ClientFormatProfile.of(info.getRequestUserAgent(), avClientInfo);
+    }
+
+    public BrowseResult browse(String objectID, BrowseFlag browseFlag,
+                               String filter, long firstResult, long maxResults,
+                               SortCriterion[] orderby, apincer.music.core.server.ClientFormatProfile profile)
+            throws ContentDirectoryException {
+        checkLibraryChanged();
+        // Check if we can use a cached result
+        // The profile is part of the key: a TV's listing (no DSD, WAV entries) differs from others'
+        String cacheKey = profile.name() + "|" + generateCacheKey(objectID, browseFlag, filter, firstResult, maxResults, orderby);
+
+        cacheLock.readLock().lock();
+        try {
+            CachedBrowseResult cachedResult = browseResultCache.get(cacheKey);
+            if (cachedResult != null && !cachedResult.isExpired()) {
+                Log.d(TAG, "Cache hit for browse request: " + cacheKey);
+                return cachedResult.getBrowseResult();
+            }
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+
+        // Cache miss or expired, fetch the result
+        int childCount =0;
+        int totalMatches;
+        DIDLObject didlObject;
+        DIDLContent didl = new DIDLContent();
+        AbstractContentBrowser contentBrowser = findBrowserFor(objectID);
+        if (contentBrowser != null) contentBrowser.setClientProfile(profile);
+        if (contentBrowser != null) {
+                if (browseFlag == BrowseFlag.METADATA) {
+                    didlObject = contentBrowser.browseMeta(this, objectID, firstResult, maxResults, orderby);
+                    if (didlObject == null) {
+                        throw new ContentDirectoryException(ContentDirectoryErrorCode.NO_SUCH_OBJECT, objectID);
+                    }
+                    didl.addObject(didlObject);
+                    childCount = 1;
+                    totalMatches = 1;
+                } else {
+                    List<DIDLObject> children = contentBrowser.browseChildren(this, objectID, firstResult, maxResults, orderby);
+                    for (DIDLObject child : children) {
+                        didl.addObject(child);
+                        childCount++;
+                    }
+                    // A browser that filtered (hidden formats) reports the filtered total
+                    Integer filtered = contentBrowser.filteredTotal();
+                    totalMatches = filtered != null ? filtered : contentBrowser.getTotalMatches(this, objectID);
+                }
+
+            try {
+                markReadOnly(didl);
+                // Generate output with nested items
+                String didlXml = new DIDLParser().generate(didl, false);
+                BrowseResult result = new BrowseResult(didlXml, childCount, totalMatches);
+
+                // Cache the result
+                cacheLock.writeLock().lock();
+                try {
+                    browseResultCache.put(cacheKey, new CachedBrowseResult(result));
+                } finally {
+                    cacheLock.writeLock().unlock();
+                }
+
+                return result;
+            } catch (Exception e) {
+                Log.e(TAG, "Error generating DIDL-Lite XML", e);
+                throw new ContentDirectoryException(
+                        ContentDirectoryErrorCode.CANNOT_PROCESS.getCode(),
+                        "Error while generating BrowseResult", e);
+            }
+        } else {
+            // UPnP ContentDirectory error 701, not an empty success that looks like an empty folder
+            throw new ContentDirectoryException(ContentDirectoryErrorCode.NO_SUCH_OBJECT, objectID);
+        }
+    }
+
+    /**
+     * Finds the appropriate browser for a given object ID
+     *
+     * @param objectID The object ID to find a browser for
+     * @return The appropriate content browser, or null if none found
+     */
+    private AbstractContentBrowser findBrowserFor(String objectID) {
+        // Check direct matches first
+        Supplier<AbstractContentBrowser> directSupplier = directBrowserRegistry.get(objectID);
+        if (directSupplier != null) {
+            return directSupplier.get();
+        }
+
+        // Check prefix matches
+        for (Map.Entry<String, Supplier<AbstractContentBrowser>> entry : prefixBrowserRegistry.entrySet()) {
+            if (objectID != null && objectID.startsWith(entry.getKey())) {
+                return entry.getValue().get();
+            }
+        }
+
+        // Fallback to root browser
+        if (objectID == null || objectID.isEmpty()) {
+            return new LibraryBrowser(getContext(), tagRepos);
+        }
+
+        return null;
+    }
+
+    /**
+     * Generates a cache key for a browse request
+     */
+    private String generateCacheKey(String objectID, BrowseFlag browseFlag, String filter,
+                                    long firstResult, long maxResults, SortCriterion[] orderby) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(objectID != null ? objectID : "root").append('|')
+                .append(browseFlag).append('|')
+                .append(firstResult).append('|')
+                .append(maxResults).append('|');
+
+        if (orderby != null) {
+            for (SortCriterion criterion : orderby) {
+                sb.append(criterion.toString()).append(',');
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Wrapper class for cached browse results
+     */
+    private static class CachedBrowseResult {
+        private final BrowseResult browseResult;
+        private final long timestamp;
+
+        public CachedBrowseResult(BrowseResult browseResult) {
+            this.browseResult = browseResult;
+            this.timestamp = System.currentTimeMillis();
+        }
+
+        public BrowseResult getBrowseResult() {
+            return browseResult;
+        }
+
+        public boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > CACHE_EXPIRATION_MS;
+        }
+    }
+
+}

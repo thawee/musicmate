@@ -1,0 +1,82 @@
+--- before/FlacDecoder.java
++++ after/FlacDecoder.java
+@@ -22,6 +22,7 @@
+ package io.nayuki.flac.decode;
+ 
+ import java.io.File;
++import java.io.EOFException;
+ import java.io.IOException;
+ import java.util.Objects;
+ import io.nayuki.flac.common.FrameInfo;
+@@ -96,6 +97,17 @@
+ 	// of this object to reflect the new data seen, and throws exceptions for situations such as
+ 	// not starting with a stream info metadata block or encountering duplicates of certain blocks.
+ 	public Object[] readAndHandleMetadataBlock() throws IOException {
++		return readAndHandleMetadataBlock(true);
++	}
++
++	// Consumes metadata needed for audio decoding without retaining unused payloads.
++	// The block-returning API remains available for callers that inspect tags/artwork.
++	public void readMetadataForAudio() throws IOException {
++		while (metadataEndPos == -1)
++			readAndHandleMetadataBlock(false);
++	}
++
++	private Object[] readAndHandleMetadataBlock(boolean returnData) throws IOException {
+ 		if (metadataEndPos != -1)
+ 			return null;  // All metadata already consumed
+ 		
+@@ -103,8 +115,18 @@
+ 		boolean last = input.readUint(1) != 0;
+ 		int type = input.readUint(7);
+ 		int length = input.readUint(24);
+-		byte[] data = new byte[length];
+-		input.readFully(data);
++		byte[] data = null;
++		if (returnData || type == 0 || type == 3) {
++			data = new byte[length];
++			input.readFully(data);
++		} else {
++			long end = input.getPosition() + length;
++			// RandomAccessFile.seek permits seeking past EOF; retain truncation checks.
++			if (end > input.getLength())
++				throw new EOFException();
++			if (length != 0)
++				input.seekTo(end);
++		}
+ 		
+ 		// Handle recognized block
+ 		if (type == 0) {
+@@ -124,7 +146,7 @@
+ 		if (last) {
+ 			metadataEndPos = input.getPosition();
+ 		}
+-		return new Object[]{type, data};
++		return returnData ? new Object[]{type, data} : null;
+ 	}
+ 	
+ 	
+--- before/FlacToWav.java
++++ after/FlacToWav.java
+@@ -41,9 +41,7 @@
+     /** Reads the FLAC's STREAMINFO; throws if the file is not FLAC or its length is unknown. */
+     public static FlacToWav open(File flac) throws IOException {
+         try (FlacDecoder decoder = new FlacDecoder(flac)) {
+-            while (decoder.readAndHandleMetadataBlock() != null) {
+-                // metadata only
+-            }
++            decoder.readMetadataForAudio();
+             StreamInfo info = decoder.streamInfo;
+             if (info == null || info.numSamples <= 0) throw new IOException("FLAC length unknown: " + flac);
+             return new FlacToWav(info);
+@@ -100,9 +98,7 @@
+         int outLength = 0;
+         int[][] samples = new int[channels][65536];
+         try (FlacDecoder decoder = new FlacDecoder(flac)) {
+-            while (decoder.readAndHandleMetadataBlock() != null) {
+-                // skip to the audio
+-            }
++            decoder.readMetadataForAudio();
+             int blockSize = frame > 0 ? decoder.seekAndReadAudioBlock(frame, samples, 0)
+                     : decoder.readAudioBlock(samples, 0);
+             while (remaining > 0) {

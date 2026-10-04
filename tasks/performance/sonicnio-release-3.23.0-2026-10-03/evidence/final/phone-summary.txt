@@ -1,0 +1,7 @@
+time to headers head: n=128 median=8.235 p95=11.765 max=14.461 ms
+time to headers header: n=128 median=10.128 p95=12.521 max=14.505 ms
+time to headers seek: n=96 median=10.172 p95=12.399 max=15.609 ms
+total head: n=128 median=8.326 p95=11.912 max=14.614 ms
+total header: n=128 median=11.128 p95=13.849 max=15.218 ms
+total seek: n=96 median=29.364 p95=48.059 max=52.244 ms
+requests 352 non-2xx 0

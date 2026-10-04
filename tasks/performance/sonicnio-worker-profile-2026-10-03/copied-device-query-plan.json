@@ -1,0 +1,61 @@
+{
+  "scope": "Host SQLite read-only query-plan check against copied device DB/WAL; not an on-device timing test",
+  "host_sqlite": "3.53.4",
+  "quick_check": [
+    [
+      "ok"
+    ]
+  ],
+  "user_version": 2,
+  "tracks": 8289,
+  "indexes": [
+    [
+      "index_musictag_album",
+      "CREATE INDEX `index_musictag_album` ON `musictag` (`album`)"
+    ],
+    [
+      "index_musictag_artist",
+      "CREATE INDEX `index_musictag_artist` ON `musictag` (`artist`)"
+    ],
+    [
+      "index_musictag_audioBitsDepth",
+      "CREATE INDEX `index_musictag_audioBitsDepth` ON `musictag` (`audioBitsDepth`)"
+    ],
+    [
+      "index_musictag_genre",
+      "CREATE INDEX `index_musictag_genre` ON `musictag` (`genre`)"
+    ],
+    [
+      "index_musictag_normalizedArtist",
+      "CREATE INDEX `index_musictag_normalizedArtist` ON `musictag` (`normalizedArtist`)"
+    ],
+    [
+      "index_musictag_normalizedTitle",
+      "CREATE INDEX `index_musictag_normalizedTitle` ON `musictag` (`normalizedTitle`)"
+    ],
+    [
+      "index_musictag_publisher",
+      "CREATE INDEX `index_musictag_publisher` ON `musictag` (`publisher`)"
+    ],
+    [
+      "index_musictag_qualityInd",
+      "CREATE INDEX `index_musictag_qualityInd` ON `musictag` (`qualityInd`)"
+    ],
+    [
+      "index_musictag_title",
+      "CREATE INDEX `index_musictag_title` ON `musictag` (`title`)"
+    ],
+    [
+      "index_musictag_uniqueKey",
+      "CREATE UNIQUE INDEX `index_musictag_uniqueKey` ON `musictag` (`uniqueKey`)"
+    ]
+  ],
+  "get_by_path_plan": [
+    [
+      2,
+      0,
+      216,
+      "SCAN musictag"
+    ]
+  ]
+}

@@ -1,0 +1,297 @@
+--- a/core/src/main/java/apincer/music/core/http/NioHttpServer.java
++++ b/core/src/main/java/apincer/music/core/http/NioHttpServer.java
+@@ -37,7 +37,7 @@
+  *
+  * <p><b>Model.</b> One selector thread does all socket I/O: it accepts connections, reads requests,
+  * and writes responses. A bounded worker pool runs the {@link Handler} for each complete request;
+- * an independent pool runs ordered WebSocket callbacks. Files use {@code FileChannel.transferTo()} in 256 KB slices,
++ * an independent pool runs ordered WebSocket callbacks. Files use {@code FileChannel.transferTo()} in bounded slices,
+  * so audio never passes through the Java heap, and the selector yields between slices so one
+  * stream cannot starve others.
+  *
+@@ -89,6 +89,9 @@
+     private volatile ExecutorService workerPool;
+     private ExecutorService callbackPool;
+     private int maxQueuedRequests = 128;
++    private int sharedFileWriteBudget = 256 * 1024;
++    private int soloFileWriteBudget = 256 * 1024; // larger solo turns require measured benefit
++    private boolean batchGeneratedAudio = true;
+     private int maxThread = 0;
+ 
+ 
+@@ -219,6 +222,20 @@
+ 
+     public void setMaxBufferedAudioBytes(long bytes) { audioBuffers.setLimit(bytes); }
+ 
++    /** Configure before start; larger file turns apply only to one active connection. */
++    public void setFileWriteBudgets(int sharedBytes, int soloBytes) {
++        if (isRunning || sharedBytes < 64 * 1024 || soloBytes < sharedBytes || soloBytes > 1024 * 1024) {
++            throw new IllegalArgumentException("Set ordered 64 KiB–1 MiB file budgets before start");
++        }
++        sharedFileWriteBudget = sharedBytes;
++        soloFileWriteBudget = soloBytes;
++    }
++
++    public void setBatchGeneratedAudio(boolean enabled) {
++        if (isRunning) throw new IllegalStateException("Configure PCM batching before start");
++        batchGeneratedAudio = enabled;
++    }
++
+     public record ResourceUsage(int resourceTransfers, int queuedHandlers, int activeHandlers,
+                                 int activeProducers, long bufferedAudioBytes, long peakBufferedAudioBytes) { }
+ 
+@@ -446,7 +463,8 @@
+                                 } else if (key.isReadable()) {
+                                     handleRead(key);
+                                 } else if (key.isWritable()) {
+-                                    handleWrite(key);
++                                    handleWrite(key, selectedKeysCount == 1 && activeConnections.get() == 1
++                                            ? soloFileWriteBudget : sharedFileWriteBudget);
+                                 }
+                             } catch (IOException e) {
+                                 // String msg = e.getMessage();
+@@ -898,7 +916,7 @@
+     }
+ 
+ 
+-    private void handleWrite(SelectionKey key) throws IOException {
++    private void handleWrite(SelectionKey key, int fileWriteBudget) throws IOException {
+         writeCalls.incrementAndGet();
+         ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
+         if (attachment.state == ConnectionAttachment.ParseState.WEBSOCKET_FRAME) {
+@@ -912,7 +930,8 @@
+         SocketChannel clientChannel = (SocketChannel) key.channel();
+         long before = attachment.response.wireBytesSent();
+         try {
+-            attachment.response.write(clientChannel);
++            if (attachment.response instanceof FileResponse file) file.write(clientChannel, fileWriteBudget);
++            else attachment.response.write(clientChannel);
+         } finally {
+             // A producer can fail after headers or body bytes were sent in this very turn.
+             long written = attachment.response.wireBytesSent() - before;
+@@ -1178,7 +1197,7 @@
+         }
+         StreamingResponse response;
+         try {
+-            response = new StreamingResponse(status, statusText, contentLength, streamSlots, audioBuffers);
++            response = new StreamingResponse(status, statusText, contentLength, streamSlots, audioBuffers, batchGeneratedAudio);
+         } catch (RuntimeException invalid) {
+             streamSlots.release();
+             throw invalid;
+--- a/core/src/main/java/apincer/music/core/http/FileResponse.java
++++ b/core/src/main/java/apincer/music/core/http/FileResponse.java
+@@ -15,7 +15,7 @@
+ import java.util.concurrent.atomic.AtomicBoolean;
+ 
+ /**
+- * Streams a file (or a byte range of it) with {@code FileChannel.transferTo()}, 256 KB per write.
++ * Streams a file or range with {@code FileChannel.transferTo()} and a bounded per-turn allowance.
+  * Handles HEAD, ETag/If-None-Match (304), If-Range and RFC 7233 ranges (invalid ranges are ignored).
+  * Each open file holds a {@link StreamSlots} slot until {@link #close()}.
+  */
+@@ -216,6 +216,10 @@
+ 
+     @Override
+     public long write(SocketChannel channel) throws IOException {
++        return write(channel, (int) CHUNK_SIZE);
++    }
++
++    long write(SocketChannel channel, int writeBudget) throws IOException {
+         if (headerBuffer == null) buildHeaders();
+         long sent = 0;
+ 
+@@ -231,10 +235,10 @@
+             long position = rangeStart + bytesSent;
+             long remaining = rangeLength - bytesSent;
+ 
+-            int maxTries = 1; // Yield after each chunk to ensure other HTTP requests (like cover art or metadata) aren't starved
++            int maxTries = 1; // One bounded transfer; the server lowers the allowance under contention.
+ 
+             while (remaining > 0 && maxTries-- > 0) {
+-                long chunk = Math.min(remaining, CHUNK_SIZE);
++                long chunk = Math.min(remaining, writeBudget);
+ 
+                 long written = fileChannel.transferTo(position, chunk, channel);
+ 
+--- a/core/src/main/java/apincer/music/core/http/StreamingResponse.java
++++ b/core/src/main/java/apincer/music/core/http/StreamingResponse.java
+@@ -15,6 +15,8 @@
+  * the connection (no OP_WRITE), and the producer wakes it through requestWrite, so a slow
+  * producer never makes the selector spin. Producing more or fewer bytes than declared fails the
+  * stream, which closes the connection, rather than sending a body of the wrong length.
++ * Small producer writes may share a reserved 64 KiB chunk. Startup and selector draining publish
++ * partial chunks promptly; a partial producer chunk remains charged until transmitted or cancelled.
+  */
+ public final class StreamingResponse extends NioHttpServer.HttpResponse implements StreamBody {
+ 
+@@ -35,6 +37,7 @@
+     private final long contentLength;
+     private final StreamSlots slots;
+     private final AudioBufferBudget budget;
++    private final boolean batchWrites;
+     private final AtomicBoolean parked = new AtomicBoolean();
+     private final AtomicBoolean released = new AtomicBoolean();
+     private volatile Runnable wake;
+@@ -42,6 +45,7 @@
+     private volatile Throwable producerFailure;
+     private volatile boolean closed;
+     private ByteBuffer pending; // selector thread only
++    private ByteBuffer producerBuffer; // guarded by this; cancellation owns its reservation too
+     private Future<?> task;
+ 
+     StreamingResponse(int status, String statusText, long contentLength, StreamSlots slots) {
+@@ -49,8 +53,14 @@
+     }
+ 
+     StreamingResponse(int status, String statusText, long contentLength, StreamSlots slots, AudioBufferBudget budget) {
++        this(status, statusText, contentLength, slots, budget, true);
++    }
++
++    StreamingResponse(int status, String statusText, long contentLength, StreamSlots slots,
++                      AudioBufferBudget budget, boolean batchWrites) {
+         if (contentLength < 0) throw new IllegalArgumentException("Content length must not be negative");
+         this.budget = budget;
++        this.batchWrites = batchWrites;
+         this.contentLength = contentLength;
+         this.slots = slots;
+         setStatus(status, statusText);
+@@ -65,42 +75,87 @@
+                     if (length < 0 || length > contentLength - produced[0]) {
+                         throw new IOException("Producer exceeded the declared Content-Length");
+                     }
+-                    for (int at = offset; at < offset + length; at += CHUNK) {
+-                        int n = Math.min(CHUNK, offset + length - at);
+-                        budget.acquire(n, () -> closed);
+-                        boolean queued = false;
+-                        try {
+-                            ByteBuffer chunk = ByteBuffer.allocate(n);
+-                            chunk.put(data, at, n).flip();
+-                            synchronized (this) {
+-                                while (!closed && !queue.offer(chunk)) wait(200);
+-                                if (closed) throw new IOException("Response closed");
+-                                queued = true;
++                    for (int at = offset; at < offset + length;) {
++                        boolean needsBuffer;
++                        synchronized (this) {
++                            if (closed) throw new IOException("Response closed");
++                            needsBuffer = producerBuffer == null;
++                        }
++                        if (needsBuffer) {
++                            int capacity = batchWrites && !queue.isEmpty() ? (int) Math.min(CHUNK, contentLength - produced[0])
++                                    : Math.min(CHUNK, offset + length - at);
++                            budget.acquire(capacity, () -> closed);
++                            boolean owned = false;
++                            try {
++                                ByteBuffer chunk = ByteBuffer.allocate(capacity);
++                                synchronized (this) {
++                                    if (closed) throw new IOException("Response closed");
++                                    producerBuffer = chunk;
++                                    owned = true;
++                                }
++                            } finally {
++                                if (!owned) budget.release(capacity);
+                             }
+-                        } catch (InterruptedException interrupted) {
+-                            Thread.currentThread().interrupt();
+-                            throw new IOException("Response closed", interrupted);
+-                        } finally {
+-                            if (!queued) budget.release(n);
+                         }
+-                        wakeIfParked();
++                        boolean full;
++                        synchronized (this) {
++                            if (closed) throw new IOException("Response closed");
++                            if (producerBuffer == null) continue; // selector drained a partial batch
++                            int n = Math.min(producerBuffer.remaining(), offset + length - at);
++                            producerBuffer.put(data, at, n);
++                            at += n;
++                            produced[0] += n;
++                            full = !producerBuffer.hasRemaining();
++                        }
++                        if (full || !batchWrites) flushProducerBuffer();
+                     }
+-                    produced[0] += length;
++                    // Publish promptly when no queued audio covers startup/producer pauses.
++                    if (queue.isEmpty()) flushProducerBuffer();
+                 });
+                 if (produced[0] != contentLength) {
+                     throw new IOException("Producer made " + produced[0] + " of " + contentLength + " bytes");
+                 }
++                flushProducerBuffer();
+                 producerDone = true;
+             } catch (Throwable t) {
+                 producerFailure = t;
+             } finally {
++                synchronized (this) { releaseProducerBuffer(); }
+                 wakeIfParked();
+             }
+         });
+     }
+ 
+-    boolean awaitingProducer() {
+-        return headersSent && pending == null && queue.isEmpty() && !producerDone && producerFailure == null;
++    private void flushProducerBuffer() throws IOException {
++        try {
++            synchronized (this) {
++                if (closed) throw new IOException("Response closed");
++                if (producerBuffer == null) return;
++                while (!closed && producerBuffer != null && queue.remainingCapacity() == 0) wait(200);
++                if (closed) throw new IOException("Response closed");
++                if (producerBuffer == null) return; // selector drained it while this producer waited
++                producerBuffer.flip();
++                queue.add(producerBuffer);
++                producerBuffer = null; // queued response now owns the reservation
++            }
++        } catch (InterruptedException interrupted) {
++            Thread.currentThread().interrupt();
++            throw new IOException("Response closed", interrupted);
++        }
++        wakeIfParked();
++    }
++
++    private void releaseProducerBuffer() {
++        if (producerBuffer != null) {
++            budget.release(producerBuffer.capacity());
++            producerBuffer = null;
++        }
++    }
++
++    synchronized boolean awaitingProducer() {
++        return headersSent && pending == null && queue.isEmpty()
++                && (producerBuffer == null || producerBuffer.position() == 0)
++                && !producerDone && producerFailure == null;
+     }
+ 
+     Throwable failure() { return producerFailure; }
+@@ -125,6 +180,12 @@
+         while (bodyWrittenThisTurn < WRITE_BUDGET) {
+             if (pending == null) {
+                 pending = queue.poll();
++                if (pending == null && producerBuffer != null && producerBuffer.position() > 0) {
++                    // Never park with deliverable PCM held in a partial producer batch.
++                    pending = producerBuffer;
++                    pending.flip();
++                    producerBuffer = null;
++                }
+                 notifyAll(); // room for the producer; budget stays reserved while pending
+             }
+             if (pending == null) {
+@@ -155,8 +216,8 @@
+      * Selector thread, after a write that left the body unfinished: true when the queue is empty
+      * and the connection should stop asking for OP_WRITE until {@code wakeAction} runs.
+      */
+-    boolean park(Runnable wakeAction) {
+-        if (!headersSent || pending != null) return false; // the socket was full, not the queue
++    synchronized boolean park(Runnable wakeAction) {
++        if (!headersSent || pending != null || (producerBuffer != null && producerBuffer.position() > 0)) return false;
+         wake = wakeAction;
+         parked.set(true);
+         // Re-check after parking: the producer may have queued or finished in between
+@@ -172,6 +233,7 @@
+         if (closed) return;
+         closed = true;
+         if (task != null) task.cancel(true);
++        releaseProducerBuffer();
+         ByteBuffer chunk;
+         while ((chunk = queue.poll()) != null) budget.release(chunk.capacity());
+         if (pending != null) {

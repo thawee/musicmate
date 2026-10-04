@@ -1,0 +1,12 @@
+// Export the host unit-test runtime, including Android stubs, for standalone benchmarks.
+gradle.projectsEvaluated {
+    def coreProject = gradle.rootProject.project(':core')
+    coreProject.tasks.register('writeStreamingBenchmarkClasspath') {
+        dependsOn coreProject.tasks.named('testDebugUnitTest')
+        doLast {
+            def output = gradle.rootProject.layout.buildDirectory.file('bench/core-test-classpath.txt').get().asFile
+            output.parentFile.mkdirs()
+            output.text = coreProject.tasks.named('testDebugUnitTest').get().classpath.asPath
+        }
+    }
+}

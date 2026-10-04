@@ -1,0 +1,106 @@
+[
+  {
+    "case": "conflicting-lines",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "conflicting-list",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "signed-length",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "empty-list-element",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "overflow",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "whitespace-before-colon",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "folded-field",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "missing-colon",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "te-and-cl",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "unframed-coding",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "wrong-final-coding",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "repeated-te",
+    "expected": 400,
+    "actual": 400,
+    "closed": true
+  },
+  {
+    "case": "chunked",
+    "expected": 501,
+    "actual": 501,
+    "closed": true
+  },
+  {
+    "case": "coding-chain",
+    "expected": 501,
+    "actual": 501,
+    "closed": true
+  },
+  {
+    "case": "oversized",
+    "expected": 413,
+    "actual": 413,
+    "closed": true
+  },
+  {
+    "case": "identical-lines",
+    "expected": 206,
+    "actual": 206,
+    "closed": true,
+    "exact_byte": true
+  },
+  {
+    "case": "identical-list",
+    "expected": 206,
+    "actual": 206,
+    "closed": true,
+    "exact_byte": true
+  }
+]

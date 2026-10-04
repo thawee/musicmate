@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.http.NioHttpServerSoakTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:19.727Z" hostname="KB-XXAXXW9TX4" time="8.035">
+  <properties/>
+  <testcase name="mixedLoad_leavesNoLeaksAndServesCorrectBytes" classname="apincer.music.core.http.NioHttpServerSoakTest" time="8.035"/>
+  <system-out><![CDATA[SOAK clients=16 seconds=8.0 operations=6680 throughput=715.1 MB/s rangeTTFB p50=5162 us p95=19001 us errors=0
+]]></system-out>
+  <system-err><![CDATA[Oct 03, 2026 8:33:27 PM apincer.music.core.http.NioHttpServer run
+INFO: Server on port 65508 stopped
+]]></system-err>
+</testsuite>

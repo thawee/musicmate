@@ -1,0 +1,69 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.kotlin.serialization)
+}
+
+android {
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+    buildTypes {
+        release {
+        }
+    }
+    lint {
+        abortOnError = true
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+    namespace = 'musicmate.core'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    // Local Submodules
+    implementation project(':library:JustFLAC')
+    implementation project(':library:library')
+    implementation project(':library:jaudiotagger-android')
+
+    // AndroidX & Architecture
+    implementation libs.androidx.annotation
+    implementation libs.androidx.core
+    implementation libs.androidx.work
+    implementation libs.androidx.preference
+
+    // Dagger Hilt
+    implementation libs.dagger.hilt.android
+    ksp libs.dagger.hilt.compiler
+
+    // Kotlin & Serialization
+    implementation libs.kotlin.coroutines.core
+    implementation libs.kotlinx.serialization.json
+
+    // Networking, Audio & Storage
+    implementation libs.square.okhttp3
+    implementation libs.anggrayudi.storage
+    implementation libs.ffmpegkit.audio
+    implementation libs.jsoup
+
+    // Math & String Utilities
+    implementation libs.commons.lang3
+    implementation libs.commons.match3
+
+    testImplementation libs.junit
+}

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="apincer.android.vivohifi.MainActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:background="?android:colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:elevation="4dp"/>
+
+    <Switch
+        android:textSize="16sp"
+        android:textStyle="normal"
+        android:textColor="@android:color/holo_green_dark"
+        android:id="@+id/btn_enable"
+        android:padding="18dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hi-Fi Enabled"
+        android:fontFamily="sans-serif"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <View
+        android:background="@android:color/darker_gray"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignBottom="@+id/btn_enable"
+        android:layout_alignParentStart="true" />
+
+    <Switch
+        android:enabled="true"
+        android:textSize="16sp"
+        android:textStyle="normal"
+        android:textColor="@android:color/holo_green_dark"
+        android:id="@+id/btn_notify"
+        android:padding="18dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="Notify When Enabled/Disabled"
+        android:fontFamily="sans-serif"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <View
+        android:background="@android:color/darker_gray"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignBottom="@id/btn_notify"
+        android:layout_alignParentStart="true" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/about_text"
+        android:gravity="center_horizontal">
+        <TextView
+                android:textSize="16sp"
+                android:textStyle="normal"
+                android:textColor="@android:color/darker_gray"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:gravity="top|center_horizontal"
+                android:layout_margin="10dp"
+                android:text="This app enables HI-FI output mode for any app on VIVO Music phone. \nUse this app at your own risk!, developer of this app is not responsible for any damage done to your device! \n\nExpect extra battery DRAIN!"
+                android:fontFamily="sans-serif" />
+
+        <TextView
+            android:textSize="14sp"
+            android:typeface="normal"
+            android:textColor="@android:color/darker_gray"
+            android:id="@+id/about_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HI-FI mode for VIVO Music Phone - by Thawee"
+            android:gravity="bottom|center_horizontal"
+            android:fontFamily="sans-serif" />
+    </LinearLayout>
+</LinearLayout>

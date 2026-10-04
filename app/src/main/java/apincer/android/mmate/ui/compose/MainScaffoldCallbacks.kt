@@ -1,0 +1,55 @@
+package apincer.android.mmate.ui.compose
+
+import apincer.android.mmate.ui.navigation.LibraryDestination
+import apincer.music.core.model.Track
+import apincer.music.core.playback.spi.PlaybackTarget
+
+interface MainScaffoldCallbacks {
+    fun onLibraryDestinationChanged(destination: LibraryDestination)
+    fun onNavigationItemClick(itemId: Int)
+    fun onSearchQueryChange(query: String)
+    fun onSearchBackClick()
+    fun onListRefresh()
+    fun onDiscoverMusicFolders()
+    fun onClearMusicFilters()
+    fun onBrowseAllMusic()
+    fun onLoadMoreMusic()
+    fun onTrackClick(track: Track, position: Int)
+    fun onTrackLongClick(track: Track, position: Int)
+    fun onTrackMenuAction(track: Track, position: Int, actionId: Int)
+    fun onTrackQuickPlayClick(track: Track)
+    /** Plays every track in the current list or search results, in order or shuffled. */
+    fun onPlayResults()
+    fun onFolderPlayClick(track: Track)
+    fun onFolderEnqueueClick(track: Track)
+    fun onDockPlayPauseClick()
+    fun onDockNextClick()
+    fun onDockLongClick() { onAudioHubTrackClick() }
+    fun onSelectPlaybackTargetClick()
+    fun onPlayerTargetSelected(target: PlaybackTarget)
+    fun onRefreshPlayerTargets()
+    fun onOpenSystemAudioOutput()
+    fun onEnableExternalPlayerAccess()
+    fun onAudioHubPlayPause()
+    fun onAudioHubNext()
+    fun onAudioHubPrevious()
+    fun onAudioHubShuffleToggle()
+    fun onAudioHubRepeatToggle()
+    fun onAudioHubSeek(position: Float)
+    fun onAudioHubVolumeDown()
+    fun onAudioHubVolumeUp()
+    fun onAudioHubVolumeChanged(volume: Float)
+    fun onAudioHubSleepTimerSelected(minutes: Long, endOfTrack: Boolean)
+    fun onAudioHubTrackClick()
+    fun onAudioHubQueueTrackClick(track: Track)
+    fun onAudioHubQueueTrackRemove(track: Track, index: Int)
+    fun onAudioHubQueueTrackMoved(fromIndex: Int, toIndex: Int)
+    fun onAudioHubQueueClear()
+    fun onAudioHubQueueJumpToPlaying()
+    fun onStartServerClicked()
+    fun onStopServerClicked()
+    fun onCopyUrlClicked()
+    fun onOpenUrlClicked()
+    fun onQrCodeClicked()
+    fun onSmartPlaylistCreated(entry: apincer.music.core.model.PlaylistEntry) {}
+}

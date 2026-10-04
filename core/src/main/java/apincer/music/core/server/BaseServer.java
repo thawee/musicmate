@@ -1,0 +1,1316 @@
+package apincer.music.core.server;
+
+import static apincer.music.core.utils.StringUtils.isEmpty;
+import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.getDynamicRangeScore;
+
+import android.annotation.SuppressLint;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.collection.LruCache;
+
+
+
+import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import apincer.music.core.codec.MusicAnalyser;
+import apincer.music.core.model.PlaylistEntry;
+import apincer.music.core.model.TrackInfo;
+import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.repository.QueueManager;
+import apincer.music.core.playback.WebStreamingPlayer;
+import apincer.music.core.model.Track;
+import apincer.music.core.playback.spi.PlaybackCallback;
+import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.MusicInfoRepository;
+import apincer.music.core.repository.PlaylistRepository;
+import apincer.music.core.repository.TagRepository;
+import apincer.music.core.server.spi.UpnpServer;
+import apincer.music.core.server.spi.WebServer;
+import apincer.music.core.service.spi.MusicMateServiceBinder;
+import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.MimeTypeUtils;
+import apincer.music.core.utils.MusicMateExecutors;
+import apincer.music.core.utils.NetworkUtils;
+import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
+
+public class BaseServer {
+    private static final String TAG = "BaseServer";
+    public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
+
+    public static final int WEB_SERVER_PORT = 9000;
+    public static final String CONTEXT_PATH_WEBSOCKET = "/ws";
+    protected static final String CONTEXT_PATH_ROOT = "/";
+    public static final String CONTEXT_PATH_COVERART = "/coverart/";
+    public static final String CONTEXT_PATH_MUSIC = "/music/";
+
+    public static final String DEFAULT_PATH = "/index.html";
+
+    protected final Context context;
+    private final TagRepository tagRepos;
+    private final FileRepository fileRepos;
+    private final String appVersion;
+    private final String osVersion;
+    private final List<String> libInfos = new ArrayList<>();
+
+    private PlaybackCallback playbackCallback;
+    // Fallback only, used before the playback service binds. Created on first use: building it
+    // loads the saved queue from the database, which ran on the main thread at startup.
+    private QueueManager fallbackQueueManager;
+
+    AutoCloseable nowPlayingSubscription;
+    AutoCloseable playbackSubscription;
+    AutoCloseable playbackStateSubscription;
+
+    private boolean isBound = false;
+
+    public BaseServer(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+        this.context = context;
+        this.fileRepos = fileRepos;
+        this.tagRepos = tagRepos;
+
+        this.appVersion = ApplicationUtils.getVersionNumber(context);
+        this.osVersion = Build.VERSION.RELEASE;
+
+        if (this instanceof WebServer) {
+            bindPlaybackService();
+        }
+    }
+
+    private void bindPlaybackService() {
+        if (isBound) return;
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.MusicMateServiceImpl"));
+            isBound = context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to bind to MusicMateServiceImpl: " + e.getMessage());
+        }
+    }
+
+    protected QueueManager getQueueManager() {
+        if (playbackService != null && playbackService.getQueueManager() != null) {
+            return playbackService.getQueueManager();
+        }
+        synchronized (this) {
+            if (fallbackQueueManager == null) fallbackQueueManager = new QueueManager(tagRepos);
+            return fallbackQueueManager;
+        }
+    }
+
+    private PlaybackService playbackService;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @SuppressLint("CheckResult")
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicMateServiceBinder binder = (MusicMateServiceBinder) service;
+            playbackService = binder.getPlaybackService();
+            if (playbackCallback != null) {
+                closeSubscriptions();
+                nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
+                        mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
+                        throwable -> Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable)
+                );
+                playbackSubscription = playbackService.subscribePlaybackTarget(
+                        playbackTarget -> playbackTarget.ifPresent(playbackCallback::onPlaybackTargetChanged),
+                        throwable -> Log.e("BaseServer", "Error in playbackTarget subscription", throwable)
+                );
+                playbackStateSubscription = playbackService.subscribePlaybackState(
+                        playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
+                        throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable)
+                );
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            playbackService = null;
+            closeSubscriptions();
+        }
+    };
+
+    private synchronized void closeSubscriptions() {
+        if (nowPlayingSubscription != null) {
+            try { nowPlayingSubscription.close(); } catch (Exception ignored) {}
+            nowPlayingSubscription = null;
+        }
+        if (playbackSubscription != null) {
+            try { playbackSubscription.close(); } catch (Exception ignored) {}
+            playbackSubscription = null;
+        }
+        if (playbackStateSubscription != null) {
+            try { playbackStateSubscription.close(); } catch (Exception ignored) {}
+            playbackStateSubscription = null;
+        }
+    }
+
+    public void destroy() {
+        closeSubscriptions();
+        if (isBound) {
+            try {
+                context.unbindService(serviceConnection);
+            } catch (Exception ignored) {}
+            isBound = false;
+        }
+        playbackService = null;
+    }
+
+    public String getServerSignature() {
+        return serverHeader(osVersion, appVersion, libInfos);
+    }
+
+    /**
+     * The HTTP Server header in the UPnP Device Architecture form "OS/version UPnP/1.0
+     * product/version", with the engine (e.g. SonicNIO/2.2) as an extra product token.
+     */
+    static String serverHeader(String osVersion, String appVersion, java.util.List<String> libInfos) {
+        StringBuilder sb = new StringBuilder("Android/").append(osVersion)
+                .append(" UPnP/1.0 MusicMate/").append(appVersion);
+        for (String lib : libInfos) sb.append(' ').append(lib);
+        return sb.toString();
+    }
+
+    public void addLibInfo(String name, String version) {
+        if(isEmpty(version)) {
+            libInfos.add(name);
+        }else {
+            libInfos.add(name + "/" + version);
+        }
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    private void notifyPlayback(String clientIp, String userAgent, Track tag) {
+
+        MusicMateExecutors.execute(() -> {
+            if(playbackService != null) {
+                // The service applies the player priority: a stream never interrupts music that is
+                // playing, and a driven renderer's own pre-fetch is the same session, not a new one
+                String cleanIp = NetworkUtils.extractIpAddress(clientIp);
+                PlaybackTarget player = WebStreamingPlayer.Factory.create(cleanIp, userAgent, cleanIp);
+                playbackService.onStreamAccess(player, tag);
+            }
+        });
+    }
+
+    /**
+     * Formats the given time value as a string in the standard IMF-fixdate format (RFC 1123).
+     *
+     * @param time the time in milliseconds since the Java epoch (00:00:00 GMT, January 1, 1970)
+     * @return the given time value as a formatted string
+     */
+    public String formatDate(long time) {
+        return DateTimeFormatter.RFC_1123_DATE_TIME.format(
+                ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC)
+        );
+    }
+
+    /**
+     * Normalizes a request path to prevent path traversal attacks (e.g., ../../etc/passwd).
+     * Returns a safe relative path or null if traversal is detected.
+     */
+    protected String normalizePath(String path) {
+        if (isEmpty(path)) return DEFAULT_PATH;
+
+        if (path.equals("/")) {
+            return DEFAULT_PATH;
+        }
+        
+        // 1. Remove query and fragment
+        if (path.contains("?")) path = path.substring(0, path.indexOf("?"));
+        if (path.contains("#")) path = path.substring(0, path.indexOf("#"));
+
+        // 2. Decode URL-encoded characters (like %2e%2e for ..)
+        try {
+            path = java.net.URLDecoder.decode(path, StandardCharsets.UTF_8);
+        } catch (Exception ignored) {}
+
+        // 3. Check for obvious traversal attempts
+        if (path.contains("..") || path.contains("./") || path.contains("//")) {
+            return null;
+        }
+
+        // 4. Ensure it's treated as a relative path from the context root
+        //while (path.startsWith("/")) {
+        //    path = path.substring(1);
+        //}
+
+        return path.isEmpty() ? DEFAULT_PATH : path;
+    }
+
+    private File getWebResource(String requestUri) {
+        String safePath = normalizePath(requestUri);
+        if (safePath == null) return null;
+
+        File webUiDir = new File(getContext().getFilesDir(), "webui");
+        File resource = new File(webUiDir, safePath);
+        
+        // Final sanity check: Does the resolved file still live inside webUiDir?
+        try {
+            if (!resource.getCanonicalPath().startsWith(webUiDir.getCanonicalPath())) {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        
+        return resource;
+    }
+
+    protected File getDefaultAlbumArt() {
+        File webUiDir = new File(getContext().getFilesDir(), "webui");
+        return new File(webUiDir, "assets/no_cover.png");
+    }
+
+    private File getAlbumArt(String requestUri) {
+        if (requestUri == null || !requestUri.startsWith(CONTEXT_PATH_COVERART)) {
+            return getDefaultAlbumArt();
+        }
+
+        String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length());
+        
+        // Basic sanitization for the filename key
+        if (albumUniqueKey.contains("/") || albumUniqueKey.contains("\\") || albumUniqueKey.contains("..")) {
+            return getDefaultAlbumArt();
+        }
+
+        // "tn_<key>": a 160x160 JPEG of that cover, for renderers that need the JPEG_TN profile
+        boolean thumbnail = albumUniqueKey.startsWith(THUMBNAIL_KEY_PREFIX);
+        if (thumbnail) albumUniqueKey = albumUniqueKey.substring(THUMBNAIL_KEY_PREFIX.length());
+
+        File albumArt = getFileRepos().getCoverArtByAlbumartFilename(albumUniqueKey);
+        if(albumArt == null || albumArt.length() == 0) {
+            albumArt = getDefaultAlbumArt();
+        }
+        if (thumbnail) {
+            File small = CoverThumbnails.thumbnailFor(albumArt, getContext().getCacheDir());
+            if (small != null) return small;
+        }
+        return albumArt;
+    }
+
+    /** Cover art key prefix for the 160x160 JPEG thumbnail (DLNA JPEG_TN). */
+    public static final String THUMBNAIL_KEY_PREFIX = "tn_";
+
+    private Track getSong(String uri) {
+        if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
+            return null;
+        }
+        try {
+            String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length());
+            if (pathPart.isEmpty()) {
+                return null;
+            }
+            String[] parts = pathPart.split("/");
+            if (parts.length > 0 && !parts[0].isEmpty()) {
+                long contentId = StringUtils.toLong(parts[0]);
+                if (contentId > 0) { // Add validation
+                    return getTagRepos().findById(contentId);
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, TAG+" - Failed to parse content ID from URI: " + uri, ex);
+        }
+        return null;
+    }
+
+    public ContentHolder resolveRequest(String requestUri, String remoteAddr, String userAgent) {
+
+        if (requestUri == null) return null;
+
+        // Decode (Jetty 12 behavior replicated)
+        try {
+            requestUri = URLDecoder.decode(requestUri, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return null;
+        }
+
+        // Remove query params (?a=b)
+        requestUri = normalizePath(requestUri);
+        // 🔥 Prevent path traversal
+        if (requestUri == null) {
+            return null;
+        }
+
+        // Skip WebSocket path
+        if (requestUri.startsWith(CONTEXT_PATH_WEBSOCKET)) {
+            return null;
+        }
+
+        // =========================
+        // ROUTING
+        // =========================
+        try {
+            if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
+                File file = getAlbumArt(requestUri);
+                if (file == null) return null;
+
+                return new ContentHolder(
+                        MimeTypeUtils.getMimeTypeFromPath(file.getPath()),
+                        null,
+                        file.getAbsolutePath()
+                );
+
+            } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
+                Track tag = getSong(requestUri);
+                if (tag == null) return null;
+
+                notifyPlayback(remoteAddr, userAgent, tag);
+                return new ContentHolder(
+                        MimeTypeUtils.getMimeTypeFromPath(tag.getPath()),
+                        tag,
+                        tag.getPath()
+                );
+
+            } else {
+                File file = getWebResource(requestUri);
+                if (file == null) return null;
+
+                return new ContentHolder(MimeTypeUtils.getMimeTypeFromPath(file.getPath()),
+                        null,
+                        file.getAbsolutePath()
+                );
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Routing error: " + requestUri, e);
+            return null;
+        }
+    }
+
+    protected static String generateETag(File file) {
+        String value = file.getAbsolutePath() + "-" + file.length() + "-" + file.lastModified();
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(value.getBytes(StandardCharsets.UTF_8));
+            return "\"" + bytesToHex(hash).substring(0, 16) + "-" + Long.toHexString(file.length()) + "\"";
+        } catch (NoSuchAlgorithmException e) {
+            return "\"" + Integer.toHexString(value.hashCode()) + "-" + Long.toHexString(file.length()) + "\"";
+        }
+    }
+
+    protected static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+
+    public List<String> getLibInfos() {
+        return libInfos;
+    }
+
+    public static String getMusicUrl(Track track) {
+        return "http://"+ NetworkUtils.getIpAddress()+":"+  WEB_SERVER_PORT+CONTEXT_PATH_MUSIC + track.getId() + "/file." + track.getFileType();
+    }
+
+    public TagRepository getTagRepos() {
+        return tagRepos;
+    }
+
+    public FileRepository getFileRepos() {
+        return fileRepos;
+    }
+
+    private void registerPlaybackCallback(PlaybackCallback callback) {
+        this.playbackCallback = callback;
+        bindPlaybackService();
+        if (playbackService != null) {
+            closeSubscriptions();
+            nowPlayingSubscription = playbackService.subscribeNowPlayingSong(
+                    mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
+                    throwable -> Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable)
+            );
+            playbackSubscription = playbackService.subscribePlaybackTarget(
+                    playbackTarget -> playbackTarget.ifPresent(playbackCallback::onPlaybackTargetChanged),
+                    throwable -> Log.e("BaseServer", "Error in playbackTarget subscription", throwable)
+            );
+            playbackStateSubscription = playbackService.subscribePlaybackState(
+                    playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
+                    throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable)
+            );
+        }
+    }
+
+    public abstract class WebSocketContent {
+        private static final String TAG = "WebSocketContent";
+        private final MusicInfoRepository musicInfoService = new MusicInfoRepository();
+        // Cache for generated waveforms to avoid repeated heavy processing.
+        private final LruCache<String, float[]> memoryCache;
+        final int cacheSize = 256; // Bounded to 256 entries to prevent OOM
+        private PlaybackState currentPlaybackState;
+
+
+
+        /**
+         * Constructs the WebSocket content handler.
+         */
+        protected WebSocketContent() {
+            // Initialize the waveform cache bounded by number of entries
+            memoryCache = new LruCache<>(cacheSize);
+
+            registerPlaybackCallback(new PlaybackCallback() {
+                @Override
+                public void onMediaTrackChanged(Track track) {
+                    Map<String, Object> response = getNowPlaying(track);
+                    if (response != null) {
+                        try {
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error serializing nowPlaying", e);
+                        }
+
+                       // Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
+                    }
+                }
+
+                @Override
+                public void onPlaybackStateChanged(PlaybackState state) {
+                    currentPlaybackState = state;
+                    Map<String, Object> response = getPlaybackState(state);
+                    if (response != null) {
+                        try {
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error serializing playbackState", e);
+                        }
+                    }
+                }
+
+                @Override
+                public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
+                    Map<String, Object> response = getPlaybackTarget(playbackTarget);
+                    if (response != null) {
+                        try {
+                            String jsonResponse = apincer.music.core.utils.JsonUtils.toJson(response);
+                            broadcastMessage(jsonResponse);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error serializing playbackTarget", e);
+                        }
+                        //Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
+                    }
+                }
+            });
+        }
+
+        protected abstract void broadcastMessage(String jsonResponse);
+
+        /**
+         * The main entry point for processing commands received from the WebSocket client.
+         * Parses the command and delegates to the appropriate handler method.
+         *
+         * @param command The command string (e.g., "browse", "play", "getTrackMetadata").
+         * @param message A Map containing the payload associated with the command (e.g., path, trackId).
+         * @return A Map representing the JSON response to send back to the client,
+         * or {@code null} if the command does not require a direct response.
+         */
+        @Nullable
+        public Map<String, Object> handleCommand(String command, Map<String, Object> message) {
+            if (command == null) {
+                Log.w(TAG, "Received websocket null command");
+                return null;
+            }
+            Log.d(TAG, "Received websocket command: " + command + " message: " + message);
+
+            try {
+                switch (command) {
+                    case "browse":
+                        String path = getOptionalString(message, "path", "Library");
+                        return sendBrowseResult(path);
+
+                    case "search":
+                        String query = getRequiredString(message, "query");
+                        return handleSearch(query);
+
+                    case "getTrackMetadata":
+                        long trackIdMeta = getRequiredTrackIdAsLong(message);
+                        return handleGetTrackMetadata(trackIdMeta);
+
+                    case "setRenderer":
+                        setRenderer(getRequiredString(message, "udn"));
+                        break; // No direct response needed
+
+                    case "getQueue":
+                        return sendQueueUpdate();
+
+                    case "addToQueue":
+                        handleAddToQueue(getRequiredString(message, "trackId"));
+                        break; // Queue update will be pushed
+
+                    case "emptyQueue":
+                        handleEmptyQueue();
+                        break; // Queue update will be pushed
+
+                    case "play":
+                        handlePlay(getRequiredString(message, "trackId"));
+                        break; // Playback state updates will be pushed
+
+                    case "playFromContext":
+                        String songIdContext = getRequiredString(message, "trackId");
+                        String pathContext = getRequiredString(message, "path");
+                        handlePlayFormContext(songIdContext, pathContext);
+                        break; // Playback state and queue updates will be pushed
+
+                    case "next":
+                        handlePlayNext();
+                        break; // Playback state update will be pushed
+
+                    case "previous":
+                        handlePlayPrevious();
+                        break; // Playback state update will be pushed
+
+                    case "getTrackDetails":
+                        return handleGetTrackDetails(getRequiredString(message, "trackId"));
+
+                    case "setRepeatMode":
+                        String mode = getRequiredString(message, "mode");
+                        if (!"none".equals(mode) && !"all".equals(mode) && !"one".equals(mode)) {
+                            throw new IllegalArgumentException("Invalid mode for setRepeatMode: " + mode);
+                        }
+                        handleSetRepeatMode(mode);
+                        break; // Playback state update will be pushed
+
+                    case "setShuffle":
+                        handleSetShuffleMode(getBoolean(message, "enabled"));
+                        break; // Playback state update will be pushed
+
+                    case "getNowPlaying":
+                        return sendNowPlaying();
+
+                    case "togglePlayPause":
+                        handleTogglePlayPause();
+                        break; // Playback state update will be pushed
+                    default:
+                        Log.w(TAG, "Unknown command received: " + command);
+                        return createErrorResponse("Unknown command: " + command);
+                }
+            } catch (IllegalArgumentException e) {
+                // This new catch block handles all validation failures from the helpers
+                Log.w(TAG, "Command '" + command + "' failed: " + e.getMessage());
+                return createErrorResponse(e.getMessage());
+            } catch (ClassCastException e) {
+                Log.e(TAG, "Error casting parameter for command: " + command, e);
+                return createErrorResponse("Invalid parameter type");
+            } catch (Exception e) {
+                Log.e(TAG, "Unexpected error handling command: " + command, e);
+                return createErrorResponse("Internal server error");
+            }
+            return null; // Return null for commands that don't send a direct response
+        }
+
+        private Map<String, Object> handleSearch(String query) {
+            List<Track> results = tagRepos.getDbHelper().findByKeyword(query, 0, 100);
+            List<Map<String, ?>> items = results.stream().map(this::getMap).collect(Collectors.toList());
+            return Map.of("type", "browseResult", "items", items, "path", "Search: " + query);
+        }
+
+        private void handleTogglePlayPause() {
+            if (playbackService != null && currentPlaybackState != null) {
+                if (currentPlaybackState.currentState == PlaybackState.State.PLAYING) {
+                    playbackService.pausePlayer();
+                } else if (currentPlaybackState.currentState == PlaybackState.State.PAUSED) {
+                    if (currentPlaybackState.currentTrack != null) {
+                        playbackService.playSong(currentPlaybackState.currentTrack);
+                    }
+                } else if (currentPlaybackState.currentTrack != null) {
+                    playbackService.playSong(currentPlaybackState.currentTrack);
+                }
+            }
+        }
+
+        /**
+         * Gets a required String parameter from the message map.
+         * Throws IllegalArgumentException if the parameter is null, empty, or the string "null".
+         */
+        private String getRequiredString(Map<String, Object> message, String key) {
+            Object obj = message.get(key);
+            if (obj == null) {
+                throw new IllegalArgumentException("Missing required parameter: " + key);
+            }
+            String value = String.valueOf(obj);
+            if (value.isEmpty() || "null".equalsIgnoreCase(value)) {
+                throw new IllegalArgumentException("Invalid or empty parameter: " + key);
+            }
+            return value;
+        }
+
+        /**
+         * Gets an optional String parameter from the message map.
+         * Returns the defaultValue if the parameter is null, empty, or the string "null".
+         */
+        private String getOptionalString(Map<String, Object> message, String key, String defaultValue) {
+            Object obj = message.get(key);
+            if (obj == null) {
+                return defaultValue;
+            }
+            String value = String.valueOf(obj);
+            if (value.isEmpty() || "null".equalsIgnoreCase(value)) {
+                return defaultValue;
+            }
+            return value;
+        }
+
+        /**
+         * Gets the "trackId" parameter and parses it as a long.
+         * This robustly handles the ID being sent as either a String or a Number.
+         * Throws IllegalArgumentException if the ID is missing or in an invalid format.
+         */
+        private long getRequiredTrackIdAsLong(Map<String, Object> message) {
+            Object idObj = message.get("trackId");
+            if (idObj == null) {
+                throw new IllegalArgumentException("Missing required parameter: trackId");
+            }
+
+            try {
+                if (idObj instanceof Number) {
+                    // Client sent it as a number
+                    return ((Number) idObj).longValue();
+                } else {
+                    // Client sent it as a string (which our JS client does)
+                    return Long.parseLong(String.valueOf(idObj));
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid format for trackId: " + idObj);
+            }
+        }
+
+        /**
+         * Gets a boolean parameter from the message map.
+         * Safely defaults to false if the parameter is null or not a boolean.
+         */
+        private boolean getBoolean(Map<String, Object> message, String key) {
+            // This is the most robust way to parse a boolean from an Object
+            return Boolean.TRUE.equals(message.get(key));
+        }
+
+        /**
+         * Handles the "getTrackMetadata" command. Fetches detailed track information including
+         * waveform data, artist/album bios, genres, and credits. This involves potentially
+         * slow operations like file analysis and external API calls.
+         *
+         * @param trackId The ID of the track to fetch metadata for.
+         * @return A Map representing the "trackMetadata" response, or {@code null} if the track is not found.
+         */
+        @Nullable
+        private Map<String, Object> handleGetTrackMetadata(long trackId) {
+            Track song = tagRepos.findById(trackId);
+            if (song == null) {
+                Log.w(TAG, "handleGetTrackMetadata: Track not found for ID " + trackId);
+                return null;
+            }
+
+            TrackInfo info = null;
+            try {
+                info = musicInfoService.getFullTrackInfo(song.getArtist(), song.getAlbumArtist(), song.getAlbum(), song.getYear());
+            } catch (Exception ex) {
+                Log.e(TAG, "getTrackMetadata (bio fetch) failed for track ID " + trackId, ex);
+            }
+
+            float[] waveform = getWaveform(song);
+
+            Map<String, Object> infoPayload = new HashMap<>();
+            if (info != null) {
+                infoPayload.put("artistBio", info.artistBio());
+                infoPayload.put("albumBio", info.albumBio());
+                infoPayload.put("genres", info.genres() != null ? info.genres() : Collections.emptyList()); // Ensure not null
+                infoPayload.put("highResArtUrl", info.highResArtUrl());
+            } else {
+                infoPayload.put("genres", Collections.emptyList()); // Default empty list if info fetch fails
+            }
+
+            Map<String, String> credits = new HashMap<>();
+            if (!isEmpty(song.getComposer())) {
+                credits.put("composer", song.getComposer());
+            }
+
+            // Add more credits (producer, personnel) if available in MusicTag
+            infoPayload.put("credits", credits);
+
+            return Map.of(
+                    "type", "trackMetadata",
+                    "trackId", song.getId(),
+                    "waveform", waveform != null ? waveform : new float[0], // Ensure waveform is not null
+                    "info", infoPayload
+            );
+        }
+
+        /**
+         * Retrieves overall statistics for the music library.
+         *
+         * @return A Map representing the "statsUpdate" response containing total songs, size, and duration.
+         */
+        public Map<String, Object> getLibraryStats() {
+            // Use database aggregation instead of loading all songs into memory
+            apincer.music.core.model.SearchResultStats statsData = tagRepos.getSearchStats(new apincer.music.core.model.SearchCriteria(apincer.music.core.model.SearchCriteria.TYPE.LIBRARY));
+            if (statsData == null) {
+                return null;
+            }
+            
+            Map<String, Object> stats = Map.of(
+                    "totalSize", StringUtils.formatStorageSize(statsData.getTotalSize()),
+                    "totalDuration", StringUtils.formatDuration((long) statsData.getTotalDuration(), true),
+                    "songs", statsData.getTotalCount()
+            );
+            return Map.of("type", "statsUpdate", "stats", stats);
+        }
+
+        /**
+         * Handles the "play" command. Finds the track by ID and initiates playback.
+         *
+         * @param id The ID string of the track to play.
+         */
+        private void handlePlay(String id) {
+            if (playbackService != null) {
+                try {
+                    long trackId = Long.parseLong(id);
+                    Track tag = tagRepos.findById(trackId);
+                    if (tag != null) {
+                        playbackService.playSong(tag);
+                    } else {
+                        Log.w(TAG, "handlePlay: Track not found for ID " + id);
+                    }
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "handlePlay: Invalid ID format " + id, e);
+                }
+            }
+        }
+
+        /**
+         * Handles the "setShuffle" command. Enables or disables shuffle mode.
+         *
+         * @param enabled {@code true} to enable shuffle, {@code false} to disable.
+         */
+        private void handleSetShuffleMode(boolean enabled) {
+            if (playbackService != null) {
+                playbackService.setShuffleMode(enabled);
+            }
+        }
+
+        private void handlePlayPause() {
+            if (playbackService != null) {
+                playbackService.pausePlayer();
+            }
+        }
+
+        /**
+         * Handles the "setRepeatMode" command. Sets the repeat mode (none, all, one).
+         *
+         * @param mode The repeat mode string ("none", "all", "one").
+         */
+        private void handleSetRepeatMode(String mode) {
+            if (playbackService != null) {
+                playbackService.setRepeatMode(mode);
+            }
+        }
+
+        /**
+         * Handles the "getTrackDetails" command. Fetches basic track information suitable
+         * for quickly populating UI elements before heavier metadata arrives.
+         *
+         * @param id The ID string of the track.
+         * @return A Map representing the "trackDetailsResult" response, or {@code null} if the track is not found.
+         */
+        @Nullable
+        private Map<String, Object> handleGetTrackDetails(String id) {
+            try {
+                long trackId = Long.parseLong(id);
+                Track tag = tagRepos.findById(trackId);
+                if (tag != null) {
+                    Map<String, Object> track = getMap(tag); // Use getMap for consistency
+                    return Map.of("type", "trackDetailsResult", "track", track);
+                } else {
+                    Log.w(TAG, "handleGetTrackDetails: Track not found for ID " + id);
+                }
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "handleGetTrackDetails: Invalid ID format " + id, e);
+            }
+            return null;
+        }
+
+        /**
+         * Handles the "emptyQueue" command. Clears the current playback queue.
+         */
+        private void handleEmptyQueue() {
+            getQueueManager().emptyPlayingQueue();
+        }
+
+        /**
+         * Handles the "playFromContext" command. Starts playback of a specific track
+         * and sets the playback queue based on the context (e.g., album, genre, playlist).
+         *
+         * @param id   The ID string of the track to start playing.
+         * @param path The context path (e.g., "Library/Genres/Pop") defining the queue.
+         */
+        private void handlePlayFormContext(String id, String path) {
+            if (playbackService == null) return;
+
+            try {
+                long trackId = Long.parseLong(id);
+                Track songToPlay = tagRepos.findById(trackId);
+                if(songToPlay == null) {
+                    Log.w(TAG, "handlePlayFormContext: Track to play not found for ID " + id);
+                    return;
+                }
+
+                playbackService.setShuffleMode(false); // Reset shuffle mode for context playback
+
+                List<Track> songsInContext = new ArrayList<>();
+                // Determine the list of songs based on the path
+                if (path.equalsIgnoreCase("Library/All Songs")) {
+                    songsInContext = tagRepos.getAllMusics();
+                } else if (path.equalsIgnoreCase("Library/Incoming Tracks") || path.equalsIgnoreCase("Library/Recently Added")) {
+                    songsInContext = tagRepos.findRecentlyAdded(0, 0);
+                } else if (path.startsWith("Library/Genres/")) {
+                    String name = path.substring("Library/Genres/".length());
+                    songsInContext = tagRepos.findByGenre(name);
+                } else if (path.startsWith("Library/Artists/")) {
+                    String name = path.substring("Library/Artists/".length());
+                    songsInContext = tagRepos.findByArtist(name, 0, 0);
+                } else if (path.startsWith("Library/Playlists/")) {
+                    String name = path.substring("Library/Playlists/".length());
+                    // Assuming isSongInPlaylistName works correctly
+                    songsInContext = tagRepos.getAllMusicsForPlaylist().stream()
+                            .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
+                            .collect(Collectors.toList());
+                } else {
+                    Log.w(TAG, "handlePlayFormContext: Unknown context path: " + path);
+                    // Optionally default to playing just the single song
+                    songsInContext.add(songToPlay);
+                }
+
+                // Set the queue in the repository and load it into the playback service
+                //tagRepos.savePlayingQueue(songsInContext);
+                getQueueManager().savePlayingQueue(songsInContext);
+                playbackService.playSong(songToPlay);
+
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "handlePlayFormContext: Invalid ID format " + id, e);
+            } catch (Exception e) {
+                Log.e(TAG, "Error in handlePlayFormContext", e);
+            }
+        }
+
+        /**
+         * Handles the "previous" command. Skips to the previous track in the queue.
+         */
+        private void handlePlayPrevious() {
+            if (playbackService != null) {
+                playbackService.skipToPrevious();
+            }
+        }
+
+        /**
+         * Handles the "next" command. Skips to the next track in the queue.
+         */
+        private void handlePlayNext() {
+            if (playbackService != null) {
+                playbackService.skipToNextInQueue();
+            }
+        }
+
+        /**
+         * Handles the "setRenderer" command. Switches the active playback target (UPnP/DLNA device).
+         *
+         * @param udn The Unique Device Name (UDN) or identifier of the target device.
+         */
+        private void setRenderer(String udn) {
+            if (playbackService != null) {
+                playbackService.switchPlayer(udn, true);
+            }
+        }
+
+        /**
+         * Handles the "addToQueue" command. Adds the specified track to the end of the playback queue.
+         *
+         * @param songId The ID string of the track to add.
+         */
+        private void handleAddToQueue(String songId) {
+            if (songId == null || songId.isBlank()) return;
+            try {
+                long trackId = Long.parseLong(songId);
+                getQueueManager().addPlayingQueue(trackId);
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "handleAddToQueue: Invalid ID format " + songId, e);
+            }
+        }
+
+        /**
+         * Retrieves the current state of the playback queue.
+         *
+         * @return A Map representing the "updateQueue" response containing the list of tracks in the queue.
+         * Returns {@code null} in case of a database error.
+         */
+        @Nullable
+        public Map<String, Object> sendQueueUpdate() {
+            try {
+                // Fetching QueueItems which contain the order and the MusicTag
+
+                //List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
+                List<Track> songs = getQueueManager().getSongs();
+                List<Map<String, ?>> queueAsMaps = songs.stream()
+                        //.map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
+                        .filter(java.util.Objects::nonNull) // Filter out any null tracks
+                        .map(this::getMap) // Convert MusicTag to Map
+                        .collect(Collectors.toList());
+                return Map.of("type", "updateQueue", "path", "Playing Queue", "queue", queueAsMaps);
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching playing queue", e);
+            }
+            return null;
+        }
+
+        /**
+         * Retrieves the currently playing track information.
+         *
+         * @return A Map representing the "nowPlaying" response, or {@code null} if nothing is playing.
+         */
+        @Nullable
+        public Map<String, Object> sendNowPlaying() {
+            if (playbackService != null) {
+                Track nowPlaying = playbackService.getNowPlayingSong();
+                if (nowPlaying != null) {
+                    Map<String, Object> track = getMap(nowPlaying);
+                    return Map.of("type", "nowPlaying", "track", track);
+                }
+            }
+            return null; // Send null or a specific "stopped" message if needed
+        }
+
+        /**
+         * Handles the "browse" command. Retrieves the list of items (songs or folders)
+         * for the specified library path.
+         *
+         * @param path The library path to browse (e.g., "Library/Genres/Pop").
+         * @return A Map representing the "browseResult" response containing the items and the current path.
+         */
+        private Map<String, Object> sendBrowseResult(String path) {
+            List<Map<String, ?>> items = new ArrayList<>(); // Use ArrayList for modification safety
+            try {
+                if (path == null || path.isEmpty() || path.equalsIgnoreCase("Library")) {
+                    // Default top-level view
+                    items = List.of(
+                            Map.of("type", "folder", "name", "Incoming Tracks", "path", "Library/Incoming Tracks"),
+                            Map.of("type", "folder", "name", "All Songs", "path", "Library/All Songs"),
+                            Map.of("type", "folder", "name", "Artists", "path", "Library/Artists"),
+                            Map.of("type", "folder", "name", "Genres", "path", "Library/Genres"),
+                            Map.of("type", "folder", "name", "Playlists", "path", "Library/Playlists")
+                    );
+                } else if (path.equalsIgnoreCase("Library/All Songs")) {
+                    List<Track> songs = tagRepos.getAllMusicsForPlaylist();
+                    items = songs.stream().map(this::getMap).collect(Collectors.toList());
+                } else if (path.equalsIgnoreCase("Library/Incoming Tracks") || path.equalsIgnoreCase("Library/Recently Added")) {
+                    List<Track> songs = tagRepos.findRecentlyAdded(0, 0);
+                    items = songs.stream().map(this::getMap).collect(Collectors.toList());
+                } else if (path.equalsIgnoreCase("Library/Genres")) {
+                    List<String> genres = tagRepos.getActualGenreList();
+                    items = genres.stream()
+                            .map(entry -> Map.<String, Object>of("type", "folder", "name", entry, "path", "Library/Genres/" + entry))
+                            .collect(Collectors.toList());
+                } else if (path.startsWith("Library/Genres/")) {
+                    String name = path.substring("Library/Genres/".length());
+                    List<Track> songs = tagRepos.findByGenre(name);
+                    items = songs.stream().map(this::getMap).collect(Collectors.toList());
+                } else if (path.equalsIgnoreCase("Library/Artists")) {
+                    List<String> artists = tagRepos.getArtistList(); // Assuming this method exists
+                    items = artists.stream()
+                            .map(entry -> Map.<String, Object>of("type", "folder", "name", entry, "path", "Library/Artists/" + entry))
+                            .collect(Collectors.toList());
+                } else if (path.startsWith("Library/Artists/")) {
+                    String name = path.substring("Library/Artists/".length());
+                    List<Track> songs = tagRepos.findByArtist(name, 0, 0);
+                    items = songs.stream().map(this::getMap).collect(Collectors.toList());
+                } else if (path.equalsIgnoreCase("Library/Playlists")) {
+                    List<PlaylistEntry> list = PlaylistRepository.getPlaylists();
+                    items = list.stream()
+                            .sorted(Comparator.comparing(PlaylistEntry::getName))
+                            .map(entry -> Map.<String, Object>of("type", "folder", "name", entry.getName(), "path", "Library/Playlists/" + entry.getName()))
+                            .collect(Collectors.toList());
+                   // String missingTitle = "the Missing Titles";
+                   // items.add(Map.<String, Object>of("type", "folder", "name", missingTitle, "path", "Library/Playlists/" + missingTitle));
+                } else if (path.startsWith("Library/Playlists/")) {
+                    String name = path.substring("Library/Playlists/".length());
+
+                    /*String missingTitle = "the Missing Titles";
+                    if(name.equals(missingTitle)) {
+                        List<PlaylistEntry> entries = PlaylistRepository.getPlaylists();
+
+                        items = songs.stream()
+                                .filter(musicTag -> !PlaylistRepository.isSongInPlaylistName(musicTag, name))
+                                .map(this::getMap)
+                                .collect(Collectors.toList());
+                    }else { */
+                        // This might be inefficient if getAllMusicsForPlaylist is large
+
+                        List<Track> songs = tagRepos.getAllMusicsForPlaylist();
+                        items = songs.stream()
+                                .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
+                                .map(this::getMap)
+                                .collect(Collectors.toList());
+                  //  }
+                } else {
+                    Log.w(TAG, "sendBrowseResult: Unknown browse path: " + path);
+                    // Return empty list for unknown paths
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error browsing path: " + path, e);
+                // Return empty list on error
+            }
+            return Map.of("type", "browseResult", "items", items, "path", StringUtils.trimToEmpty(path));
+        }
+
+        /**
+         * Converts a {@link Track} object (like {@link Track}) into a Map suitable for sending as JSON.
+         * Contains basic track information used in various responses (browse, queue, nowPlaying, trackDetails).
+         *
+         * @param song The {@link Track} to convert.
+         * @return A Map containing key track details. Returns an empty map if the input song is null.
+         */
+        @NonNull
+        private Map<String, Object> getMap(@Nullable Track song) {
+            if (song == null) return new HashMap<>();
+
+            Map<String, Object> track = new HashMap<>();
+            track.put("type", "song");
+            track.put("trackId", song.getId());
+            track.put("title", trimToEmpty(song.getTitle()));
+            track.put("artist", trimToEmpty(song.getArtist()));
+            track.put("album", trimToEmpty(song.getAlbum()));
+            track.put("duration", song.getAudioDuration());
+            track.put("format", trimToEmpty(song.getAudioEncoding()).toUpperCase(Locale.US));
+            track.put("bitDepth", StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()));
+            track.put("sampleRate", StringUtils.formatAudioSampleRate(song.getAudioSampleRate(),true));
+            track.put("artUrl", "/coverart/" + trimToEmpty(song.getAlbumArtFilename()));
+
+            if (!isEmpty(song.getYear())) {
+                track.put("year", song.getYear());
+            }
+
+            if (song.getDrScore()>0) {
+                track.put("drs", getDynamicRangeScore(song));
+            }
+
+            String qualityIndicator = song.getQualityInd();
+            if (!isEmpty(qualityIndicator)) {
+                if (qualityIndicator.contains("MQA")) {
+                    track.put("quality", "MQA");
+                } else {
+                    track.put("quality", qualityIndicator);
+                }
+            }
+
+            return track;
+        }
+
+        /**
+         * Retrieves the current playback state (playing/paused, position, duration, track ID).
+         *
+         * @param state The current {@link PlaybackState} object from the {@link PlaybackService}.
+         * @return A Map representing the "playbackState" response, or {@code null} if the state or track is invalid.
+         */
+        @Nullable
+        public Map<String, Object> getPlaybackState(@Nullable PlaybackState state) {
+            if (state == null || state.currentTrack == null || state.currentState == null) return null;
+
+            // Ensure state name is lowercase as expected by the client
+            String stateName = state.currentState.name().toLowerCase();
+            
+            String repeatMode = "none";
+            String shuffleMode = "none";
+            if (playbackService != null && playbackService.getQueueManager() != null) {
+                apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
+                shuffleMode = qm.isShuffle() ? "all" : "none";
+                String rMode = qm.getRepeatMode().name();
+                if ("ONE".equalsIgnoreCase(rMode)) repeatMode = "one";
+                else if ("ALL".equalsIgnoreCase(rMode)) repeatMode = "all";
+            }
+
+            return Map.of(
+                    "type", "playbackState",
+                    "trackId", state.currentTrack.getId(),
+                    "elapsed", state.currentPositionSecond,
+                    "state", stateName,
+                    "duration", state.currentTrack.getAudioDuration(),
+                    "shuffleMode", shuffleMode,
+                    "repeatMode", repeatMode
+            );
+        }
+
+        /**
+         * Generates or retrieves the waveform data for a given track from the cache or by analysis.
+         *
+         * @param tag The {@link Track} to get the waveform for.
+         * @return A float array representing the waveform peaks, or {@code null} if generation fails.
+         */
+        @Nullable
+        private float[] getWaveform(@NonNull Track tag) {
+            String cacheKey = String.valueOf(tag.getId());
+
+            // --- 1. First check (fast, no lock) ---
+            // LruCache.get() is thread-safe
+            float[] waveform = memoryCache.get(cacheKey);
+
+            if (waveform == null) {
+                // --- 2. Lock only on a cache miss ---
+                // We synchronize on the cache itself
+                synchronized (memoryCache) {
+
+                    // --- 3. Second check (inside the lock) ---
+                    // This stops the race condition. While this thread was
+                    // waiting for the lock, another thread might have
+                    // finished and populated the cache.
+                    waveform = memoryCache.get(cacheKey);
+
+                    if (waveform == null) {
+                        // --- 4. Generate (This block only runs ONCE) ---
+                        Log.d(TAG, "Waveform cache miss for track ID: " + cacheKey);
+                        waveform = MusicAnalyser.generateWaveform(context, tag, 480, 0.6);
+
+                        if (waveform != null) {
+                            // --- 5. Put in cache (also thread-safe) ---
+                            // If this is the 11th item, LruCache will
+                            // automatically remove the oldest one.
+                            memoryCache.put(cacheKey, waveform);
+                            Log.d(TAG, "Waveform generated and cached for track ID: " + cacheKey);
+                        } else {
+                            Log.w(TAG, "Failed to generate waveform for track ID: " + cacheKey);
+                        }
+                    } else {
+                        Log.d(TAG, "Waveform (double-check) cache hit for ID: " + cacheKey);
+                    }
+                }
+            } else {
+                Log.d(TAG, "Waveform cache hit for track ID: " + cacheKey);
+            }
+
+            return waveform;
+        }
+
+        /**
+         * Gets the status information for the currently active playback target (renderer).
+         *
+         * @param player The currently active {@link PlaybackTarget}.
+         * @return A Map representing the "playerStatus" response, or {@code null} if no player is active.
+         */
+        @Nullable
+        public Map<String, Object> getPlaybackTarget(@Nullable PlaybackTarget player) {
+            if (player != null) {
+                return Map.of(
+                        "type", "playerStatus",
+                        "targetId", trimToEmpty(player.getTargetId()),
+                        "name", trimToEmpty(player.getDisplayName())
+                        // Add volume, shuffle, repeat mode if available from PlaybackTarget/PlaybackService
+                );
+            }
+            return null;
+        }
+
+        /**
+         * Retrieves the list of available playback targets (renderers) discovered on the network.
+         *
+         * @return A Map representing the "availableRenderers" response containing the list of renderers.
+         */
+        public Map<String, Object> getAvailableRenderers() {
+            if (playbackService == null) return Map.of("type", "availableRenderers", "renderers", Collections.emptyList());
+
+            List<Map<String, ?>> renderers = Collections.emptyList(); // Default to empty list
+            List<PlaybackTarget> rendererList = playbackService.getPlaybackTargets();
+
+            if (rendererList != null && !rendererList.isEmpty()) {
+                renderers = rendererList.stream()
+                        .map(device -> Map.<String, Object>of(
+                                "name", device.getDisplayName(),
+                                "targetId", device.getTargetId()
+                        ))
+                        .collect(Collectors.toList());
+            }
+
+            return Map.of("type", "availableRenderers", "renderers", renderers);
+        }
+
+        /**
+         * Gets the status information for the currently active playback target.
+         * Convenience method that retrieves the player from the PlaybackService.
+         *
+         * @return A Map representing the "playerStatus" response, or {@code null} if no player is active.
+         */
+        @Nullable
+        public Map<String, Object> getPlaybackTarget() {
+            if (playbackService != null) {
+                return getPlaybackTarget(playbackService.getPlayer());
+            }
+            return null;
+        }
+
+        /**
+         * Formats a given MediaTrack into the standard "nowPlaying" message structure.
+         * This is a helper method used when the track object is already known and
+         * needs to be prepared for sending via WebSocket.
+         *
+         * @param song The {@link Track} to format.
+         * @return A Map representing the "nowPlaying" message, or {@code null} if the input song is null.
+         */
+        @Nullable // Add Nullable annotation
+        public Map<String, Object> getNowPlaying(@Nullable Track song) { // Add Nullable annotation
+            if (song != null) {
+                Map<String, Object> track = getMap(song); // getMap already handles null check internally, but good practice
+                return Map.of("type", "nowPlaying", "track", track);
+            }
+            return null;
+        }
+
+        /**
+         * Helper method to create a standardized error response map.
+         * @param message The error message string.
+         * @return A Map representing an error response.
+         */
+        private Map<String, Object> createErrorResponse(String message) {
+            return Map.of("type", "error", "message", message);
+        }
+
+        public List<Map<String, Object>> getWelcomeMessages() {
+           // Log.d(TAG, TAG+" - Connected Messages:");
+            List<Map<String, Object>> messages = new ArrayList<>();
+            Map<String, Object> stats = getLibraryStats();
+            if (stats != null) messages.add(stats);
+            Map<String, Object> renderers = getAvailableRenderers();
+            if (renderers != null) messages.add(renderers);
+            Map<String, Object> nowPlaying = sendNowPlaying();
+            if (nowPlaying != null) messages.add(nowPlaying);
+            // Send empty or partial queue on welcome to avoid saturating NIO socket buffer with 2000+ track objects
+            messages.add(Map.of("type", "updateQueue", "path", "Playing Queue", "queue", Collections.emptyList()));
+
+            return messages;
+        }
+    }
+}

@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/private/tmp/musicmate-metadata-skip-20261003/archive-results.py", line 24, in <module>
+    assert hashes[sources[0]]==hashlib.sha256((dest/'micro/sources/after/FlacDecoder.java').read_bytes()).hexdigest()
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 777, in read_bytes
+    with self.open(mode='rb', buffering=0) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/thawee.p/Workspaces/github/musicmate/tasks/performance/sonicnio-metadata-skip-2026-10-03/micro/sources/after/FlacDecoder.java'

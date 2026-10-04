@@ -1,0 +1,102 @@
+{
+  "before": {
+    "control": {
+      "head": {
+        "n": 128,
+        "median_ms": 13.516396,
+        "p95_ms": 23.7393353,
+        "p99_ms": 26.41655318,
+        "max_ms": 26.854084
+      },
+      "header": {
+        "n": 128,
+        "median_ms": 14.224979000000001,
+        "p95_ms": 24.074618199999996,
+        "p99_ms": 26.43054009,
+        "max_ms": 27.758459
+      },
+      "seek": {
+        "n": 96,
+        "median_ms": 13.524771000000001,
+        "p95_ms": 23.281312500000002,
+        "p99_ms": 25.400272899999997,
+        "max_ms": 26.531208
+      }
+    },
+    "trace": {
+      "head": {
+        "n": 128,
+        "median_ms": 14.355,
+        "p95_ms": 23.4329193,
+        "p99_ms": 27.75657018000001,
+        "max_ms": 29.366083
+      },
+      "header": {
+        "n": 128,
+        "median_ms": 14.0875,
+        "p95_ms": 23.24605,
+        "p99_ms": 27.789342520000012,
+        "max_ms": 29.254417
+      },
+      "seek": {
+        "n": 96,
+        "median_ms": 12.337104499999999,
+        "p95_ms": 22.18662525,
+        "p99_ms": 26.733941649999995,
+        "max_ms": 29.112583
+      }
+    }
+  },
+  "after": {
+    "control": {
+      "head": {
+        "n": 128,
+        "median_ms": 12.101625,
+        "p95_ms": 20.9538853,
+        "p99_ms": 22.970601840000004,
+        "max_ms": 24.07525
+      },
+      "header": {
+        "n": 128,
+        "median_ms": 12.133125,
+        "p95_ms": 20.15090175,
+        "p99_ms": 21.63086691,
+        "max_ms": 24.219625
+      },
+      "seek": {
+        "n": 96,
+        "median_ms": 13.3319995,
+        "p95_ms": 20.762146,
+        "p99_ms": 25.084716049999994,
+        "max_ms": 28.128042
+      }
+    },
+    "trace": {
+      "head": {
+        "n": 128,
+        "median_ms": 13.8591875,
+        "p95_ms": 23.40991655,
+        "p99_ms": 27.240455590000007,
+        "max_ms": 29.9335
+      },
+      "header": {
+        "n": 128,
+        "median_ms": 14.781437,
+        "p95_ms": 23.700873249999997,
+        "p99_ms": 26.781689410000002,
+        "max_ms": 27.503042
+      },
+      "seek": {
+        "n": 96,
+        "median_ms": 13.0872915,
+        "p95_ms": 23.73204175,
+        "p99_ms": 25.009574699999998,
+        "max_ms": 26.166042
+      }
+    }
+  }
+}
+compare-before-0-trace clock uncertainty ms 24.168525 GC {'Background concurrent mark compact GC': {'n': 5, 'total_ms': 260.470469, 'max_ms': 56.121407}, 'Background young concurrent mark compact GC': {'n': 5, 'total_ms': 144.665625, 'max_ms': 31.305885}, 'Mutator threads suspended for ScopedPause': {'n': 10, 'total_ms': 5.997449, 'max_ms': 0.838177}} quality []
+compare-after-1-trace clock uncertainty ms 23.933281 GC {'Background concurrent mark compact GC': {'n': 2, 'total_ms': 115.61052099999999, 'max_ms': 67.35125}, 'Background young concurrent mark compact GC': {'n': 2, 'total_ms': 70.480469, 'max_ms': 44.493907}, 'Mutator threads suspended for ScopedPause': {'n': 4, 'total_ms': 2.885678, 'max_ms': 1.066406}} quality []
+compare-after-2-trace clock uncertainty ms 23.714879 GC {'Background concurrent mark compact GC': {'n': 1, 'total_ms': 54.287135, 'max_ms': 54.287135}, 'Background young concurrent mark compact GC': {'n': 2, 'total_ms': 83.30849, 'max_ms': 55.082448}, 'Mutator threads suspended for ScopedPause': {'n': 3, 'total_ms': 2.062344, 'max_ms': 0.860156}} quality []
+compare-before-3-trace clock uncertainty ms 23.656619 GC {'Background concurrent mark compact GC': {'n': 4, 'total_ms': 251.888647, 'max_ms': 71.805313}, 'Background young concurrent mark compact GC': {'n': 4, 'total_ms': 155.062448, 'max_ms': 41.107343}, 'Mutator threads suspended for ScopedPause': {'n': 8, 'total_ms': 6.099531, 'max_ms': 1.119427}} quality []

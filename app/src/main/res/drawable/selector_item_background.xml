@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Selected State -->
+    <item android:state_selected="true">
+        <layer-list>
+            <!-- Base dark surface for depth -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#80000000" /> <!-- 50% dark base for contrast -->
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Blue tinted glass fill (20% opacity colorPrimary #1E88E5) -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#331E88E5" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Glass sheen gradient -->
+            <item>
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#33FFFFFF"
+                        android:endColor="#00000000"
+                        android:angle="90" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Sharp glass edge stroke in blue -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="32dp"/>
+                    <stroke android:width="2dp" android:color="@color/colorPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Activated State -->
+    <item android:state_activated="true">
+        <layer-list>
+            <!-- Base dark surface for depth -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#80000000" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Blue tinted glass fill -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#331E88E5" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Glass sheen gradient -->
+            <item>
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#33FFFFFF"
+                        android:endColor="#00000000"
+                        android:angle="90" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Sharp glass edge stroke in blue -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="32dp"/>
+                    <stroke android:width="2dp" android:color="@color/colorPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Normal/Default State -->
+    <item>
+        <layer-list>
+            <!-- Base dark surface for depth -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#80000000" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Milky glass fill -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#1AFFFFFF" /> <!-- 10% white frosted tint -->
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Glass sheen gradient -->
+            <item>
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#33FFFFFF"
+                        android:endColor="#00000000"
+                        android:angle="90" />
+                    <corners android:radius="32dp"/>
+                </shape>
+            </item>
+            <!-- Sharp glass edge stroke -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="32dp"/>
+                    <stroke android:width="1.5dp" android:color="#4DFFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

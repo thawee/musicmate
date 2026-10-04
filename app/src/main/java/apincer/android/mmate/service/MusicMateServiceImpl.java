@@ -1,0 +1,2012 @@
+package apincer.android.mmate.service;
+
+import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotification;
+
+import android.app.ForegroundServiceStartNotAllowedException;
+import android.app.Notification;
+import android.app.Service;
+import androidx.media3.session.MediaLibraryService;
+import androidx.media3.session.MediaSession;
+import androidx.media3.session.DefaultMediaNotificationProvider;
+import apincer.android.mmate.R;
+import androidx.media3.session.MediaLibraryService.MediaLibrarySession;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ServiceInfo;
+import android.media.session.MediaController;
+import android.media.session.MediaSessionManager;
+import android.os.Binder;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+
+import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.android.mmate.utils.PermissionUtils;
+import apincer.android.mmate.ui.compose.ExternalPlayerAccessPolicy;
+import apincer.android.mmate.ui.compose.ExternalPlayerListenerAction;
+import apincer.music.core.Constants;
+import apincer.music.core.playback.AudioStreamCacheManager;
+import apincer.music.core.playback.DMRPlayer;
+import apincer.music.core.playback.ExternalAndroidPlayer;
+import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.repository.QueueManager;
+import apincer.music.core.model.Track;
+import apincer.music.core.playback.spi.PlaybackCallback;
+import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.repository.TagRepository;
+import apincer.music.core.server.spi.MediaServerHub;
+import apincer.music.core.service.spi.MusicMateServiceBinder;
+import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.NetworkUtils;
+import dagger.hilt.android.AndroidEntryPoint;
+import java.util.function.Consumer;
+
+import kotlinx.coroutines.flow.MutableStateFlow;
+import kotlinx.coroutines.flow.StateFlow;
+import kotlinx.coroutines.flow.StateFlowKt;
+
+/**
+ * Media session monitoring service that:
+ * 1. Discovers all active media sessions (external music player + streaming renderers)
+ * 2. Controls external players (UAPP, Neutron Music, Hiby Music, etc.) and streaming players (RopieeeXL, WiiM)
+ * 3. Bridges external playback state to streaming player targets
+ * 4. Manages playing queue for streaming player playback
+ *
+ * Control vs monitor is decided by the target: MusicMate drives local ExoPlayer playback and
+ * DLNA renderers the user chose (isControllable), follows other Android apps through their
+ * media session, and only follows passive HTTP streams (browsers, renderers driven by other
+ * control points); see PLAYBACK_ARCHITECTURE.md.
+ */
+@AndroidEntryPoint
+public class MusicMateServiceImpl extends MediaLibraryService implements PlaybackService {
+    private static final String TAG = "MusicMateServiceImpl";
+
+    public static final String CHANNEL_ID = "musicmate_service_channel";
+    public static final int SERVICE_ID = 1;
+
+
+
+    public static final String SERVER_STATUS_NO_WIFI = "No Network"; // Red circle for Offline
+    // Used as a prefix for the dynamic SSID
+    public static final String SERVER_STATUS_ONLINE_PREFIX = "Online"; // Green circle for Online
+    public static final String SERVER_STATUS_OFFLINE = "Offline"; // Red circle for Offline
+
+    public static final String SERVER_STATUS_CAST_PREFIX = "Cast"; // Green circle for Online
+
+    @Inject
+    TagRepository tagRepos;
+
+    @Inject
+    MediaServerHub mediaHub;
+
+    @Inject
+    QueueManager queueManager;
+
+    private AndroidPlayerController androidPlayer;
+    private MediaLibrarySession mediaLibrarySession;
+
+    private MediaSessionManager mediaSessionManager;
+
+    // Kotlin coroutines scope for this Android Service (used for cleanup)
+    private final kotlinx.coroutines.Job serviceJob = kotlinx.coroutines.SupervisorKt.SupervisorJob(null);
+
+    private final MutableStateFlow<apincer.music.core.playback.PlaybackState> playbackStateFlow =
+            StateFlowKt.MutableStateFlow(new apincer.music.core.playback.PlaybackState());
+    private final MutableStateFlow<Optional<Track>> currentTrackFlow =
+            StateFlowKt.MutableStateFlow(Optional.empty());
+    private final MutableStateFlow<Optional<PlaybackTarget>> currentPlayerFlow =
+            StateFlowKt.MutableStateFlow(Optional.empty());
+    private final MutableStateFlow<List<Track>> playingQueueFlow =
+            StateFlowKt.MutableStateFlow(new ArrayList<>());
+
+    // Expose as StateFlow for external read-only access
+    public StateFlow<apincer.music.core.playback.PlaybackState> getPlaybackStateFlow() { return playbackStateFlow; }
+    public StateFlow<Optional<Track>> getCurrentTrackFlow() { return currentTrackFlow; }
+    public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
+
+    private volatile String controlledPlayerTargetId;
+    // An external app (UAPP, HiBy, Poweramp) playing a track MusicMate sent it from the queue: when
+    // that track ends, MusicMate sends the next one (the app only has the one file). -1 when not.
+    private volatile long drivenExternalTrackId = -1;
+    private volatile long lastExternalPositionSec;
+    private volatile long drivenExternalStartedAt; // elapsedRealtime when MusicMate sent the track
+    private final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
+    private ScheduledFuture<?> nextTrackTask;
+    private final ScheduledExecutorService smartQueueWorker =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:SmartQueue"));
+    private ScheduledFuture<?> preloadTask;
+    private ScheduledFuture<?> dmrStartupTimeoutTask;
+    private ScheduledFuture<?> trackStartTask;
+
+    private volatile boolean acceptingHistory = true;
+    private final java.util.concurrent.ExecutorService historyWriter = Executors.newSingleThreadExecutor(
+            r -> new Thread(r, "MM:ListeningHistory"));
+    private final apincer.music.core.playback.ListeningHistoryTracker historyTracker =
+            new apincer.music.core.playback.ListeningHistoryTracker(event -> {
+                if (!acceptingHistory) return;
+                try {
+                    historyWriter.execute(() -> {
+                        try { tagRepos.getDbHelper().recordListeningEvent(event); }
+                        catch (Exception e) { Log.e(TAG, "Unable to persist listening history", e); }
+                    });
+                } catch (java.util.concurrent.RejectedExecutionException ignored) {
+                    // Service teardown won the race with a final callback.
+                }
+            });
+
+    private volatile long lastPreloadedTrackId = -1;
+
+    /** Track left paused when the user switched to a target that has nothing loaded yet. */
+    private static final class PendingResume {
+        final String targetId;
+        final Track track;
+        final long positionMs;
+
+        PendingResume(String targetId, Track track, long positionMs) {
+            this.targetId = targetId;
+            this.track = track;
+            this.positionMs = positionMs;
+        }
+    }
+
+    private volatile PendingResume pendingResume;
+    private final java.util.concurrent.atomic.AtomicBoolean preloadRecheckPending = new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile long lastPlaybackTrackId = -1;
+
+    // The Service is now the single source of truth for its status.
+    private final MutableLiveData<MediaServerHub.ServerStatus> statusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
+    /** The hub's own status (STARTING, RUNNING, CAST, STOPPED, ERROR), mirrored into statusLiveData. */
+    private androidx.lifecycle.LiveData<MediaServerHub.ServerStatus> hubStatus;
+    private final androidx.lifecycle.Observer<MediaServerHub.ServerStatus> hubStatusMirror = statusLiveData::setValue;
+
+    private androidx.lifecycle.Observer<MediaServerHub.ServerStatus> statusObserver;
+
+    private final PlaybackCallback playbackCallback = new PlaybackCallback() {
+
+        @Override
+        public void onMediaTrackChanged(Track metadata) {
+            MusicMateServiceImpl.this.onMediaTrackChanged(metadata);
+        }
+
+        @Override
+        public void onMediaTrackChanged(String title, String artist, String album, long duration) {
+            scheduler.execute(() -> {
+                Track song = tagRepos.findMusic(title, artist, album);
+                if (song != null) {
+                    onMediaTrackChanged(song);
+                }
+            });
+        }
+
+        @Override
+        public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
+            apincer.music.core.playback.PlaybackState current = getPlaybackStateFlow().getValue();
+            if (state != null && state.currentTrack == null && current != null) {
+                state.currentTrack = current.currentTrack; // Preserve track if missing from callback state
+            }
+            MusicMateServiceImpl.this.onPlaybackStateChanged(state);
+        }
+
+        @Override
+        public void onPlaybackCompleted() {
+            advanceQueue(false);
+        }
+
+        @Override
+        public void onNaturalTrackEnd() {
+            if (acceptingHistory) historyTracker.naturalEnd(android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
+        }
+
+        @Override
+        public void onPlaybackStateTimeElapsedSeconds(long elapsedSeconds) {
+            onPlaybackStateElapsedTime(elapsedSeconds);
+        }
+    };
+
+    private final BroadcastReceiver becomingNoisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent != null ? intent.getAction() : null;
+            if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)
+                    || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                if (isPlaying() && isLocalTarget()) {
+                    Log.d(TAG, "Audio output disconnected / becoming noisy. Auto-pausing local playback.");
+                    pausePlayer();
+                } else {
+                    Log.d(TAG, "Audio output disconnected / becoming noisy, but active playback is remote (DLNA/Cast). Continuing playback.");
+                }
+                if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                    AudioOutputHelper.clearCachedBluetoothCodec();
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    refreshExternalPlayersSafe();
+                }
+            } else if ("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED".equals(action)) {
+                Log.d(TAG, "Bluetooth codec configuration changed.");
+                try {
+                    if (intent != null) {
+                        try {
+                            intent.setExtrasClassLoader(BluetoothProfile.class.getClassLoader());
+                        } catch (Exception ignored) {}
+                    }
+                    Object codecStatus = null;
+                    if (intent != null) {
+                        if (Build.VERSION.SDK_INT >= 33) { // Build.VERSION_CODES.TIRAMISU
+                            try {
+                                Class<?> clazz = Class.forName("android.bluetooth.BluetoothCodecStatus");
+                                java.lang.reflect.Method getParcelableExtraMethod = Intent.class.getMethod("getParcelableExtra", String.class, Class.class);
+                                codecStatus = getParcelableExtraMethod.invoke(intent, "android.bluetooth.extra.CODEC_STATUS", clazz);
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null) {
+                            try {
+                                codecStatus = intent.getParcelableExtra("android.bluetooth.extra.CODEC_STATUS");
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null) {
+                            try {
+                                codecStatus = intent.getParcelableExtra("android.bluetooth.a2dp.extra.CODEC_STATUS");
+                            } catch (Exception ignored) {}
+                        }
+                        if (codecStatus == null && intent.getExtras() != null) {
+                            try {
+                                android.os.Bundle bundle = intent.getExtras();
+                                for (String key : bundle.keySet()) {
+                                    Object val = bundle.get(key);
+                                    if (val != null && (val.getClass().getName().contains("CodecStatus") || String.valueOf(val).contains("mCodecConfig") || String.valueOf(val).contains("codecConfig"))) {
+                                        codecStatus = val;
+                                        break;
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    if (codecStatus != null) {
+                        AudioOutputHelper.parseCodecStatus(codecStatus);
+                    } else {
+                        AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    }
+                } catch (Exception ignored) {
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                }
+                refreshExternalPlayersSafe();
+            } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                Log.d(TAG, "Bluetooth device connected.");
+                AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                refreshExternalPlayersSafe();
+                android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                mainHandler.postDelayed(() -> {
+                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                    refreshExternalPlayersSafe();
+                }, 1000);
+            }
+        }
+    };
+
+    private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
+            controllers -> {
+               // Log.d(TAG, "Active sessions changed: " + controllers.size());
+                updateAvailableExternalPlayers(controllers);
+            };
+    private boolean activeSessionsListenerRegistered = false;
+    // One callback per external app session: a paused app that resumes changes no session list,
+    // so only its own state callback tells us it started playing
+    private final java.util.Map<MediaController, MediaController.Callback> sessionWatchers = new java.util.HashMap<>();
+
+    public MusicMateServiceImpl( ) {
+    }
+
+    private void refreshExternalPlayersSafe() {
+        syncExternalPlayerAccess();
+    }
+
+    private void syncExternalPlayerAccess() {
+        if (mediaSessionManager == null) {
+            updateAvailableExternalPlayers(null);
+            return;
+        }
+
+        boolean hasAccess = PermissionUtils.isNotificationListenerEnabled(this);
+        ExternalPlayerListenerAction action = ExternalPlayerAccessPolicy.nextAction(
+                activeSessionsListenerRegistered,
+                hasAccess);
+        ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
+
+        try {
+            if (action == ExternalPlayerListenerAction.REGISTER) {
+                mediaSessionManager.addOnActiveSessionsChangedListener(
+                        sessionChangeListener,
+                        notificationListener);
+                activeSessionsListenerRegistered = true;
+            } else if (action == ExternalPlayerListenerAction.UNREGISTER) {
+                mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
+                activeSessionsListenerRegistered = false;
+            }
+
+            List<MediaController> controllers = hasAccess
+                    ? mediaSessionManager.getActiveSessions(notificationListener)
+                    : null;
+            updateAvailableExternalPlayers(controllers);
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to synchronize external player access", t);
+            if (!hasAccess) {
+                activeSessionsListenerRegistered = false;
+            }
+            updateAvailableExternalPlayers(null);
+        }
+    }
+
+    /** An external app that starts playing is offered to the player priority (it may take over an idle target). */
+    private void watchExternalSession(MediaController controller, PlaybackTarget player) {
+        MediaController.Callback callback = new MediaController.Callback() {
+            @Override
+            public void onPlaybackStateChanged(android.media.session.PlaybackState state) {
+                if (state == null || state.getState() != android.media.session.PlaybackState.STATE_PLAYING) return;
+                PlaybackTarget current = getActivePlayer();
+                if (current != null && current.getTargetId().equals(player.getTargetId())) return;
+                switchPlayer(player, false);
+            }
+        };
+        try {
+            controller.registerCallback(callback, new android.os.Handler(android.os.Looper.getMainLooper()));
+            synchronized (sessionWatchers) {
+                sessionWatchers.put(controller, callback);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Cannot watch " + controller.getPackageName(), e);
+        }
+    }
+
+    private void unwatchExternalSessions() {
+        synchronized (sessionWatchers) {
+            for (java.util.Map.Entry<MediaController, MediaController.Callback> watcher : sessionWatchers.entrySet()) {
+                try {
+                    watcher.getKey().unregisterCallback(watcher.getValue());
+                } catch (Exception ignored) {
+                    // the session is already gone
+                }
+            }
+            sessionWatchers.clear();
+        }
+    }
+
+    private PlaybackTarget getActivePlayer() {
+        return currentPlayerFlow.getValue().orElse(null);
+    }
+
+    private boolean isLocalTarget() {
+        PlaybackTarget player = getActivePlayer();
+        return player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId());
+    }
+
+    private void updateAvailableExternalPlayers(List<MediaController> controllers) {
+        // Remove all existing external Players
+        addLocalPlaybackTarget(null, true);
+
+        // Always register default Local Audio Output target
+        apincer.android.mmate.utils.AudioOutputHelper.Device outDev = 
+                apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(getApplicationContext(), null);
+        String localName = "Local Device";
+        String localDesc = "System Audio Output";
+        if (outDev != null) {
+            if (outDev.getName() != null && !outDev.getName().isEmpty()) {
+                localName = outDev.getName();
+            }
+            if (outDev.getDescription() != null && !outDev.getDescription().isEmpty()) {
+                localDesc = outDev.getDescription();
+            }
+        }
+        
+        PlaybackTarget localTarget = ExternalAndroidPlayer.Factory.createLocalTarget(
+                getApplicationContext(), localName, localDesc);
+        if (localTarget != null) {
+            addLocalPlaybackTarget(localTarget, false);
+        }
+
+        PlaybackTarget playingPlayer = null;
+        Set<String> addedPackages = new HashSet<>();
+        unwatchExternalSessions();
+
+        // Add external media session targets
+        if (controllers != null) {
+            String selfPackage = getPackageName();
+            for (MediaController controller : controllers) {
+                if (controller == null) continue;
+                String packageName = controller.getPackageName();
+                if (selfPackage != null && selfPackage.equalsIgnoreCase(packageName)) {
+                    continue; // Skip self — MusicMate is already registered as the primary local player target
+                }
+                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
+                if (player != null) {
+                    addLocalPlaybackTarget(player, false);
+                    addedPackages.add(packageName);
+                    watchExternalSession(controller, player);
+                    android.media.session.PlaybackState state = controller.getPlaybackState();
+                    if (state != null && state.getState() == android.media.session.PlaybackState.STATE_PLAYING) {
+                        playingPlayer = player;
+                    }
+                }
+            }
+        }
+
+        // Add installed external music players even if not currently playing
+        for (String pkg : ExternalAndroidPlayer.SUPPORTED_PLAYERS) {
+            if (!addedPackages.contains(pkg) && ExternalAndroidPlayer.Factory.isPackageInstalled(getApplicationContext(), pkg)) {
+                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), pkg);
+                if (player != null) {
+                    addLocalPlaybackTarget(player, false);
+                    addedPackages.add(pkg);
+                }
+            }
+        }
+
+        // If an external player is playing or if no player is selected, auto-select!
+        if (playingPlayer != null) {
+            switchPlayer(playingPlayer, false);
+        } else if (!currentPlayerFlow.getValue().isPresent()) {
+            String lastPlayerId = apincer.music.core.Settings.getLastPlayerTargetId(getApplicationContext());
+            if (lastPlayerId != null && !lastPlayerId.isEmpty()) {
+                switchPlayer(lastPlayerId, true);
+                if (!currentPlayerFlow.getValue().isPresent() && lastPlayerId.startsWith("uuid:")) {
+                    // It's a DLNA target that hasn't been discovered yet.
+                    // Create a placeholder target so we don't fallback to localTarget immediately.
+                    PlaybackTarget dummy = apincer.music.core.playback.DMRPlayer.Factory.create(lastPlayerId, "Scanning for players…", "");
+                    switchPlayer(dummy, true);
+
+                    // Schedule safety fallback to local target if previous DLNA renderer does not appear
+                    if (dmrStartupTimeoutTask != null) {
+                        dmrStartupTimeoutTask.cancel(false);
+                    }
+                    dmrStartupTimeoutTask = scheduler.schedule(() -> {
+                        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                        mainHandler.post(() -> {
+                            if (currentPlayerFlow.getValue().isPresent()) {
+                                PlaybackTarget cur = currentPlayerFlow.getValue().get();
+                                if (cur.isStreaming() && "Scanning for players…".equals(cur.getDisplayName())) {
+                                    Log.i(TAG, "DLNA target discovery timed out (8s) → falling back to local playback target");
+                                    switchPlayer(localTarget, true);
+                                }
+                            }
+                        });
+                    }, 8, TimeUnit.SECONDS);
+                }
+            }
+            if (!currentPlayerFlow.getValue().isPresent()) {
+                switchPlayer(localTarget, true);
+            }
+        }
+
+        Log.d(TAG, "Updated available targets: " + getPlaybackTargets().size());
+    }
+
+    // ==================== Service Lifecycle ====================
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        // Queue edits and Repeat/Shuffle changes can make the preloaded gapless follower stale
+        queueManager.setQueueChangeListener(() -> {
+            if (preloadRecheckPending.compareAndSet(false, true)) {
+                scheduler.execute(this::revalidatePreloadedNext);
+            }
+        });
+
+        try {
+            // Only call it ONCE based on the Android version
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(SERVICE_ID, createInitialNotification());
+            } else {
+                startForeground(SERVICE_ID, createInitialNotification());
+            }
+        } catch (Exception e) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    e instanceof ForegroundServiceStartNotAllowedException) {
+                Log.w(TAG, "Service bound in background. Cannot elevate to Foreground. Running silently.");
+            } else if (e instanceof SecurityException) {
+                Log.w(TAG, "Lacking permissions for foreground start. Running silently.");
+            } else {
+                Log.e(TAG, "Unexpected error starting foreground service", e);
+            }
+        }
+
+        statusObserver = status -> {
+            PlaybackTarget activeTarget = getActivePlayer();
+            // Only update notification if NOT using the local Media3 ExoPlayer (Media3 handles its own)
+            if (activeTarget == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(activeTarget.getTargetId())) {
+                Track currentTrack = getNowPlayingSong();
+                MediaServerHub.ServerStatus s = (status != null) ? status : mediaHub.getStatus().getValue();
+                updateNotification(getApplicationContext(), currentTrack, activeTarget, s, tagRepos.getTotalSongs(), isPlaying());
+            }
+        };
+        getStatusLiveData().observeForever(statusObserver);
+        // Async start results, failures and network-loss stops come from the hub itself
+        if (mediaHub != null) {
+            hubStatus = androidx.lifecycle.FlowLiveDataConversions.asLiveData(mediaHub.getStatus());
+            hubStatus.observeForever(hubStatusMirror);
+        }
+
+        // external player controller
+        mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
+        
+        // Initialize MediaLibrarySession for Media3
+        if (androidPlayer.getInternalExoPlayer() != null) {
+            // Session Next/Previous (notification, lock screen, headset) follow the MusicMate queue
+            QueueAwareSessionPlayer sessionPlayer = new QueueAwareSessionPlayer(
+                    androidPlayer.getInternalExoPlayer(), this::skipToNextInQueue, this::skipToPrevious);
+            mediaLibrarySession = new MediaLibrarySession.Builder(this, sessionPlayer, new MediaLibrarySession.Callback() {})
+                .build();
+                
+            DefaultMediaNotificationProvider notificationProvider = new DefaultMediaNotificationProvider.Builder(this)
+                .setNotificationId(SERVICE_ID)
+                .build();
+            notificationProvider.setSmallIcon(R.drawable.ic_notification_default);
+            setMediaNotificationProvider(notificationProvider);
+        }
+        syncExternalPlayerAccess();
+
+        // Load queue from database
+        if(queueManager != null) {
+            // The saved queue loads in the background; publish it once it is ready
+            queueManager.whenLoaded(() -> playingQueueFlow.setValue(new java.util.ArrayList<>(queueManager.getSongs())));
+            smartQueueWorker.scheduleWithFixedDelay(() -> {
+                try {
+                    if (queueManager.refreshSmartQueue()) {
+                        playingQueueFlow.setValue(new java.util.ArrayList<>(queueManager.getSongs()));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Smart queue refresh failed; keeping current queue", e);
+                }
+            }, 0, 15, TimeUnit.SECONDS);
+        }
+
+        // Init WebUI assets in background to avoid blocking UI thread during service creation
+        Executors.newSingleThreadExecutor().execute(() -> initWebUIAssets(getApplicationContext()));
+
+        // Hook up live DLNA renderer discovery listener to automatically reconcile placeholder targets
+        if (mediaHub != null) {
+            mediaHub.setOnRenderersChangedListener(this::handleDiscoveredRenderers);
+        }
+
+        // Initialize Bluetooth A2DP proxy for real-time codec telemetry
+        AudioOutputHelper.initializeBluetooth(getApplicationContext());
+
+        // Register receiver for headphone / Bluetooth disconnect auto-pause & codec configuration changes
+        IntentFilter audioNoisyFilter = new IntentFilter();
+        audioNoisyFilter.addAction(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        audioNoisyFilter.addAction("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(becomingNoisyReceiver, audioNoisyFilter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(becomingNoisyReceiver, audioNoisyFilter);
+        }
+
+        Optional<PlaybackTarget> bestChoice = autoSelectBestPlayer();
+        if (bestChoice.isPresent()) {
+            // We found a player, now switch to it
+            PlaybackTarget selectedPlayer = bestChoice.get();
+            switchPlayer(selectedPlayer, true);
+        } else {
+            // No players are available, maybe switch to local playback or show a message
+            Log.w(TAG, "No players available to auto-select.");
+        }
+    }
+
+    public static final String ACTION_SKIP_PREVIOUS = "apincer.android.mmate.action.SKIP_PREVIOUS";
+    public static final String ACTION_TOGGLE_PLAYBACK = "apincer.android.mmate.action.TOGGLE_PLAYBACK";
+    public static final String ACTION_SKIP_NEXT = "apincer.android.mmate.action.SKIP_NEXT";
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getAction() != null) {
+            switch (intent.getAction()) {
+                // --- Remote Control Actions ---
+                case ACTION_SKIP_PREVIOUS:
+                    skipToPrevious();
+                    break;
+                case ACTION_TOGGLE_PLAYBACK:
+                    if (isPlaying()) {
+                        pausePlayer();
+                    } else {
+                        Track current = getNowPlayingSong();
+                        if (current != null) {
+                            resumePlayer();
+                        }
+                    }
+                    break;
+                case ACTION_SKIP_TO_NEXT:
+                case ACTION_SKIP_NEXT:
+                case ACTION_PLAY_NEXT:
+                    long deletedId = intent.getLongExtra(EXTRA_MUSIC_ID, -1);
+                    if (deletedId != -1) {
+                        onTrackDeleted(deletedId);
+                    } else {
+                        skipToNextInQueue();
+                    }
+                    break;
+
+                // --- Server Actions ---
+                case MediaServerManager.ACTION_START_SERVER:
+                    startServers();
+                    break;
+                case MediaServerManager.ACTION_STOP_SERVER:
+                    stopServers();
+                    break;
+            }
+        }
+        return START_STICKY;
+    }
+
+    public void startServers() {
+        if (!NetworkUtils.isServerNetworkAvailable(this)) {
+            statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
+            Log.d(TAG, TAG+" - Error, Required WiFi or Hotspot network");
+            return;
+        }
+
+        mediaHub.start(); // the hub reports STARTING, then RUNNING or ERROR
+    }
+
+    public void stopServers() {
+        mediaHub.stop();
+        statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
+    }
+
+    // It just creates the *first* notification shown before anything is loaded.
+    private Notification createInitialNotification() {
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(Constants.getPresentationName())
+                .setContentText("Monitoring media sessions")
+                .setSmallIcon(apincer.android.mmate.R.drawable.ic_notification_default)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .build();
+    }
+
+
+    private boolean isPlaying() {
+        return playbackStateFlow.getValue().currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+    }
+
+    @Override
+        public void onDestroy() {
+        queueManager.setQueueChangeListener(null);
+        historyTracker.end(false);
+        acceptingHistory = false;
+        historyWriter.shutdown(); // Drain accepted events; never discard a completed listen.
+        if (mediaLibrarySession != null) {
+            mediaLibrarySession.release();
+            mediaLibrarySession = null;
+        }
+        // 1. Cancel the pending "Next Track", preload, and DLNA startup timeout timers
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+        }
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
+        }
+        if (dmrStartupTimeoutTask != null) {
+            dmrStartupTimeoutTask.cancel(true);
+            dmrStartupTimeoutTask = null;
+        }
+
+        // 2. Shut down the scheduler
+        scheduler.shutdownNow();
+        smartQueueWorker.shutdownNow();
+
+        // 3. Remove LiveData observer
+        if (statusObserver != null) {
+            getStatusLiveData().removeObserver(statusObserver);
+            if (hubStatus != null) hubStatus.removeObserver(hubStatusMirror);
+        }
+
+        // 4. Cancel coroutines job
+        serviceJob.cancel(null);
+
+        // Unregister renderer listener to prevent Singleton from holding reference to destroyed service
+        if (mediaHub != null) {
+            mediaHub.setOnRenderersChangedListener(null);
+        }
+
+        // Ensure everything is cleaned up if the service is destroyed.
+        stopServers();
+
+        try {
+            unregisterReceiver(becomingNoisyReceiver);
+        } catch (Exception ignored) {}
+
+        AudioOutputHelper.cleanupBluetooth(getApplicationContext());
+
+        if (mediaSessionManager != null && activeSessionsListenerRegistered) {
+            mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
+            activeSessionsListenerRegistered = false;
+        }
+        unwatchExternalSessions();
+        if (androidPlayer != null) {
+            androidPlayer.release();
+        }
+        deactivatePlayer(getActivePlayer());
+        super.onDestroy();
+    }
+
+    private void deactivatePlayer(PlaybackTarget player) {
+        if(player != null) {
+            // Cancel any pending gapless fallback timer to prevent it firing on the wrong player
+            resetGaplessState();
+
+            try {
+                if (player.isStreaming()){
+                    // Stop playback before deactivating to prevent audio continuing in background
+                    mediaHub.playerStop(player.getTargetId());
+                    mediaHub.playerDeactivate(player.getTargetId());
+                }else {
+                    androidPlayer.stopPlaying();
+                    androidPlayer.unregisterCallback();
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Error deactivating player: " + player.getDisplayName(), e);
+            }
+        }
+    }
+
+    // ==================== Playback Control (Unified) ====================
+
+    @Override
+    public void playSong(Track song) {
+        playSong(song, true);
+    }
+
+    private void playSong(Track song, boolean newInstance) {
+        pendingResume = null;
+        if (song != null && newInstance) historyTracker.end(true);
+        if (song != null) {
+            if (!queueManager.containsTrack(song.getId())) {
+                queueManager.addPlayingQueue(song.getId());
+            }
+            queueManager.setCurrentTrack(song);
+            AudioStreamCacheManager.getInstance().preloadTrack(song);
+        }
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isControllable(playbackTarget)) {
+                internalPlayOnDMRPlayer(playbackTarget, song);
+            } else {
+                boolean externalApp = playbackTarget instanceof ExternalAndroidPlayer
+                        && !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId());
+                drivenExternalTrackId = (externalApp && song != null) ? song.getId() : -1;
+                lastExternalPositionSec = 0;
+                drivenExternalStartedAt = android.os.SystemClock.elapsedRealtime();
+                androidPlayer.play(song);
+                currentTrackFlow.setValue(Optional.ofNullable(song));
+                if (song != null) {
+                    apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                    state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+                    state.currentTrack = song;
+                    playbackStateFlow.setValue(state);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void skipToNextInQueue() {
+        advanceQueue(true);
+    }
+
+    /**
+     * Advances playback to the next queued track.
+     * @param userSkip true for an explicit Next action, which overrides Repeat One;
+     *                 false for natural completion, which honours Repeat One.
+     */
+    private void advanceQueue(boolean userSkip) {
+        historyTracker.end(userSkip);
+        // A manual Next keeps the timer armed for the end of the new track
+        if (!userSkip && stopForEndOfTrackSleep()) return;
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
+            if (isControllable(playbackTarget)) {
+                internalSkipToNextOnDMRPlayer(playbackTarget, userSkip);
+            } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                // Local ExoPlayer: advance MusicMate's queue
+                playNextFromQueue(userSkip);
+            } else if (isDrivingExternalApp()) {
+                // An external app playing MusicMate's queue: it only has the one file
+                playNextFromQueue(userSkip);
+            } else {
+                // External music app: MediaSession IPC event
+                androidPlayer.skipToNext();
+            }
+        });
+    }
+
+    /** Plays the queue's next track on the current target, or stops at the end of the queue. */
+    private void playNextFromQueue(boolean userSkip) {
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
+        Track nextSong = queueManager.getNextTrack(userSkip);
+        if (nextSong != null) {
+            queueManager.setPlaybackTrack(nextSong);
+            playSong(nextSong);
+        } else {
+            stopPlaying();
+        }
+    }
+
+    /** True while an external app is playing the track MusicMate sent it from the queue. */
+    private boolean isDrivingExternalApp() {
+        Track current = getNowPlayingSong();
+        return drivenExternalTrackId >= 0 && current != null && current.getId() == drivenExternalTrackId;
+    }
+
+    private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget, boolean userSkip) {
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
+        Track song = queueManager.getNextTrack(userSkip);
+        if (song != null) {
+            queueManager.setPlaybackTrack(song);
+            internalPlayOnDMRPlayer(playbackTarget, song);
+        } else {
+            Log.d(TAG, "internalSkipToNextOnDMRPlayer: Queue ended, stopping DMR");
+            internalStopOnDMRPlayer(playbackTarget);
+        }
+    }
+
+    @Override
+    public void skipToPrevious() {
+        historyTracker.end(true);
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
+            if (isControllable(playbackTarget)) {
+                internalPreviousOnDMRPlayer(playbackTarget);
+            } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                // Local ExoPlayer: advance MusicMate's queue backwards
+                Track current = getNowPlayingSong();
+                if (current != null) {
+                    queueManager.setCurrentTrack(current);
+                }
+                Track prevSong = queueManager.getPreviousTrack();
+                if (prevSong != null) {
+                    queueManager.setPlaybackTrack(prevSong);
+                    playSong(prevSong);
+                }
+            } else {
+                // External music app: MediaSession IPC event
+                androidPlayer.skipToPrevious();
+            }
+        });
+    }
+
+    private void internalPreviousOnDMRPlayer(PlaybackTarget playbackTarget) {
+        Track current = getNowPlayingSong();
+        if (current != null) {
+            queueManager.setCurrentTrack(current);
+        }
+        Track song = queueManager.getPreviousTrack();
+        if (song != null) {
+            queueManager.setPlaybackTrack(song);
+            internalPlayOnDMRPlayer(playbackTarget, song);
+        }
+    }
+
+    @Override
+    public void pausePlayer() {
+        historyTracker.suspend();
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
+            if (isControllable(playbackTarget)) {
+                InternalPauseDMRPlayer(playbackTarget);
+            } else {
+                // external player
+                androidPlayer.pause();
+            }
+        });
+    }
+
+    private void InternalPauseDMRPlayer(PlaybackTarget playbackTarget) {
+        try {
+            mediaHub.playerPause(playbackTarget.getTargetId());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to pause DMR: " + playbackTarget.getDisplayName(), e);
+        }
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+            nextTrackTask = null;
+        }
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
+            preloadTask = null;
+        }
+        if (trackStartTask != null) {
+            trackStartTask.cancel(true);
+            trackStartTask = null;
+        }
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
+        state.currentTrack = getNowPlayingSong();
+        if (playbackStateFlow.getValue() != null) {
+            state.currentPositionSecond = playbackStateFlow.getValue().currentPositionSecond;
+        }
+        onPlaybackStateChanged(state);
+    }
+
+    @Override
+    public void resumePlayer() {
+        PendingResume pending = pendingResume;
+        PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        if (isMonitoredStream(target)) {
+            Log.d(TAG, "Ignoring resume for monitored stream " + target.getDisplayName());
+            return;
+        }
+        if (pending != null && target != null && pending.targetId.equals(target.getTargetId())) {
+            Log.i(TAG, "Resume after target switch: starting " + pending.track.getTitle()
+                    + " at " + pending.positionMs + "ms on " + target.getDisplayName());
+            if (isControllable(target)) {
+                pendingResume = null;
+                queueManager.setPlaybackTrack(pending.track);
+                internalPlayOnDMRPlayer(target, pending.track, pending.positionMs);
+            } else {
+                playSong(pending.track, false);
+                if (pending.positionMs > 1000) seekTo(pending.positionMs);
+            }
+            return;
+        }
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isControllable(playbackTarget)) {
+                try {
+                    mediaHub.playerResume(playbackTarget.getTargetId());
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to resume DMR: " + playbackTarget.getDisplayName(), e);
+                }
+                apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+                Track currentSong = getNowPlayingSong();
+                state.currentTrack = currentSong;
+                long curPos = 0;
+                if (playbackStateFlow.getValue() != null) {
+                    curPos = playbackStateFlow.getValue().currentPositionSecond;
+                    state.currentPositionSecond = curPos;
+                }
+                onPlaybackStateChanged(state);
+
+                // Reschedule fallback timer based on remaining duration
+                if (currentSong != null && currentSong.getAudioDuration() > 0) {
+                    long remainingSec = Math.max(1, Math.round(currentSong.getAudioDuration()) - curPos);
+                    long delayMs = (remainingSec * 1000L) + 1500L;
+                    if (nextTrackTask != null) {
+                        nextTrackTask.cancel(true);
+                    }
+                    nextTrackTask = scheduler.schedule(() -> {
+                        Log.w(TAG, "Track end fallback triggered after resumed duration!");
+                        currentPlayerFlow.getValue().ifPresentOrElse(
+                                this::fallbackToNextTrack,
+                                () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+                        );
+                    }, delayMs, TimeUnit.MILLISECONDS);
+                }
+            } else {
+                androidPlayer.resume();
+            }
+        });
+    }
+
+    @Override
+    public void stopPlaying() {
+        historyTracker.end(false);
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isMonitoredStream(playbackTarget)) {
+                Log.d(TAG, "Ignoring transport command for monitored stream " + playbackTarget.getDisplayName());
+                return;
+            }
+            if (isControllable(playbackTarget)) {
+                internalStopOnDMRPlayer(playbackTarget);
+            } else {
+                // external player
+                androidPlayer.stopPlaying();
+            }
+        });
+    }
+
+    private void internalStopOnDMRPlayer(PlaybackTarget playbackTarget) {
+        try {
+            mediaHub.playerStop(playbackTarget.getTargetId());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to stop DMR: " + playbackTarget.getDisplayName(), e);
+        }
+        resetGaplessState();
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
+        state.currentTrack = null;
+        onPlaybackStateChanged(state);
+    }
+
+    @Override
+    public QueueManager getQueueManager() {
+        return queueManager;
+    }
+
+    @Override
+    public void setShuffleMode(boolean enabled) {
+        queueManager.setShuffle(enabled);
+        triggerPlaybackStateUpdate();
+    }
+
+    @Override
+    public void setRepeatMode(String mode) {
+        try {
+            if ("0".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
+            } else if ("1".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.ALL);
+            } else if ("2".equals(mode)) {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.ONE);
+            } else {
+                queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.valueOf(mode));
+            }
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Unknown repeat mode: " + mode + ", defaulting to OFF");
+            queueManager.setRepeatMode(apincer.music.core.repository.QueueManager.RepeatMode.OFF);
+        }
+        triggerPlaybackStateUpdate();
+    }
+
+    private void triggerPlaybackStateUpdate() {
+        apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
+        if (state != null) {
+            apincer.music.core.playback.PlaybackState updated = state.copy();
+            onPlaybackStateChanged(updated);
+        }
+    }
+
+    // ==================== Streaming Player Management ====================
+
+    private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song) {
+        internalPlayOnDMRPlayer(player, song, 0);
+    }
+
+    private void internalPlayOnDMRPlayer(PlaybackTarget player, Track song, long positionMs) {
+        if (song == null) return;
+
+        // Cancel any existing gapless task first
+        resetGaplessState();
+
+        // 1. Start playback
+        try {
+            mediaHub.playerPlaySong(player.getTargetId(), song, positionMs);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to play on DMR: " + player.getDisplayName(), e);
+            return;
+        }
+        currentTrackFlow.setValue(Optional.of(song));
+
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionSecond = positionMs / 1000;
+
+        onPlaybackStateChanged(state);
+
+        // C-2: Delay handleTrackStartEvent by 1.5s to allow the async Stop→SetURI→Play
+        // handshake to complete before the preload and fallback timers start.
+        // Firing these timers immediately after playerPlaySong() (which only queues the command)
+        // means the timers run from the wrong base time and the preload can fire before the
+        // renderer is even playing. onMediaTrackChanged() from GENA/polling remains the
+        // authoritative real-time trigger for subsequent track-start events.
+        trackStartTask = scheduler.schedule(() -> handleTrackStartEvent(song), 1500, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void seekTo(long positionMs) {
+        historyTracker.seek();
+        PlaybackTarget currentTarget = getPlayer();
+        if (isMonitoredStream(currentTarget)) {
+            Log.d(TAG, "Ignoring seek for monitored stream " + currentTarget.getDisplayName());
+            return;
+        }
+        if (currentTarget != null) {
+            try {
+                Track currentTrack = getNowPlayingSong();
+                long targetPos = Math.max(0, positionMs);
+                if (currentTrack != null && currentTrack.getAudioDuration() > 0) {
+                    long durationMs = (long) (currentTrack.getAudioDuration() * 1000.0);
+                    targetPos = Math.min(targetPos, durationMs);
+                }
+                if (currentTarget instanceof ExternalAndroidPlayer || !currentTarget.isStreaming()) {
+                    androidPlayer.seekTo(targetPos);
+                } else {
+                    mediaHub.playerSeek(currentTarget.getTargetId(), targetPos);
+                    // Reschedule fallback timer based on seek position
+                    if (currentTrack != null && currentTrack.getAudioDuration() > 0) {
+                        long durationMs = (long) (currentTrack.getAudioDuration() * 1000.0);
+                        long remainingMs = Math.max(1000L, durationMs - targetPos);
+                        if (nextTrackTask != null) {
+                            nextTrackTask.cancel(true);
+                        }
+                        nextTrackTask = scheduler.schedule(() -> {
+                            Log.w(TAG, "Track end fallback triggered after seek remaining duration!");
+                            currentPlayerFlow.getValue().ifPresentOrElse(
+                                    this::fallbackToNextTrack,
+                                    () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+                            );
+                        }, remainingMs + 1500L, TimeUnit.MILLISECONDS);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to seek", e);
+            }
+        }
+    }
+
+    private int dmrVolume = 50;
+
+    @Override
+    public void setVolume(int volumePercent) {
+        PlaybackTarget currentTarget = getPlayer();
+        if (currentTarget != null && currentTarget.isStreaming()) {
+            dmrVolume = Math.max(0, Math.min(100, volumePercent));
+            try {
+                mediaHub.playerSetVolume(currentTarget.getTargetId(), dmrVolume);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to set DMR volume", e);
+            }
+        }
+    }
+
+    @Override
+    public void adjustVolume(int direction) {
+        PlaybackTarget currentTarget = getPlayer();
+        if (currentTarget != null && currentTarget.isStreaming()) {
+            int step = 5 * (direction > 0 ? 1 : -1);
+            setVolume(dmrVolume + step);
+        }
+    }
+
+    private java.util.Timer sleepTimer;
+    private long sleepTimerEndTimeMs = 0;
+    private volatile boolean sleepTimerEndOfTrack = false;
+
+    /** Pauses at a natural track end when "end of track" sleep is armed; true if it did. */
+    private boolean stopForEndOfTrackSleep() {
+        if (!sleepTimerEndOfTrack) return false;
+        sleepTimerEndOfTrack = false;
+        sleepTimerEndTimeMs = 0;
+        Log.i(TAG, "Sleep timer: stopping at end of track");
+        pausePlayer();
+        return true;
+    }
+
+    @Override
+    public void setSleepTimer(long minutes, boolean endOfTrack) {
+        if (sleepTimer != null) {
+            sleepTimer.cancel();
+            sleepTimer = null;
+        }
+        boolean wasEndOfTrack = sleepTimerEndOfTrack;
+        sleepTimerEndOfTrack = endOfTrack;
+        if (endOfTrack && !wasEndOfTrack) {
+            // A gapless follower would start without passing the track-end check: take it back
+            lastPreloadedTrackId = -1;
+            scheduler.execute(() -> handNextToPlayer(null));
+        } else if (!endOfTrack && wasEndOfTrack && isPlaying()) {
+            scheduler.execute(this::preloadNextTrackSafe);
+        }
+        if (minutes <= 0 && !endOfTrack) {
+            sleepTimerEndTimeMs = 0;
+            return;
+        }
+        if (endOfTrack) {
+            sleepTimerEndTimeMs = -1;
+            return;
+        }
+        long durationMs = minutes * 60 * 1000L;
+        sleepTimerEndTimeMs = System.currentTimeMillis() + durationMs;
+        sleepTimer = new java.util.Timer("SleepTimer", true);
+        sleepTimer.schedule(new java.util.TimerTask() {
+            @Override
+            public void run() {
+                fadeOutAndPause();
+            }
+        }, durationMs);
+    }
+
+    @Override
+    public long getSleepTimerRemainingMs() {
+        if (sleepTimerEndOfTrack) return -1;
+        if (sleepTimerEndTimeMs <= 0) return 0;
+        return Math.max(0, sleepTimerEndTimeMs - System.currentTimeMillis());
+    }
+
+    /**
+     * Fades a renderer down from its real volume, pauses, then restores that volume so the next
+     * Play is not silent. When the volume cannot be read it pauses without fading, so the
+     * fade can never make playback louder.
+     */
+    private void fadeOutAndPause() {
+        new Thread(() -> {
+            try {
+                PlaybackTarget target = getPlayer();
+                String rendererId = (target != null && target.isStreaming()) ? target.getTargetId() : null;
+                int original = rendererId != null ? mediaHub.playerGetVolume(rendererId, 2000) : -1;
+                if (original > 0) {
+                    for (int quarter = 3; quarter >= 1; quarter--) {
+                        mediaHub.playerSetVolume(rendererId, original * quarter / 4);
+                        Thread.sleep(500);
+                    }
+                }
+                pausePlayer();
+                if (original > 0) {
+                    Thread.sleep(500); // let the pause land before the level comes back
+                    mediaHub.playerSetVolume(rendererId, original);
+                    dmrVolume = original;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                Log.w(TAG, "Sleep fade failed", e);
+            } finally {
+                sleepTimerEndTimeMs = 0;
+                sleepTimerEndOfTrack = false;
+            }
+        }, "SleepFade").start();
+    }
+
+    private void fallbackToNextTrack(PlaybackTarget player) {
+        if (stopForEndOfTrackSleep()) return; // the fallback fires only after the full track length
+        Track current = getNowPlayingSong();
+        Track expectedNext = queueManager.getNextTrack();
+
+        if (expectedNext == null) {
+            Log.w(TAG, "Fallback: No next track (queue ended), stopping playback");
+            if (player != null && player.isStreaming()) {
+                internalStopOnDMRPlayer(player);
+            } else {
+                stopPlaying();
+            }
+            return;
+        }
+
+        // Check if renderer already moved
+        if (current != null && current.getId() == expectedNext.getId()) {
+            Log.d(TAG, "Fallback skipped: renderer already advanced");
+            return;
+        }
+
+        Log.w(TAG, "Fallback: Forcing next → " + expectedNext.getTitle());
+        queueManager.setPlaybackTrack(expectedNext);
+        if (player != null && player.isStreaming() && isControllable(player)) {
+            internalPlayOnDMRPlayer(player, expectedNext);
+        } else {
+            playSong(expectedNext);
+        }
+    }
+
+    @Override
+    public List<PlaybackTarget> getPlaybackTargets() {
+        return mediaHub.getPlaybackTargets();
+    }
+
+    @Override
+    public void addLocalPlaybackTarget(PlaybackTarget playbackTarget, boolean purgeExisting) {
+        mediaHub.addLocalPlaybackTarget(playbackTarget, purgeExisting);
+    }
+
+    @Override
+    public void refreshPlayerDiscovery() {
+        refreshExternalPlayersSafe();
+        if (mediaHub != null) {
+            mediaHub.refreshDiscovery();
+        }
+    }
+
+    @Override
+    public PlaybackTarget getPlayer() {
+        return getActivePlayer();
+    }
+
+    @Override
+    public void switchPlayer(String targetId, boolean controlled) {
+        //if (targetId.startsWith(STREAMING_PLAYER_PREFIX)) {
+        // Find and activate streaming player
+        PlaybackTarget newTarget = getPlaybackTargets().stream()
+                .filter(target -> target.getTargetId().equals(targetId))
+                .findFirst()
+                .orElse(null);
+
+        switchPlayer(newTarget, controlled);
+    }
+
+    @Override
+    public void switchPlayer(PlaybackTarget newTarget, boolean controlled) {
+        if (newTarget != null) {
+            // 1. Resolve the real target (e.g. proxy to actual DMR)
+            final PlaybackTarget resolvedTarget = (newTarget.isStreaming()) ? resolveStreamingPlayerTarget(newTarget) : newTarget;
+
+            boolean wasPlaying = isPlaying();
+            Track activeTrack = getNowPlayingSong();
+            long currentPositionMs = 0;
+            apincer.music.core.playback.PlaybackState lastState = playbackStateFlow.getValue();
+            if (lastState != null && lastState.currentPositionSecond > 0) {
+                currentPositionMs = lastState.currentPositionSecond * 1000L;
+            }
+
+            final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
+                && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
+
+            // Automatic switches (a stream, an external app starting) follow the player priority:
+            // never interrupt what is playing; an idle target never blocks one that starts; two at
+            // once: the higher rank wins. The listener's own choice (controlled) always wins.
+            if (!controlled) {
+                PlaybackTarget current = currentPlayerFlow.getValue().orElse(null);
+                if (isSameTarget) return; // nothing changes (e.g. a driven renderer pre-fetching)
+                boolean currentJustTookOver = android.os.SystemClock.elapsedRealtime() - automaticSwitchAt < 5000;
+                if (current != null && !PlayerPriority.mayTakeOver(
+                        PlayerPriority.rank(current, isControllable(current)), isCurrentTargetPlaying(current),
+                        currentJustTookOver, PlayerPriority.rank(resolvedTarget, false))) {
+                    Log.d(TAG, "Not switching to " + resolvedTarget.getDisplayName() + ": "
+                            + current.getDisplayName() + " keeps priority");
+                    return;
+                }
+            }
+
+            // 2. Deactivate current player IF DIFFERENT
+            if (!isSameTarget) historyTracker.suspend();
+            currentPlayerFlow.getValue().ifPresent(oldTarget -> {
+                if (!oldTarget.getTargetId().equals(resolvedTarget.getTargetId())) {
+                    deactivatePlayer(oldTarget);
+                }
+            });
+
+            // "Last player" is the listener's choice: an automatic switch (a stream, an app) is not saved
+            if (controlled) apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), resolvedTarget.getTargetId());
+            automaticSwitchAt = controlled ? 0 : android.os.SystemClock.elapsedRealtime();
+
+            // Publish the destination before activation: handoff playback and seek route
+            // through currentPlayerFlow, as do callbacks from the newly active player.
+            if (controlled) {
+                // Only a user-chosen DLNA renderer is driven; choosing anything else ends that
+                this.controlledPlayerTargetId = resolvedTarget instanceof DMRPlayer ? resolvedTarget.getTargetId() : null;
+            }
+            currentPlayerFlow.setValue(Optional.of(resolvedTarget));
+
+            // 3. Activate the new player
+            if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
+                // Register callback to ensure we are listening to this session
+                androidPlayer.registerCallback(externalPlayer, playbackCallback);
+                if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
+                    playSong(activeTrack, false);
+                    if (currentPositionMs > 1000) {
+                        seekTo(currentPositionMs);
+                    }
+                }
+            } else if (resolvedTarget.isStreaming()) {
+                startServers();
+                if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
+                    mediaHub.playerActivateWithHandoff(resolvedTarget.getTargetId(), playbackCallback, activeTrack, currentPositionMs);
+                } else {
+                    mediaHub.playerActivate(resolvedTarget.getTargetId(), playbackCallback);
+                }
+            }
+
+            if (!isSameTarget) {
+                // Paused handoff: the new target has nothing loaded, so Play must start the track there
+                pendingResume = (controlled && activeTrack != null && !wasPlaying)
+                        ? new PendingResume(resolvedTarget.getTargetId(), activeTrack, currentPositionMs)
+                        : null;
+            }
+
+            Track active = getNowPlayingSong();
+            updateNotification(getApplicationContext(), active, resolvedTarget, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs(), isPlaying());
+        }
+    }
+
+    @Override
+    public void setNextSongInQueue() {
+        queueManager.setPlaybackTrack(getNowPlayingSong());
+        preloadNextTrackSafe();
+    }
+
+    private void handleDiscoveredRenderers(List<PlaybackTarget> renderers) {
+        if (renderers == null || renderers.isEmpty()) return;
+
+        Optional<PlaybackTarget> currentOpt = currentPlayerFlow.getValue();
+        if (currentOpt.isPresent()) {
+            PlaybackTarget current = currentOpt.get();
+            if (current.isStreaming()) {
+                String targetId = current.getTargetId();
+                for (PlaybackTarget live : renderers) {
+                    if (live != null && live.getTargetId().equals(targetId)) {
+                        // Reconcile placeholder with live device data
+                        if ("Scanning for players…".equals(current.getDisplayName())
+                                || !live.getDisplayName().equals(current.getDisplayName())
+                                || !live.getDescription().equals(current.getDescription())) {
+                            Log.i(TAG, "Reconciling live DLNA renderer: " + live.getDisplayName() + " [" + targetId + "]");
+                            if (dmrStartupTimeoutTask != null) {
+                                dmrStartupTimeoutTask.cancel(false);
+                                dmrStartupTimeoutTask = null;
+                            }
+                            currentPlayerFlow.setValue(Optional.of(live));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private PlaybackTarget resolveStreamingPlayerTarget(PlaybackTarget player) {
+        if (!player.isStreaming()) return player;
+
+        String incomingIp = NetworkUtils.extractIpAddress(player.getDescription());
+        if (incomingIp.isEmpty()) return player;
+
+        for (PlaybackTarget dev : getPlaybackTargets()) {
+            if (dev != null && dev.isStreaming() && dev != player) {
+                String devIp = NetworkUtils.extractIpAddress(dev.getDescription());
+                if (!devIp.isEmpty() && incomingIp.equals(devIp)) {
+                    return dev;
+                }
+            }
+        }
+        return player;
+    }
+
+    /**
+     * True when MusicMate drives this target as a DLNA renderer: a DMRPlayer the user chose
+     * (switchPlayer(..., controlled=true)). A passive HTTP stream (a browser, or a renderer driven
+     * by another control point) is only followed. It used to count any streaming target, and
+     * adopted the first one asked about, so passive streams were ignored as "controlled".
+     */
+    public boolean isControllable(PlaybackTarget player) {
+        return player instanceof DMRPlayer && player.getTargetId().equals(controlledPlayerTargetId);
+    }
+
+    // A passive stream reports no state; it counts as playing for the track's length after its request
+    private volatile long passiveStreamBusyUntil;
+    // When the current target last took over automatically (elapsedRealtime); 0 after a listener choice
+    private volatile long automaticSwitchAt;
+
+    /** Is the current target playing? A followed stream is busy for its track's length. */
+    private boolean isCurrentTargetPlaying(PlaybackTarget current) {
+        if (isMonitoredStream(current)) return android.os.SystemClock.elapsedRealtime() < passiveStreamBusyUntil;
+        return isPlaying();
+    }
+
+    @Override
+    public void onStreamAccess(PlaybackTarget client, Track track) {
+        switchPlayer(client, false);
+        // Follow the stream only if it is now the current target (it may have lost to music playing,
+        // or be a driven renderer pre-fetching its next track)
+        PlaybackTarget active = getActivePlayer();
+        PlaybackTarget resolved = resolveStreamingPlayerTarget(client);
+        if (active == null || !isMonitoredStream(active) || !active.getTargetId().equals(resolved.getTargetId())) {
+            Log.d(TAG, "Stream from " + client.getDisplayName() + " not followed; "
+                    + (active != null ? active.getDisplayName() : "no player") + " keeps priority");
+            return;
+        }
+        double seconds = track != null && track.getAudioDuration() > 0 ? track.getAudioDuration() : 0;
+        passiveStreamBusyUntil = android.os.SystemClock.elapsedRealtime() + Math.max(60_000L, (long) (seconds * 1000) + 15_000L);
+        onAccessMediaTrack(track);
+    }
+
+    /** A streaming target MusicMate only follows: transport commands cannot reach it. */
+    private boolean isMonitoredStream(PlaybackTarget player) {
+        return player != null && player.isStreaming() && !isControllable(player);
+    }
+
+    /**
+     * Automatically selects the best available player based on a predefined priority.
+     *
+     * Priority Order:
+     * 1. DMR Player (DLNA/UPnP, target.isStreaming() and target.canReadSate())
+     * 2. WebStreaming Player (target.isStreaming())
+     * 3. ExternalPlayer (MediaSession-based)
+     *
+     * @return An Optional containing the highest-priority player found, or Optional.empty() if no suitable player is available.
+     */
+    public Optional<PlaybackTarget> autoSelectBestPlayer() {
+        // Startup / fallback default: DLNA renderer > local playback > external app. A passive
+        // stream is driven by another device and cannot be chosen (PlayerPriority).
+        List<PlaybackTarget> targets = getPlaybackTargets();
+        if (targets == null || targets.isEmpty()) return Optional.empty();
+        PlaybackTarget best = null;
+        int bestRank = 0;
+        for (PlaybackTarget target : targets) {
+            if (target == null) continue;
+            int rank;
+            if (target instanceof DMRPlayer) rank = PlayerPriority.RENDERER;
+            else if (target.isStreaming()) continue;
+            else rank = PlayerPriority.rank(target, false);
+            if (rank > bestRank) {
+                best = target;
+                bestRank = rank;
+            }
+        }
+        if (best != null) Log.d(TAG, "Auto-select: " + best.getTargetId());
+        return Optional.ofNullable(best);
+    }
+
+    private void initWebUIAssets(Context context) {
+        try {
+            String assetDir = "webui";
+            // Per your code, this will delete and re-copy on every service creation.
+            ApplicationUtils.deleteFilesFromAndroidFilesDir(context, assetDir);
+            ApplicationUtils.copyDirToAndroidFilesDir(context, assetDir);
+            ApplicationUtils.copyFileToAndroidFilesDir(context, "playlists.json",  assetDir+"/playlists.json");
+            ApplicationUtils.copyFileToAndroidFilesDir(context, "noto_sans_thai_semi_bold.ttf",  assetDir+"/noto_sans_thai.ttf");
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to copy web assets", e);
+        }
+    }
+
+    //
+    @Override
+    public Track getNowPlayingSong() {
+        return currentTrackFlow.getValue().orElse(null);
+    }
+
+    public String getLibraryNames() {
+        return mediaHub.getLibraryNames();
+    }
+
+    /**
+     * Allows clients (like MediaServerManager) to observe the service's status.
+     */
+    public LiveData<MediaServerHub.ServerStatus> getStatusLiveData() {
+        return statusLiveData;
+    }
+
+    // ==================== State Notifications ====================
+
+    private synchronized void handleTrackStartEvent(Track track) {
+        if (track == null) return;
+
+        long trackId = track.getId();
+
+        // Avoid duplicate events unless the fallback task has already completed or repeat mode is active
+        boolean fallbackActive = nextTrackTask != null && !nextTrackTask.isDone();
+        boolean isRepeatOne = queueManager != null && queueManager.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE;
+        if (trackId == lastPlaybackTrackId && fallbackActive && !isRepeatOne) {
+            Log.d(TAG, "Event ignored (duplicate): " + track.getTitle());
+            return;
+        }
+
+        lastPlaybackTrackId = trackId;
+        lastPreloadedTrackId = -1; // the new track's follower has not been handed to the player yet
+
+        Log.d(TAG, "Event-driven: Track started → " + track.getTitle());
+
+        // 1. Sync queue with actual renderer state
+        queueManager.setPlaybackTrack(track);
+
+        // 2. Preload next track with 5-second stabilization delay (prevents initial playback stutter)
+        schedulePreloadNextTrack(track);
+
+        // 3. Setup fallback timer
+        scheduleFallback(track);
+    }
+
+    private void schedulePreloadNextTrack(Track track) {
+        if (preloadTask != null && !preloadTask.isDone()) {
+            preloadTask.cancel(false);
+        }
+
+        PlaybackTarget activePlayer = getActivePlayer();
+        boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
+                || mediaHub.isCurrentRendererHiBy();
+        // SAFE-BY-DEFAULT: Only DMRPlayer instances that explicitly report supportsPreload() = true
+        // may use UPnP SetNextAVTransportURI. Non-DMR players (WebStreamingPlayer) and unknown
+        // targets must NEVER default to supportsPreload = true.
+        boolean supportsPreload = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                && ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
+
+        if (isHiBy || !supportsPreload) {
+            Log.d(TAG, "Renderer (" + (activePlayer != null ? activePlayer.getDisplayName() : "Unknown") + ") does not support UPnP SetNextAVTransportURI. Pre-caching stream in memory for discrete handover.");
+            Track next = queueManager.getNextTrack();
+            if (next != null) {
+                AudioStreamCacheManager.getInstance().preloadTrack(next);
+            }
+            return;
+        }
+
+        // Compute a dynamic preload delay:
+        // Fire SetNextAVTransportURI at 60% of the track's duration so the renderer
+        // has time to confirm playback is fully established before the next URI is queued.
+        // Use max(deviceGaplessDelayMs, 60% duration) but never more than the last 30s
+        // of the track, to maintain gapless crossfade behaviour on long tracks.
+        long deviceGaplessDelayMs = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                ? ((apincer.music.core.playback.DMRPlayer) activePlayer).getDeviceProfile().getGaplessDelayMs()
+                : 5000;
+
+        long trackDurationMs = track != null && track.getAudioDuration() > 0
+                ? (long) (track.getAudioDuration() * 1000)
+                : 0;
+
+        long preloadDelayMs;
+        if (trackDurationMs > 0) {
+            long sixtyPctMs = (long) (trackDurationMs * 0.60);
+            long thirtySecFromEnd = Math.max(0, trackDurationMs - 30_000);
+            // Clamp: at least deviceGaplessDelay, at most 30s before end of track
+            preloadDelayMs = Math.min(Math.max(sixtyPctMs, deviceGaplessDelayMs), thirtySecFromEnd);
+            Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s"
+                    + " (60% of " + (trackDurationMs / 1000) + "s track)");
+        } else {
+            preloadDelayMs = deviceGaplessDelayMs;
+            Log.d(TAG, "Gapless preload scheduled in " + (preloadDelayMs / 1000) + "s (no duration metadata)");
+        }
+
+        preloadTask = scheduler.schedule(() -> {
+            preloadNextTrackSafe();
+        }, preloadDelayMs, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Re-checks a follower already handed to the player after a queue edit: replaces it with the
+     * queue's current next track, or clears it when the queue now ends here.
+     */
+    private void revalidatePreloadedNext() {
+        preloadRecheckPending.set(false);
+        long preloaded = lastPreloadedTrackId;
+        if (preloaded == -1) return; // nothing handed over yet; the scheduled preload reads the queue then
+        Track next = queueManager.getNextTrack();
+        if (next != null && next.getId() == preloaded) return;
+
+        Log.d(TAG, "Gapless: Queue changed, replacing preloaded next → " + (next != null ? next.getTitle() : "none"));
+        lastPreloadedTrackId = -1;
+        if (next != null) {
+            preloadNextTrackSafe();
+        } else {
+            handNextToPlayer(null);
+        }
+    }
+
+    private void preloadNextTrackSafe() {
+        if (sleepTimerEndOfTrack) {
+            Log.d(TAG, "Gapless: Skipped, sleep timer stops at end of this track");
+            return;
+        }
+        Track next = queueManager.getNextTrack();
+
+        if (next == null) {
+            Log.d(TAG, "Gapless: No next track");
+            return;
+        }
+
+        if (next.getId() == lastPreloadedTrackId) {
+            Log.d(TAG, "Gapless: Already preloaded → " + next.getTitle());
+            return;
+        }
+
+        lastPreloadedTrackId = next.getId();
+
+        Log.d(TAG, "Gapless: Preloading → " + next.getTitle());
+        AudioStreamCacheManager.getInstance().preloadTrack(next);
+        handNextToPlayer(next);
+    }
+
+    /** Gives the gapless follower to the active player; {@code null} clears a queued one. */
+    private void handNextToPlayer(Track next) {
+        PlaybackTarget activePlayer = getActivePlayer();
+        boolean isHiBy = (activePlayer instanceof apincer.music.core.playback.DMRPlayer && ((apincer.music.core.playback.DMRPlayer) activePlayer).isHiBy())
+                || mediaHub.isCurrentRendererHiBy();
+        boolean supportsPreload = (activePlayer instanceof apincer.music.core.playback.DMRPlayer)
+                && ((apincer.music.core.playback.DMRPlayer) activePlayer).supportsPreload();
+
+        if (isLocalTarget()) {
+            androidPlayer.setNextTrack(next);
+        } else if (activePlayer != null && isControllable(activePlayer) && !isHiBy && supportsPreload) {
+            mediaHub.setNextTrack(next); // SetNextAVTransportURI
+        }
+    }
+
+    private void scheduleFallback(Track song) {
+        PlaybackTarget activePlayer = getActivePlayer();
+        if (activePlayer == null || !activePlayer.isStreaming() || !isControllable(activePlayer)) {
+            return; // Safety fallback timer is strictly for controllable DLNA/DMR streaming renderers
+        }
+
+        if (nextTrackTask != null && !nextTrackTask.isDone()) {
+            nextTrackTask.cancel(false);
+        }
+
+        long durationMs = (long) (song.getAudioDuration() * 1000);
+        if (durationMs <= 0) return;
+
+        // Schedule safety fallback ONLY after 100% track duration + 1.5s grace period
+        // so current track plays completely to the end without getting cut off
+        long delay = durationMs + 1500;
+
+        Log.d(TAG, "Fallback transition scheduled in " + (delay / 1000) + " sec (after full track completion)");
+
+        nextTrackTask = scheduler.schedule(() -> {
+            Log.w(TAG, "Track end fallback triggered after full duration!");
+
+            currentPlayerFlow.getValue().ifPresentOrElse(
+                    this::fallbackToNextTrack,
+                    () -> Log.w(TAG, "Fallback transition skipped: no active playback target")
+            );
+
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void resetGaplessState() {
+        lastPreloadedTrackId = -1;
+        lastPlaybackTrackId = -1;
+
+        if (preloadTask != null) {
+            preloadTask.cancel(true);
+            preloadTask = null;
+        }
+
+        if (nextTrackTask != null) {
+            nextTrackTask.cancel(true);
+            nextTrackTask = null;
+        }
+
+        if (trackStartTask != null) {
+            trackStartTask.cancel(true);
+            trackStartTask = null;
+        }
+
+        AudioStreamCacheManager.getInstance().cancelPendingPreloads();
+    }
+
+    @Override
+    public void onMediaTrackChanged(Track song) {
+        if (song == null || song.getId() != drivenExternalTrackId) {
+            drivenExternalTrackId = -1; // the app moved on by itself (its own queue or the listener)
+        }
+        currentTrackFlow.setValue(Optional.ofNullable(song));
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionSecond = 0;
+        onPlaybackStateChanged(state);
+
+        // EVENT-DRIVEN PIPELINE ENTRY
+        handleTrackStartEvent(song);
+    }
+
+    @Override
+    public void onAccessMediaTrack(Track song) {
+        // Guard: Do NOT let passive HTTP access requests hijack an active controlled playback session.
+        // When a DLNA renderer pre-fetches the next track (triggered by SetNextAVTransportURI),
+        // it issues an HTTP GET for the next song. That request must NOT reset currentTrack,
+        // timers, or preload state — the DMR's GENA events and polling handle transitions.
+        PlaybackTarget activePlayer = getActivePlayer();
+        if (activePlayer != null && isControllable(activePlayer)) {
+            Log.d(TAG, "onAccessMediaTrack: Ignoring passive HTTP request for '"
+                    + (song != null ? song.getTitle() : "null")
+                    + "' — active controlled DMR session in progress.");
+            return;
+        }
+
+        Track current = getNowPlayingSong();
+        if (current != null && song != null && current.getId() == song.getId()) {
+            // Track is already active, do not interrupt playback state
+            return;
+        }
+        currentTrackFlow.setValue(Optional.ofNullable(song));
+        apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+        state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionSecond = 0;
+        onPlaybackStateChanged(state);
+        
+        // EVENT-DRIVEN PIPELINE ENTRY
+        handleTrackStartEvent(song);
+    }
+
+    @Override
+    public void onTrackDeleted(long trackId) {
+        Track current = getNowPlayingSong();
+        boolean isCurrent = (current != null && current.getId() == trackId);
+        if (queueManager != null) {
+            queueManager.removeTrackById(trackId);
+        }
+        if (isCurrent) {
+            Log.i(TAG, "Currently playing track deleted (ID " + trackId + "). Advancing to next track in queue.");
+            // The queue keeps the deleted track's follower; null means it was the last track
+            Track next = (queueManager != null) ? queueManager.getNextTrack(true) : null;
+            if (next != null) {
+                playSong(next);
+            } else {
+                stopPlaying();
+            }
+        }
+    }
+
+    @Override
+    public void onTrackDeleted(Track tag) {
+        if (tag != null) {
+            onTrackDeleted(tag.getId());
+        }
+    }
+
+    @Override
+    public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
+        observeListeningState(state);
+        playbackStateFlow.setValue(state);
+        apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
+        continueExternalQueueIfEnded(state, target);
+        // Only manually update notification if NOT using the local Media3 ExoPlayer
+        if (target == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
+            boolean isPlaying = state != null && state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+            updateNotification(getApplicationContext(), state != null ? state.currentTrack : null, target, mediaHub.getStatus().getValue(), tagRepos.getTotalSongs(), isPlaying);
+        }
+    }
+
+    @Override
+    public void onPlaybackStateElapsedTime(long elapsedTimeMS) {
+        apincer.music.core.playback.PlaybackState state = playbackStateFlow.getValue();
+        if (state != null) {
+            // Create a copy — StateFlow uses reference equality and silently drops
+            // setValue() calls with the same object instance, even if fields changed.
+            apincer.music.core.playback.PlaybackState updated = state.copy();
+            updated.currentPositionSecond = elapsedTimeMS;
+            if (drivenExternalTrackId >= 0) lastExternalPositionSec = Math.max(lastExternalPositionSec, elapsedTimeMS);
+            observeListeningState(updated);
+            if (acceptingHistory && updated.currentTrack != null && elapsedTimeMS >= 0) {
+                historyTracker.onPosition(updated.currentTrack.getId(), elapsedTimeMS * 1000L,
+                        android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
+            }
+            playbackStateFlow.setValue(updated);
+        }
+    }
+
+    /**
+     * An external app that played the track MusicMate sent it reports STOPPED (or PAUSED) at the
+     * end of that one file; continue with the queue's next track. A stop mid-track, or the app
+     * moving to its own next track, does not count (ExternalTrackEnd, onMediaTrackChanged).
+     */
+    private void continueExternalQueueIfEnded(apincer.music.core.playback.PlaybackState state,
+                                              apincer.music.core.playback.spi.PlaybackTarget target) {
+        if (state == null || !(target instanceof ExternalAndroidPlayer)
+                || ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) return;
+        Track current = getNowPlayingSong();
+        if (current == null || current.getId() != drivenExternalTrackId) return;
+        // A late STOPPED for the previous track (with its end position) must not skip this one
+        if (android.os.SystemClock.elapsedRealtime() - drivenExternalStartedAt < 3000) return;
+        if (state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING) {
+            lastExternalPositionSec = Math.max(lastExternalPositionSec, state.currentPositionSecond);
+            return;
+        }
+        long position = Math.max(lastExternalPositionSec, state.currentPositionSecond);
+        if (ExternalTrackEnd.endedNaturally(state.currentState, position, current.getAudioDuration())) {
+            drivenExternalTrackId = -1; // once per track
+            Log.i(TAG, "External app finished '" + current.getTitle() + "'; continuing the queue");
+            scheduler.execute(() -> {
+                historyTracker.end(false);
+                if (stopForEndOfTrackSleep()) return;
+                playNextFromQueue(false);
+            });
+        }
+    }
+
+    private void observeListeningState(apincer.music.core.playback.PlaybackState state) {
+        if (!acceptingHistory) return;
+        if (state == null || state.currentTrack == null || state.currentState == null) {
+            historyTracker.suspend();
+            return;
+        }
+        double duration = state.durationSecond > 0 ? state.durationSecond : state.currentTrack.getAudioDuration();
+        long durationMs = Double.isFinite(duration) && duration > 0 ? (long) (duration * 1000) : 0;
+        historyTracker.onState(state.currentTrack.getId(), durationMs,
+                state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING,
+                android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
+    }
+
+    @Override
+    public AutoCloseable subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
+        return flowSubscribe(playbackStateFlow, consumer, onErrorConsumer);
+    }
+
+    @Override
+    public AutoCloseable subscribeNowPlayingSong(
+            Consumer<Optional<Track>> onNextConsumer,
+            Consumer<Throwable> onErrorConsumer
+    ) {
+        return flowSubscribe(currentTrackFlow, onNextConsumer, onErrorConsumer);
+    }
+
+    @Override
+    public AutoCloseable subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
+        return flowSubscribe(currentPlayerFlow, consumer, onErrorConsumer);
+    }
+
+    /** Lightweight Java-compatible StateFlow subscriber using the single-thread scheduler. */
+    private <T> AutoCloseable flowSubscribe(
+            StateFlow<T> flow,
+            Consumer<T> onNext,
+            Consumer<Throwable> onError) {
+        // Emit current value immediately
+        try { onNext.accept(flow.getValue()); } catch (Throwable t) {
+            try { onError.accept(t); } catch (Exception ignored) {}
+        }
+        final java.util.concurrent.atomic.AtomicReference<T> lastRef =
+                new java.util.concurrent.atomic.AtomicReference<>(flow.getValue());
+
+        ScheduledFuture<?> task = scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                T current = flow.getValue();
+                if (current != lastRef.get()) {
+                    lastRef.set(current);
+                    onNext.accept(current);
+                }
+            } catch (Throwable t) {
+                try { onError.accept(t); } catch (Exception ignored) {}
+            }
+        }, 500, 500, TimeUnit.MILLISECONDS);
+
+        return () -> task.cancel(false);
+    }
+
+    // ==================== Binder ====================
+
+    public class MusicMateServiceImplBinder extends Binder implements MusicMateServiceBinder {
+        @Override
+        public PlaybackService getPlaybackService() {
+            return MusicMateServiceImpl.this;
+        }
+        @Override
+        public MediaServerHub getMediaServerHub() {
+            return mediaHub;
+        }
+
+        public MusicMateServiceImpl getService() {
+            return MusicMateServiceImpl.this;
+        }
+    }
+
+    @androidx.annotation.Nullable
+    @Override
+    public MediaLibrarySession onGetSession(androidx.media3.session.MediaSession.ControllerInfo controllerInfo) {
+        return mediaLibrarySession;
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        if (intent != null && MediaLibraryService.SERVICE_INTERFACE.equals(intent.getAction())) {
+            return super.onBind(intent);
+        }
+        return new MusicMateServiceImplBinder();
+    }
+}

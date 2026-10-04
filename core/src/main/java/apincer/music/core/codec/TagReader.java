@@ -1,0 +1,144 @@
+package apincer.music.core.codec;
+
+import static org.jaudiotagger.audio.mp4.EncoderType.*;
+import static apincer.music.core.utils.StringUtils.trimToEmpty;
+
+import android.content.Context;
+
+import com.anggrayudi.storage.file.DocumentFileCompat;
+
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioHeader;
+
+import java.io.File;
+import java.util.Locale;
+import java.util.Set;
+
+import apincer.music.core.Constants;
+import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.Track;
+import apincer.music.core.utils.StringUtils;
+import apincer.android.utils.FileUtils;
+
+public abstract class TagReader {
+
+    public enum SupportedFileFormat {
+        MP3,
+        FLAC,
+        M4A,
+        WAV,
+        AIF,
+        AIFF,
+        DSF;
+       // DFF("dff", "Dff");
+
+        /** Constructor for internal use by this enum.
+         */
+        SupportedFileFormat()  {
+        }
+    }
+
+    protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
+    protected static final String KEY_TAG_QUALITY = "QUALITY";
+    protected static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
+    protected static final String KEY_TAG_ORIGINALSAMPLERATE = "ORIGINALSAMPLERATE";
+
+    /** Set-based format lookup — no exception allocation per unsupported file. */
+    private static final Set<String> SUPPORTED_EXTENSIONS = Set.of(
+            "MP3", "FLAC", "M4A", "WAV", "AIF", "AIFF", "DSF"
+    );
+
+    /**
+     * Cache one JThinkReader per scan thread to avoid creating a new instance per file.
+     * The WeakReference-free ThreadLocal is safe here because WorkManager threads are
+     * pooled and Context is the Application context (long-lived).
+     */
+    private static final ThreadLocal<JThinkReader> readerCache = new ThreadLocal<>();
+
+    protected static TagReader getReader(Context context, String path) {
+        JThinkReader reader = readerCache.get();
+        if (reader == null) {
+            reader = new JThinkReader(context);
+            readerCache.set(reader);
+        }
+        return reader;
+    }
+
+    public long generateId(String path, int seq) {
+        // Avoid temporary String allocation: combine hash codes directly
+        long h = (long) path.hashCode() * 31 + seq;
+        return h & 0xffffffffL;
+    }
+
+    public static boolean isSupportedFileFormat(String path) {
+        String ext = FileUtils.getExtension(path);
+        if (ext == null || ext.isEmpty()) return false;
+        return SUPPORTED_EXTENSIONS.contains(ext.toUpperCase(Locale.US));
+    }
+
+    protected String detectAudioEncoding(AudioFile read, AudioHeader header) {
+        String encType = read.getExt();
+        if(StringUtils.isEmpty(encType)) return "";
+
+        if(APPLE_LOSSLESS.getDescription().equals(header.getEncodingType())) {
+            encType = Constants.MEDIA_ENC_ALAC;
+        }else if("m4a".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_AAC;
+        }else if("wav".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_WAVE;
+        }else if("aif".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_AIFF;
+        }else if("flac".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_FLAC;
+        }else if("mp3".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_MPEG;
+        }else if("dsf".equalsIgnoreCase(encType)) {
+            encType =  Constants.MEDIA_ENC_DSF;
+        }else if("dff".equalsIgnoreCase(encType)) {
+            encType =  Constants.MEDIA_ENC_DFF;
+        }else if("iso".equalsIgnoreCase(encType)) {
+            encType =  Constants.MEDIA_ENC_SACD;
+        }
+        return  encType.toLowerCase(Locale.US);
+    }
+
+
+    protected static void readFileInfo(Context context, Track tag) {
+        File file = new File(tag.getPath());
+        tag.setFileLastModified(file.lastModified());
+        tag.setFileSize(file.length());
+        tag.setFileType(FileUtils.getExtension(file).toLowerCase(Locale.US));
+
+        tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
+        tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
+
+        //set default, will be override by reader
+        tag.setAudioEncoding(tag.getFileType());
+        tag.setTitle(FileUtils.removeExtension(file.getName()));
+    }
+
+    protected static String extractField(String[] tags, int i) {
+        if(tags.length>i) {
+            return trimToEmpty(tags[i]);
+        }
+        return "";
+    }
+
+    public static AudioTag readBasicTag(Context context, String mediaPath) {
+        return getReader(context, mediaPath).readBasicTag(mediaPath);
+    }
+
+    public static boolean readFullTag(Context context, Track tag) {
+        return getReader(context, tag.getPath()).readFullTag(tag);
+    }
+
+    public static boolean readExtras(Context context, Track tag) {
+        return getReader(context, tag.getPath()).readExtras(tag);
+    }
+
+    protected abstract AudioTag readBasicTag(String mediaPath);
+
+    protected abstract boolean readFullTag(Track tag);
+
+    protected abstract boolean readExtras(Track tag);
+}

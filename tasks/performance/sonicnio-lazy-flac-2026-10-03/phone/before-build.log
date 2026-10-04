@@ -1,0 +1,247 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/Users/thawee.p/.gradle/wrapper/dists/gradle-9.6.0-bin/24oeilp3acun5ick6dmu928p7o/gradle-9.6.0/lib/native-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+
+> Configure project :app
+WARNING: The option setting 'android.experimental.enableScreenshotTest=true' is experimental.
+The current default is 'false'.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :core:preBuild UP-TO-DATE
+> Task :core:preDebugBuild UP-TO-DATE
+> Task :core:processDebugNavigationResources UP-TO-DATE
+> Task :db-room:preBuild UP-TO-DATE
+> Task :db-room:preDebugBuild UP-TO-DATE
+> Task :db-room:processDebugNavigationResources UP-TO-DATE
+> Task :server-jupnp:preBuild UP-TO-DATE
+> Task :server-jupnp:preDebugBuild UP-TO-DATE
+> Task :server-jupnp:processDebugNavigationResources UP-TO-DATE
+> Task :library:crashreporter:preBuild UP-TO-DATE
+> Task :library:crashreporter:preDebugBuild UP-TO-DATE
+> Task :library:crashreporter:processDebugNavigationResources UP-TO-DATE
+> Task :library:jaudiotagger-android:preBuild UP-TO-DATE
+> Task :library:jaudiotagger-android:preDebugBuild UP-TO-DATE
+> Task :library:jaudiotagger-android:processDebugNavigationResources UP-TO-DATE
+> Task :library:JustFLAC:preBuild UP-TO-DATE
+> Task :library:JustFLAC:preDebugBuild UP-TO-DATE
+> Task :library:JustFLAC:processDebugNavigationResources UP-TO-DATE
+> Task :library:library:preBuild UP-TO-DATE
+> Task :library:library:preDebugBuild UP-TO-DATE
+> Task :library:library:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :core:generateDebugResources UP-TO-DATE
+> Task :core:packageDebugResources UP-TO-DATE
+> Task :core:parseDebugLocalResources UP-TO-DATE
+> Task :library:jaudiotagger-android:generateDebugResources UP-TO-DATE
+> Task :library:jaudiotagger-android:packageDebugResources UP-TO-DATE
+> Task :library:jaudiotagger-android:parseDebugLocalResources UP-TO-DATE
+> Task :library:jaudiotagger-android:generateDebugRFile UP-TO-DATE
+> Task :library:JustFLAC:generateDebugResources UP-TO-DATE
+> Task :library:JustFLAC:packageDebugResources UP-TO-DATE
+> Task :library:JustFLAC:parseDebugLocalResources UP-TO-DATE
+> Task :library:JustFLAC:generateDebugRFile UP-TO-DATE
+> Task :library:library:generateDebugResources UP-TO-DATE
+> Task :library:library:packageDebugResources UP-TO-DATE
+> Task :library:library:parseDebugLocalResources UP-TO-DATE
+> Task :library:library:generateDebugRFile UP-TO-DATE
+> Task :core:generateDebugRFile UP-TO-DATE
+> Task :db-room:generateDebugResources UP-TO-DATE
+> Task :db-room:packageDebugResources UP-TO-DATE
+> Task :db-room:parseDebugLocalResources UP-TO-DATE
+> Task :db-room:generateDebugRFile UP-TO-DATE
+> Task :server-jupnp:generateDebugResources UP-TO-DATE
+> Task :server-jupnp:packageDebugResources UP-TO-DATE
+> Task :server-jupnp:parseDebugLocalResources UP-TO-DATE
+> Task :server-jupnp:generateDebugRFile UP-TO-DATE
+> Task :library:crashreporter:generateDebugResources UP-TO-DATE
+> Task :library:crashreporter:packageDebugResources UP-TO-DATE
+> Task :library:crashreporter:parseDebugLocalResources UP-TO-DATE
+> Task :library:crashreporter:generateDebugRFile UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :library:jaudiotagger-android:compileDebugKotlin NO-SOURCE
+> Task :library:jaudiotagger-android:javaPreCompileDebug UP-TO-DATE
+> Task :library:jaudiotagger-android:compileDebugJavaWithJavac UP-TO-DATE
+> Task :library:jaudiotagger-android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :library:JustFLAC:compileDebugKotlin NO-SOURCE
+> Task :library:JustFLAC:javaPreCompileDebug UP-TO-DATE
+
+> Task :library:JustFLAC:compileDebugJavaWithJavac
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :library:library:compileDebugKotlin NO-SOURCE
+> Task :library:JustFLAC:bundleLibCompileToJarDebug
+> Task :library:library:javaPreCompileDebug UP-TO-DATE
+> Task :library:library:compileDebugJavaWithJavac UP-TO-DATE
+> Task :library:library:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:kspDebugKotlin UP-TO-DATE
+> Task :core:compileDebugKotlin UP-TO-DATE
+> Task :core:javaPreCompileDebug UP-TO-DATE
+> Task :core:compileDebugJavaWithJavac UP-TO-DATE
+> Task :library:jaudiotagger-android:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :library:library:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :db-room:javaPreCompileDebug UP-TO-DATE
+> Task :server-jupnp:javaPreCompileDebug UP-TO-DATE
+> Task :library:crashreporter:compileDebugKotlin NO-SOURCE
+> Task :library:crashreporter:javaPreCompileDebug UP-TO-DATE
+> Task :library:crashreporter:compileDebugJavaWithJavac UP-TO-DATE
+> Task :library:JustFLAC:bundleLibRuntimeToJarDebug
+> Task :library:crashreporter:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :db-room:compileDebugKotlin NO-SOURCE
+> Task :db-room:compileDebugJavaWithJavac UP-TO-DATE
+> Task :db-room:transformDebugClassesWithAsm UP-TO-DATE
+> Task :db-room:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :server-jupnp:kspDebugKotlin UP-TO-DATE
+> Task :server-jupnp:compileDebugKotlin NO-SOURCE
+> Task :server-jupnp:compileDebugJavaWithJavac UP-TO-DATE
+> Task :server-jupnp:transformDebugClassesWithAsm UP-TO-DATE
+> Task :server-jupnp:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :core:generateDebugAssets UP-TO-DATE
+> Task :core:mergeDebugAssets UP-TO-DATE
+> Task :db-room:generateDebugAssets UP-TO-DATE
+> Task :db-room:mergeDebugAssets UP-TO-DATE
+> Task :server-jupnp:generateDebugAssets UP-TO-DATE
+> Task :server-jupnp:mergeDebugAssets UP-TO-DATE
+> Task :library:crashreporter:generateDebugAssets UP-TO-DATE
+> Task :library:crashreporter:mergeDebugAssets UP-TO-DATE
+> Task :library:jaudiotagger-android:generateDebugAssets UP-TO-DATE
+> Task :library:jaudiotagger-android:mergeDebugAssets UP-TO-DATE
+> Task :library:JustFLAC:generateDebugAssets UP-TO-DATE
+> Task :library:JustFLAC:mergeDebugAssets UP-TO-DATE
+> Task :library:library:generateDebugAssets UP-TO-DATE
+> Task :library:library:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :core:processDebugJavaRes UP-TO-DATE
+> Task :db-room:processDebugJavaRes UP-TO-DATE
+> Task :server-jupnp:processDebugJavaRes NO-SOURCE
+> Task :library:crashreporter:processDebugJavaRes NO-SOURCE
+> Task :library:jaudiotagger-android:processDebugJavaRes NO-SOURCE
+> Task :library:JustFLAC:processDebugJavaRes NO-SOURCE
+> Task :library:library:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :db-room:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :server-jupnp:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :library:library:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :library:crashreporter:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :library:jaudiotagger-android:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :db-room:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :server-jupnp:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :library:crashreporter:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:hiltCollectClassesDebug UP-TO-DATE
+> Task :app:hiltAggregateDepsDebug UP-TO-DATE
+> Task :library:JustFLAC:bundleLibRuntimeToDirDebug
+> Task :app:hiltJavaCompileDebug UP-TO-DATE
+> Task :core:writeDebugAarMetadata UP-TO-DATE
+> Task :db-room:writeDebugAarMetadata UP-TO-DATE
+> Task :server-jupnp:writeDebugAarMetadata UP-TO-DATE
+> Task :library:crashreporter:writeDebugAarMetadata UP-TO-DATE
+> Task :library:jaudiotagger-android:writeDebugAarMetadata UP-TO-DATE
+> Task :library:JustFLAC:writeDebugAarMetadata UP-TO-DATE
+> Task :library:library:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core:extractDeepLinksDebug UP-TO-DATE
+> Task :core:processDebugManifest UP-TO-DATE
+> Task :db-room:extractDeepLinksDebug UP-TO-DATE
+> Task :db-room:processDebugManifest UP-TO-DATE
+> Task :server-jupnp:extractDeepLinksDebug UP-TO-DATE
+> Task :server-jupnp:processDebugManifest UP-TO-DATE
+> Task :library:crashreporter:extractDeepLinksDebug UP-TO-DATE
+> Task :library:crashreporter:processDebugManifest UP-TO-DATE
+> Task :library:jaudiotagger-android:extractDeepLinksDebug UP-TO-DATE
+> Task :library:jaudiotagger-android:processDebugManifest UP-TO-DATE
+> Task :library:JustFLAC:extractDeepLinksDebug UP-TO-DATE
+> Task :library:JustFLAC:processDebugManifest UP-TO-DATE
+> Task :library:library:extractDeepLinksDebug UP-TO-DATE
+> Task :library:library:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :core:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:compileDebugLibraryResources UP-TO-DATE
+> Task :db-room:mapDebugSourceSetPaths UP-TO-DATE
+> Task :db-room:compileDebugLibraryResources UP-TO-DATE
+> Task :server-jupnp:mapDebugSourceSetPaths UP-TO-DATE
+> Task :server-jupnp:compileDebugLibraryResources UP-TO-DATE
+> Task :library:crashreporter:mapDebugSourceSetPaths UP-TO-DATE
+> Task :library:crashreporter:compileDebugLibraryResources UP-TO-DATE
+> Task :library:jaudiotagger-android:mapDebugSourceSetPaths UP-TO-DATE
+> Task :library:jaudiotagger-android:compileDebugLibraryResources UP-TO-DATE
+> Task :library:JustFLAC:mapDebugSourceSetPaths UP-TO-DATE
+> Task :library:JustFLAC:compileDebugLibraryResources UP-TO-DATE
+> Task :library:library:mapDebugSourceSetPaths UP-TO-DATE
+> Task :library:library:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:transformDebugClassesWithAsm UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:mergeDebugNativeLibs NO-SOURCE
+> Task :core:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :db-room:mergeDebugJniLibFolders UP-TO-DATE
+> Task :db-room:mergeDebugNativeLibs NO-SOURCE
+> Task :db-room:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :server-jupnp:mergeDebugJniLibFolders UP-TO-DATE
+> Task :server-jupnp:mergeDebugNativeLibs NO-SOURCE
+> Task :server-jupnp:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :library:crashreporter:mergeDebugJniLibFolders UP-TO-DATE
+> Task :library:crashreporter:mergeDebugNativeLibs NO-SOURCE
+> Task :library:crashreporter:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :library:jaudiotagger-android:mergeDebugJniLibFolders UP-TO-DATE
+> Task :library:jaudiotagger-android:mergeDebugNativeLibs NO-SOURCE
+> Task :library:jaudiotagger-android:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :library:JustFLAC:mergeDebugJniLibFolders UP-TO-DATE
+> Task :library:JustFLAC:mergeDebugNativeLibs NO-SOURCE
+> Task :library:JustFLAC:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :library:library:mergeDebugJniLibFolders UP-TO-DATE
+> Task :library:library:mergeDebugNativeLibs NO-SOURCE
+> Task :library:library:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeLibDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///Users/thawee.p/Workspaces/github/musicmate/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2s
+176 actionable tasks: 6 executed, 170 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

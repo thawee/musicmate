@@ -1,0 +1,176 @@
+[
+  {
+    "label": "metadata-controlled-after-0",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 29.40937492530793,
+      "seconds": 0.2612707079388201,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 7.804229506291449,
+    "seek_p95_ms": 14.967167051509023,
+    "parallel_MB_s": 39.43811703230331,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 12.21225003246218,
+      "seconds": 0.8312145409872755,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "132bf343f7ea3d300386055c397c61b7b15753c59484e8a33a56f110fa2cbe2f",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  },
+  {
+    "label": "metadata-controlled-before-1",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 55.395874893292785,
+      "seconds": 0.2632538339821622,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 16.281540971249342,
+    "seek_p95_ms": 23.624083027243614,
+    "parallel_MB_s": 39.43651405365417,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 19.30208399426192,
+      "seconds": 0.7857574999798089,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "e08d4932e0cbc7b599903a3b8aae6e779dfae68286790ab1424be0cd2d4d7ce6",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  },
+  {
+    "label": "metadata-controlled-before-2",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 61.04216701351106,
+      "seconds": 0.27084400004241616,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 14.465999964158982,
+    "seek_p95_ms": 17.449709004722536,
+    "parallel_MB_s": 39.505718217715426,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 16.57437498215586,
+      "seconds": 0.8552615829976276,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "e08d4932e0cbc7b599903a3b8aae6e779dfae68286790ab1424be0cd2d4d7ce6",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  },
+  {
+    "label": "metadata-controlled-after-3",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 28.208958101458848,
+      "seconds": 0.2616451670182869,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 7.072771026287228,
+    "seek_p95_ms": 14.80683300178498,
+    "parallel_MB_s": 39.429290241714135,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 11.370375053957105,
+      "seconds": 0.8406155409757048,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "132bf343f7ea3d300386055c397c61b7b15753c59484e8a33a56f110fa2cbe2f",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  },
+  {
+    "label": "metadata-controlled-before-4",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 53.8773339940235,
+      "seconds": 0.2638277920195833,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 17.106708546634763,
+    "seek_p95_ms": 25.03808308392763,
+    "parallel_MB_s": 39.340468778360496,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 19.937874982133508,
+      "seconds": 0.8857645839452744,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "e08d4932e0cbc7b599903a3b8aae6e779dfae68286790ab1424be0cd2d4d7ce6",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  },
+  {
+    "label": "metadata-controlled-after-5",
+    "single": {
+      "size": 9940667,
+      "ttfb_ms": 36.3379999762401,
+      "seconds": 0.2703794159460813,
+      "sha256": "69619cbf611ad6711cfa7962916eec48879759dc7b839af8ba15b590eb818626",
+      "status": 200
+    },
+    "seek_p50_ms": 15.041958016809076,
+    "seek_p95_ms": 20.337959052994847,
+    "parallel_MB_s": 39.33460447089297,
+    "converted": {
+      "size": 29529404,
+      "ttfb_ms": 18.5049579013139,
+      "seconds": 0.8785019998904318,
+      "sha256": "edb1ab13ad8e8dc03e8e283a40dd30d6344672671b0186a2b72a58bb01f1b676",
+      "status": 200
+    },
+    "range_checks": 16,
+    "parallel_hash_matches": 4,
+    "apk_sha256": "132bf343f7ea3d300386055c397c61b7b15753c59484e8a33a56f110fa2cbe2f",
+    "metadata_headers": {
+      "ETag": "\"1b771e2f0b93dabd-97aebb\"",
+      "Last-Modified": "Thu, 11 Sep 2025 21:41:35 GMT",
+      "Content-Range": "bytes 0-0/9940667",
+      "Content-Type": "audio/flac"
+    }
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "compare-after-1-trace.pftrace.gz",
+    "raw_sha256": "a30aa8ea896a57272ba228e9da507029e6356ec3214296532b22959ce19a5685",
+    "raw_bytes": 30016773,
+    "gzip_bytes": 9719683
+  },
+  {
+    "file": "compare-after-2-trace.pftrace.gz",
+    "raw_sha256": "2c741cb9206cabb82fd65a29d3b8b870d22867492e37a342e0b1b99056c9a68c",
+    "raw_bytes": 28354128,
+    "gzip_bytes": 9254750
+  },
+  {
+    "file": "compare-before-0-trace.pftrace.gz",
+    "raw_sha256": "49bc6b14d5c1dc846e1b29faaf4148ba14f35760e19f89153fa22df8a4a35269",
+    "raw_bytes": 29894159,
+    "gzip_bytes": 9292546
+  },
+  {
+    "file": "compare-before-3-trace.pftrace.gz",
+    "raw_sha256": "2179483c5f27c5c8e7a529217721106d8f957a4ad7f3a7ecbe776920364532d9",
+    "raw_bytes": 27551760,
+    "gzip_bytes": 9156635
+  },
+  {
+    "file": "pilot-after-0-trace.pftrace.gz",
+    "raw_sha256": "de37e0f055aba35698851aa72ecbb8efe8dc6ebac56fbdf7b0dc94bc36493145",
+    "raw_bytes": 24717507,
+    "gzip_bytes": 7852243
+  }
+]

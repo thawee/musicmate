@@ -1,0 +1,12 @@
+<!-- res/drawable/bg_notification_overlay.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Rounded corners -->
+    <corners android:radius="16dp" />
+
+    <!-- Subtle overlay color to unify the card -->
+    <solid android:color="?attr/colorSurfaceContainer" />
+
+    <!-- Slight elevation shadow (optional, for visual depth) -->
+    <padding android:left="1dp" android:top="1dp" android:right="1dp" android:bottom="1dp" />
+</shape>

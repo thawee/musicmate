@@ -1,0 +1,131 @@
+package apincer.android.mmate;
+
+import static apincer.android.mmate.service.MusicMateServiceImpl.CHANNEL_ID;
+
+import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.util.Log;
+
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.work.WorkManager;
+
+import com.balsikandar.crashreporter.CrashReporter;
+import com.google.android.material.color.DynamicColors;
+
+
+import javax.inject.Inject;
+
+import apincer.music.core.Constants;
+import apincer.music.core.Settings;
+import apincer.music.core.utils.MusicMateExecutors;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
+import apincer.music.core.repository.PlaylistRepository;
+import apincer.music.core.utils.LogHelper;
+import coil3.ImageLoader;
+import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.worker.ScanAudioFileWorker;
+import dagger.hilt.android.HiltAndroidApp;
+
+@HiltAndroidApp
+public class MusixMateApp extends Application implements coil3.SingletonImageLoader.Factory {
+    private static final String TAG = LogHelper.getTag(MusixMateApp.class);
+
+    private static MusixMateApp sInstance;
+
+    public static MusixMateApp getInstance() {
+        return sInstance;
+    }
+
+    @Inject
+    FileRepository fileRepos;
+    @Inject
+    TagRepository tagRepos;
+
+    @Override public void onCreate() {
+        sInstance = this;
+        super.onCreate();
+        // Apply dynamic color
+        DynamicColors.applyToActivitiesIfAvailable(this);
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        LogHelper.initial();
+        LogHelper.setSLF4JOn();
+        CrashReporter.initialize(getApplicationContext());
+
+        // must create notification channel for foreground services
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        createNotificationChannel(notificationManager);
+
+        // initialize thread executors
+        MusicMateExecutors.getInstance();
+
+        removeRetiredServerEnginePreference();
+
+        // start music scan
+        startMusicScan();
+
+        PlaylistRepository.loadPlaylists(this);
+
+        // Initialize Bluetooth A2DP proxy early for codec telemetry
+        apincer.android.mmate.utils.AudioOutputHelper.initializeBluetooth(getApplicationContext());
+    }
+
+    private void createNotificationChannel(NotificationManager notificationManager) {
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                Constants.getPresentationName(),
+                NotificationManager.IMPORTANCE_LOW
+        );
+        channel.setDescription("Manages media");
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+
+
+    /** SonicNIO is the only streaming engine (ADR-037); drop the old engine choice ("httpcore", "netty"). */
+    private void removeRetiredServerEnginePreference() {
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.contains("preference_media_server_engine")) {
+            prefs.edit().remove("preference_media_server_engine").apply();
+        }
+    }
+
+    // Add this to your MusixMateApp class
+    public void startMusicScan() {
+        // Clean up any pending work requests
+        WorkManager.getInstance(getApplicationContext()).pruneWork();
+
+        if(Settings.checkDirectoriesSet(getApplicationContext())) {
+            // Incremental scan, unless a scan (possibly a full rescan) is already queued or running
+            Log.i(TAG, "Normal startup, requesting incremental music scan");
+            ScanAudioFileWorker.startStartupScan(getApplicationContext());
+        } else {
+            Log.w(TAG, "Music scan skipped - no directories configured");
+        }
+    }
+
+    // use by worker
+    public FileRepository getFileRepository() {
+        return fileRepos;
+    }
+
+    // use by worker
+    public TagRepository getTagRepository() {
+        return tagRepos;
+    }
+
+    @androidx.annotation.NonNull
+    @Override
+    public ImageLoader newImageLoader(@androidx.annotation.NonNull android.content.Context context) {
+        coil3.ComponentRegistry registry = new coil3.ComponentRegistry.Builder()
+            .add(new CoverartFetcher.Factory(getApplicationContext()), kotlin.jvm.JvmClassMappingKt.getKotlinClass(apincer.music.core.model.Track.class))
+            .build();
+        return new ImageLoader.Builder(context)
+                .components(registry)
+                .build();
+    }
+
+}

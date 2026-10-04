@@ -1,0 +1,21 @@
+{
+  "streaming_requests_verified": 528,
+  "capture_samples": [
+    3626,
+    613,
+    1342
+  ],
+  "capture_lost_samples": 0,
+  "gzip_recordings_verified": 3,
+  "worker_summary_recomputed": "identical",
+  "offline_query_samples_preserved": 12,
+  "all_probe_results_equal": true,
+  "copied_database_quick_check": "ok",
+  "production_source_files_unchanged": 871,
+  "candidate_sha256": "81ad7cb39e44fa72ad529f8460471e3422848af0640488cd03d7e55550796444",
+  "python_syntax_and_script_copies": "pass",
+  "scoped_git_diff_check": "pass",
+  "previous_tests": "222 core/UPnP cases passed for this production source; not rerun because production unchanged",
+  "unsupported_live_helper": "isolated app_process aborted; no on-device query-plan claim",
+  "main_diff_review": "Prior comparison established main lacks these production classes; previous source manifest used to verify no changes this step"
+}

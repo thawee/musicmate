@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="apincer.music.core.model.PlaylistEntrySmartTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-03T13:33:46.698Z" hostname="KB-XXAXXW9TX4" time="0.006">
+  <properties/>
+  <testcase name="testHiResStudioMastersSmartPlaylist" classname="apincer.music.core.model.PlaylistEntrySmartTest" time="0.006"/>
+  <testcase name="testLosslessMasterVaultSmartPlaylist" classname="apincer.music.core.model.PlaylistEntrySmartTest" time="0.0"/>
+  <testcase name="testDrScoreSmartPlaylist" classname="apincer.music.core.model.PlaylistEntrySmartTest" time="0.0"/>
+  <testcase name="testPureDsdArchiveSmartPlaylist" classname="apincer.music.core.model.PlaylistEntrySmartTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

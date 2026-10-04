@@ -1,0 +1,177 @@
+package apincer.android.mmate.ui.compose
+
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import apincer.music.core.model.Track
+import apincer.android.mmate.ui.navigation.MainNavigationInterop
+
+class MainScaffoldState {
+    var searchQuery = mutableStateOf("")
+    var isBackVisible = mutableStateOf(false)
+    var headerStatsText = mutableStateOf("")
+    var isPlaylistOverview = mutableStateOf(false)
+    var isScanning = mutableStateOf(false)
+    var scanProgressText = mutableStateOf("")
+
+    var nowPlayingTrack = mutableStateOf<Track?>(null)
+    var isPlaying = mutableStateOf(false)
+    var outputTargetSubtitle = mutableStateOf("")
+    var playbackProgress = mutableFloatStateOf(0f)
+    var isFloatingDockVisible = mutableStateOf(true)
+
+    // Player picker modal state
+    var showPlayerPickerDialog = mutableStateOf(false)
+    val playerTargets = mutableStateListOf<PlayerTargetItem>()
+    var systemAccess = mutableStateOf(SystemAccessState())
+
+    // Smart playlist creator modal state
+    var showCreateSmartPlaylistDialog = mutableStateOf(false)
+
+    // Track list, selection & scrolling state
+    val tracks = mutableStateListOf<Track>()
+    val selectedTracks = mutableStateListOf<Track>()
+    var hasMoreMusic = mutableStateOf(false)
+    /** True while the playback service is bound; track menus hide playback actions otherwise. */
+    var isPlaybackAvailable = mutableStateOf(false)
+    /** Listener tap mode: tap plays, long-press edits. Curator: tap edits, long-press selects. */
+    var listenerTapMode = mutableStateOf(true)
+    /** Destination of the shown tracks; the list keeps one scroll position per key. */
+    var musicListKey = mutableStateOf("")
+    var musicLoadError = mutableStateOf<String?>(null)
+    var libraryEmpty = mutableStateOf(false)
+    var hasActiveMusicFilters = mutableStateOf(false)
+    /** Uuid of the user's own song playlist on screen, or null; enables "Remove from Playlist". */
+    var openUserPlaylistUuid = mutableStateOf<String?>(null)
+    var isRefreshing = mutableStateOf(false)
+    var scrollToIndex = mutableIntStateOf(-1)
+
+    // Sub-states for AudioHubSheet
+    val nowPlayingState = NowPlayingState()
+    val queueState = QueueState(mutableListOf(), null)
+    val mediaServerState = MediaServerState()
+
+    companion object {
+        private val instance = MainScaffoldState()
+
+        @JvmStatic
+        fun get(): MainScaffoldState = instance
+
+        @JvmStatic
+        fun updatePlaylistOverview(visible: Boolean) {
+            instance.isPlaylistOverview.value = visible
+        }
+
+        @JvmStatic
+        fun setTracks(tracks: List<Track>) {
+            instance.tracks.clear()
+            instance.tracks.addAll(tracks)
+        }
+
+        @JvmStatic
+        fun setSelectedTracks(tracks: List<Track>) {
+            instance.selectedTracks.clear()
+            instance.selectedTracks.addAll(tracks)
+        }
+
+        @JvmStatic
+        fun clearSelectedTracks() {
+            instance.selectedTracks.clear()
+        }
+
+        @JvmStatic
+        fun setRefreshing(refreshing: Boolean) {
+            instance.isRefreshing.value = refreshing
+        }
+
+        @JvmStatic
+        fun scrollToPosition(index: Int) {
+            instance.scrollToIndex.intValue = index
+        }
+
+        @JvmStatic
+        fun resetScrollToIndex() {
+            instance.scrollToIndex.intValue = -1
+        }
+
+        @JvmStatic
+        fun updateSearchQuery(query: String) {
+            instance.searchQuery.value = query
+        }
+
+        @JvmStatic
+        fun updateBackVisible(visible: Boolean) {
+            instance.isBackVisible.value = visible
+        }
+
+        @JvmStatic
+        fun updateHeaderStats(statsText: String) {
+            instance.headerStatsText.value = statsText
+        }
+
+        @JvmStatic
+        fun updateScanning(scanning: Boolean, progressText: String) {
+            instance.isScanning.value = scanning
+            instance.scanProgressText.value = progressText
+        }
+
+        @JvmStatic
+        fun updateNowPlaying(track: Track?, playing: Boolean, targetSubtitle: String, progress: Float) {
+            instance.nowPlayingTrack.value = track
+            instance.isPlaying.value = playing
+            instance.outputTargetSubtitle.value = targetSubtitle
+            instance.playbackProgress.floatValue = progress
+        }
+
+        @JvmStatic
+        fun setFloatingDockVisible(visible: Boolean) {
+            instance.isFloatingDockVisible.value = visible
+        }
+
+        @JvmStatic
+        fun openAudioHub(initialTab: Int) {
+            MainNavigationInterop.openMusicCenter(initialTab)
+        }
+
+        @JvmStatic
+        fun closeAudioHub() {
+            MainNavigationInterop.closeMusicCenter()
+        }
+
+        @JvmStatic
+        fun isAudioHubOpen(): Boolean {
+            return MainNavigationInterop.isMusicCenterOpen()
+        }
+
+        @JvmStatic
+        fun setPlayerTargets(targets: List<PlayerTargetItem>) {
+            instance.playerTargets.clear()
+            instance.playerTargets.addAll(targets)
+        }
+
+        @JvmStatic
+        fun showPlayerPicker(show: Boolean) {
+            instance.showPlayerPickerDialog.value = show
+        }
+
+        @JvmStatic
+        fun updateSystemAccess(hasFullStorageAccess: Boolean, hasExternalPlayerAccess: Boolean) {
+            instance.systemAccess.value = SystemAccessState(
+                hasFullStorageAccess = hasFullStorageAccess,
+                hasExternalPlayerAccess = hasExternalPlayerAccess
+            )
+        }
+
+        @JvmStatic
+        fun openCreateSmartPlaylistDialog() {
+            instance.showCreateSmartPlaylistDialog.value = true
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun updateQueue(tracks: List<Track>, currentPlayingKey: String?, totalDurationText: String = "") {
+            instance.queueState.updateQueue(tracks, currentPlayingKey, totalDurationText)
+        }
+    }
+}

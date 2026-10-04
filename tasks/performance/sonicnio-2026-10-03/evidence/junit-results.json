@@ -1,0 +1,1452 @@
+[
+  {
+    "module": "core",
+    "class": "apincer.music.core.SettingsDefaultsTest",
+    "timestamp_utc": "2026-10-03T05:48:19.937Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.004,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "new installs default to listener mode",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.AlacToWavTest",
+    "timestamp_utc": "2026-10-03T05:48:19.944Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.001,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "sampleCount_fromFfprobeDurationAndTimeBase",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.codec.FlacToWavTest",
+    "timestamp_utc": "2026-10-03T05:48:19.948Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.491,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "wholeFile_16bit",
+        "seconds": 0.215,
+        "result": "PASS"
+      },
+      {
+        "name": "ranges_matchTheSameBytesOfTheWholeFile",
+        "seconds": 0.152,
+        "result": "PASS"
+      },
+      {
+        "name": "wholeFile_24bit_isAWavWhoseDataMatchesTheFlacMd5",
+        "seconds": 0.122,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerFuzzTest",
+    "timestamp_utc": "2026-10-03T05:48:20.444Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 8.769,
+    "stdout": "FUZZ ws seed=749121491257666 cases=40\nFUZZ seed=749127913864458 cases=1500\n",
+    "cases": [
+      {
+        "name": "randomWebSocketFrames_neverBreakTheServer",
+        "seconds": 6.485,
+        "result": "PASS"
+      },
+      {
+        "name": "mutatedRequests_neverBreakTheServer",
+        "seconds": 2.083,
+        "result": "PASS"
+      },
+      {
+        "name": "hostileRequests_neverBreakTheServer",
+        "seconds": 0.201,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerSoakTest",
+    "timestamp_utc": "2026-10-03T05:48:29.218Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 8.096,
+    "stdout": "SOAK clients=16 seconds=8.0 operations=5560 throughput=606.7 MB/s rangeTTFB p50=9402 us p95=38943 us errors=0\n",
+    "cases": [
+      {
+        "name": "mixedLoad_leavesNoLeaksAndServesCorrectBytes",
+        "seconds": 8.096,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.NioHttpServerTest",
+    "timestamp_utc": "2026-10-03T05:48:37.320Z",
+    "tests": 54,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 17.914,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "streamingResponse_clientDisconnect_stopsTheProducer",
+        "seconds": 0.074,
+        "result": "PASS"
+      },
+      {
+        "name": "responseCreatedAfterStop_isClosedInsteadOfLeftInTheQueue",
+        "seconds": 0.019,
+        "result": "PASS"
+      },
+      {
+        "name": "multipleRanges_areServedAsWholeFile",
+        "seconds": 0.015,
+        "result": "PASS"
+      },
+      {
+        "name": "chunkedRequestBody_isRejected",
+        "seconds": 0.012,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_protocolErrorAfterAQueuedReply_stillClosesTheConnection",
+        "seconds": 0.062,
+        "result": "PASS"
+      },
+      {
+        "name": "clientConnectionClose_isHonoured",
+        "seconds": 0.065,
+        "result": "PASS"
+      },
+      {
+        "name": "stop_returnsPromptlyWhileAHandlerIsBusy",
+        "seconds": 0.266,
+        "result": "PASS"
+      },
+      {
+        "name": "handlerDeadline_startsAfterTheRequestBodyArrives",
+        "seconds": 1.549,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_serverClose_sendsCloseFrameAndClosesSocket",
+        "seconds": 0.015,
+        "result": "PASS"
+      },
+      {
+        "name": "streamingResponse_producerFailure_closesTheConnection",
+        "seconds": 0.022,
+        "result": "PASS"
+      },
+      {
+        "name": "jpegBehindAPngName_isServedAsJpeg",
+        "seconds": 0.02,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_framePipelinedWithUpgrade_isHandledAfterOnOpen",
+        "seconds": 0.096,
+        "result": "PASS"
+      },
+      {
+        "name": "midStreamDisconnect_releasesStreamAndConnection",
+        "seconds": 0.123,
+        "result": "PASS"
+      },
+      {
+        "name": "stop_releasesOpenStreamsAndConnections",
+        "seconds": 0.378,
+        "result": "PASS"
+      },
+      {
+        "name": "startOffset_sendsTheRestOfTheFileAs200",
+        "seconds": 0.07,
+        "result": "PASS"
+      },
+      {
+        "name": "ifRangeMismatch_returnsWholeFile",
+        "seconds": 0.016,
+        "result": "PASS"
+      },
+      {
+        "name": "stopBeforeRun_keepsTheServerStopped",
+        "seconds": 0.013,
+        "result": "PASS"
+      },
+      {
+        "name": "startOffset_winsOverARangeHeader",
+        "seconds": 0.015,
+        "result": "PASS"
+      },
+      {
+        "name": "stalledReader_isClosedAfterTheWriteStallTimeout",
+        "seconds": 1.172,
+        "result": "PASS"
+      },
+      {
+        "name": "streamingResponse_deliversEveryByteInOrder",
+        "seconds": 0.109,
+        "result": "PASS"
+      },
+      {
+        "name": "producerLimit_refusesNewConversionAndReleasesItsSlot",
+        "seconds": 1.574,
+        "result": "PASS"
+      },
+      {
+        "name": "suffixRange_returnsLastBytes",
+        "seconds": 0.078,
+        "result": "PASS"
+      },
+      {
+        "name": "stats_countRequestsBytesAndConnections",
+        "seconds": 0.154,
+        "result": "PASS"
+      },
+      {
+        "name": "imageMimeType_comesFromContentNotExtension",
+        "seconds": 0.092,
+        "result": "PASS"
+      },
+      {
+        "name": "post_bodyInSamePacket_isCutToContentLength",
+        "seconds": 0.083,
+        "result": "PASS"
+      },
+      {
+        "name": "pipelinedRequests_areAnsweredInOrder",
+        "seconds": 0.081,
+        "result": "PASS"
+      },
+      {
+        "name": "keepAlive_servesTwoRequestsOnOneConnection",
+        "seconds": 0.123,
+        "result": "PASS"
+      },
+      {
+        "name": "streamingResponse_slowProducer_doesNotSpinTheSelector",
+        "seconds": 1.599,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_oversizedFrame_isNotDeliveredAsAMessage",
+        "seconds": 0.068,
+        "result": "PASS"
+      },
+      {
+        "name": "workerOverload_returns503AndDoesNotStarveAnUpgradedWebSocket",
+        "seconds": 0.081,
+        "result": "PASS"
+      },
+      {
+        "name": "get_returnsWholeFile",
+        "seconds": 0.017,
+        "result": "PASS"
+      },
+      {
+        "name": "head_returnsLengthWithoutBody_andConnectionStaysUsable",
+        "seconds": 0.072,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_forceClose_closesSocketAndReleasesConnection",
+        "seconds": 0.02,
+        "result": "PASS"
+      },
+      {
+        "name": "rangeStartPastEof_416EndsCleanly_andConnectionIsReusable",
+        "seconds": 0.077,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_messagesFromOneConnection_areHandledInOrder",
+        "seconds": 0.238,
+        "result": "PASS"
+      },
+      {
+        "name": "streamingResponse_parkedProducer_hasAStallDeadline",
+        "seconds": 1.069,
+        "result": "PASS"
+      },
+      {
+        "name": "expectContinue_gets100BeforeTheBody",
+        "seconds": 0.099,
+        "result": "PASS"
+      },
+      {
+        "name": "notModified_doesNotEvictAnActiveStream",
+        "seconds": 0.889,
+        "result": "PASS"
+      },
+      {
+        "name": "range_returnsSlice",
+        "seconds": 0.073,
+        "result": "PASS"
+      },
+      {
+        "name": "handlerStall_hasADistinctCloseReason",
+        "seconds": 1.072,
+        "result": "PASS"
+      },
+      {
+        "name": "webSocket_handshakeAndEcho",
+        "seconds": 0.07,
+        "result": "PASS"
+      },
+      {
+        "name": "streamingResponse_producerPause_doesNotUseSocketStallDeadline",
+        "seconds": 1.573,
+        "result": "PASS"
+      },
+      {
+        "name": "http10WithoutKeepAlive_closesAfterTheResponse",
+        "seconds": 0.075,
+        "result": "PASS"
+      },
+      {
+        "name": "post_bodyArrivingAfterHeaders_reachesHandlerComplete",
+        "seconds": 0.275,
+        "result": "PASS"
+      },
+      {
+        "name": "slowHeaders_areCutOffAtTheHeaderDeadline",
+        "seconds": 1.464,
+        "result": "PASS"
+      },
+      {
+        "name": "diagnostics_keepAliveResponses_haveDistinctIdsAndExactBodyCounts",
+        "seconds": 0.087,
+        "result": "PASS"
+      },
+      {
+        "name": "simultaneousAdmission_neverExceedsMediaSlots",
+        "seconds": 0.034,
+        "result": "PASS"
+      },
+      {
+        "name": "bodylessResponse_hasZeroContentLength_andConnectionIsReusable",
+        "seconds": 0.09,
+        "result": "PASS"
+      },
+      {
+        "name": "rangeEndPastEof_isClampedToLastByte",
+        "seconds": 0.065,
+        "result": "PASS"
+      },
+      {
+        "name": "streamLimit_refusesNewAudioAndAllowsArtworkWithoutEvictingPlayback",
+        "seconds": 0.162,
+        "result": "PASS"
+      },
+      {
+        "name": "openEndedRange_returnsTail",
+        "seconds": 0.069,
+        "result": "PASS"
+      },
+      {
+        "name": "rangeStartPastEof_returns416",
+        "seconds": 0.075,
+        "result": "PASS"
+      },
+      {
+        "name": "malformedRange_isIgnored",
+        "seconds": 0.072,
+        "result": "PASS"
+      },
+      {
+        "name": "longStream_outlivesHeaderAndWriteStallDeadlines",
+        "seconds": 2.124,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.RateLimitingHandlerTest",
+    "timestamp_utc": "2026-10-03T05:48:55.236Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.006,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "requestsOverTheLimit_get429",
+        "seconds": 0.004,
+        "result": "PASS"
+      },
+      {
+        "name": "exemptPaths_areNotCountedOrLimited",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.SerialExecutorTest",
+    "timestamp_utc": "2026-10-03T05:48:55.245Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.004,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "overflow_reservesCloseAfterAdmittedMessages",
+        "seconds": 0.004,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.ServerDiagnosticsTest",
+    "timestamp_utc": "2026-10-03T05:48:55.251Z",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.001,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "rate_comesFromBytesSinceTheLastCall",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "counterReset_afterRestart_doesNotShowANegativeRate",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "firstCall_hasNoRateYet",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "problems_areListedOnlyWhenPresent",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "idle_saysSo",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamDiagnosticsTest",
+    "timestamp_utc": "2026-10-03T05:48:55.254Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.0,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "historyIsBoundedWhileTotalsKeepCounting",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.http.StreamingResponseTest",
+    "timestamp_utc": "2026-10-03T05:48:55.258Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.012,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "sharedBudget_includesPendingBytesAndIsReleasedOnCancellation",
+        "seconds": 0.004,
+        "result": "PASS"
+      },
+      {
+        "name": "continuouslyReadyBody_yieldsAfterBudgetAndPreservesPartialWrites",
+        "seconds": 0.008,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.AudioTagTest",
+    "timestamp_utc": "2026-10-03T05:48:55.272Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.001,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "copy_createsDistinctCloneWithAllFieldsPreserved",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "timestamp_utc": "2026-10-03T05:48:55.275Z",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.008,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "testHiResStudioMastersSmartPlaylist",
+        "seconds": 0.007,
+        "result": "PASS"
+      },
+      {
+        "name": "testLosslessMasterVaultSmartPlaylist",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "testDrScoreSmartPlaylist",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "testPureDsdArchiveSmartPlaylist",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "timestamp_utc": "2026-10-03T05:48:55.285Z",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.004,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "unknownDurationNeedsNaturalEndAndDoesNotCompleteAfterSeek",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "subsecondDuplicatePositionsDoNotLoseWholeSeconds",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "skipRecordedOnceAndReplayGetsANewSession",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "ninetyPercentCountsOnceDespiteDuplicateCallbacks",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "seekToEndIsNotACompletedListen",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "unannouncedForwardSeekAndStalledClockCannotInflateListening",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "pauseAndSameTrackHandoffPreserveProgressWithoutCountingDowntime",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "noProgressOrLongTelemetryGapDoesNotCountAsListening",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.playback.ReplayGainManagerTest",
+    "timestamp_utc": "2026-10-03T05:48:55.291Z",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.004,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "testParseGain",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "testParsePeak",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "testGainLinearCalculation",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "testReplayGainInfoDisplay",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.FileSystemMoveTest",
+    "timestamp_utc": "2026-10-03T05:48:55.297Z",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.039,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "occupiedDestinationPreservesBothRecordings",
+        "seconds": 0.012,
+        "result": "PASS"
+      },
+      {
+        "name": "unusedDestinationReceivesCompleteRecordingAndRemovesSource",
+        "seconds": 0.006,
+        "result": "PASS"
+      },
+      {
+        "name": "conversionSkipsOccupiedDestinationsAndReturnsActualOutputPath",
+        "seconds": 0.014,
+        "result": "PASS"
+      },
+      {
+        "name": "conversionUsesRequestedDestinationWhenAvailable",
+        "seconds": 0.006,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.provider.MissingFileTest",
+    "timestamp_utc": "2026-10-03T05:48:55.338Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.009,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "accessibleParentWithAbsentLeafConfirmsDeletion",
+        "seconds": 0.005,
+        "result": "PASS"
+      },
+      {
+        "name": "existingTrackIsNotMissing",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "missingParentIsUnavailableRatherThanConfirmedDeletion",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.QueueManagerTest",
+    "timestamp_utc": "2026-10-03T05:48:55.351Z",
+    "tests": 36,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.145,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "addPlayNext_currentTrack_preservesCurrentIndex",
+        "seconds": 0.009,
+        "result": "PASS"
+      },
+      {
+        "name": "getRandomTrack_singleTrack_returnsThatTrack",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "unplayedUsesHistoryQueryAndPersistsSource",
+        "seconds": 0.005,
+        "result": "PASS"
+      },
+      {
+        "name": "containsTrack_checksIndexMapCorrectly",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_thenPlaybackMoves_normalNavigationResumes",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "playlistSourceStateAndPersistence",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "getRandomTrack_multipleTracks_returnsValidTrackFromQueue",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_removedSuggestionsDoNotReturnAfterRestart",
+        "seconds": 0.007,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_followerAlsoRemoved_nextMovesOn",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "shuffle_removeOrMoveOtherTrack_keepsNextTrack",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_downloadPredicateAndMissingFilesAreRespected",
+        "seconds": 0.008,
+        "result": "PASS"
+      },
+      {
+        "name": "shuffle_enqueue_keepsPlayedTracksOutAndPlaysNewOnes",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "addPlayingQueue_existingTrack_movesToEndWithoutDuplicate",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "queueChangeListener_firesOnEditsAndModes_notOnNavigation",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "shuffle_playNext_isNextAndPlayedTracksDoNotReturn",
+        "seconds": 0.009,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingTrack_thenPlayNext_playsItThenFollower",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "getNextTrack_repeatModeOne_loopsOnNaturalEnd_advancesOnUserSkip",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingLastTrack_queueEnds",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingLastTrack_repeatAllWraps",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "loadPlayingQueue_temporarilyUnavailableStorage_preservesQueueAndPersistence",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "shuffleOrder_preservesSequenceAcrossPlaybackTransitions",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingTrackReportedAgain_isNotReEnqueued",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingTrack_nextIsItsFollower",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "addPlayingQueue_currentTrack_updatesCurrentIndexToEnd",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_otherTrack_doesNotDetachPlayback",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "moveTrack_preservesActiveCurrentTrackIndex",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "rediscoverUsesThirtyDayCutoffAndRetainsOldestFirstOrder",
+        "seconds": 0.005,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_preservesNextAndPrioritizesManualChoice",
+        "seconds": 0.009,
+        "result": "PASS"
+      },
+      {
+        "name": "getRandomTrack_emptyQueue_returnsNull",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "setPlaybackTrack_unknownTrack_autoEnqueuesAndSetsPlaybackIndex",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_lastPlayingTrack_thenEnqueue_playsNewTrack",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_restoresAnchorAndManualFreezesRefill",
+        "seconds": 0.006,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_clearDuringLookupCannotRepopulateQueue",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "removeTrack_playingFirstTrack_nextIsNewFirst",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "emptyPlayingQueue_resetsAllState",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "smartQueue_boundsRefillAndAppendsNewCandidates",
+        "seconds": 0.034,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.TagRepositoryPaginationTest",
+    "timestamp_utc": "2026-10-03T05:48:55.498Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.001,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "unpagedFolderOrPlaylistReturnsOnlyRequestedPage",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.repository.TagRepositoryQueryErrorTest",
+    "timestamp_utc": "2026-10-03T05:48:55.501Z",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.002,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "findMusic_queryFailure_propagatesInsteadOfEmptyList",
+        "seconds": 0.002,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientFormatProfileTest",
+    "timestamp_utc": "2026-10-03T05:48:55.505Z",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.002,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "toshiba_onlyHidesDsd_untilWeHaveEvidence",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "otherClients_seeEverythingAsIs",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "detection",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "sony_playsFlac_convertsAlac_hidesDsd",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "lg_convertsFlacAndAlac_hidesDsd",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ClientRegistryTest",
+    "timestamp_utc": "2026-10-03T05:48:55.509Z",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.003,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "sony_fromXAvClientInfo",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "unknown_usesTheFirstToken",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "lg_fromUserAgent",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "firstSighting_isReportedOnce_perAddressAndName",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "otherKnownClients",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.CoverThumbnailsTest",
+    "timestamp_utc": "2026-10-03T05:48:55.518Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.0,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "fit_neverEnlarges",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "fit_keepsAspectRatio_withinTheBox",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "sampleSize_isTheLargestPowerOfTwoThatStaysAboveTheTarget",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.server.ServerHeaderTest",
+    "timestamp_utc": "2026-10-03T05:48:55.522Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.002,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "noLibraries_noTrailingSeparator",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "followsUpnpDeviceArchitecture_withEngineAsExtraToken",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.NetworkUtilsTest",
+    "timestamp_utc": "2026-10-03T05:48:55.525Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.002,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "isVirtualOrVpnInterface_identifiesVpnTunnelsCorrectly",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "extractIpAddress_handlesVariousFormats",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "core",
+    "class": "apincer.music.core.utils.ThaiEncodingUtilsTest",
+    "timestamp_utc": "2026-10-03T05:48:55.529Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.007,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "testFixThaiEncoding_plainEnglishUnchanged",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "testFixThaiEncoding_recoversGarbledText",
+        "seconds": 0.006,
+        "result": "PASS"
+      },
+      {
+        "name": "testHasHighAscii_standardAscii",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaReceiverRegistrarServiceTest",
+    "timestamp_utc": "2026-10-03T05:23:14.158Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.06,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "everyDeviceIsAuthorizedAndValidated",
+        "seconds": 0.006,
+        "result": "PASS"
+      },
+      {
+        "name": "bindsAsTheMicrosoftRegistrar_withItsThreeActions",
+        "seconds": 0.047,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "timestamp_utc": "2026-10-03T05:23:14.222Z",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.016,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "testFormatDurationForDidl",
+        "seconds": 0.014,
+        "result": "PASS"
+      },
+      {
+        "name": "testParseTimeToSeconds_fractionalSeconds",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "testDLNAContentFeatures_bitrateThresholds",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "testParseTimeToSeconds_standardFormats",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "testParseTimeToSeconds_edgeCases",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "timestamp_utc": "2026-10-03T05:23:14.241Z",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.005,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "startPastTheEnd_isEmpty",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "requestedCount_limitsThePage",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "hugeRequestedCount_doesNotOverflow",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "startingIndex_skipsEarlierEntries",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "lastPage_isShort",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "requestedCountZero_meansEverythingFromTheStart",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "timestamp_utc": "2026-10-03T05:23:14.249Z",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.017,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "unsupportedOrEmptyCriteria_meanNoSort",
+        "seconds": 0.007,
+        "result": "PASS"
+      },
+      {
+        "name": "tracks_sortTheSameWay",
+        "seconds": 0.005,
+        "result": "PASS"
+      },
+      {
+        "name": "artistThenTitle_andAlbum",
+        "seconds": 0.004,
+        "result": "PASS"
+      },
+      {
+        "name": "title_ascendingAndDescending_ignoringCase",
+        "seconds": 0.001,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "timestamp_utc": "2026-10-03T05:23:14.269Z",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.001,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "samsungMediaInfo_isTheDurationInMilliseconds",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "didlBitrate_isBytesPerSecond",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "didlDate_isAnIsoDate",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "dlnaProfile_onlyForFormatsDlnaDefines",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.SamsungFeatureListTest",
+    "timestamp_utc": "2026-10-03T05:23:14.272Z",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.013,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "contentDirectory_exposesXGetFeatureList",
+        "seconds": 0.013,
+        "result": "PASS"
+      },
+      {
+        "name": "featureList_pointsSamsungBasicViewAtTheMusicRoot",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "timestamp_utc": "2026-10-03T05:23:14.290Z",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.007,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "artistAlbumGenre_andCreatorAsArtist",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "star_matchesEverything",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "andBindsTighterThanOr_andParenthesesGroup",
+        "seconds": 0.002,
+        "result": "PASS"
+      },
+      {
+        "name": "unknownProperty_matchesNothing",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "malformedCriteria_isRejected",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "contains_isCaseInsensitive",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "escapedQuotes_inValues",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "bubbleUpnpStyle_classAndTitle",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "audioClass_matchesTracks_containerClass_matchesNothing",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "negativeOperators_andExists",
+        "seconds": 0.003,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "timestamp_utc": "2026-10-03T05:23:14.301Z",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.052,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "npt_isHMMSSmmm",
+        "seconds": 0.01,
+        "result": "PASS"
+      },
+      {
+        "name": "flac_usesTheSeekPointAtOrBeforeTheTime",
+        "seconds": 0.012,
+        "result": "PASS"
+      },
+      {
+        "name": "pastTheEnd_orUnsupportedFormat_isNull",
+        "seconds": 0.006,
+        "result": "PASS"
+      },
+      {
+        "name": "parseNpt_rejectsOtherForms",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "parseNpt_secondsAndClockForms",
+        "seconds": 0.003,
+        "result": "PASS"
+      },
+      {
+        "name": "flac_withoutSeekTable_isProportional_alignedToTheNextFrame",
+        "seconds": 0.012,
+        "result": "PASS"
+      },
+      {
+        "name": "mp3_isProportionalAfterTheId3Tag_alignedToAFrame",
+        "seconds": 0.008,
+        "result": "PASS"
+      }
+    ]
+  },
+  {
+    "module": "server-jupnp",
+    "class": "apincer.music.server.nio.UpnpRequestCheckTest",
+    "timestamp_utc": "2026-10-03T05:23:14.355Z",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.003,
+    "stdout": "",
+    "cases": [
+      {
+        "name": "upnpMethods_areAccepted",
+        "seconds": 0.001,
+        "result": "PASS"
+      },
+      {
+        "name": "otherMethods_get405",
+        "seconds": 0.0,
+        "result": "PASS"
+      },
+      {
+        "name": "malformedPath_gets400",
+        "seconds": 0.0,
+        "result": "PASS"
+      }
+    ]
+  }
+]

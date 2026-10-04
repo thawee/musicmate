@@ -1,0 +1,298 @@
+[
+  {
+    "module": "core",
+    "name": "apincer.music.core.SettingsDefaultsTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.codec.AlacToWavTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.codec.FlacToWavTest",
+    "tests": "12",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.FileResponseTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.HttpRequestTest",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.NioHttpServerFuzzTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.NioHttpServerSoakTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.NioHttpServerTest",
+    "tests": "58",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.RateLimitingHandlerTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.SerialExecutorTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.ServerDiagnosticsTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.StreamDiagnosticsTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.http.StreamingResponseTest",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.model.AudioTagTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.model.PlaylistEntrySmartTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.playback.ListeningHistoryTrackerTest",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.playback.ReplayGainManagerTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.provider.FileSystemMoveTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.provider.MissingFileTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.repository.QueueManagerTest",
+    "tests": "36",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.repository.TagRepositoryPaginationTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.repository.TagRepositoryQueryErrorTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.server.ClientFormatProfileTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.server.ClientRegistryTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.server.CoverThumbnailsTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.server.ServerHeaderTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.utils.NetworkUtilsTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "core",
+    "name": "apincer.music.core.utils.ThaiEncodingUtilsTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.MediaReceiverRegistrarServiceTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.MediaServerHubTimeParsingTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.content.BrowsePagingTest",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.content.BrowseSortTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.content.DidlValuesTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.content.SamsungFeatureListTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.content.UpnpSearchTest",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.jupnp.transport.TimeSeekTest",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "module": "server-jupnp",
+    "name": "apincer.music.server.nio.UpnpRequestCheckTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]
