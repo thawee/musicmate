@@ -1,5 +1,6 @@
 package apincer.android.mmate.service;
 
+import androidx.annotation.NonNull;
 import static apincer.music.core.playback.ExternalAndroidPlayer.NEUTRON_MUSIC_PACK_NAME;
 
 import android.content.ComponentName;
@@ -175,7 +176,32 @@ public class AndroidPlayerController {
 
             this.internalExoPlayer.addListener(new Player.Listener() {
                 @Override
+                public void onPlayerError(@NonNull androidx.media3.common.PlaybackException error) {
+                    // Without this, one unreadable or missing file stopped playback for the rest of
+                    // the queue. Skip to the next track, but stop after a few failures in a row
+                    // (e.g. storage removed) instead of racing through the whole queue.
+                    // ExoPlayer can report one bad item more than once; skip it only once
+                    MediaItem failed = internalExoPlayer != null ? internalExoPlayer.getCurrentMediaItem() : null;
+                    if (failed != null && failed == lastFailedItem) return;
+                    lastFailedItem = failed;
+                    consecutivePlayerErrors++;
+                    Log.w(TAG, "Playback error (" + consecutivePlayerErrors + " in a row): "
+                            + error.getErrorCodeName(), error);
+                    if (playbackCallback == null
+                            || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) return;
+                    if (consecutivePlayerErrors <= MAX_CONSECUTIVE_PLAYER_ERRORS) {
+                        playbackCallback.onPlaybackCompleted();
+                    } else {
+                        Log.e(TAG, "Too many playback errors in a row; stopping");
+                        consecutivePlayerErrors = 0;
+                    }
+                }
+                @Override
                 public void onPlaybackStateChanged(int playbackState) {
+                    if (playbackState == Player.STATE_READY) {
+                        consecutivePlayerErrors = 0;
+                        lastFailedItem = null;
+                    }
                     if (playbackState == Player.STATE_ENDED) {
                         if (playbackCallback != null) {
                             if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTargetId)) {
@@ -225,6 +251,10 @@ public class AndroidPlayerController {
             Log.e(TAG, "Failed to initialize ExoPlayer", e);
         }
     }
+
+    private static final int MAX_CONSECUTIVE_PLAYER_ERRORS = 3;
+    private int consecutivePlayerErrors = 0;
+    private MediaItem lastFailedItem;
 
     public void registerCallback(ExternalAndroidPlayer player, PlaybackCallback playbackCallback) {
         unregisterCallback();

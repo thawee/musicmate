@@ -50,10 +50,24 @@ public class MusicMateExecutors {
     public static MusicMateExecutors getInstance() {
         if (mInstance == null) {
             synchronized (MusicMateExecutors.class) {
-                mInstance = new MusicMateExecutors();
+                if (mInstance == null) mInstance = new MusicMateExecutors();
             }
         }
         return mInstance;
+    }
+
+    /**
+     * An exception escaping a background task kills its thread and, on Android, the whole app
+     * (a bad file during a scan closed MusicMate). Log it and keep the app running instead.
+     */
+    static Runnable guarded(Runnable task) {
+        return () -> {
+            try {
+                task.run();
+            } catch (Exception | LinkageError e) {
+                Log.e(TAG, "Background task failed", e);
+            }
+        };
     }
 
     private MusicMateExecutors() {
@@ -65,7 +79,7 @@ public class MusicMateExecutors {
     }
 
     public static void lowPriority(Runnable command) {
-        LOW_PRIORITY_EXECUTOR.execute(command);
+        LOW_PRIORITY_EXECUTOR.execute(guarded(command));
     }
 
     public static void executeUI(@NonNull Runnable command) {
@@ -78,17 +92,17 @@ public class MusicMateExecutors {
      * @param task The task to execute
      */
     public static void executeParallel(@NonNull Runnable task) {
-        getInstance().mFastThread.execute(task);
+        getInstance().mFastThread.execute(guarded(task));
     }
     public static void execute(@NonNull Runnable command) {
-        getInstance().mMainThread.execute(command);
+        getInstance().mMainThread.execute(guarded(command));
     }
     public static void scan(@NonNull Runnable command) {
-        getInstance().mScanThread.execute(command);
+        getInstance().mScanThread.execute(guarded(command));
     }
 
     public static void schedule(@NonNull Runnable command, long seconds) {
-        getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
+        getInstance().mScheduleThread.schedule(guarded(command), seconds, TimeUnit.SECONDS);
     }
 
     // Add a static shutdown method

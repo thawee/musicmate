@@ -1,3 +1,11 @@
+# Reliability review (2026-10-04)
+
+- [x] Background tasks: MusicMateExecutors guards every task (Exception and LinkageError logged instead of killing the app); double-checked singleton fixed.
+- [x] NIO request handler also catches LinkageError (e.g. ExceptionInInitializerError) and answers 500.
+- [x] Media server: wake lock (4 h timeout) renewed every 30 s while RUNNING; lock methods synchronized; periodic discovery, renderer sync monitor and position poll chain survive exceptions.
+- [x] Local playback: onPlayerError skips to the next track (once per bad item), stops after 3 failures in a row. Verified on the emulator with a corrupt file.
+- [ ] Follow-up (not done): Room allows main-thread queries (ANR risk); audit UI-thread DB access.
+
 # Genre / mood / style / origin presets (2026-10-04)
 
 - [x] 1. Presets without "/" (single names); playlist rules use the same names; a shared vocabulary maps legacy values (e.g. "R&B, Soul", "Chill / Relax", "US/UK") to the new names on read and in matching.

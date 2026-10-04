@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Playback stops on a bad file:** An unreadable or corrupt track now skips to the next one instead of stopping the queue; after three failures in a row playback stops.
+- **Long DLNA sessions:** The server's wake lock expired after 4 hours and was never renewed, so streams could stop with the screen off. It is renewed while the server runs. Renderer sync timers and discovery no longer stop for good after a single error.
+- **Background task crashes:** An error in any background task (scan, analysis, file operations) is logged instead of closing the app; the HTTP server answers 500 for handler errors such as class-initialisation failures.
 - **Genre presets saved as two genres:** Presets containing "/" ("R&B / Soul", "Electronic / EDM") were written as two values and read back as "R&B, Soul". Presets now use single names (R&B, Hip-Hop, Electronic, Acoustic, Soundtrack, Alternative; moods Chill, Melancholy, Dark, Focus; styles Live, Audiophile Vocal; origins Western, Other Asian), and older values are mapped to them on rescan and when saving.
 - **Genre playlists:** Rules now match each of a track's genres ("Pop, Rock" matches a Pop playlist) and accept the older preset names.
 - **DR12+ playlist:** Silent audio stored an infinite dynamic range (~9.2e16), so it passed every DR filter. Silence now has no DR, and DR filters and Now Playing ignore implausible stored values.

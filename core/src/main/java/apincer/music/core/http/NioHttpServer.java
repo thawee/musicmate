@@ -903,7 +903,9 @@ public class NioHttpServer implements Runnable {
             queueResponse(new ResponseTask(key, response));
             selector.wakeup();
 
-        } catch (Exception e) {
+        // LinkageError covers ExceptionInInitializerError/NoClassDefFoundError from a handler:
+        // answer 500 instead of letting it kill the worker thread and the app.
+        } catch (Exception | LinkageError e) {
             LOG.log(Level.WARNING, "Error processing request", e);
             HttpResponse errorResponse = new HttpResponse()
                     .setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");

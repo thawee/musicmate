@@ -513,6 +513,23 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void triggerDiscovery() {
+        // Runs every 30 s on a fixed-delay schedule: an exception here would stop it for good
+        try {
+            // The wake lock is acquired with a 4-hour timeout; renew it while the server runs so a
+            // long listening session does not lose the CPU (and its streams) when the screen is off.
+            // Only while RUNNING: a tick racing a stop must not re-acquire released locks.
+            boolean running;
+            synchronized (stateLock) {
+                running = state == State.RUNNING;
+            }
+            if (running) acquireLocks();
+            triggerDiscoveryInner();
+        } catch (Exception e) {
+            Log.w(TAG, "Periodic discovery failed; will retry", e);
+        }
+    }
+
+    private void triggerDiscoveryInner() {
         if (serverStatus.getValue() == ServerStatus.CAST) {
             // Suppress background SSDP multicast bursts during active audio streaming
             // to preserve Wi-Fi airtime and avoid packet jitter.
@@ -696,7 +713,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     // LOCKS
     // =========================================================
 
-    private void acquireLocks() {
+    private synchronized void acquireLocks() {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
@@ -705,9 +722,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                 wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MM:Wake");
                 wakeLock.setReferenceCounted(false);
             }
-            if (!wakeLock.isHeld()) {
-                wakeLock.acquire(4 * 60 * 60 * 1000L);
-            }
+            // Re-acquiring a non-reference-counted lock restarts its timeout
+            wakeLock.acquire(4 * 60 * 60 * 1000L);
         }
 
         if (wm != null) {
@@ -731,7 +747,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         }
     }
 
-    private void releaseLocks() {
+    private synchronized void releaseLocks() {
         try { if (wakeLock != null && wakeLock.isHeld()) wakeLock.release(); } catch (Exception ignored) {}
         try { if (wifiLock != null && wifiLock.isHeld()) wifiLock.release(); } catch (Exception ignored) {}
         try { if (multicastLock != null && multicastLock.isHeld()) multicastLock.release(); } catch (Exception ignored) {}
@@ -1605,7 +1621,13 @@ public class MediaServerHubImpl implements MediaServerHub {
                 return;
             }
 
-            getAvTransportPosition(avTransport, gen);
+            try {
+                getAvTransportPosition(avTransport, gen);
+            } catch (Exception e) {
+                // The poll chain reschedules itself from the result; keep it alive after a failure
+                Log.w(TAG, "Renderer position poll failed; retrying", e);
+                scheduleNextPoll(avTransport, gen, Math.max(getPollingInterval(), 2000L));
+            }
         }, delay, TimeUnit.MILLISECONDS);
     }
 
@@ -1992,6 +2014,8 @@ public class MediaServerHubImpl implements MediaServerHub {
         stopFallbackMonitor();
 
         fallbackTask = scheduler.scheduleWithFixedDelay(() -> {
+          // An exception would cancel this monitor for good and the renderer's track end would go unseen
+          try {
             long now = System.currentTimeMillis();
             long delta = now - lastEventTime;
 
@@ -2009,7 +2033,9 @@ public class MediaServerHubImpl implements MediaServerHub {
                 // parseLastChange will optimize polling if it detects position in GENA events.
                 syncMode = SyncMode.GENA;
             }
-
+          } catch (Exception e) {
+            Log.w(TAG, "Renderer sync monitor error; will retry", e);
+          }
         }, 2, 2, TimeUnit.SECONDS);
     }
 
