@@ -3,7 +3,7 @@
 - [x] Reproduce: hotspot on next to Wi-Fi; /proc/net/igmp showed SSDP joined on wlan0 only for 2.5 min (same pid); stopping/starting the server added swlan0.
 - [x] Root cause 1: UPnP binds interfaces at startup; restart only on primary-IP change, which stays the Wi-Fi IP. Fix: interface signature; restart on change (hotspot/network events + 30 s tick), deferred while casting. Verified: swlan0 joined 31 s after hotspot on, no app restart.
 - [x] Root cause 2: player list filtered renderers to the primary IP's subnet. Fix: accept any bound interface subnet. Verified: HiBy 10.221.118.217 listed (user).
-- [ ] Hotspot off/on cycle with HiBy reconnect, checked without restarting (user step 2).
+- [x] Root cause 3 (found by step 2 failing: off/on lost ALL renderers): UpnpServiceImpl.shutdown() shuts down its configuration's executor; the hub reused one configuration, so a restarted stack never processed discovery replies. Fix: Supplier of a fresh configuration per stack (main, jetty, undertow modules). Verified with logs (same pid): off -> Verox re-added 1.3 s after restart; on -> HiBy R3 + Verox re-added; user confirmed both in the picker.
 - skip: failing-test-first commit; no cheap local test (needs real interfaces); verified on device instead.
 
 # Reliability review (2026-10-04)

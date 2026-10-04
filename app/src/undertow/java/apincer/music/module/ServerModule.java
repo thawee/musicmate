@@ -39,8 +39,8 @@ public class ServerModule {
 
     @Provides
     @Singleton
-    public MediaServerHub provideMediaServerHub(@ApplicationContext Context context, UpnpServiceConfiguration cfg, FileRepository fileRepos, TagRepository tagRepos) {
-        return new MediaServerHubImpl(context, cfg, fileRepos, tagRepos);
+    public MediaServerHub provideMediaServerHub(@ApplicationContext Context context, javax.inject.Provider<UpnpServiceConfiguration> cfg, FileRepository fileRepos, TagRepository tagRepos) {
+        return new MediaServerHubImpl(context, cfg::get, fileRepos, tagRepos);
     }
 
     @Provides

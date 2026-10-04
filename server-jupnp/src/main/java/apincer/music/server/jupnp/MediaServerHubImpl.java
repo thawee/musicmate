@@ -111,7 +111,9 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     private final Context context;
 
-    protected UpnpServiceConfiguration cfg;
+    // A new configuration for every stack: UpnpServiceImpl.shutdown() shuts down its configuration's
+    // executors, so a reused one left a restarted stack unable to process discovery responses.
+    private final java.util.function.Supplier<UpnpServiceConfiguration> cfgFactory;
     private final FileRepository fileRepos;
     private final TagRepository tagRepos;
 
@@ -206,13 +208,13 @@ public class MediaServerHubImpl implements MediaServerHub {
     /**
      * Initializes the hub with required repositories and network configuration.
      * * @param context The application context for system services.
-     * @param upnpServiceCfg Configuration for the jUPnP stack.
+     * @param upnpServiceCfgFactory Creates a fresh jUPnP configuration for each stack start.
      * @param fileRepos Repository for physical file access.
      * @param tagRepos Repository for track metadata and analysis results.
      */
-    public MediaServerHubImpl(Context context, UpnpServiceConfiguration upnpServiceCfg, FileRepository fileRepos, TagRepository tagRepos) {
+    public MediaServerHubImpl(Context context, java.util.function.Supplier<UpnpServiceConfiguration> upnpServiceCfgFactory, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context.getApplicationContext();
-        this.cfg = upnpServiceCfg;
+        this.cfgFactory = upnpServiceCfgFactory;
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
         this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -298,7 +300,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void initUpnp() throws Exception {
-        upnpService = new UpnpServiceImpl(cfg);
+        upnpService = new UpnpServiceImpl(cfgFactory.get());
         upnpService.startup();
 
         controlPoint = upnpService.getControlPoint();
