@@ -68,7 +68,7 @@ public class FileRepository {
                         image = getFolderCoverArt(new File(dir, DEFAULT_COVERART));
                     }
                     if (image == null || !image.exists() || image.isDirectory()) {
-                        String artist = music.getTitle().toLowerCase().replace("/", " ");
+                        String artist = trimToEmpty(music.getTitle()).toLowerCase().replace("/", " ");
                         image = new File(cacheDir, "/artist/" + artist + ".png");
                         if (!image.exists()) {
                             copyAssetCover(context, "Covers/artist/" + artist + ".png", image);
@@ -92,7 +92,7 @@ public class FileRepository {
                     yield image;
                 }
                 case GENRE -> {
-                    String genre = music.getTitle().toLowerCase().replace("/", " ");
+                    String genre = trimToEmpty(music.getTitle()).toLowerCase().replace("/", " ");
                     File image = new File(cacheDir, "/genre/" + genre + ".png");
                     if (!image.exists()) {
                         copyAssetCover(context, "Covers/genre/" + genre + ".png", image);
@@ -115,7 +115,7 @@ public class FileRepository {
                     yield image;
                 }
                 case SOUND_GRADE -> {
-                    String codec = music.getTitle().replace("/", " ");
+                    String codec = trimToEmpty(music.getTitle()).replace("/", " ");
                     File image = new File(cacheDir, "/sound_grade/" + codec + ".png");
                     if (!image.exists()) {
                         copyAssetCover(context, "Covers/sound_grade/" + codec + ".png", image);
@@ -224,6 +224,8 @@ public class FileRepository {
                 try (android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever()) {
                     retriever.setDataSource(path);
                     byte[] art = retriever.getEmbeddedPicture();
+                    // MediaMetadataRetriever skips ID3 pictures inside WAV/AIFF files
+                    if (art == null) art = readTaggedArtwork(path);
                     if (art != null) {
                         try (java.io.FileOutputStream fos = new java.io.FileOutputStream(pathFile)) {
                             fos.write(art);
@@ -240,6 +242,18 @@ public class FileRepository {
             android.util.Log.e(TAG, "extractCoverArt:", e);
         }
         return null;
+    }
+
+    /** First embedded picture via the tag library, or null if there is none or it cannot be read. */
+    private static byte[] readTaggedArtwork(String path) {
+        try {
+            org.jaudiotagger.tag.Tag tag = org.jaudiotagger.audio.AudioFileIO.read(new File(path)).getTag();
+            org.jaudiotagger.tag.images.Artwork artwork = tag == null ? null : tag.getFirstArtwork();
+            return artwork == null ? null : artwork.getBinaryData();
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "readTaggedArtwork: " + path, e);
+            return null;
+        }
     }
 
     public static boolean isManagedInLibrary(Context context, Track tag) {

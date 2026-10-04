@@ -1625,7 +1625,7 @@ public class TagsActivity extends AppCompatActivity {
         formatSpan = new TextBuilder(getApplicationContext());
         formatSpan.append("\n");
 
-        String textValue = track.getFileType().toUpperCase();
+        String textValue = StringUtils.trimToEmpty(track.getFileType()).toUpperCase(Locale.US);
         formatSpan.append(textValue+"\n", valueColor, textSize, false);
 
         textValue = formatAudioSampleRate(track.getAudioSampleRate(), true);

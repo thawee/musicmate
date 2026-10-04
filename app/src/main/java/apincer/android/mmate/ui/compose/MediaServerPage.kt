@@ -330,7 +330,8 @@ fun MediaServerPage(
                         }
 
                         // QR Code thumbnail
-                        if (state.qrCodeBitmap != null) {
+                        val qrBitmap = state.qrCodeBitmap
+                        if (qrBitmap != null) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
@@ -350,7 +351,7 @@ fun MediaServerPage(
                                     modifier = Modifier.size(72.dp)
                                 ) {
                                     Image(
-                                        bitmap = state.qrCodeBitmap!!.asImageBitmap(),
+                                        bitmap = qrBitmap.asImageBitmap(),
                                         contentDescription = null,
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -414,7 +415,9 @@ fun MediaServerPage(
     }
 
     // ── 3. ZOOMABLE QR CODE DIALOG ───────────────────────────────────────────
-    if (showQrZoomDialog && state.qrCodeBitmap != null) {
+    // Read once: the dialog composes separately and the bitmap clears when the server stops
+    val zoomQrBitmap = state.qrCodeBitmap
+    if (showQrZoomDialog && zoomQrBitmap != null) {
         Dialog(onDismissRequest = { showQrZoomDialog = false }) {
             Surface(
                 color = Color(0xFF1E1E28),
@@ -452,7 +455,7 @@ fun MediaServerPage(
                         modifier = Modifier.size(200.dp)
                     ) {
                         Image(
-                            bitmap = state.qrCodeBitmap!!.asImageBitmap(),
+                            bitmap = zoomQrBitmap.asImageBitmap(),
                             contentDescription = "WebUI QR Code",
                             modifier = Modifier
                                 .fillMaxSize()

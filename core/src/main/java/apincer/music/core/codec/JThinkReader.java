@@ -280,7 +280,10 @@ public class JThinkReader extends TagReader{
         }else {
             // wave file — reuse tempTagsMap (already cleared above) to parse TXX tags
             parseTxx(tag, tempTagsMap);
-                metadata.setGenre(tempTagsMap.get("GENRE"));
+                // A custom TXXX:GENRE (as MusicMate writes) wins; otherwise keep the standard
+                // ID3 genre read above instead of replacing it with null ("Unknown").
+                String txxGenre = tempTagsMap.get("GENRE");
+                if (!isEmpty(txxGenre)) metadata.setGenre(txxGenre);
                 metadata.setStyle(tempTagsMap.get("STYLE"));
                 metadata.setMood(tempTagsMap.get("MOOD"));
                 metadata.setOrigin(tempTagsMap.get("ORIGIN"));

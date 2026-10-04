@@ -1,3 +1,11 @@
+# WAV tags and NPE audit (2026-10-04)
+
+- [x] Find why WAV embedded tags/cover art are not read. Not release-only (debug same). Genre: JThinkReader replaced the ID3 genre with an absent TXXX:GENRE. Cover: MediaMetadataRetriever ignores ID3 pictures in WAV.
+- [x] Fix the demonstrated cause; verified on the emulator (debug DB: Classical/Folk; release: 4 genres, gold/green covers, Tech Info 100%, MP3s unchanged).
+- [x] NPE audit: getPackage (WavTag, OkHttp) fixed earlier; JustDSD not shipped; track-getter dereferences reviewed (13, 2 guarded + 3 container titles); Kotlin !! (3, QR dialog race fixed); system services and listFiles/getParentFile chains reviewed.
+- [x] Fixes committed; 328 JVM tests pass (no existing reader tests; verified on emulator instead).
+- [ ] Release 3.23.2 after the fixes are verified on device/emulator.
+
 # Release 3.23.1 (2026-10-04)
 
 - [x] Version 3.23.1 / code 143; changelog and release notes.
