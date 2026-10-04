@@ -1,9 +1,5 @@
 package apincer.android.mmate.ui.compose
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -14,11 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,11 +64,9 @@ data class PlayerTargetItem @JvmOverloads constructor(
 @Composable
 fun PlayerPickerDialog(
     targets: List<PlayerTargetItem>,
-    isScanning: Boolean,
     hasExternalPlayerAccess: Boolean,
     onDismissRequest: () -> Unit,
     onTargetSelected: (PlaybackTarget) -> Unit,
-    onRescanClick: () -> Unit,
     onBluetoothOutputClick: () -> Unit,
     onExternalPlayerAccessClick: () -> Unit
 ) {
@@ -93,18 +87,18 @@ fun PlayerPickerDialog(
         label = "player_dialog_alpha"
     )
 
-    val streamers = remember(targets) {
+    val streamers by remember(targets) { derivedStateOf {
         targets.filter { it.category == PlayerCategory.NETWORK_STREAMER }
             .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
-    }
-    val localOutputs = remember(targets) {
+    } }
+    val localOutputs by remember(targets) { derivedStateOf {
         targets.filter { it.category == PlayerCategory.THIS_DEVICE }
             .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
-    }
-    val musicApps = remember(targets) {
+    } }
+    val musicApps by remember(targets) { derivedStateOf {
         targets.filter { it.category == PlayerCategory.MUSIC_APP }
             .sortedWith(compareByDescending<PlayerTargetItem> { it.isSelected }.thenBy { it.title })
-    }
+    } }
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -256,52 +250,8 @@ fun PlayerPickerDialog(
                     modifier = Modifier.padding(vertical = 12.dp)
                 )
 
-                // Group 1: Utilities (Rescan & Bluetooth / System Output)
+                // Group 1: Utilities (Bluetooth / System Output)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    // Rescan Action
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable(onClick = onRescanClick)
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_baseline_refresh_24),
-                            contentDescription = "Rescan",
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = if (isScanning) "Rescanning DLNA players…" else "Rescan for DLNA players",
-                            color = Color.White,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        if (isScanning) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            val transition = rememberInfiniteTransition(label = "rescan_pulse")
-                            val alpha by transition.animateFloat(
-                                initialValue = 0.3f,
-                                targetValue = 1f,
-                                animationSpec = infiniteRepeatable(
-                                    animation = tween(600),
-                                    repeatMode = RepeatMode.Reverse
-                                ),
-                                label = "rescan_alpha"
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFFD700))
-                                    .alpha(alpha)
-                            )
-                        }
-                    }
-
                     // Bluetooth / System Output Action
                     Row(
                         modifier = Modifier

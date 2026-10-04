@@ -1230,15 +1230,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
-    public void onRescanTargets() {
-        if (playbackService != null) {
-            playbackService.refreshPlayerDiscovery();
-            MainScaffoldState.setPlayerScanning(true);
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                updatePlayerPickerState();
-                MainScaffoldState.setPlayerScanning(false);
-            }, 1200);
-        }
+    public void onRefreshPlayerTargets() {
+        updatePlayerPickerState();
     }
 
     @Override

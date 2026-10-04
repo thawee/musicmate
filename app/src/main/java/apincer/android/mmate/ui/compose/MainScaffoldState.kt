@@ -24,7 +24,6 @@ class MainScaffoldState {
     // Player picker modal state
     var showPlayerPickerDialog = mutableStateOf(false)
     val playerTargets = mutableStateListOf<PlayerTargetItem>()
-    var isPlayerScanning = mutableStateOf(false)
     var systemAccess = mutableStateOf(SystemAccessState())
 
     // Smart playlist creator modal state
@@ -154,11 +153,6 @@ class MainScaffoldState {
         @JvmStatic
         fun showPlayerPicker(show: Boolean) {
             instance.showPlayerPickerDialog.value = show
-        }
-
-        @JvmStatic
-        fun setPlayerScanning(scanning: Boolean) {
-            instance.isPlayerScanning.value = scanning
         }
 
         @JvmStatic

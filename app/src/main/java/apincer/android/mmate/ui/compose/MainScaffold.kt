@@ -616,16 +616,21 @@ fun MainScaffold(
 
     // ── Pure Compose Player Picker Modal Dialog (DESIGN.md §4 & §8A) ─────────
     if (state.showPlayerPickerDialog.value) {
+        // Renderers answer discovery over several seconds: keep the open list current
+        LaunchedEffect(Unit) {
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                callbacks?.onRefreshPlayerTargets()
+            }
+        }
         PlayerPickerDialog(
             targets = state.playerTargets,
-            isScanning = state.isPlayerScanning.value,
             hasExternalPlayerAccess = state.systemAccess.value.hasExternalPlayerAccess,
             onDismissRequest = { state.showPlayerPickerDialog.value = false },
             onTargetSelected = { target ->
                 callbacks?.onPlayerTargetSelected(target)
                 state.showPlayerPickerDialog.value = false
             },
-            onRescanClick = { callbacks?.onRescanTargets() },
             onBluetoothOutputClick = {
                 callbacks?.onOpenSystemAudioOutput()
                 state.showPlayerPickerDialog.value = false

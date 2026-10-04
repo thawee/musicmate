@@ -27,7 +27,7 @@ interface MainScaffoldCallbacks {
     fun onDockLongClick() { onAudioHubTrackClick() }
     fun onSelectPlaybackTargetClick()
     fun onPlayerTargetSelected(target: PlaybackTarget)
-    fun onRescanTargets()
+    fun onRefreshPlayerTargets()
     fun onOpenSystemAudioOutput()
     fun onEnableExternalPlayerAccess()
     fun onAudioHubPlayPause()

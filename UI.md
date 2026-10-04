@@ -238,8 +238,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 │  │                    External Music App               │  │
 │  └─────────────────────────────────────────────────────┘  │
 │  ───────────────────────────────────────────────────────  │
-│  🔄  Rescan for DLNA players                              │ ┐ Group 1:
-│  🔵  Bluetooth / System Output…                           │ ┘ Utilities
+│  🔵  Bluetooth / System Output…                           │ ← Group 1: Utilities
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -250,9 +249,8 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 - **Authentic App Icons:** External music apps render their real native application icon via `packageManager.getApplicationIcon()` with smooth squircle clipping (`RoundedCornerShape(6.dp)`), displayed without color tinting to preserve brand identity. Fallback to `rounded_music_note_24` if uninstalled.
 - **Priority Within Categories:** Each category sorts the active/selected target (`isSelected`) to the top with an Amber/Gold border (`0x80FFD700`) and checkmark (`✓`), followed by remaining devices sorted alphabetically.
 - **Dynamic Local Device Telemetry:** Local player replaces generic labels and SD card icons with live hardware detection: `"Phone Speaker"` with `"Plays on this phone"` (built-in outputs report the phone model, e.g. `SM-S931B`, as their product name, so they are named by type), `"FiiO KA13"` with `"USB Bit-Perfect Output"`, or `"WH-1000XM5"` with `"Bluetooth • LDAC"`.
-- **Zero-Latency Auto-Discovery:** On opening the popup, `refreshPlayerDiscovery()` triggers both DLNA M-SEARCH and an installed package scan (`isPackageInstalled` against `SUPPORTED_PLAYERS`), populating targets immediately without requiring an explicit manual tap.
+- **Zero-Latency Auto-Discovery:** On opening the popup, `refreshPlayerDiscovery()` triggers both DLNA M-SEARCH and an installed package scan (`isPackageInstalled` against `SUPPORTED_PLAYERS`), populating targets immediately without requiring an explicit manual tap. While the popup is open the list refreshes every second, so renderers that answer late appear in place. There is no manual Rescan action.
 - **Ordering by Proximity to Effect:**
-  - **Rescan** is placed directly below the player target list because its action directly modifies the list above it.
   - **Bluetooth / System Output…** is placed at the bottom because selecting it navigates away from the app into Android System Settings / Output Panel.
 - **Informative Empty State:** When no remote renderers are found, displays a disabled `"Scanning for audio output devices…"` placeholder item rather than an interactive/confusing error item.
 
