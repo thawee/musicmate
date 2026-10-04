@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 long bitrate = song.getAudioBitRate();
                 nps.getSpecsBitrate().setValue(bitrate > 0 ? (bitrate / 1000) + " kbps" : "Lossless Audio");
 
-                double dr = song.getDrScore() > 0 ? song.getDrScore() : song.getDynamicRange();
+                double dr = apincer.music.core.utils.TagUtils.effectiveDr(song);
                 nps.getSpecsDr().setValue(dr > 0 ? "DR " + (int) dr : "");
 
                 apincer.music.core.playback.ReplayGainManager.ReplayGainInfo rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(song.getPath());
@@ -580,6 +580,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     unitTitle = count == 1 ? "Artist" : "Artists";
                 } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
                     unitTitle = count == 1 ? "Genre" : "Genres";
+                } else if (isTopLevelCategoryDir) {
+                    // e.g. Audio Quality lists categories (Hi-Res, CD, Compressed), not tracks
+                    unitTitle = count == 1 ? "Category" : "Categories";
                 } else {
                     unitTitle = count == 1 ? "Track" : "Tracks";
                 }
@@ -1049,7 +1052,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             state.setBroadcastInfo("Wi-Fi / Hotspot required to stream");
             state.setQrCodeBitmap(null);
         } else {
-            state.setServerStatusText("Server Stopped");
+            state.setServerStatusText("Server Off");
             state.setServerUrl("");
             state.setBroadcastInfo(networkAvailable ? "Ready to stream" : "Wi-Fi / Hotspot disconnected");
             state.setQrCodeBitmap(null);

@@ -1,5 +1,10 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -19,6 +24,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
@@ -523,6 +529,13 @@ fun MainScaffold(
                     MusicListScreen(
                         tracks = state.tracks,
                         listKey = state.musicListKey.value,
+                        emptyCollectionText = when (navigationState.selectedLibraryDestination) {
+                            LibraryDestination.SIMILAR_TRACKS -> "No similar songs found" to
+                                "Songs with matching titles (and artists, if enabled in Settings) appear here."
+                            LibraryDestination.RECENTLY_ADDED -> "No new tracks" to
+                                "Newly scanned or downloaded songs appear here until you organize them."
+                            else -> null
+                        },
                         playbackAvailable = state.isPlaybackAvailable.value,
                         userPlaylistOpen = state.openUserPlaylistUuid.value != null,
                         listenerTapMode = state.listenerTapMode.value,
@@ -771,6 +784,12 @@ private fun TopSearchBar(
                     Spacer(modifier = Modifier.width(4.dp))
                 }
 
+                var searchFocusAllowed by remember { mutableStateOf(false) }
+                val searchContext = LocalContext.current
+                val touchExploration = remember(searchContext) {
+                    (searchContext.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE)
+                        as? android.view.accessibility.AccessibilityManager)?.isTouchExplorationEnabled == true
+                }
                 // Frosted Search Pill
                 Box(
                     modifier = Modifier
@@ -817,6 +836,19 @@ private fun TopSearchBar(
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    // With a hardware keyboard Android gives the first text field
+                                    // initial focus and opens the soft keyboard on launch. Search
+                                    // becomes focusable only once pressed (or under TalkBack).
+                                    .pointerInput(Unit) {
+                                        awaitEachGesture {
+                                            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                            searchFocusAllowed = true
+                                        }
+                                    }
+                                    .focusProperties {
+                                        canFocus = searchFocusAllowed || query.isNotEmpty() || touchExploration
+                                    }
+                                    .onFocusChanged { if (!it.isFocused && query.isEmpty()) searchFocusAllowed = false }
                                     .semantics {
                                         contentDescription = searchContentDescription
                                     }
@@ -1357,6 +1389,8 @@ private fun DrawerCardItem(
             modifier = Modifier.size(19.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
+        // Long badges ("Optional access off") go under the title so they never truncate it
+        val badgeBelow = largeText || (badge?.length ?: 0) > 10
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = text,
@@ -1366,7 +1400,7 @@ private fun DrawerCardItem(
                 maxLines = if (largeText) 2 else 1,
                 overflow = TextOverflow.Ellipsis
             )
-            if (badge != null && largeText) {
+            if (badge != null && badgeBelow) {
                 Text(
                     text = badge,
                     color = badgeColor,
@@ -1377,7 +1411,7 @@ private fun DrawerCardItem(
             }
         }
 
-        if (badge != null && !largeText) {
+        if (badge != null && !badgeBelow) {
             Surface(
                 color = badgeColor.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(6.dp),

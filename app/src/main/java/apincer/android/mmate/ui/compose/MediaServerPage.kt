@@ -88,7 +88,11 @@ fun MediaServerPage(
                         modifier = Modifier
                             .size(14.dp)
                             .background(
-                                color = if (state.isServerRunning) Color(0x3300E676) else Color(0x33FF5252),
+                                color = when {
+                                    state.isServerRunning -> Color(0x3300E676)
+                                    state.isNetworkAvailable -> Color(0x33757575)
+                                    else -> Color(0x33FFAB91)
+                                },
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -97,7 +101,12 @@ fun MediaServerPage(
                             modifier = Modifier
                                 .size(8.dp)
                                 .background(
-                                    color = if (state.isServerRunning) Color(0xFF00E676) else Color(0xFFFF5252),
+                                    // Off is a normal state (grey); only a missing network is a warning
+                                    color = when {
+                                        state.isServerRunning -> Color(0xFF00E676)
+                                        state.isNetworkAvailable -> Color(0xFF757575)
+                                        else -> Color(0xFFFFAB91)
+                                    },
                                     shape = CircleShape
                                 )
                         )
@@ -107,7 +116,7 @@ fun MediaServerPage(
 
                     Column {
                         Text(
-                            text = if (state.isServerRunning) state.serverStatusText else "Server Stopped",
+                            text = if (state.isServerRunning) state.serverStatusText else "Server Off",
                             color = Color.White,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
@@ -119,7 +128,7 @@ fun MediaServerPage(
                             text = if (state.isServerRunning) {
                                 if (state.broadcastInfo.isNotEmpty()) state.broadcastInfo else "DLNA 1.5 • Port 9000"
                             } else if (state.isNetworkAvailable) {
-                                "Ready to stream"
+                                "Stream to renderers and browsers"
                             } else {
                                 "Wi-Fi / Hotspot disconnected"
                             },

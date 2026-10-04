@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -28,7 +32,8 @@ fun PermissionScreen(
     systemAccess: SystemAccessState,
     focusedCapability: SystemAccessCapability = SystemAccessCapability.NONE,
     onStorageAccessClick: () -> Unit,
-    onExternalPlayerAccessClick: () -> Unit
+    onExternalPlayerAccessClick: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -46,11 +51,18 @@ fun PermissionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            // A visible way back: the screen previously offered only Android settings links
+            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Start).size(48.dp)) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
+                    contentDescription = stringResource(R.string.cd_back),
+                    tint = Color.White
+                )
+            }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
 
                 // Hero Icon
                 Box(
@@ -116,6 +128,20 @@ fun PermissionScreen(
                     focused = focusedCapability == SystemAccessCapability.EXTERNAL_PLAYERS,
                     onClick = onExternalPlayerAccessClick
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                // Continue once the required access is granted; otherwise allow leaving for now
+                if (systemAccess.hasFullStorageAccess) {
+                    Button(
+                        onClick = onBack,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB300), contentColor = Color.Black),
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    ) { Text("Continue", fontWeight = FontWeight.Bold) }
+                } else {
+                    TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                        Text("Not now", color = Color(0xFFBDBDBD))
+                    }
+                }
             }
         }
     }

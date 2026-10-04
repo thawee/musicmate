@@ -226,8 +226,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = Color(0x14FFFFFF), modifier = Modifier.padding(vertical = 8.dp))
 
                 SettingsSwitchRow(
-                    title = "Keep Screen Awake in Fullscreen",
-                    subtitle = "Keeps the screen on while Fullscreen Desk Mode is open",
+                    title = "Keep Screen Awake in Studio Console",
+                    subtitle = "Keeps the screen on while the Studio Console is open",
                     checked = studioKeepScreenOn,
                     onCheckedChange = onStudioKeepScreenOnChange
                 )
@@ -387,8 +387,10 @@ private fun SettingsSwitchRow(
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Black,
                 checkedTrackColor = Color(0xFFFFB300),
-                uncheckedThumbColor = Color(0xFF888888),
-                uncheckedTrackColor = Color(0xFF2C2C36)
+                // Off state needs a visible outline and thumb on the dark cards
+                uncheckedThumbColor = Color(0xFFBDBDBD),
+                uncheckedTrackColor = Color(0xFF2C2C36),
+                uncheckedBorderColor = Color(0xFF8A8A94)
             )
         )
     }

@@ -74,6 +74,20 @@ public class TagUtils {
         return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= 16));
     }
 
+    /** Above this a stored dynamic range is not a real measurement (silence was once stored as ~9.2e16). */
+    private static final double MAX_PLAUSIBLE_DYNAMIC_RANGE = 200.0;
+
+    /**
+     * DR to display or filter on: the measured DR score when present, otherwise a plausible
+     * dynamic range value; 0 when neither is usable.
+     */
+    public static double effectiveDr(Track tag) {
+        if (tag == null) return 0.0;
+        if (tag.getDrScore() > 0) return tag.getDrScore();
+        double dr = tag.getDynamicRange();
+        return (Double.isFinite(dr) && dr > 0 && dr <= MAX_PLAUSIBLE_DYNAMIC_RANGE) ? dr : 0.0;
+    }
+
     public static boolean isDSD(@UnknownNullability Track tag) {
         return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }

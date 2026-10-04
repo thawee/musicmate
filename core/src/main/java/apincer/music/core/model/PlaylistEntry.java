@@ -183,7 +183,7 @@ public class PlaylistEntry {
 
         // 1. Min DR Score filter
         if (minDrScore > 0.0) {
-            double dr = track.getDrScore() > 0 ? track.getDrScore() : track.getDynamicRange();
+            double dr = TagUtils.effectiveDr(track);
             if (dr < minDrScore) {
                 return false;
             }

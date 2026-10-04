@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **DR12+ playlist:** Silent audio stored an infinite dynamic range (~9.2e16), so it passed every DR filter. Silence now has no DR, and DR filters and Now Playing ignore implausible stored values.
+- **Keyboard on launch:** The search box no longer takes focus and opens the keyboard when the app starts; it focuses when tapped (and stays reachable with TalkBack).
+
+### Changed
+- **First run:** System Access has a back arrow and a Continue (or Not now) button. The folder dialog is opaque, shows readable locations ("Internal storage › Music"), labels its button "Add folder" and marks default folders.
+- **Library:** Category screens count "Categories", CD and Compressed get category art, playlist cover badges no longer break words at large text, artists and genres show coloured initials, and Similar Tracks explains an empty result.
+- **Settings and Music Center:** Off switches have a visible outline, the console is consistently called the Studio Console, the stopped server shows a neutral "Server Off", and queue actions use one neutral colour with tooltips. The drawer moves long badges below their title.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.

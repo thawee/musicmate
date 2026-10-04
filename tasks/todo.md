@@ -1,3 +1,20 @@
+# Emulator review fixes, 13 items (2026-10-04)
+
+- [x] 1. Search box does not auto-focus / open the keyboard on launch or return.
+- [x] 2. System Access screen has a way back (and continues once storage is granted).
+- [x] 3. Folder dialog: opaque; readable paths; clear "Add folder"; visible remove per folder.
+- [x] 4. Drawer: "System Access" not truncated by its badge.
+- [x] 5. Audio Quality: header counts categories; every category has art.
+- [x] 6. Similar Tracks empty state says no similar songs were found.
+- [x] 7. Playlist cover badges do not break or clip words.
+- [x] 8. "Audiophile Sanctuary (DR12+)" only includes tracks that meet its rule.
+- [x] 9. Artists/Genres show distinguishable placeholders.
+- [x] 10. Settings switches are visible when off.
+- [x] 11. One name for the fullscreen console.
+- [x] 12. Server tab: neutral stopped state, consistent wording.
+- [x] 13. Queue header icons readable/labelled and on-theme; source chips show they scroll.
+- [x] Tests (335), release build, emulator check of each item, changelog, commit. Item 8 root cause: silent audio stored DR as Infinity (~9.2e16), which passed DR12+.
+
 # WAV tags and NPE audit (2026-10-04)
 
 - [x] Find why WAV embedded tags/cover art are not read. Not release-only (debug same). Genre: JThinkReader replaced the ID3 genre with an absent TXXX:GENRE. Cover: MediaMetadataRetriever ignores ID3 pictures in WAV.

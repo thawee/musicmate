@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 class MediaServerState {
-    var serverStatusText by mutableStateOf("Server Stopped")
+    var serverStatusText by mutableStateOf("Server Off")
     var isServerRunning by mutableStateOf(false)
     var isNetworkAvailable by mutableStateOf(true)
     var serverUrl by mutableStateOf("")

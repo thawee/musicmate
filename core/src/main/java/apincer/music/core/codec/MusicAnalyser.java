@@ -371,11 +371,15 @@ public class MusicAnalyser {
             noiseFloor = 0;
         }
 
+        // Silence has no dynamic range. Infinity here was stored as ~9.2e16 after rounding and
+        // then passed every "DR12+" filter.
+        if (peakLevel == 0 || noiseFloor == 0) {
+            return 0.0;
+        }
+
         // Calculate dynamic range in decibels
         double dynamicRange;
-        if (noiseFloor == 0) {
-            dynamicRange = Double.POSITIVE_INFINITY; // Infinite dynamic range
-        } else {
+        {
             dynamicRange = 20 * Math.log10(peakLevel / noiseFloor);
         }
 

@@ -35,6 +35,31 @@ public class PlaylistEntrySmartTest {
     }
 
     @Test
+    public void testSilentTrackWithBogusDynamicRangeIsNotDr12() {
+        PlaylistEntry drEntry = new PlaylistEntry();
+        drEntry.setType(PlaylistEntry.TYPE_SMART);
+        drEntry.setMinDrScore(12.0);
+        // Older analysis stored silence as ~9.2e16 with no DR score
+        Track silent = (Track) Proxy.newProxyInstance(
+                Track.class.getClassLoader(),
+                new Class<?>[]{Track.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if ("getDrScore".equals(name)) return 0.0;
+                    if ("getDynamicRange".equals(name)) return 9.223372036854776e16;
+                    if ("getAudioEncoding".equals(name)) return "wave";
+                    if ("getFileType".equals(name)) return "wav";
+                    if ("getPath".equals(name)) return "/music/silence.wav";
+                    if (method.getReturnType().equals(boolean.class)) return false;
+                    if (method.getReturnType().equals(int.class)) return 0;
+                    if (method.getReturnType().equals(long.class)) return 0L;
+                    if (method.getReturnType().equals(double.class)) return 0.0;
+                    return null;
+                });
+        assertFalse("Silence must not match DR12+", drEntry.isInPlaylist(silent));
+    }
+
+    @Test
     public void testDrScoreSmartPlaylist() {
         PlaylistEntry drEntry = new PlaylistEntry();
         drEntry.setType(PlaylistEntry.TYPE_SMART);

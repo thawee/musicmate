@@ -83,6 +83,8 @@ fun MusicListScreen(
     trackArtwork: (@Composable (Track) -> Unit)? = null,
     /** Destination of [tracks]; each destination keeps its own scroll position. */
     listKey: String = "",
+    // Title and message for an empty collection (e.g. "No similar songs found"); null = generic text
+    emptyCollectionText: Pair<String, String>? = null,
     /** Whether the playback service is bound; track menus hide playback actions otherwise. */
     playbackAvailable: Boolean = true,
     userPlaylistOpen: Boolean = false,
@@ -181,6 +183,7 @@ fun MusicListScreen(
                             loadError != null -> "Couldn’t load music"
                             libraryEmpty -> "Add your music"
                             hasActiveFilters -> "No matching music"
+                            emptyCollectionText != null -> emptyCollectionText.first
                             else -> "No tracks here yet"
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -192,6 +195,7 @@ fun MusicListScreen(
                         text = loadError ?: when {
                             libraryEmpty -> "Choose the folders containing your music, then scan to build your library."
                             hasActiveFilters -> "Try another search or clear your search and filters."
+                            emptyCollectionText != null -> emptyCollectionText.second
                             else -> "This collection is empty. Browse your library to find music."
                         },
                         style = MaterialTheme.typography.bodySmall,
@@ -213,7 +217,11 @@ fun MusicListScreen(
                         )
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_round_refresh_24),
+                            // Refresh only for Retry/Scan; browsing gets a library icon
+                            painter = painterResource(
+                                id = if (loadError != null || libraryEmpty) R.drawable.ic_round_refresh_24
+                                else R.drawable.rounded_library_music_24
+                            ),
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )

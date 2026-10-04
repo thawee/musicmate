@@ -43,7 +43,8 @@ class PermissionActivity : ComponentActivity() {
                     systemAccess = systemAccess,
                     focusedCapability = focusedCapability,
                     onStorageAccessClick = ::openStorageAccessSettings,
-                    onExternalPlayerAccessClick = ::openExternalPlayerAccessSettings
+                    onExternalPlayerAccessClick = ::openExternalPlayerAccessSettings,
+                    onBack = { finish() }
                 )
             }
         }

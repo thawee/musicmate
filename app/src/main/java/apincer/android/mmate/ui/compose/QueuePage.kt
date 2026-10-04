@@ -1,5 +1,10 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -558,40 +563,9 @@ private fun CompactQueueHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            IconButton(
-                onClick = onOpenPlaylistPicker,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
-                    contentDescription = "Load Playlist",
-                    tint = Color(0xFFBA68C8),
-                    modifier = Modifier.size(19.dp)
-                )
-            }
-            IconButton(
-                onClick = onJumpToPlaying,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_center_focus_strong_black_24dp),
-                    contentDescription = "Jump to Now Playing",
-                    tint = Color(0xFFFFB300),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            IconButton(
-                onClick = onClearQueue,
-                enabled = canClear,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.rounded_delete_24),
-                    contentDescription = "Clear Queue",
-                    tint = if (canClear) Color(0xFFB0BEC5) else Color(0xFF555555),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            QueueHeaderAction(R.drawable.ic_baseline_playlist_play_24, "Load Playlist", onOpenPlaylistPicker)
+            QueueHeaderAction(R.drawable.ic_center_focus_strong_black_24dp, "Jump to Now Playing", onJumpToPlaying)
+            QueueHeaderAction(R.drawable.rounded_delete_24, "Clear Queue", onClearQueue, enabled = canClear)
         }
     }
 }
@@ -630,8 +604,8 @@ private fun CompactSourceDeck(
         modifier = Modifier
             .fillMaxWidth()
             .fadingEdge(
-                startWidth = if (scrollState.canScrollBackward) 24.dp else 0.dp,
-                endWidth = if (scrollState.canScrollForward) 24.dp else 0.dp
+                startWidth = if (scrollState.canScrollBackward) 40.dp else 0.dp,
+                endWidth = if (scrollState.canScrollForward) 40.dp else 0.dp
             )
             .horizontalScroll(scrollState)
             .padding(horizontal = 14.dp, vertical = 2.dp),
@@ -1171,5 +1145,25 @@ private fun QueueEmptyActionButton(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+/** Icon-only queue action: one neutral tint (no lone purple) and its label as a long-press tooltip. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QueueHeaderAction(iconRes: Int, label: String, onClick: () -> Unit, enabled: Boolean = true) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+        tooltip = { PlainTooltip { Text(label) } },
+        state = rememberTooltipState()
+    ) {
+        IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(48.dp)) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = label,
+                tint = if (enabled) Color(0xFFCFD8DC) else Color(0xFF555555),
+                modifier = Modifier.size(19.dp)
+            )
+        }
     }
 }

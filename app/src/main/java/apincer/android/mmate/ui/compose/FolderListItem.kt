@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -169,6 +171,9 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
     val isLossless = title.contains("Lossless", ignoreCase = true) || title.contains("Vault", ignoreCase = true)
     val isClassical = title.contains("Classical", ignoreCase = true)
     val isMasterpiece = title.contains("Masterpiece", ignoreCase = true)
+    // Audio Quality categories
+    val isCd = title.contains("CD Quality", ignoreCase = true)
+    val isLossy = title.contains("Compressed", ignoreCase = true) || title.contains("Lossy", ignoreCase = true)
 
     val theme = when {
         isDr12 -> SmartArtworkTheme(
@@ -201,6 +206,18 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
             badgeSubtext = "HERITAGE",
             accentColor = Color(0xFFEF9A9A)
         )
+        isCd -> SmartArtworkTheme(
+            brush = Brush.linearGradient(listOf(Color(0xFF0B1A2E), Color(0xFF16304F), Color(0xFF2A4F7A))),
+            badgeText = "CD",
+            badgeSubtext = "16-BIT",
+            accentColor = Color(0xFF90CAF9)
+        )
+        isLossy -> SmartArtworkTheme(
+            brush = Brush.linearGradient(listOf(Color(0xFF1C1C1C), Color(0xFF2E2E2E), Color(0xFF474747))),
+            badgeText = "LOSSY",
+            badgeSubtext = "COMPRESSED",
+            accentColor = Color(0xFFBDBDBD)
+        )
         isMasterpiece -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF241406), Color(0xFF4D2C0C), Color(0xFF8A5319))),
             badgeText = "REFERENCE",
@@ -224,6 +241,11 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         if (theme.badgeText.isNotEmpty()) {
+            // The badge is artwork in a fixed 72dp box: size its text in dp so system font
+            // scaling cannot wrap or clip it ("CLASSICA/L"), and keep each line on one line.
+            val density = LocalDensity.current
+            val badgeSize = with(density) { (if (theme.badgeText.length > 6) 10.dp else 12.dp).toSp() }
+            val subSize = with(density) { (if (theme.badgeSubtext.length > 9) 6.5.dp else 8.dp).toSp() }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -234,8 +256,10 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
                     color = theme.accentColor,
                     fontWeight = FontWeight.Black,
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    letterSpacing = 0.5.sp
+                    fontSize = badgeSize,
+                    letterSpacing = 0.3.sp,
+                    maxLines = 1,
+                    softWrap = false
                 )
                 if (theme.badgeSubtext.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -244,10 +268,28 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
                         color = Color.White.copy(alpha = 0.85f),
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 8.sp,
-                        letterSpacing = 1.sp
+                        fontSize = subSize,
+                        letterSpacing = 0.5.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
+            }
+        } else if (monogramOf(title).isNotEmpty()) {
+            // Artists, genres and other collections without artwork: initials on a colour taken
+            // from the name, so entries are distinguishable instead of all sharing one icon
+            Box(
+                modifier = Modifier.fillMaxSize().background(monogramColor(title)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = monogramOf(title),
+                    color = Color.White.copy(alpha = 0.92f),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = with(LocalDensity.current) { 22.dp.toSp() },
+                    maxLines = 1,
+                    softWrap = false
+                )
             }
         } else {
             Icon(
@@ -266,4 +308,28 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize()
         )
     }
+}
+
+/** Up to two initials ("Aurora Lane" -> "AL", "Synthpop" -> "S"); empty when there are none. */
+internal fun monogramOf(title: String): String {
+    val words = title.split(' ', '-', '_', '/', '&', ',').filter { w -> w.any { it.isLetterOrDigit() } }
+    return words.take(2).joinToString("") { w ->
+        val first = w.first { it.isLetterOrDigit() }
+        first.uppercaseChar().toString()
+    }
+}
+
+private val monogramPalette = listOf(
+    Color(0xFF3B4A6B), Color(0xFF5B3B6B), Color(0xFF6B3B4A), Color(0xFF3B6B5B),
+    Color(0xFF6B5B3B), Color(0xFF3B5F6B), Color(0xFF4F6B3B), Color(0xFF6B4A3B)
+)
+
+/** A stable muted colour for a name. */
+internal fun monogramColor(title: String): Color {
+    // Spread String.hashCode's low bits, which cluster for similar names
+    var h = title.lowercase().hashCode()
+    h = h xor (h ushr 16)
+    h *= 0x45d9f3b
+    h = h xor (h ushr 16)
+    return monogramPalette[Math.floorMod(h, monogramPalette.size)]
 }

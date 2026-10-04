@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -56,7 +58,8 @@ fun MusicFoldersDialog(
 
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xF2161618),
+        // Opaque: song titles behind the dialog showed through the translucent panel
+        color = Color(0xFF161618),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
         modifier = Modifier
             .padding(12.dp)
@@ -154,7 +157,7 @@ fun MusicFoldersDialog(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "+ ${sid.replaceFirstChar { it.uppercase() }}",
+                                    text = addFolderLabel(sid, storageIds.size),
                                     fontSize = 11.sp
                                 )
                             }
@@ -184,14 +187,24 @@ fun MusicFoldersDialog(
                                     modifier = Modifier.width(24.dp)
                                 )
                                 Text(
-                                    text = dir,
+                                    text = readableFolderPath(dir),
                                     color = Color.White,
                                     fontSize = 14.sp,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .semantics { contentDescription = dir }
                                 )
-                                if (!defaultPaths.contains(dir)) {
+                                if (defaultPaths.contains(dir)) {
+                                    // Default folders cannot be removed; say so instead of hiding the action
+                                    Text(
+                                        text = "Default",
+                                        color = Color(0xFF9E9E9E),
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                } else {
                                     IconButton(
                                         onClick = { dirs.remove(dir) },
                                         modifier = Modifier.size(32.dp)
@@ -260,4 +273,24 @@ fun MusicFoldersDialog(
             }
         }
     }
+}
+
+/** "Add folder" when there is one storage volume; otherwise name the volume. */
+internal fun addFolderLabel(storageId: String, storageCount: Int): String = when {
+    storageCount <= 1 -> "Add folder"
+    storageId.equals("primary", ignoreCase = true) -> "Internal"
+    else -> "SD card"
+}
+
+/** "/storage/emulated/0/Music" -> "Internal storage › Music"; "/storage/1234-ABCD/x" -> "SD card › x". */
+internal fun readableFolderPath(path: String): String {
+    val internal = Regex("^/storage/emulated/\\d+/?")
+    val removable = Regex("^/storage/[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}/?")
+    val (volume, rest) = when {
+        internal.containsMatchIn(path) -> "Internal storage" to path.replaceFirst(internal, "")
+        removable.containsMatchIn(path) -> "SD card" to path.replaceFirst(removable, "")
+        else -> return path
+    }
+    val parts = rest.trim('/').split('/').filter { it.isNotEmpty() }
+    return if (parts.isEmpty()) volume else (listOf(volume) + parts).joinToString(" › ")
 }
