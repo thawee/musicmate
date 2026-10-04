@@ -4,8 +4,15 @@
 - [x] Rewrite USER_GUIDE from the user's view, by task: getting started, browsing, playing and the queue, choosing a player, streaming and web remote, song details and tags, organizing files, quality badges, settings, troubleshooting. Check each behaviour on the phone while writing.
 - [x] Capture extra screenshots for the guide (menu, queue, tag edit form, settings, Studio Console) after analysis finishes, same crop/resize script.
 - [x] Verify links and images (check_links.py: 0 broken before and after the move), review, commit (no push).
-- [ ] Retake all README and User Guide screenshots on the emulator with a demo library of freely licensed music (CC0 / Creative Commons, covers free to use), so no copyrighted cover art or personal library is published. Current shots are from the user's phone (user decision 2026-10-04: keep as is until then).
+- [x] Retake all README and User Guide screenshots on the emulator with a demo library of freely licensed music (CC0 / Creative Commons, covers free to use), so no copyrighted cover art or personal library is published. Current shots are from the user's phone (user decision 2026-10-04: keep as is until then).
+  - [x] tools/demo-library: generate original music (numpy synthesis, varied dynamics), covers (CoreGraphics), FLAC 16/44.1, 24/88.2, 24/96, 24/192 and ALAC 24/48 via afconvert, tags and art via mutagen. Invented artists only.
+  - [x] Emulator: replace old /sdcard/Music/MusicMate Demo, reinstall signed 3.24 build, grant access, scan, wait for analysis.
+  - [x] Retake the 12 screenshots (player picker stays from the phone: emulator cannot see network renderers, and the shot has no cover art or library), crop, check each image.
+  - [ ] Commit and push.
 - [ ] DR mismatch: Studio Console / Now Playing show dynamicRange truncated ("DR 13" for '39) while lists show drScore rounded ("DR14"). Use one field everywhere.
+- [ ] Library tips card says "Long Press: Long-press a song for batch editing", but in the default Play tracks mode a long press opens the song details; batch selection needs the Edit tags mode. Make the tip follow the tap mode.
+- [ ] Studio Console "UP NEXT" showed the playing track (Adagio Cantabile) while the queue's next was Afterglow (emulator, 2026-10-04).
+- [x] "Don't show these tips again" kept the tips on screen until restart (GestureHintBanner had no state; callers pass no onDismissAll). Fixed with remembered dismissal; verified on the emulator queue tips.
 - [ ] Settings: "Album Gain" button text wraps onto two lines at default font size.
 
 # Scan analysis phase (2026-10-04, found during README screenshots)

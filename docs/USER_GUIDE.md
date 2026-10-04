@@ -142,7 +142,7 @@ MusicMate runs a DLNA media server on your phone, so other devices can browse an
 
 - Tap **Stop** to turn the server off. It stays off, even after reopening the app, until you tap **Start**. Choosing a network player starts it again when needed.
 - **Control apps** such as mConnect or BubbleUPnP see MusicMate as a media server. Browse your library there and play to any renderer, with full tags and cover art.
-- **Web remote.** Open the address shown under *Web Interface & Remote*, for example `http://192.168.1.51:9000/index.html`, in a browser on the same network. **Open WebUI** and **Copy** help with that, and the QR code opens it on another phone.
+- **Web remote.** Open the address shown under *Web Interface & Remote*, for example `http://192.168.1.20:9000/index.html`, in a browser on the same network. **Open WebUI** and **Copy** help with that, and the QR code opens it on another phone.
 
 Streaming works on home Wi-Fi and on the phone's own hotspot, including both at once.
 
