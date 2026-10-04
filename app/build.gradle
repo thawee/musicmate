@@ -35,8 +35,8 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 144
-        versionName  = "3.23.2-"+ getDate()
+        versionCode = 145
+        versionName  = "3.24.0-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
@@ -61,8 +61,24 @@ android {
         }
     }
 
+    // Release signing comes from the environment (CI secrets or a local shell); without it the APK is unsigned
+    def releaseKeystore = System.getenv("MUSICMATE_KEYSTORE")
+    signingConfigs {
+        if (releaseKeystore) {
+            release {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("MUSICMATE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MUSICMATE_KEY_ALIAS")
+                keyPassword = System.getenv("MUSICMATE_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseKeystore) {
+                signingConfig = signingConfigs.release
+            }
             minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

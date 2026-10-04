@@ -1,9 +1,13 @@
-# MusicMate 3.23.2
+# MusicMate 3.24.0
 
-Fixes a crash when scanning a library that contains WAV files. Release builds moved one of the tag library's classes so that a lookup of its package returned nothing, and the scan stopped at the first WAV file. Earlier releases were very likely affected too.
+The APK on this page now installs. Releases 3.21.0 to 3.23.2 published an unsigned APK, which Android refuses with "App not installed". This release is signed with the MusicMate release key. If MusicMate is already on your phone from another source, uninstall it once first; later GitHub releases will then update in place.
 
-WAV files now keep their genre and embedded cover art. Previously the genre showed as "Unknown" unless MusicMate had written it, and covers stored inside WAV files were not shown.
+DLNA renderers on the phone's hotspot are now found without restarting MusicMate. Turning the hotspot on or off no longer makes every renderer disappear. The player picker updates while it is open, so renderers that answer late appear in place, and the Rescan action is gone.
 
-Also adds small null-safety fixes, including one for the server QR code if the server stops while the QR code is enlarged.
+Playback and streaming are more robust. An unreadable track skips to the next one instead of stopping the queue, long DLNA sessions keep the server awake past 4 hours, and an error in a background task is logged instead of closing the app. Database reads that froze the screen now run in the background.
 
-Version code: 144. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.23.2/CHANGELOG.md) for details.
+Genre, mood and style presets use single names, so "R&B / Soul" is no longer saved as two genres, and genre playlists match each of a track's genres. Older values are mapped to the new names. The DR12+ playlist no longer includes silent tracks.
+
+The tag editor opens Genre, Style, Mood and Origin with the full list, first run and the library screens are clearer, and the search box no longer opens the keyboard at launch.
+
+Version code: 145. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.24.0/CHANGELOG.md) for details.

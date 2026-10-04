@@ -48,6 +48,13 @@
 - [x] Fixes committed; 328 JVM tests pass (no existing reader tests; verified on emulator instead).
 - [x] Release 3.23.2 (code 144): optimized APK verified on the emulator (scan, 4 genres, WAV covers, Tech Info, no crashes). The phone was not connected, so the phone streaming/UPnP gates were not rerun; streaming code is unchanged since 3.23.1.
 
+# Release 3.24.0 (2026-10-04)
+- [x] Root cause of "GitHub APK will not install": every release since 3.21.0 published app-release-unsigned.apk; the phone reports INSTALL_PARSE_FAILED_NO_CERTIFICATES for the 3.23.2 asset.
+- [x] Release key generated outside the repo (~/.config/musicmate/musicmate-release.jks, SHA-256 b5757a1e...1d29ee). Gradle signs release builds from MUSICMATE_KEYSTORE* env vars; CI decodes the keystore secret, verifies the signature and fails without secrets.
+- [x] Local signed build verified: apksigner shows CN=MusicMate, code 145, 3.24.0.
+- [ ] User adds RELEASE_KEYSTORE_BASE64, RELEASE_KEYSTORE_PASSWORD, RELEASE_KEY_ALIAS secrets; then push tag v3.24.0.
+- [ ] Download the published MusicMate-v3.24.0.apk, apksigner verify, install on the phone after the one-time uninstall.
+
 # Release 3.23.1 (2026-10-04)
 
 - [x] Version 3.23.1 / code 143; changelog and release notes.

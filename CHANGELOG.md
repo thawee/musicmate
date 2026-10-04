@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.24.0] - 2026-10-04
+
 ### Fixed
+- **GitHub release APK would not install:** Releases 3.21.0 to 3.23.2 published `app-release-unsigned.apk`, which Android rejects ("App not installed", `INSTALL_PARSE_FAILED_NO_CERTIFICATES`). The release workflow now signs the APK with the MusicMate release key, verifies the signature, publishes it as `MusicMate-v<version>.apk`, and fails instead of publishing when the signing secrets are missing. A copy installed from Android Studio or another key must be uninstalled once before installing this release.
 - **Renderers on the phone's hotspot:** With Wi-Fi and the hotspot both on, renderers connected to the hotspot (e.g. a HiBy) were not found until MusicMate restarted. The server now rebinds when its network interfaces change (checked on hotspot and network events and every 30 s, deferred while streaming), and the player list keeps renderers on any network the server listens on instead of only the Wi-Fi subnet. Restarting the server in-process also no longer leaves discovery broken: each restart gets a fresh UPnP configuration, because shutting down the old stack stopped its shared worker threads.
 - **Player picker updates live:** Renderers that answered discovery after the picker opened never appeared until it was reopened, and the "Rescan for DLNA players" action could not show them either (the open list never recomputed). The open picker now refreshes every second, and the Rescan action is removed.
 - **UI freezes from database reads:** The saved play queue (loaded up to three times at startup) and the tag editor's Artist and genre lists were read on the main thread. They now load in the background; debug builds reject main-thread queries so new ones are caught early.
@@ -24,10 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **First run:** System Access has a back arrow and a Continue (or Not now) button. The folder dialog is opaque, shows readable locations ("Internal storage › Music"), labels its button "Add folder" and marks default folders.
 - **Library:** Category screens count "Categories", CD and Compressed get category art, playlist cover badges no longer break words at large text, artists and genres show coloured initials, and Similar Tracks explains an empty result.
 - **Settings and Music Center:** Off switches have a visible outline, the console is consistently called the Studio Console, the stopped server shows a neutral "Server Off", and queue actions use one neutral colour with tooltips. The empty queue's Playlists button uses the gold accent. The drawer moves long badges below their title.
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.23.2] - 2026-10-04
 
