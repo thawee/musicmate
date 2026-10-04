@@ -1057,9 +1057,9 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Playlists",
                 onClick = onOpenPlaylistPicker,
-                containerColor = Color(0x22BA68C8),
-                contentColor = Color(0xFFCE93D8),
-                borderColor = Color(0x55BA68C8),
+                containerColor = Color(0x22FFB300),
+                contentColor = Color(0xFFFFB300),
+                borderColor = Color(0x55FFB300),
                 modifier = Modifier.fillMaxWidth()
             )
             if (source == QueueManager.Source.MANUAL) {
@@ -1093,9 +1093,9 @@ private fun QueueEmptyActions(
                 QueueEmptyActionButton(
                     label = "Playlists",
                     onClick = onOpenPlaylistPicker,
-                    containerColor = Color(0x22BA68C8),
-                    contentColor = Color(0xFFCE93D8),
-                    borderColor = Color(0x55BA68C8),
+                    containerColor = Color(0x22FFB300),
+                    contentColor = Color(0xFFFFB300),
+                    borderColor = Color(0x55FFB300),
                     modifier = Modifier.weight(1f)
                 )
                 if (source == QueueManager.Source.MANUAL) {
