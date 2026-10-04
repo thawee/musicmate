@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Track analysis after a scan:** Measuring dynamic range for every track ran inside the scan job without progress, so the header stayed at "Scanning: 8302/8302 files" for hours. Android stops long jobs after a few minutes, and each restart repeated the whole folder scan before analysis continued. Analysis now runs as its own background work after the scan, shows "Analyzing: x/y tracks", and resumes with the tracks still missing DR when it is restarted. Starting a new scan pauses analysis until the scan finishes.
 - **Faster track analysis:** Up to 4 tracks are analyzed at once (half the CPU cores), about 2 to 3 times faster on a Galaxy S25 (1.8 to 5.1 tracks per second).
 - **ALAC temp files in music folders:** Analyzing an ALAC track wrote `temp_pcm.raw` into the album's folder, with the same name for every track. It now uses a unique file in the app cache and always deletes it.
+- **Tips stayed after "Don't show these tips again":** The library and queue tips saved the choice but stayed on screen until the app restarted. They now disappear at once.
 - **DR badge color:** The badge rounded the DR value for its label but truncated it for its color, so a 12.6 read "DR13" in the DR12 color while a 13.2 was green. Both now use the rounded value.
 
 ### Experimental — held from release

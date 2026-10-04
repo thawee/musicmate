@@ -148,9 +148,11 @@ object GestureHints {
         modifier: Modifier = Modifier
     ) {
         val context = LocalContext.current
+        // Preferences are not observable: remember the dismissal so the banner hides at once
+        var dismissed by remember { mutableStateOf(false) }
         val visibleHints = hints.filter { !hasShown(context, it) }
 
-        if (visibleHints.isNotEmpty()) {
+        if (!dismissed && visibleHints.isNotEmpty()) {
             Column(
                 modifier = modifier.fillMaxWidth()
             ) {
@@ -160,6 +162,7 @@ object GestureHints {
                 TextButton(
                     onClick = {
                         visibleHints.forEach { markShown(context, it) }
+                        dismissed = true
                         onDismissAll()
                     },
                     modifier = Modifier
