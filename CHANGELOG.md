@@ -61,8 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.23.0] - 2026-10-03
 
 ### Performance
-- **FLAC-to-WAV streaming:** Unused FLAC metadata payloads are skipped while preserving audio parameters, seek tables and validation. Earlier matched candidate tests reduced idle seek median by 38.7%; those candidate APKs also contained experiments excluded from this release, so that percentage is not a measurement of 3.23.0. See [PERFORMANCE.md section 16](PERFORMANCE.md#16-streaming-flac-metadata-skipping).
-- **Library path lookup:** A non-unique path index and preserving Room 2→3 migration retain tracks and listening history. Native Android lookup is 51.3× faster with 1.164 MiB additional storage; streaming improvement was not demonstrated. See [PERFORMANCE.md section 15](PERFORMANCE.md#15-non-unique-room-path-index-and-android-validation).
+- **FLAC-to-WAV streaming:** Unused FLAC metadata payloads are skipped while preserving audio parameters, seek tables and validation. Earlier matched candidate tests reduced idle seek median by 38.7%; those candidate APKs also contained experiments excluded from this release, so that percentage is not a measurement of 3.23.0. See [PERFORMANCE.md section 16](docs/technical/PERFORMANCE.md#16-streaming-flac-metadata-skipping).
+- **Library path lookup:** A non-unique path index and preserving Room 2→3 migration retain tracks and listening history. Native Android lookup is 51.3× faster with 1.164 MiB additional storage; streaming improvement was not demonstrated. See [PERFORMANCE.md section 15](docs/technical/PERFORMANCE.md#15-non-unique-room-path-index-and-android-validation).
 - **File metadata:** Size and modification time are read together per response, reducing conditional/range preparation time with a small allocation increase. Throughput remains unchanged and tail latency is mixed; see PERFORMANCE.md section 12.
 - **File response preparation:** ETag encoding and Last-Modified formatting allocate less memory while preserving response values. Matched phone runs showed lower seek latency and essentially unchanged bulk throughput; methods and evidence are in PERFORMANCE.md section 11.
 
@@ -291,9 +291,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - Updated `USER_GUIDE.md`, `README.md`, and `UI.md` for the current preview controls, collection/queue navigation, accessibility paths, and server start/stop behavior. The debug build and core/app unit tests pass; on-device UI verification is pending. Existing unrelated lint errors remain.
-- Updated [`DESIGN.md`](DESIGN.md) with ADR-029 for stable library identity, safe storage reconciliation, bounded paging, and collision-safe file operations.
-- Updated [`UI.md`](UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title separation, and Compose dialog lifecycle interop.
-- Updated [`UI.md`](UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover Back/Change Cover controls, and Save dirty-state feedback.
+- Updated [`DESIGN.md`](docs/technical/DESIGN.md) with ADR-029 for stable library identity, safe storage reconciliation, bounded paging, and collision-safe file operations.
+- Updated [`UI.md`](docs/technical/UI.md) ADR-028 with tag-editor draft recovery, partial batch-edit behavior, preview title separation, and Compose dialog lifecycle interop.
+- Updated [`UI.md`](docs/technical/UI.md) §5.B and ADR-009 for the tag preview UX pass: badges under the cover, hysteresis-based preview/edit transitions, animated header, cover Back/Change Cover controls, and Save dirty-state feedback.
 
 ## [3.19.7] - 2026-09-21
 

@@ -22,7 +22,7 @@ MusicMate is a music player and library manager for Android, made for people wit
 
 **Stream from your phone.** MusicMate runs a DLNA media server, so players and apps like mConnect or BubbleUPnP can browse and play your library directly, with no transcoding. It works on home Wi-Fi and on the phone's own hotspot. A web remote is available at `http://<phone-ip>:9000` in any browser.
 
-**Know your files.** MusicMate detects Hi-Res, DSD and MQA, measures dynamic range (DR), and flags "Hi-Res" files that are really upsampled CD audio. The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains what the labels mean.
+**Know your files.** MusicMate detects Hi-Res, DSD and MQA, measures dynamic range (DR), and flags "Hi-Res" files that are really upsampled CD audio. The [Music Quality Guide](docs/MUSIC_QUALITY_GUIDE.md) explains what the labels mean.
 
 **Fix your tags.** Edit title, artist, album, genre, mood and style with ready-made choices. Look up details on MusicBrainz, manage cover art, and organize files into folders.
 
@@ -45,7 +45,7 @@ Releases before 3.24.0 published an unsigned APK that Android refuses to install
 2. **Pick where to play.** Tap the player button to choose the phone, a Bluetooth or USB device, a DLNA player on your network, or another music app.
 3. **Play.** Tap a song to play it. Press and hold a song to open its details, where you can edit its tags.
 
-The [User Guide](USER_GUIDE.md) covers every screen in detail.
+The [User Guide](docs/USER_GUIDE.md) covers every screen in detail.
 
 ---
 
@@ -64,10 +64,10 @@ Your music stays on the phone. A control app browses it, and the streamer plays 
 
 ## More information
 
-*   **[User Guide](USER_GUIDE.md):** How to use each screen.
-*   **[Music Quality Guide](MUSIC_QUALITY_GUIDE.md):** Bit depth, sample rate and dynamic range explained.
+*   **[User Guide](docs/USER_GUIDE.md):** How to use each screen.
+*   **[Music Quality Guide](docs/MUSIC_QUALITY_GUIDE.md):** Bit depth, sample rate and dynamic range explained.
 *   **[Changelog](CHANGELOG.md):** What changed in each release.
-*   **[Technical Overview](TECHNICAL.md):** For developers. How the server and streaming engine work, performance figures, and links to the design documents.
+*   **[Technical Overview](docs/technical/TECHNICAL.md):** For developers. How the server and streaming engine work, performance figures, and links to the design documents.
 
 ---
 

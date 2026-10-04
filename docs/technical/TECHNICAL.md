@@ -1,6 +1,6 @@
 # MusicMate Technical Overview
 
-How MusicMate is built: the DLNA server, the SonicNIO streaming engine, its performance baseline, and the libraries it uses. For using the app, see the [README](README.md) and the [User Guide](USER_GUIDE.md).
+How MusicMate is built: the DLNA server, the SonicNIO streaming engine, its performance baseline, and the libraries it uses. For using the app, see the [README](../../README.md) and the [User Guide](../USER_GUIDE.md).
 
 ## 🗺 Developer Documentation
 
@@ -8,10 +8,12 @@ How MusicMate is built: the DLNA server, the SonicNIO streaming engine, its perf
 *   🎛️ **[Playback Architecture](PLAYBACK_ARCHITECTURE.md)** - How playback control, queue, Android app control, and DLNA control are integrated.
 *   🔌 **[WebSocket API](WEBSOCKET_API.md)** - Technical specification for real-time remote control.
 *   🖥️ **[Web UI & Server Architecture](WEBUI.md)** - Deep dive into the remote interface and the SonicNIO streaming server.
-*   🛠️ **[Contributing Guide](CONTRIBUTING.md)** - Developer setup, build instructions, and architecture overview.
+*   🛠️ **[Contributing Guide](../../CONTRIBUTING.md)** - Developer setup, build instructions, and architecture overview.
 *   🏗️ **[System Architecture & Design](DESIGN.md)** - Technical topology, audio engine pipelines, multi-target playback routing, and system ADRs.
 *   🎨 **[UI/UX Design System & Guidelines](UI.md)** - Interaction models, gestures, menus, Obsidian-Glass theming, and UI decision records.
 *   ⚡ **[Performance](PERFORMANCE.md)** - Measurement method and results for the streaming server.
+*   📶 **[Network Resilience](NETWORK_RESILIENCE.md)** - How the server follows Wi-Fi and hotspot changes.
+*   🗄️ **[Archive](../archive/)** - Superseded reviews and engine write-ups, kept for history.
 
 ---
 

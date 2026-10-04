@@ -1,3 +1,13 @@
+# Docs reorganization and User Guide (2026-10-04)
+- [x] Move docs with git mv (names unchanged): docs/ gets USER_GUIDE, MUSIC_QUALITY_GUIDE, screenshots; docs/technical/ gets TECHNICAL, DESIGN, UI, ECOSYSTEM, PLAYBACK_ARCHITECTURE, WEBSOCKET_API, WEBUI, PERFORMANCE, NETWORK_RESILIENCE; docs/archive/ gets superseded CHANGES_SUMMARY (removed HttpCore), NIO_WEB_ENGINE_10_10 (marked superseded), lib-review (2026-07). Root keeps README, CHANGELOG, CONTRIBUTING, RELEASE_NOTES (release workflow reads it).
+- [x] Script: rewrite relative links after the move and check every Markdown link and image in the repo resolves.
+- [x] Rewrite USER_GUIDE from the user's view, by task: getting started, browsing, playing and the queue, choosing a player, streaming and web remote, song details and tags, organizing files, quality badges, settings, troubleshooting. Check each behaviour on the phone while writing.
+- [x] Capture extra screenshots for the guide (menu, queue, tag edit form, settings, Studio Console) after analysis finishes, same crop/resize script.
+- [x] Verify links and images (check_links.py: 0 broken before and after the move), review, commit (no push).
+- [ ] Retake all README and User Guide screenshots on the emulator with a demo library of freely licensed music (CC0 / Creative Commons, covers free to use), so no copyrighted cover art or personal library is published. Current shots are from the user's phone (user decision 2026-10-04: keep as is until then).
+- [ ] DR mismatch: Studio Console / Now Playing show dynamicRange truncated ("DR 13" for '39) while lists show drScore rounded ("DR14"). Use one field everywhere.
+- [ ] Settings: "Album Gain" button text wraps onto two lines at default font size.
+
 # Scan analysis phase (2026-10-04, found during README screenshots)
 - [x] Deep scan (DR / extras for every track) runs inside the expedited ScanAudioFileWorker with no progress: header stays at "Scanning: 8302/8302 files" for hours. Job scheduler stops the job on timeout (observed STOP ... timeout after ~10 min, next run capped ~5 min) and WorkManager reruns the whole worker, repeating the folder walk and file check before resuming DR. Fix: separate DR worker chained after the scan that resumes from tracks without DR and reports "Analyzing: x/y". Verify on the phone, including a stop and resume.
 - [x] Fixed: AnalyzeTracksWorker (unique work MusicAnalyzeWork) runs after the scan, cancelled by any new scan. Phone: header "Analyzing: x/5387 tracks"; forced timeout (cmd jobscheduler timeout -n androidx.work.systemjobscheduler) at 22:13:26, new run 15 s later at 34/3428, no scan job ran.

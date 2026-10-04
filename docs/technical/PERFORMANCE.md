@@ -16,7 +16,7 @@ Evidence date: **2026-10-03**. Scope: MusicMate's Android HTTP audio server, inc
 | A Netty speed comparison remains uncertain | Historical measurements exist, but a silent fallback from Netty to SonicNIO is also documented | Do not certify the labelled runs as genuine Netty without active-engine evidence |
 | App CPU, GC pause and playback continuity improvements remain unproven | Isolated ART metadata allocation/GC counters improve (§14); exact app runtime counters and renderer listening comparison remain open | Do not extrapolate microbenchmark savings to end-to-end performance |
 
-Recorded implementation summary: [2026-10-03 streaming report](tasks/sonicnio-streaming-2026-10-03.md). Architectural constraints: [DESIGN.md, ADR-036 and ADR-037](DESIGN.md). Complete case inventory: [individual automated results](tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md).
+Recorded implementation summary: [2026-10-03 streaming report](../../tasks/sonicnio-streaming-2026-10-03.md). Architectural constraints: [DESIGN.md, ADR-036 and ADR-037](DESIGN.md). Complete case inventory: [individual automated results](../../tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md).
 
 ## 2. Concepts and approach
 
@@ -106,7 +106,7 @@ Workers construct responses; only the selector writes to sockets. An empty gener
 
 Same-connection seeks can reuse the connection. A new-connection seek at full media capacity is refused until an old transfer releases its slot. There is no total-duration cap on a progressing response. An empty producer queue must not be treated as a socket-write stall. Merely receiving an OP_WRITE event does not count as progress.
 
-Implementation sources: [NioHttpServer](core/src/main/java/apincer/music/core/http/NioHttpServer.java), [StreamingResponse](core/src/main/java/apincer/music/core/http/StreamingResponse.java), [FileResponse](core/src/main/java/apincer/music/core/http/FileResponse.java), [AudioBufferBudget](core/src/main/java/apincer/music/core/http/AudioBufferBudget.java), [SerialExecutor](core/src/main/java/apincer/music/core/http/SerialExecutor.java), [StreamDiagnostics](core/src/main/java/apincer/music/core/http/StreamDiagnostics.java), and [UPnP HTTP adapter](server-jupnp/src/main/java/apincer/music/server/nio/NioWebServerImpl.java).
+Implementation sources: [NioHttpServer](../../core/src/main/java/apincer/music/core/http/NioHttpServer.java), [StreamingResponse](../../core/src/main/java/apincer/music/core/http/StreamingResponse.java), [FileResponse](../../core/src/main/java/apincer/music/core/http/FileResponse.java), [AudioBufferBudget](../../core/src/main/java/apincer/music/core/http/AudioBufferBudget.java), [SerialExecutor](../../core/src/main/java/apincer/music/core/http/SerialExecutor.java), [StreamDiagnostics](../../core/src/main/java/apincer/music/core/http/StreamDiagnostics.java), and [UPnP HTTP adapter](../../server-jupnp/src/main/java/apincer/music/server/nio/NioWebServerImpl.java).
 
 ## 3. Measurement definitions and environment
 
@@ -145,7 +145,7 @@ The comparison did not control cache warmth, JIT compilation, thermal state, bat
 
 ### 4.1 Same-content USB before/after
 
-The archived [phone-check harness](tasks/performance/sonicnio-2026-10-03/harness/phone-check.py) runs these stages sequentially for each build:
+The archived [phone-check harness](../../tasks/performance/sonicnio-2026-10-03/harness/phone-check.py) runs these stages sequentially for each build:
 
 1. Download the original FLAC once; check body length against Content-Length, record status, timing and SHA-256.
 2. Send 12 deterministic 256 KiB range requests. Start offsets are (i × 313337) modulo (file length − 262144). Require 206 and exact equality with the original slice; record response-start timings.
@@ -169,7 +169,7 @@ The harness stores the slowest of 12 seeks as `seek_p95_ms`; that field is **rep
 | Converted full transfer | 2.592752 s | 1.250503 s | −51.8%; about 2.07× duration-based speedup |
 | Exact original + converted ranges | 16 / 16 | 16 / 16 | Pass in both builds |
 
-Raw results: [before](tasks/performance/sonicnio-2026-10-03/evidence/phone-before.json), [after](tasks/performance/sonicnio-2026-10-03/evidence/phone-after.json).
+Raw results: [before](../../tasks/performance/sonicnio-2026-10-03/evidence/phone-before.json), [after](../../tasks/performance/sonicnio-2026-10-03/evidence/phone-after.json).
 
 | Content | SHA-256, identical before and after |
 |---|---|
@@ -180,18 +180,18 @@ Interpretation: seek and converted-response timings were lower in this sample. T
 
 ### 4.2 Independent decoded-audio references
 
-The [audio-reference harness](tasks/performance/sonicnio-2026-10-03/harness/audio-reference.py) reads the selected source from the phone, requests WAV through the LG user-agent conversion path, extracts its PCM, and compares it byte-for-byte with an independent decoder. Apple `/usr/bin/afconvert -f WAVE -d LEI16` produced the references used in both cases.
+The [audio-reference harness](../../tasks/performance/sonicnio-2026-10-03/harness/audio-reference.py) reads the selected source from the phone, requests WAV through the LG user-agent conversion path, extracts its PCM, and compares it byte-for-byte with an independent decoder. Apple `/usr/bin/afconvert -f WAVE -d LEI16` produced the references used in both cases.
 
 | Test | PCM bytes | Format | Reference | Result |
 |---|---:|---|---|---|
 | FLAC → WAV, track 2122216336 | 29,529,360 | 16-bit, stereo, 44.1 kHz | Apple afconvert | Exact PCM equality |
 | ALAC → WAV, track 5563167 | 37,355,520 | 16-bit, stereo, 44.1 kHz | Apple afconvert | Exact PCM equality |
 
-The FLAC STREAMINFO MD5 was all zero, so it could not be used as a decoded-audio checksum reference. These results establish the exercised native-format output; they do not establish high-resolution, resampled, MQA or every renderer profile. Using an LG user agent is not a physical LG television playback test. [Raw reference results](tasks/performance/sonicnio-2026-10-03/evidence/audio-reference.json)
+The FLAC STREAMINFO MD5 was all zero, so it could not be used as a decoded-audio checksum reference. These results establish the exercised native-format output; they do not establish high-resolution, resampled, MQA or every renderer profile. Using an LG user agent is not a physical LG television playback test. [Raw reference results](../../tasks/performance/sonicnio-2026-10-03/evidence/audio-reference.json)
 
 ### 4.3 Audio with artwork burst and MP3 ranges
 
-The [artwork-burst harness](tasks/performance/sonicnio-2026-10-03/harness/artwork-burst.py) first obtains an expected FLAC hash. It then submits four original-audio downloads and 32 requests for one cover image to a 12-thread client pool. It requires all audio hashes to match and all covers to be nonempty and byte-identical. It subsequently downloads an MP3 and checks three 64 KiB ranges at offsets 0, 10000 and 100000.
+The [artwork-burst harness](../../tasks/performance/sonicnio-2026-10-03/harness/artwork-burst.py) first obtains an expected FLAC hash. It then submits four original-audio downloads and 32 requests for one cover image to a 12-thread client pool. It requires all audio hashes to match and all covers to be nonempty and byte-identical. It subsequently downloads an MP3 and checks three 64 KiB ranges at offsets 0, 10000 and 100000.
 
 | Test | Result |
 |---|---|
@@ -201,7 +201,7 @@ The [artwork-burst harness](tasks/performance/sonicnio-2026-10-03/harness/artwor
 | MP3 ranges | 3 / 3 exact matches to original bytes |
 | Recorded elapsed time | 1.455845 s, including the later MP3 download/range checks |
 
-This is a correctness/coexistence check. The 12-thread pool means 36 submitted requests are not all simultaneously active; repeated requests for one image do not model cold thumbnails or a large browse database. No per-audio latency series or audible continuity measurement was captured. [Raw burst results](tasks/performance/sonicnio-2026-10-03/evidence/artwork-burst.json)
+This is a correctness/coexistence check. The 12-thread pool means 36 submitted requests are not all simultaneously active; repeated requests for one image do not model cold thumbnails or a large browse database. No per-audio latency series or audible continuity measurement was captured. [Raw burst results](../../tasks/performance/sonicnio-2026-10-03/evidence/artwork-burst.json)
 
 ### 4.4 Wi-Fi, memory and logs
 
@@ -235,7 +235,7 @@ The retained Gradle XML has **156 core cases and 43 UPnP cases, all passing with
 | UPnP module tests | 43 | Browse/search/metadata, request checks, time parsing and time seek, feature/registrar behavior |
 | **Total** | **199** | Functional/regression coverage; not 199 performance benchmarks |
 
-Every individual method name, outcome and JUnit execution time is listed in [TEST_RESULTS.md](tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md), grouped by all 35 suites. Exact stimuli/assertions are available through each suite's source link. The [normalized JUnit evidence](tasks/performance/sonicnio-2026-10-03/evidence/junit-results.json) also retains timestamps and fuzz/soak output.
+Every individual method name, outcome and JUnit execution time is listed in [TEST_RESULTS.md](../../tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md), grouped by all 35 suites. Exact stimuli/assertions are available through each suite's source link. The [normalized JUnit evidence](../../tasks/performance/sonicnio-2026-10-03/evidence/junit-results.json) also retains timestamps and fuzz/soak output.
 
 ### 5.2 Targeted streaming regressions
 
@@ -277,7 +277,7 @@ Fuzz assertions check resilience and framing/health, not comprehensive protocol 
 
 ### 5.4 Soak methodology and results
 
-The [soak test](core/src/test/java/apincer/music/core/http/NioHttpServerSoakTest.java) uses a deterministic 4 MiB file with bytes i modulo 251. Each client randomly chooses whole-file reads, ranges, persistent-connection requests, deliberate mid-stream resets or WebSocket bursts. The server permits 256 media streams during this steady-state test; saturation is checked separately. At the end it waits up to ten seconds for active streams/connections to drain and requires zero collected errors. Deliberate resets are test traffic, not counted as failed expected transfers.
+The [soak test](../../core/src/test/java/apincer/music/core/http/NioHttpServerSoakTest.java) uses a deterministic 4 MiB file with bytes i modulo 251. Each client randomly chooses whole-file reads, ranges, persistent-connection requests, deliberate mid-stream resets or WebSocket bursts. The server permits 256 media streams during this steady-state test; saturation is checked separately. At the end it waits up to ten seconds for active streams/connections to drain and requires zero collected errors. Deliberate resets are test traffic, not counted as failed expected transfers.
 
 | Recorded run | Clients / duration | Operations | Aggregate rate | Range TTFB p50 / p95 | Errors |
 |---|---|---:|---:|---:|---:|
@@ -301,13 +301,13 @@ The initial repetition attempt observed an HTTP/1.0 case with a missing parsed C
 
 An intermediate progress-deadline run also failed the old stalled-reader test because it still configured the keep-alive/idle timeout. The test was updated to exercise the new write-stall timeout explicitly; the final WRITE_STALL regression passes. This is separate from the unexplained HTTP/1.0 failure.
 
-[Repeat results and original-log hashes](tasks/performance/sonicnio-2026-10-03/evidence/repeat-results.json). Archived repeat harnesses invoke JUnitCore and check each process exit code. They require a freshly built classpath; their historical /private/tmp paths are prerequisites, not portable ready-to-run commands.
+[Repeat results and original-log hashes](../../tasks/performance/sonicnio-2026-10-03/evidence/repeat-results.json). Archived repeat harnesses invoke JUnitCore and check each process exit code. They require a freshly built classpath; their historical /private/tmp paths are prerequisites, not portable ready-to-run commands.
 
 ## 6. Historical comparisons
 
 ### 6.1 SonicNIO and Netty-labelled Wi-Fi runs
 
-Source: tasks/todo.md, “SonicNIO to top grade (2026-10-01),” after f1438181, and DESIGN.md ADR-037. These used the Galaxy S25 hotspot, Mac client and reported 261 MB FLAC. The [LAN benchmark script](tools/bench/stream-bench.sh) measures one full transfer, 20 random 256 KiB seeks, four parallel full transfers, and optional sampled app CPU via adb top.
+Source: tasks/todo.md, “SonicNIO to top grade (2026-10-01),” after f1438181, and DESIGN.md ADR-037. These used the Galaxy S25 hotspot, Mac client and reported 261 MB FLAC. The [LAN benchmark script](../../tools/bench/stream-bench.sh) measures one full transfer, 20 random 256 KiB seeks, four parallel full transfers, and optional sampled app CPU via adb top.
 
 | Historical metric | SonicNIO | Netty-labelled runs |
 |---|---:|---:|
@@ -403,17 +403,17 @@ The supported conclusion is that the exercised implementation now has verified o
 
 | Artifact | Contents |
 |---|---|
-| [Individual automated results](tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md) | Every retained core/UPnP test case, result and execution time |
-| [JUnit snapshot](tasks/performance/sonicnio-2026-10-03/evidence/junit-results.json) | 35 suites, 199 cases, UTC timestamps, durations, fuzz seeds and default soak stdout |
-| [Repeat snapshot](tasks/performance/sonicnio-2026-10-03/evidence/repeat-results.json) | 40 runs, test counts, execution durations and SHA-256 of original temporary logs |
-| [Before device results](tasks/performance/sonicnio-2026-10-03/evidence/phone-before.json) | Original/converted timing, hashes, range counts and parallel rate |
-| [After device results](tasks/performance/sonicnio-2026-10-03/evidence/phone-after.json) | Same metrics after implementation |
-| [PCM reference results](tasks/performance/sonicnio-2026-10-03/evidence/audio-reference.json) | Independent FLAC/ALAC decoded-audio equality |
-| [Artwork/MP3 results](tasks/performance/sonicnio-2026-10-03/evidence/artwork-burst.json) | Burst counts, mixed-scenario elapsed time and MP3 ranges |
-| [Manifest](tasks/performance/sonicnio-2026-10-03/evidence/manifest.json) | Source anchor/state, source and archived evidence/harness digests |
-| [Historical harness directory](tasks/performance/sonicnio-2026-10-03/harness/) | Exact available session scripts; prerequisites and limitations described above |
-| [Earlier implementation report](tasks/sonicnio-streaming-2026-10-03.md) | Extended soak and focused stress observations, verification and unresolved issues |
-| [Design records](DESIGN.md) / [task history](tasks/todo.md) | ADR-036/037 constraints, historical engine/pooling measurements and invalid-run context |
+| [Individual automated results](../../tasks/performance/sonicnio-2026-10-03/TEST_RESULTS.md) | Every retained core/UPnP test case, result and execution time |
+| [JUnit snapshot](../../tasks/performance/sonicnio-2026-10-03/evidence/junit-results.json) | 35 suites, 199 cases, UTC timestamps, durations, fuzz seeds and default soak stdout |
+| [Repeat snapshot](../../tasks/performance/sonicnio-2026-10-03/evidence/repeat-results.json) | 40 runs, test counts, execution durations and SHA-256 of original temporary logs |
+| [Before device results](../../tasks/performance/sonicnio-2026-10-03/evidence/phone-before.json) | Original/converted timing, hashes, range counts and parallel rate |
+| [After device results](../../tasks/performance/sonicnio-2026-10-03/evidence/phone-after.json) | Same metrics after implementation |
+| [PCM reference results](../../tasks/performance/sonicnio-2026-10-03/evidence/audio-reference.json) | Independent FLAC/ALAC decoded-audio equality |
+| [Artwork/MP3 results](../../tasks/performance/sonicnio-2026-10-03/evidence/artwork-burst.json) | Burst counts, mixed-scenario elapsed time and MP3 ranges |
+| [Manifest](../../tasks/performance/sonicnio-2026-10-03/evidence/manifest.json) | Source anchor/state, source and archived evidence/harness digests |
+| [Historical harness directory](../../tasks/performance/sonicnio-2026-10-03/harness) | Exact available session scripts; prerequisites and limitations described above |
+| [Earlier implementation report](../../tasks/sonicnio-streaming-2026-10-03.md) | Extended soak and focused stress observations, verification and unresolved issues |
+| [Design records](DESIGN.md) / [task history](../../tasks/todo.md) | ADR-036/037 constraints, historical engine/pooling measurements and invalid-run context |
 
 Normalized snapshots preserve available results beyond temporary-directory cleanup. Hashes of original repeat logs establish their identity but do not preserve their full content; unavailable raw artifacts are explicitly identified in the relevant sections. No missing measurements have been reconstructed or invented.
 
@@ -429,7 +429,7 @@ This follow-up compares the already-improved reliability implementation with two
 
 ### 10.2 Host methodology and provenance
 
-The reproducible [ThroughputBenchmark.java](tools/bench/ThroughputBenchmark.java) and [instructions](tools/bench/README.md) use deterministic 16 MiB content on host loopback. Every whole response must have status 200, the declared length and matching SHA-256; every range must have status 206 and exactly match its 64 KiB reference slice. Each server has four HTTP workers and 16 media slots. The workloads are:
+The reproducible [ThroughputBenchmark.java](../../tools/bench/ThroughputBenchmark.java) and [instructions](../../tools/bench/README.md) use deterministic 16 MiB content on host loopback. Every whole response must have status 200, the declared length and matching SHA-256; every range must have status 206 and exactly match its 64 KiB reference slice. Each server has four HTTP workers and 16 media slots. The workloads are:
 
 | Workload | Client behavior | What it isolates |
 |---|---|---|
@@ -439,7 +439,7 @@ The reproducible [ThroughputBenchmark.java](tools/bench/ThroughputBenchmark.java
 
 Each workload has a two-second unreported warmup and three two-second measured load periods. The last request finishes after the period ends. Throughput counts completed full bodies and excludes range bytes. Its elapsed time includes client allocation/hashing. TTFB is the first response-header byte; run p95 is sorted element floor(N × 0.95). Tables below report the median throughput and **median of the three run p95 values**, not a pooled p95. Resource checks require zero remaining connections, streams and audio reservations. Any exception rejects the configuration, rather than counting incomplete transfers as complete.
 
-Baseline sources were hashed before edits. The initial runtime classpath referred to a mutable build JAR rather than the javac directory, so it was not a durable bytecode snapshot. For repeated baseline runs, the three original production sources were reconstructed in scratch, verified byte-for-byte against those pre-edit SHA-256 values, compiled into an isolated directory, and placed before the current runtime JAR in the classpath. The archived [baseline-to-retained patch](tasks/performance/sonicnio-throughput-2026-10-03/evidence/baseline-to-retained.patch) and [manifest](tasks/performance/sonicnio-throughput-2026-10-03/evidence/manifest.json) retain the source identities and difference. The benchmark classpath-export task is now [checked into the repository](tools/bench/test-classpath.gradle).
+Baseline sources were hashed before edits. The initial runtime classpath referred to a mutable build JAR rather than the javac directory, so it was not a durable bytecode snapshot. For repeated baseline runs, the three original production sources were reconstructed in scratch, verified byte-for-byte against those pre-edit SHA-256 values, compiled into an isolated directory, and placed before the current runtime JAR in the classpath. The archived [baseline-to-retained patch](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/baseline-to-retained.patch) and [manifest](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/manifest.json) retain the source identities and difference. The benchmark classpath-export task is now [checked into the repository](../../tools/bench/test-classpath.gradle).
 
 There are 99 successful measured host samples across baseline, prototype matrix, final implementation and file-budget confirmation phases. These are short, same-JVM client/server experiments with fresh JVM/server warmup, client GC/hash costs and uncontrolled background/thermal variation. Prototype rows predate the final parking/startup-allocation refinements; only rows labelled retained-batch describe the retained batching implementation. The final comparison ran batching first, then the baseline; it is not a randomized interleaved statistical study.
 
@@ -468,7 +468,7 @@ The generated-body improvement was consistent across the matrix: approximately 1
 | 512 KiB solo, retained implementation | 676.141 MiB/s | Similar to later 256 KiB confirmation; insufficient evidence to raise default |
 | 256 KiB retained confirmation | 674.564 MiB/s | Retain conservative default |
 
-These experiments do not imply a sixfold improvement in a music decoder, Android Wi-Fi rate or renderer playback. The native paths and decoder costs are different bottlenecks. [All host samples](tasks/performance/sonicnio-throughput-2026-10-03/evidence/host-results.json), [calculated summaries](tasks/performance/sonicnio-throughput-2026-10-03/evidence/summary.json).
+These experiments do not imply a sixfold improvement in a music decoder, Android Wi-Fi rate or renderer playback. The native paths and decoder costs are different bottlenecks. [All host samples](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/host-results.json), [calculated summaries](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/summary.json).
 
 ### 10.4 Matched phone comparison
 
@@ -491,11 +491,11 @@ The primary table compares the three before runs with the three retained-after r
 
 The first retained-after WAV took 0.977 s, followed by 0.827 s and 0.831 s. Before values were 0.852 s, 0.811 s and 0.884 s. Installation/restart, cache/JIT state and USB/client noise were not controlled or alternated. The first tuned-build median was 0.873 s and is also preserved; selecting only faster samples would misrepresent the result. The practical conclusion is **no demonstrated substantial real-phone throughput gain**, despite greater synthetic small-write headroom. Improved seek timings and slower response-start timings are observations, not established causal effects.
 
-[All nine phone runs](tasks/performance/sonicnio-throughput-2026-10-03/evidence/phone-results.json). The three first-after runs also passed their 48 range checks and 12 parallel hash checks. Across all nine runs, 144 ranges and 36 parallel hashes passed. No matched Wi-Fi, CPU/GC/battery or physical-renderer continuity measurement was added.
+[All nine phone runs](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/phone-results.json). The three first-after runs also passed their 48 range checks and 12 parallel hash checks. Across all nine runs, 144 ranges and 36 parallel hashes passed. No matched Wi-Fi, CPU/GC/battery or physical-renderer continuity measurement was added.
 
 ### 10.5 Failures, regression coverage and validation
 
-A prototype generated response was cut short during the no-batching control run. Lifecycle diagnostics showed a producer NullPointerException calling flip on a cleared producerBuffer after transmitting 69,632 of 16,777,216 expected bytes. A producer waiting for queue space releases the monitor; the selector can drain its partial buffer before it reacquires that monitor. Publication now rechecks ownership after the wait, and both parking and producer-stall detection recognize deliverable partial batches. The comparison was stopped, the cause fixed and a focused regression added before successful runs resumed. [Rejected experiment record](tasks/performance/sonicnio-throughput-2026-10-03/evidence/failed-experiment.json)
+A prototype generated response was cut short during the no-batching control run. Lifecycle diagnostics showed a producer NullPointerException calling flip on a cleared producerBuffer after transmitting 69,632 of 16,777,216 expected bytes. A producer waiting for queue space releases the monitor; the selector can drain its partial buffer before it reacquires that monitor. Publication now rechecks ownership after the wait, and both parking and producer-stall detection recognize deliverable partial batches. The comparison was stopped, the cause fixed and a focused regression added before successful runs resumed. [Rejected experiment record](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/failed-experiment.json)
 
 Six additional regression cases passed:
 
@@ -508,13 +508,13 @@ Six additional regression cases passed:
 | shortProducer_flushesFirstBytesBeforePausingAndStillFailsLengthCheck | Publish three bytes immediately from a declared 1,000-byte response; pause is observable without full-chunk delay; short completion still fails and releases memory |
 | changingTurnBudget_preservesFileOffsetsAndExactTail | Write 1 MiB, then 256 KiB, then a 123-byte file tail; no lost/duplicated bytes and exactly one slot release |
 
-The final checks passed **162 core + 43 UPnP = 205 unique tests**, zero failures/errors/skips, and debug assembly. The benchmark-classpath export task was exercised successfully. The retained APK was installed and launched, and USB verification used that installed APK. [All 205 individual results](tasks/performance/sonicnio-throughput-2026-10-03/TEST_RESULTS.md), [JUnit snapshot](tasks/performance/sonicnio-throughput-2026-10-03/evidence/junit-results.json).
+The final checks passed **162 core + 43 UPnP = 205 unique tests**, zero failures/errors/skips, and debug assembly. The benchmark-classpath export task was exercised successfully. The retained APK was installed and launched, and USB verification used that installed APK. [All 205 individual results](../../tasks/performance/sonicnio-throughput-2026-10-03/TEST_RESULTS.md), [JUnit snapshot](../../tasks/performance/sonicnio-throughput-2026-10-03/evidence/junit-results.json).
 
 The earlier unexplained HTTP/1.0 failure remains unresolved; the demonstrated batching race is a separate issue. This work does not establish that the possible HiBy/MQA dropout or all historical intermittent closures are fixed. No verified Netty or Grizzly head-to-head was performed. Remaining gates are controlled native-file regression profiling, matched Wi-Fi measurements, active-engine proof for any Netty run, allocation/GC sampling and audible playback on real renderers.
 
 ## 11. Metadata encoding follow-up
 
-Implemented the first recommendation from the [Hella/yelmach source review](tasks/sonicnio-http-server-research-2026-10-03.md): encode only the eight digest bytes retained in ETags and share an immutable English/GMT date formatter, with legacy formatting for unusual timestamps. Validators, dates and audio content remain byte-identical. General header encoding, request parsing, pooling and transfer budgets were held constant.
+Implemented the first recommendation from the [Hella/yelmach source review](../../tasks/sonicnio-http-server-research-2026-10-03.md): encode only the eight digest bytes retained in ETags and share an immutable English/GMT date formatter, with legacy formatting for unusual timestamps. Validators, dates and audio content remain byte-identical. General header encoding, request parsing, pooling and transfer budgets were held constant.
 
 | Measurement | Before | After | Observed change |
 | --- | ---: | ---: | ---: |
@@ -532,7 +532,7 @@ Retained 120 host preparation/allocation samples, 24 host transfer samples and s
 
 The clear outcome is reduced response-preparation allocation. Phone latency is promising, with three retained samples per build; runtime/cache/device effects remain possible. Bulk throughput is unchanged. Host allocation does not establish Android GC or battery effects, and no Netty superiority is demonstrated.
 
-[Detailed concepts, implementation, methodology, results and reproduction](tasks/performance/sonicnio-metadata-2026-10-03/REPORT.md), [all individual tests](tasks/performance/sonicnio-metadata-2026-10-03/TEST_RESULTS.md), [raw samples and calculations](tasks/performance/sonicnio-metadata-2026-10-03/evidence/summary.json), [source/APK/evidence digests](tasks/performance/sonicnio-metadata-2026-10-03/evidence/manifest.json).
+[Detailed concepts, implementation, methodology, results and reproduction](../../tasks/performance/sonicnio-metadata-2026-10-03/REPORT.md), [all individual tests](../../tasks/performance/sonicnio-metadata-2026-10-03/TEST_RESULTS.md), [raw samples and calculations](../../tasks/performance/sonicnio-metadata-2026-10-03/evidence/summary.json), [source/APK/evidence digests](../../tasks/performance/sonicnio-metadata-2026-10-03/evidence/manifest.json).
 
 ## 12. File metadata snapshot follow-up
 
@@ -552,7 +552,7 @@ Replaced five File size/mtime lookups per normal response with one bulk attribut
 
 Retained for substantially lower preparation time at a small allocation cost. Bulk throughput is unchanged, end-to-end tail latency is mixed, and no Netty advantage is demonstrated. These comparisons use the preceding encoding optimization as their baseline, so their percentages must not be added to section 11.
 
-[Full concepts, method, individual-test explanations and results](tasks/performance/sonicnio-stat-2026-10-03/REPORT.md), [all 209 tests](tasks/performance/sonicnio-stat-2026-10-03/TEST_RESULTS.md), [raw calculations and ranges](tasks/performance/sonicnio-stat-2026-10-03/evidence/summary.json), [source/APK/evidence digests](tasks/performance/sonicnio-stat-2026-10-03/evidence/manifest.json).
+[Full concepts, method, individual-test explanations and results](../../tasks/performance/sonicnio-stat-2026-10-03/REPORT.md), [all 209 tests](../../tasks/performance/sonicnio-stat-2026-10-03/TEST_RESULTS.md), [raw calculations and ranges](../../tasks/performance/sonicnio-stat-2026-10-03/evidence/summary.json), [source/APK/evidence digests](../../tasks/performance/sonicnio-stat-2026-10-03/evidence/manifest.json).
 
 ## 13. Request framing and copy reduction
 
@@ -572,7 +572,7 @@ Compared baseline, copy-only and final classes independently: 180 fully buffered
 
 24 host transfer samples showed no consistent native throughput gain. Initial phone tail/start regressions prompted an independent six-install repeat; all twelve retained runs and warmups remain archived. Both phone series had higher seek maxima. Their cause is unproven and requires device profiling; retaining protocol correctness/copy savings must not be presented as an end-to-end latency win.
 
-All 219 core/UPnP tests, debug build, body/range/metadata checks and seventeen Android framing probes passed. The final APK remains installed and hash-verified. [Full concepts, methodology, variant comparison and adverse results](tasks/performance/sonicnio-parser-2026-10-03/REPORT.md), [all individual tests](tasks/performance/sonicnio-parser-2026-10-03/TEST_RESULTS.md), [calculations and extrema](tasks/performance/sonicnio-parser-2026-10-03/evidence/summary.json), [source/APK/evidence digests](tasks/performance/sonicnio-parser-2026-10-03/evidence/manifest.json).
+All 219 core/UPnP tests, debug build, body/range/metadata checks and seventeen Android framing probes passed. The final APK remains installed and hash-verified. [Full concepts, methodology, variant comparison and adverse results](../../tasks/performance/sonicnio-parser-2026-10-03/REPORT.md), [all individual tests](../../tasks/performance/sonicnio-parser-2026-10-03/TEST_RESULTS.md), [calculations and extrema](../../tasks/performance/sonicnio-parser-2026-10-03/evidence/summary.json), [source/APK/evidence digests](../../tasks/performance/sonicnio-parser-2026-10-03/evidence/manifest.json).
 
 ## 14. Lazy FLAC decoder scratch allocation
 
@@ -585,7 +585,7 @@ Metadata-only FLAC reads now defer FrameDecoder construction until the first aud
 
 Six fresh JVMs, three samples per JVM, interleaved variants, 64 warmups and 128 operations/sample; final loaded-class origins verified. An initial series confirms the allocation values with different timing. All 222 core/UPnP tests pass, including metadata-only allocation, first-read/first-seek initialization, decoder reuse and byte-identical 16/24-bit WAV/ranges. The Android follow-up below supersedes the initial host-only retention recommendation.
 
-[Full methodology, every sample, test results and preserved sources](tasks/performance/sonicnio-lazy-flac-2026-10-03/REPORT.md).
+[Full methodology, every sample, test results and preserved sources](../../tasks/performance/sonicnio-lazy-flac-2026-10-03/REPORT.md).
 
 ### 14.1 Physical-phone follow-up: hold from release
 
@@ -602,7 +602,7 @@ Twelve warmed-up, interleaved app runs use APKs differing in only one DEX entry.
 | Median per-run sampled maximum PSS | 225.621 MiB | 257.349 MiB | **+14.1%; higher in both series** |
 | Converted HEAD median | 14.274 ms | 16.672 ms | +16.8%; direction differs by series |
 
-Byte/range/metadata checks and all 222 tests pass. Lower allocation is confirmed, but latency and sampled memory do not establish an app performance benefit. **Hold the lazy decoder change from release pending profiling**; candidate source/build/APK remains restored for investigation. No rollback or Netty/Wi-Fi throughput claim. [Full concepts, methods, every run, adverse/control results and evidence](tasks/performance/sonicnio-lazy-flac-2026-10-03/PHONE_RESULTS.md).
+Byte/range/metadata checks and all 222 tests pass. Lower allocation is confirmed, but latency and sampled memory do not establish an app performance benefit. **Hold the lazy decoder change from release pending profiling**; candidate source/build/APK remains restored for investigation. No rollback or Netty/Wi-Fi throughput claim. [Full concepts, methods, every run, adverse/control results and evidence](../../tasks/performance/sonicnio-lazy-flac-2026-10-03/PHONE_RESULTS.md).
 
 ### 14.2 Perfetto follow-up: fewer collections, attribution still unresolved
 
@@ -610,7 +610,7 @@ Four matched eager/lazy/lazy/eager installs, each with traced and untraced phase
 
 Untraced pooled seek median is 13.525 → 13.332 ms and p95 23.281 → 20.762 ms, while maximum is 26.531 → 28.128 ms. Tracing reverses median/p95 direction. Four unnamed app worker threads consume 76.8–81.3% of app CPU; their function is unproven. Host/device clock uncertainty of approximately ±24 ms prevents reliable per-request scheduling attribution. **Release hold remains**; next identify those workers and use device-side request/backoff timestamps under controlled idle/busy workloads. Candidate APK restored; no production change or Netty throughput claim.
 
-[Every phase, methodology, controls, trace findings, limitations and compressed raw traces](tasks/performance/sonicnio-seek-profile-2026-10-03/REPORT.md).
+[Every phase, methodology, controls, trace findings, limitations and compressed raw traces](../../tasks/performance/sonicnio-seek-profile-2026-10-03/REPORT.md).
 
 ### 14.3 Busy workers identified: unindexed library-scan path lookup
 
@@ -618,7 +618,7 @@ Three 12-second CPU-stack captures verify another 528 streaming requests. The re
 
 An integrity-checked copy of the phone's 8,289-track database has no path index and uses `SCAN musictag`. Adding a non-unique path index to an isolated copy preserves full query results and changes the plan to indexed search. Host lookup medians are 3,693 → 16.3 µs initially and 1,810 → 14.0 µs in confirmation. Indexed storage grows by 1.164 MiB (10.0%). **These are host database lookup results, not Android scan/streaming improvements.** Next implement a preserving Room 2→3 migration and measure on-device scan/streaming coexistence. Lazy FLAC and parser/copy release holds remain; production and live schema unchanged, candidate restored.
 
-[Concepts, every capture, all lookup samples, query plans, failures, limitations and raw recordings](tasks/performance/sonicnio-worker-profile-2026-10-03/REPORT.md).
+[Concepts, every capture, all lookup samples, query plans, failures, limitations and raw recordings](../../tasks/performance/sonicnio-worker-profile-2026-10-03/REPORT.md).
 
 ## 15. Non-unique Room path index and Android validation
 
@@ -628,7 +628,7 @@ Native Android SQLite lookup median falls **2,691.788 → 52.507 µs (51.3×)**.
 
 Two series with reversed load order verify **2,112 measured streaming requests** against the same indexed server APK. Pooled seeks (192/condition) have median **17.925 ms idle, 4.941 ms with busy unindexed lookups, 17.940 ms with indexed lookups**; p95 is **19.317, 6.737, 19.222 ms**. The result repeats and does not show a streaming gain: indexed behaves like idle, while sustained expensive work changes runtime conditions. CPU-frequency behavior and selector backoff remain hypotheses, not established causes.
 
-Keep the index as a measured database optimization candidate. Existing lazy-FLAC/parser-copy release holds remain; no Netty/throughput claim. Next profile idle delays using device timestamps, scheduling/frequency traces and explicit server/backoff events. [Concepts, production approach, migration proof, every sample/test, repeated adverse results and raw evidence](tasks/performance/sonicnio-path-index-2026-10-03/REPORT.md).
+Keep the index as a measured database optimization candidate. Existing lazy-FLAC/parser-copy release holds remain; no Netty/throughput claim. Next profile idle delays using device timestamps, scheduling/frequency traces and explicit server/backoff events. [Concepts, production approach, migration proof, every sample/test, repeated adverse results and raw evidence](../../tasks/performance/sonicnio-path-index-2026-10-03/REPORT.md).
 
 ### 15.1 Idle seek attribution: metadata work before headers
 
@@ -636,7 +636,7 @@ Nine unchanged-server invocations verify **3,168 requests**. Four traces align a
 
 The confirmation trace has seek median **13.871 ms**, summed worker Running median **8.818 ms** and worker runnable median **0.475 ms**. Its fastest/slowest seek quartiles have worker CPU medians **4.629/11.789 ms** and reported Running-weighted frequencies **1,475/557 MHz**. This is correlation, not independent proof of power-governor causation. No recorded server GC pause overlaps those 96 seek intervals. Missing worker ownership in initial traces is corrected with validated confirmation thread inventories; initial partial aggregates are not CPU estimates.
 
-CPU-only stacks identify `FlacToWav.open → readAndHandleMetadataBlock → readFully`: byte reads and CRC updates account for **73.24% of worker self event periods**. Selector sleeping includes normal poll/handler waits and does not establish a backoff defect. Next test a streaming-specific path that skips unused metadata while preserving STREAMINFO, seek tables, validation and offsets. Production unchanged; existing release holds remain, candidate restored. [Every measurement, methods, corrected attribution, raw traces/stacks and verification](tasks/performance/sonicnio-idle-seek-2026-10-03/REPORT.md).
+CPU-only stacks identify `FlacToWav.open → readAndHandleMetadataBlock → readFully`: byte reads and CRC updates account for **73.24% of worker self event periods**. Selector sleeping includes normal poll/handler waits and does not establish a backoff defect. Next test a streaming-specific path that skips unused metadata while preserving STREAMINFO, seek tables, validation and offsets. Production unchanged; existing release holds remain, candidate restored. [Every measurement, methods, corrected attribution, raw traces/stacks and verification](../../tasks/performance/sonicnio-idle-seek-2026-10-03/REPORT.md).
 
 ## 16. Streaming FLAC metadata skipping
 
@@ -646,10 +646,10 @@ With a synthetic 1 MiB unused metadata block, host allocation falls **1,057,416 
 
 Eight phone runs in opposite APK orders verify **5,632 requests**. Both APKs retain database version 3 and differ only in two DEX entries. Combined idle converted seeks (384/variant) improve **median 16.738 → 10.255 ms (−38.7%)**, **p95 19.600 → 12.248 ms**, **p99 20.309 → 14.514 ms**, and **maximum 23.012 → 16.701 ms**. Idle median improvement repeats in both series; controlled unindexed/indexed work also improves in the initial series. No profiling runs during the latency comparison.
 
-Keep this measured optimization candidate. Earlier lazy-decoder/parser release holds remain separate; this single-track, device-local experiment does not establish Wi-Fi/bulk throughput or a Netty advantage. Candidate APK/activity restored. [Concepts, exact approach, all correctness cases, every benchmark phase/sample, reversed results and limits](tasks/performance/sonicnio-metadata-skip-2026-10-03/REPORT.md).
+Keep this measured optimization candidate. Earlier lazy-decoder/parser release holds remain separate; this single-track, device-local experiment does not establish Wi-Fi/bulk throughput or a Netty advantage. Candidate APK/activity restored. [Concepts, exact approach, all correctness cases, every benchmark phase/sample, reversed results and limits](../../tasks/performance/sonicnio-metadata-skip-2026-10-03/REPORT.md).
 
 ## 17. Release 3.23.0 correctness check
 
 3.23.0 ships the retained changes from sections 10–12, 15 and 16 plus the reliability work. It excludes the experiments in sections 13 and 14. This was a correctness gate, not a performance comparison. The section 16 percentage came from candidate APKs that also contained the held experiments, so it is not a 3.23.0 measurement.
 
-The optimized APK first failed at startup because R8 removed jUPnP members and generic signatures used through reflection. Once release builds kept warning and error logs, those logs also exposed jaudiotagger reflection failures that 3.22.0 had shipped. Targeted consumer rules fix both. The final APK passed 219 JVM cases, startup without reflection errors, 352/352 device-local streaming requests with a full-WAV SHA-256 check, and UPnP description, SCPD and SOAP control checks. Time-to-headers latency is reported descriptively and varies with startup background analysis (seek median 3.9 ms quiet, about 10 ms during analysis). No throughput or Netty claim is made. Method, hashes, limits and evidence: [release report](tasks/performance/sonicnio-release-3.23.0-2026-10-03/REPORT.md).
+The optimized APK first failed at startup because R8 removed jUPnP members and generic signatures used through reflection. Once release builds kept warning and error logs, those logs also exposed jaudiotagger reflection failures that 3.22.0 had shipped. Targeted consumer rules fix both. The final APK passed 219 JVM cases, startup without reflection errors, 352/352 device-local streaming requests with a full-WAV SHA-256 check, and UPnP description, SCPD and SOAP control checks. Time-to-headers latency is reported descriptively and varies with startup background analysis (seek median 3.9 ms quiet, about 10 ms during analysis). No throughput or Netty claim is made. Method, hashes, limits and evidence: [release report](../../tasks/performance/sonicnio-release-3.23.0-2026-10-03/REPORT.md).

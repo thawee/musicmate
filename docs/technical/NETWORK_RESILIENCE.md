@@ -35,7 +35,7 @@ IDLE ──start()──► STARTING ──► RUNNING ──stop()──► STO
 
 ### How it works
 
-#### `startNetworkMonitoring()` — [`MediaServerHubImpl.java`](server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java)
+#### `startNetworkMonitoring()` — [`MediaServerHubImpl.java`](../../server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java)
 
 Registers a `ConnectivityManager.NetworkCallback` scoped to `TRANSPORT_WIFI` and `TRANSPORT_ETHERNET`.
 The callback is registered in **`start()`**, not inside the UPnP worker thread, so it survives
@@ -147,7 +147,7 @@ The hotspot interface is typically `ap0` (Pixel/AOSP) or `swlan0` (Samsung), not
 
 ### How it works
 
-#### Interface name recognition — [`NetworkUtils.java`](core/src/main/java/apincer/music/core/utils/NetworkUtils.java)
+#### Interface name recognition — [`NetworkUtils.java`](../../core/src/main/java/apincer/music/core/utils/NetworkUtils.java)
 
 ```java
 public static boolean isHotspotInterfaceName(String name) {
@@ -199,7 +199,7 @@ Hotspot disabled
 > The 2-second delay on hotspot start ensures the `ap0`/`swlan0` interface is fully assigned
 > an IP before `UPnPServiceImpl` tries to bind to it.
 
-#### UPnP interface binding — [`MediaServerAddressFactory.java`](server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerAddressFactory.java)
+#### UPnP interface binding — [`MediaServerAddressFactory.java`](../../server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerAddressFactory.java)
 
 ```java
 return NetworkUtils.isOnWifiNetwork(networkInterface, address)   // wlan*
@@ -210,7 +210,7 @@ return NetworkUtils.isOnWifiNetwork(networkInterface, address)   // wlan*
 Without this, jUPnP would refuse to bind to `ap0`/`swlan0` and the server would be
 unreachable by devices connected to the hotspot.
 
-#### Server start guard — [`MusicMateServiceImpl.java`](app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java)
+#### Server start guard — [`MusicMateServiceImpl.java`](../../app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java)
 
 ```java
 // Before (blocked hotspot):

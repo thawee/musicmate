@@ -14,7 +14,7 @@
 
 `run-parser-comparison.py SCRATCH compile|micro|staged|throughput` compares preserved baseline, copy-only and final sources. Save NioHttpServer.java and BoundedByteArrayOutputStream.java under `SCRATCH/baseline` and `SCRATCH/copy-only` before finalizing, export the Gradle classpath, and compile first. Fully buffered and staged extraction are separate models; staged uses an 8 KiB first read. Every micro sample checks its loaded class origin. `check-phone-framing.py` runs read-only protocol probes against the final installed APK via port 19000. [Detailed methods, compatibility and results](../../tasks/performance/sonicnio-parser-2026-10-03/REPORT.md).
 
-`stream-bench.sh PHONE_IP TRACK_ID LABEL` measures a real phone over LAN. Use a real track ID from `/music/ID/file`. Its engine-setting comment predates Netty removal; the current application has only SonicNIO. Its MB/s output uses binary units, and it does not independently validate audio hashes or provide a comprehensive execution deadline. See [PERFORMANCE.md](../../PERFORMANCE.md) for interpretation limits.
+`stream-bench.sh PHONE_IP TRACK_ID LABEL` measures a real phone over LAN. Use a real track ID from `/music/ID/file`. Its engine-setting comment predates Netty removal; the current application has only SonicNIO. Its MB/s output uses binary units, and it does not independently validate audio hashes or provide a comprehensive execution deadline. See [PERFORMANCE.md](../../docs/technical/PERFORMANCE.md) for interpretation limits.
 
 ## Standalone throughput experiment
 
