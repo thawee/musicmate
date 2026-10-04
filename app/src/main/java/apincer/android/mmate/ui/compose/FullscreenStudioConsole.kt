@@ -857,7 +857,7 @@ fun FullscreenStudioConsole(
                         )
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
-                        val nextTrack = queueState.tracks.firstOrNull()
+                        val nextTrack = queueState.upNext()
                         if (nextTrack != null) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

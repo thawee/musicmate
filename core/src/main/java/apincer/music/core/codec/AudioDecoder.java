@@ -1,6 +1,8 @@
 package apincer.music.core.codec;
 
 import static apincer.music.core.Constants.MEDIA_ENC_AIFF;
+import static apincer.music.core.Constants.MEDIA_ENC_DFF;
+import static apincer.music.core.Constants.MEDIA_ENC_DSF;
 import static apincer.music.core.Constants.MEDIA_ENC_ALAC;
 import static apincer.music.core.Constants.MEDIA_ENC_FLAC;
 
@@ -27,6 +29,9 @@ import io.nayuki.flac.decode.FlacDecoder;
 
 public class AudioDecoder {
     private static final String TAG = "AudioDecoder";
+    /** DSD has no PCM samples of its own; it is analyzed as this PCM format. */
+    public static final int DSD_PCM_RATE = 88200;
+    public static final int DSD_PCM_BITS = 24;
 
     /**
      * Decode audio file to PCM bytes using JCodec
@@ -44,6 +49,7 @@ public class AudioDecoder {
                 case MEDIA_ENC_ALAC -> decodeAlac(tag, maxDurationSeconds);
                 case MEDIA_ENC_FLAC -> decodeFlac(filePath, maxDurationSeconds);
                 case MEDIA_ENC_AIFF -> decodeAiff(filePath, maxDurationSeconds);
+                case MEDIA_ENC_DSF, MEDIA_ENC_DFF -> decodeWithFFmpeg(filePath, maxDurationSeconds, "s24le", "-ar " + DSD_PCM_RATE);
                 default -> decodeAndroid(filePath, maxDurationSeconds);
             };
         } catch (Exception e) {
@@ -57,26 +63,27 @@ public class AudioDecoder {
     }
 
     public static byte[] decodeAlac(Track tag, int maxDurationSeconds) throws IOException {
-        String filePath = tag.getPath();
+        String pcmFormat = switch (tag.getAudioBitsDepth()) {
+            case 24 -> "s24le";
+            case 32 -> "s32le";
+            default -> "s16le";
+        };
+        return decodeWithFFmpeg(tag.getPath(), maxDurationSeconds, pcmFormat, "");
+    }
+
+    /** Decodes the first seconds of a file to raw little-endian PCM in the given format with FFmpeg. */
+    private static byte[] decodeWithFFmpeg(String filePath, int maxDurationSeconds, String pcmFormat, String outputOptions) throws IOException {
         File inputFile = new File(filePath);
         if (!inputFile.exists()) {
             throw new IOException("File not found: " + filePath);
         }
 
         // Unique file in the app cache (java.io.tmpdir): never in the music folder, safe in parallel
-        File outputFile = File.createTempFile("alac", ".pcm");
+        File outputFile = File.createTempFile("decode", ".pcm");
 
-        int bitDepth = tag.getAudioBitsDepth();
-        String pcmFormat = switch (bitDepth) {
-            case 24 -> "s24le";
-            case 32 -> "s32le";
-            default -> "s16le";
-        };
-
-        // Use FFmpeg to decode ALAC to raw PCM
-        // -t specifies the duration to decode
-        String command = String.format(Locale.US, "-y -i \"%s\" -t %d -f %s -acodec pcm_%s \"%s\"",
-                filePath, maxDurationSeconds, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
+        // -t limits the decoded duration
+        String command = String.format(Locale.US, "-y -i \"%s\" -t %d %s -f %s -acodec pcm_%s \"%s\"",
+                filePath, maxDurationSeconds, outputOptions, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
 
         try {
             FFmpegSession session = FFmpegKit.execute(command);

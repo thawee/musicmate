@@ -151,8 +151,8 @@ fun SettingsScreen(
                 AdaptiveChoiceGroup(
                     options = listOf(
                         "off" to "Off",
-                        "track" to "Track Gain",
-                        "album" to "Album Gain"
+                        "track" to "Track",
+                        "album" to "Album"
                     ),
                     selected = { replayGainMode.equals(it, ignoreCase = true) },
                     onSelect = onReplayGainModeChange

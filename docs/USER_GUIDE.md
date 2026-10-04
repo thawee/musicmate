@@ -228,7 +228,7 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 - **When I tap a track.**
   - **Play tracks** (default): tap plays, and press and hold opens the details.
   - **Edit tags**: tap opens the details, and press and hold starts selecting several songs.
-- **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track Gain** levels every song. **Album Gain** keeps the loudness differences within an album.
+- **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
   - **Pre-Amp Gain** raises or lowers the result.
   - **Prevent Clipping** stops loud peaks from distorting.
 - **Display options.**

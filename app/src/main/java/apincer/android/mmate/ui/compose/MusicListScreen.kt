@@ -278,8 +278,13 @@ fun MusicListScreen(
                     // Gesture discovery hints for new users
                     if (showGestureHints) {
                         GestureHints.GestureHintBanner(
-                            hints = listOf(
+                            // Describe what tap and long-press do in the current tap mode
+                            hints = if (listenerTapMode) listOf(
                                 GestureHints.HintType.TRACK_TAP,
+                                GestureHints.HintType.ART_TAP,
+                                GestureHints.HintType.LONG_PRESS_DETAILS
+                            ) else listOf(
+                                GestureHints.HintType.TRACK_TAP_EDIT,
                                 GestureHints.HintType.ART_TAP,
                                 GestureHints.HintType.LONG_PRESS
                             )

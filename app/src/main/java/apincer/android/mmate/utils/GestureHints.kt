@@ -43,6 +43,8 @@ object GestureHints {
     private const val KEY_TRACK_TAP = "hint_track_tap_shown"
     private const val KEY_ART_TAP = "hint_art_tap_shown"
     private const val KEY_LONG_PRESS = "hint_long_press_shown"
+    private const val KEY_TRACK_TAP_EDIT = "hint_track_tap_edit_shown"
+    private const val KEY_LONG_PRESS_DETAILS = "hint_long_press_details_shown"
     private const val KEY_SWIPE_QUEUE = "hint_swipe_queue_shown"
     private const val KEY_DRAG_REORDER = "hint_drag_reorder_shown"
     private const val KEY_DOUBLE_TAP_FLIP = "hint_double_tap_flip_shown"
@@ -55,7 +57,9 @@ object GestureHints {
     ) {
         TRACK_TAP(KEY_TRACK_TAP, "Tap to Play", "Tap any song to play it instantly", R.drawable.ic_baseline_play_arrow_24),
         ART_TAP(KEY_ART_TAP, "Tap Artwork", "Tap album artwork for quick play", R.drawable.ic_album_black_24dp),
-        LONG_PRESS(KEY_LONG_PRESS, "Long Press", "Long-press a song for batch editing", R.drawable.ic_baseline_edit_note_24),
+        LONG_PRESS(KEY_LONG_PRESS, "Long Press", "Long-press a song to select several for batch editing", R.drawable.ic_baseline_edit_note_24),
+        TRACK_TAP_EDIT(KEY_TRACK_TAP_EDIT, "Tap to Open", "Tap a song to see its details and edit its tags", R.drawable.ic_baseline_edit_note_24),
+        LONG_PRESS_DETAILS(KEY_LONG_PRESS_DETAILS, "Long Press", "Long-press a song to see its details and edit its tags", R.drawable.ic_baseline_edit_note_24),
         SWIPE_QUEUE(KEY_SWIPE_QUEUE, "Swipe to Remove", "Swipe queue items left/right to remove", R.drawable.rounded_delete_24),
         DRAG_REORDER(KEY_DRAG_REORDER, "Drag to Reorder", "Drag the handle to reorder queue", R.drawable.rounded_drag_indicator_24),
         DOUBLE_TAP_FLIP(KEY_DOUBLE_TAP_FLIP, "Double Tap Artwork", "Double-tap Now Playing artwork for audio specs", R.drawable.ic_baseline_playlist_play_24);

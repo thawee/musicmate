@@ -258,7 +258,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 nps.getSpecsBitrate().setValue(bitrate > 0 ? (bitrate / 1000) + " kbps" : "Lossless Audio");
 
                 double dr = apincer.music.core.utils.TagUtils.effectiveDr(song);
-                nps.getSpecsDr().setValue(dr > 0 ? "DR " + (int) dr : "");
+                // Rounded like the library badge, so both read the same DR
+                nps.getSpecsDr().setValue(dr > 0 ? "DR " + Math.round(dr) : "");
 
                 apincer.music.core.playback.ReplayGainManager.ReplayGainInfo rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(song.getPath());
                 String rgMode = apincer.music.core.Settings.getReplayGainMode(this);

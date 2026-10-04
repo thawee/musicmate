@@ -76,6 +76,11 @@ public class MusicAnalyser {
         this.sampleRate = (int) tag.getAudioSampleRate();
         this.bitsPerSample = tag.getAudioBitsDepth();
         this.channels = 2;
+        if (TagUtils.isDSD(tag)) {
+            // DSD is decoded to PCM for analysis; measure that PCM, not the 1-bit source
+            this.sampleRate = AudioDecoder.DSD_PCM_RATE;
+            this.bitsPerSample = AudioDecoder.DSD_PCM_BITS;
+        }
         try {
                 byte[] audioData = AudioDecoder.decodeAudio(tag, durationInSeconds);
 
@@ -83,7 +88,7 @@ public class MusicAnalyser {
                     enhancedMQADetection(audioData);
                 }
 
-                dynamicRange = calculateDynamicRange(audioData, tag.getAudioBitsDepth());
+                dynamicRange = calculateDynamicRange(audioData, bitsPerSample);
 
                 dynamicRangeScore = calculateDRMeter(audioData);
 

@@ -19,6 +19,13 @@ class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
         totalDurationText = durationText
     }
 
+    /** The track after the one playing, or the first track when nothing is playing. */
+    fun upNext(): Track? {
+        val playing = tracks.indexOfFirst { it.uniqueKey == currentPlayingKey }
+            .takeIf { it >= 0 } ?: manager?.currentIndex ?: -1
+        return tracks.getOrNull(playing + 1)
+    }
+
     fun updateTracks(newTracks: List<Track>) {
         tracks.clear()
         tracks.addAll(newTracks)
