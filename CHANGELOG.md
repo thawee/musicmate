@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.23.2] - 2026-10-04
+
 ### Fixed
 - **WAV genre and cover art:** WAV files lost their genre (shown as "Unknown") because a custom `TXXX:GENRE` lookup replaced the standard ID3 genre even when absent; the standard genre is now kept. Embedded covers in WAV/AIFF files are now read through the tag library when Android's metadata retriever finds none.
 - **Null-safety:** Guard the song screen's file type, library category image names and the server QR-code dialog (which could read a cleared bitmap after the server stopped).
 - **Library scan crash in release builds:** Scanning a folder with WAV files crashed the minified app. R8 moved jaudiotagger's `WavTag` into the unnamed package, so `getPackage()` returned null in its static initializer. Online metadata requests had the same pattern for OkHttp's version (now `OkHttp.VERSION`).
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.23.1] - 2026-10-04
 

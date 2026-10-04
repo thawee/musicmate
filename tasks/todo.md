@@ -4,7 +4,7 @@
 - [x] Fix the demonstrated cause; verified on the emulator (debug DB: Classical/Folk; release: 4 genres, gold/green covers, Tech Info 100%, MP3s unchanged).
 - [x] NPE audit: getPackage (WavTag, OkHttp) fixed earlier; JustDSD not shipped; track-getter dereferences reviewed (13, 2 guarded + 3 container titles); Kotlin !! (3, QR dialog race fixed); system services and listFiles/getParentFile chains reviewed.
 - [x] Fixes committed; 328 JVM tests pass (no existing reader tests; verified on emulator instead).
-- [ ] Release 3.23.2 after the fixes are verified on device/emulator.
+- [x] Release 3.23.2 (code 144): optimized APK verified on the emulator (scan, 4 genres, WAV covers, Tech Info, no crashes). The phone was not connected, so the phone streaming/UPnP gates were not rerun; streaming code is unchanged since 3.23.1.
 
 # Release 3.23.1 (2026-10-04)
 
