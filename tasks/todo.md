@@ -1,3 +1,12 @@
+# Scan analysis phase (2026-10-04, found during README screenshots)
+- [ ] Deep scan (DR / extras for every track) runs inside the expedited ScanAudioFileWorker with no progress: header stays at "Scanning: 8302/8302 files" for hours. Job scheduler stops the job on timeout (observed STOP ... timeout after ~10 min, next run capped ~5 min) and WorkManager reruns the whole worker, repeating the folder walk and file check before resuming DR. Fix: separate DR worker chained after the scan that resumes from tracks without DR and reports "Analyzing: x/y". Verify on the phone, including a stop and resume.
+
+# README for users (2026-10-04)
+- [x] Move technical README sections (architecture, SonicNIO, performance baseline, tech stack, developer notes) verbatim into TECHNICAL.md.
+- [x] Rewrite README from the user's view: what it is, screenshots, features in plain words, install from GitHub, getting started, typical setup, links.
+- [x] Screenshots captured on the phone (library, Music Center, player picker, song details, server); Samsung ignores demo mode, so the status bar is cropped off (103 px) and images resized to 540 px wide with a CoreGraphics script. Library shot shows "Scanning" and some DR values missing; retake after the full scan.
+- [ ] Check every link and image path resolves; review on GitHub after push.
+
 # Hotspot renderer discovery (2026-10-04)
 
 - [x] Reproduce: hotspot on next to Wi-Fi; /proc/net/igmp showed SSDP joined on wlan0 only for 2.5 min (same pid); stopping/starting the server added swlan0.
@@ -52,8 +61,9 @@
 - [x] Root cause of "GitHub APK will not install": every release since 3.21.0 published app-release-unsigned.apk; the phone reports INSTALL_PARSE_FAILED_NO_CERTIFICATES for the 3.23.2 asset.
 - [x] Release key generated outside the repo (~/.config/musicmate/musicmate-release.jks, SHA-256 b5757a1e...1d29ee). Gradle signs release builds from MUSICMATE_KEYSTORE* env vars; CI decodes the keystore secret, verifies the signature and fails without secrets.
 - [x] Local signed build verified: apksigner shows CN=MusicMate, code 145, 3.24.0.
-- [ ] User adds RELEASE_KEYSTORE_BASE64, RELEASE_KEYSTORE_PASSWORD, RELEASE_KEY_ALIAS secrets; then push tag v3.24.0.
-- [ ] Download the published MusicMate-v3.24.0.apk, apksigner verify, install on the phone after the one-time uninstall.
+- [x] Secrets added; tag v3.24.0 pushed; workflow run 37208736621 succeeded.
+- [x] Published MusicMate-v3.24.0.apk verified: CN=MusicMate, SHA-256 b5757a1e...1d29ee, code 145.
+- [ ] Install on the phone after the one-time uninstall (user decision: wipes library data).
 
 # Release 3.23.1 (2026-10-04)
 
