@@ -168,6 +168,33 @@ public class NetworkUtils {
      * Returns true when the given interface is a WiFi client interface (wlan*).
      * For hotspot/AP interfaces use {@link #isOnHotspotInterface(NetworkInterface, InetAddress)}.
      */
+    /**
+     * The usable server interfaces and their IPv4 addresses, sorted, e.g.
+     * "swlan0=10.221.118.194,wlan0=192.168.1.51". The UPnP stack binds these once at startup, so a
+     * change (a hotspot coming up next to Wi-Fi) needs a restart even when the primary IP is unchanged.
+     */
+    @NonNull
+    public static String getServerInterfaceSignature() {
+        java.util.List<String> entries = new java.util.ArrayList<>();
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!ni.isUp() || ni.isLoopback() || isVirtualOrVpnInterface(ni)) continue;
+                String name = ni.getName();
+                if (!(isWifiClientInterfaceName(name) || isHotspotInterfaceName(name) || isOnEthernetNetwork(ni, null))) continue;
+                for (InetAddress address : Collections.list(ni.getInetAddresses())) {
+                    String host = address.getHostAddress();
+                    if (!address.isLoopbackAddress() && host != null && IPV4_PATTERN.matcher(host).matches()) {
+                        entries.add(name + "=" + host);
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            Log.e(TAG, "Error retrieving network interfaces", ex);
+        }
+        Collections.sort(entries);
+        return String.join(",", entries);
+    }
+
     public static boolean isOnWifiNetwork(NetworkInterface networkInterface, InetAddress address) {
         String interfaceName = networkInterface.getName();
         return isWifiClientInterfaceName(interfaceName);

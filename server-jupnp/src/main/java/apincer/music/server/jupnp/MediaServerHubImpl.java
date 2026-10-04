@@ -198,6 +198,8 @@ public class MediaServerHubImpl implements MediaServerHub {
     private WifiManager.MulticastLock multicastLock;
 
     private volatile String lastBoundIp = null;
+    // Interfaces the UPnP stack bound at startup; it does not pick up new ones (e.g. a hotspot) by itself
+    private volatile String lastBoundInterfaces = null;
 
     private long lastDiscoveryTime = 0;
 
@@ -308,7 +310,8 @@ public class MediaServerHubImpl implements MediaServerHub {
         upnpService.getRegistry().addDevice(mediaServerDevice);
 
         lastBoundIp = apincer.music.core.utils.NetworkUtils.getIpAddress();
-        Log.i(TAG, "UPnP initialized and bound to IP: " + lastBoundIp);
+        lastBoundInterfaces = apincer.music.core.utils.NetworkUtils.getServerInterfaceSignature();
+        Log.i(TAG, "UPnP initialized and bound to IP: " + lastBoundIp + " on " + lastBoundInterfaces);
 
         sendAlive();
         triggerDiscovery();
@@ -522,7 +525,11 @@ public class MediaServerHubImpl implements MediaServerHub {
             synchronized (stateLock) {
                 running = state == State.RUNNING;
             }
-            if (running) acquireLocks();
+            if (running) {
+                acquireLocks();
+                // Backstop for a missed hotspot broadcast: rebind when the interface set changed
+                if (restartIfInterfacesChanged()) return;
+            }
             triggerDiscoveryInner();
         } catch (Exception e) {
             Log.w(TAG, "Periodic discovery failed; will retry", e);
@@ -641,6 +648,8 @@ public class MediaServerHubImpl implements MediaServerHub {
                     if (lastBoundIp == null || !lastBoundIp.equals(currentIp)) {
                         Log.i(TAG, "Network IP changed (" + lastBoundIp + " -> " + currentIp + ") while running → auto-restarting UPnP");
                         restart();
+                    } else if (restartIfInterfacesChanged()) {
+                        // handled: rebinding to a new interface set (e.g. hotspot started next to Wi-Fi)
                     } else {
                         // Same IP, ensure locks are active; avoid multicast discovery during active streaming
                         acquireLocks();
@@ -656,6 +665,24 @@ public class MediaServerHubImpl implements MediaServerHub {
                 }
             }
         }
+    }
+
+    /**
+     * Restarts the stack when the usable interfaces differ from those bound at startup, so a hotspot
+     * that comes up (or goes away) next to Wi-Fi is served without restarting the app. Deferred while
+     * a renderer is streaming; the periodic discovery tick checks again.
+     */
+    private boolean restartIfInterfacesChanged() {
+        String bound = lastBoundInterfaces;
+        String current = apincer.music.core.utils.NetworkUtils.getServerInterfaceSignature();
+        if (bound == null || bound.equals(current)) return false;
+        if (serverStatus.getValue() == ServerStatus.CAST) {
+            Log.i(TAG, "Interfaces changed (" + bound + " -> " + current + "); restart deferred while streaming");
+            return true;
+        }
+        Log.i(TAG, "Interfaces changed (" + bound + " -> " + current + ") while running → restarting UPnP");
+        restart();
+        return true;
     }
 
     private void stopNetworkMonitoring() {
@@ -1031,19 +1058,29 @@ public class MediaServerHubImpl implements MediaServerHub {
         if (host == null || host.isEmpty() || "127.0.0.1".equals(host) || "0.0.0.0".equals(host)) {
             return false;
         }
-        // Subnet sanity check: If we have lastBoundIp (e.g. 192.168.1.5), verify host starts with same /24 or /16
-        if (lastBoundIp != null && !lastBoundIp.isEmpty()) {
-            String mySubnet24 = getSubnet24(lastBoundIp);
-            String devSubnet24 = getSubnet24(host);
-            if (!mySubnet24.isEmpty() && !devSubnet24.isEmpty() && !mySubnet24.equals(devSubnet24)) {
-                // If subnets don't match on class C /24, check if /16 matches (e.g. 172.16.x or 10.x mesh networks)
-                if (!getSubnet16(lastBoundIp).equals(getSubnet16(host))) {
-                    Log.d(TAG, "Filtering out stale device on disparate subnet: " + host + " (current IP: " + lastBoundIp + ")");
-                    return false;
-                }
+        // Subnet sanity check: keep devices on the subnet (/24, else /16) of ANY interface the stack is
+        // bound to. Checking only the primary IP hid renderers on a hotspot running next to Wi-Fi.
+        List<String> boundIps = boundAddresses();
+        if (boundIps.isEmpty()) return true;
+        for (String ip : boundIps) {
+            if (getSubnet24(ip).equals(getSubnet24(host)) || getSubnet16(ip).equals(getSubnet16(host))) return true;
+        }
+        Log.d(TAG, "Filtering out stale device on disparate subnet: " + host + " (bound: " + boundIps + ")");
+        return false;
+    }
+
+    /** IPv4 addresses the stack was bound to, from the interface signature ("swlan0=10.0.0.1,wlan0=..."). */
+    private List<String> boundAddresses() {
+        List<String> ips = new ArrayList<>();
+        String bound = lastBoundInterfaces;
+        if (bound != null && !bound.isEmpty()) {
+            for (String entry : bound.split(",")) {
+                int eq = entry.indexOf('=');
+                if (eq > 0 && eq < entry.length() - 1) ips.add(entry.substring(eq + 1));
             }
         }
-        return true;
+        if (ips.isEmpty() && lastBoundIp != null && !lastBoundIp.isEmpty()) ips.add(lastBoundIp);
+        return ips;
     }
 
     private String getSubnet24(String ip) {

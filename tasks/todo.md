@@ -1,3 +1,11 @@
+# Hotspot renderer discovery (2026-10-04)
+
+- [x] Reproduce: hotspot on next to Wi-Fi; /proc/net/igmp showed SSDP joined on wlan0 only for 2.5 min (same pid); stopping/starting the server added swlan0.
+- [x] Root cause 1: UPnP binds interfaces at startup; restart only on primary-IP change, which stays the Wi-Fi IP. Fix: interface signature; restart on change (hotspot/network events + 30 s tick), deferred while casting. Verified: swlan0 joined 31 s after hotspot on, no app restart.
+- [x] Root cause 2: player list filtered renderers to the primary IP's subnet. Fix: accept any bound interface subnet. Verified: HiBy 10.221.118.217 listed (user).
+- [ ] Hotspot off/on cycle with HiBy reconnect, checked without restarting (user step 2).
+- skip: failing-test-first commit; no cheap local test (needs real interfaces); verified on device instead.
+
 # Reliability review (2026-10-04)
 
 - [x] Background tasks: MusicMateExecutors guards every task (Exception and LinkageError logged instead of killing the app); double-checked singleton fixed.
