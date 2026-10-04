@@ -1,3 +1,8 @@
+# Release 3.24.1 (2026-10-04)
+- [x] Fixes: DSD DR via FFmpeg (emulator: generated DSD64 DSF measured DR8, previously no DR), DR rounding in Now Playing/Console (emulator: console DR 13 = list DR13), console Up Next (shows Afterglow after Adagio Cantabile), mode-aware tips, Off/Track/Album labels on one line. Core and app unit tests pass.
+- [ ] Phone check of DSD analysis on the 6 real DSD tracks (phone disconnected during the fix).
+- [x] Paused row shows pause bars while the dock shows Play: intentional (status glyph vs action), no change.
+
 # Docs reorganization and User Guide (2026-10-04)
 - [x] Move docs with git mv (names unchanged): docs/ gets USER_GUIDE, MUSIC_QUALITY_GUIDE, screenshots; docs/technical/ gets TECHNICAL, DESIGN, UI, ECOSYSTEM, PLAYBACK_ARCHITECTURE, WEBSOCKET_API, WEBUI, PERFORMANCE, NETWORK_RESILIENCE; docs/archive/ gets superseded CHANGES_SUMMARY (removed HttpCore), NIO_WEB_ENGINE_10_10 (marked superseded), lib-review (2026-07). Root keeps README, CHANGELOG, CONTRIBUTING, RELEASE_NOTES (release workflow reads it).
 - [x] Script: rewrite relative links after the move and check every Markdown link and image in the repo resolves.
@@ -9,18 +14,18 @@
   - [x] Emulator: replace old /sdcard/Music/MusicMate Demo, reinstall signed 3.24 build, grant access, scan, wait for analysis.
   - [x] Retake the 12 screenshots (player picker stays from the phone: emulator cannot see network renderers, and the shot has no cover art or library), crop, check each image.
   - [ ] Commit and push.
-- [ ] DR mismatch: Studio Console / Now Playing show dynamicRange truncated ("DR 13" for '39) while lists show drScore rounded ("DR14"). Use one field everywhere.
-- [ ] Library tips card says "Long Press: Long-press a song for batch editing", but in the default Play tracks mode a long press opens the song details; batch selection needs the Edit tags mode. Make the tip follow the tap mode.
-- [ ] Studio Console "UP NEXT" showed the playing track (Adagio Cantabile) while the queue's next was Afterglow (emulator, 2026-10-04).
+- [x] DR mismatch: Studio Console / Now Playing show dynamicRange truncated ("DR 13" for '39) while lists show drScore rounded ("DR14"). Use one field everywhere.
+- [x] Library tips card says "Long Press: Long-press a song for batch editing", but in the default Play tracks mode a long press opens the song details; batch selection needs the Edit tags mode. Make the tip follow the tap mode.
+- [x] Studio Console "UP NEXT" showed the playing track (Adagio Cantabile) while the queue's next was Afterglow (emulator, 2026-10-04).
 - [x] "Don't show these tips again" kept the tips on screen until restart (GestureHintBanner had no state; callers pass no onDismissAll). Fixed with remembered dismissal; verified on the emulator queue tips.
-- [ ] Settings: "Album Gain" button text wraps onto two lines at default font size.
+- [x] Settings: "Album Gain" button text wraps onto two lines at default font size.
 
 # Scan analysis phase (2026-10-04, found during README screenshots)
 - [x] Deep scan (DR / extras for every track) runs inside the expedited ScanAudioFileWorker with no progress: header stays at "Scanning: 8302/8302 files" for hours. Job scheduler stops the job on timeout (observed STOP ... timeout after ~10 min, next run capped ~5 min) and WorkManager reruns the whole worker, repeating the folder walk and file check before resuming DR. Fix: separate DR worker chained after the scan that resumes from tracks without DR and reports "Analyzing: x/y". Verify on the phone, including a stop and resume.
 - [x] Fixed: AnalyzeTracksWorker (unique work MusicAnalyzeWork) runs after the scan, cancelled by any new scan. Phone: header "Analyzing: x/5387 tracks"; forced timeout (cmd jobscheduler timeout -n androidx.work.systemjobscheduler) at 22:13:26, new run 15 s later at 34/3428, no scan job ran.
 - [x] Parallel analysis (min(4, cores/2) threads) and ALAC temp file in cache. Phone: 1 thread 1.79 tracks/s overall (2.3/s on the same remaining tracks); 4 threads 5.1 tracks/s (630 tracks in 123 s), 428% CPU, PSS 420 MB, skin 42 C (moderate), no crashes.
 - [x] DR badge color used truncation while the label rounds; color now rounds too.
-- [ ] DSD tracks never get DR (no Android DSD decoder: "Failed to initialize audio/dsd"), so every analysis run retries them. Decide: mark as not analyzable, or analyze via FFmpeg.
+- [x] DSD tracks never get DR (no Android DSD decoder: "Failed to initialize audio/dsd"), so every analysis run retries them. Decide: mark as not analyzable, or analyze via FFmpeg.
 
 # README for users (2026-10-04)
 - [x] Move technical README sections (architecture, SonicNIO, performance baseline, tech stack, developer notes) verbatim into TECHNICAL.md.

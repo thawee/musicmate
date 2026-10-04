@@ -7,16 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.24.1] - 2026-10-04
+
 ### Fixed
 - **Track analysis after a scan:** Measuring dynamic range for every track ran inside the scan job without progress, so the header stayed at "Scanning: 8302/8302 files" for hours. Android stops long jobs after a few minutes, and each restart repeated the whole folder scan before analysis continued. Analysis now runs as its own background work after the scan, shows "Analyzing: x/y tracks", and resumes with the tracks still missing DR when it is restarted. Starting a new scan pauses analysis until the scan finishes.
 - **Faster track analysis:** Up to 4 tracks are analyzed at once (half the CPU cores), about 2 to 3 times faster on a Galaxy S25 (1.8 to 5.1 tracks per second).
 - **ALAC temp files in music folders:** Analyzing an ALAC track wrote `temp_pcm.raw` into the album's folder, with the same name for every track. It now uses a unique file in the app cache and always deletes it.
 - **Tips stayed after "Don't show these tips again":** The library and queue tips saved the choice but stayed on screen until the app restarted. They now disappear at once.
 - **DR badge color:** The badge rounded the DR value for its label but truncated it for its color, so a 12.6 read "DR13" in the DR12 color while a 13.2 was green. Both now use the rounded value.
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+- **DSD dynamic range:** DSD tracks never got a DR value (Android has no DSD decoder, and the analyzer divided by a 1-bit sample size). They are now decoded with FFmpeg to 24-bit / 88.2 kHz PCM and measured like any other track.
+- **Same DR everywhere:** Now Playing and the Studio Console truncated DR ("DR 13") while the library rounded it ("DR14"). All screens round.
+- **Studio Console "Up Next":** The chip showed the first track in the queue, which is the one playing. It now shows the next track.
+- **Library tips match the tap mode:** The long-press tip said "batch editing", but in the default Play tracks mode a long press opens the song details. Tips now describe the current mode.
+- **Settings:** The loudness leveling choices read Off, Track and Album, so they fit on one line.
 
 ## [3.24.0] - 2026-10-04
 
