@@ -124,16 +124,16 @@
         <item>Rock</item>
         <item>Jazz</item>
         <item>Classical</item>
-        <item>R&amp;B / Soul</item>
-        <item>Hip-Hop / Rap</item>
-        <item>Electronic / EDM</item>
-        <item>Acoustic / Vocal</item>
+        <item>R&amp;B</item>
+        <item>Hip-Hop</item>
+        <item>Electronic</item>
+        <item>Acoustic</item>
         <item>Blues</item>
         <item>Folk</item>
         <item>Country</item>
         <item>Bossa Nova</item>
-        <item>Soundtrack / OST</item>
-        <item>Alternative / Indie</item>
+        <item>Soundtrack</item>
+        <item>Alternative</item>
         <item>Metal</item>
         <item>Punk</item>
         <item>Latin</item>
@@ -156,15 +156,14 @@
     </string-array>
 
     <string-array name="moods">
-        <item> - </item>
         <item>Calm</item>
-        <item>Chill / Relax</item>
+        <item>Chill</item>
         <item>Energetic</item>
         <item>Happy</item>
-        <item>Sad / Melancholy</item>
+        <item>Melancholy</item>
         <item>Romantic</item>
-        <item>Moody / Dark</item>
-        <item>Focus / Study</item>
+        <item>Dark</item>
+        <item>Focus</item>
         <item>Nostalgic</item>
         <item>Inspiring</item>
         <item>Workout</item>
@@ -172,13 +171,10 @@
     </string-array>
 
     <string-array name="styles">
-        <!-- only audio/sound style -->
-        <item> - </item>
-        <item>Acoustic</item>
         <item>Ballad</item>
-        <item>Live / Concert</item>
+        <item>Live</item>
         <item>Orchestral</item>
-        <item>Vocal / Audiophile</item>
+        <item>Audiophile Vocal</item>
         <item>Instrumental</item>
         <item>Unplugged</item>
         <item>Synth-based</item>
@@ -191,16 +187,13 @@
     </string-array>
 
     <string-array name="origins">
-        <item> - </item>
         <item>Thai</item>
-        <item>Western</item>
-        <item>US/UK</item>
+        <item>Laos</item>
         <item>Japanese</item>
         <item>Korean</item>
         <item>Chinese</item>
-        <item>Asia</item>
-        <item>Laos</item>
-        <item>European</item>
+        <item>Other Asian</item>
+        <item>Western</item>
         <item>Latin</item>
         <item>World</item>
     </string-array>

@@ -1,5 +1,6 @@
 package apincer.music.core.model;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,18 +34,18 @@ public class GenreRule{
                 && (anyStyle || style.equals(normalize(t.getStyle())));
     } */
 
-    public boolean matches(String genre, String mood, String style) {
+    /** Each argument holds the track's matching keys for that field (a track may have several genres). */
+    public boolean matches(Collection<String> genres, Collection<String> moods, Collection<String> styles) {
 
-        // include
-        if (!matchAny(rule.getGenre(), Collections.singletonList(genre))) return false;
-        if (!matchAny(rule.getMood(), Collections.singletonList(mood))) return false;
-        if (!matchAny(rule.getStyle(), Collections.singletonList(style))) return false;
+        // include ("*" or an empty rule list matches anything)
+        if (!anyGenre && !matchAny(rule.getGenre(), genres)) return false;
+        if (!anyMood && !matchAny(rule.getMood(), moods)) return false;
+        if (!anyStyle && !matchAny(rule.getStyle(), styles)) return false;
 
         // exclude
         if (rule.getExclude() != null && !rule.getExclude().isEmpty()) {
-           // if (isExcluded(rule.getExclude().getGenre(), track.getGenres())) return false;
-            if (isExcluded(rule.getExclude().getMood(), Collections.singletonList(mood))) return false;
-            return !isExcluded(rule.getExclude().getStyle(), Collections.singletonList(style));
+            if (isExcluded(rule.getExclude().getMood(), moods)) return false;
+            return !isExcluded(rule.getExclude().getStyle(), styles);
         }
 
         return true;
@@ -55,7 +56,7 @@ public class GenreRule{
         return ruleValues.contains(trackValue);
     }
 
-    private boolean matchAny(List<String> ruleValues, List<String> trackValues) {
+    private boolean matchAny(List<String> ruleValues, Collection<String> trackValues) {
         if (ruleValues == null || ruleValues.isEmpty()) return true;
 
         for (String val : trackValues) {
@@ -64,7 +65,7 @@ public class GenreRule{
         return false;
     }
 
-    private boolean isExcluded(List<String> excludeValues, List<String> trackValues) {
+    private boolean isExcluded(List<String> excludeValues, Collection<String> trackValues) {
         if (excludeValues == null || excludeValues.isEmpty()) return false;
 
         for (String val : trackValues) {

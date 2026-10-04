@@ -8,10 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Genre presets saved as two genres:** Presets containing "/" ("R&B / Soul", "Electronic / EDM") were written as two values and read back as "R&B, Soul". Presets now use single names (R&B, Hip-Hop, Electronic, Acoustic, Soundtrack, Alternative; moods Chill, Melancholy, Dark, Focus; styles Live, Audiophile Vocal; origins Western, Other Asian), and older values are mapped to them on rescan and when saving.
+- **Genre playlists:** Rules now match each of a track's genres ("Pop, Rock" matches a Pop playlist) and accept the older preset names.
 - **DR12+ playlist:** Silent audio stored an infinite dynamic range (~9.2e16), so it passed every DR filter. Silence now has no DR, and DR filters and Now Playing ignore implausible stored values.
 - **Keyboard on launch:** The search box no longer takes focus and opens the keyboard when the app starts; it focuses when tapped (and stays reachable with TalkBack).
 
 ### Changed
+- **Tag editor choices:** Genre, Style, Mood and Origin open with the full list (current value ticked) and filter only as you type. Presets come first, then genres already in your library without duplicates. Every field has "Clear" and a one-line hint. The Origin list is simplified.
 - **First run:** System Access has a back arrow and a Continue (or Not now) button. The folder dialog is opaque, shows readable locations ("Internal storage › Music"), labels its button "Add folder" and marks default folders.
 - **Library:** Category screens count "Categories", CD and Compressed get category art, playlist cover badges no longer break words at large text, artists and genres show coloured initials, and Similar Tracks explains an empty result.
 - **Settings and Music Center:** Off switches have a visible outline, the console is consistently called the Studio Console, the stopped server shows a neutral "Server Off", and queue actions use one neutral colour with tooltips. The empty queue's Playlists button uses the gold accent. The drawer moves long badges below their title.

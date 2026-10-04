@@ -1,5 +1,6 @@
 package apincer.music.core.codec;
 
+import apincer.music.core.utils.TagVocabulary;
 import static apincer.music.core.codec.MusicAnalyser.analyse;
 import static apincer.music.core.repository.FileRepository.isMediaFileExist;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -310,6 +311,12 @@ public class JThinkReader extends TagReader{
                 }
             }
         }
+
+        // Old presets ("R&B / Soul" read back as "R&B, Soul", "Chill / Relax", "US/UK") -> current names
+        metadata.setGenre(TagVocabulary.normalize(TagVocabulary.Field.GENRE, metadata.getGenre()));
+        metadata.setMood(TagVocabulary.normalize(TagVocabulary.Field.MOOD, metadata.getMood()));
+        metadata.setStyle(TagVocabulary.normalize(TagVocabulary.Field.STYLE, metadata.getStyle()));
+        metadata.setOrigin(TagVocabulary.normalize(TagVocabulary.Field.ORIGIN, metadata.getOrigin()));
     }
 
     /** Parses TXXX tag fields into the provided map (avoids per-call HashMap allocation). */

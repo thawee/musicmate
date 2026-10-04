@@ -34,6 +34,54 @@ public class PlaylistEntrySmartTest {
         );
     }
 
+    private Track tagged(String genre, String mood, String style) {
+        return (Track) Proxy.newProxyInstance(
+                Track.class.getClassLoader(),
+                new Class<?>[]{Track.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if ("getGenre".equals(name)) return genre;
+                    if ("getMood".equals(name)) return mood;
+                    if ("getStyle".equals(name)) return style;
+                    if ("getTitle".equals(name)) return "Test Track";
+                    if ("getArtist".equals(name)) return "Test Artist";
+                    if (method.getReturnType().equals(boolean.class)) return false;
+                    if (method.getReturnType().equals(int.class)) return 0;
+                    if (method.getReturnType().equals(long.class)) return 0L;
+                    if (method.getReturnType().equals(double.class)) return 0.0;
+                    return null;
+                });
+    }
+
+    private PlaylistEntry genrePlaylist(java.util.List<String> genres, java.util.List<String> moods) {
+        PlaylistRule rule = new PlaylistRule();
+        rule.setGenre(new java.util.ArrayList<>(genres));
+        if (moods != null) rule.setMood(new java.util.ArrayList<>(moods));
+        PlaylistEntry entry = new PlaylistEntry();
+        entry.setType(PlaylistEntry.TYPE_GENRE);
+        entry.setRules(new java.util.ArrayList<>(java.util.Collections.singletonList(rule)));
+        entry.compileRules();
+        return entry;
+    }
+
+    @Test
+    public void genreRulesMatchAnyOfSeveralGenres() {
+        PlaylistEntry pop = genrePlaylist(java.util.Arrays.asList("Pop"), null);
+        assertTrue(pop.isInPlaylist(tagged("Pop, Rock", null, null)));
+        assertTrue(pop.isInPlaylist(tagged("rock/pop", null, null)));
+        assertFalse(pop.isInPlaylist(tagged("Jazz", null, null)));
+    }
+
+    @Test
+    public void legacyPresetValuesMatchCurrentRules() {
+        PlaylistEntry alt = genrePlaylist(java.util.Arrays.asList("Alternative"), null);
+        // Old preset "Alternative / Indie" was stored as "Alternative, Indie"
+        assertTrue(alt.isInPlaylist(tagged("Alternative, Indie", null, null)));
+        PlaylistEntry focus = genrePlaylist(java.util.Arrays.asList("Jazz"), java.util.Arrays.asList("Focus"));
+        assertTrue(focus.isInPlaylist(tagged("Jazz", "Focus / Study", null)));
+        assertFalse(focus.isInPlaylist(tagged("Jazz", "Happy", null)));
+    }
+
     @Test
     public void testSilentTrackWithBogusDynamicRangeIsNotDr12() {
         PlaylistEntry drEntry = new PlaylistEntry();

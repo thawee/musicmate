@@ -2,6 +2,7 @@ package apincer.music.core.model;
 
 
 
+import apincer.music.core.utils.TagVocabulary;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -106,12 +107,12 @@ public class PlaylistEntry {
                   //  c.genre = normalize(r.getGenre()); //StringUtils.normalizeName(r.getGenre());
                   //  c.mood = normalize(r.getMood()); //StringUtils.normalizeName(r.getMood());
                   //  c.style = normalize(r.getStyle()); //StringUtils.normalizeName(r.getStyle());
-                r.setGenre(normalizeList(r.getGenre()));
-                r.setMood(normalizeList(r.getMood()));
-                r.setStyle(normalizeList(r.getStyle()));
+                r.setGenre(ruleKeys(TagVocabulary.Field.GENRE, r.getGenre()));
+                r.setMood(ruleKeys(TagVocabulary.Field.MOOD, r.getMood()));
+                r.setStyle(ruleKeys(TagVocabulary.Field.STYLE, r.getStyle()));
                 if (r.getExclude() != null) {
-                    r.getExclude().setMood(normalizeList(r.getExclude().getMood()));
-                    r.getExclude().setStyle(normalizeList(r.getExclude().getStyle()));
+                    r.getExclude().setMood(ruleKeys(TagVocabulary.Field.MOOD, r.getExclude().getMood()));
+                    r.getExclude().setStyle(ruleKeys(TagVocabulary.Field.STYLE, r.getExclude().getStyle()));
                 }
 
                 boolean anyGenre = isAny(r.getGenre());
@@ -130,6 +131,16 @@ public class PlaylistEntry {
                 titleIndexRules.add(key);
             }
         }
+    }
+
+    /** Rule values as matching keys: legacy names mapped to current presets, lower-case. */
+    private List<String> ruleKeys(TagVocabulary.Field field, List<String> values) {
+        if (values == null) return Collections.emptyList();
+        return values.stream()
+                .filter(Objects::nonNull)
+                .map(v -> "*".equals(v.trim()) ? "*" : TagVocabulary.ruleKey(field, v))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private List<String> normalizeList(List<String> values) {
@@ -162,16 +173,17 @@ public class PlaylistEntry {
             return titleIndexRules.contains(key);
         }
 
-        if(genreIndexRules.contains(normalize(track.getGenre()))) {
-            return true;
+        // A track can have several genres ("Pop, Rock"): match any of them
+        java.util.Set<String> genres = TagVocabulary.matchKeys(TagVocabulary.Field.GENRE, track.getGenre());
+        for (String genre : genres) {
+            if (genreIndexRules.contains(genre)) return true;
         }
 
         if (genreComplexRules.isEmpty()) return false;
-        String genre = normalize(track.getGenre());
-        String mood = normalize(track.getMood());
-        String style = normalize(track.getStyle());
+        java.util.Set<String> moods = TagVocabulary.matchKeys(TagVocabulary.Field.MOOD, track.getMood());
+        java.util.Set<String> styles = TagVocabulary.matchKeys(TagVocabulary.Field.STYLE, track.getStyle());
         for (GenreRule rule : genreComplexRules) {
-            if (rule.matches(genre, mood, style)) {
+            if (rule.matches(genres, moods, styles)) {
                 return true;
             }
         }

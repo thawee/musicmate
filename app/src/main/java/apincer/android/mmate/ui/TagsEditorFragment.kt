@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui
 
+import apincer.music.core.utils.TagVocabulary
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -69,10 +70,11 @@ class TagsEditorFragment : Fragment() {
 
                     val albumArtistOptions = remember(track) { buildAlbumArtistOptions(track) }
                     val artistOptions = remember(track) { buildArtistOptions(track) }
-                    val genreOptions = remember(track) { buildGenreOptions(track) }
-                    val styleOptions = remember(track) { buildStyleOptions(track) }
-                    val originOptions = remember(track) { buildOriginOptions(track) }
-                    val moodOptions = remember(track) { buildMoodOptions(track) }
+                    val genreOptions = remember { buildGenreOptions() }
+                    val genreLibraryOptions = remember(track) { buildGenreLibraryOptions(genreOptions) }
+                    val styleOptions = remember { buildStyleOptions() }
+                    val originOptions = remember { buildOriginOptions() }
+                    val moodOptions = remember { buildMoodOptions() }
                     val publisherOptions = remember(track) { buildPublisherOptions(track) }
 
                     TagsEditorPage(
@@ -83,6 +85,7 @@ class TagsEditorFragment : Fragment() {
                         albumArtistOptions = albumArtistOptions,
                         artistOptions = artistOptions,
                         genreOptions = genreOptions,
+                        genreLibraryOptions = genreLibraryOptions,
                         styleOptions = styleOptions,
                         originOptions = originOptions,
                         moodOptions = moodOptions,
@@ -131,73 +134,44 @@ class TagsEditorFragment : Fragment() {
         return list
     }
 
-    private fun buildGenreOptions(tag: Track?): List<String> {
-        val list = mutableListOf<String>()
-        if (tag != null) {
-            val genre = StringUtils.trimToEmpty(tag.genre)
-            if (genre.isNotEmpty() && !list.contains(genre)) list.add(genre)
-        }
-        context?.let { ctx ->
-            TagRepository.getDefaultGenreList(ctx)?.forEach { g ->
-                val trimmed = StringUtils.trimToEmpty(g)
-                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
-            }
-        }
+    /** Genre presets (core + Thai), alphabetical. */
+    private fun buildGenreOptions(): List<String> =
+        context?.let { ctx -> TagRepository.getDefaultGenreList(ctx) }
+            ?.map { StringUtils.trimToEmpty(it) }?.filter { it.isNotEmpty() }?.distinct().orEmpty()
+
+    /**
+     * Genres already in the library that are not presets: each value of a multi-genre entry,
+     * mapped to current preset names, without case or spacing duplicates, alphabetical.
+     */
+    private fun buildGenreLibraryOptions(presets: List<String>): List<String> {
+        val seen = presets.map { it.lowercase() }.toMutableSet()
+        val result = mutableListOf<String>()
         try {
-            tagRepos.actualGenreList?.forEach { g ->
-                val trimmed = StringUtils.trimToEmpty(g)
-                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
+            tagRepos.actualGenreList?.forEach { raw ->
+                if (StringUtils.isEmpty(raw) || raw == apincer.music.core.Constants.NONE) return@forEach
+                val normalized = TagVocabulary.normalize(TagVocabulary.Field.GENRE, raw)
+                StringUtils.splitMultiValue(normalized).forEach { value ->
+                    val v = value.trim()
+                    if (v.isNotEmpty() && seen.add(v.lowercase())) result.add(v)
+                }
             }
         } catch (e: Exception) {
             Log.e("TagsEditorFragment", "Error loading actual genre list", e)
         }
-        return list
+        return result.sortedWith(String.CASE_INSENSITIVE_ORDER)
     }
 
-    private fun buildStyleOptions(tag: Track?): List<String> {
-        val list = mutableListOf<String>()
-        context?.let { ctx ->
-            TagRepository.getDefaultStyleList(ctx)?.forEach { s ->
-                val trimmed = StringUtils.trimToEmpty(s)
-                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
-            }
-        }
-        if (tag != null) {
-            val style = StringUtils.trimToEmpty(tag.style)
-            if (style.isNotEmpty() && !list.contains(style)) list.add(style)
-        }
-        return list
-    }
+    private fun buildStyleOptions(): List<String> =
+        context?.let { ctx -> TagRepository.getDefaultStyleList(ctx) }
+            ?.map { StringUtils.trimToEmpty(it) }?.filter { it.isNotEmpty() && it != "-" }?.distinct().orEmpty()
 
-    private fun buildOriginOptions(tag: Track?): List<String> {
-        val list = mutableListOf<String>()
-        context?.let { ctx ->
-            TagRepository.getDefaultOriginList(ctx)?.forEach { o ->
-                val trimmed = StringUtils.trimToEmpty(o)
-                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
-            }
-        }
-        if (tag != null) {
-            val origin = StringUtils.trimToEmpty(tag.origin)
-            if (origin.isNotEmpty() && !list.contains(origin)) list.add(origin)
-        }
-        return list
-    }
+    private fun buildOriginOptions(): List<String> =
+        context?.let { ctx -> TagRepository.getDefaultOriginList(ctx) }
+            ?.map { StringUtils.trimToEmpty(it) }?.filter { it.isNotEmpty() && it != "-" }?.distinct().orEmpty()
 
-    private fun buildMoodOptions(tag: Track?): List<String> {
-        val list = mutableListOf<String>()
-        context?.let { ctx ->
-            TagRepository.getDefaultMoodList(ctx)?.forEach { m ->
-                val trimmed = StringUtils.trimToEmpty(m)
-                if (trimmed.isNotEmpty() && !list.contains(trimmed)) list.add(trimmed)
-            }
-        }
-        if (tag != null) {
-            val mood = StringUtils.trimToEmpty(tag.mood)
-            if (mood.isNotEmpty() && !list.contains(mood)) list.add(mood)
-        }
-        return list
-    }
+    private fun buildMoodOptions(): List<String> =
+        context?.let { ctx -> TagRepository.getDefaultMoodList(ctx) }
+            ?.map { StringUtils.trimToEmpty(it) }?.filter { it.isNotEmpty() && it != "-" }?.distinct().orEmpty()
 
     private fun buildPublisherOptions(tag: Track?): List<String> {
         val list = mutableListOf<String>()
@@ -326,6 +300,11 @@ class TagsEditorFragment : Fragment() {
         if (!multi || editorState.moodModified) tagUpdate.mood = buildTag(editorState.mood, tagUpdate.mood, editorState.moodModified, multi)
         if (!multi || editorState.styleModified) tagUpdate.style = buildTag(editorState.style, tagUpdate.style, editorState.styleModified, multi)
         if (!multi || editorState.originModified) tagUpdate.origin = buildTag(editorState.origin, tagUpdate.origin, editorState.originModified, multi)
+        // Store the same names a rescan would read back (e.g. "R&B / Soul" -> "R&B")
+        tagUpdate.genre = TagVocabulary.normalize(TagVocabulary.Field.GENRE, tagUpdate.genre)
+        tagUpdate.mood = TagVocabulary.normalize(TagVocabulary.Field.MOOD, tagUpdate.mood)
+        tagUpdate.style = TagVocabulary.normalize(TagVocabulary.Field.STYLE, tagUpdate.style)
+        tagUpdate.origin = TagVocabulary.normalize(TagVocabulary.Field.ORIGIN, tagUpdate.origin)
         if (!multi || editorState.publisherModified) tagUpdate.publisher = buildTag(editorState.publisher, tagUpdate.publisher, editorState.publisherModified, multi)
         if (!multi || editorState.yearModified) tagUpdate.year = buildTag(editorState.year, tagUpdate.year, editorState.yearModified, multi)
     }

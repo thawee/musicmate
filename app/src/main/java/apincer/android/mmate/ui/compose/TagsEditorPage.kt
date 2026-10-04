@@ -64,6 +64,7 @@ fun TagsEditorPage(
     albumArtistOptions: List<String> = emptyList(),
     artistOptions: List<String> = emptyList(),
     genreOptions: List<String> = emptyList(),
+    genreLibraryOptions: List<String> = emptyList(),
     styleOptions: List<String> = emptyList(),
     originOptions: List<String> = emptyList(),
     moodOptions: List<String> = emptyList(),
@@ -179,13 +180,16 @@ fun TagsEditorPage(
                 value = state.genre,
                 onValueChange = { state.genre = it; state.genreModified = true },
                 label = "Genre",
-                options = genreOptions
+                options = genreOptions,
+                libraryOptions = genreLibraryOptions,
+                hint = "Main category, e.g. Jazz. Separate several with commas."
             )
             EditorDropdownField(
                 value = state.style,
                 onValueChange = { state.style = it; state.styleModified = true },
                 label = "Style",
-                options = styleOptions
+                options = styleOptions,
+                hint = "How it is performed or produced, e.g. Live, Ballad."
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 EditorDropdownField(
@@ -193,6 +197,7 @@ fun TagsEditorPage(
                     onValueChange = { state.origin = it; state.originModified = true },
                     label = "Origin",
                     options = originOptions,
+                    hint = "Where the music is from",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -201,6 +206,7 @@ fun TagsEditorPage(
                     onValueChange = { state.mood = it; state.moodModified = true },
                     label = "Mood",
                     options = moodOptions,
+                    hint = "How it feels",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -284,47 +290,84 @@ fun EditorTextField(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+/** One row of a tag dropdown: a section header, a value, or "Clear". */
+internal sealed interface DropdownEntry {
+    data class Header(val title: String) : DropdownEntry
+    data class Value(val text: String) : DropdownEntry
+    data object Clear : DropdownEntry
+}
+
+/**
+ * Builds the dropdown: presets first, then values already in the library that are not presets.
+ * Until the user types, everything is listed (the current value is ticked, not used as a filter);
+ * after typing, only matches are listed - words starting with the text first.
+ */
+internal fun dropdownEntries(
+    presets: List<String>,
+    library: List<String>,
+    query: String,
+    typed: Boolean,
+    hasValue: Boolean
+): List<DropdownEntry> {
+    val q = query.trim()
+    fun filter(values: List<String>): List<String> {
+        if (!typed || q.isEmpty()) return values
+        val words = values.filter { v -> v.split(' ', '-', '&', ',').any { it.startsWith(q, ignoreCase = true) } }
+        val contains = values.filter { it.contains(q, ignoreCase = true) && it !in words }
+        return words + contains
+    }
+    val presetKeys = presets.map { it.trim().lowercase() }.toSet()
+    val extra = library.filter { it.trim().isNotEmpty() && it.trim().lowercase() !in presetKeys }
+    val shownPresets = filter(presets)
+    val shownLibrary = filter(extra)
+    val entries = mutableListOf<DropdownEntry>()
+    if (hasValue && (!typed || q.isEmpty())) entries += DropdownEntry.Clear
+    shownPresets.forEach { entries += DropdownEntry.Value(it) }
+    if (shownLibrary.isNotEmpty()) {
+        if (shownPresets.isNotEmpty()) entries += DropdownEntry.Header("In your library")
+        shownLibrary.forEach { entries += DropdownEntry.Value(it) }
+    }
+    return entries
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorDropdownField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
     options: List<String>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    libraryOptions: List<String> = emptyList(),
+    hint: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    // Filter only after the user types; opening the menu shows every choice
+    var typed by remember { mutableStateOf(false) }
     val isMulti = TagsEditorState.isMultiValues(value)
     val displayValue = if (isMulti) "" else value
 
-    val filteredOptions = remember(displayValue, options) {
-        val trimmed = displayValue.trim()
-        if (trimmed.isEmpty() || trimmed == "-") {
-            options.take(60)
-        } else {
-            val startsWith = mutableListOf<String>()
-            val contains = mutableListOf<String>()
-            for (opt in options) {
-                if (opt.startsWith(trimmed, ignoreCase = true)) {
-                    startsWith.add(opt)
-                } else if (opt.contains(trimmed, ignoreCase = true)) {
-                    contains.add(opt)
-                }
-            }
-            val combined = (startsWith + contains).distinct()
-            if (combined.isNotEmpty()) combined.take(50) else options.take(50)
-        }
+    val entries = remember(displayValue, options, libraryOptions, typed) {
+        dropdownEntries(options, libraryOptions, displayValue, typed, hasValue = displayValue.isNotBlank())
     }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it },
+        onExpandedChange = {
+            expanded = it
+            if (it) typed = false
+        },
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
     ) {
         OutlinedTextField(
             value = displayValue,
-            onValueChange = onValueChange,
+            onValueChange = {
+                typed = true
+                expanded = true
+                onValueChange(it)
+            },
             label = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(label)
@@ -344,13 +387,13 @@ fun EditorDropdownField(
                     Text("Multiple values (type to overwrite)", color = Color.Gray, fontSize = 12.sp)
                 }
             },
-            supportingText = {
-                if (isMulti) {
-                    Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp)
-                }
+            supportingText = when {
+                isMulti -> { { Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
+                hint != null -> { { Text(hint, color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
+                else -> null
             },
             trailingIcon = {
-                if (options.isNotEmpty()) {
+                if (options.isNotEmpty() || libraryOptions.isNotEmpty()) {
                     androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 }
             },
@@ -359,27 +402,51 @@ fun EditorDropdownField(
                 .fillMaxWidth(),
             singleLine = true
         )
-        if (options.isNotEmpty() && filteredOptions.isNotEmpty()) {
+        if (entries.isNotEmpty()) {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.heightIn(max = 280.dp)
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
-                filteredOptions.forEach { selectionOption ->
-                    DropdownMenuItem(
-                        text = { 
-                            Text(
-                                text = selectionOption,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            ) 
-                        },
-                        onClick = {
-                            val finalVal = if (selectionOption.trim() == "-") "" else selectionOption
-                            onValueChange(finalVal)
-                            expanded = false
+                entries.forEach { entry ->
+                    when (entry) {
+                        is DropdownEntry.Header -> Text(
+                            text = entry.title.uppercase(),
+                            color = Color(0xFFFFB300),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.padding(start = 16.dp, top = 10.dp, bottom = 4.dp)
+                        )
+                        DropdownEntry.Clear -> DropdownMenuItem(
+                            text = { Text("Clear", color = Color(0xFFBDBDBD)) },
+                            onClick = {
+                                onValueChange("")
+                                expanded = false
+                            }
+                        )
+                        is DropdownEntry.Value -> {
+                            val selected = entry.text.equals(displayValue.trim(), ignoreCase = true)
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = entry.text,
+                                        maxLines = 1,
+                                        color = if (selected) Color(0xFFFFB300) else Color.Unspecified,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                },
+                                trailingIcon = if (selected) {
+                                    { Text("✓", color = Color(0xFFFFB300), fontWeight = FontWeight.Bold) }
+                                } else null,
+                                onClick = {
+                                    onValueChange(entry.text)
+                                    expanded = false
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }

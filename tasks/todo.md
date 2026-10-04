@@ -1,3 +1,12 @@
+# Genre / mood / style / origin presets (2026-10-04)
+
+- [x] 1. Presets without "/" (single names); playlist rules use the same names; a shared vocabulary maps legacy values (e.g. "R&B, Soul", "Chill / Relax", "US/UK") to the new names on read and in matching.
+- [x] 2. Playlist rules match value by value (split multi-value genre, case-insensitive, via the vocabulary).
+- [x] 3. Dropdown opens with the full list and the current value ticked; filters only after typing; no unrelated fallback.
+- [x] 4. Presets first, then "In your library" without near-duplicates; "Clear" in every field.
+- [x] 5. One-line hint per field; tidy overlaps (Origin list; Style entries duplicating genres).
+- [x] Tests (343, 8 new); emulator: dropdown opens full list with Clear and hint; legacy files tagged "Alternative/Indie" and "R&B/Soul" scan as "Alternative" and "R&B"; Personal Essentials includes the legacy Alternative track. Editor save also normalizes. Style "Ambient" kept (used by playlist rules); "Acoustic" style removed.
+
 # Emulator review fixes, 13 items (2026-10-04)
 
 - [x] 1. Search box does not auto-focus / open the keyboard on launch or return.
