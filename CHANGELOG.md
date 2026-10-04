@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Track analysis after a scan:** Measuring dynamic range for every track ran inside the scan job without progress, so the header stayed at "Scanning: 8302/8302 files" for hours. Android stops long jobs after a few minutes, and each restart repeated the whole folder scan before analysis continued. Analysis now runs as its own background work after the scan, shows "Analyzing: x/y tracks", and resumes with the tracks still missing DR when it is restarted. Starting a new scan pauses analysis until the scan finishes.
+- **Faster track analysis:** Up to 4 tracks are analyzed at once (half the CPU cores), about 2 to 3 times faster on a Galaxy S25 (1.8 to 5.1 tracks per second).
+- **ALAC temp files in music folders:** Analyzing an ALAC track wrote `temp_pcm.raw` into the album's folder, with the same name for every track. It now uses a unique file in the app cache and always deletes it.
+- **DR badge color:** The badge rounded the DR value for its label but truncated it for its color, so a 12.6 read "DR13" in the DR12 color while a 13.2 was green. Both now use the rounded value.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.

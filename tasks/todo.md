@@ -1,5 +1,9 @@
 # Scan analysis phase (2026-10-04, found during README screenshots)
-- [ ] Deep scan (DR / extras for every track) runs inside the expedited ScanAudioFileWorker with no progress: header stays at "Scanning: 8302/8302 files" for hours. Job scheduler stops the job on timeout (observed STOP ... timeout after ~10 min, next run capped ~5 min) and WorkManager reruns the whole worker, repeating the folder walk and file check before resuming DR. Fix: separate DR worker chained after the scan that resumes from tracks without DR and reports "Analyzing: x/y". Verify on the phone, including a stop and resume.
+- [x] Deep scan (DR / extras for every track) runs inside the expedited ScanAudioFileWorker with no progress: header stays at "Scanning: 8302/8302 files" for hours. Job scheduler stops the job on timeout (observed STOP ... timeout after ~10 min, next run capped ~5 min) and WorkManager reruns the whole worker, repeating the folder walk and file check before resuming DR. Fix: separate DR worker chained after the scan that resumes from tracks without DR and reports "Analyzing: x/y". Verify on the phone, including a stop and resume.
+- [x] Fixed: AnalyzeTracksWorker (unique work MusicAnalyzeWork) runs after the scan, cancelled by any new scan. Phone: header "Analyzing: x/5387 tracks"; forced timeout (cmd jobscheduler timeout -n androidx.work.systemjobscheduler) at 22:13:26, new run 15 s later at 34/3428, no scan job ran.
+- [x] Parallel analysis (min(4, cores/2) threads) and ALAC temp file in cache. Phone: 1 thread 1.79 tracks/s overall (2.3/s on the same remaining tracks); 4 threads 5.1 tracks/s (630 tracks in 123 s), 428% CPU, PSS 420 MB, skin 42 C (moderate), no crashes.
+- [x] DR badge color used truncation while the label rounds; color now rounds too.
+- [ ] DSD tracks never get DR (no Android DSD decoder: "Failed to initialize audio/dsd"), so every analysis run retries them. Decide: mark as not analyzable, or analyze via FFmpeg.
 
 # README for users (2026-10-04)
 - [x] Move technical README sections (architecture, SonicNIO, performance baseline, tech stack, developer notes) verbatim into TECHNICAL.md.

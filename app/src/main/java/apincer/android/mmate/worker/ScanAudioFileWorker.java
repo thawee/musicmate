@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.music.core.model.Track;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.repository.FileRepository;
@@ -102,8 +101,8 @@ public class ScanAudioFileWorker extends Worker {
             //MusicMateExecutors.lowPriority(this::exportPlaylists);
             exportPlaylists();
 
-            // start deep scan for mastering details
-            deepScan();
+            // Dynamic range and other decoded details run as separate, resumable work
+            AnalyzeTracksWorker.enqueue(getApplicationContext());
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)
@@ -112,31 +111,6 @@ public class ScanAudioFileWorker extends Worker {
         } catch (Exception e) {
             Log.e(TAG, "Failed to complete scan", e);
             return Result.failure();
-        }
-    }
-
-    private void deepScan() {
-        List<Track> basicList = tagRepos.findMyNoDRMeterSongs();
-        if(basicList == null || basicList.isEmpty()) return;
-
-        for (Track basicTag : basicList) {
-            if (isStopped()) {
-                break;
-            }
-            try {
-                //full scan
-                TagReader.readExtras(getApplicationContext(), basicTag);
-               //     basicTag.setMusicManaged(FileRepository.isManagedInLibrary(getApplicationContext(), basicTag));
-                //}
-
-                basicTag.setIsManaged(FileRepository.isManagedInLibrary(getApplicationContext(), basicTag));
-
-                // re-try to extract embed album art
-                repos.saveCoverartToCache(basicTag);
-                tagRepos.saveTag(basicTag);
-            } catch(Exception e) {
-                Log.e(TAG, "Error extracting cover art", e);
-            }
         }
     }
 
@@ -276,6 +250,7 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     private static void enqueueScan(Context context, boolean isFullScan, androidx.work.ExistingWorkPolicy policy) {
+        AnalyzeTracksWorker.cancel(context);
         Data inputData = new Data.Builder()
                 .putBoolean("isFullScan", isFullScan)
                 .build();

@@ -121,6 +121,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private LibrarySelectionModel selectionModel;
 
     private WorkInfo.State lastWorkState = null;
+    private WorkInfo scanWork;
+    private WorkInfo analyzeWork;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -487,16 +489,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     if (workInfos != null && !workInfos.isEmpty()) {
                         WorkInfo workInfo = activeScanWork(workInfos);
                         WorkInfo.State currentState = workInfo.getState();
-                        if (currentState == WorkInfo.State.RUNNING) {
-                            int progress = workInfo.getProgress().getInt("progress_value", 0);
-                            int total = workInfo.getProgress().getInt("total_files", 0);
-                            String scanMsg = total > 0 ? "Scanning: " + progress + "/" + total + " files" : "Scanning…";
-                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, scanMsg);
-                        } else if (currentState == WorkInfo.State.ENQUEUED || currentState == WorkInfo.State.BLOCKED) {
-                            // Waiting on its constraint (storage not low) or on a scan ahead of it
-                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, "Scan waiting to start…");
-                        } else {
-                            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(false, "");
+                        scanWork = workInfo;
+                        if (currentState.isFinished()) {
                             if (lastWorkState == WorkInfo.State.RUNNING) {
                                 viewModel.loadMusicItems(currentCriteria);
                             }
@@ -505,8 +499,43 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                             }
                         }
                         lastWorkState = currentState;
+                        renderScanStatus();
                     }
                 });
+        WorkManager.getInstance(getApplicationContext())
+                .getWorkInfosForUniqueWorkLiveData(apincer.android.mmate.worker.AnalyzeTracksWorker.WORK_NAME)
+                .observe(this, workInfos -> {
+                    if (workInfos == null || workInfos.isEmpty()) return;
+                    WorkInfo workInfo = activeScanWork(workInfos);
+                    // Show the measured DR values once analysis completes
+                    if (workInfo.getState() == WorkInfo.State.SUCCEEDED
+                            && analyzeWork != null && analyzeWork.getState() == WorkInfo.State.RUNNING) {
+                        viewModel.loadMusicItems(currentCriteria);
+                    }
+                    analyzeWork = workInfo;
+                    renderScanStatus();
+                });
+    }
+
+    /** Header status: the scan while it is queued or running, then track analysis. */
+    private void renderScanStatus() {
+        WorkInfo.State scanState = scanWork != null ? scanWork.getState() : null;
+        if (scanState == WorkInfo.State.RUNNING) {
+            int progress = scanWork.getProgress().getInt("progress_value", 0);
+            int total = scanWork.getProgress().getInt("total_files", 0);
+            String scanMsg = total > 0 ? "Scanning: " + progress + "/" + total + " files" : "Scanning…";
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, scanMsg);
+        } else if (scanState == WorkInfo.State.ENQUEUED || scanState == WorkInfo.State.BLOCKED) {
+            // Waiting on its constraint (storage not low) or on a scan ahead of it
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, "Scan waiting to start…");
+        } else if (analyzeWork != null && analyzeWork.getState() == WorkInfo.State.RUNNING) {
+            int progress = analyzeWork.getProgress().getInt("progress_value", 0);
+            int total = analyzeWork.getProgress().getInt("total_files", 0);
+            String msg = total > 0 ? "Analyzing: " + progress + "/" + total + " tracks" : "Analyzing tracks…";
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(true, msg);
+        } else {
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateScanning(false, "");
+        }
     }
 
     /** A running scan first, then one still waiting, else the last reported (chained scans share one name). */

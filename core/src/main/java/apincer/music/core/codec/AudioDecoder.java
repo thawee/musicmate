@@ -63,10 +63,8 @@ public class AudioDecoder {
             throw new IOException("File not found: " + filePath);
         }
 
-        File outputFile = new File(inputFile.getParent(), "temp_pcm.raw");
-        if (outputFile.exists()) {
-            outputFile.delete();
-        }
+        // Unique file in the app cache (java.io.tmpdir): never in the music folder, safe in parallel
+        File outputFile = File.createTempFile("alac", ".pcm");
 
         int bitDepth = tag.getAudioBitsDepth();
         String pcmFormat = switch (bitDepth) {
@@ -80,32 +78,25 @@ public class AudioDecoder {
         String command = String.format(Locale.US, "-y -i \"%s\" -t %d -f %s -acodec pcm_%s \"%s\"",
                 filePath, maxDurationSeconds, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
 
-        FFmpegSession session = FFmpegKit.execute(command);
-
-        if (ReturnCode.isSuccess(session.getReturnCode())) {
-            // Read the raw PCM data from the temporary file
-            if (outputFile.exists()) {
-                try (FileInputStream fis = new FileInputStream(outputFile);
-                     ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = fis.read(buffer)) != -1) {
-                        baos.write(buffer, 0, bytesRead);
-                    }
-                    return baos.toByteArray();
-                } finally {
-                    outputFile.delete(); // Clean up the temporary file
-                }
-            } else {
-                throw new IOException("FFmpeg execution succeeded, but output file was not created.");
+        try {
+            FFmpegSession session = FFmpegKit.execute(command);
+            if (!ReturnCode.isSuccess(session.getReturnCode())) {
+                throw new IOException("FFmpeg decoding failed with return code: " + session.getReturnCode() +
+                        " and logs: " + session.getAllLogsAsString());
             }
-        } else {
-            // FFmpeg execution failed
-            throw new IOException("FFmpeg decoding failed with return code: " + session.getReturnCode() +
-                    " and logs: " + session.getAllLogsAsString());
+            try (FileInputStream fis = new FileInputStream(outputFile);
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+                return baos.toByteArray();
+            }
+        } finally {
+            outputFile.delete();
         }
     }
-
 
     public static byte[] decodeAndroid(String audioFile, int durationInSeconds) throws IOException {
         MediaExtractor extractor = new MediaExtractor();

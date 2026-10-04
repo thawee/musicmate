@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import apincer.android.mmate.utils.TagUIUtils
 import apincer.music.core.model.Track
 import apincer.music.core.utils.TagUtils
+import kotlin.math.roundToInt
 
 @Composable
 fun DynamicRangeMeter(
@@ -44,7 +45,8 @@ fun DynamicRangeMeter(
 
     val context = LocalContext.current
     val drScoreStr = TagUtils.getDynamicRangeScore(track) ?: ""
-    val scoreVal = track.drScore.toInt()
+    // Round like the label ("%.0f"), or a 12.6 reads "DR13" in the DR12 color
+    val scoreVal = track.drScore.roundToInt()
     val scoreColor = Color(TagUIUtils.getDRScoreColor(context, scoreVal))
     val drsColor = if (highContrast) {
         androidx.compose.ui.graphics.lerp(scoreColor, Color.White, 0.55f)
