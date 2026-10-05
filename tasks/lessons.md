@@ -1,6 +1,7 @@
 # Lessons Learned: MusicMate Notification & Scroll Refactoring
 
 ## Learnings & Patterns
+- **Keep audio answers scoped to MusicMate when asked about its output:** Explain the internal playback path and its limitations first. Do not substitute recommendations for external players when the user means playback from MusicMate itself. Distinguish supported bit-perfect capability from an accepted preference and an active routed output.
 - **Make release gates explicit when asked for a plan:** Record scope, current blocker, exact build/runtime checks, documentation review and publication verification as separate checkboxes before resuming release execution. A successful build or debug smoke check does not clear an optimized APK runtime gate.
 - **Verify Android signing paths before a release smoke install:** Read Gradle signingReport and compare certificate fingerprints instead of assuming ~/.android/debug.keystore. ANDROID_USER_HOME can relocate the active key. A rejected update must not lead to uninstalling the app or resetting its database.
 - **Honor the current delegation policy:** When the user replaces AGENTS.md, apply its explicit model/role assignments to new helpers, keep file ownership exclusive, and retain integration/final verification with the main agent. Do not carry an earlier no-delegation policy into newly authorized bounded work.

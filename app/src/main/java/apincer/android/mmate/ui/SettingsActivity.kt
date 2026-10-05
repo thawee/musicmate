@@ -34,6 +34,9 @@ class SettingsActivity : ComponentActivity() {
             var artistAwareSimilarSongs by remember {
                 mutableStateOf(Settings.isArtistAwareSimilarSongs(this@SettingsActivity))
             }
+            var usbBitPerfect by remember {
+                mutableStateOf(Settings.isUsbBitPerfectEnabled(this@SettingsActivity))
+            }
             var replayGainMode by remember {
                 mutableStateOf(Settings.getReplayGainMode(this@SettingsActivity))
             }
@@ -71,6 +74,11 @@ class SettingsActivity : ComponentActivity() {
                     onArtistAwareSimilarSongsChange = { checked ->
                         artistAwareSimilarSongs = checked
                         prefs.edit().putBoolean(Constants.PREF_ARTIST_AWARE_SIMILAR_SONGS, checked).apply()
+                    },
+                    usbBitPerfect = usbBitPerfect,
+                    onUsbBitPerfectChange = { checked ->
+                        usbBitPerfect = checked
+                        Settings.setUsbBitPerfectEnabled(this@SettingsActivity, checked)
                     },
                     replayGainMode = replayGainMode,
                     onReplayGainModeChange = { newMode ->

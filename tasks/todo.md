@@ -1454,3 +1454,23 @@ Found by an end-to-end check against the phone (description, SCPD, Browse, GetPr
 Scope: implement the research report's first metadata optimization. Header-token caching, parser changes and buffer pooling remain separate experiments so measurements can be attributed to this change.
 
 Result: [PERFORMANCE.md §11](../PERFORMANCE.md#11-metadata-encoding-follow-up), [complete report/evidence](performance/sonicnio-metadata-2026-10-03/REPORT.md). ETag/date allocation medians fall 94.3%/86.8%; 304/206 preparation times fall 13.1%/5.5%. Six interleaved phone samples show seek median 16.282 → 7.804 ms with essentially unchanged 39.43 MiB/s four-stream throughput. Host bulk throughput is unchanged. All 207 core/UPnP cases and debug build pass; bytes, metadata and installed APK identity verified. Optimized APK remains installed. Small-sample latency gains and absent Netty comparison remain explicit.
+# Dock output label mismatch (2026-10-05)
+
+- [x] Trace dock and Music Center output labels. Dock used the generic player label; Music Center resolved the Android output device.
+- [x] Apply the smallest fix using the existing audio output model. Both local labels now use the same resolved device name; no new API or abstraction.
+- [x] Run app unit tests and debug build, inspect the diff against main, and check whitespace.
+- [x] Verify the fixed APK on the emulator: uninstalled old signature build, installed debug build, verified connected Android test `UsbBitPerfectSettingsTest` (100% pass), and confirmed matching resolved device label ("Phone Speaker") across both the player dock and Music Center. (Physical USB hardware validation still deferred to physical device).
+
+USB hardware validation requires the physical phone; verified on emulator.
+# Native USB bit-perfect playback (2026-10-05)
+
+- [x] Ground playback, mixer APIs, settings and badge behavior; compare lifecycle designs.
+- [x] Implement an opt-in USB mode with exact decoded-format matching, unity gain and safe fallback.
+- [x] Replace capability-based badge with playback mode status; document the setting.
+- [x] Run regression tests, debug build and available runtime checks; record physical USB verification limits.
+
+Throughput checkpoint:
+- Blocking first steps: verify Media3 1.11.1 sink extension points and Android mixer behavior before implementation.
+- Independent workstreams: research lifecycle and settings/UI contracts read-only in parallel.
+- Shared mutable state: one playback owner controls mixer preference and status; workers own disjoint files.
+- Smallest safe decomposition: one worker implements the coupled sink/controller lifecycle; settings and integration follow its status contract.

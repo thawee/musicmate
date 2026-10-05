@@ -20,7 +20,6 @@ import android.graphics.Typeface;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioMixerAttributes;
 import android.media.AudioProfile;
 import android.os.Build;
 import android.text.TextPaint;
@@ -53,8 +52,17 @@ public class AudioOutputHelper {
     private static volatile BluetoothA2dp sBluetoothA2dp = null;
 
     public static class Device {
-        private boolean bitPerfect;
+        private int id = -1;
+        private boolean usb;
         private boolean bluetooth;
+
+        public int getId() {
+            return id;
+        }
+
+        public boolean isUsb() {
+            return usb;
+        }
 
         public String getName() {
             return name;
@@ -163,13 +171,6 @@ public class AudioOutputHelper {
             return description;
         }
 
-        public boolean isBitPerfect() {
-            return bitPerfect;
-        }
-
-        public void setBitPerfect(boolean bitPerfect) {
-            this.bitPerfect = bitPerfect;
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -182,9 +183,12 @@ public class AudioOutputHelper {
 
         // Default setup if we have a device, or absolute fallback
         if (selectedDevice != null) {
+            outputDevice.id = selectedDevice.getId();
+            int type = selectedDevice.getType();
+            outputDevice.usb = type == AudioDeviceInfo.TYPE_USB_DEVICE
+                    || type == AudioDeviceInfo.TYPE_USB_HEADSET
+                    || type == AudioDeviceInfo.TYPE_USB_ACCESSORY;
             readResolutions(context, outputDevice, selectedDevice);
-            int sampleRate = (track != null) ? (int) track.getAudioSampleRate() : 44100;
-            outputDevice.setBitPerfect(isBitPerfect(context, selectedDevice, sampleRate));
             boolean isBt = isBluetoothDevice(selectedDevice);
             outputDevice.setBluetooth(isBt);
 
@@ -196,7 +200,8 @@ public class AudioOutputHelper {
                 }
             } else {
                 outputDevice.setDescription(typeToString(selectedDevice.getType()));
-                outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+                outputDevice.setResId(outputDevice.isUsb()
+                        ? R.drawable.ic_baseline_usb_24 : R.drawable.ic_baseline_volume_up_24);
             }
             // Built-in outputs (speaker, earpiece, wired jack) report the phone model ("SM-S931B")
             // as their product name; name those by type instead.
@@ -230,7 +235,7 @@ public class AudioOutputHelper {
 
         if (target instanceof ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
             if (audioOutputDevice != null) {
-                if (audioOutputDevice.isBitPerfect()) {
+                if (audioOutputDevice.isUsb()) {
                     return ContextCompat.getDrawable(context, R.drawable.ic_baseline_usb_24);
                 } else if (audioOutputDevice.getResId() != 0) {
                     return ContextCompat.getDrawable(context, audioOutputDevice.getResId());
@@ -713,35 +718,6 @@ public class AudioOutputHelper {
         return false;
     }
 
-    // Check if the current path is truly bit-perfect (Android 14+)
-    public static boolean isBitPerfect(Context context, AudioDeviceInfo device, int trackSampleRate) {
-        if (context == null || device == null) return false;
-        int type = device.getType();
-        // Bit-perfect mixer attributes are only supported on USB audio sinks
-        if (type != AudioDeviceInfo.TYPE_USB_DEVICE &&
-            type != AudioDeviceInfo.TYPE_USB_HEADSET &&
-            type != AudioDeviceInfo.TYPE_USB_ACCESSORY) {
-            return false;
-        }
-
-        try {
-            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                List<AudioMixerAttributes> mixerAttrs = am.getSupportedMixerAttributes(device);
-                if (mixerAttrs != null) {
-                    for (AudioMixerAttributes attr : mixerAttrs) {
-                        if (attr.getMixerBehavior() == AudioMixerAttributes.MIXER_BEHAVIOR_BIT_PERFECT) {
-                            if (attr.getFormat().getSampleRate() == trackSampleRate) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignored) {}
-        return false;
-    }
-
     private static AudioDeviceInfo getAudioDevice(AudioDeviceInfo[] devices) {
         AudioDeviceInfo bestDevice = null;
         int highestPriority = -1;
@@ -776,7 +752,7 @@ public class AudioOutputHelper {
         };
     }
 
-    static String typeToString(int type) {
+    public static String typeToString(int type) {
         return switch (type) {
             case AudioDeviceInfo.TYPE_AUX_LINE -> "AUX Line Out";
             case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth Audio";

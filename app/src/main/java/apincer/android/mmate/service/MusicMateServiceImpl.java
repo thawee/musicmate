@@ -1341,6 +1341,15 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return getActivePlayer();
     }
 
+    public apincer.android.mmate.audio.UsbBitPerfectSession.Status getUsbBitPerfectStatus() {
+        PlaybackTarget target = getPlayer();
+        if (androidPlayer == null || target == null
+                || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
+            return apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
+        }
+        return androidPlayer.getUsbBitPerfectStatus();
+    }
+
     @Override
     public void switchPlayer(String targetId, boolean controlled) {
         //if (targetId.startsWith(STREAMING_PLAYER_PREFIX)) {

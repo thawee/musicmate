@@ -111,11 +111,19 @@ Whether MusicMate drives or only follows playback depends on the current target:
 ### High-Resolution AudioTrack & ExoPlayer Setup
 MusicMate's internal player leverages Media3 ExoPlayer configured for hardware audio reproduction:
 
-1. **Auto-Negotiated Integer PCM:** Built with a custom `DefaultRenderersFactory` whose only purpose is to override `buildAudioSink` and inject `AudioLevelProcessor` (the VU-meter tap) into `DefaultAudioSink`. ExoPlayer's own `enableFloatOutput` / `enableAudioTrackPlaybackParams` arguments are forwarded **unchanged**, so the player auto-negotiates bit-perfect 16-bit and 24-bit integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) with Android's Bluetooth A2DP audio HAL (`a2dp.default.so`) and connected USB DACs, avoiding float quantization distortion. Float output is never forced — see `tasks/lessons.md` §"Never force 32-bit Float PCM".
+1. **PCM output:** A custom `DefaultRenderersFactory` injects the byte-preserving `AudioLevelProcessor` VU-meter tap into `DefaultAudioSink`. The ordinary sink retains Media3's float-output policy. Media3 1.11.1 can convert high-resolution integer PCM to 16-bit in this pipeline; neither source tags nor a DAC's supported sample rate prove bit-perfect playback. Float output is not forced, because the repository records Bluetooth distortion with that configuration.
 2. **CPU Wakelock Protection:** Configured with `setWakeMode(C.WAKE_MODE_LOCAL)` to acquire `PowerManager.PARTIAL_WAKE_LOCK` automatically during active playback, preventing Android Doze sleep pauses and buffer underruns during screen-off listening.
 3. **Hardware Disconnect Protection:** Configured with `setHandleAudioBecomingNoisy(true)` to automatically pause playback when headphones, USB DACs, or Bluetooth devices are disconnected.
 4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing across 24-bit/96kHz+ FLAC and DSD files.
 5. **Lifecycle Cleanup:** Complete `release()` method tied directly into `MusicMateServiceImpl.onDestroy()`.
+
+### Native USB mixer requests
+
+The opt-in **USB bit-perfect** setting applies at the next song. `UsbBitPerfectSession` owns the decoded format and the final Media3 output, requests an exact supported Android `BIT_PERFECT` mixer format before AudioTrack creation, and checks the routed USB device and current preferred attributes. Playback uses unity software gain on this USB path. Songs are prepared individually while the option is enabled, preventing buffered source metadata from changing the previous song's request.
+
+Unsupported formats, precision loss, rejected mixer requests, and initialization failures use ordinary playback. Output release, route changes, and processing changes clear the owned request. Older output releases cannot clear a newer output's preference. Normal playback retains gapless preloading when the option is off.
+
+`BIT-PERFECT REQUESTED` reports an accepted preference on the matching USB route, not measured transport or DAC integrity. Android exposes no public end-to-end verification API. This implementation does not add a direct USB driver, native DSD, or DoP. See [Android's preferred mixer documentation](https://source.android.com/docs/core/audio/preferred-mixer-attr).
 
 ### True Dual-Engine Gapless Playback Pipeline
 
@@ -226,7 +234,7 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 
 ## 8. Active ReplayGain 2.0 / EBU R128 Loudness Leveling Architecture
 
-MusicMate incorporates an active, real-time loudness leveling engine (`ReplayGainManager.java`) designed to eliminate abrupt volume jumps between tracks and albums while safeguarding bit-perfect digital audio integrity.
+`ReplayGainManager.java` levels loudness by changing software volume. USB bit-perfect mode bypasses ReplayGain on its USB playback path because gain changes modify the samples.
 
 ```
                   ┌──────────────────────────────────────────────┐

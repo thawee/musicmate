@@ -126,7 +126,7 @@ Your queue, source and current song are kept when you close the app. Playback do
 Tap the player icon in Music Center to choose where music plays.
 
 - **Network Streamers.** DLNA/UPnP players on your network or on the phone's hotspot, such as a HiBy, WiiM or Eversolo, shown with their address.
-- **This Device.** The phone speaker, a USB DAC (shown as *USB Bit-Perfect Output*) or Bluetooth headphones (shown with the codec, for example *Bluetooth · LDAC*).
+- **This Device.** The phone speaker, a USB DAC, or Bluetooth headphones. USB devices show *USB audio output*, or *USB bit-perfect requested* when Android accepts MusicMate's request for the current output. Bluetooth devices show the codec, for example *Bluetooth · LDAC*.
 - **Installed Music Apps.** Other players such as HiByMusic, Poweramp or UAPP. These need External Player Access.
 - **Bluetooth / System Output…** opens Android's output panel to connect or switch Bluetooth devices.
 
@@ -228,6 +228,7 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 - **When I tap a track.**
   - **Play tracks** (default): tap plays, and press and hold opens the details.
   - **Edit tags**: tap opens the details, and press and hold starts selecting several songs.
+- **USB bit-perfect** requests unmodified USB output for a compatible DAC and phone. Enable it, select **This Device**, and start the next song. MusicMate bypasses ReplayGain on this USB path, so use your DAC's volume control. Music Center shows **BIT-PERFECT REQUESTED** only after Android accepts the matching output format and the audio routes to that USB device. If support is unavailable or the decoder/output changes precision, ordinary playback continues and Music Center shows the reason. This option prepares songs individually, so USB playback does not use gapless preloading. It does not add direct DSD or DoP playback, and the badge does not verify the DAC's received samples.
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
   - **Pre-Amp Gain** raises or lowers the result.
   - **Prevent Clipping** stops loud peaks from distorting.

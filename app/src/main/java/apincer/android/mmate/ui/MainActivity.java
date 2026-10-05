@@ -237,8 +237,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 progress = (float) playbackState.currentPositionSecond / (float) song.getAudioDuration();
             }
 
-            apincer.android.mmate.ui.compose.MainScaffoldState.updateNowPlaying(song, isPlaying, targetSubtitle, progress);
-
             // Update AudioHub sub-states
             apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
             nps.getPlaybackState().setValue(playbackState != null ? playbackState : new PlaybackState());
@@ -302,17 +300,26 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 apincer.music.core.playback.spi.PlaybackTarget player = playbackService.getPlayer();
                 if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
                     AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(this, song);
-                    boolean isBitPerfect = device.isBitPerfect();
+                    apincer.android.mmate.audio.UsbBitPerfectSession.Status usbStatus =
+                            (playbackService instanceof apincer.android.mmate.service.MusicMateServiceImpl msi)
+                                    ? msi.getUsbBitPerfectStatus()
+                                    : apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
+                    boolean isBitPerfectRequested = usbStatus.isRequested() && usbStatus.getDeviceId() == device.getId();
                     boolean isBluetooth = device.isBluetooth();
                     String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Phone Speaker";
+                    targetSubtitle = devName;
                     nps.getTargetTitle().setValue(devName);
-                    nps.getTargetBadge().setValue(isBitPerfect ? "BIT-PERFECT" : (isBluetooth ? "BLUETOOTH" : "DIRECT OUTPUT"));
+                    nps.getTargetBadge().setValue(isBitPerfectRequested ? "BIT-PERFECT REQUESTED"
+                            : (isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "DIRECT OUTPUT")));
                     StringBuilder devBuf = new StringBuilder();
                     devBuf.append(device.getDescription());
                     if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
                         devBuf.append(" — ").append(device.getCodec());
                     } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getFriendyDescription())) {
                         devBuf.append(" — ").append(device.getFriendyDescription());
+                    }
+                    if (device.isUsb() && usbStatus.getState() != apincer.android.mmate.audio.UsbBitPerfectSession.State.DISABLED) {
+                        devBuf.append("\n").append(usbStatus.getReason());
                     }
                     nps.getTargetDetails().setValue(devBuf.toString());
                 } else {
@@ -325,6 +332,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 nps.getTargetBadge().setValue("SYS OUT");
                 nps.getTargetDetails().setValue("System Default Output");
             }
+
+            apincer.android.mmate.ui.compose.MainScaffoldState.updateNowPlaying(song, isPlaying, targetSubtitle, progress);
 
             if (songChanged && song != null) {
                 if (Settings.isListFollowNowPlaying(getBaseContext()) && (actionMode == null)) {
@@ -1597,6 +1606,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
         apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice =
                 apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, playbackService.getNowPlayingSong());
+        apincer.android.mmate.audio.UsbBitPerfectSession.Status usbStatus =
+                (playbackService instanceof apincer.android.mmate.service.MusicMateServiceImpl msi)
+                        ? msi.getUsbBitPerfectStatus()
+                        : apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
 
         List<apincer.android.mmate.ui.compose.PlayerTargetItem> streamerItems = new java.util.ArrayList<>();
         List<apincer.android.mmate.ui.compose.PlayerTargetItem> localItems = new java.util.ArrayList<>();
@@ -1616,8 +1629,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                         if (audioOutputDevice.getName() != null && !audioOutputDevice.getName().isEmpty()) {
                             title = audioOutputDevice.getName();
                         }
-                        if (audioOutputDevice.isBitPerfect()) {
-                            subtitle = "USB Bit-Perfect Output";
+                        if (audioOutputDevice.isUsb()) {
+                            subtitle = isSelected && usbStatus.isRequested()
+                                    && usbStatus.getDeviceId() == audioOutputDevice.getId()
+                                    ? "USB bit-perfect requested" : "USB audio output";
                             iconRes = R.drawable.ic_baseline_usb_24;
                         } else if (audioOutputDevice.isBluetooth()) {
                             String codec = audioOutputDevice.getCodec();
