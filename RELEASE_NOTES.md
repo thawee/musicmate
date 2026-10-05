@@ -1,11 +1,9 @@
-# MusicMate 3.24.1
+# MusicMate 3.25.0
 
-Track analysis after a scan is faster and no longer looks stuck. MusicMate now shows "Analyzing: x/y tracks" while it measures dynamic range, analyzes up to four tracks at once (about 2 to 3 times faster), and continues where it left off if Android pauses it. DSD tracks now get a DR value too.
+Native USB bit-perfect playback is now supported on Android 14+. When enabled in Settings under Audiophile Playback, MusicMate requests direct hardware output from the Android audio mixer for connected USB DACs when the audio format (sample rate and channels) matches the DAC's capabilities.
 
-DR reads the same everywhere: the library, Now Playing and the Studio Console all round it, and the badge color matches the number shown. The Studio Console's Up Next shows the next track instead of the current one.
+During active bit-perfect USB sessions, audio is delivered at 100% unity gain without digital scaling or dithering, and ReplayGain volume leveling is automatically bypassed. Active status is displayed with real-time badges (`USB BIT-PERFECT`, `USB DIRECT`, or `DIRECT OUTPUT`) in Now Playing and the Studio Console.
 
-Smaller fixes: ALAC analysis no longer writes temporary files into your music folders, "Don't show these tips again" hides the tips at once, the tips describe what tap and long-press do in your tap mode, and the loudness leveling buttons fit on one line.
+The player dock output label now matches the Music Center, consistently displaying the name of the active audio output device (such as Phone Speaker or USB DAC).
 
-The README and User Guide are rewritten for people using the app, with new screenshots.
-
-Version code: 146. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.24.1/CHANGELOG.md) for details.
+Version code: 147. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.25.0/CHANGELOG.md) for details.

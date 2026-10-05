@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.25.0] - 2026-10-05
+
+### Added
+- **Native USB bit-perfect playback:** Opt-in playback setting to bypass Android's system mixer on supported external USB DACs (Android 14+) when decoded sample rate and channel count match hardware capabilities.
+- **Bit-perfect volume & replay gain bypass:** Enforces unity gain (full digital fidelity) and automatically bypasses ReplayGain loudness adjustments during bit-perfect USB sessions.
+- **Playback mode badges:** Real-time playback status badge in Now Playing and the Studio Console reflects active bit-perfect or direct output (`USB BIT-PERFECT`, `USB DIRECT`, `DIRECT OUTPUT`).
+- **USB bit-perfect preference:** Setting toggle under "Audiophile Playback" in Settings.
+
+### Fixed
+- **Dock output label mismatch:** The player dock showed a generic player label while Music Center resolved the active Android audio output device. Both surfaces now consistently display the resolved output device name (e.g., Phone Speaker, USB DAC).
+
 ## [3.24.1] - 2026-10-04
 
 ### Fixed

@@ -1,3 +1,8 @@
+# Release 3.25.0 (2026-10-05)
+- [x] Native USB bit-perfect playback (Android 14+): opt-in mixer bypass, exact decoded format matching, unity gain, ReplayGain bypass, and status badges.
+- [x] Dock and Music Center output label alignment: both local playback surfaces consistently display the active resolved audio device name.
+- [x] Verified on emulator: instrumented settings test passed, library scan and audio playback functional, settings toggle verified. Core and app unit tests pass.
+
 # Release 3.24.1 (2026-10-04)
 - [x] Fixes: DSD DR via FFmpeg (emulator: generated DSD64 DSF measured DR8, previously no DR), DR rounding in Now Playing/Console (emulator: console DR 13 = list DR13), console Up Next (shows Afterglow after Adagio Cantabile), mode-aware tips, Off/Track/Album labels on one line. Core and app unit tests pass.
 - [ ] Phone check of DSD analysis on the 6 real DSD tracks (phone disconnected during the fix).
