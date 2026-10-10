@@ -207,7 +207,8 @@ public class AudioOutputHelper {
             // as their product name; name those by type instead.
             String productName = selectedDevice.getProductName() != null ? selectedDevice.getProductName().toString().trim() : "";
             boolean isGenericName = productName.isEmpty() || productName.equalsIgnoreCase(Build.MODEL);
-            outputDevice.setName(isGenericName ? typeToString(selectedDevice.getType()) : productName);
+            String name = isGenericName ? typeToString(selectedDevice.getType()) : cleanDeviceName(productName);
+            outputDevice.setName(name);
         } else {
             outputDevice.setCodec("SRC");
             outputDevice.setName("Phone Speaker");
@@ -1037,6 +1038,18 @@ public class AudioOutputHelper {
     private static int intArrayLastIndex(int[] integerArray){
         if(integerArray==null || integerArray.length==0) return 0;
         return integerArray[integerArray.length-1];
+    }
+
+    public static String cleanDeviceName(String rawName) {
+        if (rawName == null || rawName.trim().isEmpty()) return "";
+        String cleaned = rawName.trim();
+        // Remove ALSA / driver prefixes like "USB-Audio - ", "ASB-Audio - "
+        cleaned = cleaned.replaceAll("(?i)^[AU]SB[-_\\s]*Audio\\s*-\\s*", "");
+        // Remove redundant trailing " USB AUDIO", " USB DAC", " USB Audio"
+        cleaned = cleaned.replaceAll("(?i)\\s+USB\\s+(?:AUDIO|DAC)$", "");
+        // Fix known vendor typos like "TNIY" -> "TINY"
+        cleaned = cleaned.replaceAll("(?i)\\bTNIY\\b", "TINY");
+        return cleaned.trim().isEmpty() ? rawName.trim() : cleaned.trim();
     }
 
 }

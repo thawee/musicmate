@@ -1,5 +1,7 @@
 # Native USB bit-perfect design
 
+Superseded on 2026-10-06 by USB DAC hi-res output (tasks/todo.md). The Galaxy S25 test phone exposes no `BIT_PERFECT` mixer port, so the feature was removed.
+
 ## Caller and ownership
 
 The listener enables **USB bit-perfect** in Settings and starts the next song on **This Device**. `AndroidPlayerController` snapshots the preference for that song. `UsbBitPerfectSession` owns the decoded format, Android mixer request, output lease, and immutable `Status`. Music Center and the player picker read the service's status for the matching device ID.
@@ -22,6 +24,8 @@ The listener enables **USB bit-perfect** in Settings and starts the next song on
 | Own the request beside the sink and AudioTrack lifecycle | Accepted. Exact output matching, fallback, route checks, and cleanup share one owner. |
 
 The playback worker implements the accepted sketch. Avoid a separate USB driver or a vendored Media3 sink. Native requests use the existing decoder/sink only when it preserves precision. High-resolution content narrowed by this pipeline uses ordinary playback with an explicit reason.
+
+The retry limits native requests to eligible 16-bit PCM. Media3 1.11.1 applies a private 20 ms startup fade after its processor chain. `PcmStartFadeRestorer` retains that bounded prefix after trimming and conversion and restores it only on the owned native output. Unit checks compare byte identity against Media3's fade routine, and an emulator check captures the actual `DefaultAudioSink` output with and without restoration.
 
 ## Lifecycle contracts
 

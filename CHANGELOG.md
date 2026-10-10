@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.26.0] - 2026-10-10
+
+### Changed
+- **High-resolution USB DAC output:** 24-bit songs keep their full resolution instead of being reduced to 16-bit, and a USB DAC runs at the song's own sample rate when it offers that rate (for example 96 kHz instead of Android's usual 48 kHz). Android still mixes other sounds and applies the volume. The output picker shows the DAC format, such as `USB 96 kHz / 32-bit`.
+- **VU meters:** Levels are measured from the audio sent to the output, so meters also move for high-resolution songs.
+
+### Removed
+- **USB bit-perfect setting:** Replaced by the automatic high-resolution USB output above. Phones such as the Galaxy S25 expose no Android bit-perfect mixer, so the setting could never succeed on them. ReplayGain and gapless playback work again on USB.
+
+### Fixed
+- **DLNA streaming on Android 17:** Android 17 blocks local network traffic until the app holds the new Local network access permission, so the media server could not announce itself or find players. MusicMate now asks for this permission when the server starts.
+- **Next in Music Center:** Each tap skipped two songs, so a short queue stopped after a few taps. Next now moves one song per tap.
+- **USB output recovery:** If Android refuses the requested USB format, MusicMate retries once with Android's default format instead of failing the song.
+
 ## [3.25.0] - 2026-10-05
 
 ### Added

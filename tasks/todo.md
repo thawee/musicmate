@@ -1,3 +1,8 @@
+# Release 3.26.0 (2026-10-10)
+- [x] DLNA on Android 17: request ACCESS_LOCAL_NETWORK before the media server starts. Phone (SM-S931B, Android 17): permission denied = 258 SSDP `sendto EPERM`; granted = 0, SSDP bound on 1900, HTTP on 192.168.1.51, LAN devices discovered; system permission dialog shown on launch with auto-start.
+- [x] USB DAC hi-res output replaces USB bit-perfect; Next in Music Center fix (see "USB DAC hi-res output" below).
+- [ ] Listener check still open: a hi-res track over Bluetooth.
+
 # Release 3.25.0 (2026-10-05)
 - [x] Native USB bit-perfect playback (Android 14+): opt-in mixer bypass, exact decoded format matching, unity gain, ReplayGain bypass, and status badges.
 - [x] Dock and Music Center output label alignment: both local playback surfaces consistently display the active resolved audio device name.
@@ -1479,3 +1484,30 @@ Throughput checkpoint:
 - Independent workstreams: research lifecycle and settings/UI contracts read-only in parallel.
 - Shared mutable state: one playback owner controls mixer preference and status; workers own disjoint files.
 - Smallest safe decomposition: one worker implements the coupled sink/controller lifecycle; settings and integration follow its status contract.
+# USB bit-perfect retry (2026-10-06)
+
+- [x] Fix exact decoded/output mixer matching and unity gain before the USB request.
+- [x] Verify accepted preference against the actual USB route; clear owned preferences on fallback and release.
+- [x] Run meaningful format/lifecycle regression tests, app/core tests, and debug build. 129 app tests and 187 core tests passed; real Media3 sink checks preserve PCM16 bytes before and after trimming/seek and retain the normal output fade.
+- [x] Verify settings and ordinary output on connected devices; distinguish physical USB checks from emulator checks. Android 16 emulator: settings toggle persists and restores its original value; normal sink fade and native PCM trim/seek checks pass. The first real-sink run exposed an empty-buffer drain crash, fixed with a regression test.
+- [ ] Confirm an accepted native USB request on the physical Samsung + SNOWSKY TINY B. Only the Android 16 emulator is connected; it cannot establish hardware support.
+
+Preserve the existing SNOWSKY name cleanup and picker details. Physical device: Samsung with SNOWSKY TINY B; model/Android version not yet observed.
+
+# USB DAC hi-res output (2026-10-06), replaces USB bit-perfect
+
+Evidence (Galaxy S25 SM-S931B, Android 16, SNOWSKY TINY B, measured over adb):
+- No output mix port has AUDIO_OUTPUT_FLAG_BIT_PERFECT, so Android bit-perfect is impossible on this phone.
+- Today a 24/96 file leaves MusicMate as 96k 16-bit and Android mixes it to USB at 48k (deep_buffer, PCM_8_24).
+- getSupportedMixerAttributes (default behavior) offers 48k-384k at 16/24/32-bit. No 44.1k, no float.
+- Media3 1.11.1 truncates high-res PCM to 16-bit unless float output is on; float mode skips custom processors (meters).
+
+Plan:
+- [x] Subtract: delete UsbBitPerfectSession, PcmStartFadeRestorer, their unit/instrumented tests, the USB bit-perfect setting, status plumbing (service, MainActivity, picker), docs and the libs.versions comment. Revert picker maxLines probe. Restore gapless preloading and ReplayGain on USB.
+- [x] Keep 24-bit: enable Media3 float output. Move level metering from the processor chain to the output write path so VU meters work for 16-bit and float.
+- [x] Native rate on USB: before each AudioTrack is created, if the route is a USB DAC and Android offers a default-behavior mixer at the exact track rate and channel mask, prefer it with the highest bit depth. Otherwise clear MusicMate's preference. Clear on stop, release, and DAC removal. Pure selection function with unit tests.
+- [x] Picker shows the real USB output format (e.g. "USB 96 kHz / 32-bit output").
+- [x] Verify on phone (dumpsys media.audio_flinger): 24/96 track is 24-bit packed at 96k on a 96 kHz 32-bit USB output; 24/48 at 48 kHz 32-bit; 16/44.1 stays 16-bit on the 48 kHz deep-buffer output.
+- [x] Fix: Next in Music Center skipped two tracks per tap and stopped early. play() cleared the playlist before setting the new item; the empty playlist reached STATE_ENDED, which the listener treated as a natural track end. Pre-existing in 3.25.0. Verified on phone: 3 fast taps = 3 advances, 0 spurious completions, still playing.
+- [x] Listener checks (user): hi-res and CD sound clean, VU meters, gapless album, DAC unplug.
+- [ ] Listener check still open: a hi-res track over Bluetooth (24-bit integer now reaches A2DP).

@@ -11,7 +11,6 @@ import java.util.Set;
 
 public class Settings {
     private static final String TAG = Settings.class.getSimpleName();
-    private static final String PREF_USB_BIT_PERFECT = "preference_usb_bit_perfect";
 
     public static boolean isShowStorageSpace(Context context) {
         SharedPreferences prefs =
@@ -71,16 +70,6 @@ public class Settings {
     public static String getLastPlayerTargetId(Context context) {
         SharedPreferences prefs = getPreferences(context);
         return prefs.getString("PREF_LAST_PLAYER_TARGET_ID", null);
-    }
-
-    public static boolean isUsbBitPerfectEnabled(Context context) {
-        return context != null && PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_USB_BIT_PERFECT, false);
-    }
-
-    public static void setUsbBitPerfectEnabled(Context context, boolean enabled) {
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putBoolean(PREF_USB_BIT_PERFECT, enabled).apply();
     }
 
     public static String getReplayGainMode(Context context) {

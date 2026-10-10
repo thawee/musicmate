@@ -86,8 +86,8 @@ MusicMate's playback architecture coordinates audio delivery across three distin
 
 1. **Audio Engine Architecture:**
    - Driven by `ExoPlayer` configured with `C.WAKE_MODE_LOCAL`, `SeekParameters.EXACT`, and `USAGE_MEDIA` / `CONTENT_TYPE_MUSIC`.
-   - **Auto-Negotiated PCM Output:** `AndroidPlayerController` installs a custom `DefaultRenderersFactory` that overrides `buildAudioSink` purely to inject the `AudioLevelProcessor` (VU meter) tap. It forwards ExoPlayer's own `enableFloatOutput` / `enableAudioTrackPlaybackParams` decision to `DefaultAudioSink` **unchanged** — float output is *not* forced on. Integer PCM (`ENCODING_PCM_16BIT` / `ENCODING_PCM_24BIT_PACKED`) is the safe default for Bluetooth A2DP (`a2dp.default.so`) and standard device mixers; forcing float PCM onto those sinks causes audible distortion and crackling. See `tasks/lessons.md` §"Never force 32-bit Float PCM".
-   - **Zero-Copy Audio Telemetry:** Injects `AudioLevelProcessor` into `DefaultAudioSink`'s processor chain to non-destructively sample peak and RMS stereo levels for the real-time Analog VU meter via `AudioTelemetryManager`.
+   - **Integer PCM Output:** `AndroidPlayerController` overrides `buildAudioSink` to run `DefaultAudioSink` with float output, so high-resolution sources keep more than 16 bits, and wraps each output in `IntegerPcmAudioOutput`. That wrapper converts float to `ENCODING_PCM_24BIT_PACKED` before Android sees it, because float PCM on Bluetooth A2DP (`a2dp.default.so`) and standard device mixers causes distortion and crackling. See `tasks/lessons.md` §"Never force 32-bit Float PCM". `UsbOutputFormat` asks Android to run a USB DAC at the track's sample rate when the DAC offers it.
+   - **Output Audio Telemetry:** `IntegerPcmAudioOutput` passes the samples Android accepted to `AudioLevelMeter`, which publishes peak and RMS stereo levels for the real-time Analog VU meter via `AudioTelemetryManager`. Metering sits at the output because Media3 skips custom processors in float mode.
    - **ReplayGain 2.0 / EBU R128 Leveling:** Evaluates track and album gain tags before playback and attenuates `internalExoPlayer.setVolume(gain)` with an anti-clipping true-peak limiter ($scalar \times peak \le 1.0$) to prevent inter-sample clipping on external DACs.
 
 2. **Hardware Sink Routing Priority:**
@@ -312,7 +312,7 @@ Library metadata rows and full-screen specification chips wrap when space is lim
   4. Local device playback required clear architectural separation and documentation between phone speaker routing and bit-perfect USB DAC output.
 - **Decision:**
   1. **Triple Playback Domain Architecture:**
-     - **Local Device (Internal ExoPlayer):** Primary engine with auto-negotiated PCM output (integer PCM by default; float output is not forced), zero-copy stereo VU meter telemetry (`AudioLevelProcessor`), ReplayGain 2.0 leveling, and native gapless preloading.
+     - **Local Device (Internal ExoPlayer):** Primary engine with integer PCM output (24-bit for high-resolution sources), USB DAC output at the track's sample rate, stereo VU meter telemetry (`AudioLevelMeter`), ReplayGain 2.0 leveling, and native gapless preloading.
      - **Network Streamer (DLNA/UPnP Dual Modes):** MusicMate operates both as an integrated controller + server (Mode A: DMS + DMC with `SetNextAVTransportURI` gapless preloading and safety fallback timers) and as a standalone media server (Mode B: DMS Only browsable by external controllers like BubbleUPnP, mconnect, and WiiM via `ContentDirectory` with RFC 7233 byte-range HTTP streaming and passive `onAccessMediaTrack` collision guards).
      - **External Music Apps (Companion Controller Pattern):** MusicMate acts as a remote companion controller via Android `MediaSession` Binder IPC (`MediaController.getTransportControls()`), observing metadata and state passively.
   2. **One-Time Explicit Handoff vs. IPC Control:**

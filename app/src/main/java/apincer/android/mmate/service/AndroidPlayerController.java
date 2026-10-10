@@ -32,22 +32,15 @@ import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.common.audio.AudioProcessor;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.audio.AudioSink;
-import androidx.media3.exoplayer.audio.AudioOutput;
-import androidx.media3.exoplayer.audio.AudioOutputProvider;
-import androidx.media3.exoplayer.audio.AudioOutputProvider.InitializationException;
-import androidx.media3.exoplayer.audio.AudioOutputProvider.OutputConfig;
-import androidx.media3.exoplayer.audio.AudioTrackAudioOutput;
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider;
 import androidx.media3.exoplayer.audio.DefaultAudioSink;
-import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider;
-import apincer.android.mmate.audio.AudioLevelProcessor;
 import apincer.android.mmate.audio.AudioTelemetryManager;
-import apincer.android.mmate.audio.UsbBitPerfectSession;
+import apincer.android.mmate.audio.MusicAudioOutputProvider;
+import apincer.android.mmate.audio.UsbOutputFormat;
 
 public class AndroidPlayerController {
     private static final String TAG = "AndroidPlayerController";
@@ -60,7 +53,7 @@ public class AndroidPlayerController {
     private PlaybackCallback playbackCallback;
     private ExoPlayer internalExoPlayer;
     private Track nextTrack;
-    private UsbBitPerfectSession usbBitPerfectSession;
+    private final UsbOutputFormat usbOutputFormat;
 
     private long lastUpdateSongTime;
 
@@ -152,8 +145,8 @@ public class AndroidPlayerController {
     public AndroidPlayerController(Context context, MediaSessionManager mediaSessionManager) {
         this.context = context;
         this.mediaSessionManager = mediaSessionManager;
-        this.usbBitPerfectSession = new UsbBitPerfectSession(context);
-        this.usbBitPerfectSession.start();
+        this.usbOutputFormat = new UsbOutputFormat(context);
+        this.usbOutputFormat.start();
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -171,41 +164,15 @@ public class AndroidPlayerController {
                     AudioTrackAudioOutputProvider baseProvider = new AudioTrackAudioOutputProvider.Builder(context)
                             .build();
 
-                    ForwardingAudioOutputProvider outputProvider = new ForwardingAudioOutputProvider(baseProvider) {
-                        @NonNull
-                        @Override
-                        public AudioOutput getAudioOutput(OutputConfig config) throws InitializationException {
-                            if (usbBitPerfectSession != null) {
-                                usbBitPerfectSession.prepareMixerPreference(config.sampleRate, config.channelMask, config.encoding);
-                            }
-                            try {
-                                AudioOutput output = super.getAudioOutput(config);
-                                if (output instanceof AudioTrackAudioOutput trackOutput && usbBitPerfectSession != null) {
-                                    usbBitPerfectSession.onAudioTrackCreated(trackOutput.getAudioTrack());
-                                }
-                                return output;
-                            } catch (InitializationException e) {
-                                if (usbBitPerfectSession != null && usbBitPerfectSession.hasActiveMixerPreference()) {
-                                    Log.w(TAG, "AudioTrack init failed with bit-perfect mixer; clearing preference and retrying...", e);
-                                    usbBitPerfectSession.clearMixerPreference();
-                                    AudioOutput fallbackOutput = super.getAudioOutput(config);
-                                    if (fallbackOutput instanceof AudioTrackAudioOutput trackOutput) {
-                                        usbBitPerfectSession.onAudioTrackCreated(trackOutput.getAudioTrack());
-                                    }
-                                    return fallbackOutput;
-                                }
-                                throw e;
-                            }
-                        }
-                    };
+                    MusicAudioOutputProvider outputProvider = new MusicAudioOutputProvider(baseProvider, usbOutputFormat);
 
+                    // Float keeps high-resolution sources above 16 bits; IntegerPcmAudioOutput
+                    // turns it back into integer PCM before Android sees it. Media3 skips its
+                    // speed processor in float mode, so speed requests go to the AudioTrack.
                     return new DefaultAudioSink.Builder(context)
-                            .setEnableFloatOutput(enableFloatOutput)
-                            .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                            .setEnableFloatOutput(true)
+                            .setEnableAudioTrackPlaybackParams(true)
                             .setAudioOutputProvider(outputProvider)
-                            .setAudioProcessors(new AudioProcessor[] {
-                                    new AudioLevelProcessor(null)
-                            })
                             .build();
                 }
             };
@@ -272,6 +239,11 @@ public class AndroidPlayerController {
                             }
                         }
                     }
+                }
+                @Override
+                public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+                    if (playWhenReady) usbOutputFormat.resume();
+                    else usbOutputFormat.suspend();
                 }
                 @Override
                 public void onIsPlayingChanged(boolean isPlaying) {
@@ -479,11 +451,6 @@ public class AndroidPlayerController {
                             internalExoPlayer.removeMediaItems(0, current);
                         }
                         if (nextSong == null) return;
-                        if (usbBitPerfectSession != null && usbBitPerfectSession.isBitPerfectActive()) {
-                            // With USB mode enabled, prepare songs individually so upcoming source
-                            // metadata cannot change a buffered song's request.
-                            return;
-                        }
                         internalExoPlayer.addMediaItem(buildMediaItem(nextSong));
                         Log.d(TAG, "Gapless ExoPlayer: Preloaded next media item: " + nextSong.getTitle());
                     } catch (Exception e) {
@@ -503,10 +470,8 @@ public class AndroidPlayerController {
             runOnMainThread(() -> {
                 if (internalExoPlayer != null) {
                     try {
-                        if (usbBitPerfectSession != null) {
-                            usbBitPerfectSession.onTrackStarting(song);
-                        }
-                        internalExoPlayer.clearMediaItems();
+                        // Replace the playlist in one step: clearing it first ends the empty
+                        // playlist, and STATE_ENDED would advance the queue a second time.
                         internalExoPlayer.setMediaItem(buildMediaItem(song));
                         applyReplayGain(song);
                         internalExoPlayer.prepare();
@@ -620,9 +585,7 @@ public class AndroidPlayerController {
                 if (internalExoPlayer != null) {
                     internalExoPlayer.stop();
                 }
-                if (usbBitPerfectSession != null) {
-                    usbBitPerfectSession.clearMixerPreference();
-                }
+                usbOutputFormat.clear();
             });
         }
     }
@@ -633,34 +596,25 @@ public class AndroidPlayerController {
     }
 
     public void release() {
-        if (usbBitPerfectSession != null) {
-            usbBitPerfectSession.release();
-            usbBitPerfectSession = null;
-        }
         unregisterCallback();
         runOnMainThread(() -> {
             if (internalExoPlayer != null) {
                 internalExoPlayer.release();
                 internalExoPlayer = null;
             }
+            usbOutputFormat.release();
         });
     }
 
-    public UsbBitPerfectSession.Status getUsbBitPerfectStatus() {
-        if (usbBitPerfectSession == null) {
-            return UsbBitPerfectSession.Status.disabled();
-        }
-        return usbBitPerfectSession.getStatus();
+    /** The format MusicMate asked this USB DAC to run at, or null when Android's default applies. */
+    @Nullable
+    public android.media.AudioFormat getUsbOutputFormat(int deviceId) {
+        return usbOutputFormat.requestedFormat(deviceId);
     }
 
     private void applyReplayGain(Track song) {
         if (internalExoPlayer == null || song == null) return;
         try {
-            if (usbBitPerfectSession != null && usbBitPerfectSession.isBitPerfectActive()) {
-                internalExoPlayer.setVolume(1.0f);
-                Log.d(TAG, "USB bit-perfect active: ReplayGain bypassed, software volume set to unity (1.0)");
-                return;
-            }
             float volume = ReplayGainManager.getInstance().calculateGainVolume(context, song);
             internalExoPlayer.setVolume(volume);
             Log.d(TAG, "Applied ReplayGain volume: " + volume + " for track: " + song.getTitle());

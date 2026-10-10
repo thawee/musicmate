@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Environment;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,12 @@ public class PermissionUtils {
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         ComponentName listener = new ComponentName(context, MediaNotificationListener.class);
         return manager != null && manager.isNotificationListenerAccessGranted(listener);
+    }
+
+    // Android 17 (API 37) blocks LAN traffic, including DLNA/SSDP multicast, until this runtime permission is granted
+    public static boolean hasLocalNetworkAccess(Context context) {
+        return Build.VERSION.SDK_INT < 37
+                || context.checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED;
     }
 
     public static boolean hasPermissions(@NonNull Context context, @Size(min = 1) @NonNull String... perms) {

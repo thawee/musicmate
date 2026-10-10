@@ -1,9 +1,9 @@
-# MusicMate 3.25.0
+# MusicMate 3.26.0
 
-Native USB bit-perfect playback is now supported on Android 14+. When enabled in Settings under Audiophile Playback, MusicMate requests direct hardware output from the Android audio mixer for connected USB DACs when the audio format (sample rate and channels) matches the DAC's capabilities.
+DLNA streaming works again on Android 17. Android 17 blocks local network traffic until an app holds the new Local network access permission, so the media server could not announce itself or find players. MusicMate now asks for this permission when the server starts.
 
-During active bit-perfect USB sessions, audio is delivered at 100% unity gain without digital scaling or dithering, and ReplayGain volume leveling is automatically bypassed. Active status is displayed with real-time badges (`USB BIT-PERFECT`, `USB DIRECT`, or `DIRECT OUTPUT`) in Now Playing and the Studio Console.
+USB DACs now get high-resolution output. 24-bit songs keep their full resolution instead of being reduced to 16-bit, and the DAC runs at the song's own sample rate when it offers that rate (for example 96 kHz instead of Android's usual 48 kHz). The output picker shows the DAC format, such as `USB 96 kHz / 32-bit`. This replaces the USB bit-perfect setting, which could never succeed on phones without an Android bit-perfect mixer, such as the Galaxy S25. ReplayGain and gapless playback work again on USB.
 
-The player dock output label now matches the Music Center, consistently displaying the name of the active audio output device (such as Phone Speaker or USB DAC).
+VU meters now measure the audio sent to the output, so they also move for high-resolution songs. Next in Music Center moves one song per tap instead of two.
 
-Version code: 147. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.25.0/CHANGELOG.md) for details.
+Version code: 148. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.26.0/CHANGELOG.md) for details.

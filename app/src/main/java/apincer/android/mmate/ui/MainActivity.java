@@ -112,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     // Activity result launcher
     ActivityResultLauncher<Intent> tagViewResultLauncher;
+    private ActivityResultLauncher<String> localNetworkPermissionLauncher;
+    private Runnable pendingLocalNetworkAction;
 
     // ViewModel
     private MainViewModel viewModel;
@@ -300,17 +302,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 apincer.music.core.playback.spi.PlaybackTarget player = playbackService.getPlayer();
                 if (player instanceof apincer.music.core.playback.ExternalAndroidPlayer extPlayer && "local".equalsIgnoreCase(extPlayer.getTargetId())) {
                     AudioOutputHelper.Device device = AudioOutputHelper.getOutputDevice(this, song);
-                    apincer.android.mmate.audio.UsbBitPerfectSession.Status usbStatus =
-                            (playbackService instanceof apincer.android.mmate.service.MusicMateServiceImpl msi)
-                                    ? msi.getUsbBitPerfectStatus()
-                                    : apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
-                    boolean isBitPerfectRequested = usbStatus.isRequested() && usbStatus.getDeviceId() == device.getId();
+                    android.media.AudioFormat usbFormat = usbOutputFormat(device);
                     boolean isBluetooth = device.isBluetooth();
                     String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Phone Speaker";
                     targetSubtitle = devName;
                     nps.getTargetTitle().setValue(devName);
-                    nps.getTargetBadge().setValue(isBitPerfectRequested ? "BIT-PERFECT REQUESTED"
-                            : (isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "DIRECT OUTPUT")));
+                    nps.getTargetBadge().setValue(isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "DIRECT OUTPUT"));
                     StringBuilder devBuf = new StringBuilder();
                     devBuf.append(device.getDescription());
                     if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
@@ -318,8 +315,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getFriendyDescription())) {
                         devBuf.append(" — ").append(device.getFriendyDescription());
                     }
-                    if (device.isUsb() && usbStatus.getState() != apincer.android.mmate.audio.UsbBitPerfectSession.State.DISABLED) {
-                        devBuf.append("\n").append(usbStatus.getReason());
+                    if (usbFormat != null) {
+                        devBuf.append("\nDAC runs at ").append(apincer.android.mmate.audio.UsbOutputFormat.describe(usbFormat));
                     }
                     nps.getTargetDetails().setValue(devBuf.toString());
                 } else {
@@ -389,10 +386,21 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             restoreCriteria(savedInstanceState);
         }
 
+        localNetworkPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    Runnable action = pendingLocalNetworkAction;
+                    pendingLocalNetworkAction = null;
+                    if (granted && action != null) {
+                        action.run();
+                    } else if (!granted) {
+                        android.widget.Toast.makeText(this, "Allow Local network access in app settings to stream to DLNA players.", android.widget.Toast.LENGTH_LONG).show();
+                    }
+                });
         // Start the server here, where we are guaranteed to be in the foreground!
         // Opt-in: the server starts automatically only after the user has started it themselves
         if (getPreferences(MODE_PRIVATE).getBoolean("media_server_auto_start", false)) {
-            mediaServerManager.startServer();
+            runWithLocalNetworkAccess(mediaServerManager::startServer);
         }
         mediaServerManager.getServerStatus().observe(this, this::updateMediaServerState);
         updateMediaServerState(mediaServerManager.getServerStatus().getValue());
@@ -1102,8 +1110,21 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
     }
 
+    private void runWithLocalNetworkAccess(Runnable action) {
+        if (PermissionUtils.hasLocalNetworkAccess(this)) {
+            action.run();
+            return;
+        }
+        pendingLocalNetworkAction = action;
+        localNetworkPermissionLauncher.launch(android.Manifest.permission.ACCESS_LOCAL_NETWORK);
+    }
+
     public void onAudioHubStartServer() {
         getPreferences(MODE_PRIVATE).edit().putBoolean("media_server_auto_start", true).apply();
+        runWithLocalNetworkAccess(this::startMediaServer);
+    }
+
+    private void startMediaServer() {
         mediaServerManager.startServer();
         if (playbackService instanceof MusicMateServiceImpl msi) {
             msi.startServers();
@@ -1599,17 +1620,20 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         onSelectPlaybackTargetClicked();
     }
 
+    @androidx.annotation.Nullable
+    private android.media.AudioFormat usbOutputFormat(AudioOutputHelper.Device device) {
+        return device.isUsb() && playbackService instanceof apincer.android.mmate.service.MusicMateServiceImpl msi
+                ? msi.getUsbOutputFormat(device.getId()) : null;
+    }
+
     public void updatePlayerPickerState() {
         if (playbackService == null) return;
         List<apincer.music.core.playback.spi.PlaybackTarget> renderers = playbackService.getPlaybackTargets();
         apincer.music.core.playback.spi.PlaybackTarget current = playbackService.getPlayer();
 
-        apincer.android.mmate.utils.AudioOutputHelper.Device audioOutputDevice =
-                apincer.android.mmate.utils.AudioOutputHelper.getOutputDevice(this, playbackService.getNowPlayingSong());
-        apincer.android.mmate.audio.UsbBitPerfectSession.Status usbStatus =
-                (playbackService instanceof apincer.android.mmate.service.MusicMateServiceImpl msi)
-                        ? msi.getUsbBitPerfectStatus()
-                        : apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
+        AudioOutputHelper.Device audioOutputDevice = AudioOutputHelper.getOutputDevice(this,
+                playbackService.getNowPlayingSong());
+        android.media.AudioFormat usbFormat = usbOutputFormat(audioOutputDevice);
 
         List<apincer.android.mmate.ui.compose.PlayerTargetItem> streamerItems = new java.util.ArrayList<>();
         List<apincer.android.mmate.ui.compose.PlayerTargetItem> localItems = new java.util.ArrayList<>();
@@ -1630,9 +1654,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                             title = audioOutputDevice.getName();
                         }
                         if (audioOutputDevice.isUsb()) {
-                            subtitle = isSelected && usbStatus.isRequested()
-                                    && usbStatus.getDeviceId() == audioOutputDevice.getId()
-                                    ? "USB bit-perfect requested" : "USB audio output";
+                            subtitle = isSelected && usbFormat != null
+                                    ? "USB " + apincer.android.mmate.audio.UsbOutputFormat.describe(usbFormat)
+                                    : "USB audio output";
                             iconRes = R.drawable.ic_baseline_usb_24;
                         } else if (audioOutputDevice.isBluetooth()) {
                             String codec = audioOutputDevice.getCodec();

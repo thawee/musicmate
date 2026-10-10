@@ -1341,13 +1341,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return getActivePlayer();
     }
 
-    public apincer.android.mmate.audio.UsbBitPerfectSession.Status getUsbBitPerfectStatus() {
+    /** The format MusicMate asked this USB DAC to run at, or null when Android's default applies. */
+    public android.media.AudioFormat getUsbOutputFormat(int deviceId) {
         PlaybackTarget target = getPlayer();
         if (androidPlayer == null || target == null
                 || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
-            return apincer.android.mmate.audio.UsbBitPerfectSession.Status.disabled();
+            return null;
         }
-        return androidPlayer.getUsbBitPerfectStatus();
+        return androidPlayer.getUsbOutputFormat(deviceId);
     }
 
     @Override

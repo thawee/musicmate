@@ -227,7 +227,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
 │  THIS DEVICE                                              │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │ 🔊 Phone Speaker (or 🎛️ FiiO KA13 / 🎧 Bluetooth)   │  │
-│  │    Plays on this phone / USB Bit-Perfect / LDAC     │  │
+│  │    Plays on this phone / USB 96kHz/32bit / LDAC     │  │
 │  └─────────────────────────────────────────────────────┘  │
 │                                                           │
 │  INSTALLED MUSIC APPS                                     │
@@ -248,7 +248,7 @@ MusicMate employs a dual sliding menu design (`ResideMenu`) with a strict separa
   - **`INSTALLED MUSIC APPS`:** External media players (Poweramp, UAPP, Spotify, Neutron, etc.) placed in a dedicated section.
 - **Authentic App Icons:** External music apps render their real native application icon via `packageManager.getApplicationIcon()` with smooth squircle clipping (`RoundedCornerShape(6.dp)`), displayed without color tinting to preserve brand identity. Fallback to `rounded_music_note_24` if uninstalled.
 - **Priority Within Categories:** Each category sorts the active/selected target (`isSelected`) to the top with an Amber/Gold border (`0x80FFD700`) and checkmark (`✓`), followed by remaining devices sorted alphabetically.
-- **Dynamic Local Device Telemetry:** Local player labels use the detected hardware name: `"Phone Speaker"` with `"Plays on this phone"`, `"FiiO KA13"` with `"USB audio output"`, or `"WH-1000XM5"` with `"Bluetooth • LDAC"`. Built-in outputs that report the phone model use their device type as the name. The selected USB output shows `"USB bit-perfect requested"` only when the service reports an accepted request on that device. Music Center uses `"BIT-PERFECT REQUESTED"` and shows fallback reasons for unavailable requests. The dock and Music Center share the resolved output name.
+- **Dynamic Local Device Telemetry:** Local player labels use the detected hardware name: `"Phone Speaker"` with `"Plays on this phone"`, `"FiiO KA13"` with `"USB audio output"`, or `"WH-1000XM5"` with `"Bluetooth • LDAC"`. Built-in outputs that report the phone model use their device type as the name. The selected USB output shows the format the DAC runs at, for example `"USB 96 kHz / 32-bit"`, when MusicMate set one for the current song, and Music Center's output details add `"DAC runs at 96 kHz / 32-bit"`. The dock and Music Center share the resolved output name.
 - **Zero-Latency Auto-Discovery:** On opening the popup, `refreshPlayerDiscovery()` triggers both DLNA M-SEARCH and an installed package scan (`isPackageInstalled` against `SUPPORTED_PLAYERS`), populating targets immediately without requiring an explicit manual tap. While the popup is open the list refreshes every second, so renderers that answer late appear in place. There is no manual Rescan action.
 - **Ordering by Proximity to Effect:**
   - **Bluetooth / System Output…** is placed at the bottom because selecting it navigates away from the app into Android System Settings / Output Panel.

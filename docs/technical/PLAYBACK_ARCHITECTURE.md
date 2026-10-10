@@ -111,19 +111,17 @@ Whether MusicMate drives or only follows playback depends on the current target:
 ### High-Resolution AudioTrack & ExoPlayer Setup
 MusicMate's internal player leverages Media3 ExoPlayer configured for hardware audio reproduction:
 
-1. **PCM output:** A custom `DefaultRenderersFactory` injects the byte-preserving `AudioLevelProcessor` VU-meter tap into `DefaultAudioSink`. The ordinary sink retains Media3's float-output policy. Media3 1.11.1 can convert high-resolution integer PCM to 16-bit in this pipeline; neither source tags nor a DAC's supported sample rate prove bit-perfect playback. Float output is not forced, because the repository records Bluetooth distortion with that configuration.
+1. **PCM output:** `DefaultAudioSink` runs with float output, because Media3 1.11.1 otherwise converts high-resolution PCM to 16-bit. `IntegerPcmAudioOutput` wraps each Media3 `AudioOutput`. It converts float to 24-bit integer before Android sees it, since float PCM distorted on Bluetooth A2DP and some device mixers (`tasks/lessons.md`), and 24 bits hold a 24-bit source exactly. It also feeds `AudioLevelMeter` with the samples Android accepted. Media3 skips custom audio processors in float mode, which is why metering lives at the output. 16-bit sources stay 16-bit.
 2. **CPU Wakelock Protection:** Configured with `setWakeMode(C.WAKE_MODE_LOCAL)` to acquire `PowerManager.PARTIAL_WAKE_LOCK` automatically during active playback, preventing Android Doze sleep pauses and buffer underruns during screen-off listening.
 3. **Hardware Disconnect Protection:** Configured with `setHandleAudioBecomingNoisy(true)` to automatically pause playback when headphones, USB DACs, or Bluetooth devices are disconnected.
 4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing across 24-bit/96kHz+ FLAC and DSD files.
 5. **Lifecycle Cleanup:** Complete `release()` method tied directly into `MusicMateServiceImpl.onDestroy()`.
 
-### Native USB mixer requests
+### USB DAC output format
 
-The opt-in **USB bit-perfect** setting applies at the next song. `UsbBitPerfectSession` owns the decoded format and the final Media3 output, requests an exact supported Android `BIT_PERFECT` mixer format before AudioTrack creation, and checks the routed USB device and current preferred attributes. Playback uses unity software gain on this USB path. Songs are prepared individually while the option is enabled, preventing buffered source metadata from changing the previous song's request.
+`MusicAudioOutputProvider` opens every output. It calls `UsbOutputFormat.prepare` before each AudioTrack is created, and if Android refuses the output it clears the USB request and retries once. When media routes to a USB DAC and Android offers a default-behavior mixer at the track's exact sample rate and channel count, it requests that mixer at the deepest bit depth through `AudioManager.setPreferredMixerAttributes`. Otherwise it clears MusicMate's request, and Android's default output applies (usually 48 kHz). Pausing releases the request and resuming asks again. Stopping playback, releasing the player, and unplugging the DAC clear it, so other apps are not left at MusicMate's rate. The picker label shows the format only while Android still holds the request and routes media to that DAC. Android still mixes and applies volume. This avoids resampling, not processing.
 
-Unsupported formats, precision loss, rejected mixer requests, and initialization failures use ordinary playback. Output release, route changes, and processing changes clear the owned request. Older output releases cannot clear a newer output's preference. Normal playback retains gapless preloading when the option is off.
-
-`BIT-PERFECT REQUESTED` reports an accepted preference on the matching USB route, not measured transport or DAC integrity. Android exposes no public end-to-end verification API. This implementation does not add a direct USB driver, native DSD, or DoP. See [Android's preferred mixer documentation](https://source.android.com/docs/core/audio/preferred-mixer-attr).
+Measured on a Galaxy S25 (SM-S931B, Android 16) with a SNOWSKY TINY B: a 24/96 track plays through a 96 kHz 32-bit USB output, and 44.1 kHz tracks use the 48 kHz deep-buffer output because the DAC lists no 44.1 kHz format. That phone exposes no `BIT_PERFECT` mixer port, so MusicMate does not offer bit-perfect playback. See [Android's preferred mixer documentation](https://source.android.com/docs/core/audio/preferred-mixer-attr).
 
 ### True Dual-Engine Gapless Playback Pipeline
 
@@ -234,7 +232,7 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 
 ## 8. Active ReplayGain 2.0 / EBU R128 Loudness Leveling Architecture
 
-`ReplayGainManager.java` levels loudness by changing software volume. USB bit-perfect mode bypasses ReplayGain on its USB playback path because gain changes modify the samples.
+`ReplayGainManager.java` levels loudness by changing software volume.
 
 ```
                   ┌──────────────────────────────────────────────┐
@@ -320,7 +318,10 @@ MusicMate embeds one HTTP server, SonicNIO (`NioHttpServer`), optimized for bit-
 | `:app` | [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) | Jetpack Compose Now Playing UI, 3D flip Audio Anatomy card with dual-mode telemetry switcher. |
 | `:app` | [`AnalogVUMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AnalogVUMeter.kt) | Pure Compose Canvas ballistic VU meter with dual stereo dials, 3 audiophile themes, and live PCM input. |
 | `:app` | [`ReelToReelTapeDeck.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/ReelToReelTapeDeck.kt) | Pure Compose Canvas vintage reel-to-reel tape deck with differential angular physics and tape counter. |
-| `:app` | [`AudioLevelProcessor.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/AudioLevelProcessor.kt) | Media3 BaseAudioProcessor extracting real-time stereo RMS and peak decibels from decoded PCM. |
+| `:app` | [`AudioLevelMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/AudioLevelMeter.kt) | Real-time stereo RMS and peak decibels from the PCM written to the audio output. |
+| `:app` | [`IntegerPcmAudioOutput.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/IntegerPcmAudioOutput.kt) | Converts Media3 float PCM to 24-bit integer for Android and meters the written samples. |
+| `:app` | [`MusicAudioOutputProvider.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/MusicAudioOutputProvider.kt) | Opens integer PCM outputs, requests the USB format, and retries once without it if Android refuses. |
+| `:app` | [`UsbOutputFormat.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/UsbOutputFormat.kt) | Requests a USB DAC mixer at the track's sample rate, releases it on pause, and clears it on stop, release, or unplug. |
 | `:app` | [`AudioTelemetryManager.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/AudioTelemetryManager.kt) | Thread-safe 60Hz telemetry hub delivering live audio decibel packets to UI widgets. |
 | `:app` | [`CreateSmartPlaylistDialog.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/CreateSmartPlaylistDialog.kt) | Visual Audiophile Query Studio modal dialog with live matching telemetry. |
 | `:app` | [`MediaServerPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/MediaServerPage.kt) | Jetpack Compose Media Server management, Hero Status Card with Start/Stop controls & QR zoom dialog. |

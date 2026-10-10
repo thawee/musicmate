@@ -37,8 +37,6 @@ fun SettingsScreen(
     onListFollowsNowPlayingChange: (Boolean) -> Unit,
     artistAwareSimilarSongs: Boolean,
     onArtistAwareSimilarSongsChange: (Boolean) -> Unit,
-    usbBitPerfect: Boolean = false,
-    onUsbBitPerfectChange: (Boolean) -> Unit = {},
     replayGainMode: String = "track",
     onReplayGainModeChange: (String) -> Unit = {},
     replayGainPreamp: Float = 0.0f,
@@ -133,16 +131,9 @@ fun SettingsScreen(
 
             // ── Section 2: Audiophile Playback (ReplayGain) ───────────────────
             SettingsCard(
-                title = "AUDIOPHILE PLAYBACK",
+                title = "AUDIOPHILE PLAYBACK (REPLAYGAIN)",
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
-                SettingsSwitchRow(
-                    title = "USB bit-perfect",
-                    subtitle = "Requests unmodified USB output when supported. Bypasses ReplayGain on USB. Applies to the next song; use your DAC's volume control.",
-                    checked = usbBitPerfect,
-                    onCheckedChange = onUsbBitPerfectChange
-                )
-                Spacer(modifier = Modifier.height(14.dp))
                 Text(
                     text = "Loudness Leveling Mode",
                     color = Color.White,

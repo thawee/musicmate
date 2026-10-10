@@ -22,10 +22,11 @@ This guide walks through MusicMate screen by screen: adding your music, playing 
 
 **Add your music.** On first launch MusicMate asks for the folders that hold your music. Download and Music on internal storage are suggested. Tap **Scan** to build the library. You can change folders later from the menu under **Music Folders & Scan**. **Full Rescan** there reads every file again, which helps after editing tags in another app.
 
-**Grant access.** MusicMate asks for two Android permissions, and you can check both under **System Access** in the menu.
+**Grant access.** MusicMate asks for two Android permissions, and you can check both under **System Access** in the menu. On Android 17 it also asks for **Local network access** the first time the media server starts.
 
 - **Full Storage Access** is required. MusicMate needs it to read your files, edit tags, organize folders and save cover art.
 - **External Player Access** is optional. It lets MusicMate see and control other music apps. Playing on the phone and streaming to network players work without it.
+- **Local network access** (Android 17 and later) is needed for the media server and network players. Without it, players cannot find MusicMate and MusicMate cannot find them.
 
 **After the scan.** The header shows `Scanning: 1200/8302 files` while files are read, then `Analyzing: 900/5400 tracks` while MusicMate measures dynamic range and other details. You can use the app during both. Analysis continues in the background and picks up where it stopped if Android pauses it.
 
@@ -126,7 +127,7 @@ Your queue, source and current song are kept when you close the app. Playback do
 Tap the player icon in Music Center to choose where music plays.
 
 - **Network Streamers.** DLNA/UPnP players on your network or on the phone's hotspot, such as a HiBy, WiiM or Eversolo, shown with their address.
-- **This Device.** The phone speaker, a USB DAC, or Bluetooth headphones. USB devices show *USB audio output*, or *USB bit-perfect requested* when Android accepts MusicMate's request for the current output. Bluetooth devices show the codec, for example *Bluetooth · LDAC*.
+- **This Device.** The phone speaker, a USB DAC, or Bluetooth headphones. USB devices show *USB audio output*, or the format the DAC runs at, for example *USB 96 kHz / 32-bit*. MusicMate asks Android to run a USB DAC at each song's own sample rate when the DAC offers it, so a 96 kHz song reaches the DAC at 96 kHz instead of Android's usual 48 kHz, and 24-bit songs keep their full resolution. Songs at a rate the DAC doesn't offer, such as 44.1 kHz on some DACs, are converted by Android as usual. Android still mixes in other sounds and applies the volume, so this is high-resolution playback, not bit-perfect playback. Bluetooth devices show the codec, for example *Bluetooth · LDAC*.
 - **Installed Music Apps.** Other players such as HiByMusic, Poweramp or UAPP. These need External Player Access.
 - **Bluetooth / System Output…** opens Android's output panel to connect or switch Bluetooth devices.
 
@@ -228,7 +229,6 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 - **When I tap a track.**
   - **Play tracks** (default): tap plays, and press and hold opens the details.
   - **Edit tags**: tap opens the details, and press and hold starts selecting several songs.
-- **USB bit-perfect** requests unmodified USB output for a compatible DAC and phone. Enable it, select **This Device**, and start the next song. MusicMate bypasses ReplayGain on this USB path, so use your DAC's volume control. Music Center shows **BIT-PERFECT REQUESTED** only after Android accepts the matching output format and the audio routes to that USB device. If support is unavailable or the decoder/output changes precision, ordinary playback continues and Music Center shows the reason. This option prepares songs individually, so USB playback does not use gapless preloading. It does not add direct DSD or DoP playback, and the badge does not verify the DAC's received samples.
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
   - **Pre-Amp Gain** raises or lowers the result.
   - **Prevent Clipping** stops loud peaks from distorting.
@@ -247,7 +247,8 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 
 1. Check that the player is on the same Wi-Fi as the phone, or connected to the phone's hotspot.
 2. Make sure the server is running in Music Center's Server tab.
-3. Leave the picker open for a few seconds. New players appear by themselves.
+3. On Android 17, check that MusicMate has **Local network access** in Android Settings > Apps > MusicMate > Permissions.
+4. Leave the picker open for a few seconds. New players appear by themselves.
 
 **The header says Analyzing for a long time.** After a first scan MusicMate measures every track, which takes a while on a large library. You can keep using the app. Progress is kept if it stops, and it continues later.
 
