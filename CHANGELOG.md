@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.26.1] - 2026-10-11
+
+### Fixed
+- **DLNA streaming stopped after skipping songs:** On Android 17, closing a song file sometimes fails after a player such as the HiBy R3 drops the connection when you skip. Each failure permanently used up one of the server's 16 stream slots. After about 16 skips every song was refused, and the player stayed on "Transitioning" until the streaming engine was restarted. The slot is now always returned, so playback keeps working however often you skip.
+
 ## [3.26.0] - 2026-10-10
 
 ### Changed
