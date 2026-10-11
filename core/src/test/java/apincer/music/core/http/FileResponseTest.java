@@ -97,6 +97,52 @@ public class FileResponseTest {
         assertEquals(0, released.get());
     }
 
+    @Test
+    public void close_releasesTheSlotWhenClosingTheFileFails() throws Exception {
+        // Seen on Android 17: closing the file after a renderer hung up mid-stream throws, and
+        // the slot was never returned; after 16 such skips every song request got 503
+        AtomicInteger taken = new AtomicInteger();
+        StreamSlots slots = new StreamSlots() {
+            public boolean acquire() { taken.incrementAndGet(); return true; }
+            public void release() { taken.decrementAndGet(); }
+        };
+        File file = temporary.newFile("track.flac");
+        Files.write(file.toPath(), new byte[1000]);
+        FileResponse response = new FileResponse(file, request(""), slots);
+        java.lang.reflect.Field channel = FileResponse.class.getDeclaredField("fileChannel");
+        channel.setAccessible(true);
+        ((java.nio.channels.FileChannel) channel.get(response)).close();
+        channel.set(response, new FailingCloseChannel());
+        assertEquals(1, taken.get());
+
+        try {
+            response.close();
+            fail("the close failure must still be reported");
+        } catch (java.io.IOException expected) { }
+        assertEquals(0, taken.get());
+    }
+
+    /** A file channel whose close fails, like a file closed after an aborted transfer on Android 17. */
+    private static final class FailingCloseChannel extends java.nio.channels.FileChannel {
+        @Override protected void implCloseChannel() throws java.io.IOException { throw new java.io.IOException("close failed"); }
+        @Override public int read(java.nio.ByteBuffer dst) { return -1; }
+        @Override public long read(java.nio.ByteBuffer[] dsts, int offset, int length) { return -1; }
+        @Override public int write(java.nio.ByteBuffer src) { return 0; }
+        @Override public long write(java.nio.ByteBuffer[] srcs, int offset, int length) { return 0; }
+        @Override public long position() { return 0; }
+        @Override public java.nio.channels.FileChannel position(long newPosition) { return this; }
+        @Override public long size() { return 1000; }
+        @Override public java.nio.channels.FileChannel truncate(long size) { return this; }
+        @Override public void force(boolean metaData) { }
+        @Override public long transferTo(long position, long count, java.nio.channels.WritableByteChannel target) { return 0; }
+        @Override public long transferFrom(java.nio.channels.ReadableByteChannel src, long position, long count) { return 0; }
+        @Override public int read(java.nio.ByteBuffer dst, long position) { return -1; }
+        @Override public int write(java.nio.ByteBuffer src, long position) { return 0; }
+        @Override public java.nio.MappedByteBuffer map(MapMode mode, long position, long size) { throw new UnsupportedOperationException(); }
+        @Override public java.nio.channels.FileLock lock(long position, long size, boolean shared) { throw new UnsupportedOperationException(); }
+        @Override public java.nio.channels.FileLock tryLock(long position, long size, boolean shared) { throw new UnsupportedOperationException(); }
+    }
+
     private static NioHttpServer.HttpRequest request(String header) {
         byte[] data = ("GET /file HTTP/1.1\r\n" + header + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
         NioHttpServer.HttpRequest request = new NioHttpServer.HttpRequest();

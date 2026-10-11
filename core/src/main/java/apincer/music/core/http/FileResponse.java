@@ -290,10 +290,12 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
     public void close() throws IOException {
         if (!hasClosed.compareAndSet(false, true)) return;
 
-        if (fileChannel != null) {
-            if (fileChannel.isOpen()) {
-                fileChannel.close();
-            }
+        if (fileChannel == null) return;
+        // The slot is returned even when closing the file fails (Android 17, after a renderer
+        // aborts a transfer); a lost slot is never recovered and ends in 503 for every song
+        try {
+            fileChannel.close();
+        } finally {
             slots.release();
         }
     }
