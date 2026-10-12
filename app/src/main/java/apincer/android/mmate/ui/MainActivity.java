@@ -610,7 +610,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 hasActiveFilter || currentCriteria.isSearchMode());
         int count = (isTopLevelCategoryDir || hasActiveFilter) ? apincer.android.mmate.ui.compose.ListInterop.getTracks().size()
                 : ((stats != null) ? stats.getTotalCount() : apincer.android.mmate.ui.compose.ListInterop.getTracks().size());
-        long totalSize = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum() : ((stats != null) ? stats.getTotalSize() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum());
         double totalDuration = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum() : ((stats != null) ? stats.getTotalDuration() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum());
 
         String statText = "";
@@ -620,7 +619,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
 
             if (isEmpty(currentCriteria.getFilterType()) && count > 0) {
-                statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration) + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
+                statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration);
             }
         } else {
             if (count > 0) {
@@ -640,11 +639,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 statText = StringUtils.formatSongSize(count) + " " + unitTitle;
                 if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
                     statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration);
-                    // Whole-library size was nearly always cut off beside Play, so About shows it;
-                    // search results are short enough to keep theirs
-                    if (currentCriteria.isSearchMode()) {
-                        statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
-                    }
                 }
             }
         }
