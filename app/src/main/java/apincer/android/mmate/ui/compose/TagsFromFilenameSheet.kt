@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +19,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,7 +41,7 @@ fun TagsFromFilenameSheet(
     onApply: (pattern: String) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    var pattern by remember { mutableStateOf(FilenameTagParser.PRESET_PATTERNS.first()) }
+    var pattern by remember(tracks) { mutableStateOf(FilenameTagParser.detectPattern(tracks.map { it.path })) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -50,6 +55,7 @@ fun TagsFromFilenameSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
@@ -76,6 +82,51 @@ fun TagsFromFilenameSheet(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Source: up to 2 parent folders + filename (extension stripped), as '/' patterns see it
+            val sourceName = remember(tracks) {
+                tracks.firstOrNull()?.let { track ->
+                    (2 downTo 0).firstNotNullOfOrNull { FilenameTagParser.sourceName(track.path, it) }
+                }.orEmpty()
+            }
+            if (sourceName.isNotEmpty()) {
+                Text(
+                    text = "SOURCE",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Gray,
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                // Folders dimmed, '/' highlighted, filename bright so the pattern boundaries stand out
+                val sourceText = remember(sourceName) {
+                    val segments = sourceName.split('/')
+                    buildAnnotatedString {
+                        segments.forEachIndexed { index, segment ->
+                            if (index < segments.lastIndex) {
+                                withStyle(SpanStyle(color = Color.Gray)) { append(segment) }
+                                withStyle(SpanStyle(color = Color(0xFFFFD700), fontWeight = FontWeight.Bold)) { append(" / ") }
+                            } else {
+                                append(segment)
+                            }
+                        }
+                    }
+                }
+                SelectionContainer {
+                    Text(
+                        text = sourceText,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0x1AFFFFFF))
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Pattern Input Field
             OutlinedTextField(
@@ -125,6 +176,9 @@ fun TagsFromFilenameSheet(
                     TokenChip(token = token) {
                         pattern = if (pattern.isEmpty()) token else "$pattern$token"
                     }
+                }
+                TokenChip(token = "/") {
+                    pattern = "$pattern/"
                 }
                 TokenChip(token = " - ") {
                     pattern = "$pattern - "

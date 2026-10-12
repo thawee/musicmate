@@ -165,7 +165,7 @@ Press and hold a song to open its details. The screen shows the cover, quality a
 - Genre, Style, Mood and Origin open a list of ready-made choices. The current value is ticked, and typing filters the list. To give a song several genres, separate them with commas.
 - **Save** lights up once something has changed. Back asks before discarding unsaved edits.
 - **Format** cleans up the tag text. Press and hold it to run the full clean-up.
-- **From File** suggests tags read from the file name, for you to review.
+- **From File** reads tags from the file name and its folders. **Source** shows the file name with its two parent folders, for example `Queen / A Night at the Opera / 11 - Bohemian Rhapsody`. Write a pattern with tokens such as `%artist%`, `%album%`, `%track%` and `%title%`, using `/` for each folder, as in `%artist%/%album%/%track% - %title%`. MusicMate picks a pattern that fits your files to start with, and the preview shows the tags each song will get before you apply them.
 
 **Tech Info** shows a tag check (which important tags are present), ReplayGain loudness values, and embedded cover art size. **Reload Tags** reads the file again.
 

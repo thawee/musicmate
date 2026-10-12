@@ -189,6 +189,10 @@ MusicMate houses a comprehensive audio tagging subsystem designed to protect fil
    - **AcoustID & MusicBrainz:** Generates acoustic fingerprints via Chromaprint to match unidentified tracks against the MusicBrainz online database.
    - **Thai Encoding Auto-Repair:** Intercepts corrupted legacy Windows-874 / TIS-620 character byte sequences and recovers legitimate Thai text.
    - **Title Casing & Junk Noise Stripping:** Strips common rip artifacts (e.g., `[FLAC 24-96]`, `www.sitename.com`, track numbers prefixed in titles) and standardizes capitalization.
+5. **Tags from File Path (`FilenameTagParser`):**
+   - A pattern such as `%artist%/%album%/%track% - %title%` is compiled to a regex and matched against the file name without its extension. Each `/` in the pattern adds one parent folder to the matched text, so folder names can supply tags; a path with fewer folders than the pattern needs does not match.
+   - A token never spans a `/`, and `%track%` matches digits only, so a track preset cannot match a name that has no track number. When a token appears twice, the later match wins.
+   - `detectPattern(paths)` chooses the starting pattern: among presets that parse at least half of the selected tracks, the one that extracts the most tags, then the one that parses the most tracks, then the earlier preset. With no candidate it falls back to `%track% - %title%`.
 
 ---
 

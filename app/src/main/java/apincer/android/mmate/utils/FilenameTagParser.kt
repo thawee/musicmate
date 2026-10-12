@@ -1,6 +1,5 @@
 package apincer.android.mmate.utils
 
-import java.io.File
 import java.util.regex.Pattern
 
 data class ParsedTags(
@@ -25,6 +24,11 @@ data class ParsedTags(
 object FilenameTagParser {
 
     val PRESET_PATTERNS = listOf(
+        "%artist%/%album%/%track% - %title%",
+        "%artist%/%album%/%track%. %title%",
+        "%artist%/%album%/%track% - %artist% - %title%",
+        "%artist%/%album%/%artist% - %title%",
+        "%artist%/%album%/%title%",
         "%track% - %title%",
         "%artist% - %title%",
         "%track% - %artist% - %title%",
@@ -33,6 +37,24 @@ object FilenameTagParser {
         "%track%. %title%",
         "%title%"
     )
+
+    /**
+     * Picks the preset for [paths]: among presets that parse at least half of them, the one that
+     * extracts the most tags, then the one that parses the most paths, then the earlier preset.
+     * Falls back to the first filename-only preset.
+     */
+    fun detectPattern(paths: List<String>): String {
+        return PRESET_PATTERNS
+            .map { preset -> Triple(preset, paths.count { parse(it, preset)?.isEmpty == false }, tokenCount(preset)) }
+            .filter { it.second > 0 && it.second * 2 >= paths.size }
+            .maxWithOrNull(compareBy<Triple<String, Int, Int>>({ it.third }, { it.second })
+                .thenByDescending { PRESET_PATTERNS.indexOf(it.first) })
+            ?.first
+            ?: PRESET_PATTERNS.first { !it.contains('/') }
+    }
+
+    private fun tokenCount(pattern: String): Int =
+        TOKEN_MAP.keys.sumOf { token -> pattern.windowed(token.length).count { it == token } }
 
     val AVAILABLE_TOKENS = listOf(
         "%track%",
@@ -58,14 +80,8 @@ object FilenameTagParser {
      * @param pattern token pattern like "%artist% - %title%"
      */
     fun parse(filePathOrName: String, pattern: String): ParsedTags? {
-        val fileName = File(filePathOrName).name
-        val cleanName = if (fileName.contains('.')) {
-            fileName.substringBeforeLast('.')
-        } else {
-            fileName
-        }
-
-        if (cleanName.isBlank() || pattern.isBlank()) return null
+        if (pattern.isBlank()) return null
+        val cleanName = sourceName(filePathOrName, pattern.count { it == '/' }) ?: return null
 
         val (regexPattern, tokenList) = compilePatternToRegex(pattern) ?: return null
         val matcher = regexPattern.matcher(cleanName)
@@ -101,6 +117,19 @@ object FilenameTagParser {
         )
     }
 
+    /**
+     * Returns the filename without extension, prefixed by up to [parentLevels] parent folders
+     * joined with '/', or null when the path has fewer folders than requested.
+     */
+    fun sourceName(filePathOrName: String, parentLevels: Int): String? {
+        val segments = filePathOrName.split('/').filter { it.isNotEmpty() }
+        if (segments.size <= parentLevels) return null
+        val fileName = segments.last()
+        val cleanName = if (fileName.contains('.')) fileName.substringBeforeLast('.') else fileName
+        if (cleanName.isBlank()) return null
+        return (segments.dropLast(1).takeLast(parentLevels) + cleanName).joinToString("/")
+    }
+
     private fun cleanTrackNumber(raw: String): String {
         val digits = raw.filter { it.isDigit() }
         return if (digits.isNotEmpty()) digits else raw
@@ -117,10 +146,12 @@ object FilenameTagParser {
                 val groupName = TOKEN_MAP[matchedToken]!!
                 tokenList.add(groupName)
                 val isLast = (i + matchedToken.length >= pattern.length)
-                if (isLast) {
-                    regexBuilder.append("(.+)")
+                if (groupName == "track") {
+                    regexBuilder.append("(\\d+)")
+                } else if (isLast) {
+                    regexBuilder.append("([^/]+)")
                 } else {
-                    regexBuilder.append("(.+?)")
+                    regexBuilder.append("([^/]+?)")
                 }
                 i += matchedToken.length
             } else {
