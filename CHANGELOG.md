@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.27.0] - 2026-10-12
+
+### Added
+- **Tags from folder names:** In **From File**, a pattern can now read tags from the folders above the song, such as `%artist%/%album%/%track% - %title%`. Each `/` stands for one folder. A `/` button and folder presets were added.
+
+### Changed
+- **From File shows the source:** The sheet shows the file name with its two parent folders, in full and selectable, so you can see what the pattern has to match. Cancel and Apply no longer get squeezed when the text is large; the sheet scrolls instead.
+- **Starting pattern fits your files:** From File starts with the preset that reads the most tags from most of the selected songs, instead of always `%track% - %title%`.
+
+### Fixed
+- **Track number from a name without one:** `%track%` now matches digits only, so `%track% - %title%` no longer reads `The Rolling Stones` as a track number.
+
 ## [3.26.1] - 2026-10-11
 
 ### Fixed
