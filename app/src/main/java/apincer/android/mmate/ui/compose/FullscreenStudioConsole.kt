@@ -867,8 +867,8 @@ fun FullscreenStudioConsole(
                         )
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
-                        val nextTrack = queueState.upNext()
-                        if (nextTrack != null) {
+                        val nextLabel = queueState.upNextLabel(state.isShuffle.value)
+                        if (nextLabel != null) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
@@ -886,7 +886,7 @@ fun FullscreenStudioConsole(
                                     fontFamily = FontFamily.Monospace
                                 )
                                 Text(
-                                    text = nextTrack.title,
+                                    text = nextLabel,
                                     color = Color.White.copy(alpha = 0.8f),
                                     fontSize = 8.sp,
                                     fontWeight = FontWeight.Medium,

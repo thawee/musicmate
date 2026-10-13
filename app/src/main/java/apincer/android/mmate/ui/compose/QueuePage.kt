@@ -339,6 +339,20 @@ fun QueuePage(
             canClear = state.tracks.isNotEmpty()
         )
 
+        // The list stays in list order while shuffled, so say what actually plays next
+        val shuffled = MainScaffoldState.get().nowPlayingState.isShuffle.value
+        val nextLabel = state.upNextLabel(shuffled)
+        if (shuffled && nextLabel != null) {
+            Text(
+                text = "Shuffled · Up next: $nextLabel",
+                color = MusicMateDesignTokens.Text.Muted,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 27.dp, end = 14.dp, bottom = 2.dp)
+            )
+        }
+
         if (manager != null) {
             // Ultra-Compact Single-Line Source Capsules (~28dp)
             CompactSourceDeck(

@@ -351,6 +351,33 @@ public class QueueManagerTest {
     }
 
     @Test
+    public void peekNextTrack_followsShuffleOrderWithoutChangingState() {
+        List<Track> tracks = new ArrayList<>();
+        for (long i = 1; i <= 8; i++) {
+            tracks.add(createDummyTrack(i, "Track " + i));
+        }
+        queueManager.savePlayingQueue(tracks);
+
+        queueManager.setShuffle(true);
+        queueManager.setPlaybackTrack(tracks.get(0));
+
+        // Walk the whole shuffled order: every peek names the track playback then moves to
+        java.util.Set<Long> visited = new java.util.HashSet<>();
+        visited.add(1L);
+        for (int step = 1; step < tracks.size(); step++) {
+            int indexBefore = queueManager.getCurrentIndex();
+            Track peeked = queueManager.peekNextTrack();
+            assertNotNull(peeked);
+            assertEquals("peek changes no state", indexBefore, queueManager.getCurrentIndex());
+            Track next = queueManager.getNextTrack(true);
+            assertEquals(next.getId(), peeked.getId());
+            assertTrue("no repeats within one pass", visited.add(peeked.getId()));
+            queueManager.setPlaybackTrack(next);
+        }
+        assertNull("end of the shuffled pass", queueManager.peekNextTrack());
+    }
+
+    @Test
     public void emptyPlayingQueue_resetsAllState() {
         Track t1 = createDummyTrack(1L, "Track 1");
         queueManager.savePlayingQueue(Collections.singletonList(t1));
@@ -469,6 +496,35 @@ public class QueueManagerTest {
         assertEquals(3L, queueManager.getNextTrack(true).getId());
         assertEquals(3L, queueManager.getNextTrack(false).getId());
         assertEquals(1L, queueManager.getPreviousTrack().getId());
+    }
+
+    @Test
+    public void peekNextTrack_listOrderEndAndRepeatAll() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(0));
+        assertEquals(2L, queueManager.peekNextTrack().getId());
+
+        queueManager.setPlaybackTrack(q.get(2));
+        assertNull("last track, repeat off", queueManager.peekNextTrack());
+
+        queueManager.setRepeatMode(QueueManager.RepeatMode.ALL);
+        assertEquals(1L, queueManager.peekNextTrack().getId());
+    }
+
+    @Test
+    public void peekNextTrack_ignoresRepeatOneLikeTheNextButton() {
+        List<Track> q = queueOf(1, 2, 3);
+        queueManager.setPlaybackTrack(q.get(0));
+        queueManager.setRepeatMode(QueueManager.RepeatMode.ONE);
+        assertEquals(2L, queueManager.peekNextTrack().getId());
+    }
+
+    @Test
+    public void peekNextTrack_afterRemovingPlayingTrack_isItsFollower() {
+        List<Track> q = queueOf(1, 2, 3, 4);
+        queueManager.setPlaybackTrack(q.get(1));
+        queueManager.removeTrack(1);
+        assertEquals(3L, queueManager.peekNextTrack().getId());
     }
 
     @Test

@@ -704,6 +704,24 @@ public class QueueManager {
         return null;
     }
 
+    /**
+     * The track Next would move to, for display. Unlike {@link #getNextTrack(boolean)} it changes no
+     * state and does no file checks, so the UI can call it while drawing.
+     *
+     * @return The next {@link Track} in play order (shuffle aware), or {@code null} when nothing is
+     * playing or the queue ends.
+     */
+    public synchronized Track peekNextTrack() {
+        if (queueList.isEmpty()) return null;
+        if (anchorRemoved) {
+            Integer follower = anchorSuccessorId != null ? indexMap.get(anchorSuccessorId) : null;
+            return follower != null ? queueList.get(follower) : null;
+        }
+        int baseIndex = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        int nextIndex = getNextIndex(baseIndex);
+        return nextIndex != -1 ? queueList.get(nextIndex) : null;
+    }
+
     /** Smart sources skip tracks whose file is gone; bounded so Repeat All cannot spin forever. */
     private int skipUnplayable(int index) {
         int steps = 0;
