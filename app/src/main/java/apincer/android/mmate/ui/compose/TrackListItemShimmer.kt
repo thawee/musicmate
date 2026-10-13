@@ -78,7 +78,7 @@ fun TrackListItemShimmer(
                     .size(72.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(brush)
-                    .border(0.75.dp, Color(0x1AFFFFFF), RoundedCornerShape(12.dp))
+                    .border(0.75.dp, MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(12.dp))
             )
 
             Spacer(modifier = Modifier.width(10.dp))
