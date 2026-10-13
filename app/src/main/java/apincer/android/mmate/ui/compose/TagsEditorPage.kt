@@ -100,14 +100,14 @@ fun TagsEditorPage(
                 modifier = Modifier
                     .size(60.dp)
                     .graphicsLayer { clip = true }
-                    .background(Color(0x1AFFB300), RoundedCornerShape(12.dp))
-                    .border(1.dp, Color(0x33FFB300), RoundedCornerShape(12.dp)),
+                    .background(Color(0x1AFFD700), RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0x33FFD700), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.rounded_library_music_24),
                     contentDescription = null,
-                    tint = Color(0xFFFFD700),
+                    tint = MusicMateDesignTokens.Brand.Gold,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -129,7 +129,7 @@ fun TagsEditorPage(
             Button(
                 onClick = onScanLibrary,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFB300),
+                    containerColor = MusicMateDesignTokens.Brand.Gold,
                     contentColor = Color.Black
                 ),
                 shape = RoundedCornerShape(10.dp),
@@ -278,7 +278,7 @@ fun EditorTextField(
         },
         supportingText = {
             if (isMulti) {
-                Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp)
+                Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 11.sp)
             }
         },
         modifier = modifier
@@ -388,8 +388,8 @@ fun EditorDropdownField(
                 }
             },
             supportingText = when {
-                isMulti -> { { Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
-                hint != null -> { { Text(hint, color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
+                isMulti -> { { Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 11.sp) } }
+                hint != null -> { { Text(hint, color = Color(0xFF9E9E9E), fontSize = 11.sp) } }
                 else -> null
             },
             trailingIcon = {
@@ -412,7 +412,7 @@ fun EditorDropdownField(
                     when (entry) {
                         is DropdownEntry.Header -> Text(
                             text = entry.title.uppercase(),
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp,
@@ -432,13 +432,13 @@ fun EditorDropdownField(
                                     Text(
                                         text = entry.text,
                                         maxLines = 1,
-                                        color = if (selected) Color(0xFFFFB300) else Color.Unspecified,
+                                        color = if (selected) MusicMateDesignTokens.Brand.Gold else Color.Unspecified,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
                                 },
                                 trailingIcon = if (selected) {
-                                    { Text("✓", color = Color(0xFFFFB300), fontWeight = FontWeight.Bold) }
+                                    { Text("✓", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold) }
                                 } else null,
                                 onClick = {
                                     onValueChange(entry.text)

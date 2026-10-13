@@ -29,7 +29,9 @@ object MusicMateDesignTokens {
      */
     object Brand {
         val Gold = Color(0xFFFFD700)
-        val GoldAmber = Color(0xFFFFB300)
+        val GoldContainer = Color(0x22FFD700) // fill behind an active or now-playing element
+        val GoldOutline = Color(0x55FFD700)   // border of a gold container
+        val GoldAmber = Color(0xFFFFB300) // Studio Console accent, DR 8-12, warning states
         val WarmAmber = Color(0xFFF57C00)
         val AcousticTeal = Color(0xFF80CBC4)
         val TealContainer = Color(0xFF1E3A39)
@@ -62,13 +64,18 @@ object MusicMateDesignTokens {
         val PurpleAudiophile = Color(0xFF9933CC) // DR 21+
     }
 
+    /** Live status lights (server running, queue caught up) */
+    object Status {
+        val Positive = Color(0xFF00E676)
+    }
+
     /**
      * Text & Typography High-Contrast Scale
      */
     object Text {
         val Primary = Color(0xFFFFFFFF)
         val Secondary = Color(0xFFAAAAAA)
-        val Muted = Color(0xFF757575)
+        val Muted = Color(0xFF9E9E9E) // Text: 5.2:1 on SurfaceElevated (#2C2C2C), passes WCAG AA
         val Telemetry = Color(0xFFCCCCCC)
     }
 

@@ -43,7 +43,7 @@ fun SearchQueryContent(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xF2141416),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier
             .fillMaxWidth(0.92f)
             .wrapContentHeight()
@@ -63,7 +63,7 @@ fun SearchQueryContent(
                     Icon(
                         painter = painterResource(id = R.drawable.round_auto_awesome_24),
                         contentDescription = null,
-                        tint = Color(0xFFFFD700),
+                        tint = MusicMateDesignTokens.Brand.Gold,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -98,9 +98,9 @@ fun SearchQueryContent(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color(0xFFFFD700),
-                    unfocusedBorderColor = Color(0x33FFFFFF),
-                    cursorColor = Color(0xFFFFD700)
+                    focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
+                    unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
+                    cursorColor = MusicMateDesignTokens.Brand.Gold
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -117,9 +117,9 @@ fun SearchQueryContent(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color(0xFFFFD700),
-                    unfocusedBorderColor = Color(0x33FFFFFF),
-                    cursorColor = Color(0xFFFFD700)
+                    focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
+                    unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
+                    cursorColor = MusicMateDesignTokens.Brand.Gold
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -147,7 +147,7 @@ fun SearchQueryContent(
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0x33FFD700),
-                        contentColor = Color(0xFFFFD700)
+                        contentColor = MusicMateDesignTokens.Brand.Gold
                     ),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
                     shape = RoundedCornerShape(20.dp)
@@ -202,7 +202,7 @@ fun SearchResultsContent(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xF2141416),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier
             .fillMaxWidth(0.94f)
             .fillMaxHeight(0.75f)
@@ -223,7 +223,7 @@ fun SearchResultsContent(
                         Icon(
                             painter = painterResource(id = R.drawable.round_auto_awesome_24),
                             contentDescription = null,
-                            tint = Color(0xFFFFD700),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -255,7 +255,7 @@ fun SearchResultsContent(
             }
 
             Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 0.5.dp)
+            HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle, thickness = 0.5.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             // Results List
@@ -353,7 +353,7 @@ fun SearchResultsContent(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 0.5.dp)
+            HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle, thickness = 0.5.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
             // Cancel Button

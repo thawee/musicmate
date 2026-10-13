@@ -111,11 +111,11 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 
 // ── App-wide dark colour palette ────────────────────────────────────────────
-private val drawerBg        = Color(0xFF121212)
-private val drawerSurface   = Color(0xFF1E1E1E)
-private val drawerGold      = Color(0xFFFFD700)
+private val drawerBg        = MusicMateDesignTokens.Surfaces.Canvas
+private val drawerSurface   = MusicMateDesignTokens.Surfaces.Surface
+private val drawerGold      = MusicMateDesignTokens.Brand.Gold
 private val drawerWhite     = Color.White
-private val drawerGray      = Color(0xFFAAAAAA)
+private val drawerGray      = MusicMateDesignTokens.Text.Secondary
 private val drawerDivider   = Color(0xFF2C2C2C)
 private val drawerSelected  = Color(0xFF2A2A2A)
 
@@ -229,7 +229,7 @@ fun MainScaffold(
                                     letterSpacing = (-0.4).sp
                                 )
                                 Text(
-                                    text = "v$appVersion • Hi-Res Edition",
+                                    text = "v$appVersion",
                                     color = drawerGold.copy(alpha = 0.85f),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
@@ -271,7 +271,7 @@ fun MainScaffold(
                         }
                     }
 
-                    HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 0.5.dp)
+                    HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle, thickness = 0.5.dp)
                     Spacer(modifier = Modifier.height(10.dp))
 
                     // ── 2. CORE LIBRARY (2×2 Quick-Action Grid) ───────────────
@@ -336,7 +336,7 @@ fun MainScaffold(
                     Surface(
                         color = Color(0x12FFFFFF),
                         shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.75.dp, Color(0x1AFFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(0.75.dp, MusicMateDesignTokens.Surfaces.BorderSubtle),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
@@ -399,7 +399,7 @@ fun MainScaffold(
                     Surface(
                         color = Color(0x12FFFFFF),
                         shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.75.dp, Color(0x1AFFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(0.75.dp, MusicMateDesignTokens.Surfaces.BorderSubtle),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
@@ -802,7 +802,7 @@ private fun TopSearchBar(
                         .height(48.dp)
                         .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF242424))
-                        .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(24.dp))
+                        .border(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary, RoundedCornerShape(24.dp))
                         .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -887,7 +887,7 @@ private fun TopSearchBar(
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_playlist_add_24),
                             contentDescription = stringResource(R.string.cd_new_smart_playlist),
-                            tint = Color(0xFFFFB300),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -912,7 +912,7 @@ private fun TopSearchBar(
                             )
                             .border(
                                 width = 1.dp,
-                                color = if (isPlaybackTargetActive) drawerGold.copy(alpha = 0.6f) else Color(0x33FFFFFF),
+                                color = if (isPlaybackTargetActive) drawerGold.copy(alpha = 0.6f) else MusicMateDesignTokens.Surfaces.BorderPrimary,
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -1020,12 +1020,12 @@ private fun PlayResultsPill(iconRes: Int, label: String, iconOnly: Boolean = fal
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                tint = Color(0xFFFFD700),
+                tint = MusicMateDesignTokens.Brand.Gold,
                 modifier = Modifier.size(16.dp)
             )
             if (!iconOnly) {
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = label, color = Color(0xFFFFD700), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                Text(text = label, color = MusicMateDesignTokens.Brand.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
             }
         }
     }
@@ -1086,7 +1086,7 @@ private fun FloatingMiniPlayerDock(
     Surface(
         shape = RoundedCornerShape(20.dp), // DESIGN.md §6A: 20dp corner radius
         // Opaque: list text scrolling underneath showed through the title and subtitle
-        color = Color(0xFF1E1E1E),
+        color = MusicMateDesignTokens.Surfaces.Surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(76.dp)
@@ -1314,7 +1314,7 @@ private fun DrawerTile(
     onClick: () -> Unit
 ) {
     val bgColor = if (isSelected) Color(0x2BFFD700) else Color(0x12FFFFFF)
-    val borderColor = if (isSelected) drawerGold.copy(alpha = 0.65f) else Color(0x1AFFFFFF)
+    val borderColor = if (isSelected) drawerGold.copy(alpha = 0.65f) else MusicMateDesignTokens.Surfaces.BorderSubtle
     val contentColor = if (isSelected) drawerGold else drawerWhite
     val iconColor = if (isSelected) drawerGold else Color(0xFFBDBDBD)
 
@@ -1366,7 +1366,7 @@ private fun DrawerCardItem(
     showChevron: Boolean = false,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isSelected) Color(0x22FFD700) else Color.Transparent
+    val bgColor = if (isSelected) MusicMateDesignTokens.Brand.GoldContainer else Color.Transparent
     val contentColor = if (isSelected) drawerGold else drawerWhite
     val iconColor = if (isSelected) drawerGold else Color(0xFFBDBDBD)
     val largeText = LocalDensity.current.fontScale >= 1.3f

@@ -87,7 +87,7 @@ fun AboutScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = MusicMateDesignTokens.Surfaces.Canvas
                 )
             )
         },
@@ -122,7 +122,7 @@ fun AboutScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                             contentDescription = null,
-                            tint = Color(0xFFFFB300),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -137,7 +137,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Version $appVersion",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold
@@ -169,7 +169,7 @@ fun AboutScreen(
                     ) {
                         Text(
                             text = "LIBRARY QUALITY DISTRIBUTION",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
@@ -216,7 +216,7 @@ fun AboutScreen(
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0x2BFFD700),
-                                contentColor = Color(0xFFFFD700)
+                                contentColor = MusicMateDesignTokens.Brand.Gold
                             ),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
@@ -257,7 +257,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "CORE CAPABILITIES",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -285,13 +285,13 @@ fun AboutScreen(
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFF12121A),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFD700)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "THE AUDIOPHILE PHILOSOPHY",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -321,7 +321,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "AUDIO QUALITY TIERS",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -332,8 +332,8 @@ fun AboutScreen(
                     val tiers = listOf(
                         Constants.LEGEND_HIRES to "Hi-Res",
                         Constants.LEGEND_DSD to "DSD",
-                        Constants.LEGEND_STUDIO to "Studio",
-                        Constants.LEGEND_CD to "CD Quality",
+                        Constants.LEGEND_STUDIO to "24-Bit",
+                        Constants.LEGEND_CD to "Lossless",
                         Constants.LEGEND_MQA to "MQA",
                         Constants.LEGEND_LOSSY to "Standard"
                     )
@@ -424,7 +424,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "CONNECT & SUPPORT",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -436,7 +436,7 @@ fun AboutScreen(
                             try { ctx.startActivity(intent) } catch (e: Exception) {}
                         },
                         shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -444,7 +444,7 @@ fun AboutScreen(
                                 contentDescription = openGooglePlayDescription
                             }
                     ) {
-                        Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
+                        Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = MusicMateDesignTokens.Brand.Gold, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.about_rate_google_play), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
@@ -455,7 +455,7 @@ fun AboutScreen(
                             try { ctx.startActivity(intent) } catch (e: Exception) {}
                         },
                         shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -493,7 +493,7 @@ private fun FeatureItem(
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                tint = Color(0xFFFFB300),
+                tint = MusicMateDesignTokens.Brand.Gold,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -527,10 +527,10 @@ private fun TierPill(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
+            .background(if (isSelected) Color(0x33FFD700) else Color(0xFF1F1F28))
             .border(
                 1.dp,
-                if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                if (isSelected) MusicMateDesignTokens.Brand.Gold else Color(0x1FFFFFFF),
                 RoundedCornerShape(8.dp)
             )
             .selectable(
@@ -543,7 +543,7 @@ private fun TierPill(
     ) {
         Text(
             text = label,
-            color = if (isSelected) Color(0xFFFFB300) else Color.White,
+            color = if (isSelected) MusicMateDesignTokens.Brand.Gold else Color.White,
             fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1
@@ -576,14 +576,14 @@ private fun getTierDetails(key: String): TierInfo {
             accentColor = Color(0xFF00E5FF)
         )
         Constants.LEGEND_STUDIO -> TierInfo(
-            title = "Studio Quality (24-bit / 44.1 - 48kHz)",
+            title = "24-Bit Lossless (24-bit / 44.1 - 88.2 kHz)",
             description = "24-bit depth delivering 144 dB of dynamic range, capturing full studio recording headroom.",
             formats = "FLAC, ALAC, WAV",
-            resolution = "24-bit / 44.1 kHz, 48.0 kHz (2304 kbps)",
+            resolution = "24-bit / 44.1 kHz to 88.2 kHz",
             accentColor = Color(0xFFFFC107)
         )
         Constants.LEGEND_CD -> TierInfo(
-            title = "Redbook CD Quality (16-bit / 44.1kHz)",
+            title = "Lossless (16-bit / 44.1 kHz, CD quality)",
             description = "Bit-perfect lossless standard matching physical Compact Disc digital audio without compression artifacts.",
             formats = "FLAC, ALAC, APE, WAV",
             resolution = "16-bit / 44.1 kHz Lossless (1411 kbps)",

@@ -152,7 +152,7 @@ fun RelatedTracksSheet(
                 ) {
                     Text(
                         text = "No matching studio tracks found",
-                        color = Color(0xFF888888),
+                        color = MusicMateDesignTokens.Text.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -207,7 +207,7 @@ fun RelatedTracksSheet(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_play_rounded),
                                 contentDescription = "Play All",
-                                tint = Color(0xFFFFD700),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -226,7 +226,7 @@ fun RelatedTracksSheet(
                             .weight(1.2f)
                             .clip(RoundedCornerShape(20.dp))
                             .background(Color(0x22FFFFFF))
-                            .border(0.75.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                            .border(0.75.dp, MusicMateDesignTokens.Surfaces.BorderPrimary, RoundedCornerShape(20.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onQueueAll(state.tracks)
@@ -357,7 +357,7 @@ fun RelatedTrackItemRow(
             // 4. Duration
             Text(
                 text = StringUtils.formatDurationAsMinute(track.audioDuration),
-                color = Color(0xFF888888),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.5.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Normal

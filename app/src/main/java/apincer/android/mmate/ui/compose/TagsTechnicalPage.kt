@@ -260,10 +260,10 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
     }
 
     val gradeLabel = when {
-        healthPercent == 100 -> "STUDIO MASTER COMPLETE"
-        healthPercent >= 75 -> "HIGH FIDELITY READY"
-        healthPercent >= 50 -> "METADATA INCOMPLETE"
-        else -> "NEEDS TAG CLEANUP"
+        healthPercent == 100 -> "ALL TAGS COMPLETE"
+        healthPercent >= 75 -> "MOSTLY COMPLETE"
+        healthPercent >= 50 -> "SOME TAGS MISSING"
+        else -> "MANY TAGS MISSING"
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -280,7 +280,7 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "$passedCount / ${checks.size} Quality Standards Passed",
+                    text = "$passedCount of ${checks.size} checks passed",
                     color = Color.Gray,
                     fontSize = 11.sp
                 )
@@ -418,7 +418,7 @@ fun CoverArtInspector(info: CoverArtInfo) {
     }
 
     val isHiRes = info.width >= 1000 && info.height >= 1000
-    val qualityTag = if (isHiRes) "Ultra HD Master" else if (info.width >= 500) "Standard HD" else "Low-Res"
+    val qualityTag = if (isHiRes) "High resolution" else if (info.width >= 500) "Standard" else "Low resolution"
     val qualityColor = if (isHiRes) Color(0xFF66BB6A) else if (info.width >= 500) Color(0xFFFFCA28) else Color(0xFFEF5350)
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -477,7 +477,7 @@ fun TechCard(title: String, content: @Composable () -> Unit) {
             .padding(8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0x33000000)), // transparentish
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle)
     ) {
         Column(
             modifier = Modifier
@@ -486,7 +486,7 @@ fun TechCard(title: String, content: @Composable () -> Unit) {
         ) {
             Text(
                 text = title,
-                color = Color(0xFFFFB300), // App gold accent (matches About and the library headings)
+                color = MusicMateDesignTokens.Brand.Gold, // App gold accent (matches About and the library headings)
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 letterSpacing = 1.sp,

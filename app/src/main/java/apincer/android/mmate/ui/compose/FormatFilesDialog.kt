@@ -63,7 +63,7 @@ fun FormatFilesDialog(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xF2161618),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier.padding(12.dp)
     ) {
         Column(
@@ -230,7 +230,7 @@ fun FormatFilesDialog(
                                     Text(
                                         text = status,
                                         color = if (status.contains("Done") || status.contains("Success")) Color(0xFF80CBC4) else Color(0xFF9E9E9E),
-                                        fontSize = 10.sp
+                                        fontSize = 11.sp
                                     )
                                 }
                             }

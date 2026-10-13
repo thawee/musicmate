@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -107,7 +108,7 @@ fun PlayerPickerDialog(
         Surface(
             shape = RoundedCornerShape(24.dp), // DESIGN.md §8A: 24dp rounded corners
             color = Color(0xF2161618),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
@@ -133,7 +134,7 @@ fun PlayerPickerDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_music_cast_24),
                             contentDescription = null,
-                            tint = Color(0xFFFFD700),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -167,10 +168,14 @@ fun PlayerPickerDialog(
 
                 // Categorized Player Target Items
                 if (targets.isNotEmpty()) {
+                    // The list is capped at 380dp; fade the bottom so a cut-off row reads as "more below"
+                    val listState = rememberLazyListState()
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 380.dp),
+                            .heightIn(max = 380.dp)
+                            .verticalFadingEdge(bottomHeight = if (listState.canScrollForward) 40.dp else 0.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         if (streamers.isNotEmpty()) {
@@ -219,9 +224,9 @@ fun PlayerPickerDialog(
                 if (!hasExternalPlayerAccess) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Surface(
-                        color = Color(0x1AFFB300),
+                        color = Color(0x1AFFD700),
                         shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x55FFB300)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x55FFD700)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(onClick = onExternalPlayerAccessClick)
@@ -307,7 +312,7 @@ private fun PlayerTargetRow(
 ) {
     val cardBg = if (item.isSelected) Color(0x2BFFD700) else Color(0x14FFFFFF)
     val cardBorder = if (item.isSelected) Color(0x80FFD700) else Color(0x22FFFFFF)
-    val iconTint = if (item.isSelected) Color(0xFFFFD700) else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
+    val iconTint = if (item.isSelected) MusicMateDesignTokens.Brand.Gold else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
 
     Row(
         modifier = Modifier
@@ -338,7 +343,7 @@ private fun PlayerTargetRow(
             if (item.subtitle.isNotEmpty()) {
                 Text(
                     text = item.subtitle,
-                    color = if (item.isSelected) Color(0xFFFFD700).copy(alpha = 0.85f) else Color(0x99FFFFFF),
+                    color = if (item.isSelected) MusicMateDesignTokens.Brand.Gold.copy(alpha = 0.85f) else Color(0x99FFFFFF),
                     fontSize = 11.5.sp,
                     fontFamily = FontFamily.Monospace,
                     maxLines = 1,

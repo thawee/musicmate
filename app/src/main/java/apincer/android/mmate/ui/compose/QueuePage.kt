@@ -339,6 +339,20 @@ fun QueuePage(
             canClear = state.tracks.isNotEmpty()
         )
 
+        // The list stays in list order while shuffled, so say what actually plays next
+        val shuffled = MainScaffoldState.get().nowPlayingState.isShuffle.value
+        val nextLabel = state.upNextLabel(shuffled)
+        if (shuffled && nextLabel != null) {
+            Text(
+                text = "Shuffled · Up next: $nextLabel",
+                color = MusicMateDesignTokens.Text.Muted,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 27.dp, end = 14.dp, bottom = 2.dp)
+            )
+        }
+
         if (manager != null) {
             // Ultra-Compact Single-Line Source Capsules (~28dp)
             CompactSourceDeck(
@@ -364,7 +378,7 @@ fun QueuePage(
                     Text(
                         text = sourceError ?: "",
                         color = Color(0xFFFF8A80),
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -514,8 +528,8 @@ private fun CompactQueueHeader(
     val ledColor = when {
         refreshing -> Color(0xFFFFB300)
         source == QueueManager.Source.MANUAL -> Color(0xFF78909C)
-        caughtUp -> Color(0xFF00E676)
-        else -> Color(0xFF00E676)
+        caughtUp -> MusicMateDesignTokens.Status.Positive
+        else -> MusicMateDesignTokens.Status.Positive
     }
 
     Row(
@@ -699,7 +713,7 @@ private fun getSectionHeader(
     val prevSmart = prevTrack != null && manager?.isSmartSuggested(prevTrack.id) == true
 
     if (index == currentIdx || (currentIdx == -1 && index == 0)) {
-        return "NOW PLAYING" to Color(0xFFFFD700)
+        return "NOW PLAYING" to MusicMateDesignTokens.Brand.Gold
     }
     if (index == currentIdx + 1 && !isSmart) {
         return "UP NEXT · MANUAL PRIORITY" to Color(0xFF00E5FF)
@@ -737,7 +751,7 @@ private fun QueueSectionHeader(title: String, accentColor: Color) {
         Text(
             text = title,
             color = accentColor,
-            fontSize = 9.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.5.sp
@@ -774,7 +788,7 @@ fun QueueItem(
     val moveUpLabel = stringResource(R.string.action_move_queue_track_up, trackTitle)
     val moveDownLabel = stringResource(R.string.action_move_queue_track_down, trackTitle)
 
-    val rowBg = if (isPlaying) Color(0x22FFD700) else Color.Transparent
+    val rowBg = if (isPlaying) MusicMateDesignTokens.Brand.GoldContainer else Color.Transparent
     val borderModifier = if (isPlaying) {
         Modifier.border(BorderStroke(1.dp, Color(0x4DFFD700)), RoundedCornerShape(10.dp))
     } else Modifier
@@ -817,7 +831,7 @@ fun QueueItem(
         ) {
             Text(
                 text = if (isPlaying) "▶" else "${index + 1}",
-                color = if (isPlaying) Color(0xFFFFD700) else Color(0xFF757575),
+                color = if (isPlaying) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
@@ -832,7 +846,7 @@ fun QueueItem(
                 .background(Color(0xFF202020))
                 .border(
                     width = if (isPlaying) 1.5.dp else 0.75.dp,
-                    color = if (isPlaying) Color(0xFFFFD700) else Color(0x22FFFFFF),
+                    color = if (isPlaying) MusicMateDesignTokens.Brand.Gold else Color(0x22FFFFFF),
                     shape = RoundedCornerShape(8.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -871,7 +885,7 @@ fun QueueItem(
         ) {
             Text(
                 text = trackTitle,
-                color = if (isPlaying) Color(0xFFFFD700) else Color.White,
+                color = if (isPlaying) MusicMateDesignTokens.Brand.Gold else Color.White,
                 fontSize = 13.sp,
                 lineHeight = 16.sp,
                 fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Medium,
@@ -898,7 +912,7 @@ fun QueueItem(
                 QualityBadge(track = track, expanded = false)
 
                 if (isPlaying) {
-                    ProvenanceBadge(label = "NOW PLAYING", color = Color(0xFFFFD700), bg = Color(0x26FFD700))
+                    ProvenanceBadge(label = "NOW PLAYING", color = MusicMateDesignTokens.Brand.Gold, bg = Color(0x26FFD700))
                 } else if (isNext) {
                     ProvenanceBadge(label = "PLAY NEXT", color = Color(0xFF00E5FF), bg = Color(0x2200E5FF))
                 } else if (isSmart) {
@@ -911,7 +925,7 @@ fun QueueItem(
         if (durationStr.isNotEmpty()) {
             Text(
                 text = durationStr,
-                color = Color(0xFF888888),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier.padding(end = 4.dp)
@@ -964,7 +978,7 @@ private fun ProvenanceBadge(label: String, color: Color, bg: Color) {
         Text(
             text = label,
             color = color,
-            fontSize = 8.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.2.sp
@@ -1001,7 +1015,7 @@ private fun QueueEmptyState(
             Icon(
                 painter = painterResource(id = R.drawable.round_auto_awesome_24),
                 contentDescription = null,
-                tint = Color(0xFFFFD700),
+                tint = MusicMateDesignTokens.Brand.Gold,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -1057,9 +1071,9 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Playlists",
                 onClick = onOpenPlaylistPicker,
-                containerColor = Color(0x22FFB300),
-                contentColor = Color(0xFFFFB300),
-                borderColor = Color(0x55FFB300),
+                containerColor = MusicMateDesignTokens.Brand.GoldContainer,
+                contentColor = MusicMateDesignTokens.Brand.Gold,
+                borderColor = MusicMateDesignTokens.Brand.GoldOutline,
                 modifier = Modifier.fillMaxWidth()
             )
             if (source == QueueManager.Source.MANUAL) {
@@ -1075,7 +1089,7 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Browse Library",
                 onClick = onBrowseLibrary,
-                containerColor = Color(0xFFFFB300),
+                containerColor = MusicMateDesignTokens.Brand.Gold,
                 contentColor = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1093,9 +1107,9 @@ private fun QueueEmptyActions(
                 QueueEmptyActionButton(
                     label = "Playlists",
                     onClick = onOpenPlaylistPicker,
-                    containerColor = Color(0x22FFB300),
-                    contentColor = Color(0xFFFFB300),
-                    borderColor = Color(0x55FFB300),
+                    containerColor = MusicMateDesignTokens.Brand.GoldContainer,
+                    contentColor = MusicMateDesignTokens.Brand.Gold,
+                    borderColor = MusicMateDesignTokens.Brand.GoldOutline,
                     modifier = Modifier.weight(1f)
                 )
                 if (source == QueueManager.Source.MANUAL) {
@@ -1112,7 +1126,7 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Browse Library",
                 onClick = onBrowseLibrary,
-                containerColor = Color(0xFFFFB300),
+                containerColor = MusicMateDesignTokens.Brand.Gold,
                 contentColor = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )

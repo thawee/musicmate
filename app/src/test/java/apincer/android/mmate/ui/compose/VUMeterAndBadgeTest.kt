@@ -74,7 +74,7 @@ class VUMeterAndBadgeTest {
             fileType = "FLAC"
         )
         val badgeText = getUnifiedBadgeText(track)
-        assertEquals("CD 16/44.1", badgeText)
+        assertEquals("LOSSLESS 16/44.1", badgeText)
     }
 
     @Test
@@ -165,14 +165,14 @@ class VUMeterAndBadgeTest {
     fun genericQualityAndDsdPrecedenceArePreserved() {
         val pcm = createMockTrack(bitDepth = 24)
         assertEquals("24-BIT 24/44.1", getUnifiedBadgeText(pcm))
-        assertEquals("24-BIT STUDIO", AudioPresentation.qualityLabel(pcm, true))
+        assertEquals("24-BIT LOSSLESS", AudioPresentation.qualityLabel(pcm, true))
         assertEquals(Color(0xFFFFD700), AudioPresentation.accent(pcm))
         val dsd = createMockTrack(bitDepth = 1, sampleRate = 5644800, qualityInd = "MQA Studio")
         assertEquals("DSD128", getUnifiedBadgeText(dsd))
         assertEquals("DSD AUDIO", AudioPresentation.qualityLabel(dsd, true))
         assertEquals("DSD128", AudioPresentation.encodedResolution(dsd))
         val unknownQuality = createMockTrack(qualityInd = "-")
-        assertEquals("CD", AudioPresentation.qualityLabel(unknownQuality, false))
+        assertEquals("LOSSLESS", AudioPresentation.qualityLabel(unknownQuality, false))
     }
 
     @Test

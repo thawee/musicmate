@@ -132,7 +132,7 @@ fun MediaServerPage(
                             } else {
                                 "Wi-Fi / Hotspot disconnected"
                             },
-                            color = if (state.isServerRunning) Color(0xFFB0B0B0) else if (state.isNetworkAvailable) Color(0xFF888888) else Color(0xFFFFAB91),
+                            color = if (state.isServerRunning) Color(0xFFB0B0B0) else if (state.isNetworkAvailable) MusicMateDesignTokens.Text.Muted else Color(0xFFFFAB91),
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -173,9 +173,9 @@ fun MediaServerPage(
                         enabled = state.isNetworkAvailable,
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
+                            containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black,
-                            disabledContainerColor = Color(0xFF2C2C2C),
+                            disabledContainerColor = MusicMateDesignTokens.Surfaces.SurfaceElevated,
                             disabledContentColor = Color(0xFF666666)
                         ),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
@@ -206,7 +206,7 @@ fun MediaServerPage(
             Surface(
                 color = Color(0xFF14141A),
                 shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -224,7 +224,7 @@ fun MediaServerPage(
                             Icon(
                                 painter = painterResource(id = R.drawable.rounded_open_in_new_24),
                                 contentDescription = null,
-                                tint = Color(0xFFFFB300),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -238,11 +238,11 @@ fun MediaServerPage(
 
                         Text(
                             text = "PORT 9000",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
-                                .background(Color(0x22FFB300), RoundedCornerShape(4.dp))
+                                .background(Color(0x22FFD700), RoundedCornerShape(4.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -294,13 +294,13 @@ fun MediaServerPage(
                                         containerColor = Color(0x1AFFFFFF),
                                         contentColor = Color.White
                                     ),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                                     modifier = Modifier.height(34.dp)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.rounded_open_in_new_24),
                                         contentDescription = null,
-                                        tint = Color(0xFFFFB300),
+                                        tint = MusicMateDesignTokens.Brand.Gold,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -319,13 +319,13 @@ fun MediaServerPage(
                                         containerColor = Color(0x1AFFFFFF),
                                         contentColor = Color.White
                                     ),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                                     modifier = Modifier.height(34.dp)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_round_content_copy_24),
                                         contentDescription = null,
-                                        tint = Color(0xFFFFB300),
+                                        tint = MusicMateDesignTokens.Brand.Gold,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -370,8 +370,8 @@ fun MediaServerPage(
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = "Tap to enlarge",
-                                    color = Color(0xFF888888),
-                                    fontSize = 9.sp
+                                    color = MusicMateDesignTokens.Text.Muted,
+                                    fontSize = 11.sp
                                 )
                             }
                         }
@@ -431,7 +431,7 @@ fun MediaServerPage(
             Surface(
                 color = Color(0xFF1E1E28),
                 shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -510,7 +510,7 @@ fun MediaServerPage(
                         Button(
                             onClick = { showQrZoomDialog = false },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFB300),
+                                containerColor = MusicMateDesignTokens.Brand.Gold,
                                 contentColor = Color.Black
                             ),
                             shape = RoundedCornerShape(10.dp),
@@ -550,7 +550,7 @@ private fun ServerDiagnostics(diagnostics: String) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "CONNECTED",
-                color = Color(0xFF757575),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
@@ -576,7 +576,7 @@ private fun ServerDiagnostics(diagnostics: String) {
                     if (address.isNotEmpty()) {
                         Text(
                             text = address,
-                            color = Color(0xFF888888),
+                            color = MusicMateDesignTokens.Text.Muted,
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                             maxLines = 1

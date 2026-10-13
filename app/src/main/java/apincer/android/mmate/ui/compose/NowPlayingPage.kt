@@ -66,9 +66,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,6 +90,7 @@ typealias TelemetryWidgetMode = StudioVisualizerMode
 fun NowPlayingPage(
     state: NowPlayingState,
     canStartPlayback: Boolean = false,
+    queuedCount: Int = 0,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -120,7 +123,7 @@ fun NowPlayingPage(
             grade.contains("DSD", ignoreCase = true) -> Pair(Color(0xFFE65100), Color(0xFF261204)) // Warm Amber Gold
             grade.contains("HI-RES", ignoreCase = true) || grade.contains("STUDIO", ignoreCase = true) || grade.contains("24-BIT", ignoreCase = true) -> Pair(Color(0xFF0D47A1), Color(0xFF061426)) // Deep Sapphire Cobalt
             grade.contains("MQA", ignoreCase = true) -> Pair(Color(0xFF004D40), Color(0xFF021E19)) // Emerald Cyan
-            grade.contains("CD", ignoreCase = true) -> Pair(Color(0xFF1A237E), Color(0xFF0A0F2E)) // Royal Cobalt Blue
+            grade.contains("CD", ignoreCase = true) || grade.contains("LOSSLESS", ignoreCase = true) -> Pair(Color(0xFF1A237E), Color(0xFF0A0F2E)) // Royal Cobalt Blue
             else -> Pair(Color(0xFF2C2416), Color(0xFF141414)) // Warm Velvet Obsidian
         }
     }
@@ -165,7 +168,7 @@ fun NowPlayingPage(
         stringResource(R.string.cd_playback_position)
     }
 
-    val colorGold = Color(0xFFFFB300)
+    val colorGold = MusicMateDesignTokens.Brand.Gold
     val colorGrey400 = Color(0xFFBDBDBD)
 
     // Dynamic Artwork Ambient Glow Palette Extraction with Grade Fallback
@@ -272,7 +275,7 @@ fun NowPlayingPage(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color(0xFF1E1E1E)),
+                                .background(MusicMateDesignTokens.Surfaces.Surface),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -344,7 +347,7 @@ fun NowPlayingPage(
                         Text(
                             text = track?.let { t ->
                                 listOf(t.artist, t.album).filter { !it.isNullOrBlank() }.joinToString(" • ")
-                            } ?: "Select a song",
+                            } ?: idleQueueText(queuedCount.takeIf { canStartPlayback } ?: 0),
                             color = Color(0xFFEEEEEE),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Normal,
@@ -422,7 +425,7 @@ fun NowPlayingPage(
                                     Text(
                                         text = state.targetBadge.value,
                                         color = targetDotColor,
-                                        fontSize = 9.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -696,7 +699,7 @@ fun NowPlayingPage(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Tap to flip back", color = Color(0xFF757575), fontSize = 12.sp)
+                        Text(text = "Tap to flip back", color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
                     }
                 }
             }
@@ -734,8 +737,8 @@ fun NowPlayingPage(
                     Box(
                         modifier = Modifier
                             .size(16.dp)
-                            .background(animatedAmbientColor.copy(alpha = 0.4f), CircleShape)
-                            .border(0.75.dp, animatedAmbientColor.copy(alpha = 0.7f), CircleShape),
+                            .background(colorGold.copy(alpha = 0.4f), CircleShape)
+                            .border(0.75.dp, colorGold.copy(alpha = 0.7f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
@@ -748,7 +751,8 @@ fun NowPlayingPage(
                 track = { sliderState ->
                     SliderDefaults.Track(
                         colors = SliderDefaults.colors(
-                            activeTrackColor = animatedAmbientColor.copy(alpha = 0.95f),
+                            // Gold, not the cover's ambient colour, so seek always reads as the main control
+                            activeTrackColor = colorGold.copy(alpha = 0.95f),
                             inactiveTrackColor = Color(0x33FFFFFF)
                         ),
                         sliderState = sliderState,
@@ -829,6 +833,13 @@ fun NowPlayingPage(
                             modifier = Modifier.height(4.dp).clip(CircleShape)
                         )
                     }
+                )
+                Text(
+                    text = "$volumePercent%",
+                    color = MusicMateDesignTokens.Text.Muted,
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.width(36.dp).clearAndSetSemantics { }
                 )
                 IconButton(
                     onClick = onVolumeUp,
@@ -915,12 +926,12 @@ fun NowPlayingPage(
                         .shadow(
                             elevation = if (isPlaying) 8.dp else 3.dp,
                             shape = CircleShape,
-                            ambientColor = Color(0x33FFA000),
-                            spotColor = Color(0x55FFB300)
+                            ambientColor = Color(0x33FFD700),
+                            spotColor = Color(0x55FFD700)
                         )
                         .clip(CircleShape)
                         .background(if (playControlsEnabled) Color.White else Color(0xFF666666))
-                        .border(BorderStroke(1.5.dp, Color(0xFFFFB300).copy(alpha = 0.5f)), CircleShape)
+                        .border(BorderStroke(1.5.dp, MusicMateDesignTokens.Brand.Gold.copy(alpha = 0.5f)), CircleShape)
                         .semantics {
                             role = Role.Button
                             contentDescription = context.getString(if (isPlaying) R.string.cd_pause else R.string.cd_play)
@@ -1053,7 +1064,7 @@ fun SleepTimerDialog(
                 }
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFF1C1C1E))
-                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                .border(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary, RoundedCornerShape(20.dp))
                 .padding(20.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1094,7 +1105,7 @@ fun SleepTimerDialog(
                     ) {
                         Text(
                             text = label,
-                            color = if (isSelected) Color(0xFFFFD700) else Color(0xFFE0E0E0),
+                            color = if (isSelected) MusicMateDesignTokens.Brand.Gold else Color(0xFFE0E0E0),
                             fontSize = 14.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
@@ -1102,7 +1113,7 @@ fun SleepTimerDialog(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_timer_24),
                                 contentDescription = null,
-                                tint = Color(0xFFFFD700),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -1131,3 +1142,10 @@ private val ArtTextShadow = androidx.compose.ui.graphics.Shadow(
     offset = androidx.compose.ui.geometry.Offset(0f, 2f),
     blurRadius = 6f
 )
+
+/** Idle subtitle: Play starts the queue when nothing is loaded, so say what it will play. */
+internal fun idleQueueText(queuedCount: Int): String = when {
+    queuedCount <= 0 -> "Select a song"
+    queuedCount == 1 -> "1 track queued · press Play"
+    else -> String.format(java.util.Locale.getDefault(), "%,d tracks queued · press Play", queuedCount)
+}

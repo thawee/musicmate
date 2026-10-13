@@ -47,7 +47,7 @@ fun TagsFromFilenameSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF1E1E1E),
+        containerColor = MusicMateDesignTokens.Surfaces.Surface,
         contentColor = Color.White,
         dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0x66FFFFFF)) },
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -148,9 +148,9 @@ fun TagsFromFilenameSheet(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFFD700),
-                    focusedLabelColor = Color(0xFFFFD700),
-                    unfocusedBorderColor = Color(0x33FFFFFF),
+                    focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
+                    focusedLabelColor = MusicMateDesignTokens.Brand.Gold,
+                    unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
                     unfocusedLabelColor = Color.Gray
                 )
             )
@@ -213,7 +213,7 @@ fun TagsFromFilenameSheet(
                             .background(if (isSelected) Color(0x33FFD700) else Color(0x1AFFFFFF))
                             .border(
                                 1.dp,
-                                if (isSelected) Color(0xFFFFD700) else Color(0x1AFFFFFF),
+                                if (isSelected) MusicMateDesignTokens.Brand.Gold else Color(0x1AFFFFFF),
                                 RoundedCornerShape(12.dp)
                             )
                             .clickable {
@@ -224,7 +224,7 @@ fun TagsFromFilenameSheet(
                     ) {
                         Text(
                             text = preset,
-                            color = if (isSelected) Color(0xFFFFD700) else Color.White,
+                            color = if (isSelected) MusicMateDesignTokens.Brand.Gold else Color.White,
                             fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace
                         )
@@ -275,7 +275,7 @@ fun TagsFromFilenameSheet(
                         val parsed = if (index < parsedResults.size) parsedResults[index] else null
                         PreviewTrackItem(track = track, parsed = parsed)
                         if (index < previewTracks.size - 1) {
-                            HorizontalDivider(color = Color(0x1AFFFFFF), modifier = Modifier.padding(top = 8.dp))
+                            HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle, modifier = Modifier.padding(top = 8.dp))
                         }
                     }
                     if (tracks.size > 3) {
@@ -302,7 +302,7 @@ fun TagsFromFilenameSheet(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary)
                 ) {
                     Text("Cancel", color = Color.White)
                 }
@@ -409,13 +409,13 @@ private fun TagPreviewPill(label: String, value: String) {
         Text(
             text = "$label: ",
             color = Color(0xFF81C784),
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold
         )
         Text(
             text = value,
             color = Color.White,
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

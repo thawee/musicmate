@@ -28,13 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
+import apincer.music.core.Constants
 import apincer.music.core.model.Track
 import coil3.compose.AsyncImage
 
 private val folderCardShape  = RoundedCornerShape(12.dp)
 private val folderCardBgDark = Color(0x80000000)
 private val folderCardBg     = Color(0x1AFFFFFF)
-private val folderCardBorder = Color(0x4DFFFFFF)
+private val folderCardBorder = MusicMateDesignTokens.Surfaces.BorderElevated
 
 private data class SmartArtworkTheme(
     val brush: Brush,
@@ -119,7 +120,7 @@ fun FolderListItem(
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
                         text = statsText,
-                        color = Color(0xFF888888),
+                        color = MusicMateDesignTokens.Text.Muted,
                         fontSize = 11.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -168,11 +169,13 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
     val isDr12 = title.contains("DR12", ignoreCase = true) || title.contains("Sanctuary", ignoreCase = true)
     val isHiRes = title.contains("Hi-Res", ignoreCase = true) || title.contains("Studio Masters", ignoreCase = true)
     val isDsd = title.contains("DSD", ignoreCase = true)
+    // Exact match: the title also contains "Lossless", which would pick the Vault tile
+    val isPcm24 = title == Constants.TITLE_CD_EXT_QUALITY
     val isLossless = title.contains("Lossless", ignoreCase = true) || title.contains("Vault", ignoreCase = true)
     val isClassical = title.contains("Classical", ignoreCase = true)
     val isMasterpiece = title.contains("Masterpiece", ignoreCase = true)
     // Audio Quality categories
-    val isCd = title.contains("CD Quality", ignoreCase = true)
+    val isCd = title == Constants.TITLE_CD_QUALITY
     val isLossy = title.contains("Compressed", ignoreCase = true) || title.contains("Lossy", ignoreCase = true)
 
     val theme = when {
@@ -184,9 +187,15 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
         )
         isHiRes -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF091629), Color(0xFF133658), Color(0xFF1E6F9F))),
-            badgeText = "24-BIT",
-            badgeSubtext = "STUDIO",
+            badgeText = "HI-RES",
+            badgeSubtext = "LOSSLESS",
             accentColor = Color(0xFF64B5F6)
+        )
+        isPcm24 -> SmartArtworkTheme(
+            brush = Brush.linearGradient(listOf(Color(0xFF1F1A05), Color(0xFF4A3D0A), Color(0xFF8C7414))),
+            badgeText = "24-BIT",
+            badgeSubtext = "LOSSLESS",
+            accentColor = Color(0xFFFFD54F)
         )
         isDsd -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF02231A), Color(0xFF005844), Color(0xFF00897B))),
@@ -194,7 +203,7 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
             badgeSubtext = "1-BIT DIRECT",
             accentColor = Color(0xFF4DB6AC)
         )
-        isLossless -> SmartArtworkTheme(
+        isLossless && !isCd -> SmartArtworkTheme( // the 16-bit tier title is "Lossless" too
             brush = Brush.linearGradient(listOf(Color(0xFF200C2E), Color(0xFF43165E), Color(0xFF7227A6))),
             badgeText = "VAULT",
             badgeSubtext = "LOSSLESS",
@@ -208,8 +217,8 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
         )
         isCd -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF0B1A2E), Color(0xFF16304F), Color(0xFF2A4F7A))),
-            badgeText = "CD",
-            badgeSubtext = "16-BIT",
+            badgeText = "16-BIT",
+            badgeSubtext = "LOSSLESS",
             accentColor = Color(0xFF90CAF9)
         )
         isLossy -> SmartArtworkTheme(

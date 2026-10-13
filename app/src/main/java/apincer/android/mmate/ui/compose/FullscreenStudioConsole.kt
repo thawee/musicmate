@@ -203,7 +203,7 @@ fun FullscreenStudioConsole(
         mutableStateOf(if (isDLNA) StudioVisualizerMode.TAPE_DECK else StudioVisualizerMode.VU_METER)
     }
 
-    val colorGold = Color(0xFFFFB300)
+    val colorGold = MusicMateDesignTokens.Brand.GoldAmber
     val colorGoldAccent = Color(0xFFFFD54F)
 
     // 3. Dynamic Studio Ambilight Color Extraction (Clamped to Darkroom Obsidian)
@@ -427,7 +427,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = m.displayName,
                                     color = if (isSelected) colorGoldAccent else Color.White.copy(alpha = 0.45f),
-                                    fontSize = 8.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontFamily = FontFamily.Monospace,
                                     letterSpacing = 0.5.sp
@@ -475,13 +475,13 @@ fun FullscreenStudioConsole(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(if (isPlaying) Color(0xFF00E676) else Color.Gray.copy(alpha = 0.5f))
+                                    .background(if (isPlaying) MusicMateDesignTokens.Status.Positive else Color.Gray.copy(alpha = 0.5f))
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "STUDIO DESK",
                                 color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 8.5.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
                                 letterSpacing = 1.sp,
@@ -492,7 +492,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = studioClockTime,
                                     color = colorGoldAccent,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace
                                 )
@@ -507,7 +507,7 @@ fun FullscreenStudioConsole(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val targetDotColor = when {
-                                isBitPerfect -> Color(0xFF00E676)
+                                isBitPerfect -> MusicMateDesignTokens.AudioProvenance.BitPerfectGreen
                                 isDLNA -> Color(0xFF00E5FF)
                                 else -> colorGold
                             }
@@ -531,7 +531,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = cleanTargetTitle,
                                     color = Color.White.copy(alpha = 0.9f),
-                                    fontSize = 8.5.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -542,7 +542,7 @@ fun FullscreenStudioConsole(
                                     Text(
                                         text = "DLNA",
                                         color = Color(0xFF00E5FF),
-                                        fontSize = 7.5.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -550,8 +550,8 @@ fun FullscreenStudioConsole(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = "BIT-PERFECT",
-                                        color = Color(0xFF00E676),
-                                        fontSize = 7.5.sp,
+                                        color = MusicMateDesignTokens.AudioProvenance.BitPerfectGreen,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -648,7 +648,7 @@ fun FullscreenStudioConsole(
                         // Track Title & Artist Metadata Column
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = track?.title ?: "MusicMate",
+                                text = track?.title ?: "Ready to play",
                                 color = Color.White,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
@@ -660,7 +660,7 @@ fun FullscreenStudioConsole(
                             Spacer(modifier = Modifier.height(2.dp))
                             val artistAlbum = listOfNotNull(track?.artist, track?.album).filter { it.isNotBlank() }.joinToString(" • ")
                             Text(
-                                text = artistAlbum.ifEmpty { "High-Fidelity Studio Audio" },
+                                text = if (track == null) idleQueueText(queueState.tracks.size) else artistAlbum,
                                 color = Color.White.copy(alpha = 0.65f),
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
@@ -682,7 +682,8 @@ fun FullscreenStudioConsole(
                     val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
                     val rgStr = state.specsReplayGain.value
 
-                    FlowRow(
+                    // Nothing loaded: an empty verdict would read as "CD QUALITY"
+                    if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -692,7 +693,7 @@ fun FullscreenStudioConsole(
                             isHighlighted = true,
                             highlightColor = if (track != null) AudioPresentation.accent(track) else AudioPresentation.accent(state.specsVerdict.value)
                         )
-                        StudioSpecChip(codecStr)
+                        if (codecStr.isNotBlank()) StudioSpecChip(codecStr)
                         if (resStr.isNotEmpty()) StudioSpecChip(resStr)
                         if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
                         if (drStr.isNotEmpty()) StudioSpecChip(drStr)
@@ -727,13 +728,13 @@ fun FullscreenStudioConsole(
                             Text(
                                 text = StringUtils.formatDuration(curSec, false),
                                 color = Color.White.copy(alpha = 0.65f),
-                                fontSize = 9.5.sp,
+                                fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace
                             )
                             Text(
                                 text = StringUtils.formatDuration(durSec, false),
                                 color = Color.White.copy(alpha = 0.45f),
-                                fontSize = 9.5.sp,
+                                fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -746,17 +747,20 @@ fun FullscreenStudioConsole(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         // Shuffle
-                        IconButton(onClick = onShuffleToggle, modifier = Modifier.size(36.dp)) {
+                        IconButton(onClick = onShuffleToggle, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_shuffle_24),
-                                contentDescription = "Shuffle",
+                                contentDescription = context.getString(
+                                    R.string.cd_shuffle_state,
+                                    context.getString(if (state.isShuffle.value) R.string.state_on else R.string.state_off)
+                                ),
                                 tint = if (state.isShuffle.value) colorGold else Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(19.dp)
                             )
                         }
 
                         // Previous
-                        IconButton(onClick = onPrevious, modifier = Modifier.size(40.dp)) {
+                        IconButton(onClick = onPrevious, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_skip_previous_24),
                                 contentDescription = "Previous",
@@ -817,7 +821,7 @@ fun FullscreenStudioConsole(
                         }
 
                         // Next
-                        IconButton(onClick = onNext, modifier = Modifier.size(40.dp)) {
+                        IconButton(onClick = onNext, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
                                 contentDescription = "Next",
@@ -827,13 +831,19 @@ fun FullscreenStudioConsole(
                         }
 
                         // Repeat
-                        IconButton(onClick = onRepeatToggle, modifier = Modifier.size(36.dp)) {
+                        IconButton(onClick = onRepeatToggle, modifier = Modifier.size(48.dp)) {
                             val repeatMode = state.repeatMode.value
                             Icon(
                                 painter = painterResource(
                                     id = if (repeatMode == 2) R.drawable.ic_baseline_repeat_one_24 else R.drawable.ic_baseline_repeat_24
                                 ),
-                                contentDescription = "Repeat",
+                                contentDescription = context.getString(
+                                    when (repeatMode) {
+                                        1 -> R.string.cd_repeat_all
+                                        2 -> R.string.cd_repeat_one
+                                        else -> R.string.cd_repeat_off
+                                    }
+                                ),
                                 tint = if (repeatMode > 0) colorGold else Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(19.dp)
                             )
@@ -853,36 +863,36 @@ fun FullscreenStudioConsole(
                             volume = state.volume.value,
                             onVolumeChanged = onVolumeChanged,
                             colorGold = colorGold,
-                            modifier = Modifier.width(180.dp)
+                            modifier = Modifier.width(150.dp)
                         )
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
-                        val nextTrack = queueState.upNext()
-                        if (nextTrack != null) {
+                        val nextLabel = queueState.upNextLabel(state.isShuffle.value)
+                        if (nextLabel != null) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(if (showQueueOverlay) colorGold.copy(alpha = 0.25f) else Color(0x22FFFFFF))
-                                    .border(BorderStroke(0.75.dp, if (showQueueOverlay) colorGold else Color(0x33FFFFFF)), RoundedCornerShape(8.dp))
+                                    .border(BorderStroke(0.75.dp, if (showQueueOverlay) colorGold else MusicMateDesignTokens.Surfaces.BorderPrimary), RoundedCornerShape(8.dp))
                                     .clickable { showQueueOverlay = !showQueueOverlay }
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Text(
                                     text = "UP NEXT: ",
                                     color = colorGold.copy(alpha = 0.85f),
-                                    fontSize = 8.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace
                                 )
                                 Text(
-                                    text = nextTrack.title,
+                                    text = nextLabel,
                                     color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 8.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 140.dp)
+                                    modifier = Modifier.widthIn(max = 170.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Icon(
@@ -984,7 +994,7 @@ fun FullscreenStudioConsole(
                                             Text(
                                                 text = "${index + 1}",
                                                 color = colorGold.copy(alpha = 0.7f),
-                                                fontSize = 9.sp,
+                                                fontSize = 10.sp,
                                                 fontFamily = FontFamily.Monospace,
                                                 modifier = Modifier.width(20.dp)
                                             )
@@ -1001,7 +1011,7 @@ fun FullscreenStudioConsole(
                                                     Text(
                                                         text = queueTrack.artist,
                                                         color = Color.White.copy(alpha = 0.55f),
-                                                        fontSize = 9.sp,
+                                                        fontSize = 11.sp,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
@@ -1011,7 +1021,7 @@ fun FullscreenStudioConsole(
                                             Text(
                                                 text = StringUtils.formatDuration(queueTrack.audioDuration, false),
                                                 color = Color.White.copy(alpha = 0.4f),
-                                                fontSize = 9.sp,
+                                                fontSize = 11.sp,
                                                 fontFamily = FontFamily.Monospace
                                             )
                                         }
@@ -1302,7 +1312,7 @@ private fun StudioLinearVolumeFader(
         Text(
             text = dbText,
             color = colorGold.copy(alpha = 0.9f),
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(34.dp)
@@ -1324,7 +1334,7 @@ private fun StudioSpecChip(
             .clip(RoundedCornerShape(6.dp))
             .background(if (isHighlighted) highlightColor.copy(alpha = 0.15f) else Color(0x1CFFFFFF))
             .border(
-                BorderStroke(0.5.dp, if (isHighlighted) highlightColor.copy(alpha = 0.6f) else Color(0x33FFFFFF)),
+                BorderStroke(0.5.dp, if (isHighlighted) highlightColor.copy(alpha = 0.6f) else MusicMateDesignTokens.Surfaces.BorderPrimary),
                 RoundedCornerShape(6.dp)
             )
             .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -1332,7 +1342,7 @@ private fun StudioSpecChip(
         Text(
             text = text,
             color = if (isHighlighted) highlightColor else Color.White.copy(alpha = 0.85f),
-            fontSize = 8.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.5.sp

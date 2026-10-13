@@ -19,11 +19,31 @@ class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
         totalDurationText = durationText
     }
 
-    /** The track after the one playing, or the first track when nothing is playing. */
-    fun upNext(): Track? {
+    /**
+     * The track that plays next, in play order. [isShuffle] is passed in from Compose state, so a
+     * caller recomposes when shuffle changes the order without changing [tracks]. With nothing
+     * playing it is what Play starts (MainActivity.onDockPlayPauseClicked): the current track, else
+     * the first; null when shuffle picks a random one. Display only: unlike Play it does not skip
+     * missing files on smart sources, since checking files here would run while drawing.
+     */
+    fun upNext(isShuffle: Boolean): Track? {
+        val m = manager
+        val isPlaying = tracks.any { it.uniqueKey == currentPlayingKey }
+        if (m != null) {
+            if (isPlaying) return m.peekNextTrack()
+            if (isShuffle) return null
+            return m.currentTrack ?: tracks.firstOrNull()
+        }
         val playing = tracks.indexOfFirst { it.uniqueKey == currentPlayingKey }
-            .takeIf { it >= 0 } ?: manager?.currentIndex ?: -1
         return tracks.getOrNull(playing + 1)
+    }
+
+    /** Label for [upNext], or null when the queue is empty. */
+    fun upNextLabel(isShuffle: Boolean): String? {
+        if (tracks.isEmpty()) return null
+        upNext(isShuffle)?.let { return it.title.orEmpty() }
+        val isPlaying = tracks.any { it.uniqueKey == currentPlayingKey }
+        return if (!isPlaying && isShuffle) "Random track" else "End of queue"
     }
 
     fun updateTracks(newTracks: List<Track>) {

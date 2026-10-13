@@ -199,7 +199,7 @@ fun QualityPieChart(
                 Text(
                     text = displayLabel,
                     color = Color(0xFF9E9E9E),
-                    fontSize = 9.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
@@ -221,7 +221,7 @@ fun QualityPieChart(
                     Text(
                         text = displaySub,
                         color = activeColor,
-                        fontSize = 9.5.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

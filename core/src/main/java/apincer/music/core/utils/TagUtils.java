@@ -360,7 +360,7 @@ public class TagUtils {
 
     public static String getQualityNote(String codec) {
         if(codec.equals(Constants.TITLE_CD_QUALITY)) {
-            return "16–bit • 44.1–48 kHz";
+            return "16–bit • 44.1–48 kHz • CD quality";
         }else  if(codec.equals(Constants.TITLE_DSD)) {
             return "DSD64 (2.8MHz) to DSD512 (22.5MHz)";
         }else  if(codec.equals(Constants.TITLE_MQA_MASTER_QUALITY)) {

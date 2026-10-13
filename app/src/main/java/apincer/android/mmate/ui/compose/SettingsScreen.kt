@@ -74,7 +74,7 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = MusicMateDesignTokens.Surfaces.Canvas
                 )
             )
         },
@@ -293,10 +293,10 @@ private fun SettingsChoice(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
             .clip(shape)
-            .background(if (selected) Color(0x33FFB300) else Color(0xFF1F1F28))
+            .background(if (selected) Color(0x33FFD700) else Color(0xFF1F1F28))
             .border(
                 width = 1.dp,
-                color = if (selected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                color = if (selected) MusicMateDesignTokens.Brand.Gold else Color(0x1FFFFFFF),
                 shape = shape
             )
             .selectable(
@@ -309,7 +309,7 @@ private fun SettingsChoice(
     ) {
         Text(
             text = label,
-            color = if (selected) Color(0xFFFFB300) else Color.White,
+            color = if (selected) MusicMateDesignTokens.Brand.Gold else Color.White,
             fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )
@@ -335,7 +335,7 @@ private fun SettingsCard(
         ) {
             Text(
                 text = title,
-                color = Color(0xFFFFB300),
+                color = MusicMateDesignTokens.Brand.Gold,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
@@ -386,7 +386,7 @@ private fun SettingsSwitchRow(
             modifier = Modifier.defaultMinSize(minHeight = 48.dp),
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Black,
-                checkedTrackColor = Color(0xFFFFB300),
+                checkedTrackColor = MusicMateDesignTokens.Brand.Gold,
                 // Off state needs a visible outline and thumb on the dark cards
                 uncheckedThumbColor = Color(0xFFBDBDBD),
                 uncheckedTrackColor = Color(0xFF2C2C36),

@@ -60,7 +60,7 @@ fun MusicFoldersDialog(
         shape = RoundedCornerShape(24.dp),
         // Opaque: song titles behind the dialog showed through the translucent panel
         color = Color(0xFF161618),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier
             .padding(12.dp)
             .graphicsLayer {
@@ -152,7 +152,7 @@ fun MusicFoldersDialog(
                                 Icon(
                                     painter = painterResource(id = R.drawable.rounded_folder_24),
                                     contentDescription = null,
-                                    tint = Color(0xFFFFB300),
+                                    tint = MusicMateDesignTokens.Brand.Gold,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -169,7 +169,7 @@ fun MusicFoldersDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .background(Color(0xFF1E1E1E), RoundedCornerShape(8.dp))
+                        .background(MusicMateDesignTokens.Surfaces.Surface, RoundedCornerShape(8.dp))
                         .heightIn(max = 250.dp)
                 ) {
                     LazyColumn {
@@ -219,7 +219,7 @@ fun MusicFoldersDialog(
                                 }
                             }
                             if (index < dirs.size - 1) {
-                                HorizontalDivider(color = Color(0x1AFFFFFF))
+                                HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
                             }
                         }
                     }
@@ -235,7 +235,7 @@ fun MusicFoldersDialog(
                         checked = isDeepAudit,
                         onCheckedChange = { isDeepAudit = it },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFFFB300),
+                            checkedColor = MusicMateDesignTokens.Brand.Gold,
                             checkmarkColor = Color.Black
                         )
                     )
@@ -260,7 +260,7 @@ fun MusicFoldersDialog(
                     Button(
                         onClick = { onScan(isDeepAudit, dirs.toList()) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
+                            containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black
                         )
                     ) {

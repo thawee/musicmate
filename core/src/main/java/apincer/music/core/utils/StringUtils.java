@@ -529,7 +529,7 @@ public class StringUtils {
         long m = (long) (totalseconds / 60 % 60);
 
         // Using %d to avoid padding (e.g., " 5 Hrs" -> "5 Hrs")
-        String formatHrsUnit = "%d Hrs";
+        String formatHrsUnit = h == 1 ? "%d Hr" : "%d Hrs";
         String formatMinuteUnit = "%d Min";
         String formatText = "";
 
