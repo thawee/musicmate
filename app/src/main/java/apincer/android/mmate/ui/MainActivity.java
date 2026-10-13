@@ -888,8 +888,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                         Track startTrack = null;
                         if (!qm.isShuffle()) {
                             startTrack = qm.getCurrentTrack();
-                            if (startTrack == null) {
-                                startTrack = qm.getNextTrack();
+                            if (startTrack == null && qm.getQueueSize() > 0) {
+                                // No current track yet: start at the top, not at getNextTrack()'s second track
+                                startTrack = qm.getSongs().get(0);
                             }
                         }
                         if (startTrack == null) {

@@ -22,9 +22,8 @@ class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
     /**
      * The track that plays next, in play order. [isShuffle] is passed in from Compose state, so a
      * caller recomposes when shuffle changes the order without changing [tracks]. With nothing
-     * playing it is what Play starts (MainActivity.onDockPlayPauseClicked): the current track;
-     * with no current track, getNextTrack() from index 0, which is the second track; null when
-     * shuffle picks a random one.
+     * playing it is what Play starts (MainActivity.onDockPlayPauseClicked): the current track, else
+     * the first; null when shuffle picks a random one.
      */
     fun upNext(isShuffle: Boolean): Track? {
         val m = manager
@@ -32,7 +31,7 @@ class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
         if (m != null) {
             if (isPlaying) return m.peekNextTrack()
             if (isShuffle) return null
-            return m.currentTrack ?: tracks.getOrNull(1) ?: tracks.firstOrNull()
+            return m.currentTrack ?: tracks.firstOrNull()
         }
         val playing = tracks.indexOfFirst { it.uniqueKey == currentPlayingKey }
         return tracks.getOrNull(playing + 1)
