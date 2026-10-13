@@ -477,7 +477,7 @@ fun TechCard(title: String, content: @Composable () -> Unit) {
             .padding(8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0x33000000)), // transparentish
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle)
     ) {
         Column(
             modifier = Modifier
