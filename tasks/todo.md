@@ -1,3 +1,58 @@
+# UX review fixes (2026-10-13, from tasks/ux-review-2026-10-13.md)
+Verify each batch with unit tests, `./gradlew :app:assembleDebug`, and a check on the phone (S25, real library). Run the reviewer on batches 3, 4 and 6. Proposed: one commit per batch on a branch (we are on `master`); this needs the user's OK.
+
+Gate before the first install on the phone: the installed 3.27.0 is a release build (not debuggable), with 8,117 tracks scanned and analysed. Compare the signing certificate from `./gradlew :app:signingReport` with the installed package's certificate (`apksigner verify --print-certs` on the pulled APK). If they differ, stop and ask. Never uninstall and never clear data (see lessons.md).
+
+Decisions (user, 2026-10-13): D1 "24-Bit Lossless"; D2 option A (list order + Shuffled chip + Up next line); D3 #FFD700; D4 drop "Hi-Res Edition".
+- D1 (batch 3): one name for the 24-bit 44.1-88.2 kHz tier, used in all four places: library pill, song page, the Audio Quality category title (`Constants.TITLE_CD_EXT_QUALITY` = "Studio Quality", which also produces the "SQ" tile) and About. Proposal: "24-Bit" (pill "24-BIT", expanded "24-BIT LOSSLESS", category "24-Bit Lossless"). The Hi-Res tile badge becomes "HI-RES" / "LOSSLESS" instead of "24-BIT" / "STUDIO".
+- D2 (batch 6): Queue tab while shuffle is on. Option A: keep list order, add a "Shuffled" chip and an "Up next: <title>" line in the header (row numbers stay list positions). Option B: render the list in play order while shuffle is on (drag-reorder then edits the play order).
+- D4 (batch 2): drop "Hi-Res Edition" from the drawer, or keep it.
+- D3 (batch 7): the brand gold. Proposal: #FFD700 for accents and active states, with #FFB300 kept only as a DR tier color.
+
+## Batch 1: contrast (#1, #2)
+- [ ] `dr_high` is used for text (`TagUIUtils.getDRScoreColor`) and by `shape_background_dr_high.xml` via the deprecated `getDRScoreBackgroundColor`, which has no callers. Change it from #2E7D32 to a green of at least 4.5:1 on #1E1E1E (#4CAF50 measures 6.74 / 6.00 / 5.02:1 on #121212 / #1E1E1E / #2C2C2C).
+- [x] `dr_none` #BDBDBD: 9.97:1 on #121212, no change.
+- [ ] Replace text uses of #888888 (13), #757575 (6) and #666666 (2) with one muted color of at least 4.5:1 on #2C2C2C (#9E9E9E, 5.21:1). Change only text colors; leave borders and icon tints alone. Add it as `Text.Muted` in `MusicMateDesignTokens` and reference it.
+- [ ] Phone: library DR labels, queue durations, server status lines. Screenshot before and after.
+
+## Batch 2: copy and labels (#11, #12, #13, #16)
+- [ ] `StringUtils.formatDuration` (core): fix singular and plural in the current capitalized style: "1 Hr", "2 Hrs", "1 Min", "1.0 Day". "Days of Music" was chosen on purpose (`MainActivity.java:670`). Add a core unit test that covers the singular, plural, under-1-hour and over-48-hour cases. There are 16 callers in app/core, and no other module uses it. Check that none of them parses the text.
+- [ ] Tech Info (`TagsTechnicalPage.kt:263,421`): "ALL TAGS COMPLETE" and "High resolution" / "Standard" / "Low resolution".
+- [ ] Tag editor dock: the "Format" button (`action_reformat` -> `TagsEditorFragment.doFormatTags`) fixes garbled Thai text and tidies the case and spacing of tag text. Add a new string "Tidy Tags" for that button; `btn_format` itself is used only there.
+- [ ] Drawer: drop " • Hi-Res Edition" (`MainScaffold.kt:232`), per D4.
+
+## Batch 3: one name per quality tier (#6), needs D1
+- [ ] Before renaming, list every `contains(` / `equals` match on tier strings. Several places pick a tier or color by searching the label text: `AudioPresentation.tier(raw)` ("Studio", "Hi-Res", "Lossless"), `FolderListItem` (category title), `NowPlayingPage.kt:121` (grade name), `TagRepository.java:483,556` and `TagUtils.java:368` (`TITLE_CD_EXT_QUALITY` as a search keyword). Make each match use the tier itself or the constant, not the display text.
+- [ ] `AudioPresentation.Tier.PCM24` labels and `Constants.TITLE_CD_EXT_QUALITY` per D1.
+- [ ] `FolderListItem.kt:187-188`: the Hi-Res tile badge uses the same tier names.
+- [ ] Grep for other hard-coded tier strings ("24-BIT STUDIO", "STUDIO", "HI-RES LOSSLESS") and route them through `AudioPresentation`.
+- [ ] Unit test: each tier maps to its labels, and each new label maps back to the same tier through `tier(raw)`, so a rename that breaks detection fails the test.
+- [ ] Phone: library pill, song page, Audio Quality tiles, console badge.
+
+## Batch 4: console states (#15 idle part, #17)
+- [ ] With no track loaded, hide the quality badge and the empty pill (`FullscreenStudioConsole.kt`). Show "N tracks queued" instead of "MusicMate / High-Fidelity Studio Audio".
+- [ ] Music Center idle: first read what Play does when no track is loaded but the queue is not empty. If it starts the queue, change "Ready to play / Select a song" to "N tracks queued · press Play".
+- [ ] Console Shuffle and Repeat descriptions include their state, matching Music Center (`FullscreenStudioConsole.kt:752,836`).
+
+## Batch 5: layout (#8, #10, #14)
+- [ ] Queue chip row: horizontal fading edge on both sides. Drop the duplicated count from the header (the tab badge keeps it).
+- [ ] Song page Play button: move it off the artwork, next to the title, as a 48dp button. Keep long-press for Play Next.
+- [ ] Output picker: give the app list a fading bottom edge, or a height that ends on a whole row.
+
+## Batch 6: queue under shuffle (#15), needs D2
+- [ ] Per D2, in `QueuePage.kt` / `QueueState.kt`, using the play order from `QueueManager` (`shuffleOrder` / `shuffleIds`).
+- [ ] `QueueManagerTest`: a test that the play-order view matches `upNext()`.
+- [ ] Phone: with shuffle on, the console's Up Next matches what the Queue tab shows next.
+
+## Batch 7: tokens (#5, #4, #3, #9), one file per commit
+- [ ] Wire `MusicMateDesignTokens` into `MusicMateTheme` and pick the gold per D3.
+- [ ] Add a check (a unit test or a Gradle grep task) that fails on new `Color(0x` literals in `ui/compose` outside the tokens file, with an allowlist of current counts that can only go down.
+- [ ] Migrate files from the most literals down: QueuePage (57), MainScaffold (56), FullscreenStudioConsole (56), AboutScreen, NowPlayingPage, MediaServerPage.
+- [ ] While in each file: set an 11sp floor for meaningful text (#4); use 48dp buttons where touch targets sit side by side (#3); in NowPlayingPage, a gold seek bar and a volume percent (#9).
+
+## Not planned
+- #7 PLAY NEXT pills: check them on the phone while something is playing (this changes the playback state, so ask first), then decide.
+
 # Release 3.26.0 (2026-10-10)
 - [x] DLNA on Android 17: request ACCESS_LOCAL_NETWORK before the media server starts. Phone (SM-S931B, Android 17): permission denied = 258 SSDP `sendto EPERM`; granted = 0, SSDP bound on 1900, HTTP on 192.168.1.51, LAN devices discovered; system permission dialog shown on launch with auto-start.
 - [x] USB DAC hi-res output replaces USB bit-perfect; Next in Music Center fix (see "USB DAC hi-res output" below).
