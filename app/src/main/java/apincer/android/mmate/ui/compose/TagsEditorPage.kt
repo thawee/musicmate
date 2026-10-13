@@ -107,7 +107,7 @@ fun TagsEditorPage(
                 Icon(
                     painter = painterResource(id = R.drawable.rounded_library_music_24),
                     contentDescription = null,
-                    tint = Color(0xFFFFD700),
+                    tint = MusicMateDesignTokens.Brand.Gold,
                     modifier = Modifier.size(28.dp)
                 )
             }
