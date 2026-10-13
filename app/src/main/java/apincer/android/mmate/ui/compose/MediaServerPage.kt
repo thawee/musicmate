@@ -175,7 +175,7 @@ fun MediaServerPage(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black,
-                            disabledContainerColor = Color(0xFF2C2C2C),
+                            disabledContainerColor = MusicMateDesignTokens.Surfaces.SurfaceElevated,
                             disabledContentColor = Color(0xFF666666)
                         ),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
@@ -206,7 +206,7 @@ fun MediaServerPage(
             Surface(
                 color = Color(0xFF14141A),
                 shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFFFFF)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -294,7 +294,7 @@ fun MediaServerPage(
                                         containerColor = Color(0x1AFFFFFF),
                                         contentColor = Color.White
                                     ),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                                     modifier = Modifier.height(34.dp)
                                 ) {
                                     Icon(
@@ -319,7 +319,7 @@ fun MediaServerPage(
                                         containerColor = Color(0x1AFFFFFF),
                                         contentColor = Color.White
                                     ),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                                     modifier = Modifier.height(34.dp)
                                 ) {
                                     Icon(
@@ -431,7 +431,7 @@ fun MediaServerPage(
             Surface(
                 color = Color(0xFF1E1E28),
                 shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
