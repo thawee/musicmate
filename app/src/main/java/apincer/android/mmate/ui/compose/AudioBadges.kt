@@ -156,7 +156,7 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
         modifier = modifier
             .clip(CircleShape)
             .background(Color(0xD9141414))
-            .border(0.5.dp, Color(0x33FFFFFF), CircleShape)
+            .border(0.5.dp, MusicMateDesignTokens.Surfaces.BorderPrimary, CircleShape)
             .padding(horizontal = 6.dp, vertical = 2.dp)
             .semantics { contentDescription = "Resolution: ${AudioPresentation.resolutionDescription(track)}" },
         contentAlignment = Alignment.Center
