@@ -203,7 +203,7 @@ fun FullscreenStudioConsole(
         mutableStateOf(if (isDLNA) StudioVisualizerMode.TAPE_DECK else StudioVisualizerMode.VU_METER)
     }
 
-    val colorGold = Color(0xFFFFB300)
+    val colorGold = MusicMateDesignTokens.Brand.GoldAmber
     val colorGoldAccent = Color(0xFFFFD54F)
 
     // 3. Dynamic Studio Ambilight Color Extraction (Clamped to Darkroom Obsidian)
@@ -475,7 +475,7 @@ fun FullscreenStudioConsole(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(if (isPlaying) Color(0xFF00E676) else Color.Gray.copy(alpha = 0.5f))
+                                    .background(if (isPlaying) MusicMateDesignTokens.Status.Positive else Color.Gray.copy(alpha = 0.5f))
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
@@ -507,7 +507,7 @@ fun FullscreenStudioConsole(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val targetDotColor = when {
-                                isBitPerfect -> Color(0xFF00E676)
+                                isBitPerfect -> MusicMateDesignTokens.AudioProvenance.BitPerfectGreen
                                 isDLNA -> Color(0xFF00E5FF)
                                 else -> colorGold
                             }
@@ -550,7 +550,7 @@ fun FullscreenStudioConsole(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = "BIT-PERFECT",
-                                        color = Color(0xFF00E676),
+                                        color = MusicMateDesignTokens.AudioProvenance.BitPerfectGreen,
                                         fontSize = 7.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
@@ -874,7 +874,7 @@ fun FullscreenStudioConsole(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(if (showQueueOverlay) colorGold.copy(alpha = 0.25f) else Color(0x22FFFFFF))
-                                    .border(BorderStroke(0.75.dp, if (showQueueOverlay) colorGold else Color(0x33FFFFFF)), RoundedCornerShape(8.dp))
+                                    .border(BorderStroke(0.75.dp, if (showQueueOverlay) colorGold else MusicMateDesignTokens.Surfaces.BorderPrimary), RoundedCornerShape(8.dp))
                                     .clickable { showQueueOverlay = !showQueueOverlay }
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
@@ -1334,7 +1334,7 @@ private fun StudioSpecChip(
             .clip(RoundedCornerShape(6.dp))
             .background(if (isHighlighted) highlightColor.copy(alpha = 0.15f) else Color(0x1CFFFFFF))
             .border(
-                BorderStroke(0.5.dp, if (isHighlighted) highlightColor.copy(alpha = 0.6f) else Color(0x33FFFFFF)),
+                BorderStroke(0.5.dp, if (isHighlighted) highlightColor.copy(alpha = 0.6f) else MusicMateDesignTokens.Surfaces.BorderPrimary),
                 RoundedCornerShape(6.dp)
             )
             .padding(horizontal = 6.dp, vertical = 2.dp)

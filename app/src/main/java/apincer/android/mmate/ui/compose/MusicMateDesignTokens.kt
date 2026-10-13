@@ -31,7 +31,7 @@ object MusicMateDesignTokens {
         val Gold = Color(0xFFFFD700)
         val GoldContainer = Color(0x22FFD700) // fill behind an active or now-playing element
         val GoldOutline = Color(0x55FFD700)   // border of a gold container
-        val GoldAmber = Color(0xFFFFB300)
+        val GoldAmber = Color(0xFFFFB300) // Studio Console accent, DR 8-12, warning states
         val WarmAmber = Color(0xFFF57C00)
         val AcousticTeal = Color(0xFF80CBC4)
         val TealContainer = Color(0xFF1E3A39)
