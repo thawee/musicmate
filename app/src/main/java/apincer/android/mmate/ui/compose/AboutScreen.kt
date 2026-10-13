@@ -87,7 +87,7 @@ fun AboutScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = MusicMateDesignTokens.Surfaces.Canvas
                 )
             )
         },
@@ -216,7 +216,7 @@ fun AboutScreen(
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0x2BFFD700),
-                                contentColor = Color(0xFFFFD700)
+                                contentColor = MusicMateDesignTokens.Brand.Gold
                             ),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
@@ -436,7 +436,7 @@ fun AboutScreen(
                             try { ctx.startActivity(intent) } catch (e: Exception) {}
                         },
                         shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -444,7 +444,7 @@ fun AboutScreen(
                                 contentDescription = openGooglePlayDescription
                             }
                     ) {
-                        Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
+                        Icon(painterResource(id = R.drawable.ic_baseline_star_24), contentDescription = null, tint = MusicMateDesignTokens.Brand.Gold, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.about_rate_google_play), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
@@ -455,7 +455,7 @@ fun AboutScreen(
                             try { ctx.startActivity(intent) } catch (e: Exception) {}
                         },
                         shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
