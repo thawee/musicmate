@@ -63,7 +63,7 @@ fun FormatFilesDialog(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xF2161618),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier.padding(12.dp)
     ) {
         Column(
