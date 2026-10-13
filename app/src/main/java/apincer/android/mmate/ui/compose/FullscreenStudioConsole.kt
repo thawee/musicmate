@@ -648,7 +648,7 @@ fun FullscreenStudioConsole(
                         // Track Title & Artist Metadata Column
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = track?.title ?: "MusicMate",
+                                text = track?.title ?: "Ready to play",
                                 color = Color.White,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
@@ -660,7 +660,7 @@ fun FullscreenStudioConsole(
                             Spacer(modifier = Modifier.height(2.dp))
                             val artistAlbum = listOfNotNull(track?.artist, track?.album).filter { it.isNotBlank() }.joinToString(" • ")
                             Text(
-                                text = artistAlbum.ifEmpty { "High-Fidelity Studio Audio" },
+                                text = if (track == null) idleQueueText(queueState.tracks.size) else artistAlbum,
                                 color = Color.White.copy(alpha = 0.65f),
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
@@ -682,7 +682,8 @@ fun FullscreenStudioConsole(
                     val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
                     val rgStr = state.specsReplayGain.value
 
-                    FlowRow(
+                    // Nothing loaded: an empty verdict would read as "CD QUALITY"
+                    if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -692,7 +693,7 @@ fun FullscreenStudioConsole(
                             isHighlighted = true,
                             highlightColor = if (track != null) AudioPresentation.accent(track) else AudioPresentation.accent(state.specsVerdict.value)
                         )
-                        StudioSpecChip(codecStr)
+                        if (codecStr.isNotBlank()) StudioSpecChip(codecStr)
                         if (resStr.isNotEmpty()) StudioSpecChip(resStr)
                         if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
                         if (drStr.isNotEmpty()) StudioSpecChip(drStr)
@@ -746,10 +747,13 @@ fun FullscreenStudioConsole(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         // Shuffle
-                        IconButton(onClick = onShuffleToggle, modifier = Modifier.size(36.dp)) {
+                        IconButton(onClick = onShuffleToggle, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_shuffle_24),
-                                contentDescription = "Shuffle",
+                                contentDescription = context.getString(
+                                    R.string.cd_shuffle_state,
+                                    context.getString(if (state.isShuffle.value) R.string.state_on else R.string.state_off)
+                                ),
                                 tint = if (state.isShuffle.value) colorGold else Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(19.dp)
                             )
@@ -827,13 +831,19 @@ fun FullscreenStudioConsole(
                         }
 
                         // Repeat
-                        IconButton(onClick = onRepeatToggle, modifier = Modifier.size(36.dp)) {
+                        IconButton(onClick = onRepeatToggle, modifier = Modifier.size(48.dp)) {
                             val repeatMode = state.repeatMode.value
                             Icon(
                                 painter = painterResource(
                                     id = if (repeatMode == 2) R.drawable.ic_baseline_repeat_one_24 else R.drawable.ic_baseline_repeat_24
                                 ),
-                                contentDescription = "Repeat",
+                                contentDescription = context.getString(
+                                    when (repeatMode) {
+                                        1 -> R.string.cd_repeat_all
+                                        2 -> R.string.cd_repeat_one
+                                        else -> R.string.cd_repeat_off
+                                    }
+                                ),
                                 tint = if (repeatMode > 0) colorGold else Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(19.dp)
                             )

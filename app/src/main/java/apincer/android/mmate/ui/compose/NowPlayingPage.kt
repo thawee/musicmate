@@ -88,6 +88,7 @@ typealias TelemetryWidgetMode = StudioVisualizerMode
 fun NowPlayingPage(
     state: NowPlayingState,
     canStartPlayback: Boolean = false,
+    queuedCount: Int = 0,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -344,7 +345,7 @@ fun NowPlayingPage(
                         Text(
                             text = track?.let { t ->
                                 listOf(t.artist, t.album).filter { !it.isNullOrBlank() }.joinToString(" • ")
-                            } ?: "Select a song",
+                            } ?: idleQueueText(queuedCount.takeIf { canStartPlayback } ?: 0),
                             color = Color(0xFFEEEEEE),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Normal,
@@ -1131,3 +1132,10 @@ private val ArtTextShadow = androidx.compose.ui.graphics.Shadow(
     offset = androidx.compose.ui.geometry.Offset(0f, 2f),
     blurRadius = 6f
 )
+
+/** Idle subtitle: Play starts the queue when nothing is loaded, so say what it will play. */
+internal fun idleQueueText(queuedCount: Int): String = when {
+    queuedCount <= 0 -> "Select a song"
+    queuedCount == 1 -> "1 track queued · press Play"
+    else -> String.format(java.util.Locale.getDefault(), "%,d tracks queued · press Play", queuedCount)
+}

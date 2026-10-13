@@ -373,6 +373,7 @@ fun AudioHubSheet(
                         0 -> NowPlayingPage(
                             state = nowPlayingState,
                             canStartPlayback = true,
+                            queuedCount = queueCount,
                             onPlayPause = onPlayPause,
                             onNext = onNext,
                             onPrevious = onPrevious,
