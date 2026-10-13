@@ -96,7 +96,7 @@ fun PlaylistPickerDialog(
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = Color(0xF2161618),
-            border = BorderStroke(1.dp, Color(0x33FFFFFF)),
+            border = BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
@@ -283,7 +283,7 @@ fun PlaylistPickerDialog(
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
                                             contentDescription = "Play All",
-                                            tint = Color(0xFFFFD700),
+                                            tint = MusicMateDesignTokens.Brand.Gold,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
