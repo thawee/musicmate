@@ -35,7 +35,7 @@ class ColorLiteralBudgetTest {
         "PlayerPickerDialog.kt" to 23,
         "PlaylistPickerDialog.kt" to 21,
         "QualityPieChart.kt" to 7,
-        "QueuePage.kt" to 61,
+        "QueuePage.kt" to 48,
         "ReelToReelTapeDeck.kt" to 37,
         "RelatedTracksSheet.kt" to 20,
         "SearchMatchDialog.kt" to 31,

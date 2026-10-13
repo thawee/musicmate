@@ -29,6 +29,8 @@ object MusicMateDesignTokens {
      */
     object Brand {
         val Gold = Color(0xFFFFD700)
+        val GoldContainer = Color(0x22FFD700) // fill behind an active or now-playing element
+        val GoldOutline = Color(0x55FFD700)   // border of a gold container
         val GoldAmber = Color(0xFFFFB300)
         val WarmAmber = Color(0xFFF57C00)
         val AcousticTeal = Color(0xFF80CBC4)
@@ -60,6 +62,11 @@ object MusicMateDesignTokens {
         val SkyBlueHigh = Color(0xFF33CCFF)    // DR 13-16
         val RoyalBlueDynamic = Color(0xFF3366FF) // DR 17-20
         val PurpleAudiophile = Color(0xFF9933CC) // DR 21+
+    }
+
+    /** Live status lights (server running, queue caught up) */
+    object Status {
+        val Positive = Color(0xFF00E676)
     }
 
     /**
