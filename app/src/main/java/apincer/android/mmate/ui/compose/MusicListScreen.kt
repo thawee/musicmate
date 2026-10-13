@@ -172,7 +172,7 @@ fun MusicListScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                                 contentDescription = null,
-                                tint = Color(0xFFFFD700),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -213,7 +213,7 @@ fun MusicListScreen(
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFD700)),
                         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFFFD700)
+                            contentColor = MusicMateDesignTokens.Brand.Gold
                         )
                     ) {
                         Icon(
@@ -375,7 +375,7 @@ fun MusicListScreen(
                             .clip(CircleShape)
                             // Solid so row badges underneath do not show through
                             .background(Color(0xFF262626))
-                            .border(1.5.dp, Color(0x4DFFFFFF), CircleShape)
+                            .border(1.5.dp, MusicMateDesignTokens.Surfaces.BorderElevated, CircleShape)
                             .clickable {
                                 coroutineScope.launch {
                                     listState.animateScrollToItem(0)
