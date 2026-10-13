@@ -275,7 +275,7 @@ fun NowPlayingPage(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color(0xFF1E1E1E)),
+                                .background(MusicMateDesignTokens.Surfaces.Surface),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -1064,7 +1064,7 @@ fun SleepTimerDialog(
                 }
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFF1C1C1E))
-                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(20.dp))
+                .border(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary, RoundedCornerShape(20.dp))
                 .padding(20.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1105,7 +1105,7 @@ fun SleepTimerDialog(
                     ) {
                         Text(
                             text = label,
-                            color = if (isSelected) Color(0xFFFFD700) else Color(0xFFE0E0E0),
+                            color = if (isSelected) MusicMateDesignTokens.Brand.Gold else Color(0xFFE0E0E0),
                             fontSize = 14.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
@@ -1113,7 +1113,7 @@ fun SleepTimerDialog(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_timer_24),
                                 contentDescription = null,
-                                tint = Color(0xFFFFD700),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
