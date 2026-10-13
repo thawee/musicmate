@@ -69,7 +69,7 @@ import apincer.music.core.utils.StringUtils
 private val cardShape       = RoundedCornerShape(12.dp)
 private val cardBg          = Color(0x1AFFFFFF)   // 10% white frosted tint
 private val cardBgDark      = Color(0x80000000)   // 50% dark base
-private val cardBorderNormal = Color(0x4DFFFFFF)  // 30% white stroke
+private val cardBorderNormal = MusicMateDesignTokens.Surfaces.BorderElevated  // 30% white stroke
 private val cardBorderSelected = Color(0xFF1E88E5) // blue stroke when selected
 private val colorGold       = Color(0xFFFFD700)
 
@@ -267,7 +267,7 @@ fun TrackListItem(
                         onDismissRequest = { showMenu = false },
                         modifier = Modifier
                             .background(Color(0xFF242424))
-                            .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(8.dp))
+                            .border(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(8.dp))
                     ) {
                         if (showPlaybackActions) {
                             DropdownMenuItem(
@@ -300,7 +300,7 @@ fun TrackListItem(
                                     onMenuAction(R.id.action_add_queue)
                                 }
                             )
-                            HorizontalDivider(color = Color(0x1AFFFFFF))
+                            HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
                         }
                         // Browse group
                         if (showRemoveFromPlaylist) {
@@ -349,7 +349,7 @@ fun TrackListItem(
                                 }
                             )
                         }
-                        HorizontalDivider(color = Color(0x1AFFFFFF))
+                        HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
                         // File operations group
                         DropdownMenuItem(
                             text = { Text("Convert Format", color = Color.White, fontSize = 15.sp) },
