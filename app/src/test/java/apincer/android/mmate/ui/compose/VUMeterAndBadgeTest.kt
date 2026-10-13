@@ -165,7 +165,7 @@ class VUMeterAndBadgeTest {
     fun genericQualityAndDsdPrecedenceArePreserved() {
         val pcm = createMockTrack(bitDepth = 24)
         assertEquals("24-BIT 24/44.1", getUnifiedBadgeText(pcm))
-        assertEquals("24-BIT STUDIO", AudioPresentation.qualityLabel(pcm, true))
+        assertEquals("24-BIT LOSSLESS", AudioPresentation.qualityLabel(pcm, true))
         assertEquals(Color(0xFFFFD700), AudioPresentation.accent(pcm))
         val dsd = createMockTrack(bitDepth = 1, sampleRate = 5644800, qualityInd = "MQA Studio")
         assertEquals("DSD128", getUnifiedBadgeText(dsd))

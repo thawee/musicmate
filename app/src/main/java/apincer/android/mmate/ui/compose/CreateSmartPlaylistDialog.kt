@@ -202,7 +202,7 @@ fun CreateSmartPlaylistDialog(
                         modifier = Modifier.weight(1f)
                     )
                     FilterToggleChip(
-                        label = "24-bit Studio",
+                        label = "24-bit+",
                         selected = minBitDepth == 24,
                         onToggle = { minBitDepth = if (minBitDepth == 24) 0 else 24 },
                         modifier = Modifier.weight(1f)

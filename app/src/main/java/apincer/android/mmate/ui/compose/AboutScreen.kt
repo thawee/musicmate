@@ -332,7 +332,7 @@ fun AboutScreen(
                     val tiers = listOf(
                         Constants.LEGEND_HIRES to "Hi-Res",
                         Constants.LEGEND_DSD to "DSD",
-                        Constants.LEGEND_STUDIO to "Studio",
+                        Constants.LEGEND_STUDIO to "24-Bit",
                         Constants.LEGEND_CD to "CD Quality",
                         Constants.LEGEND_MQA to "MQA",
                         Constants.LEGEND_LOSSY to "Standard"
@@ -576,10 +576,10 @@ private fun getTierDetails(key: String): TierInfo {
             accentColor = Color(0xFF00E5FF)
         )
         Constants.LEGEND_STUDIO -> TierInfo(
-            title = "Studio Quality (24-bit / 44.1 - 48kHz)",
+            title = "24-Bit Lossless (24-bit / 44.1 - 88.2 kHz)",
             description = "24-bit depth delivering 144 dB of dynamic range, capturing full studio recording headroom.",
             formats = "FLAC, ALAC, WAV",
-            resolution = "24-bit / 44.1 kHz, 48.0 kHz (2304 kbps)",
+            resolution = "24-bit / 44.1 kHz to 88.2 kHz",
             accentColor = Color(0xFFFFC107)
         )
         Constants.LEGEND_CD -> TierInfo(

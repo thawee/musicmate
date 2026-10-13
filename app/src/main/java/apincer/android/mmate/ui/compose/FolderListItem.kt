@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.android.mmate.coil3.CoverartFetcher
+import apincer.music.core.Constants
 import apincer.music.core.model.Track
 import coil3.compose.AsyncImage
 
@@ -168,6 +169,8 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
     val isDr12 = title.contains("DR12", ignoreCase = true) || title.contains("Sanctuary", ignoreCase = true)
     val isHiRes = title.contains("Hi-Res", ignoreCase = true) || title.contains("Studio Masters", ignoreCase = true)
     val isDsd = title.contains("DSD", ignoreCase = true)
+    // Exact match: the title also contains "Lossless", which would pick the Vault tile
+    val isPcm24 = title == Constants.TITLE_CD_EXT_QUALITY
     val isLossless = title.contains("Lossless", ignoreCase = true) || title.contains("Vault", ignoreCase = true)
     val isClassical = title.contains("Classical", ignoreCase = true)
     val isMasterpiece = title.contains("Masterpiece", ignoreCase = true)
@@ -184,9 +187,15 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
         )
         isHiRes -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF091629), Color(0xFF133658), Color(0xFF1E6F9F))),
-            badgeText = "24-BIT",
-            badgeSubtext = "STUDIO",
+            badgeText = "HI-RES",
+            badgeSubtext = "LOSSLESS",
             accentColor = Color(0xFF64B5F6)
+        )
+        isPcm24 -> SmartArtworkTheme(
+            brush = Brush.linearGradient(listOf(Color(0xFF1F1A05), Color(0xFF4A3D0A), Color(0xFF8C7414))),
+            badgeText = "24-BIT",
+            badgeSubtext = "LOSSLESS",
+            accentColor = Color(0xFFFFD54F)
         )
         isDsd -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF02231A), Color(0xFF005844), Color(0xFF00897B))),

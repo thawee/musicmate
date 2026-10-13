@@ -48,7 +48,7 @@ The main screen lists your songs with their quality badge (such as `HI-RES 24/96
 
 - **Core Library.** All Songs, Artists, Genres and Playlists.
 - **Discover & Audiophile.**
-  - **Audio Quality** groups songs into DSD, MQA, Hi-Res Lossless, Studio Quality and other tiers.
+  - **Audio Quality** groups songs into DSD, MQA, Hi-Res Lossless, 24-Bit Lossless and other tiers.
   - **Similar Tracks** finds possible duplicates: songs with the same title, and by default the same artist.
   - **Incoming Tracks** lists songs that have arrived but are not organized yet, such as downloads.
 - **Settings & System.** Music Folders & Scan, Settings, System Access and Diagnostics. Diagnostics is a crash log that is useful when reporting a problem.
@@ -210,7 +210,7 @@ Each song shows a quality badge and a DR value.
 
 - **Quality badges.**
   - `CD` is 16-bit lossless.
-  - `24-BIT` is studio quality, 24-bit at 44.1 to 88.2 kHz.
+  - `24-BIT` is 24-bit lossless at 44.1 to 88.2 kHz.
   - `HI-RES` is 24-bit at 96 kHz or higher.
   - `DSD` is Direct Stream Digital.
   - `MQA` marks MQA-encoded files. Expanded badges tell `MQA MASTER` from `MQA STUDIO`, and show the original sample rate when the file records it.

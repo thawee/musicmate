@@ -54,7 +54,7 @@ public final class Constants {
     public static final String TITLE_HIRES_QUALITY = "Hi-Res Lossless"; //"Hi-Res Quality";
 
     public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
-    public static final String TITLE_CD_EXT_QUALITY = "Studio Quality"; //"24-bit Studio Quality";
+    public static final String TITLE_CD_EXT_QUALITY = "24-Bit Lossless"; // 24-bit below 96 kHz
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "Compressed"; //"Lossy Compressed Quality";
     public static final String TITLE_MQA_MASTER_QUALITY = "MQA Master"; //"MQA Master Quality";
