@@ -123,7 +123,7 @@ fun AudioHubSheet(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                         contentDescription = null,
-                        tint = Color(0xFFFFD700),
+                        tint = MusicMateDesignTokens.Brand.Gold,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -242,7 +242,7 @@ fun AudioHubSheet(
                     ) {
                         Text(
                             text = playbackLabel,
-                            color = if (isPlaybackSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                            color = if (isPlaybackSelected) MusicMateDesignTokens.Brand.Gold else Color(0x99FFFFFF),
                             fontSize = 12.5.sp,
                             fontWeight = if (isPlaybackSelected) FontWeight.Bold else FontWeight.Medium,
                             letterSpacing = 0.2.sp
@@ -277,7 +277,7 @@ fun AudioHubSheet(
                         ) {
                             Text(
                                 text = stringResource(R.string.music_center_tab_queue),
-                                color = if (isQueueSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                                color = if (isQueueSelected) MusicMateDesignTokens.Brand.Gold else Color(0x99FFFFFF),
                                 fontSize = 12.5.sp,
                                 fontWeight = if (isQueueSelected) FontWeight.Bold else FontWeight.Medium,
                                 letterSpacing = 0.2.sp
@@ -294,7 +294,7 @@ fun AudioHubSheet(
                                 ) {
                                     Text(
                                         text = queueCount.toString(),
-                                        color = if (isQueueSelected) Color(0xFFFFD700) else Color(0xBBFFFFFF),
+                                        color = if (isQueueSelected) MusicMateDesignTokens.Brand.Gold else Color(0xBBFFFFFF),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
@@ -330,7 +330,7 @@ fun AudioHubSheet(
                         ) {
                             Text(
                                 text = stringResource(R.string.music_center_tab_server),
-                                color = if (isServerSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                                color = if (isServerSelected) MusicMateDesignTokens.Brand.Gold else Color(0x99FFFFFF),
                                 fontSize = 12.5.sp,
                                 fontWeight = if (isServerSelected) FontWeight.Bold else FontWeight.Medium,
                                 letterSpacing = 0.2.sp
@@ -451,7 +451,7 @@ private fun AudioHubContainer(
                 val bottomSheetScope = this
                 Box(modifier = Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(listOf(Color(0xFF282B30), Color(0xFF121212))))) {
+                    .background(Brush.verticalGradient(listOf(Color(0xFF282B30), MusicMateDesignTokens.Surfaces.Canvas)))) {
                     bottomSheetScope.content()
                 }
             }
@@ -462,7 +462,7 @@ private fun AudioHubContainer(
             modifier = modifier
                 .fillMaxSize()
                 .safeDrawingPadding()
-                .background(Brush.verticalGradient(listOf(Color(0xFF282B30), Color(0xFF121212)))),
+                .background(Brush.verticalGradient(listOf(Color(0xFF282B30), MusicMateDesignTokens.Surfaces.Canvas))),
             content = {
                 Column(content = content)
             }
@@ -476,7 +476,7 @@ private fun AudioHubContainer(
         ) {
             Surface(
                 shape = sheetShape,
-                color = Color(0xFF121212),
+                color = MusicMateDesignTokens.Surfaces.Canvas,
                 modifier = sheetModifier.fillMaxSize()
             ) {
                 Column(
