@@ -166,7 +166,7 @@ fun NowPlayingPage(
         stringResource(R.string.cd_playback_position)
     }
 
-    val colorGold = Color(0xFFFFB300)
+    val colorGold = MusicMateDesignTokens.Brand.Gold
     val colorGrey400 = Color(0xFFBDBDBD)
 
     // Dynamic Artwork Ambient Glow Palette Extraction with Grade Fallback
@@ -917,11 +917,11 @@ fun NowPlayingPage(
                             elevation = if (isPlaying) 8.dp else 3.dp,
                             shape = CircleShape,
                             ambientColor = Color(0x33FFA000),
-                            spotColor = Color(0x55FFB300)
+                            spotColor = Color(0x55FFD700)
                         )
                         .clip(CircleShape)
                         .background(if (playControlsEnabled) Color.White else Color(0xFF666666))
-                        .border(BorderStroke(1.5.dp, Color(0xFFFFB300).copy(alpha = 0.5f)), CircleShape)
+                        .border(BorderStroke(1.5.dp, MusicMateDesignTokens.Brand.Gold.copy(alpha = 0.5f)), CircleShape)
                         .semantics {
                             role = Role.Button
                             contentDescription = context.getString(if (isPlaying) R.string.cd_pause else R.string.cd_play)

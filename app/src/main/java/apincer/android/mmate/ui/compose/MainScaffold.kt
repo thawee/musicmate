@@ -887,7 +887,7 @@ private fun TopSearchBar(
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_playlist_add_24),
                             contentDescription = stringResource(R.string.cd_new_smart_playlist),
-                            tint = Color(0xFFFFB300),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(22.dp)
                         )
                     }

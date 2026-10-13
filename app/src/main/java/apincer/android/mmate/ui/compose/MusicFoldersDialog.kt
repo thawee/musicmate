@@ -152,7 +152,7 @@ fun MusicFoldersDialog(
                                 Icon(
                                     painter = painterResource(id = R.drawable.rounded_folder_24),
                                     contentDescription = null,
-                                    tint = Color(0xFFFFB300),
+                                    tint = MusicMateDesignTokens.Brand.Gold,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -235,7 +235,7 @@ fun MusicFoldersDialog(
                         checked = isDeepAudit,
                         onCheckedChange = { isDeepAudit = it },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFFFB300),
+                            checkedColor = MusicMateDesignTokens.Brand.Gold,
                             checkmarkColor = Color.Black
                         )
                     )
@@ -260,7 +260,7 @@ fun MusicFoldersDialog(
                     Button(
                         onClick = { onScan(isDeepAudit, dirs.toList()) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
+                            containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black
                         )
                     ) {

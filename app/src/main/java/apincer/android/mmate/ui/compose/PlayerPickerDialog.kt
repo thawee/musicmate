@@ -224,9 +224,9 @@ fun PlayerPickerDialog(
                 if (!hasExternalPlayerAccess) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Surface(
-                        color = Color(0x1AFFB300),
+                        color = Color(0x1AFFD700),
                         shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x55FFB300)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x55FFD700)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(onClick = onExternalPlayerAccessClick)

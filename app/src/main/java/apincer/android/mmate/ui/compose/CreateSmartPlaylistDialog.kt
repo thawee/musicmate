@@ -64,7 +64,7 @@ fun CreateSmartPlaylistDialog(
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = Color(0xFF141418),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFD700)),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp)
@@ -83,7 +83,7 @@ fun CreateSmartPlaylistDialog(
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_playlist_add_24),
                         contentDescription = null,
-                        tint = Color(0xFFFFB300),
+                        tint = MusicMateDesignTokens.Brand.Gold,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -116,9 +116,9 @@ fun CreateSmartPlaylistDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFFFFB300),
+                        focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
                         unfocusedBorderColor = Color(0x33FFFFFF),
-                        focusedLabelColor = Color(0xFFFFB300),
+                        focusedLabelColor = MusicMateDesignTokens.Brand.Gold,
                         unfocusedLabelColor = MusicMateDesignTokens.Text.Muted
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -153,8 +153,8 @@ fun CreateSmartPlaylistDialog(
                         valueRange = 0f..16f,
                         steps = 15,
                         colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFFFFB300),
-                            activeTrackColor = Color(0xFFFFB300),
+                            thumbColor = MusicMateDesignTokens.Brand.Gold,
+                            activeTrackColor = MusicMateDesignTokens.Brand.Gold,
                             inactiveTrackColor = Color(0xFF2C2C36)
                         )
                     )
@@ -217,13 +217,13 @@ fun CreateSmartPlaylistDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF1E1E28))
-                        .border(1.dp, Color(0x33FFB300), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0x33FFD700), RoundedCornerShape(10.dp))
                         .padding(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "⚡ Live Match:",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -261,9 +261,9 @@ fun CreateSmartPlaylistDialog(
                         },
                         enabled = title.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
+                            containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black,
-                            disabledContainerColor = Color(0x33FFB300),
+                            disabledContainerColor = Color(0x33FFD700),
                             disabledContentColor = Color(0x66000000)
                         ),
                         modifier = Modifier.weight(1f)
@@ -286,10 +286,10 @@ private fun FilterToggleChip(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(if (selected) Color(0x33FFB300) else Color(0xFF1F1F28))
+            .background(if (selected) Color(0x33FFD700) else Color(0xFF1F1F28))
             .border(
                 1.dp,
-                if (selected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                if (selected) MusicMateDesignTokens.Brand.Gold else Color(0x1FFFFFFF),
                 RoundedCornerShape(8.dp)
             )
             .clickable { onToggle() }
@@ -298,7 +298,7 @@ private fun FilterToggleChip(
     ) {
         Text(
             text = label,
-            color = if (selected) Color(0xFFFFB300) else Color(0xFFCCCCCC),
+            color = if (selected) MusicMateDesignTokens.Brand.Gold else Color(0xFFCCCCCC),
             fontSize = 11.5.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1

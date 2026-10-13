@@ -486,7 +486,7 @@ fun TechCard(title: String, content: @Composable () -> Unit) {
         ) {
             Text(
                 text = title,
-                color = Color(0xFFFFB300), // App gold accent (matches About and the library headings)
+                color = MusicMateDesignTokens.Brand.Gold, // App gold accent (matches About and the library headings)
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 letterSpacing = 1.sp,

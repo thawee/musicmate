@@ -1071,9 +1071,9 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Playlists",
                 onClick = onOpenPlaylistPicker,
-                containerColor = Color(0x22FFB300),
-                contentColor = Color(0xFFFFB300),
-                borderColor = Color(0x55FFB300),
+                containerColor = Color(0x22FFD700),
+                contentColor = MusicMateDesignTokens.Brand.Gold,
+                borderColor = Color(0x55FFD700),
                 modifier = Modifier.fillMaxWidth()
             )
             if (source == QueueManager.Source.MANUAL) {
@@ -1089,7 +1089,7 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Browse Library",
                 onClick = onBrowseLibrary,
-                containerColor = Color(0xFFFFB300),
+                containerColor = MusicMateDesignTokens.Brand.Gold,
                 contentColor = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1107,9 +1107,9 @@ private fun QueueEmptyActions(
                 QueueEmptyActionButton(
                     label = "Playlists",
                     onClick = onOpenPlaylistPicker,
-                    containerColor = Color(0x22FFB300),
-                    contentColor = Color(0xFFFFB300),
-                    borderColor = Color(0x55FFB300),
+                    containerColor = Color(0x22FFD700),
+                    contentColor = MusicMateDesignTokens.Brand.Gold,
+                    borderColor = Color(0x55FFD700),
                     modifier = Modifier.weight(1f)
                 )
                 if (source == QueueManager.Source.MANUAL) {
@@ -1126,7 +1126,7 @@ private fun QueueEmptyActions(
             QueueEmptyActionButton(
                 label = "Browse Library",
                 onClick = onBrowseLibrary,
-                containerColor = Color(0xFFFFB300),
+                containerColor = MusicMateDesignTokens.Brand.Gold,
                 contentColor = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )

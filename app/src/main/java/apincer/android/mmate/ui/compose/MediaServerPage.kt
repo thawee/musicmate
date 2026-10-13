@@ -173,7 +173,7 @@ fun MediaServerPage(
                         enabled = state.isNetworkAvailable,
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
+                            containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black,
                             disabledContainerColor = Color(0xFF2C2C2C),
                             disabledContentColor = Color(0xFF666666)
@@ -224,7 +224,7 @@ fun MediaServerPage(
                             Icon(
                                 painter = painterResource(id = R.drawable.rounded_open_in_new_24),
                                 contentDescription = null,
-                                tint = Color(0xFFFFB300),
+                                tint = MusicMateDesignTokens.Brand.Gold,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -238,11 +238,11 @@ fun MediaServerPage(
 
                         Text(
                             text = "PORT 9000",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
-                                .background(Color(0x22FFB300), RoundedCornerShape(4.dp))
+                                .background(Color(0x22FFD700), RoundedCornerShape(4.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -300,7 +300,7 @@ fun MediaServerPage(
                                     Icon(
                                         painter = painterResource(id = R.drawable.rounded_open_in_new_24),
                                         contentDescription = null,
-                                        tint = Color(0xFFFFB300),
+                                        tint = MusicMateDesignTokens.Brand.Gold,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -325,7 +325,7 @@ fun MediaServerPage(
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_round_content_copy_24),
                                         contentDescription = null,
-                                        tint = Color(0xFFFFB300),
+                                        tint = MusicMateDesignTokens.Brand.Gold,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -510,7 +510,7 @@ fun MediaServerPage(
                         Button(
                             onClick = { showQrZoomDialog = false },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFB300),
+                                containerColor = MusicMateDesignTokens.Brand.Gold,
                                 contentColor = Color.Black
                             ),
                             shape = RoundedCornerShape(10.dp),

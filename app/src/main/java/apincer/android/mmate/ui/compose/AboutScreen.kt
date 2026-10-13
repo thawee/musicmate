@@ -122,7 +122,7 @@ fun AboutScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                             contentDescription = null,
-                            tint = Color(0xFFFFB300),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -137,7 +137,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Version $appVersion",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold
@@ -169,7 +169,7 @@ fun AboutScreen(
                     ) {
                         Text(
                             text = "LIBRARY QUALITY DISTRIBUTION",
-                            color = Color(0xFFFFB300),
+                            color = MusicMateDesignTokens.Brand.Gold,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
@@ -257,7 +257,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "CORE CAPABILITIES",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -285,13 +285,13 @@ fun AboutScreen(
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFF12121A),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFD700)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "THE AUDIOPHILE PHILOSOPHY",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -321,7 +321,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "AUDIO QUALITY TIERS",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -424,7 +424,7 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "CONNECT & SUPPORT",
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -493,7 +493,7 @@ private fun FeatureItem(
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                tint = Color(0xFFFFB300),
+                tint = MusicMateDesignTokens.Brand.Gold,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -527,10 +527,10 @@ private fun TierPill(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color(0x33FFB300) else Color(0xFF1F1F28))
+            .background(if (isSelected) Color(0x33FFD700) else Color(0xFF1F1F28))
             .border(
                 1.dp,
-                if (isSelected) Color(0xFFFFB300) else Color(0x1FFFFFFF),
+                if (isSelected) MusicMateDesignTokens.Brand.Gold else Color(0x1FFFFFFF),
                 RoundedCornerShape(8.dp)
             )
             .selectable(
@@ -543,7 +543,7 @@ private fun TierPill(
     ) {
         Text(
             text = label,
-            color = if (isSelected) Color(0xFFFFB300) else Color.White,
+            color = if (isSelected) MusicMateDesignTokens.Brand.Gold else Color.White,
             fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1

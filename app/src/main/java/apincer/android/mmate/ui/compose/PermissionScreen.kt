@@ -69,14 +69,14 @@ fun PermissionScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(Color(0x22FFB300))
-                        .border(1.5.dp, Color(0xFFFFB300), CircleShape),
+                        .background(Color(0x22FFD700))
+                        .border(1.5.dp, MusicMateDesignTokens.Brand.Gold, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_nav_musicmate_menu),
                         contentDescription = null,
-                        tint = Color(0xFFFFB300),
+                        tint = MusicMateDesignTokens.Brand.Gold,
                         modifier = Modifier.size(44.dp)
                     )
                 }
@@ -134,7 +134,7 @@ fun PermissionScreen(
                 if (systemAccess.hasFullStorageAccess) {
                     Button(
                         onClick = onBack,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB300), contentColor = Color.Black),
+                        colors = ButtonDefaults.buttonColors(containerColor = MusicMateDesignTokens.Brand.Gold, contentColor = Color.Black),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) { Text("Continue", fontWeight = FontWeight.Bold) }
                 } else {
@@ -163,7 +163,7 @@ private fun PermissionItem(
         color = Color(0xFF16161F),
         border = androidx.compose.foundation.BorderStroke(
             if (focused) 1.5.dp else 1.dp,
-            if (focused) Color(0xFFFFB300) else Color(0x1AFFFFFF)
+            if (focused) MusicMateDesignTokens.Brand.Gold else Color(0x1AFFFFFF)
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -181,7 +181,7 @@ private fun PermissionItem(
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
-                    tint = Color(0xFFFFB300),
+                    tint = MusicMateDesignTokens.Brand.Gold,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -233,7 +233,7 @@ private fun PermissionItem(
                 ) {
                     Text(
                         text = actionText,
-                        color = Color(0xFFFFB300),
+                        color = MusicMateDesignTokens.Brand.Gold,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
