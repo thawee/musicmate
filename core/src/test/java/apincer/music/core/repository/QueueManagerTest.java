@@ -112,6 +112,19 @@ public class QueueManagerTest {
     }
 
     @Test
+    public void peekFirstPlayableTrack_skipsMissingFileOnSmartSource() throws Exception {
+        AudioTag missing = new AudioTag();
+        missing.setId(1);
+        missing.setPath(new java.io.File(temporaryFolder.getRoot(), "gone.flac").getPath());
+        missing.setUniqueKey("song-1");
+        queueManager.setSource(QueueManager.Source.NEW);
+        queueManager.savePlayingQueue(java.util.Arrays.asList(missing, playable(2), playable(3)));
+
+        assertEquals(2L, queueManager.peekFirstPlayableTrack().getId());
+        assertEquals(3, queueManager.getQueueSize());
+    }
+
+    @Test
     public void unplayedUsesHistoryQueryAndPersistsSource() throws Exception {
         smartCandidates.add(playable(1));
         unplayedCandidates.add(playable(2));

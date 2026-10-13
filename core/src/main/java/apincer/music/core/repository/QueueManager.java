@@ -722,6 +722,17 @@ public class QueueManager {
         return nextIndex != -1 ? queueList.get(nextIndex) : null;
     }
 
+    /**
+     * The first track Play can start: the top of the queue, skipping missing files on smart
+     * sources like {@link #getNextTrack(boolean)} does. Changes no state; checks files, so call it
+     * off the drawing path.
+     */
+    public synchronized Track peekFirstPlayableTrack() {
+        if (queueList.isEmpty()) return null;
+        int index = skipUnplayable(0);
+        return index != -1 ? queueList.get(index) : null;
+    }
+
     /** Smart sources skip tracks whose file is gone; bounded so Repeat All cannot spin forever. */
     private int skipUnplayable(int index) {
         int steps = 0;
