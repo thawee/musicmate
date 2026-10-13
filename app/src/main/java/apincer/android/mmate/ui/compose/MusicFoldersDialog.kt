@@ -60,7 +60,7 @@ fun MusicFoldersDialog(
         shape = RoundedCornerShape(24.dp),
         // Opaque: song titles behind the dialog showed through the translucent panel
         color = Color(0xFF161618),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
         modifier = Modifier
             .padding(12.dp)
             .graphicsLayer {
@@ -169,7 +169,7 @@ fun MusicFoldersDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .background(Color(0xFF1E1E1E), RoundedCornerShape(8.dp))
+                        .background(MusicMateDesignTokens.Surfaces.Surface, RoundedCornerShape(8.dp))
                         .heightIn(max = 250.dp)
                 ) {
                     LazyColumn {
@@ -219,7 +219,7 @@ fun MusicFoldersDialog(
                                 }
                             }
                             if (index < dirs.size - 1) {
-                                HorizontalDivider(color = Color(0x1AFFFFFF))
+                                HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
                             }
                         }
                     }
