@@ -50,8 +50,8 @@ Decisions (user, 2026-10-13): D1 "24-Bit Lossless"; D2 option A (list order + Sh
 - [x] Theme already reads MusicMateDesignTokens (`MusicMateTheme.kt:41-52`). Gold per D3: accents use Brand.Gold (6986d49f, reviewer PASS; follow-up b8596356). Amber kept for DR 8-12, warnings, VU needles, Studio Console (now Brand.GoldAmber).
 - [x] Guard: `ColorLiteralBudgetTest` (fbdf468c), per-file budget that only goes down; proved failing on an added literal. Regenerate with the scratchpad budget.py or by hand after each migration.
 - [x] Migrated (values unchanged): QueuePage 72c1f058, MainScaffold 2b4ab384, FullscreenStudioConsole 7bcd31f4. New tokens: Brand.GoldContainer, Brand.GoldOutline, Status.Positive. Budget 861 -> 745.
-- [ ] Remaining 31 files (AboutScreen, NowPlayingPage, FolderListItem, MediaServerPage, ... ). Ask the user before continuing.
-- [ ] #4 11sp floor for meaningful text, #3 48dp buttons side by side, #9 gold seek bar + volume percent: separate visual commits, phone-checked (console Up Next chip at 11sp in landscape).
+- [x] Remaining files: context-based pass (borders, surfaces, accent gold) over 24 files, one commit each, reviewer PASS. Budget 745 -> 668. The rest are identity/data colours (tiers, sources, DR, meters, gradients) left literal on purpose; migrate only with a named role.
+- [x] #4/#3/#9 in 3bbb1036, phone-checked: sentence text 11sp, caps badges >= 10sp, 48dp side-by-side buttons (playlist names wrap to 2 lines), gold seek bar, volume percent, console Up Next room.
 - [x] Play fix follow-up: f73daa44 + 8cd25215 (first playable track on smart sources; reviewer CHANGES addressed).
 
 ## Not planned
