@@ -411,7 +411,7 @@
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
                         android:text="@string/btn_format"
-                        android:contentDescription="Format tags"
+                        android:contentDescription="Tidy tag text"
                         app:cornerRadius="18dp"
                         app:icon="@drawable/round_auto_awesome_24"
                         app:iconPadding="4dp"

@@ -260,10 +260,10 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
     }
 
     val gradeLabel = when {
-        healthPercent == 100 -> "STUDIO MASTER COMPLETE"
-        healthPercent >= 75 -> "HIGH FIDELITY READY"
-        healthPercent >= 50 -> "METADATA INCOMPLETE"
-        else -> "NEEDS TAG CLEANUP"
+        healthPercent == 100 -> "ALL TAGS COMPLETE"
+        healthPercent >= 75 -> "MOSTLY COMPLETE"
+        healthPercent >= 50 -> "SOME TAGS MISSING"
+        else -> "MANY TAGS MISSING"
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -418,7 +418,7 @@ fun CoverArtInspector(info: CoverArtInfo) {
     }
 
     val isHiRes = info.width >= 1000 && info.height >= 1000
-    val qualityTag = if (isHiRes) "Ultra HD Master" else if (info.width >= 500) "Standard HD" else "Low-Res"
+    val qualityTag = if (isHiRes) "High resolution" else if (info.width >= 500) "Standard" else "Low resolution"
     val qualityColor = if (isHiRes) Color(0xFF66BB6A) else if (info.width >= 500) Color(0xFFFFCA28) else Color(0xFFEF5350)
 
     Column(modifier = Modifier.fillMaxWidth()) {

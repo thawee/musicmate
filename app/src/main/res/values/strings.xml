@@ -406,7 +406,7 @@
     <string name="button_edit_song_info">Edit Song Info</string>
     <string name="btn_back_cd">Back</string>
     <string name="btn_play_cd">Play preview</string>
-    <string name="btn_format">Format</string>
+    <string name="btn_format">Tidy Tags</string>
     <string name="btn_read">From File</string>
     <string name="btn_save">Save</string>
     <string name="btn_reload">Reload Tags</string>

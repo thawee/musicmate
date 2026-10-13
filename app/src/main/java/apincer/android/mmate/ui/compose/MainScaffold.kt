@@ -229,7 +229,7 @@ fun MainScaffold(
                                     letterSpacing = (-0.4).sp
                                 )
                                 Text(
-                                    text = "v$appVersion • Hi-Res Edition",
+                                    text = "v$appVersion",
                                     color = drawerGold.copy(alpha = 0.85f),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
