@@ -47,10 +47,12 @@ Decisions (user, 2026-10-13): D1 "24-Bit Lossless"; D2 option A (list order + Sh
 - [x] Phone: with shuffle on, the console's Up Next matches what the Queue tab shows next.
 
 ## Batch 7: tokens (#5, #4, #3, #9), one file per commit
-- [ ] Wire `MusicMateDesignTokens` into `MusicMateTheme` and pick the gold per D3.
-- [ ] Add a check (a unit test or a Gradle grep task) that fails on new `Color(0x` literals in `ui/compose` outside the tokens file, with an allowlist of current counts that can only go down.
-- [ ] Migrate files from the most literals down: QueuePage (57), MainScaffold (56), FullscreenStudioConsole (56), AboutScreen, NowPlayingPage, MediaServerPage.
-- [ ] While in each file: set an 11sp floor for meaningful text (#4); use 48dp buttons where touch targets sit side by side (#3); in NowPlayingPage, a gold seek bar and a volume percent (#9).
+- [x] Theme already reads MusicMateDesignTokens (`MusicMateTheme.kt:41-52`). Gold per D3: accents use Brand.Gold (6986d49f, reviewer PASS; follow-up b8596356). Amber kept for DR 8-12, warnings, VU needles, Studio Console (now Brand.GoldAmber).
+- [x] Guard: `ColorLiteralBudgetTest` (fbdf468c), per-file budget that only goes down; proved failing on an added literal. Regenerate with the scratchpad budget.py or by hand after each migration.
+- [x] Migrated (values unchanged): QueuePage 72c1f058, MainScaffold 2b4ab384, FullscreenStudioConsole 7bcd31f4. New tokens: Brand.GoldContainer, Brand.GoldOutline, Status.Positive. Budget 861 -> 745.
+- [ ] Remaining 31 files (AboutScreen, NowPlayingPage, FolderListItem, MediaServerPage, ... ). Ask the user before continuing.
+- [ ] #4 11sp floor for meaningful text, #3 48dp buttons side by side, #9 gold seek bar + volume percent: separate visual commits, phone-checked (console Up Next chip at 11sp in landscape).
+- [x] Play fix follow-up: f73daa44 + 8cd25215 (first playable track on smart sources; reviewer CHANGES addressed).
 
 ## Not planned
 - #7 PLAY NEXT pills: check them on the phone while something is playing (this changes the playback state, so ask first), then decide.
