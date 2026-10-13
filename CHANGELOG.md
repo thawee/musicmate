@@ -11,6 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.28.0] - 2026-10-13
+
+### Changed
+- **Quality names anyone can read:** The tiers are now **Lossless** (16-bit, was "CD"), **24-Bit Lossless** (was "24-BIT STUDIO", "Studio Quality" and "SQ") and **Hi-Res Lossless**. Library pills read `LOSSLESS 16/44.1`, and "CD quality" stays as a hint in Audio Quality and About.
+- **Plain labels:** "1 Hr" instead of "1 Hrs"; Tech Info says "ALL TAGS COMPLETE", "7 of 8 checks passed" and "High resolution" art; the tag editor's **Format** button is now **Tidy Tags**; the menu shows only the version.
+- **Easier to read:** Dynamic range ratings of 13 and above, durations and other secondary text are brighter. Small badge and status text is larger.
+- **One gold:** Selected and active controls use the same gold everywhere; the Studio Console keeps its amber look.
+- **Song page:** The Play button sits beside the title instead of covering the album art.
+- **Music Center:** The seek bar is gold and the volume row shows its percent.
+- **Larger buttons:** The playlist picker's Play All, Add to Queue and Auto-refill buttons and the Studio Console's Previous and Next are easier to tap.
+
+### Fixed
+- **Up Next with shuffle:** The Studio Console now names the track that will actually play next when shuffle is on, and the Queue shows "Shuffled · Up next".
+- **Nothing loaded:** Music Center and the Studio Console say how many tracks are queued and that Play starts them, instead of "Select a song" and a made-up CD QUALITY badge.
+- **Play on a fresh queue:** Play starts at the first track (it started at the second), skipping songs whose file is gone.
+- **Lists that continue:** The player picker's app list fades at the bottom when there is more to scroll.
+- **Web remote:** Malformed WebSocket frames are rejected before any data is read.
+
 ## [3.27.0] - 2026-10-12
 
 ### Added
