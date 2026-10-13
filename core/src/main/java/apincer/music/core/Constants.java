@@ -53,7 +53,7 @@ public final class Constants {
     public static final String TITLE_DSD = "DSD"; //""Direct Stream Digital";
     public static final String TITLE_HIRES_QUALITY = "Hi-Res Lossless"; //"Hi-Res Quality";
 
-    public static final String TITLE_CD_QUALITY = "CD Quality"; //""Hi-Fi Lossless";
+    public static final String TITLE_CD_QUALITY = "Lossless"; // 16-bit, CD quality
     public static final String TITLE_CD_EXT_QUALITY = "24-Bit Lossless"; // 24-bit below 96 kHz
    // public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "Compressed"; //"Lossy Compressed Quality";
@@ -63,7 +63,7 @@ public final class Constants {
 
    // public static final String TITLE_PCM = "PCM";
    public static final String LEGEND_HIRES = "HI-RES";
-    public static final String LEGEND_CD = "CD";
+    public static final String LEGEND_CD = "CD"; // stored code; shown as "LOSSLESS"
     public static final String LEGEND_STUDIO = "24-BIT"; // CD-Extended
     public static final String LEGEND_DSD = "DSD";
     public static final String LEGEND_MQA = "MQA";

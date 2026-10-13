@@ -209,7 +209,7 @@ To change several songs at once, set **When I tap a track** to **Edit tags** in 
 Each song shows a quality badge and a DR value.
 
 - **Quality badges.**
-  - `CD` is 16-bit lossless.
+  - `LOSSLESS` is 16-bit lossless at 44.1 or 48 kHz (CD quality).
   - `24-BIT` is 24-bit lossless at 44.1 to 88.2 kHz.
   - `HI-RES` is 24-bit at 96 kHz or higher.
   - `DSD` is Direct Stream Digital.

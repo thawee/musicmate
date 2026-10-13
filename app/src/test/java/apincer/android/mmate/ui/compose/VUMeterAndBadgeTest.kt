@@ -74,7 +74,7 @@ class VUMeterAndBadgeTest {
             fileType = "FLAC"
         )
         val badgeText = getUnifiedBadgeText(track)
-        assertEquals("CD 16/44.1", badgeText)
+        assertEquals("LOSSLESS 16/44.1", badgeText)
     }
 
     @Test
@@ -172,7 +172,7 @@ class VUMeterAndBadgeTest {
         assertEquals("DSD AUDIO", AudioPresentation.qualityLabel(dsd, true))
         assertEquals("DSD128", AudioPresentation.encodedResolution(dsd))
         val unknownQuality = createMockTrack(qualityInd = "-")
-        assertEquals("CD", AudioPresentation.qualityLabel(unknownQuality, false))
+        assertEquals("LOSSLESS", AudioPresentation.qualityLabel(unknownQuality, false))
     }
 
     @Test

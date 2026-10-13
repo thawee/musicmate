@@ -123,7 +123,7 @@ fun NowPlayingPage(
             grade.contains("DSD", ignoreCase = true) -> Pair(Color(0xFFE65100), Color(0xFF261204)) // Warm Amber Gold
             grade.contains("HI-RES", ignoreCase = true) || grade.contains("STUDIO", ignoreCase = true) || grade.contains("24-BIT", ignoreCase = true) -> Pair(Color(0xFF0D47A1), Color(0xFF061426)) // Deep Sapphire Cobalt
             grade.contains("MQA", ignoreCase = true) -> Pair(Color(0xFF004D40), Color(0xFF021E19)) // Emerald Cyan
-            grade.contains("CD", ignoreCase = true) -> Pair(Color(0xFF1A237E), Color(0xFF0A0F2E)) // Royal Cobalt Blue
+            grade.contains("CD", ignoreCase = true) || grade.contains("LOSSLESS", ignoreCase = true) -> Pair(Color(0xFF1A237E), Color(0xFF0A0F2E)) // Royal Cobalt Blue
             else -> Pair(Color(0xFF2C2416), Color(0xFF141414)) // Warm Velvet Obsidian
         }
     }

@@ -175,7 +175,7 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
     val isClassical = title.contains("Classical", ignoreCase = true)
     val isMasterpiece = title.contains("Masterpiece", ignoreCase = true)
     // Audio Quality categories
-    val isCd = title.contains("CD Quality", ignoreCase = true)
+    val isCd = title == Constants.TITLE_CD_QUALITY
     val isLossy = title.contains("Compressed", ignoreCase = true) || title.contains("Lossy", ignoreCase = true)
 
     val theme = when {
@@ -203,7 +203,7 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
             badgeSubtext = "1-BIT DIRECT",
             accentColor = Color(0xFF4DB6AC)
         )
-        isLossless -> SmartArtworkTheme(
+        isLossless && !isCd -> SmartArtworkTheme( // the 16-bit tier title is "Lossless" too
             brush = Brush.linearGradient(listOf(Color(0xFF200C2E), Color(0xFF43165E), Color(0xFF7227A6))),
             badgeText = "VAULT",
             badgeSubtext = "LOSSLESS",
@@ -217,8 +217,8 @@ private fun PlaylistCoverArt(track: Track, modifier: Modifier = Modifier) {
         )
         isCd -> SmartArtworkTheme(
             brush = Brush.linearGradient(listOf(Color(0xFF0B1A2E), Color(0xFF16304F), Color(0xFF2A4F7A))),
-            badgeText = "CD",
-            badgeSubtext = "16-BIT",
+            badgeText = "16-BIT",
+            badgeSubtext = "LOSSLESS",
             accentColor = Color(0xFF90CAF9)
         )
         isLossy -> SmartArtworkTheme(

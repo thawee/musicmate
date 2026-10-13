@@ -333,7 +333,7 @@ fun AboutScreen(
                         Constants.LEGEND_HIRES to "Hi-Res",
                         Constants.LEGEND_DSD to "DSD",
                         Constants.LEGEND_STUDIO to "24-Bit",
-                        Constants.LEGEND_CD to "CD Quality",
+                        Constants.LEGEND_CD to "Lossless",
                         Constants.LEGEND_MQA to "MQA",
                         Constants.LEGEND_LOSSY to "Standard"
                     )
@@ -583,7 +583,7 @@ private fun getTierDetails(key: String): TierInfo {
             accentColor = Color(0xFFFFC107)
         )
         Constants.LEGEND_CD -> TierInfo(
-            title = "Redbook CD Quality (16-bit / 44.1kHz)",
+            title = "Lossless (16-bit / 44.1 kHz, CD quality)",
             description = "Bit-perfect lossless standard matching physical Compact Disc digital audio without compression artifacts.",
             formats = "FLAC, ALAC, APE, WAV",
             resolution = "16-bit / 44.1 kHz Lossless (1411 kbps)",
