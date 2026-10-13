@@ -287,7 +287,7 @@ fun AnalogVUMeter(
                     Text(
                         text = "ANALOG VU METER",
                         color = palette.accentTextColor.copy(alpha = 0.85f),
-                        fontSize = 8.5.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 1.sp,
@@ -299,7 +299,7 @@ fun AnalogVUMeter(
                 Text(
                     text = if (isLivePcm) "LIVE PCM • 300ms ANSI" else "ANSI BALLISTICS • 300ms",
                     color = if (isLivePcm) palette.needleColor.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.35f),
-                    fontSize = 7.5.sp,
+                    fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 0.5.sp,
                     maxLines = 1,

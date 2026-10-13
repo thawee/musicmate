@@ -409,13 +409,13 @@ private fun TagPreviewPill(label: String, value: String) {
         Text(
             text = "$label: ",
             color = Color(0xFF81C784),
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold
         )
         Text(
             text = value,
             color = Color.White,
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

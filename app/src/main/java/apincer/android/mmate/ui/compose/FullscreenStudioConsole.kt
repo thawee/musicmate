@@ -427,7 +427,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = m.displayName,
                                     color = if (isSelected) colorGoldAccent else Color.White.copy(alpha = 0.45f),
-                                    fontSize = 8.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontFamily = FontFamily.Monospace,
                                     letterSpacing = 0.5.sp
@@ -481,7 +481,7 @@ fun FullscreenStudioConsole(
                             Text(
                                 text = "STUDIO DESK",
                                 color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 8.5.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
                                 letterSpacing = 1.sp,
@@ -492,7 +492,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = studioClockTime,
                                     color = colorGoldAccent,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace
                                 )
@@ -531,7 +531,7 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = cleanTargetTitle,
                                     color = Color.White.copy(alpha = 0.9f),
-                                    fontSize = 8.5.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -542,7 +542,7 @@ fun FullscreenStudioConsole(
                                     Text(
                                         text = "DLNA",
                                         color = Color(0xFF00E5FF),
-                                        fontSize = 7.5.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -551,7 +551,7 @@ fun FullscreenStudioConsole(
                                     Text(
                                         text = "BIT-PERFECT",
                                         color = MusicMateDesignTokens.AudioProvenance.BitPerfectGreen,
-                                        fontSize = 7.5.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -728,13 +728,13 @@ fun FullscreenStudioConsole(
                             Text(
                                 text = StringUtils.formatDuration(curSec, false),
                                 color = Color.White.copy(alpha = 0.65f),
-                                fontSize = 9.5.sp,
+                                fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace
                             )
                             Text(
                                 text = StringUtils.formatDuration(durSec, false),
                                 color = Color.White.copy(alpha = 0.45f),
-                                fontSize = 9.5.sp,
+                                fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -760,7 +760,7 @@ fun FullscreenStudioConsole(
                         }
 
                         // Previous
-                        IconButton(onClick = onPrevious, modifier = Modifier.size(40.dp)) {
+                        IconButton(onClick = onPrevious, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_skip_previous_24),
                                 contentDescription = "Previous",
@@ -821,7 +821,7 @@ fun FullscreenStudioConsole(
                         }
 
                         // Next
-                        IconButton(onClick = onNext, modifier = Modifier.size(40.dp)) {
+                        IconButton(onClick = onNext, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
                                 contentDescription = "Next",
@@ -863,7 +863,7 @@ fun FullscreenStudioConsole(
                             volume = state.volume.value,
                             onVolumeChanged = onVolumeChanged,
                             colorGold = colorGold,
-                            modifier = Modifier.width(180.dp)
+                            modifier = Modifier.width(150.dp)
                         )
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
@@ -881,18 +881,18 @@ fun FullscreenStudioConsole(
                                 Text(
                                     text = "UP NEXT: ",
                                     color = colorGold.copy(alpha = 0.85f),
-                                    fontSize = 8.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace
                                 )
                                 Text(
                                     text = nextLabel,
                                     color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 8.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 140.dp)
+                                    modifier = Modifier.widthIn(max = 170.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Icon(
@@ -994,7 +994,7 @@ fun FullscreenStudioConsole(
                                             Text(
                                                 text = "${index + 1}",
                                                 color = colorGold.copy(alpha = 0.7f),
-                                                fontSize = 9.sp,
+                                                fontSize = 10.sp,
                                                 fontFamily = FontFamily.Monospace,
                                                 modifier = Modifier.width(20.dp)
                                             )
@@ -1011,7 +1011,7 @@ fun FullscreenStudioConsole(
                                                     Text(
                                                         text = queueTrack.artist,
                                                         color = Color.White.copy(alpha = 0.55f),
-                                                        fontSize = 9.sp,
+                                                        fontSize = 11.sp,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
@@ -1021,7 +1021,7 @@ fun FullscreenStudioConsole(
                                             Text(
                                                 text = StringUtils.formatDuration(queueTrack.audioDuration, false),
                                                 color = Color.White.copy(alpha = 0.4f),
-                                                fontSize = 9.sp,
+                                                fontSize = 11.sp,
                                                 fontFamily = FontFamily.Monospace
                                             )
                                         }
@@ -1312,7 +1312,7 @@ private fun StudioLinearVolumeFader(
         Text(
             text = dbText,
             color = colorGold.copy(alpha = 0.9f),
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.width(34.dp)
@@ -1342,7 +1342,7 @@ private fun StudioSpecChip(
         Text(
             text = text,
             color = if (isHighlighted) highlightColor else Color.White.copy(alpha = 0.85f),
-            fontSize = 8.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.5.sp

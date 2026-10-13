@@ -164,7 +164,7 @@ fun ResolutionBadge(track: Track?, modifier: Modifier = Modifier) {
         Text(
             text = resText,
             color = Color(0xFFDDDDDD),
-            fontSize = 9.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.2.sp,
@@ -211,7 +211,7 @@ fun UnifiedAudioBadge(track: Track?, modifier: Modifier = Modifier) {
             Text(
                 text = text,
                 color = Color.White,
-                fontSize = 9.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
                 letterSpacing = 0.2.sp,
@@ -538,7 +538,7 @@ fun NewBadge(track: Track?, modifier: Modifier = Modifier, dotOnly: Boolean = fa
             Text(
                 text = if (isDownload) "DL" else "NEW",
                 color = accentColor,
-                fontSize = 8.5.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.4.sp,
                 maxLines = 1,

@@ -371,7 +371,7 @@ fun MediaServerPage(
                                 Text(
                                     text = "Tap to enlarge",
                                     color = MusicMateDesignTokens.Text.Muted,
-                                    fontSize = 9.sp
+                                    fontSize = 11.sp
                                 )
                             }
                         }

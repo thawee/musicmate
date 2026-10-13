@@ -295,7 +295,7 @@ fun AudioHubSheet(
                                     Text(
                                         text = queueCount.toString(),
                                         color = if (isQueueSelected) Color(0xFFFFD700) else Color(0xBBFFFFFF),
-                                        fontSize = 9.5.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )

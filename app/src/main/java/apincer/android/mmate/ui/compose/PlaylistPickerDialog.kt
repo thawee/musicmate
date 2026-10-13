@@ -228,7 +228,7 @@ fun PlaylistPickerDialog(
                                             Text(
                                                 text = badgeInfo.first,
                                                 color = badgeInfo.second,
-                                                fontSize = 9.sp,
+                                                fontSize = 10.sp,
                                                 fontFamily = FontFamily.Monospace,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -249,7 +249,7 @@ fun PlaylistPickerDialog(
                                         color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
+                                        maxLines = 2, // the 48dp action buttons leave a narrow column
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     val desc = entry.description ?: entry.note
@@ -257,7 +257,7 @@ fun PlaylistPickerDialog(
                                         Text(
                                             text = desc,
                                             color = Color(0x99FFFFFF),
-                                            fontSize = 10.sp,
+                                            fontSize = 11.sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -278,7 +278,7 @@ fun PlaylistPickerDialog(
                                             onPlayAll(entry)
                                             onDismissRequest()
                                         },
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(48.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
@@ -295,7 +295,7 @@ fun PlaylistPickerDialog(
                                             onEnqueue(entry)
                                             onDismissRequest()
                                         },
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(48.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.rounded_playlist_add_24),
@@ -312,7 +312,7 @@ fun PlaylistPickerDialog(
                                             onSetSmartSource(entry)
                                             onDismissRequest()
                                         },
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(48.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.round_auto_awesome_24),

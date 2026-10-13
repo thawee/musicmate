@@ -378,7 +378,7 @@ fun QueuePage(
                     Text(
                         text = sourceError ?: "",
                         color = Color(0xFFFF8A80),
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -751,7 +751,7 @@ private fun QueueSectionHeader(title: String, accentColor: Color) {
         Text(
             text = title,
             color = accentColor,
-            fontSize = 9.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.5.sp
@@ -978,7 +978,7 @@ private fun ProvenanceBadge(label: String, color: Color, bg: Color) {
         Text(
             text = label,
             color = color,
-            fontSize = 8.5.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 0.2.sp

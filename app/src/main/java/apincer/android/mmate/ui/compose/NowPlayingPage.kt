@@ -66,9 +66,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -423,7 +425,7 @@ fun NowPlayingPage(
                                     Text(
                                         text = state.targetBadge.value,
                                         color = targetDotColor,
-                                        fontSize = 9.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace
                                     )
@@ -735,8 +737,8 @@ fun NowPlayingPage(
                     Box(
                         modifier = Modifier
                             .size(16.dp)
-                            .background(animatedAmbientColor.copy(alpha = 0.4f), CircleShape)
-                            .border(0.75.dp, animatedAmbientColor.copy(alpha = 0.7f), CircleShape),
+                            .background(colorGold.copy(alpha = 0.4f), CircleShape)
+                            .border(0.75.dp, colorGold.copy(alpha = 0.7f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
@@ -749,7 +751,8 @@ fun NowPlayingPage(
                 track = { sliderState ->
                     SliderDefaults.Track(
                         colors = SliderDefaults.colors(
-                            activeTrackColor = animatedAmbientColor.copy(alpha = 0.95f),
+                            // Gold, not the cover's ambient colour, so seek always reads as the main control
+                            activeTrackColor = colorGold.copy(alpha = 0.95f),
                             inactiveTrackColor = Color(0x33FFFFFF)
                         ),
                         sliderState = sliderState,
@@ -830,6 +833,13 @@ fun NowPlayingPage(
                             modifier = Modifier.height(4.dp).clip(CircleShape)
                         )
                     }
+                )
+                Text(
+                    text = "$volumePercent%",
+                    color = MusicMateDesignTokens.Text.Muted,
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.width(36.dp).clearAndSetSemantics { }
                 )
                 IconButton(
                     onClick = onVolumeUp,

@@ -230,7 +230,7 @@ fun FormatFilesDialog(
                                     Text(
                                         text = status,
                                         color = if (status.contains("Done") || status.contains("Success")) Color(0xFF80CBC4) else Color(0xFF9E9E9E),
-                                        fontSize = 10.sp
+                                        fontSize = 11.sp
                                     )
                                 }
                             }

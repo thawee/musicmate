@@ -278,7 +278,7 @@ fun EditorTextField(
         },
         supportingText = {
             if (isMulti) {
-                Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp)
+                Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 11.sp)
             }
         },
         modifier = modifier
@@ -388,8 +388,8 @@ fun EditorDropdownField(
                 }
             },
             supportingText = when {
-                isMulti -> { { Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
-                hint != null -> { { Text(hint, color = Color(0xFF9E9E9E), fontSize = 10.sp) } }
+                isMulti -> { { Text("Leave blank to preserve individual track values", color = Color(0xFF9E9E9E), fontSize = 11.sp) } }
+                hint != null -> { { Text(hint, color = Color(0xFF9E9E9E), fontSize = 11.sp) } }
                 else -> null
             },
             trailingIcon = {

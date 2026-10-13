@@ -170,7 +170,7 @@ fun ActionFilesDialog(
                                     Text(
                                         text = status,
                                         color = if (status.contains("Deleted") || status.contains("Moved")) Color(0xFF80CBC4) else Color(0xFF9E9E9E),
-                                        fontSize = 10.sp
+                                        fontSize = 11.sp
                                     )
                                 }
                             }

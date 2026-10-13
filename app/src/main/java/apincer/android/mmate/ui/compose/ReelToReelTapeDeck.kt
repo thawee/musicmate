@@ -206,7 +206,7 @@ fun ReelToReelTapeDeck(
                     Text(
                         text = "REEL-TO-REEL TAPE DECK",
                         color = palette.accentTextColor.copy(alpha = 0.85f),
-                        fontSize = 8.5.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 1.sp
@@ -220,7 +220,7 @@ fun ReelToReelTapeDeck(
                 Text(
                     text = "TAPE $timeStr",
                     color = Color.White.copy(alpha = 0.45f),
-                    fontSize = 7.5.sp,
+                    fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 0.5.sp
                 )
