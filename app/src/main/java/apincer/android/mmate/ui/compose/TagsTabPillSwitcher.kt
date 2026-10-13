@@ -102,13 +102,13 @@ fun TagsTabPillSwitcher(
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_library_music_24),
                         contentDescription = null,
-                        tint = if (isSongInfoSelected) Color(0xFFFFD700) else Color(0x66FFFFFF),
+                        tint = if (isSongInfoSelected) MusicMateDesignTokens.Brand.Gold else Color(0x66FFFFFF),
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Song Info",
-                        color = if (isSongInfoSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                        color = if (isSongInfoSelected) MusicMateDesignTokens.Brand.Gold else Color(0x99FFFFFF),
                         fontSize = 12.5.sp,
                         fontWeight = if (isSongInfoSelected) FontWeight.Bold else FontWeight.Medium,
                         letterSpacing = 0.2.sp
@@ -136,13 +136,13 @@ fun TagsTabPillSwitcher(
                     Icon(
                         painter = painterResource(id = R.drawable.rounded_equalizer_24),
                         contentDescription = null,
-                        tint = if (isTechInfoSelected) Color(0xFFFFD700) else Color(0x66FFFFFF),
+                        tint = if (isTechInfoSelected) MusicMateDesignTokens.Brand.Gold else Color(0x66FFFFFF),
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Tech Info",
-                        color = if (isTechInfoSelected) Color(0xFFFFD700) else Color(0x99FFFFFF),
+                        color = if (isTechInfoSelected) MusicMateDesignTokens.Brand.Gold else Color(0x99FFFFFF),
                         fontSize = 12.5.sp,
                         fontWeight = if (isTechInfoSelected) FontWeight.Bold else FontWeight.Medium,
                         letterSpacing = 0.2.sp
