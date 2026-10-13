@@ -696,7 +696,7 @@ fun NowPlayingPage(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Tap to flip back", color = Color(0xFF757575), fontSize = 12.sp)
+                        Text(text = "Tap to flip back", color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
                     }
                 }
             }

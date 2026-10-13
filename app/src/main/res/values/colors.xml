@@ -554,7 +554,7 @@
     <color name="dr_none">#BDBDBD</color>
     <color name="dr_low">#F57C00</color>
     <color name="dr_medium">#FFB300</color>
-    <color name="dr_high">#2E7D32</color>
+    <color name="dr_high">#4CAF50</color>
 
     <color name="drdb_perfect">#FFC017</color>
     <color name="drdb_none">@color/grey600</color>

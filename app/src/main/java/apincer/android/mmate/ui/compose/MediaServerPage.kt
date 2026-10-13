@@ -132,7 +132,7 @@ fun MediaServerPage(
                             } else {
                                 "Wi-Fi / Hotspot disconnected"
                             },
-                            color = if (state.isServerRunning) Color(0xFFB0B0B0) else if (state.isNetworkAvailable) Color(0xFF888888) else Color(0xFFFFAB91),
+                            color = if (state.isServerRunning) Color(0xFFB0B0B0) else if (state.isNetworkAvailable) MusicMateDesignTokens.Text.Muted else Color(0xFFFFAB91),
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -370,7 +370,7 @@ fun MediaServerPage(
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = "Tap to enlarge",
-                                    color = Color(0xFF888888),
+                                    color = MusicMateDesignTokens.Text.Muted,
                                     fontSize = 9.sp
                                 )
                             }
@@ -550,7 +550,7 @@ private fun ServerDiagnostics(diagnostics: String) {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "CONNECTED",
-                color = Color(0xFF757575),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
@@ -576,7 +576,7 @@ private fun ServerDiagnostics(diagnostics: String) {
                     if (address.isNotEmpty()) {
                         Text(
                             text = address,
-                            color = Color(0xFF888888),
+                            color = MusicMateDesignTokens.Text.Muted,
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                             maxLines = 1

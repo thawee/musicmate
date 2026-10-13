@@ -119,7 +119,7 @@ fun FolderListItem(
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
                         text = statsText,
-                        color = Color(0xFF888888),
+                        color = MusicMateDesignTokens.Text.Muted,
                         fontSize = 11.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

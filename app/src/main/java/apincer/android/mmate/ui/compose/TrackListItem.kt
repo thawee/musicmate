@@ -231,7 +231,7 @@ fun TrackListItem(
                     }
                     Text(
                         text = StringUtils.formatDuration(track.audioDuration, false),
-                        color = Color(0xFF888888),
+                        color = MusicMateDesignTokens.Text.Muted,
                         fontSize = 11.sp,
                         style = androidx.compose.ui.text.TextStyle(
                             fontFeatureSettings = "tnum"

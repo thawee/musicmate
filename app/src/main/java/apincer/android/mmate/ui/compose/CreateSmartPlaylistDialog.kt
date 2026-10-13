@@ -119,7 +119,7 @@ fun CreateSmartPlaylistDialog(
                         focusedBorderColor = Color(0xFFFFB300),
                         unfocusedBorderColor = Color(0x33FFFFFF),
                         focusedLabelColor = Color(0xFFFFB300),
-                        unfocusedLabelColor = Color(0xFF888888)
+                        unfocusedLabelColor = MusicMateDesignTokens.Text.Muted
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )

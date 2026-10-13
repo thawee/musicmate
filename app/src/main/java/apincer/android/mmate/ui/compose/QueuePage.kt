@@ -817,7 +817,7 @@ fun QueueItem(
         ) {
             Text(
                 text = if (isPlaying) "▶" else "${index + 1}",
-                color = if (isPlaying) Color(0xFFFFD700) else Color(0xFF757575),
+                color = if (isPlaying) Color(0xFFFFD700) else MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace
@@ -911,7 +911,7 @@ fun QueueItem(
         if (durationStr.isNotEmpty()) {
             Text(
                 text = durationStr,
-                color = Color(0xFF888888),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier.padding(end = 4.dp)

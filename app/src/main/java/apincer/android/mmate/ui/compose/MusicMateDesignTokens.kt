@@ -68,7 +68,7 @@ object MusicMateDesignTokens {
     object Text {
         val Primary = Color(0xFFFFFFFF)
         val Secondary = Color(0xFFAAAAAA)
-        val Muted = Color(0xFF757575)
+        val Muted = Color(0xFF9E9E9E) // Text: 5.2:1 on SurfaceElevated (#2C2C2C), passes WCAG AA
         val Telemetry = Color(0xFFCCCCCC)
     }
 

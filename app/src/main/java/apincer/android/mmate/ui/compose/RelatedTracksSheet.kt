@@ -152,7 +152,7 @@ fun RelatedTracksSheet(
                 ) {
                     Text(
                         text = "No matching studio tracks found",
-                        color = Color(0xFF888888),
+                        color = MusicMateDesignTokens.Text.Muted,
                         fontSize = 13.sp
                     )
                 }
@@ -357,7 +357,7 @@ fun RelatedTrackItemRow(
             // 4. Duration
             Text(
                 text = StringUtils.formatDurationAsMinute(track.audioDuration),
-                color = Color(0xFF888888),
+                color = MusicMateDesignTokens.Text.Muted,
                 fontSize = 11.5.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Normal
