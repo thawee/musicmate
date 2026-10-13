@@ -108,7 +108,7 @@ fun PlayerPickerDialog(
         Surface(
             shape = RoundedCornerShape(24.dp), // DESIGN.md §8A: 24dp rounded corners
             color = Color(0xF2161618),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
@@ -134,7 +134,7 @@ fun PlayerPickerDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.rounded_music_cast_24),
                             contentDescription = null,
-                            tint = Color(0xFFFFD700),
+                            tint = MusicMateDesignTokens.Brand.Gold,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -312,7 +312,7 @@ private fun PlayerTargetRow(
 ) {
     val cardBg = if (item.isSelected) Color(0x2BFFD700) else Color(0x14FFFFFF)
     val cardBorder = if (item.isSelected) Color(0x80FFD700) else Color(0x22FFFFFF)
-    val iconTint = if (item.isSelected) Color(0xFFFFD700) else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
+    val iconTint = if (item.isSelected) MusicMateDesignTokens.Brand.Gold else if (item.isStreaming) Color(0xFF00E5FF) else Color(0xFFB0BEC5)
 
     Row(
         modifier = Modifier
@@ -343,7 +343,7 @@ private fun PlayerTargetRow(
             if (item.subtitle.isNotEmpty()) {
                 Text(
                     text = item.subtitle,
-                    color = if (item.isSelected) Color(0xFFFFD700).copy(alpha = 0.85f) else Color(0x99FFFFFF),
+                    color = if (item.isSelected) MusicMateDesignTokens.Brand.Gold.copy(alpha = 0.85f) else Color(0x99FFFFFF),
                     fontSize = 11.5.sp,
                     fontFamily = FontFamily.Monospace,
                     maxLines = 1,
