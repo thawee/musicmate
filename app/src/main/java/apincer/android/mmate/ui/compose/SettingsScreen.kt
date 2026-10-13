@@ -74,7 +74,7 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = MusicMateDesignTokens.Surfaces.Canvas
                 )
             )
         },
