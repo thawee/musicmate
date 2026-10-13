@@ -280,7 +280,7 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "$passedCount / ${checks.size} Quality Standards Passed",
+                    text = "$passedCount of ${checks.size} checks passed",
                     color = Color.Gray,
                     fontSize = 11.sp
                 )

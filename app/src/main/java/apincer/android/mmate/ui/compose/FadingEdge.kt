@@ -48,3 +48,22 @@ fun Modifier.fadingEdge(
             )
         }
     }
+
+/** Vertical counterpart of [fadingEdge]: fades the bottom of a scrolling list. */
+fun Modifier.verticalFadingEdge(bottomHeight: Dp = 10.dp): Modifier = this
+    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+    .drawWithContent {
+        drawContent()
+        val bottomPx = bottomHeight.toPx()
+        if (bottomPx > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0f to Color.Black,
+                    1f to Color.Transparent,
+                    startY = size.height - bottomPx,
+                    endY = size.height
+                ),
+                blendMode = BlendMode.DstIn
+            )
+        }
+    }

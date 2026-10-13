@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -167,10 +168,14 @@ fun PlayerPickerDialog(
 
                 // Categorized Player Target Items
                 if (targets.isNotEmpty()) {
+                    // The list is capped at 380dp; fade the bottom so a cut-off row reads as "more below"
+                    val listState = rememberLazyListState()
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 380.dp),
+                            .heightIn(max = 380.dp)
+                            .verticalFadingEdge(bottomHeight = if (listState.canScrollForward) 40.dp else 0.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         if (streamers.isNotEmpty()) {
