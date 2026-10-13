@@ -916,7 +916,7 @@ fun NowPlayingPage(
                         .shadow(
                             elevation = if (isPlaying) 8.dp else 3.dp,
                             shape = CircleShape,
-                            ambientColor = Color(0x33FFA000),
+                            ambientColor = Color(0x33FFD700),
                             spotColor = Color(0x55FFD700)
                         )
                         .clip(CircleShape)

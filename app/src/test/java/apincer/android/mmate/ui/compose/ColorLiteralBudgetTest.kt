@@ -17,7 +17,7 @@ class ColorLiteralBudgetTest {
         "ActionFilesDialog.kt" to 12,
         "AnalogVUMeter.kt" to 23,
         "AudioBadges.kt" to 24,
-        "AudioHubSheet.kt" to 25,
+        "AudioHubSheet.kt" to 24,
         "AudioPresentation.kt" to 8,
         "CreateSmartPlaylistDialog.kt" to 17,
         "DynamicRangeMeters.kt" to 1,

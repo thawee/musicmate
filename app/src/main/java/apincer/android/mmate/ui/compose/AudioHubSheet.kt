@@ -97,10 +97,10 @@ fun AudioHubSheet(
     val queueCount = queueState.tracks.size
     val isServerActive = mediaServerState.isServerRunning
 
-    // Dynamic Cast Icon Tint (§5B: Gold #FFC107 when DLNA active)
+    // Cast icon turns brand gold while a DLNA renderer is the target
     val target = nowPlayingState.targetTitle.value
     val isDlnaCastActive = target.contains("DLNA", ignoreCase = true) || target.contains("Renderer", ignoreCase = true) || target.contains("Streamer", ignoreCase = true)
-    val castIconTint = if (isDlnaCastActive) Color(0xFFFFC107) else Color.White
+    val castIconTint = if (isDlnaCastActive) MusicMateDesignTokens.Brand.Gold else Color.White
 
     AudioHubContainer(
         onDismissRequest = onDismissRequest,
