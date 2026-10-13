@@ -35,7 +35,7 @@ import coil3.compose.AsyncImage
 private val folderCardShape  = RoundedCornerShape(12.dp)
 private val folderCardBgDark = Color(0x80000000)
 private val folderCardBg     = Color(0x1AFFFFFF)
-private val folderCardBorder = Color(0x4DFFFFFF)
+private val folderCardBorder = MusicMateDesignTokens.Surfaces.BorderElevated
 
 private data class SmartArtworkTheme(
     val brush: Brush,
