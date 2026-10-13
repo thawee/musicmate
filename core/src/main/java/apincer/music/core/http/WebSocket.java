@@ -124,6 +124,11 @@ public class WebSocket {
                             if (lengthBytes == null) lengthBytes = new byte[8];
                             if (readBytes(buffer, lengthBytes, 8)) {
                                 payloadLength = ByteBuffer.wrap(lengthBytes).getLong();
+                                // A 64-bit length with the high bit set is negative; left unchecked it
+                                // slips past the signed size guard and yields a negative buffer limit.
+                                if (payloadLength < 0) {
+                                    throw new RuntimeException("Invalid 64-bit payload length");
+                                }
                                 payloadBytesRemaining = payloadLength;
                                 bytesRead = 0;
                                 state = State.READING_MASK;
@@ -187,6 +192,12 @@ public class WebSocket {
         private void processHeader(FrameDataHandler handler) {
             payloadLength = smallHeaderBuffer[1] & 0x7F;
             if ((smallHeaderBuffer[1] & 0x80) == 0) throw new RuntimeException("Client frame must be masked");
+
+            // RFC 6455 §5.5: control frames (opcode >= 0x8) carry at most 125 bytes and must not
+            // use an extended length. Reject here before any payload is buffered or echoed.
+            if ((smallHeaderBuffer[0] & 0x08) != 0 && payloadLength > 125) {
+                throw new RuntimeException("Control frame payload exceeds 125 bytes");
+            }
 
             if (payloadLength <= 125) {
                 payloadBytesRemaining = payloadLength;
