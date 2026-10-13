@@ -117,7 +117,7 @@ fun CreateSmartPlaylistDialog(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
-                        unfocusedBorderColor = Color(0x33FFFFFF),
+                        unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
                         focusedLabelColor = MusicMateDesignTokens.Brand.Gold,
                         unfocusedLabelColor = MusicMateDesignTokens.Text.Muted
                     ),
@@ -248,7 +248,7 @@ fun CreateSmartPlaylistDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCCCCCC)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFFFFF))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary)
                     ) {
                         Text("Cancel")
                     }
