@@ -225,7 +225,7 @@ fun AnalogVUMeter(
         )
         VUMeterTheme.STUDIO_SLATE -> VUMeterPalette(
             chassisBg = Color(0xFF161616),
-            bezelBorder = Color(0x33FFFFFF),
+            bezelBorder = MusicMateDesignTokens.Surfaces.BorderPrimary,
             glowColor = Color(0x1AFFFFFF),
             arcNormalColor = Color(0xFFE0E0E0),
             needleColor = Color(0xFFFF5252),
