@@ -1,7 +1,7 @@
-# MusicMate 3.28.0
+# MusicMate 3.28.1
 
-Clearer names and easier reading. Quality tiers are now **Lossless**, **24-Bit Lossless** and **Hi-Res Lossless**, so the library shows `LOSSLESS 16/44.1` instead of "CD". Ratings, durations and small labels are brighter and larger, every selected control uses the same gold, and the song page's Play button no longer covers the album art.
+Volume and sleep timer fixes for DLNA players. The volume slider now shows the player's own level and no longer floods it with commands while you drag; portable players such as the HiBy R3 get one command when your finger stops. The slider and the Studio Console fader are easier to grab.
 
-With shuffle on, **Up Next** in the Studio Console now shows the track that will really play next, and the Queue says "Shuffled · Up next". When nothing is loaded, Music Center shows how many tracks are queued and Play starts them from the top.
+The sleep timer pauses HiBy, Shanling and FiiO players without the volume fade that could make them miss the Pause. Its dialog shows the option that is running and the time left, and Turn Off stops a fade already under way.
 
-Version code: 151. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.28.0/CHANGELOG.md) for details.
+Version code: 152. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.28.1/CHANGELOG.md) for details.

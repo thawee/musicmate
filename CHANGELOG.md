@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.28.1] - 2026-10-15
+
+### Changed
+- **Volume follows the player:** On a DLNA player the volume slider shows that player's own level (it showed the phone's), and the + and - buttons move it.
+- **Volume slider easier to drag:** The thumb stays under your finger while you drag, and it is larger. The Studio Console fader is wider and can be grabbed anywhere in a 48dp band.
+
+### Fixed
+- **Volume on DLNA players:** Dragging no longer sends a command for every step. Most players get at most one every 300 ms; HiBy, Shanling and FiiO get one when your finger stops, so they no longer stall. The phone's own volume panel no longer pops up during a drag.
+- **Sleep timer on HiBy, Shanling and FiiO:** The timer pauses them without the volume fade, which could make them drop the Pause.
+- **Sleep timer dialog:** It shows the option that is running and the time left (after the first minute it showed nothing selected).
+- **Sleep timer changed during the fade:** A timer set, or turned off, while the old one was fading out is kept, and Turn Off stops the fade.
+- **Sleep timer and volume errors:** A failed volume command no longer skips the pause, and a player MusicMate does not drive is not faded.
+
 ## [3.28.0] - 2026-10-13
 
 ### Changed
