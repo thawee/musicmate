@@ -1580,9 +1580,9 @@ User report: "the sleep timer function does not work properly" (no symptom detai
 - [x] Unit tests + `:app:assembleDebug` (JAVA_HOME temurin 21).
 - [x] Service: a failed volume read/write no longer skips the pause.
 - [x] User: HiBy R3 over DLNA. No fade for HIBY/SHANLING/FIIO (`DeviceProfile.canFadeVolume`): the fade's GetVolume + 3 SetVolume burst lands right before Pause on a stack documented to drop actions under SetVolume bursts (docs/technical/UI.md).
-- [ ] Open: who drives the R3 (MusicMate picker vs the R3 browsing MusicMate), does the bar's Pause work on it, and what happened when time ran out. `playerPause` sets `isUserInitiatedStop` before Pause succeeds, so a dropped Pause leaves MusicMate thinking it is paused and it won't advance. A Stop fallback must call `mediaHub.playerStop` directly, not `internalStopOnDMRPlayer` (it clears the current track).
-- [ ] Phone check with logcat (no device attached on 2026-10-15).
-- [ ] Ask the user which output was used and whether music kept playing.
+- [x] Resolved by the fade skip (sleep timer works on the R3 in 3.28.1). Watch item only: `playerPause` sets `isUserInitiatedStop` before Pause succeeds, so a dropped Pause leaves MusicMate thinking it is paused and it won't advance. A Stop fallback must call `mediaHub.playerStop` directly, not `internalStopOnDMRPlayer` (it clears the current track).
+- [x] Phone check: user confirmed the sleep timer works with the HiBy R3 on 3.28.1 (2026-10-15); no Pause/SetVolume warnings from MusicMate in the log.
+- [x] Ask the user which output was used: HiBy R3 over DLNA.
 
 # Volume slider usability (2026-10-15)
 User: "the volume slide is quite difficult to work with" (output in use: HiBy R3 over DLNA, MusicMate-driven assumed).
@@ -1595,4 +1595,11 @@ Found: on DLNA the slider shows the PHONE's STREAM_MUSIC level, not the renderer
 - [x] Studio Console fader: 48dp touch band, 150dp to 220dp wide (rail was ~68dp). Rendered via screenshot tests.
 - [x] ADR-015 marked superseded in docs/technical/UI.md.
 - [ ] Pre-existing (confirmed by rendering HEAD): at large text the Studio Console right column overflows and hides the transport row and fader. Screenshot references are stale from earlier changes; not updated.
-- [ ] Phone check: drag vs pager swipe, accidental seeks, HiBy R3 lag.
+- [x] Phone check: user confirmed the volume slider works with the HiBy R3 on 3.28.1 (2026-10-15).
+
+# Studio Console overflow at large text (2026-10-15)
+At fontScale 2 (900x480 preview) the right column's six rows overflow and the transport row and volume fader are clipped (present at HEAD before 3.28.1).
+- [x] Title and spec chips in one block with `weight(1f, fill = false)` + `verticalScroll`, so they give way and the header, seek bar, transport and fader keep their size.
+- [x] Render both full-screen previews (normal and large text) and compare with the earlier renders.
+- [x] Unit tests + debug build.
+- [x] dB readout: one line (`softWrap = false`, `widthIn(min = 34.dp)`); it wrapped to two lines at large text.

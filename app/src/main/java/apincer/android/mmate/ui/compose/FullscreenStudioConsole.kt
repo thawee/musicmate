@@ -18,6 +18,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -592,112 +594,121 @@ fun FullscreenStudioConsole(
                         }
                     }
 
-                    // Row 2: Track Title & Artist Marquee with Companion Album Art Sleeve
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    // Title and specs give way first: at large text they scroll inside the space left,
+                    // so the seek bar, transport and volume fader always stay on screen
+                    Column(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Interactive Mini-Sleeve (shown when Left Bay is in VU_METER or TAPE_DECK)
-                        AnimatedVisibility(
-                            visible = visualizerMode != StudioVisualizerMode.COVER_ART,
-                            enter = fadeIn(tween(250)) + expandHorizontally(tween(250)),
-                            exit = fadeOut(tween(250)) + shrinkHorizontally(tween(250))
+                        // Row 2: Track Title & Artist Marquee with Companion Album Art Sleeve
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .shadow(
-                                            elevation = 6.dp,
-                                            shape = RoundedCornerShape(8.dp),
-                                            ambientColor = Color(0x66000000),
-                                            spotColor = Color(0x99000000)
-                                        )
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFF141210))
-                                        .border(BorderStroke(0.75.dp, Color(0x44FFA000)), RoundedCornerShape(8.dp))
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null
-                                        ) {
-                                            // 1-Tap quick-expand: switches visualizer mode to ALBUM ART!
-                                            visualizerMode = StudioVisualizerMode.COVER_ART
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (track != null) {
-                                        AsyncImage(
-                                            model = CoverartFetcher.builder(context, track).data(track).build(),
-                                            contentDescription = "Cover Art Miniature (Tap to Expand)",
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    } else {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_now_playing_idle),
-                                            contentDescription = null,
-                                            tint = Color(0x44FFFFFF),
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                            // Interactive Mini-Sleeve (shown when Left Bay is in VU_METER or TAPE_DECK)
+                            AnimatedVisibility(
+                                visible = visualizerMode != StudioVisualizerMode.COVER_ART,
+                                enter = fadeIn(tween(250)) + expandHorizontally(tween(250)),
+                                exit = fadeOut(tween(250)) + shrinkHorizontally(tween(250))
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(46.dp)
+                                            .shadow(
+                                                elevation = 6.dp,
+                                                shape = RoundedCornerShape(8.dp),
+                                                ambientColor = Color(0x66000000),
+                                                spotColor = Color(0x99000000)
+                                            )
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0xFF141210))
+                                            .border(BorderStroke(0.75.dp, Color(0x44FFA000)), RoundedCornerShape(8.dp))
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+                                                // 1-Tap quick-expand: switches visualizer mode to ALBUM ART!
+                                                visualizerMode = StudioVisualizerMode.COVER_ART
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (track != null) {
+                                            AsyncImage(
+                                                model = CoverartFetcher.builder(context, track).data(track).build(),
+                                                contentDescription = "Cover Art Miniature (Tap to Expand)",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        } else {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_now_playing_idle),
+                                                contentDescription = null,
+                                                tint = Color(0x44FFFFFF),
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
                                     }
+                                    Spacer(modifier = Modifier.width(10.dp))
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
+                            }
+
+                            // Track Title & Artist Metadata Column
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = track?.title ?: "Ready to play",
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .basicMarquee(iterations = Int.MAX_VALUE, velocity = 26.dp)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                val artistAlbum = listOfNotNull(track?.artist, track?.album).filter { it.isNotBlank() }.joinToString(" • ")
+                                Text(
+                                    text = if (track == null) idleQueueText(queueState.tracks.size) else artistAlbum,
+                                    color = Color.White.copy(alpha = 0.65f),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
 
-                        // Track Title & Artist Metadata Column
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = track?.title ?: "Ready to play",
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .basicMarquee(iterations = Int.MAX_VALUE, velocity = 26.dp)
+                        // Row 3: Technical Specs Diagnostics Strip with Leading Quality Verdict Badge
+                        val verdictText = if (track != null) AudioPresentation.qualityLabel(track, true)
+                        else AudioPresentation.qualityLabel(state.specsVerdict.value, true)
+                        val codecStr = track?.audioEncoding?.uppercase()?.ifEmpty { null } ?: state.specsFormat.value.split("•").firstOrNull()?.trim() ?: "PCM"
+                        val encodedResolution = AudioPresentation.encodedResolution(track)
+                        val resStr = if (track != null && TagUtils.isMQA(track) && encodedResolution.isNotEmpty()) {
+                            "Encoded: $encodedResolution"
+                        } else encodedResolution
+                        val originalRate = AudioPresentation.originalRate(track)
+                        val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
+                        val rgStr = state.specsReplayGain.value
+
+                        // Nothing loaded: an empty verdict would read as "CD QUALITY"
+                        if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            StudioSpecChip(
+                                text = verdictText,
+                                isHighlighted = true,
+                                highlightColor = if (track != null) AudioPresentation.accent(track) else AudioPresentation.accent(state.specsVerdict.value)
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            val artistAlbum = listOfNotNull(track?.artist, track?.album).filter { it.isNotBlank() }.joinToString(" • ")
-                            Text(
-                                text = if (track == null) idleQueueText(queueState.tracks.size) else artistAlbum,
-                                color = Color.White.copy(alpha = 0.65f),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            if (codecStr.isNotBlank()) StudioSpecChip(codecStr)
+                            if (resStr.isNotEmpty()) StudioSpecChip(resStr)
+                            if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
+                            if (drStr.isNotEmpty()) StudioSpecChip(drStr)
+                            if (rgStr.isNotEmpty()) StudioSpecChip(rgStr)
                         }
-                    }
-
-                    // Row 3: Technical Specs Diagnostics Strip with Leading Quality Verdict Badge
-                    val verdictText = if (track != null) AudioPresentation.qualityLabel(track, true)
-                    else AudioPresentation.qualityLabel(state.specsVerdict.value, true)
-                    val codecStr = track?.audioEncoding?.uppercase()?.ifEmpty { null } ?: state.specsFormat.value.split("•").firstOrNull()?.trim() ?: "PCM"
-                    val encodedResolution = AudioPresentation.encodedResolution(track)
-                    val resStr = if (track != null && TagUtils.isMQA(track) && encodedResolution.isNotEmpty()) {
-                        "Encoded: $encodedResolution"
-                    } else encodedResolution
-                    val originalRate = AudioPresentation.originalRate(track)
-                    val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
-                    val rgStr = state.specsReplayGain.value
-
-                    // Nothing loaded: an empty verdict would read as "CD QUALITY"
-                    if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        StudioSpecChip(
-                            text = verdictText,
-                            isHighlighted = true,
-                            highlightColor = if (track != null) AudioPresentation.accent(track) else AudioPresentation.accent(state.specsVerdict.value)
-                        )
-                        if (codecStr.isNotBlank()) StudioSpecChip(codecStr)
-                        if (resStr.isNotEmpty()) StudioSpecChip(resStr)
-                        if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
-                        if (drStr.isNotEmpty()) StudioSpecChip(drStr)
-                        if (rgStr.isNotEmpty()) StudioSpecChip(rgStr)
                     }
 
                     // Row 4: Bespoke High-Precision Audiophile Scrubber
@@ -1315,7 +1326,9 @@ private fun StudioLinearVolumeFader(
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
-            modifier = Modifier.width(34.dp)
+            maxLines = 1,
+            softWrap = false, // grows past 34dp at large text instead of breaking "-4 dB" in two
+            modifier = Modifier.widthIn(min = 34.dp)
         )
     }
 }
