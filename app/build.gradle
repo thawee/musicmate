@@ -215,6 +215,8 @@ dependencies {
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.uiautomator
+    androidTestImplementation project(":library:jaudiotagger-android")
     androidTestImplementation libs.androidx.compose.ui.test.junit4
     androidTestImplementation libs.androidx.compose.ui.test.junit4.accessibility
     screenshotTestImplementation libs.screenshot.validation.api

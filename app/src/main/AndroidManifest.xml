@@ -160,6 +160,11 @@
         </activity>
 
         <activity
+            android:name="apincer.android.mmate.ui.FolderGrantActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
             android:name="apincer.android.mmate.ui.SettingsActivity"
             android:theme="@style/AboutAppTheme"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
