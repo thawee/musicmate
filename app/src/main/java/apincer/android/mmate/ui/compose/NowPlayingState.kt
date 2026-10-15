@@ -31,6 +31,7 @@ class NowPlayingState {
     val volume = mutableStateOf(0f)
     val sleepTimerText = mutableStateOf("")
     val isSleepTimerActive = mutableStateOf(false)
+    val sleepTimerMinutes = mutableStateOf(0L) // the chosen countdown; 0 for none or end of track
     
     // Signal Path
     val signalPathSteps = mutableStateListOf<String>()

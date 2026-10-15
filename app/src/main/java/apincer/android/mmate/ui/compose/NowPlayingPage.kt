@@ -1023,6 +1023,7 @@ fun NowPlayingPage(
     if (showSleepTimerDialog) {
         SleepTimerDialog(
             activeText = state.sleepTimerText.value,
+            armedMinutes = state.sleepTimerMinutes.value,
             onDismissRequest = { showSleepTimerDialog = false },
             onSelectOption = { minutes, endOfTrack ->
                 onSleepTimerSelected(minutes, endOfTrack)
@@ -1034,6 +1035,7 @@ fun NowPlayingPage(
 @Composable
 fun SleepTimerDialog(
     activeText: String,
+    armedMinutes: Long,
     onDismissRequest: () -> Unit,
     onSelectOption: (minutes: Long, endOfTrack: Boolean) -> Unit
 ) {
@@ -1074,6 +1076,14 @@ fun SleepTimerDialog(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
+                if (activeText.isNotEmpty()) {
+                    Text(
+                        text = if (armedMinutes > 0) "Stops in $activeText" else "Stops at the end of this track",
+                        color = MusicMateDesignTokens.Text.Muted,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.height(14.dp))
                 val options = listOf(
                     "15 Minutes" to Pair(15L, false),
@@ -1085,11 +1095,7 @@ fun SleepTimerDialog(
                 )
                 options.forEach { (label, option) ->
                     val (minutes, endOfTrack) = option
-                    val isSelected = when {
-                        endOfTrack -> activeText.contains("Track", ignoreCase = true)
-                        minutes > 0 -> activeText == "${minutes}m"
-                        else -> activeText.isEmpty()
-                    }
+                    val isSelected = isSleepOptionSelected(minutes, endOfTrack, activeText, armedMinutes)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1122,6 +1128,16 @@ fun SleepTimerDialog(
             }
         }
     }
+}
+
+/**
+ * Whether a Sleep Timer row is the one running. A countdown row matches the minutes it was set
+ * with, not the remaining text, which reads "29m" a minute after choosing 30.
+ */
+internal fun isSleepOptionSelected(minutes: Long, endOfTrack: Boolean, activeText: String, armedMinutes: Long): Boolean = when {
+    activeText.isEmpty() -> !endOfTrack && minutes == 0L
+    endOfTrack -> armedMinutes == 0L
+    else -> minutes > 0 && minutes == armedMinutes
 }
 
 private fun accessiblePlaybackTime(milliseconds: Long): String {

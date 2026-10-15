@@ -1570,3 +1570,17 @@ Plan:
 - [x] Fix: Next in Music Center skipped two tracks per tap and stopped early. play() cleared the playlist before setting the new item; the empty playlist reached STATE_ENDED, which the listener treated as a natural track end. Pre-existing in 3.25.0. Verified on phone: 3 fast taps = 3 advances, 0 spurious completions, still playing.
 - [x] Listener checks (user): hi-res and CD sound clean, VU meters, gapless album, DAC unplug.
 - [ ] Listener check still open: a hi-res track over Bluetooth (24-bit integer now reaches A2DP).
+
+# Sleep timer fixes (2026-10-15)
+User report: "the sleep timer function does not work properly" (no symptom details, no phone attached).
+- [x] Dialog: highlight the armed option from the service's armed minutes, not the countdown text ("29m" never matched "30m"); show the remaining time in the header. Pure matcher with a unit test.
+- [x] Service: a generation counter so a fade that is already running cannot clear a timer set during it, and "Turn Off" stops a running fade.
+- [x] Service: fade only a renderer MusicMate drives; a monitored stream cannot be paused, so it is left alone.
+- [x] Service: `sleepTimerEndTimeMs` volatile.
+- [x] Unit tests + `:app:assembleDebug` (JAVA_HOME temurin 21).
+- [x] Service: a failed volume read/write no longer skips the pause.
+- [x] User: HiBy R3 over DLNA. No fade for HIBY/SHANLING/FIIO (`DeviceProfile.canFadeVolume`): the fade's GetVolume + 3 SetVolume burst lands right before Pause on a stack documented to drop actions under SetVolume bursts (docs/technical/UI.md).
+- [ ] Open: who drives the R3 (MusicMate picker vs the R3 browsing MusicMate), does the bar's Pause work on it, and what happened when time ran out. `playerPause` sets `isUserInitiatedStop` before Pause succeeds, so a dropped Pause leaves MusicMate thinking it is paused and it won't advance. A Stop fallback must call `mediaHub.playerStop` directly, not `internalStopOnDMRPlayer` (it clears the current track).
+- [ ] Phone check with logcat (no device attached on 2026-10-15).
+- [ ] Ask the user which output was used and whether music kept playing.
+

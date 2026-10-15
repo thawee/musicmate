@@ -1200,8 +1200,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private java.util.Timer sleepTimer;
-    private long sleepTimerEndTimeMs = 0;
+    private volatile long sleepTimerEndTimeMs = 0;
+    private volatile long sleepTimerMinutes = 0;
     private volatile boolean sleepTimerEndOfTrack = false;
+    // Bumped by every setSleepTimer call; a fade from an older timer stops and clears nothing
+    private final java.util.concurrent.atomic.AtomicInteger sleepTimerGeneration = new java.util.concurrent.atomic.AtomicInteger();
+    private final Object sleepTimerLock = new Object(); // not `this`: handleTrackStartEvent holds that
 
     /** Pauses at a natural track end when "end of track" sleep is armed; true if it did. */
     private boolean stopForEndOfTrackSleep() {
@@ -1215,6 +1219,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void setSleepTimer(long minutes, boolean endOfTrack) {
+        synchronized (sleepTimerLock) {
+            armSleepTimer(minutes, endOfTrack);
+        }
+    }
+
+    private void armSleepTimer(long minutes, boolean endOfTrack) {
+        int generation = sleepTimerGeneration.incrementAndGet();
         if (sleepTimer != null) {
             sleepTimer.cancel();
             sleepTimer = null;
@@ -1228,6 +1239,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         } else if (!endOfTrack && wasEndOfTrack && isPlaying()) {
             scheduler.execute(this::preloadNextTrackSafe);
         }
+        sleepTimerMinutes = 0;
         if (minutes <= 0 && !endOfTrack) {
             sleepTimerEndTimeMs = 0;
             return;
@@ -1237,12 +1249,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             return;
         }
         long durationMs = minutes * 60 * 1000L;
+        sleepTimerMinutes = minutes;
         sleepTimerEndTimeMs = System.currentTimeMillis() + durationMs;
         sleepTimer = new java.util.Timer("SleepTimer", true);
         sleepTimer.schedule(new java.util.TimerTask() {
             @Override
             public void run() {
-                fadeOutAndPause();
+                fadeOutAndPause(generation);
             }
         }, durationMs);
     }
@@ -1254,36 +1267,65 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return Math.max(0, sleepTimerEndTimeMs - System.currentTimeMillis());
     }
 
+    @Override
+    public long getSleepTimerMinutes() {
+        return sleepTimerEndTimeMs > 0 ? sleepTimerMinutes : 0;
+    }
+
+    /** Clears the countdown once its fade is done, unless a newer timer was set meanwhile. */
+    private void finishSleepTimer(int generation) {
+        synchronized (sleepTimerLock) {
+            if (generation != sleepTimerGeneration.get()) return;
+            sleepTimerEndTimeMs = 0;
+            sleepTimerMinutes = 0;
+            sleepTimerEndOfTrack = false;
+        }
+    }
+
     /**
      * Fades a renderer down from its real volume, pauses, then restores that volume so the next
      * Play is not silent. When the volume cannot be read it pauses without fading, so the
-     * fade can never make playback louder.
+     * fade can never make playback louder. Only a renderer MusicMate drives is faded (a
+     * monitored stream cannot be paused), and not a portable player that drops actions under
+     * volume bursts. A newer timer (or Turn Off) set during the fade
+     * stops it before the pause.
      */
-    private void fadeOutAndPause() {
+    private void fadeOutAndPause(int generation) {
         new Thread(() -> {
+            PlaybackTarget target = getPlayer();
+            String rendererId = isControllable(target)
+                    && ((DMRPlayer) target).getDeviceProfile().canFadeVolume() ? target.getTargetId() : null;
+            int original = -1;
             try {
-                PlaybackTarget target = getPlayer();
-                String rendererId = (target != null && target.isStreaming()) ? target.getTargetId() : null;
-                int original = rendererId != null ? mediaHub.playerGetVolume(rendererId, 2000) : -1;
-                if (original > 0) {
-                    for (int quarter = 3; quarter >= 1; quarter--) {
-                        mediaHub.playerSetVolume(rendererId, original * quarter / 4);
-                        Thread.sleep(500);
+                try {
+                    original = rendererId != null ? mediaHub.playerGetVolume(rendererId, 2000) : -1;
+                    if (original > 0) {
+                        for (int quarter = 3; quarter >= 1 && generation == sleepTimerGeneration.get(); quarter--) {
+                            mediaHub.playerSetVolume(rendererId, original * quarter / 4);
+                            Thread.sleep(500);
+                        }
                     }
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "Sleep fade failed; pausing without it", e); // the pause must still happen
                 }
-                pausePlayer();
-                if (original > 0) {
-                    Thread.sleep(500); // let the pause land before the level comes back
-                    mediaHub.playerSetVolume(rendererId, original);
-                    dmrVolume = original;
+                if (generation == sleepTimerGeneration.get()) {
+                    pausePlayer();
+                    if (original > 0) Thread.sleep(500); // let the pause land before the level comes back
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                Log.w(TAG, "Sleep fade failed", e);
+                Log.w(TAG, "Sleep timer pause failed", e);
             } finally {
-                sleepTimerEndTimeMs = 0;
-                sleepTimerEndOfTrack = false;
+                if (original > 0) {
+                    try {
+                        mediaHub.playerSetVolume(rendererId, original);
+                        dmrVolume = original;
+                    } catch (Exception e) {
+                        Log.w(TAG, "Sleep fade: could not restore volume", e);
+                    }
+                }
+                finishSleepTimer(generation);
             }
         }, "SleepFade").start();
     }

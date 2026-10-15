@@ -36,6 +36,8 @@ public interface PlaybackService {
     void adjustVolume(int direction);
     void setSleepTimer(long minutes, boolean endOfTrack);
     long getSleepTimerRemainingMs();
+    /** The minutes chosen for the running countdown, or 0 when none is running. */
+    default long getSleepTimerMinutes() { return 0; }
 
    void skipToNextInQueue();
 

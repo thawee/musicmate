@@ -1336,6 +1336,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         long remainingMs = playbackService.getSleepTimerRemainingMs();
         nps.isSleepTimerActive().setValue(remainingMs != 0);
         nps.getSleepTimerText().setValue(formatSleepRemaining(remainingMs));
+        nps.getSleepTimerMinutes().setValue(playbackService.getSleepTimerMinutes());
         if (remainingMs != 0 && !isFinishing()) {
             sleepTimerHandler.postDelayed(sleepTimerTick, 1000);
         }

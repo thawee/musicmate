@@ -104,6 +104,14 @@ public class DMRPlayer implements PlaybackTarget {
         public String getLabel() { return label; }
         public long getGaplessDelayMs() { return gaplessDelayMs; }
         public boolean isSupportsPreload() { return supportsPreload; }
+
+        /**
+         * False for portable players whose single-threaded UPnP stack drops actions under a burst
+         * of SetVolume calls (docs/technical/UI.md), so the sleep timer pauses them without a fade.
+         */
+        public boolean canFadeVolume() {
+            return this != HIBY && this != SHANLING && this != FIIO;
+        }
     }
 
     public DeviceProfile getDeviceProfile() {
