@@ -1175,19 +1175,60 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     }
 
-    private int dmrVolume = 50;
+    private volatile int dmrVolume = 50;
+    // The driven renderer's volume for the UI, -1 when the current target has none to show
+    private final MutableStateFlow<Integer> rendererVolumeFlow = StateFlowKt.MutableStateFlow(-1);
+    private final VolumeCoalescer volumeCoalescer = new VolumeCoalescer(
+            (task, delayMs) -> scheduler.schedule(task, delayMs, TimeUnit.MILLISECONDS),
+            android.os.SystemClock::elapsedRealtime,
+            (targetId, volume) -> {
+                try {
+                    mediaHub.playerSetVolume(targetId, volume);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to set DMR volume", e);
+                }
+            });
 
     @Override
     public void setVolume(int volumePercent) {
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget != null && currentTarget.isStreaming()) {
             dmrVolume = Math.max(0, Math.min(100, volumePercent));
-            try {
-                mediaHub.playerSetVolume(currentTarget.getTargetId(), dmrVolume);
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to set DMR volume", e);
-            }
+            if (isControllable(currentTarget)) rendererVolumeFlow.setValue(dmrVolume);
+            boolean fragile = currentTarget instanceof DMRPlayer dmr && !dmr.getDeviceProfile().canFadeVolume();
+            volumeCoalescer.submit(currentTarget.getTargetId(), dmrVolume, fragile);
         }
+    }
+
+    @Override
+    public AutoCloseable subscribeRendererVolume(Consumer<Integer> consumer, Consumer<Throwable> onErrorConsumer) {
+        return flowSubscribe(rendererVolumeFlow, consumer, onErrorConsumer);
+    }
+
+    /**
+     * Reads a newly driven renderer's real volume, so the slider starts there. It runs on its own
+     * thread (the read blocks up to 2 s; the scheduler carries playback work), and a portable
+     * player is left to settle first so the read cannot collide with SetAVTransportURI or Play.
+     */
+    private void refreshRendererVolume(PlaybackTarget target) {
+        if (!isControllable(target)) {
+            rendererVolumeFlow.setValue(-1);
+            return;
+        }
+        String targetId = target.getTargetId();
+        long settleMs = ((DMRPlayer) target).getDeviceProfile().canFadeVolume() ? 0 : 5000;
+        new Thread(() -> {
+            try {
+                Thread.sleep(settleMs);
+            } catch (InterruptedException e) {
+                return;
+            }
+            if (!targetId.equals(controlledPlayerTargetId)) return;
+            int volume = mediaHub.playerGetVolume(targetId, 2000);
+            if (volume < 0 || !targetId.equals(controlledPlayerTargetId)) return; // keep the last known level
+            dmrVolume = volume;
+            rendererVolumeFlow.setValue(volume);
+        }, "RendererVolumeRead").start();
     }
 
     @Override
@@ -1457,6 +1498,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 this.controlledPlayerTargetId = resolvedTarget instanceof DMRPlayer ? resolvedTarget.getTargetId() : null;
             }
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
+            if (!isSameTarget) refreshRendererVolume(resolvedTarget);
 
             // 3. Activate the new player
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {

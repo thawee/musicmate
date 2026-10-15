@@ -1,5 +1,8 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.FlowRow
 
 import androidx.compose.animation.animateColorAsState
@@ -785,7 +788,15 @@ fun NowPlayingPage(
                 )
             }
 
-            val volumePercent = (state.volume.value.coerceIn(0f, 1f) * 100).toInt()
+            // While a finger is on the slider it shows the finger's value: a renderer reporting
+            // its level (or the phone's coarser steps) must not pull the thumb away mid-drag
+            // (only while it is pressed or dragged, so a gesture the pager takes over cannot strand it)
+            val volumeInteraction = remember { MutableInteractionSource() }
+            val volumeHeld = volumeInteraction.collectIsDraggedAsState().value ||
+                volumeInteraction.collectIsPressedAsState().value
+            var draggedVolume by remember { mutableStateOf<Float?>(null) }
+            val shownVolume = ((if (volumeHeld) draggedVolume else null) ?: state.volume.value).coerceIn(0f, 1f)
+            val volumePercent = (shownVolume * 100).toInt()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -807,8 +818,13 @@ fun NowPlayingPage(
                 // stays the primary control (the default Material slider looked unrelated).
                 @OptIn(ExperimentalMaterial3Api::class)
                 Slider(
-                    value = state.volume.value.coerceIn(0f, 1f),
-                    onValueChange = onVolumeChanged,
+                    value = shownVolume,
+                    onValueChange = {
+                        draggedVolume = it
+                        onVolumeChanged(it)
+                    },
+                    onValueChangeFinished = { draggedVolume = null },
+                    interactionSource = volumeInteraction,
                     modifier = Modifier
                         .weight(1f)
                         .semantics {
@@ -817,7 +833,7 @@ fun NowPlayingPage(
                     thumb = {
                         Box(
                             modifier = Modifier
-                                .size(12.dp)
+                                .size(18.dp)
                                 .background(Color.White, CircleShape)
                         )
                     },

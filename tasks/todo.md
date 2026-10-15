@@ -1584,3 +1584,15 @@ User report: "the sleep timer function does not work properly" (no symptom detai
 - [ ] Phone check with logcat (no device attached on 2026-10-15).
 - [ ] Ask the user which output was used and whether music kept playing.
 
+# Volume slider usability (2026-10-15)
+User: "the volume slide is quite difficult to work with" (output in use: HiBy R3 over DLNA, MusicMate-driven assumed).
+Found: on DLNA the slider shows the PHONE's STREAM_MUSIC level, not the renderer's; every drag frame sends a SetVolume (the flood ADR-015 recorded for HiBy R3); the +/- buttons on DLNA never move the slider; locally every drag frame pops the system volume panel (FLAG_SHOW_UI); the thumb is 12dp.
+- [x] Service: trailing throttle on renderer SetVolume (at most one per ~300ms, last value always sent).
+- [x] Service: read the renderer's real volume when a driven renderer becomes active; expose it so the slider shows it.
+- [x] Activity: slider and +/- show the renderer level on DLNA; slider drags on the phone do not show the system panel.
+- [x] Slider: hold the dragged value locally so a state update cannot yank the thumb; larger thumb (48dp touch height kept).
+- [x] Unit test for the throttle; build; tests.
+- [x] Studio Console fader: 48dp touch band, 150dp to 220dp wide (rail was ~68dp). Rendered via screenshot tests.
+- [x] ADR-015 marked superseded in docs/technical/UI.md.
+- [ ] Pre-existing (confirmed by rendering HEAD): at large text the Studio Console right column overflows and hides the transport row and fader. Screenshot references are stale from earlier changes; not updated.
+- [ ] Phone check: drag vs pager swipe, accidental seeks, HiBy R3 lag.

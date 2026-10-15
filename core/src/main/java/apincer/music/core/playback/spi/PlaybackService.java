@@ -34,6 +34,11 @@ public interface PlaybackService {
     void seekTo(long positionMs);
     void setVolume(int volumePercent);
     void adjustVolume(int direction);
+    /** The driven renderer's volume 0-100 as it changes, or -1 when the current target has none. */
+    default AutoCloseable subscribeRendererVolume(Consumer<Integer> consumer, Consumer<Throwable> onErrorConsumer) {
+        consumer.accept(-1);
+        return () -> {};
+    }
     void setSleepTimer(long minutes, boolean endOfTrack);
     long getSleepTimerRemainingMs();
     /** The minutes chosen for the running countdown, or 0 when none is running. */

@@ -863,7 +863,7 @@ fun FullscreenStudioConsole(
                             volume = state.volume.value,
                             onVolumeChanged = onVolumeChanged,
                             colorGold = colorGold,
-                            modifier = Modifier.width(150.dp)
+                            modifier = Modifier.width(220.dp)
                         )
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
@@ -1213,11 +1213,11 @@ private fun StudioLinearVolumeFader(
 
         Spacer(modifier = Modifier.width(6.dp))
 
-        // Custom Fader Rail
+        // Custom Fader Rail: a 3dp rail inside a 48dp touch band (Android minimum target)
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
-                .height(20.dp)
+                .height(48.dp)
                 .semantics {
                     progressBarRangeInfo = ProgressBarRangeInfo(currentVol.coerceIn(0f, 1f), 0f..1f)
                     setProgress { value ->

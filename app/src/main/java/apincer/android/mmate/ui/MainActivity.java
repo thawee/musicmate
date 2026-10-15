@@ -155,6 +155,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
     private AutoCloseable playbackStateSubscription = null;
+    private AutoCloseable rendererVolumeSubscription = null;
+    private volatile int rendererVolume = -1; // the driven renderer's level, -1 when there is none
     private final androidx.lifecycle.Observer<apincer.music.core.server.spi.MediaServerHub.ServerStatus> serverStatusObserver = this::updateMediaServerState;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -184,6 +186,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             playbackStateSubscription = playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
+            closeQuietly(rendererVolumeSubscription);
+            rendererVolumeSubscription = playbackService.subscribeRendererVolume(
+                    volume -> {
+                        rendererVolume = volume;
+                        runOnUiThread(MainActivity.this::updateVolumeState);
+                    },
+                    throwable -> Log.e(TAG, "Error in renderer volume subscription", throwable));
             if (playbackService.getQueueManager() != null) {
                 apincer.music.core.repository.QueueManager qm = playbackService.getQueueManager();
                 // Shuffle/repeat and the queue are restored from the database in the background
@@ -209,6 +218,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 } catch (Exception ignored) {}
                 playbackStateSubscription = null;
             }
+            closeQuietly(rendererVolumeSubscription);
+            rendererVolumeSubscription = null;
             isPlaybackServiceBound = false;
             MainScaffoldState.get().isPlaybackAvailable().setValue(false);
             playbackService = null;
@@ -760,6 +771,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             } catch (Exception ignored) {}
             playbackStateSubscription = null;
         }
+        closeQuietly(rendererVolumeSubscription);
+        rendererVolumeSubscription = null;
         if (isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -1011,11 +1024,27 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (am != null) {
             int max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC);
             int target = Math.round(vol * max);
-            am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target, android.media.AudioManager.FLAG_SHOW_UI);
+            // No system panel: it would pop over the sheet on every step of a drag
+            am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target, 0);
         }
     }
 
+    private static void closeQuietly(AutoCloseable closeable) {
+        if (closeable == null) return;
+        try {
+            closeable.close();
+        } catch (Exception ignored) {}
+    }
+
+    /** Shows the driven renderer's level while one plays, otherwise the phone's media volume. */
     private void updateVolumeState() {
+        int renderer = rendererVolume;
+        if (renderer >= 0 && playbackService != null && playbackService.getPlayer() != null
+                && playbackService.getPlayer().isStreaming()) {
+            apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+            if (nps != null) nps.getVolume().setValue(renderer / 100f);
+            return;
+        }
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {
             int cur = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC);
