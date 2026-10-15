@@ -40,7 +40,7 @@ This guide walks through MusicMate screen by screen: adding your music, playing 
   <img src="screenshots/audio-quality.png" width="32%" alt="Audio Quality">
 </p>
 
-The main screen lists your songs with their quality badge (such as `HI-RES 24/96` or `CD 16/44.1`), dynamic range (`DR12`) and length. The header shows the number of tracks and how long the whole collection would take to play.
+The main screen lists your songs with their quality badge (such as `HI-RES 24/96` or `LOSSLESS 16/44.1`), dynamic range (`DR12`) and length. Song list headers show the track count and total play time. The About screen shows the library's storage size.
 
 **Search** from the box at the top.
 
@@ -55,7 +55,7 @@ The main screen lists your songs with their quality badge (such as `HI-RES 24/96
 
 Category cards (an artist, a genre, a playlist) have their own **Play** and **Add to queue** buttons. Tap the card itself to see its songs.
 
-**Playlists.** Built-in smart playlists fill themselves from your library, for example *Audiophile Sanctuary (DR12+)*, *Lossless Master Vault*, *Pure DSD Archive* and *Studio Masters (Hi-Res)*. Tap **New smart playlist** to make your own from rules such as minimum DR, Hi-Res only or lossless only. Press and hold one of your own playlists to delete it.
+**Playlists.** Built-in smart playlists fill themselves from your library. *Audiophile Sanctuary (DR12+)* requires lossless audio with DR12 or higher, and *Studio Masters (Hi-Res)* requires lossless audio tagged 24-bit and 48 kHz or higher. *Lossless Master Vault* and *Pure DSD Archive* are also included. Tap **New smart playlist** to make your own from rules such as minimum DR, Hi-Res only or lossless only. Press and hold one of your own playlists to delete it.
 
 ---
 
@@ -214,6 +214,7 @@ Each song shows a quality badge and a DR value.
   - `LOSSLESS` is 16-bit lossless at 44.1 or 48 kHz (CD quality).
   - `24-BIT` is 24-bit lossless at 44.1 to 88.2 kHz.
   - `HI-RES` is 24-bit at 96 kHz or higher.
+  - `LOSSY` marks files encoded with lossy compression, such as MP3 or AAC.
   - `DSD` is Direct Stream Digital.
   - `MQA` marks MQA-encoded files. Expanded badges tell `MQA MASTER` from `MQA STUDIO`, and show the original sample rate when the file records it.
 - **DR (dynamic range)** measures how much the music breathes between quiet and loud. Higher is better: green is 13 and above, gold is 8 to 12, and orange is below 8. Heavily compressed modern masters often score DR5 to DR7.

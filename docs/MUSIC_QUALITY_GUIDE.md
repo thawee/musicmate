@@ -1,5 +1,7 @@
 # Music Quality Guide
 
+MusicMate labels 16-bit lossless files **Lossless**, 24-bit lossless files **24-Bit Lossless** or **Hi-Res Lossless**, and MP3 or AAC files **Lossy**. These labels describe the file format and resolution. Dynamic range (DR) describes the recording's loudness range.
+
 ## 🎼 Bit Depth & Dynamic Range
 
 **Bit depth** determines the **dynamic range** (difference between softest and loudest sounds) in your music:

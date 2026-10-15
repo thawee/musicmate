@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.28.3] - 2026-10-15
+
+### Changed
+- **Built-in playlists:** The DR12+ playlist now requires lossless audio. Studio Masters requires lossless 24-bit audio at 48 kHz or higher. Genre playlists exclude conflicting moods, and a duplicate title rule was removed.
+- **Quality labels:** Android and the Web UI use Lossless and Lossy consistently, including legacy quality codes. Unknown quality no longer appears as Lossless.
+- **Song list header:** Library, search, and filtered song lists show count and play time. Storage size remains on the About screen.
+
+### Fixed
+- **Music Center artwork:** Playback updates no longer enqueue a cover request on every position tick, and late results from older songs cannot replace the current cover.
+
 ## [3.28.2] - 2026-10-15
 
 ### Fixed

@@ -1,7 +1,7 @@
-# MusicMate 3.28.2
+# MusicMate 3.28.3
 
-The Studio Console now keeps Play, Previous, Next and the volume fader on screen with a large system font. The song title and format chips scroll in the space that is left, and the fader's dB readout no longer breaks onto two lines.
+Built-in playlists have tighter rules for lossless and studio quality recordings. Quality badges use **Lossless** and **Lossy** consistently in the app and Web UI.
 
-This release also carries 3.28.1's fixes: the volume slider follows a DLNA player's own level without flooding it, and the sleep timer pauses HiBy, Shanling and FiiO players reliably.
+Song list headers now show count and play time without switching storage size on and off. Music Center ignores late artwork results from previous songs, so the cover stays with the current track during playback updates.
 
-Version code: 153. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.28.2/CHANGELOG.md) for details.
+Version code: 154. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.28.3/CHANGELOG.md) for details.
