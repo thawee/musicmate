@@ -360,7 +360,7 @@ public class TagUtils {
 
     public static String getQualityNote(String codec) {
         if(codec.equals(Constants.TITLE_CD_QUALITY)) {
-            return "16–bit • 44.1–48 kHz • CD quality";
+            return "16-bit • 44.1–48 kHz";
         }else  if(codec.equals(Constants.TITLE_DSD)) {
             return "DSD64 (2.8MHz) to DSD512 (22.5MHz)";
         }else  if(codec.equals(Constants.TITLE_MQA_MASTER_QUALITY)) {
@@ -370,7 +370,7 @@ public class TagUtils {
         }else  if(codec.equals(Constants.TITLE_HIRES_QUALITY)) {
             return "24-bit • 96–384 kHz";
         }else  if(codec.equals(Constants.TITLE_HIGH_QUALITY)) {
-            return "MP3 • AAC • OGG";
+            return "MP3 • AAC (M4A)";
         }
 
         return "";

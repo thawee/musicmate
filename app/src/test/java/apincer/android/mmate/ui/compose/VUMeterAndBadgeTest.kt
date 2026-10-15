@@ -92,14 +92,14 @@ class VUMeterAndBadgeTest {
     @Test
     fun testUnifiedBadgeTextMP3() {
         val track = createMockTrack(
-            encoding = "MP3",
+            encoding = "MPEG",
             bitDepth = 0,
             sampleRate = 44100,
             bitRate = 320000,
             fileType = "MP3"
         )
         val badgeText = getUnifiedBadgeText(track)
-        assertEquals("320k", badgeText)
+        assertEquals("LOSSY 320k", badgeText)
     }
 
     @Test
@@ -123,7 +123,7 @@ class VUMeterAndBadgeTest {
         assertEquals("MQA MASTER", AudioPresentation.qualityLabel("MQA", true))
         assertEquals("MQA", AudioPresentation.qualityLabel("MQA STUDIO", false))
         assertEquals(Color(0xFFE040FB), AudioPresentation.accent("MQA STUDIO"))
-        assertEquals(Color(0xFF64B5F6), AudioPresentation.accent(null as String?))
+        assertEquals(Color(0xFF9E9E9E), AudioPresentation.accent(null as String?))
         assertEquals(Color(0xFFFFD700), AudioPresentation.accent("HR"))
     }
 

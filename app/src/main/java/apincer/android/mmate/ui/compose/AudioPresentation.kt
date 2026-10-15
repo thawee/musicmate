@@ -13,8 +13,8 @@ object AudioPresentation {
         HI_RES("HI-RES", "HI-RES LOSSLESS", Color(0xFFFFD700)),
         PCM24("24-BIT", "24-BIT LOSSLESS", Color(0xFFFFD700)),
         CD("LOSSLESS", "LOSSLESS", Color(0xFF64B5F6)),
-        LOSSY("", "STANDARD QUALITY", Color(0xFF9E9E9E)),
-        UNKNOWN("", "LOSSLESS", Color(0xFF9E9E9E))
+        LOSSY("LOSSY", "LOSSY AUDIO", Color(0xFF9E9E9E)),
+        UNKNOWN("", "UNKNOWN QUALITY", Color(0xFF9E9E9E))
     }
 
     private fun tier(track: Track): Tier = when {
@@ -35,7 +35,7 @@ object AudioPresentation {
         raw.contains("Hi-Res", true) -> Tier.HI_RES
         raw.contains("24-BIT", true) || raw.contains("Studio", true) -> Tier.PCM24
         raw.contains("CD", true) || raw.contains("Lossless", true) -> Tier.CD
-        raw.contains("Standard", true) || raw.contains("Lossy", true) -> Tier.LOSSY
+        raw.contains("Standard", true) || raw.contains("Lossy", true) || raw.contains("Compressed", true) || raw.equals("LC", true) -> Tier.LOSSY
         else -> Tier.UNKNOWN
     }
 

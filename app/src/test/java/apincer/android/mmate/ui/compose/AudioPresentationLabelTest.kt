@@ -8,7 +8,7 @@ class AudioPresentationLabelTest {
 
     private val expandedLabels = listOf(
         "DSD AUDIO", "MQA MASTER", "MQA STUDIO", "HI-RES LOSSLESS",
-        "24-BIT LOSSLESS", "LOSSLESS", "STANDARD QUALITY"
+        "24-BIT LOSSLESS", "LOSSLESS", "LOSSY AUDIO"
     )
 
     @Test
@@ -36,5 +36,14 @@ class AudioPresentationLabelTest {
         assertEquals("LOSSLESS", AudioPresentation.qualityLabel(Constants.LEGEND_CD, false))
         assertEquals("LOSSLESS", AudioPresentation.qualityLabel(Constants.LEGEND_CD, true))
         assertEquals("Lossless", Constants.TITLE_CD_QUALITY)
+    }
+
+    @Test
+    fun lossyAndUnknownCodes_doNotDisplayAsLossless() {
+        for (code in listOf("LOSSY", "Compressed", "LC", "STANDARD QUALITY")) {
+            assertEquals("LOSSY AUDIO", AudioPresentation.qualityLabel(code, true))
+            assertEquals("LOSSY", AudioPresentation.qualityLabel(code, false))
+        }
+        assertEquals("UNKNOWN QUALITY", AudioPresentation.qualityLabel("", true))
     }
 }

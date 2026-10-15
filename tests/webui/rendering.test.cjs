@@ -6,7 +6,7 @@ const source = fs.readFileSync('app/src/main/assets/webui/index.html', 'utf8');
 function renderer(name, ui) {
     const context = vm.createContext({ui, document: {querySelector: () => null}, URL,
         window: {location: {href: 'http://localhost:9000/'}}, getQualityBadge: () => '', formatTime: () => '0:01'});
-    for (const fn of ['escapeHtml', 'safeImageUrl', name]) {
+    for (const fn of new Set(['escapeHtml', 'safeImageUrl', 'qualityDisplayLabel', name])) {
         const start = source.indexOf(`        function ${fn}(`);
         if (start < 0) continue;
         const end = source.indexOf('\n        function ', start + 1);
@@ -32,4 +32,23 @@ test('queue metadata and artwork attributes are escaped', () => {
     renderer('updateQueueGrid', ui)([{trackId:1, title:payload, artUrl:'x" onload="window.injected=true'}]);
     assert.ok(!ui.queueGrid.innerHTML.includes(payload));
     assert.ok(!ui.queueGrid.innerHTML.includes('src="x" onload='));
+});
+test('legacy CD and SQ quality codes display as Lossless', () => {
+    const displayLabel = renderer('qualityDisplayLabel', {});
+    const badge = renderer('getQualityBadgeHtml', {});
+    for (const code of ['CD', 'SQ']) {
+        assert.equal(displayLabel(code), 'LOSSLESS');
+        assert.ok(badge({quality: code}).includes('LOSSLESS'));
+        assert.ok(!badge({quality: code}).includes(`>${code}<`));
+    }
+    assert.equal(displayLabel('Hi-Res'), 'Hi-Res');
+});
+test('lossy quality codes display as Lossy', () => {
+    const displayLabel = renderer('qualityDisplayLabel', {});
+    const badge = renderer('getQualityBadgeHtml', {});
+    for (const code of ['LOSSY', 'LC', 'Compressed']) {
+        assert.equal(displayLabel(code), 'LOSSY');
+        assert.ok(badge({quality: code}).includes('LOSSY'));
+        assert.ok(!badge({quality: code}).includes('>Compressed<'));
+    }
 });

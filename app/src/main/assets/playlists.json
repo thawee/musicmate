@@ -7,7 +7,8 @@
       "version": "1.0",
       "note": "DR12+",
       "minDrScore": 12.0,
-      "description": "High dynamic range uncompressed masterings (DR12 and above)."
+      "losslessOnly": true,
+      "description": "Lossless recordings with high dynamic range (DR12 and above)."
     },
     {
       "name": "Studio Masters (Hi-Res)",
@@ -15,8 +16,10 @@
       "type": "smart",
       "version": "1.0",
       "note": "Hi-Res Studio",
-      "hiresOnly": true,
-      "description": "24-bit studio quality and high sample rate masters (>= 24-bit / 48kHz)."
+      "losslessOnly": true,
+      "minBitDepth": 24,
+      "minSampleRate": 48000,
+      "description": "Lossless recordings tagged 24-bit and 48kHz or higher."
     },
     {
       "name": "Pure DSD Archive",
@@ -34,7 +37,7 @@
       "version": "1.0",
       "note": "Lossless Vault",
       "losslessOnly": true,
-      "description": "Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD)."
+      "description": "Lossless recordings from your library, including FLAC, ALAC, WAV, AIFF, and DSD."
     },
     {
       "name": "The Masterpieces Archive",
@@ -2914,11 +2917,6 @@
           "notes": "Technical testing reference for Erroll Garner."
         },
         {
-          "title": "Fly Me to the Moon (Remastered 2008)",
-          "artist": "Frank Sinatra",
-          "notes": "Technical testing reference for Frank Sinatra."
-        },
-        {
           "title": "Sinnerman",
           "artist": "Nina Simone",
           "notes": "Technical testing reference for Nina Simone."
@@ -3126,7 +3124,14 @@
           "mood": [
             "Energetic",
             "Happy"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Calm",
+              "Melancholy",
+              "Sleep"
+            ]
+          }
         },
         {
           "genre": [
@@ -3137,7 +3142,14 @@
             "Groove",
             "Indie",
             "Synth-based"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Calm",
+              "Melancholy",
+              "Sleep"
+            ]
+          }
         }
       ]
     },
@@ -3163,7 +3175,12 @@
             "Calm",
             "Energetic",
             "Nostalgic"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Sleep"
+            ]
+          }
         },
         {
           "genre": [
@@ -3180,7 +3197,12 @@
             "Ballad",
             "Groove",
             "Indie"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Sleep"
+            ]
+          }
         }
       ]
     },
@@ -3196,6 +3218,7 @@
             "Jazz",
             "Blues",
             "Folk",
+            "Acoustic",
             "Pop",
             "Mor Lam",
             "Luk Thung"
@@ -3205,20 +3228,33 @@
             "Romantic",
             "Focus",
             "Nostalgic"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout"
+            ]
+          }
         },
         {
           "genre": [
             "Jazz",
             "Blues",
             "Folk",
+            "Acoustic",
             "Pop",
             "Mor Lam",
             "Luk Thung"
           ],
           "style": [
             "Ambient"
-          ]
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout"
+            ]
+          }
         }
       ]
     },
@@ -3226,8 +3262,8 @@
       "name": "Timeless: Personal Essentials",
       "uuid": "EssentialSelects",
       "type": "genre",
-      "note": "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป",
-      "description": "Timeless hits and crowd favorites with great sound",
+      "note": "รวมเพลงหลากหลายแนวจากคลังเพลงของคุณ",
+      "description": "A mix of alternative, pop, rock, jazz, folk, and country from your library.",
       "rules": [
         {
           "genre": [
@@ -3245,7 +3281,7 @@
       "name": "The Classical Masterworks",
       "uuid": "ClassicalMasterworks",
       "type": "genre",
-      "description": "The classical masterpieces with rich, immersive sound.",
+      "description": "Classical recordings from your library.",
       "rules": [
         {
           "genre": [

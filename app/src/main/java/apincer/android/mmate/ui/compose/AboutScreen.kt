@@ -335,7 +335,7 @@ fun AboutScreen(
                         Constants.LEGEND_STUDIO to "24-Bit",
                         Constants.LEGEND_CD to "Lossless",
                         Constants.LEGEND_MQA to "MQA",
-                        Constants.LEGEND_LOSSY to "Standard"
+                        Constants.LEGEND_LOSSY to "Lossy"
                     )
 
                     Row(
@@ -563,7 +563,7 @@ private fun getTierDetails(key: String): TierInfo {
     return when (key) {
         Constants.LEGEND_HIRES -> TierInfo(
             title = "Hi-Res Studio Master (24-bit / 96kHz+)",
-            description = "Uncompressed or losslessly compressed audio exceeding standard CD sampling frequency and dynamic bit depth.",
+            description = "Uncompressed or losslessly compressed audio above standard 16-bit / 44.1 kHz resolution.",
             formats = "FLAC, ALAC, WAV, AIFF",
             resolution = "24-bit / 96.0 kHz up to 192.0 kHz (4608 kbps)",
             accentColor = Color(0xFFFFD700)
@@ -583,8 +583,8 @@ private fun getTierDetails(key: String): TierInfo {
             accentColor = Color(0xFFFFC107)
         )
         Constants.LEGEND_CD -> TierInfo(
-            title = "Lossless (16-bit / 44.1 kHz, CD quality)",
-            description = "Bit-perfect lossless standard matching physical Compact Disc digital audio without compression artifacts.",
+            title = "16-bit Lossless (44.1–48 kHz)",
+            description = "Audio stored without lossy compression, preserving the decoded samples.",
             formats = "FLAC, ALAC, APE, WAV",
             resolution = "16-bit / 44.1 kHz Lossless (1411 kbps)",
             accentColor = Color(0xFF64B5F6)
@@ -597,9 +597,9 @@ private fun getTierDetails(key: String): TierInfo {
             accentColor = Color(0xFFE040FB)
         )
         else -> TierInfo(
-            title = "Standard Quality (Lossy Compression)",
+            title = "Lossy Audio",
             description = "Perceptually encoded audio saving storage while maintaining everyday listening quality.",
-            formats = "MP3, AAC, OGG, OPUS, M4A",
+            formats = "MP3, AAC (M4A)",
             resolution = "128 kbps to 320 kbps CBR/VBR",
             accentColor = Color(0xFF9E9E9E)
         )

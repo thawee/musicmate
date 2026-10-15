@@ -1225,15 +1225,22 @@
             sendMessage({ command: 'setRepeatMode', mode: repeatMode });
         }
 
+        function qualityDisplayLabel(quality) {
+            if (/^(CD|SQ)$/i.test(quality)) return 'LOSSLESS';
+            if (/^(LC|Compressed|Lossy)$/i.test(quality)) return 'LOSSY';
+            return quality;
+        }
+
         function getQualityBadgeHtml(track) {
             if (!track || !track.quality) return '';
             const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
-            if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${escapeHtml(track.quality)}</span>`;
-            if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${escapeHtml(track.quality)}</span>`;
-            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${escapeHtml(track.quality)}</span>`;
-            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-900">${escapeHtml(track.quality)}</span>`;
-            if (track.quality.startsWith('CD')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${escapeHtml(track.quality)}</span>`;
-            return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${escapeHtml(track.quality)}</span>`;
+            const label = escapeHtml(qualityDisplayLabel(track.quality));
+            if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${label}</span>`;
+            if (track.quality.startsWith('MQA')) return `<span class="${baseStyle} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">${label}</span>`;
+            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HI-RES')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${label}</span>`;
+            if (track.quality.startsWith('24-BIT')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-900">${label}</span>`;
+            if (track.quality.startsWith('CD') || track.quality.startsWith('SQ') || track.quality.startsWith('LOSSLESS')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${label}</span>`;
+            return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${label}</span>`;
         }
 
         // NEW HELPER: Returns just the DRS badge (e.g., [icon] DR12)
@@ -1334,7 +1341,7 @@
             if (track.quality.startsWith('DSD')) return 'text-purple-400';
             if (track.quality.startsWith('MQA')) return 'text-green-400';
             if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HR')) return 'text-amber-400'; // Amber/Yellow
-            if (track.quality.startsWith('CD') || track.quality.startsWith('SQ')) return 'text-blue-400';
+            if (track.quality.startsWith('CD') || track.quality.startsWith('SQ') || track.quality.startsWith('LOSSLESS')) return 'text-blue-400';
 
             return 'text-gray-400'; // Fallback gray
         }
@@ -1358,7 +1365,7 @@
                 );
                  // Apply new color class and text
                 ui.badgeQualityTier.classList.add(qualityColorClass);
-                ui.badgeQualityTier.textContent = qualityText; // Set the text directly
+                ui.badgeQualityTier.textContent = qualityDisplayLabel(qualityText);
                 ui.badgeQualityTier.style.display = 'inline-block';
                 hasFallback = true;
             } else {
@@ -1568,7 +1575,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Format & Tier</span>
-                            <span class="text-white font-semibold text-sm">${escapeHtml(currentTrack.format || 'FLAC')} ${currentTrack.quality ? '<span class="text-amber-400 font-normal text-xs">• ' + escapeHtml(currentTrack.quality) + '</span>' : ''}</span>
+                            <span class="text-white font-semibold text-sm">${escapeHtml(currentTrack.format || 'FLAC')} ${currentTrack.quality ? '<span class="text-amber-400 font-normal text-xs">• ' + escapeHtml(qualityDisplayLabel(currentTrack.quality)) + '</span>' : ''}</span>
                         </div>
                         <div class="p-2 rounded-lg bg-black/20">
                             <span class="text-gray-400 block font-medium">Resolution</span>

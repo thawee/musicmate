@@ -409,7 +409,7 @@ public class PlaylistRepository {
             lossless.setUuid(UUID_SMART_LOSSLESS);
             lossless.setType(PlaylistEntry.TYPE_SMART);
             lossless.setLosslessOnly(true);
-            lossless.setDescription("Bit-perfect lossless CD audio and studio recordings (FLAC, ALAC, WAV, AIFF, DSD).");
+            lossless.setDescription("Lossless recordings from your library, including FLAC, ALAC, WAV, AIFF, and DSD.");
             lossless.setNote("Lossless Vault");
             entryList.add(lossless);
         }

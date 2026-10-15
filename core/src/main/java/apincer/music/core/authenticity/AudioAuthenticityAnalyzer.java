@@ -269,7 +269,7 @@ public class AudioAuthenticityAnalyzer {
             r.verdict = "Verified Lossless";
         }
         else {
-            r.verdict = "Likely CD Quality";
+            r.verdict = "Likely Standard-Resolution Audio";
         }
 
         // --- Clipping
@@ -335,8 +335,8 @@ public class AudioAuthenticityAnalyzer {
      *     <li><b>Verified Lossless:</b> Strong high-frequency presence with no lossy
      *     artifacts.</li>
      *
-     *     <li><b>Likely CD Quality:</b> Standard 44.1kHz lossless content without
-     *     extended high-frequency range.</li>
+     *     <li><b>Likely Standard-Resolution Audio:</b> Content without an extended
+     *     high-frequency range.</li>
      * </ul>
      *
      * <h3>Additional Notes</h3>
@@ -419,7 +419,7 @@ public class AudioAuthenticityAnalyzer {
             r.verdict = "Verified Lossless";
         }
         else {
-            r.verdict = "Likely CD Quality";
+            r.verdict = "Likely Standard-Resolution Audio";
         }
 
         // --- Clipping
