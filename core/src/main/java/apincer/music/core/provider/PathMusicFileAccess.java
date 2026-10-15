@@ -49,7 +49,10 @@ public class PathMusicFileAccess implements MusicFileAccess {
              FileChannel out = new FileOutputStream(target).getChannel()) {
             long size = in.size();
             for (long position = 0; position < size; ) {
-                position += out.transferFrom(in, position, size - position);
+                long copied = out.transferFrom(in, position, size - position);
+                // The source shrank while copying; stop instead of looping forever
+                if (copied <= 0) throw new IOException("Source ended early: " + source);
+                position += copied;
             }
         }
     }

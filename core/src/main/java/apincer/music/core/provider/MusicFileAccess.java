@@ -25,7 +25,9 @@ public interface MusicFileAccess {
 
     /**
      * Runs {@code editor} on a file that becomes {@code target}. The editor may get {@code target}
-     * itself or a working copy with the same name; if it throws, {@code target} keeps its content.
+     * itself or a working copy with the same name. Rollback depends on the implementation: the path
+     * implementation edits {@code target} in place, so a failure part-way can leave it partly written;
+     * an implementation that edits a copy replaces {@code target} only after the editor succeeds.
      */
     void edit(File target, FileEditor editor) throws Exception;
 
