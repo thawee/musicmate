@@ -341,7 +341,8 @@ MusicMate operates as a full **Digital Media Controller (DMC)** using UPnP `AVTr
 | **Stop** | `AVTransport` | `Stop` | Stops playback on target DMR device (`playerStop`) |
 | **Seek** | `AVTransport` | `Seek` | Scrubs position using formatted `H:MM:SS.ms` time (`playerSeek`) |
 | **Gapless Queue** | `AVTransport` | `SetNextAVTransportURI` | Pre-queues next track in queue before current finishes |
-| **Volume Control** | `RenderingControl` | `SetVolume` | Controls master volume (0–100) (`playerSetVolume`) |
+| **Volume Control** | `RenderingControl` | `SetVolume` | Controls master volume (0–100) (`playerSetVolume`), coalesced by `VolumeCoalescer` so a slider drag cannot flood the renderer |
+| **Volume Read** | `RenderingControl` | `GetVolume` | Reads a newly driven renderer's level for the slider (`playerGetVolume`) |
 | **Position Sync** | `AVTransport` | `GetPositionInfo` | Periodic polling syncs UI seek bar with DMR progress |
 
 ---
