@@ -5,14 +5,10 @@ import android.util.Log;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 import apincer.android.utils.FileUtils;
 import apincer.music.core.Constants;
@@ -20,9 +16,19 @@ import apincer.music.core.Constants;
 public class FileSystem {
     private static final String TAG = "FileSystem";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    private static volatile MusicFileAccess access = new PathMusicFileAccess();
 
     FileSystem() {
         super();
+    }
+
+    /** The access every library change goes through; see {@link MusicFileAccess}. */
+    public static MusicFileAccess access() {
+        return access;
+    }
+
+    public static void setAccess(MusicFileAccess musicFileAccess) {
+        access = musicFileAccess;
     }
 
     public static boolean copyFile(Context context, final String source, final String target) {
@@ -32,14 +38,6 @@ public class FileSystem {
         if(!file.exists()) return false;
 
         try {
-
-            // create new directory if not existed
-            File newDir  = newFile.getParentFile();
-            if(newDir != null && !newDir.exists()) {
-                // create new directory
-                com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
-                //mkdirs(newDir);
-            }
 
             copyFile(file, newFile);
             return true;
@@ -109,17 +107,8 @@ public class FileSystem {
 
         if(!file.exists()) return false;
 
-        // create new directory if not existed
-        File newDir  = newFile.getParentFile();
-        assert newDir != null;
-        if(!newDir.exists()) {
-            // create new directory
-            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
-            //mkdirs(newDir);
-        }
-
-        //Log.i(TAG, "rename path "+file.getAbsolutePath());
-        return file.renameTo(newFile);
+        // Replaces an existing target, as File.renameTo does
+        return access.move(file, newFile, true);
     }
 
     private static boolean isValidSize(String srcPath, String targetPath, boolean exactMatch) {
@@ -148,32 +137,18 @@ public class FileSystem {
     }
 
     /**
-     * Copies a file using the fastest method (NIO FileChannel)
-     * and the safest resource management (try-with-resources).
+     * Copies a file through the installed {@link MusicFileAccess}.
      */
     public static void copyFile(File source, File dest) throws IOException {
         if (source == null || dest == null) {
             throw new NullPointerException("Source or Dest is null");
         }
-        if (!source.exists()) {
-            throw new IOException("Source file does not exist: " + source);
-        }
-        if (source.getAbsoluteFile().equals(dest.getAbsoluteFile())) {
-            return; // Source and destination are the same
-        }
-
-        try (FileChannel sourceChannel = new FileInputStream(source).getChannel();
-             FileChannel destChannel = new FileOutputStream(dest).getChannel()) {
-
-            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
-        }
+        access.copy(source, dest);
     }
 
 
     public static void copyDir(File sourceDir, File targetDir) {
-        if(!targetDir.exists()) {
-            targetDir.mkdirs();
-        }
+        access.mkdirs(targetDir);
         File [] files = sourceDir.listFiles();
         if(files != null) {
             for (File f : files) {
@@ -204,9 +179,7 @@ public class FileSystem {
         if(!targetDir.isDirectory()) {
             targetDir = targetDir.getParentFile();
         }
-        if(!targetDir.exists()) {
-            targetDir.mkdirs();
-        }
+        access.mkdirs(targetDir);
 
         File [] files = sourceDir.listFiles(file -> (
                 (isRelatedDir(file) || isRelatedFile(file))));
@@ -268,28 +241,7 @@ public class FileSystem {
     }
 
     public static boolean move(Context context, final String path, final String newPath) {
-        boolean success = false;
-        File newFile = new File(newPath);
-        File file = new File(path);
-
-        if(!file.exists()) return false;
-
-        // create new directory if not existed
-        File newDir  = newFile.getParentFile();
-        assert newDir != null;
-        if(!newDir.exists()) {
-            newDir.mkdirs();
-            // create new directory
-        }
-
-        try {
-            Files.move(file.toPath(), newFile.toPath());
-          //  System.out.println("Moved file: " + file.getName());
-            success = true;
-        } catch (IOException e) {
-            Log.e(TAG, "move", e);
-        }
-        return success;
+        return access.move(new File(path), new File(newPath), false);
     }
 
     /** A missing volume/directory is unavailable, not evidence of file deletion. */
@@ -317,12 +269,10 @@ public class FileSystem {
         for (int suffix = 0; ; suffix++) {
             File candidate = suffix == 0 ? requested : new File(requested.getParentFile(),
                     base + String.format(java.util.Locale.ROOT, "_%03d", suffix) + extension);
-            try {
-                Files.move(new File(source).toPath(), candidate.toPath());
-                return candidate.getPath();
-            } catch (java.nio.file.FileAlreadyExistsException collision) {
-                // Another conversion may have claimed this name; try the next suffix.
-            }
+            if (candidate.exists()) continue;
+            if (access.move(new File(source), candidate, false)) return candidate.getPath();
+            // Another conversion may have claimed this name; try the next suffix.
+            if (!candidate.exists()) throw new IOException("Cannot move " + source + " to " + candidate);
         }
     }
 
@@ -331,7 +281,7 @@ public class FileSystem {
     }
 
     /**
-     * Delete a file within the constraints of SAF.
+     * Delete a file through the installed {@link MusicFileAccess}.
      *
      * @param file the file to be deleted.
      * @return True if successfully deleted.
@@ -341,15 +291,7 @@ public class FileSystem {
             Log.i(TAG,"cannot delete path "+file.getAbsolutePath());
             return false;
         }
-
-        try {
-            Files.deleteIfExists(file.toPath());
-            return true;
-        } catch (IOException e) {
-            Log.e(TAG, "delete", e);
-        }
-
-        return false;
+        return access.delete(file);
     }
 
     public static void closeSilently(Closeable c) {

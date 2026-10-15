@@ -21,6 +21,7 @@ import java.util.Locale;
 
 import apincer.music.core.Settings;
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
 
 /**
  * Audiophile ReplayGain Manager & Active Playback Leveling Engine.
@@ -178,30 +179,33 @@ public class ReplayGainManager {
     public boolean writeReplayGainToFile(String filePath, double gainDb, double peak) {
         if (filePath == null || filePath.isEmpty()) return false;
         File file = new File(filePath);
-        if (!file.exists() || !file.canWrite()) return false;
+        // No canWrite() check: with a granted folder the path itself is not writable
+        if (!file.exists()) return false;
 
         try {
-            AudioFile audioFile = AudioFileIO.read(file);
-            Tag tag = audioFile.getTagOrCreateDefault();
+            FileSystem.access().edit(file, workingFile -> {
+                AudioFile audioFile = AudioFileIO.read(workingFile);
+                Tag tag = audioFile.getTagOrCreateDefault();
 
-            String gainStr = String.format(Locale.US, "%.2f dB", gainDb);
-            String peakStr = String.format(Locale.US, "%.6f", peak);
+                String gainStr = String.format(Locale.US, "%.2f dB", gainDb);
+                String peakStr = String.format(Locale.US, "%.6f", peak);
 
-            if (tag instanceof FlacTag flacTag) {
-                VorbisCommentTag vorbis = flacTag.getVorbisCommentTag();
-                if (vorbis != null) {
-                    vorbis.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
-                    vorbis.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
+                if (tag instanceof FlacTag flacTag) {
+                    VorbisCommentTag vorbis = flacTag.getVorbisCommentTag();
+                    if (vorbis != null) {
+                        vorbis.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
+                        vorbis.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
+                    }
+                } else if (tag instanceof VorbisCommentTag vorbisTag) {
+                    vorbisTag.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
+                    vorbisTag.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
+                } else if (tag instanceof AbstractID3v2Tag id3Tag) {
+                    addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_GAIN", gainStr);
+                    addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_PEAK", peakStr);
                 }
-            } else if (tag instanceof VorbisCommentTag vorbisTag) {
-                vorbisTag.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
-                vorbisTag.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
-            } else if (tag instanceof AbstractID3v2Tag id3Tag) {
-                addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_GAIN", gainStr);
-                addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_PEAK", peakStr);
-            }
 
-            audioFile.commit();
+                audioFile.commit();
+            });
 
             // Update cache
             ReplayGainInfo info = new ReplayGainInfo();

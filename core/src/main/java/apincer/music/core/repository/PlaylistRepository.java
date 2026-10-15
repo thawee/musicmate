@@ -455,9 +455,7 @@ public class PlaylistRepository {
     }
 
     public static void exportPlaylists(File playlistDir, apincer.music.core.repository.TagRepository tagRepos) {
-        if (!playlistDir.exists()) {
-            playlistDir.mkdirs();
-        }
+        apincer.music.core.provider.FileSystem.access().mkdirs(playlistDir);
 
         // 1. Group songs per playlist
         Map<PlaylistEntry, List<Track>> playlistMap = new HashMap<>();
@@ -485,22 +483,26 @@ public class PlaylistRepository {
 
             File m3uFile = new File(playlistDir, sanitizeFileName(entry.getName()) + ".m3u");
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(m3uFile))) {
+            try {
+                apincer.music.core.provider.FileSystem.access().writeAtomically(m3uFile, out -> {
+                    BufferedWriter writer = new BufferedWriter(
+                            new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8));
 
-                writer.write("#EXTM3U\n");
+                    writer.write("#EXTM3U\n");
 
-                for (Track track : tracks) {
-                    if (track == null) continue;
+                    for (Track track : tracks) {
+                        if (track == null) continue;
 
-                    String title = safe(track.getTitle());
-                    String artist = safe(track.getArtist());
-                    String path = safe(track.getPath());
+                        String title = safe(track.getTitle());
+                        String artist = safe(track.getArtist());
+                        String path = safe(track.getPath());
 
-                    // Duration unknown → use -1
-                    writer.write("#EXTINF:-1," + artist + " - " + title + "\n");
-                    writer.write(path + "\n");
-                }
-
+                        // Duration unknown → use -1
+                        writer.write("#EXTINF:-1," + artist + " - " + title + "\n");
+                        writer.write(path + "\n");
+                    }
+                    writer.flush();
+                });
             } catch (IOException ex) {
                 Log.e(TAG, "Error writing playlist: " + entry.getName(), ex);
             }

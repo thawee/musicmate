@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
 import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
@@ -70,24 +71,29 @@ public class JThinkWriter extends TagWriter {
             return false;
         }
         Log.i(TAG, "writeTag: " + tag.getPath());
+        if (!isMediaFileExist(tag.getPath())) {
+            Log.e(TAG, "writeTag: audio file is missing: " + tag.getPath());
+            return false;
+        }
         try {
-            AudioFile audioFile = getAudioFile(tag.getPath());
-            if (audioFile == null) {
-                Log.e(TAG, "writeTag: audio file is null or unreadable for " + tag.getPath());
-                return false;
-            }
+            FileSystem.access().edit(new File(tag.getPath()), workingFile -> {
+                AudioFile audioFile = getAudioFile(workingFile.getPath());
+                if (audioFile == null) {
+                    throw new CannotReadException("audio file is null or unreadable for " + tag.getPath());
+                }
 
-            Tag newTag = audioFile.getTagOrCreateDefault();
-            if (!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
-                // wave does not support encoding parameter
-                newTag.setEncoding(StandardCharsets.UTF_8);
-            }
+                Tag newTag = audioFile.getTagOrCreateDefault();
+                if (!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
+                    // wave does not support encoding parameter
+                    newTag.setEncoding(StandardCharsets.UTF_8);
+                }
 
-            // Batch set tag fields to reduce individual operations
-            setAllTagFields(newTag, tag);
+                // Batch set tag fields to reduce individual operations
+                setAllTagFields(newTag, tag);
 
-            // Commit changes to file
-            audioFile.commit();
+                // Commit changes to file
+                audioFile.commit();
+            });
             return true;
         } catch (CannotWriteException e) {
             Log.e(TAG, "writeTag cannot write: " + tag.getPath(), e);

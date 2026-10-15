@@ -278,12 +278,18 @@ public class MusicBrainzClient {
      */
     public boolean downloadCoverArt(String releaseId, java.io.File targetFile) {
         if (releaseId == null || releaseId.isBlank()) return false;
-        // Download beside the target and rename, so a failed transfer never truncates an existing image
-        java.io.File partial = new java.io.File(targetFile.getParentFile(), "." + targetFile.getName() + ".part");
+        // Download to app storage first, so a failed transfer never truncates an existing image
+        java.io.File partial;
+        try {
+            partial = java.io.File.createTempFile("cover-", ".part"); // java.io.tmpdir is the app cache on Android
+        } catch (java.io.IOException e) {
+            Log.w(TAG, "Cannot create a download file for cover art", e);
+            return false;
+        }
         try {
             if (!downloadCoverArtTo(releaseId, partial) || partial.length() == 0) return false;
-            java.nio.file.Files.move(partial.toPath(), targetFile.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            apincer.music.core.provider.FileSystem.access().writeAtomically(targetFile,
+                    out -> java.nio.file.Files.copy(partial.toPath(), out));
             return true;
         } catch (java.io.IOException e) {
             Log.w(TAG, "Failed to move downloaded cover art into place", e);

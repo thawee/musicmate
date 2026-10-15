@@ -749,7 +749,7 @@ public class FileRepository {
         try {
             // more others tag shared same file, skip delete file
             if(tagRepos.getByPath(item.getPath()).size()==1) {
-                status = FileUtils.delete(new File(item.getPath()));
+                status = FileSystem.delete(new File(item.getPath()));
                 if(!FileUtils.existed(item.getPath())) {
                     cleanCacheCover(item);
                     tagRepos.removeTag(item);

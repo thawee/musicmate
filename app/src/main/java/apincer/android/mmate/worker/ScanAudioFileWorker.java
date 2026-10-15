@@ -174,10 +174,13 @@ public class ScanAudioFileWorker extends Worker {
             java.io.File musicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_MUSIC);
             java.io.File playlistDir = new java.io.File(musicDir, "AA_Playlists");
 
-            if (playlistDir.exists()) {
-                apincer.android.utils.FileUtils.delete(playlistDir);
+            // Remove playlists that no longer exist; exportPlaylists recreates the folder
+            java.io.File[] oldPlaylists = playlistDir.listFiles();
+            if (oldPlaylists != null) {
+                for (java.io.File old : oldPlaylists) {
+                    if (old.isFile()) apincer.music.core.provider.FileSystem.delete(old);
+                }
             }
-            playlistDir.mkdirs();
 
             apincer.music.core.repository.PlaylistRepository.exportPlaylists(playlistDir, tagRepos);
 

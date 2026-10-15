@@ -26,7 +26,14 @@ public class FFMpegHelper {
      * @return true if an image was written
      */
     public static boolean extractCoverArt(String path, File pathFile, GenerateCallback callback) {
-        File partial = new File(pathFile.getParentFile(), ".extract-" + pathFile.getName());
+        File partial;
+        try {
+            // FFmpeg writes to app storage; the album folder is changed only through FileSystem.access()
+            partial = File.createTempFile("extract-", "-" + pathFile.getName());
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "extractCoverArt: cannot create a temporary file", e);
+            return false;
+        }
         try {
             Log.d(TAG, "extractCoverArt: from:"+path+", to:"+pathFile);
             String targetPath = pathFile.getAbsolutePath();
@@ -38,8 +45,8 @@ public class FFMpegHelper {
             if (!ReturnCode.isSuccess(session.getReturnCode()) || partial.length() == 0) {
                 return false;
             }
-            java.nio.file.Files.move(partial.toPath(), pathFile.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            FileSystem.access().writeAtomically(pathFile,
+                    out -> java.nio.file.Files.copy(partial.toPath(), out));
             if(callback != null) {
                 callback.onGenerated(targetPath, null,0,0);
             }

@@ -1,10 +1,9 @@
 package apincer.android.mmate.ui.viewmodel
 
+import apincer.music.core.provider.FileSystem
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 /**
  * An editor-owned image. The album files are touched only when Save is requested.
@@ -21,19 +20,8 @@ class ArtworkDraft(val file: File, val targets: List<File>) {
     }
 
     private fun commitTo(target: File) {
-        // Write beside the destination so the final rename is atomic on its filesystem.
-        val replacement = File.createTempFile(".cover-", ".tmp", target.parentFile)
-        try {
-            file.inputStream().use { input ->
-                replacement.outputStream().use { output ->
-                    input.copyTo(output)
-                    output.fd.sync()
-                }
-            }
-            Files.move(replacement.toPath(), target.toPath(),
-                StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-        } finally {
-            replacement.delete()
+        FileSystem.access().writeAtomically(target) { output ->
+            file.inputStream().use { input -> input.copyTo(output) }
         }
     }
 
