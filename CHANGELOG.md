@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.28.2] - 2026-10-15
+
+### Fixed
+- **Studio Console at large text:** Play, Previous, Next and the volume fader stay on screen with a large system font. The title and format chips scroll in the space left instead of pushing the controls off the bottom, and the fader's dB readout stays on one line.
+
 ## [3.28.1] - 2026-10-15
 
 ### Changed
