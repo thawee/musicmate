@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private boolean isScrollStoppingTouch = false;
     private volatile boolean busy;
     private Track previouslyPlaying;
+    private long artworkRequestGeneration;
     private PlaybackState lastPlaybackState;
 
     private PlaybackService playbackService;
@@ -231,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private void setNowPlaying(Track song, PlaybackState playbackState) {
         runOnUiThread(() -> {
             PlaybackState.State newStateEnum = playbackState != null ? playbackState.currentState : null;
-            boolean songChanged = (song != null && !song.equals(previouslyPlaying));
+            boolean songChanged = !java.util.Objects.equals(song, previouslyPlaying);
             lastPlaybackState = playbackState;
             lastStateEnum = newStateEnum;
 
@@ -254,6 +255,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
             nps.getPlaybackState().setValue(playbackState != null ? playbackState : new PlaybackState());
             nps.getTrack().setValue(song);
+            if (songChanged) {
+                artworkRequestGeneration++;
+                nps.getAlbumArt().setValue(null);
+            }
             if (song != null) {
                 nps.getDurationMs().setValue((long) (song.getAudioDuration() * 1000.0));
                 nps.getProgressMs().setValue(playbackState != null ? playbackState.currentPositionSecond * 1000L : 0L);
@@ -278,27 +283,34 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
                 nps.getSpecsFileSize().setValue(song.getFileSize() > 0 ? android.text.format.Formatter.formatFileSize(this, song.getFileSize()) : "");
 
-                // Coil Image Loading into state.albumArt
-                coil3.request.ImageRequest imgRequest = apincer.android.mmate.coil3.CoverartFetcher.builder(this, song)
-                        .data(song)
-                        .size(800, 800)
-                        .target(new coil3.target.Target() {
-                            @Override
-                            public void onSuccess(coil3.Image result) {
-                                if (result instanceof coil3.BitmapImage) {
-                                    nps.getAlbumArt().setValue(((coil3.BitmapImage) result).getBitmap());
+                if (songChanged && !isDestroyed() && !isFinishing()) {
+                    long requestGeneration = artworkRequestGeneration;
+                    coil3.request.ImageRequest imgRequest = apincer.android.mmate.coil3.CoverartFetcher.builder(this, song)
+                            .data(song)
+                            .size(800, 800)
+                            .target(new coil3.target.Target() {
+                                @Override
+                                public void onSuccess(coil3.Image result) {
+                                    if (requestGeneration == artworkRequestGeneration
+                                            && !isDestroyed() && !isFinishing()
+                                            && result instanceof coil3.BitmapImage) {
+                                        nps.getAlbumArt().setValue(((coil3.BitmapImage) result).getBitmap());
+                                    }
                                 }
-                            }
-                            @Override
-                            public void onError(coil3.Image error) {
-                                nps.getAlbumArt().setValue(null);
-                            }
-                            @Override
-                            public void onStart(coil3.Image placeholder) {
-                            }
-                        })
-                        .build();
-                coil3.SingletonImageLoader.get(this).enqueue(imgRequest);
+                                @Override
+                                public void onError(coil3.Image error) {
+                                    if (requestGeneration == artworkRequestGeneration
+                                            && !isDestroyed() && !isFinishing()) {
+                                        nps.getAlbumArt().setValue(null);
+                                    }
+                                }
+                                @Override
+                                public void onStart(coil3.Image placeholder) {
+                                }
+                            })
+                            .build();
+                    coil3.SingletonImageLoader.get(this).enqueue(imgRequest);
+                }
             } else {
                 nps.getAlbumArt().setValue(null);
                 nps.getSpecsVerdict().setValue("");
@@ -621,7 +633,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 hasActiveFilter || currentCriteria.isSearchMode());
         int count = (isTopLevelCategoryDir || hasActiveFilter) ? apincer.android.mmate.ui.compose.ListInterop.getTracks().size()
                 : ((stats != null) ? stats.getTotalCount() : apincer.android.mmate.ui.compose.ListInterop.getTracks().size());
-        long totalSize = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum() : ((stats != null) ? stats.getTotalSize() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToLong(Track::getFileSize).sum());
         double totalDuration = hasActiveFilter ? apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum() : ((stats != null) ? stats.getTotalDuration() : apincer.android.mmate.ui.compose.ListInterop.getTracks().stream().mapToDouble(Track::getAudioDuration).sum());
 
         String statText = "";
@@ -630,8 +641,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 statText = StringUtils.formatSongSize(count) + (count == 1 ? " Song" : " Songs");
             }
 
-            if (isEmpty(currentCriteria.getFilterType()) && count > 0) {
-                statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration) + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
+            if (count > 0) {
+                statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration);
             }
         } else {
             if (count > 0) {
@@ -643,19 +654,14 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
                     unitTitle = count == 1 ? "Genre" : "Genres";
                 } else if (isTopLevelCategoryDir) {
-                    // e.g. Audio Quality lists categories (Hi-Res, CD, Compressed), not tracks
+                    // e.g. Audio Quality lists categories (Hi-Res, Lossless, Lossy), not tracks
                     unitTitle = count == 1 ? "Category" : "Categories";
                 } else {
                     unitTitle = count == 1 ? "Track" : "Tracks";
                 }
                 statText = StringUtils.formatSongSize(count) + " " + unitTitle;
-                if (stats != null && SearchCriteria.TYPE.LIBRARY.equals(type) && isEmpty(currentCriteria.getFilterType())) {
+                if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
                     statText = statText + SYMBOL_ENC_SEP + playtimeLabel(totalDuration);
-                    // Whole-library size was nearly always cut off beside Play, so About shows it;
-                    // search results are short enough to keep theirs
-                    if (currentCriteria.isSearchMode()) {
-                        statText = statText + SYMBOL_ENC_SEP + StringUtils.formatStorageSize(totalSize);
-                    }
                 }
             }
         }
@@ -677,10 +683,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 || !SearchCriteria.TYPE.LIBRARY.equals(type) || !isEmpty(currentCriteria.getKeyword()));
     }
 
-    /**
-     * "22.9 Days of Music": a bare "22.9 Days" did not read as total playing time.
-     * In search results it comes before the storage size, so truncation drops the size first.
-     */
+    /** "22.9 Days of Music": a bare "22.9 Days" did not read as total playing time. */
     private static String playtimeLabel(double totalSeconds) {
         return StringUtils.formatDuration(totalSeconds, true) + " of Music";
     }
@@ -764,6 +767,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     protected void onDestroy() {
+        artworkRequestGeneration++;
         scrollHandler.removeCallbacksAndMessages(null);
         if (playbackStateSubscription != null) {
             try {
