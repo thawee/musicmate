@@ -48,6 +48,9 @@ class AndroidMusicFileAccessTest {
         fun grantMusicFolder() {
             assertFalse("Deny all-files access first: adb shell appops set apincer.android.mmate MANAGE_EXTERNAL_STORAGE deny",
                 Environment.isExternalStorageManager())
+            assertEquals("Grant audio first: adb shell pm grant apincer.android.mmate android.permission.READ_MEDIA_AUDIO",
+                android.content.pm.PackageManager.PERMISSION_GRANTED,
+                context.checkSelfPermission(android.Manifest.permission.READ_MEDIA_AUDIO))
             // Always go through the picker, so the grant flow itself is tested
             for (permission in context.contentResolver.persistedUriPermissions) {
                 context.contentResolver.releasePersistableUriPermission(permission.uri,
@@ -131,6 +134,34 @@ class AndroidMusicFileAccessTest {
         }
         assertEquals("No temp file may be left", listOf("01 Song.flac", "02 Song.dsf", "03 Song.mp3"), names(album))
         assertFalse("A finished replace leaves no journal", journal.exists())
+    }
+
+    /** The Play build scans and streams FLAC and MP3 by path, so files written through the grant must stay readable. */
+    private fun readableByPath(file: File): Boolean {
+        repeat(10) {
+            try {
+                FileInputStream(file).use { it.read() }
+                return true
+            } catch (e: IOException) {
+                Thread.sleep(300)
+            }
+        }
+        return false
+    }
+
+    @Test
+    fun editedAndMovedAudioStaysReadableByPath() {
+        val flac = File(album, "01 Song.flac")
+        access.edit(flac) { working ->
+            val audio = AudioFileIO.read(working)
+            audio.tagOrCreateAndSetDefault.setField(FieldKey.TITLE, "Edited")
+            audio.commit()
+        }
+        assertTrue(readableByPath(flac))
+
+        val moved = File(base, "Moved/01 Moved.mp3")
+        assertTrue(access.move(File(album, "03 Song.mp3"), moved, false))
+        assertTrue(readableByPath(moved))
     }
 
     @Test

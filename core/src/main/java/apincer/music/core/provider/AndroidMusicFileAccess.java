@@ -155,9 +155,9 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
             throw new IOException("Folder does not exist: " + doc.file.getParentFile());
         }
         String name = doc.file.getName();
-        String tempName = name + TEMP_SUFFIX;
+        // Unique per replace, so two replaces of one file never share a temp
+        String tempName = name + "." + Long.toHexString(System.nanoTime()) + TEMP_SUFFIX;
         Doc temp = parent.child(tempName);
-        if (temp.exists()) DocumentsContract.deleteDocument(resolver, temp.uri);
 
         ReplaceJournal.Entry entry = new ReplaceJournal.Entry(doc.file.getAbsolutePath(), tempName);
         journal.add(entry);
@@ -282,16 +282,22 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
             renameExact(source.uri, name);
             return true;
         }
+        // Rename first, so a failed move leaves the file where the library expects it
+        Uri current = source.uri;
+        boolean renamed = !source.file.getName().equals(name);
+        if (renamed) {
+            if (sourceParent.child(name).exists()) return false; // the new name is taken here; copy instead
+            current = renameExact(source.uri, name);
+        }
         Uri moved;
         try {
-            moved = DocumentsContract.moveDocument(resolver, source.uri, sourceParent.uri, targetParent.uri);
+            moved = DocumentsContract.moveDocument(resolver, current, sourceParent.uri, targetParent.uri);
         } catch (Exception e) {
             Log.w(TAG, "moveDocument failed, copying instead: " + source.file, e);
-            return false;
+            moved = null;
         }
-        if (moved == null) return false;
-        if (!source.file.getName().equals(name)) renameExact(moved, name);
-        return true;
+        if (moved == null && renamed) renameExact(current, source.file.getName());
+        return moved != null;
     }
 
     @Override
