@@ -1,7 +1,7 @@
 [versions]
 
 # SDK & Toolchain
-minSdkVersion = "36"
+minSdkVersion = "34"
 targetSdkVersion = "37"
 compileSdkVersion = "37"
 buildTools = "37.0.0"

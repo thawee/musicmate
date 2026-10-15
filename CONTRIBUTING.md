@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Music Mate! This guide will help 
 
 *   **JDK 17:** The project requires Java 17.
 *   **Android Studio:** Latest stable version (Ladybug or higher recommended).
-*   **Android SDK:** Target API 36 (Android 16).
+*   **Android SDK:** Minimum API 34 (Android 14), target API 37.
 
 ## 🏗 Project Structure
 

@@ -33,7 +33,7 @@ MusicMate is a music player and library manager for Android, made for people wit
 1. Download `MusicMate-v<version>.apk` from the latest [GitHub release](https://github.com/thawee/musicmate/releases/latest).
 2. Open it on your phone and allow installing from your browser or file manager when Android asks.
 
-MusicMate needs **Android 16** or newer.
+MusicMate needs **Android 14** or newer.
 
 Releases before 3.24.0 published an unsigned APK that Android refuses to install. If you have a copy of MusicMate from anywhere other than these releases, uninstall it once before installing. After that, each new release updates in place and keeps your library.
 
