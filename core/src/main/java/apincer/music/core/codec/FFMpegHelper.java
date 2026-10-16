@@ -4,7 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import com.antonkarpenko.ffmpegkit.FFmpegKit;
+import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
 import com.antonkarpenko.ffmpegkit.FFmpegSession;
+import com.antonkarpenko.ffmpegkit.Level;
+import com.antonkarpenko.ffmpegkit.LogRedirectionStrategy;
 import com.antonkarpenko.ffmpegkit.ReturnCode;
 import com.antonkarpenko.ffmpegkit.Session;
 
@@ -15,12 +18,20 @@ import java.util.Locale;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.provider.FileSystem;
-import apincer.music.core.utils.LogHelper;
 import apincer.android.utils.FileUtils;
 
 public class FFMpegHelper {
 
     private static final String TAG = "FFMpegHelper";
+
+    static {
+        // FFmpeg's log level is process-wide (this call and any command's -loglevel set it), and FFmpegKit
+        // drops lines above it before they reach the session. The quality analyzer, ReplayGain and
+        // FFMPegReader parse session output, often while other commands run, so the level stays at INFO
+        // and no command lowers it; logcat stays quiet through the redirection strategy instead.
+        FFmpegKitConfig.setLogLevel(Level.AV_LOG_INFO);
+        FFmpegKitConfig.setLogRedirectionStrategy(LogRedirectionStrategy.NEVER_PRINT_LOGS);
+    }
 
     /** The "-i" argument for {@code path}; through the granted folder when its path cannot be read. Good for one run. */
     public static String input(String path) {
@@ -47,7 +58,6 @@ public class FFMpegHelper {
             String options = " -an -c:v copy -f image2 ";
 
             String cmd = " -hide_banner -nostats -y -i " + input(path) + " " + options + " \"" + partial.getAbsolutePath() + "\"";
-            LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (!ReturnCode.isSuccess(session.getReturnCode()) || partial.length() == 0) {
                 return false;
@@ -80,7 +90,6 @@ public class FFMpegHelper {
         try {
             String options = " -vn -codec:a copy ";
             String cmd = " -hide_banner -nostats -y -i " + input(tag.getPath()) + " " + options + " \"" + output.getAbsolutePath() + "\"";
-            LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (!ReturnCode.isSuccess(session.getReturnCode())) return false;
             FileSystem.access().writeAtomically(new File(tag.getPath()), out -> Files.copy(output.toPath(), out));
@@ -299,7 +308,6 @@ public class FFMpegHelper {
         String withArt = artOptions + options.replace(" -vn ", " ");
 
         try {
-            LogHelper.setFFMpegOff();
             if (runConversion(srcPath, withArt, tmpTarget)
                     || runConversion(srcPath, options, tmpTarget)) {
                 Log.i(TAG, "Conversion successful: " + srcPath);

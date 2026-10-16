@@ -71,7 +71,8 @@ public class SpectrogramGenerator {
 
         String command =
                 "-y " +
-                        "-hide_banner -loglevel error " +
+                        // No -loglevel: it sets FFmpeg's process-wide level and would silence the quality analyzer running alongside
+                        "-hide_banner " +
                         "-i " + apincer.music.core.codec.FFMpegHelper.input(inputPath) + " " +
                         resampleArg +
                         "-ac 1 "+  // merge to 1 channel for speed

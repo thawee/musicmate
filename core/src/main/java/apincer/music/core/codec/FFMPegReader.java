@@ -50,7 +50,6 @@ import java.util.regex.Pattern;
 
 import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.Track;
-import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -143,10 +142,8 @@ public static class Loudness {
     public AudioTag extractTagFromFile(String path) {
 
         String cmd ="-hide_banner -nostats -i "+FFMpegHelper.input(path)+" -f null -";
-        LogHelper.setFFMpegOn();
         FFmpegSession session = FFmpegKit.execute(cmd);
         if (ReturnCode.isSuccess(session.getReturnCode())) {
-            LogHelper.setFFMpegOff();
             String data = getFFmpegOutputData(session);
             String output = session.getOutput();
             AudioTag tag = new AudioTag(generateId(path,0));
@@ -160,7 +157,6 @@ public static class Loudness {
             parseTagsInfo(tag);
             return tag;
         }else {
-            LogHelper.setFFMpegOff();
             // try to get from file name
             AudioTag tag = new AudioTag(generateId(path, 0));
             String data = getFFmpegOutputData(session);

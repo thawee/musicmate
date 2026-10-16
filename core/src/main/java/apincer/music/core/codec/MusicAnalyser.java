@@ -1,6 +1,5 @@
 package apincer.music.core.codec;
 
-import static apincer.music.core.utils.LogHelper.setFFMpegOff;
 import static apincer.music.core.utils.Utils.runGcIfNeeded;
 
 import android.content.Context;
@@ -1080,7 +1079,6 @@ public class MusicAnalyser {
                 FFMpegHelper.input(inputPath),
                 outputPath
         );
-        setFFMpegOff();
         FFmpegSession session = FFmpegKit.execute(command);
 
         try {

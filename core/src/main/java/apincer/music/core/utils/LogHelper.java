@@ -1,7 +1,5 @@
 package apincer.music.core.utils;
 
-import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,14 +41,6 @@ public class LogHelper {
        // setLogLevel("org.jupnp.transport.impl.NetworkAddressFactoryImpl", Level.ALL);
        // setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.CONFIG);
         setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.SEVERE);
-    }
-
-    public static void setFFMpegOn() {
-        FFmpegKitConfig.setLogLevel(com.antonkarpenko.ffmpegkit.Level.AV_LOG_INFO);
-    }
-
-    public static void setFFMpegOff() {
-        FFmpegKitConfig.setLogLevel(com.antonkarpenko.ffmpegkit.Level.AV_LOG_QUIET);
     }
 
     public static String getTag(Class cls) {
