@@ -674,9 +674,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     public void stopServers() {
+        stopServers(true);
+    }
+
+    /** {@code updateForeground} is false from onDestroy, which must not re-post a notification. */
+    private void stopServers(boolean updateForeground) {
         mediaHub.stop();
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
-        setServerForeground(false);
+        if (updateForeground) setServerForeground(false);
     }
 
     /**
@@ -685,6 +690,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
      * visible changes.
      */
     private void setServerForeground(boolean serverRunning) {
+        // Out of the foreground (media3 drops it when playback pauses): nothing to drop, never re-enter
+        if (!serverRunning && getForegroundServiceType() == 0) return;
         int types = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
                 | (serverRunning ? android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE : 0);
         try {
@@ -761,7 +768,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
 
         // Ensure everything is cleaned up if the service is destroyed.
-        stopServers();
+        stopServers(false);
 
         try {
             unregisterReceiver(becomingNoisyReceiver);
