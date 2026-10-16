@@ -127,7 +127,6 @@
     <string name="preferences_sub_collection">Collections</string>
     <string name="file_explorer_label">Folder</string>
     <string name="app_statistics">Statistics</string>
-    <string name="encoding_format">Encoding Format:</string>
     <string name="editor_label_language">Language</string>
     <string name="editor_info">Music information</string>
     <string name="enter_title">Enter title</string>
@@ -255,48 +254,6 @@
     <string name="encoding_mqa_blue_header">MQA Studio (Blue):</string>
     <string name="encoding_mqa_blue_detail">Directly from Mastering Engineers</string>
     -->
-
-    <string name="encoding_hq_header">Lossy Compressed Audio</string>
-    <string name="encoding_hq_desc">Efficient compressed audio that saves space while maintaining good sound quality.</string>
-    <string name="encoding_hq_format">MP3, AAC (M4A), OGG</string>
-    <string name="encoding_hq_resolution">16-bit • 44.1 kHz (up to 320kbps)</string>
-    <string name="encoding_hq_recommended">Casual Listening, Podcasts, Radio</string>
-
-    <string name="encoding_cd_header">CD Quality</string>
-    <string name="encoding_cd_desc">Lossless audio identical to the original compact disc.</string>
-    <string name="encoding_cd_format">FLAC, ALAC, WAV, AIFF</string>
-    <string name="encoding_cd_resolution">16–bit • 44.1–48 kHz</string>
-    <string name="encoding_cd_recommended">Pop, Rock, Country, Traditional</string>
-
-    <string name="encoding_cd_ext_header">Studio 24-bit Quality</string>
-    <string name="encoding_cd_ext_desc">A step above standard CD, offering greater dynamic headroom.</string>
-    <string name="encoding_cd_ext_format">FLAC, ALAC, WAV, AIFF</string>
-    <string name="encoding_cd_ext_resolution">24-bit • 44.1–88.2 kHz</string>
-    <string name="encoding_cd_ext_recommended">Modern Pop, Electronic, R&amp;B</string>
-
-    <string name="encoding_hires_header">Hi-Res Audio</string>
-    <string name="encoding_hires_desc">High-resolution studio master audio with greater detail and dynamic range.</string>
-    <string name="encoding_hires_format">FLAC, ALAC, WAV, AIFF</string>
-    <string name="encoding_hires_resolution">24-bit • 96–384 kHz</string>
-    <string name="encoding_hires_recommended">Classical, Jazz, Acoustic</string>
-
-    <string name="encoding_dsd_header">DSD Audio</string>
-    <string name="encoding_dsd_desc">Ultra-high fidelity format known for smooth, analog-like sound reproduction.</string>
-    <string name="encoding_dsd_format">DSF, DFF</string>
-    <string name="encoding_dsd_resolution">DSD64 (2.8MHz) to DSD512 (22.5MHz)</string>
-    <string name="encoding_dsd_recommended">Audiophile Recordings, Classical, Jazz</string>
-
-    <string name="encoding_mqa_header">MQA (Master Quality Authenticated)</string>
-    <string name="encoding_mqa_desc">Master quality audio optimized for efficient streaming and playback.</string>
-    <string name="encoding_mqa_format">MQA Encoded</string>
-    <string name="encoding_mqa_resolution">Unfolds to 24-bit / 352.8 kHz</string>
-    <string name="encoding_mqa_recommended">Tidal Streams, Studio Masters</string>
-
-    <string name="encoding_mqa_green_header">MQA Verified</string>
-    <string name="encoding_mqa_green_detail">The file is authenticated and matches the original master.</string>
-
-    <string name="encoding_mqa_blue_header">MQA Studio</string>
-    <string name="encoding_mqa_blue_detail">Approved by the artist or studio as the definitive master.</string>
 
     <string name="label_audio_quality">Sound Quality</string>
     <string name="label_file_quality">File Quality</string>
