@@ -250,19 +250,48 @@ public class FileSystem {
         return access.move(new File(path), new File(newPath), false);
     }
 
-    /** A missing volume/directory is unavailable, not evidence of file deletion. */
+    /**
+     * True only when the file is provably gone: its nearest existing folder lists no entry on the way to
+     * it. That folder may be a few levels up (an album or artist folder deleted outside the app), but
+     * never above the storage volume's root, and only while that volume is mounted: an unmounted SD card
+     * or a missing volume is unavailable, not evidence of deletion.
+     */
     public static boolean isConfirmedMissingFile(String path) {
         if (path == null || path.isEmpty()) return false;
-        File file = new File(path);
+        return isConfirmedMissingFile(path, volumeRoot(new File(path).getAbsoluteFile()));
+    }
+
+    /** As {@link #isConfirmedMissingFile(String)}; with no known volume root only the file's own folder counts. */
+    static boolean isConfirmedMissingFile(String path, File volumeRoot) {
+        File file = new File(path).getAbsoluteFile();
         if (file.exists()) return false;
-        File parent = file.getAbsoluteFile().getParentFile();
-        if (parent == null || !parent.isDirectory() || !parent.canRead()) return false;
-        String[] entries = parent.list();
+        File child = file;
+        File folder = file.getParentFile();
+        if (volumeRoot != null) {
+            if (!volumeRoot.isDirectory()) return false;
+            String root = volumeRoot.getAbsolutePath();
+            while (folder != null && !folder.exists()) {
+                if (!folder.getPath().startsWith(root + File.separator)) return false;
+                child = folder;
+                folder = folder.getParentFile();
+            }
+            if (folder == null || !(folder.getPath() + File.separator).startsWith(root + File.separator)) return false;
+        }
+        if (folder == null || !folder.isDirectory() || !folder.canRead()) return false;
+        String[] entries = folder.list();
         if (entries == null) return false;
         for (String entry : entries) {
-            if (entry.equals(file.getName())) return false;
+            if (entry.equals(child.getName())) return false;
         }
         return true;
+    }
+
+    /** The storage volume a path is on (/storage/emulated/0, /storage/1234-ABCD), or null for any other path. */
+    static File volumeRoot(File file) {
+        String[] parts = file.getPath().split("/");
+        if (parts.length < 4 || !parts[0].isEmpty() || !"storage".equals(parts[1])) return null;
+        if ("emulated".equals(parts[2])) return parts.length > 4 ? new File("/storage/emulated/" + parts[3]) : null;
+        return new File("/storage/" + parts[2]);
     }
 
     /** Moves completed output without replacing any existing recording. */
