@@ -1485,6 +1485,8 @@ public class TagsActivity extends AppCompatActivity {
     public void doRemoveEmbedCoverart() {
         List<Track> items = new ArrayList<>(getEditItems());
         if (items.isEmpty()) return;
+        if (items.size() > 1
+                && !apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.BATCH_TAGS)) return;
         showDestructiveDialog(new MaterialAlertDialogBuilder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
                 .setTitle("Remove embedded cover art?")
                 .setMessage(items.size() == 1
