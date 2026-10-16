@@ -2047,6 +2047,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private void doMoveMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
+        if (!apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.ORGANIZE)) return;
         if (!MusicFolderAccess.hasOrganizeAccess(this)) {
             // Play build: Organize writes into Music, which needs a folder grant
             pendingFolderGrantKind = GRANT_ORGANIZE;

@@ -248,6 +248,9 @@ class TagsEditorFragment : Fragment() {
 
     fun doSaveMediaItem(onComplete: Runnable?) {
         val host = tagsActivity
+        // Tag writes to more than one file are Pro
+        if ((host.editItems?.size ?: 0) > 1 &&
+            !apincer.android.mmate.pro.ProGate.check(requireActivity(), apincer.android.mmate.pro.ProFeature.BATCH_TAGS)) return
         val model = host.viewModel
         host.startProgressBar()
         requireActivity().currentFocus?.clearFocus()

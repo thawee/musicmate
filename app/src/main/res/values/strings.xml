@@ -535,6 +535,24 @@
     <string name="directories_grant_explanation">Pick each folder in Android\'s folder picker so MusicMate can edit tags, covers and DSD files in it.</string>
     <string name="directories_add_folder">Add folder</string>
     <string name="about_open_source_licenses">Open-source licenses</string>
+    <!-- MusicMate Pro -->
+    <string name="pro_title">MusicMate Pro</string>
+    <string name="pro_feature_quality_report">The full quality report</string>
+    <string name="pro_feature_batch_tags">Saving tags to several songs at once</string>
+    <string name="pro_feature_musicbrainz">MusicBrainz lookup</string>
+    <string name="pro_feature_organize">Organize</string>
+    <string name="pro_needs">%1$s is part of MusicMate Pro.</string>
+    <string name="pro_includes">Pro adds the full quality report (spectrogram, band analysis and DR details), saving tags to many songs at once, MusicBrainz lookup and Organize. It is a one-time purchase. Playing, streaming, quality labels and editing one song at a time stay free.</string>
+    <string name="pro_buy">Get Pro</string>
+    <string name="pro_buy_price">Get Pro for %1$s</string>
+    <string name="pro_restore">Restore purchase</string>
+    <string name="pro_not_now">Not now</string>
+    <string name="pro_unavailable">Google Play cannot sell MusicMate Pro right now. Try again later.</string>
+    <string name="pro_checking">Checking your purchases with Google Play…</string>
+    <string name="pro_batch_notice">Saving tags to several songs at once needs MusicMate Pro.</string>
+    <string name="pro_report_locked">Spectrogram, band analysis and DR details are in MusicMate Pro.</string>
+    <string name="pro_active">MusicMate Pro is active.</string>
+    <string name="pro_included">All Pro features are included in this build.</string>
     <string name="directories_empty">No folders yet. Tap Add folder to choose where your music is.</string>
     <string name="directories_allow_access">Allow access</string>
     <string name="directories_no_access">No access yet</string>

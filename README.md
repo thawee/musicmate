@@ -37,6 +37,12 @@ MusicMate needs **Android 14** or newer.
 
 Releases before 3.24.0 published an unsigned APK that Android refuses to install. If you have a copy of MusicMate from anywhere other than these releases, uninstall it once before installing. After that, each new release updates in place and keeps your library.
 
+### MusicMate Pro
+
+The Google Play version of MusicMate is free, with a one-time **MusicMate Pro** purchase that adds the full quality report (spectrogram, band analysis and DR details), saving tags to many songs at once, MusicBrainz lookup and Organize. Playing, streaming, quality labels and editing one song at a time stay free.
+
+The version on this page includes every Pro feature, because MusicMate is open source. If it is useful to you, buying Pro on Google Play is the way to support the project.
+
 ---
 
 ## Getting started

@@ -219,6 +219,8 @@ dependencies {
     implementation project(':library:library')
     implementation project(':library:crashreporter')
     implementation libs.aboutlibraries.compose.m3
+    // Google Play purchases exist only in the Play build; the GitHub build has every Pro feature
+    playImplementation libs.play.billing
 
     // Testing
     testImplementation libs.junit

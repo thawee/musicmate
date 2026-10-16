@@ -2,7 +2,7 @@
 
 Effective: 2026-10-16
 
-MusicMate is a music library manager, player and media server that runs on your device. It has no accounts, no ads, no analytics and no tracking, and the developer receives no data from it.
+MusicMate is a music library manager, player and media server that runs on your device. It has no accounts, no ads, no analytics and no tracking. The app sends the developer no data; if you buy Pro, Google Play handles the sale (see Purchases).
 
 ## What stays on your device
 
@@ -23,6 +23,10 @@ MusicMate contacts these services only when you use the feature that needs them:
 | Search Song on Web | Your web browser and its search engine | The search text you see |
 
 These services receive your device's IP address, as with any internet request. Their own policies apply to what they receive: [MusicBrainz and the Cover Art Archive (MetaBrainz)](https://metabrainz.org/privacy), [Wikipedia (Wikimedia)](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy), and for AcoustID see [acoustid.org](https://acoustid.org). All of these connections use HTTPS.
+
+## Purchases (Google Play version)
+
+MusicMate Pro is a one-time purchase sold through Google Play. Google Play handles the payment under [Google's terms and privacy policy](https://policies.google.com/privacy); MusicMate never sees your payment details. On your device, MusicMate asks Google Play whether you own Pro and remembers the answer so Pro works offline. Google Play gives the developer the sales records it gives every seller. The version from GitHub includes Pro and has no purchases.
 
 ## Your local network
 

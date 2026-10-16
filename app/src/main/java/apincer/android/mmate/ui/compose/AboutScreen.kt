@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -466,6 +467,27 @@ fun AboutScreen(
                         Icon(painterResource(id = R.drawable.ic_baseline_open_in_new_24), contentDescription = null, tint = Color(0xFF00E5FF), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.about_github_source), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
+
+                    val proStore = remember { apincer.android.mmate.pro.Pro.store(ctx) }
+                    val proUnlocked by proStore.isPro.collectAsState()
+                    if (proUnlocked || !proStore.sellsPro) {
+                        Text(
+                            text = stringResource(if (proStore.sellsPro) R.string.pro_active else R.string.pro_included),
+                            color = MusicMateDesignTokens.Text.Secondary,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        OutlinedButton(
+                            onClick = { (ctx as? android.app.Activity)?.let { apincer.android.mmate.pro.ProGate.show(it, null) } },
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Brand.Gold),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.pro_title), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        }
                     }
 
                     OutlinedButton(

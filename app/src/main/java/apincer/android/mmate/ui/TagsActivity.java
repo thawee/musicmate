@@ -388,6 +388,11 @@ public class TagsActivity extends AppCompatActivity {
         if (tagIds != null && tagIds.length > 0 && viewModel.getEditItemsFlow().getValue().isEmpty()) {
             loadMusicTagsFromDb(tagIds);
         }
+        if (savedInstanceState == null && tagIds != null && tagIds.length > 1
+                && !apincer.android.mmate.pro.Pro.isPro(this)) {
+            // Say so before any editing, not on Save
+            Toast.makeText(this, R.string.pro_batch_notice, Toast.LENGTH_LONG).show();
+        }
 
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
@@ -797,6 +802,7 @@ public class TagsActivity extends AppCompatActivity {
      * Attempts to automatically fetch tags using MusicBrainz (by text) or AcoustID (by audio fingerprint)
      */
     private void doAutoTag() {
+        if (!apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.MUSICBRAINZ)) return;
         List<Track> items = getEditItems();
         if (items.isEmpty()) return;
         
@@ -888,6 +894,7 @@ public class TagsActivity extends AppCompatActivity {
      * Interactive search and match for a single track's tags.
      */
     private void doSearchAndMatchTags() {
+        if (!apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.MUSICBRAINZ)) return;
         List<Track> items = getEditItems();
         if (items.isEmpty()) return;
         if (items.size() > 1) {
@@ -1275,6 +1282,9 @@ public class TagsActivity extends AppCompatActivity {
 
     public void doSaveMediaItemsDirectly(@Nullable Runnable onComplete) {
         if (saveVisualState == SAVE_IN_PROGRESS) return;
+        // Tag writes to more than one file are Pro (Save, Smart Clean, Tidy Tags and From File all save here)
+        if (getEditItems().size() > 1
+                && !apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.BATCH_TAGS)) return;
         if (activeFragment instanceof TagsEditorFragment fragment) {
             if (onComplete != null) {
                 fragment.doSaveMediaItem(onComplete);
@@ -1655,8 +1665,16 @@ public class TagsActivity extends AppCompatActivity {
 
         qualityScore.setText(R.string.analyzing);
 
+        // Free: the verdict. Pro: the spectrogram and the analytics behind it.
+        final boolean fullReport = apincer.android.mmate.pro.Pro.isPro(this);
+        if (!fullReport) {
+            spectrumView.setVisibility(GONE);
+            analyticsLabel.setText(getString(R.string.pro_report_locked));
+        }
+
         if (spinner != null) spinner.setVisibility(VISIBLE);
-        final boolean[] completedNext = {false};
+        // Without the spectrogram, the verdict is the only result to wait for
+        final boolean[] completedNext = {!fullReport};
 
         AudioAuthenticityAnalyzer.analyze(
                 track.getPath(),
@@ -1682,6 +1700,11 @@ public class TagsActivity extends AppCompatActivity {
 
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));
+
+                            if (!fullReport) {
+                                if (spinner != null) spinner.setVisibility(GONE);
+                                return;
+                            }
 
                             TextBuilder analyticsSpan = new TextBuilder(getApplicationContext());
                             analyticsSpan.append("\n");
@@ -1716,7 +1739,7 @@ public class TagsActivity extends AppCompatActivity {
                     }
                 });
 
-        SpectrogramGenerator.generate(getApplicationContext(), track.getPath(), track.getAudioEncoding (), track.getAudioBitsDepth(), (int) track.getAudioSampleRate(),
+        if (fullReport) SpectrogramGenerator.generate(getApplicationContext(), track.getPath(), track.getAudioEncoding (), track.getAudioBitsDepth(), (int) track.getAudioSampleRate(),
                 new SpectrogramGenerator.Callback() {
 
                     @Override
@@ -1769,7 +1792,13 @@ public class TagsActivity extends AppCompatActivity {
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> alert.dismiss());
         }
-        if (btnOK != null) {
+        if (btnOK instanceof com.google.android.material.button.MaterialButton okButton && !fullReport) {
+            okButton.setText(R.string.pro_buy);
+            okButton.setOnClickListener(v -> {
+                alert.dismiss();
+                apincer.android.mmate.pro.ProGate.show(this, apincer.android.mmate.pro.ProFeature.QUALITY_REPORT);
+            });
+        } else if (btnOK != null) {
             btnOK.setOnClickListener(v -> alert.dismiss());
         }
         alert.show();
@@ -2013,6 +2042,7 @@ public class TagsActivity extends AppCompatActivity {
      * must be written to the files first; otherwise the DB and files can diverge.
      */
     private void doMoveMediaItemsAfterSave() {
+        if (!apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.ORGANIZE)) return;
         if (!hasUnsavedEdits()) {
             doMoveMediaItems();
             return;
@@ -2039,6 +2069,7 @@ public class TagsActivity extends AppCompatActivity {
             });
 
     public void doMoveMediaItems() {
+        if (!apincer.android.mmate.pro.ProGate.check(this, apincer.android.mmate.pro.ProFeature.ORGANIZE)) return;
         if (!MusicFolderAccess.hasOrganizeAccess(this)) {
             MusicFolderAccess.askForOrganizeAccess(this, organizeGrantLauncher);
             return;
