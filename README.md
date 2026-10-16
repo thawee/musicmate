@@ -16,9 +16,9 @@ MusicMate is a music player and library manager for Android, made for people wit
 
 **Browse a large library.** Scroll thousands of songs without waiting. Find music by artist, genre, folder, playlist or audio quality, or search. Smart playlists such as Hi-Res or DR12+ fill themselves.
 
-**Play anywhere.** Play on the phone, bit-perfect through a USB DAC, or over Bluetooth with the codec shown (LDAC, aptX, AAC, SBC). Send music to a DLNA renderer such as a HiBy, WiiM or Eversolo, or hand it to another music app. One picker lists every option, and it updates as players appear on the network.
+**Play anywhere.** Play on the phone, through a USB DAC at the song's own sample rate when the DAC offers it, or over Bluetooth with the codec shown (LDAC, aptX, AAC, SBC). Send music to a DLNA renderer such as a HiBy, WiiM or Eversolo, or hand it to another music app. One picker lists every option, and it updates as players appear on the network.
 
-**See what you are hearing.** Music Center shows the track, the queue and the server in three tabs. The audio path shows the source file, how it travels, and where it plays, with sample rate, bit depth and whether the output is bit-perfect.
+**See what you are hearing.** Music Center shows the track, the queue and the server in three tabs. The audio path shows the source file, how it travels, and where it plays, with sample rate and bit depth.
 
 **Stream from your phone.** MusicMate runs a DLNA media server, so players and apps like mConnect or BubbleUPnP can browse and play your library directly, with no transcoding. It works on home Wi-Fi and on the phone's own hotspot. A web remote is available at `http://<phone-ip>:9000` in any browser.
 
