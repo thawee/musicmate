@@ -63,9 +63,9 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
         removeRetiredServerEnginePreference();
 
         // Library changes use paths with all-files access, and granted folders without it
+        // Usually installed already by MusicFileProvider, which Android creates first
         apincer.music.core.provider.AndroidMusicFileAccess fileAccess =
-                new apincer.music.core.provider.AndroidMusicFileAccess(this);
-        apincer.music.core.provider.FileSystem.setAccess(fileAccess);
+                apincer.music.core.provider.FileSystem.installAndroidAccess(this);
         MusicMateExecutors.execute(fileAccess::recover);
 
         // start music scan

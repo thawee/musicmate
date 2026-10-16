@@ -31,6 +31,18 @@ public class FileSystem {
         access = musicFileAccess;
     }
 
+    /**
+     * Installs the Android access once and returns it. The app calls this at start, and so does
+     * MusicFileProvider: Android publishes providers before Application.onCreate runs, so another
+     * app's request can arrive first and must not fall back to paths.
+     */
+    public static synchronized AndroidMusicFileAccess installAndroidAccess(Context context) {
+        if (access instanceof AndroidMusicFileAccess installed) return installed;
+        AndroidMusicFileAccess created = new AndroidMusicFileAccess(context);
+        access = created;
+        return created;
+    }
+
     public static boolean copyFile(Context context, final String source, final String target) {
         File newFile = new File(target);
         File file = new File(source);

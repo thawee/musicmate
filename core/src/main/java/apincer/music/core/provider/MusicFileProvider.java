@@ -21,6 +21,8 @@ public final class MusicFileProvider extends ContentProvider {
        // private static final String[] a = new String[]{"_display_name", "_size"};
        @Override
        public boolean onCreate() {
+           // Before Application.onCreate: a request from another app may already be on its way
+           FileSystem.installAndroidAccess(getContext());
            // Initialize WorkManager with the default configuration.
            WorkManager.initialize(
                    getContext(),
