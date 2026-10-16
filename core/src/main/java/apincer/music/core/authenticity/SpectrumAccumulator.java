@@ -70,6 +70,16 @@ public final class SpectrumAccumulator {
         return db;
     }
 
+    /** Level of every FFT bin in dB (bin k at k x sampleRate / SIZE Hz), same scale as {@link #bandsDb()}. */
+    public double[] binsDb() {
+        double scale = 1.0 / (Math.max(frames, 1) * sampleRate * windowPower);
+        double[] db = new double[power.length];
+        for (int k = 0; k < power.length; k++) {
+            db[k] = 10 * Math.log10(power[k] * scale + 1e-30);
+        }
+        return db;
+    }
+
     private void frame() {
         long first = samples - SIZE;
         for (int i = 0; i < SIZE; i++) {

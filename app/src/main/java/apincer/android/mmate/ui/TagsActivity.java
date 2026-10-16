@@ -1688,7 +1688,10 @@ public class TagsActivity extends AppCompatActivity {
                     public void onResult(AudioAnalysisResult r) {
 
                         runOnUiThread(() -> {
-                            String result = r.verdict;
+                            // The spectrum cannot see high-bitrate lossy encoding; the format says it outright
+                            String result = apincer.music.core.utils.TagUtils.isLossy(track)
+                                    ? "Lossy format (" + track.getAudioEncoding().toUpperCase(Locale.ROOT) + ")"
+                                    : r.verdict;
 
                             // Apply the formatted spannable text
                             qualityScore.setText(VerdictFormatter.format(getApplicationContext(), result));

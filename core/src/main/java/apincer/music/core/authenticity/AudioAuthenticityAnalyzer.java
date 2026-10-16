@@ -13,9 +13,10 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import apincer.music.core.codec.FFMpegHelper;
-import apincer.music.core.utils.MusicMateExecutors;
 
 /**
  * Verify Lossless: decodes 30 seconds of a track once and reads its upper spectrum for the marks that
@@ -27,6 +28,12 @@ public class AudioAuthenticityAnalyzer {
     /** Seconds analyzed, from 30 s in; from the start when the track is shorter. */
     static final int WINDOW_SECONDS = 30;
     private static final int START_SECONDS = 30;
+    /** Its own thread: on the shared pool a Measure DR batch would keep the dialog waiting. */
+    private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "verify-lossless");
+        t.setDaemon(true);
+        return t;
+    });
 
     public interface Callback {
         void onResult(AudioAnalysisResult result);
@@ -35,11 +42,11 @@ public class AudioAuthenticityAnalyzer {
 
     /** Analyzes {@code inputPath} off the calling thread; the callback also runs off the main thread. */
     public static void analyze(String inputPath, int sampleRate, int bitDepth, Callback callback) {
-        MusicMateExecutors.execute(() -> {
+        WORKER.execute(() -> {
             AudioAnalysisResult result;
             try {
                 result = analyzeNow(inputPath, bitDepth);
-            } catch (IOException | RuntimeException e) {
+            } catch (IOException | RuntimeException | LinkageError | OutOfMemoryError e) {
                 Log.e(TAG, "Analysis failed: " + inputPath, e);
                 callback.onError(e.getMessage() != null ? e.getMessage() : e.toString());
                 return;
@@ -115,7 +122,7 @@ public class AudioAuthenticityAnalyzer {
             r.verdict = "Can't tell: too short to analyze";
             return;
         }
-        SpectralCliffDetector.Finding finding = SpectralCliffDetector.classify(spectrum.bandsDb(), wav.sampleRate, r.bitDepth);
+        SpectralCliffDetector.Finding finding = SpectralCliffDetector.classify(spectrum.bandsDb(), spectrum.binsDb(), wav.sampleRate, r.bitDepth);
         r.kind = finding.kind;
         r.cutoffHz = finding.edgeHz;
         r.verdict = verdict(finding);

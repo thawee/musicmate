@@ -10,7 +10,8 @@ import java.util.Arrays;
  * upsampled from 44.1 kHz drops 50 dB or more within a kilohertz of 22.05 kHz (24 kHz from 48 kHz).
  * Lossy encoders low-pass the same way, lower down (about 16 to 20 kHz).</li>
  * <li><b>Images:</b> a cheap resampler leaves no cliff but mirrors the audible spectrum above
- * 22.05 kHz, rising with frequency, which no recording does.</li>
+ * 22.05 kHz: every harmonic at f reappears at 44.1 kHz - f. Compared bin by bin, which a smooth noise
+ * hump (DSD-sourced PCM) or real ultrasonic content never matches.</li>
  * </ul>
  *
  * <p>Natural recordings fall off gradually, often to almost nothing above 20 kHz, so the absence of
@@ -25,6 +26,8 @@ public final class SpectralCliffDetector {
     static final double DROP_DB = 30.0;
     /** dB above the format's rounding floor for there to be anything to judge. */
     static final double SIGNAL_DB = 12.0;
+    /** Correlation of fine structure across the edge: images 0.89 to 0.99, everything else 0.10 or less. */
+    static final double MIRROR_CORRELATION = 0.5;
     /** Lowest frequency searched for a cliff. */
     static final double SEARCH_FROM_HZ = 15000.0;
 
@@ -55,9 +58,10 @@ public final class SpectralCliffDetector {
 
     /**
      * @param bandsDb   power spectral density per {@link #BAND_HZ} band, from {@link SpectrumAccumulator}
+     * @param binsDb    the same spectrum per FFT bin, for the image test
      * @param bitDepth  the file's bit depth, which sets the rounding floor (16 when unknown)
      */
-    public static Finding classify(double[] bandsDb, int sampleRate, int bitDepth) {
+    public static Finding classify(double[] bandsDb, double[] binsDb, int sampleRate, int bitDepth) {
         double floor = quantizationFloorDb(sampleRate, bitDepth > 0 ? bitDepth : 16);
         double edge = findCliff(bandsDb, sampleRate, floor);
         boolean cliff = !Double.isNaN(edge);
@@ -68,8 +72,8 @@ public final class SpectralCliffDetector {
         if (sampleRate > 48000) {
             if (cliff && edge < 22600) return new Finding(Kind.UPSAMPLED_FROM_44, edge);
             if (cliff && edge < 24600) return new Finding(Kind.UPSAMPLED_FROM_48, edge);
-            if (mirrored(bandsDb, 22050)) return new Finding(Kind.UPSAMPLED_FROM_44_IMAGES, Double.NaN);
-            if (mirrored(bandsDb, 24000)) return new Finding(Kind.UPSAMPLED_FROM_48_IMAGES, Double.NaN);
+            if (mirrored(bandsDb, binsDb, sampleRate, 22050, floor)) return new Finding(Kind.UPSAMPLED_FROM_44_IMAGES, Double.NaN);
+            if (mirrored(bandsDb, binsDb, sampleRate, 24000, floor)) return new Finding(Kind.UPSAMPLED_FROM_48_IMAGES, Double.NaN);
             if (signal < SIGNAL_DB) return new Finding(Kind.CANT_TELL, Double.NaN);
             return new Finding(Kind.NO_SIGN_OF_UPSAMPLING, Double.NaN);
         }
@@ -105,19 +109,44 @@ public final class SpectralCliffDetector {
         return Double.NaN;
     }
 
-    /** Above the edge, the spectrum mirrors the one below it and rises with frequency. */
-    static boolean mirrored(double[] db, double edge) {
-        int n = 0;
-        double[] up = new double[38];
-        double[] down = new double[38];
-        double[] d = new double[38];
-        for (double x = 500; x < 10000; x += BAND_HZ) {
-            up[n] = level(db, edge + x, edge + x + BAND_HZ);
-            down[n] = level(db, edge - x - BAND_HZ, edge - x);
-            if (Double.isNaN(up[n]) || Double.isNaN(down[n])) return false;
-            d[n++] = x;
+    /**
+     * The fine structure from 0.5 to 10 kHz above the edge matches, bin by bin, the structure the same
+     * distance below it. Each side's level minus its running median over about 500 Hz is compared.
+     * Only when there is something above the edge: rounding residue can mirror too.
+     */
+    static boolean mirrored(double[] bandsDb, double[] binsDb, int sampleRate, double edge, double floor) {
+        if (level(bandsDb, edge + 500, edge + 10000) - floor < SIGNAL_DB) return false;
+        double hz = (double) sampleRate / SpectrumAccumulator.SIZE;
+        int n = (int) Math.ceil(9500 / hz);
+        if (edge + 500 + (n - 1) * hz >= sampleRate / 2.0) return false;
+        double[] up = new double[n];
+        double[] down = new double[n];
+        for (int i = 0; i < n; i++) {
+            double f = edge + 500 + i * hz;
+            up[i] = interpolate(binsDb, f / hz);
+            down[i] = interpolate(binsDb, (2 * edge - f) / hz);
         }
-        return correlation(up, down, n) > 0.8 && slope(d, up, n) > 0;
+        int half = Math.max(3, (int) (500 / hz) | 1) / 2;
+        return correlation(residual(up, half), residual(down, half), n) > MIRROR_CORRELATION;
+    }
+
+    private static double interpolate(double[] v, double index) {
+        int i = (int) Math.floor(index);
+        if (i < 0) return v[0];
+        if (i + 1 >= v.length) return v[v.length - 1];
+        return v[i] + (index - i) * (v[i + 1] - v[i]);
+    }
+
+    /** Each value minus the median of its neighbours within {@code half} on either side. */
+    private static double[] residual(double[] v, int half) {
+        double[] out = new double[v.length];
+        for (int i = 0; i < v.length; i++) {
+            double[] w = Arrays.copyOfRange(v, Math.max(0, i - half), Math.min(v.length, i + half + 1));
+            Arrays.sort(w);
+            int m = w.length / 2;
+            out[i] = v[i] - (w.length % 2 == 1 ? w[m] : (w[m - 1] + w[m]) / 2);
+        }
+        return out;
     }
 
     /** Median of the bands covering [lo, hi), NaN when none. */
@@ -152,17 +181,5 @@ public final class SpectralCliffDetector {
             bb += (b[i] - mb) * (b[i] - mb);
         }
         return aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0;
-    }
-
-    private static double slope(double[] x, double[] y, int n) {
-        double mx = 0, my = 0;
-        for (int i = 0; i < n; i++) { mx += x[i]; my += y[i]; }
-        mx /= n; my /= n;
-        double xy = 0, xx = 0;
-        for (int i = 0; i < n; i++) {
-            xy += (x[i] - mx) * (y[i] - my);
-            xx += (x[i] - mx) * (x[i] - mx);
-        }
-        return xx > 0 ? xy / xx : 0;
     }
 }

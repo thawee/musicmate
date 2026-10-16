@@ -5,26 +5,43 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
- * Synthesized signals through {@link SpectrumAccumulator} and {@link SpectralCliffDetector}: one sine
- * per 250 Hz band, falling 1.5 dB per kHz like a recording, cut where a resampler or encoder would cut.
+ * Synthesized signals through {@link SpectrumAccumulator} and {@link SpectralCliffDetector}: about one
+ * sine per 250 Hz band, falling 1.5 dB per kHz like a recording, cut where a resampler or encoder would cut.
  */
 public class SpectralCliffDetectorTest {
 
     private static final double SECONDS = 4;
 
-    /** Sines from 125 Hz up to {@code topHz}; {@code imagesFromHz} adds mirror images above 22.05 kHz. */
     private static SpectralCliffDetector.Finding analyze(int rate, int bits, double topHz, double imagesFromHz) {
+        return analyze(rate, bits, topHz, imagesFromHz, false);
+    }
+
+    /**
+     * Sines from 125 Hz up to {@code topHz}; {@code imagesFromHz} adds mirror images above 22.05 kHz;
+     * {@code hump} adds a noise-like rise above 25 kHz, as DSD's noise shaping leaves in converted PCM.
+     */
+    private static SpectralCliffDetector.Finding analyze(int rate, int bits, double topHz, double imagesFromHz, boolean hump) {
         int n = (int) (rate * SECONDS);
         float[] x = new float[n];
-        for (double f = 125; f < topHz; f += 250) {
+        java.util.Random jitter = new java.util.Random(3);
+        for (double grid = 125; grid < topHz; grid += 250) {
+            // Off the grid a little, so the tones are not symmetric around 24 kHz by construction
+            double f = Math.min(grid + (jitter.nextDouble() - 0.5) * 120, topHz - 1);
             addSine(x, rate, f, 0.01 * Math.pow(10, -1.5 * f / 1000 / 20));
             if (imagesFromHz > 0 && f >= imagesFromHz) {
                 addSine(x, rate, 44100 - f, 0.001 * Math.pow(10, -1.5 * f / 1000 / 20));
             }
         }
+        if (hump) {
+            java.util.Random random = new java.util.Random(7);
+            for (int i = 0; i < 400; i++) {
+                double f = 25000 + random.nextDouble() * 20000;
+                addSine(x, rate, f, 0.0005 * Math.pow(10, 1.2 * (f - 25000) / 1000 / 20));
+            }
+        }
         SpectrumAccumulator spectrum = new SpectrumAccumulator(rate);
         for (float v : x) spectrum.add(v);
-        return SpectralCliffDetector.classify(spectrum.bandsDb(), rate, bits);
+        return SpectralCliffDetector.classify(spectrum.bandsDb(), spectrum.binsDb(), rate, bits);
     }
 
     private static void addSine(float[] x, int rate, double f, double amplitude) {
@@ -61,6 +78,11 @@ public class SpectralCliffDetectorTest {
     @Test
     public void mirrorImagesAbove22kHzAreACheapResampler() {
         assertEquals(SpectralCliffDetector.Kind.UPSAMPLED_FROM_44_IMAGES, analyze(96000, 24, 22000, 12000).kind);
+    }
+
+    @Test
+    public void aNoiseHumpRisingAbove25kHzIsNotImages() {
+        assertEquals(SpectralCliffDetector.Kind.NO_SIGN_OF_UPSAMPLING, analyze(96000, 24, 40000, 0, true).kind);
     }
 
     @Test
