@@ -10,6 +10,7 @@ import apincer.android.mmate.MusixMateApp
 import apincer.android.mmate.worker.ScanAudioFileWorker
 import apincer.music.core.Constants
 import apincer.music.core.provider.FileSystem
+import apincer.music.core.repository.FileRepository
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,5 +56,17 @@ class LibraryScanProbe {
         }
         val temps = found.filter { it.name.startsWith(".mm-") || it.name.endsWith(".mmtmp") }
         report("temp files left=${temps.map { it.path }}")
+
+        // Cover lookups per track: a raw folder listing each time against the per-folder memo
+        val tracks = found.filter { it.path.contains("/MMScale/") && it.name.endsWith(".mp3") }
+        if (tracks.isNotEmpty()) {
+            var start = System.nanoTime()
+            tracks.forEach { FileSystem.access().list(it.parentFile!!) }
+            val raw = (System.nanoTime() - start) / 1_000_000
+            start = System.nanoTime()
+            val covers = tracks.count { FileRepository.getFolderCoverArt(it.absolutePath) != null }
+            val memo = (System.nanoTime() - start) / 1_000_000
+            report("cover lookups for ${tracks.size} tracks: raw listing $raw ms, lookup with memo $memo ms, covers found $covers")
+        }
     }
 }

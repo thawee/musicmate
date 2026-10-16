@@ -9,6 +9,8 @@ import com.antonkarpenko.ffmpegkit.ReturnCode;
 import com.antonkarpenko.ffmpegkit.Session;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Locale;
 
 import apincer.music.core.model.Track;
@@ -66,21 +68,29 @@ public class FFMpegHelper {
 
     /** @return true if the file was rewritten without embedded pictures */
     public static boolean removeCoverArt(Context context, Track tag) {
-            String pathFile = tag.getPath();
-            String ext = FileUtils.getExtension(pathFile);
-            pathFile = pathFile.substring(0, pathFile.length() - ext.length() - 1) + "no_embed." + ext;
+        String ext = FileUtils.getExtension(tag.getPath());
+        File output;
+        try {
+            // App cache, never the album folder; the track is replaced only once FFmpeg is done
+            output = File.createTempFile("no-embed-", "." + ext);
+        } catch (IOException e) {
+            Log.e(TAG, "removeCoverArt: cannot create output", e);
+            return false;
+        }
+        try {
             String options = " -vn -codec:a copy ";
-           // String options =" -map 0:V -y -codec copy ";
-
-            String cmd = " -hide_banner -nostats -y -i " + input(tag.getPath()) + " " + options + " \"" + pathFile+ "\"";
+            String cmd = " -hide_banner -nostats -y -i " + input(tag.getPath()) + " " + options + " \"" + output.getAbsolutePath() + "\"";
             LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
-            if (ReturnCode.isSuccess(session.getReturnCode())
-                    && FileSystem.safeMove(context, pathFile, tag.getPath(), true)) {
-                return true;
-            }
-            FileSystem.delete(pathFile);
+            if (!ReturnCode.isSuccess(session.getReturnCode())) return false;
+            FileSystem.access().writeAtomically(new File(tag.getPath()), out -> Files.copy(output.toPath(), out));
+            return true;
+        } catch (IOException e) {
+            Log.e(TAG, "removeCoverArt: " + tag.getPath(), e);
             return false;
+        } finally {
+            output.delete();
+        }
     }
 
     public static final String KEY_BIT_RATE = "bit_rate";
@@ -272,8 +282,8 @@ public class FFMpegHelper {
 
         String tmpTarget;
         try {
-            File temporaryOutput = File.createTempFile("musicmate-convert-", "." + targetExt,
-                    new File(targetPath).getAbsoluteFile().getParentFile());
+            // App cache, never the album folder; moveToAvailablePath puts the finished file in place
+            File temporaryOutput = File.createTempFile("musicmate-convert-", "." + targetExt);
             tmpTarget = temporaryOutput.getAbsolutePath();
             if (!temporaryOutput.delete()) throw new java.io.IOException("Cannot prepare conversion output");
         } catch (java.io.IOException e) {

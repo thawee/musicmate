@@ -312,6 +312,8 @@ public class BaseServer {
         if(albumArt == null || albumArt.length() == 0) {
             albumArt = getDefaultAlbumArt();
         }
+        // Served and thumbnailed by path, so a cover only the granted folder can read is copied first
+        albumArt = FileRepository.readableCover(getContext(), albumArt);
         if (thumbnail) {
             File small = CoverThumbnails.thumbnailFor(albumArt, getContext().getCacheDir());
             if (small != null) return small;

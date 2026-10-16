@@ -14,12 +14,14 @@ import apincer.android.mmate.MusixMateApp
 import apincer.android.mmate.ui.FolderGrantActivity
 import apincer.music.core.Constants
 import apincer.music.core.codec.AudioDecoder
+import apincer.music.core.codec.FFMpegHelper
 import apincer.music.core.codec.TagReader
 import apincer.music.core.model.AudioTag
 import apincer.music.core.provider.AndroidMusicFileAccess
 import apincer.music.core.provider.MusicFileProvider
 import apincer.music.core.provider.PathMusicFileAccess
 import apincer.music.core.provider.StorageTreeRoots
+import apincer.music.core.repository.FileRepository
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.junit.Assert.assertArrayEquals
@@ -154,6 +156,80 @@ class AndroidMusicFileAccessTest {
         assertEquals(dsf.length(), java.nio.file.Files.readAttributes(dsf.toPath(),
             java.nio.file.attribute.BasicFileAttributes::class.java).size())
         assertFalse("Opening it by path is still refused", dsf.canRead())
+    }
+
+    /** Cover lookups and staleness checks stat images by path; only listing and opening need the grant. */
+    @Test
+    fun coversStatByPathWithoutTheGrant() {
+        val cover = File(album, "Cover.jpg")
+        access.writeAtomically(cover) { it.write(ByteArray(2048) { 7 }) }
+        assertTrue(cover.exists() && cover.isFile)
+        assertEquals(2048L, cover.length())
+        assertTrue(cover.lastModified() > 0)
+        assertFalse("A path listing hides it", album.list()!!.contains("Cover.jpg"))
+        assertFalse("Opening it by path is refused", cover.canRead())
+    }
+
+    @Test
+    fun folderCoversAreFoundAndOpenedThroughACopy() {
+        val track = File(album, "01 Song.flac").absolutePath
+        assertEquals("No cover yet", null, FileRepository.getFolderCoverArt(track))
+
+        val cover = File(album, "Cover.jpg")
+        access.writeAtomically(cover) { it.write(ByteArray(2048) { 1 }) }
+        assertEquals("The lookup sees a cover a path listing hides", cover, FileRepository.getFolderCoverArt(track))
+        val first = FileRepository.readableCover(context, cover)
+        assertTrue("A copy in app storage", first != cover && first.canRead())
+        assertArrayEquals(ByteArray(2048) { 1 }, first.readBytes())
+
+        access.writeAtomically(cover) { it.write(ByteArray(4096) { 2 }) }
+        assertEquals(cover, FileRepository.getFolderCoverArt(track))
+        assertArrayEquals("A changed cover refreshes the copy", ByteArray(4096) { 2 },
+            FileRepository.readableCover(context, cover).readBytes())
+
+        val readable = File(context.cacheDir, "plain.jpg").apply { writeBytes(ByteArray(10)) }
+        assertEquals("A readable file is used as it is", readable, FileRepository.readableCover(context, readable))
+    }
+
+    @Test
+    fun removingEmbeddedArtReplacesTheTrackInPlace() {
+        val flac = File(album, "01 Song.flac")
+        val track = AudioTag(1L).apply { path = flac.absolutePath }
+        assertTrue(FFMpegHelper.removeCoverArt(context, track))
+        assertEquals("No temp or output left in the album", listOf("01 Song.flac", "02 Song.dsf", "03 Song.mp3"), names(album))
+        assertTrue(TagReader.readAudioFile(flac).audioHeader.sampleRateAsNumber > 0)
+    }
+
+    @Test
+    fun convertingDsfWritesNoTempIntoTheAlbum() {
+        val dsf = File(album, "02 Song.dsf").absolutePath
+        val target = File(album, "02 Song.flac").absolutePath
+        val output = FFMpegHelper.convert(context, dsf, target, 5, 1)
+        assertEquals(target, output)
+        assertEquals(listOf("01 Song.flac", "02 Song.dsf", "02 Song.flac", "03 Song.mp3"), names(album))
+        assertTrue(TagReader.readAudioFile(File(target)).audioHeader.sampleRateAsNumber > 0)
+    }
+
+    @Test
+    fun aPathMoveAcrossFileSystemsCopiesBesideTheTarget() {
+        val source = File(context.cacheDir, "cross.bin").apply { writeBytes(ByteArray(100_000) { 3 }) }
+        val dir = context.getExternalFilesDir("cross")!!
+        val target = File(dir, "moved.bin").apply { delete() }
+        val probe = File(context.cacheDir, "probe.bin").apply { writeBytes(ByteArray(1)) }
+        val crossDevice = runCatching { android.system.Os.rename(probe.path, File(dir, "probe.bin").path) }
+            .exceptionOrNull() as? android.system.ErrnoException
+        probe.delete()
+        assertEquals("Cache and app external storage are different file systems",
+            android.system.OsConstants.EXDEV, crossDevice?.errno)
+        assertTrue(PathMusicFileAccess().move(source, target, false))
+        assertFalse(source.exists())
+        assertArrayEquals(ByteArray(100_000) { 3 }, target.readBytes())
+        assertEquals("No temp left beside the target", listOf("moved.bin"), dir.list()!!.toList())
+        val again = File(context.cacheDir, "cross2.bin").apply { writeBytes(ByteArray(5)) }
+        assertFalse("An existing target is kept", PathMusicFileAccess().move(again, target, false))
+        assertEquals(100_000L, target.length())
+        target.delete()
+        again.delete()
     }
 
     @Test

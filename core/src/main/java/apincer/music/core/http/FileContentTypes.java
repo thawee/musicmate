@@ -1,12 +1,14 @@
 package apincer.music.core.http;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
+import java.nio.channels.Channels;
 import java.util.HashMap;
 import java.util.Map;
+
+import apincer.music.core.provider.FileSystem;
 
 /** Content type for files served by SonicNIO: by extension, and by magic bytes for images. */
 final class FileContentTypes {
@@ -82,8 +84,9 @@ final class FileContentTypes {
         //    NOW we read the content to find the *true* MIME type
         //    (in case it's really a PNG).
         String contentMimeType;
-        // guessContentTypeFromStream needs mark/reset, which FileInputStream lacks
-        try (InputStream is = new java.io.BufferedInputStream(new FileInputStream(file))) {
+        // guessContentTypeFromStream needs mark/reset, which a channel stream lacks
+        try (InputStream is = new java.io.BufferedInputStream(Channels.newInputStream(
+                FileSystem.access().openRead(file)))) {
             // This reads the file's "magic bytes"
             contentMimeType = URLConnection.guessContentTypeFromStream(is);
         } catch (IOException e) {

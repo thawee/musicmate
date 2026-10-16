@@ -21,8 +21,10 @@ import com.anggrayudi.storage.file.DocumentFileCompat;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -339,9 +341,53 @@ public class FileRepository {
 
         if(coverDir == null) return null;
 
-        File[] files = coverDir.listFiles((file, s) -> IMAGE_COVERS.contains(s.toLowerCase()));
+        for (File file : folderEntries(coverDir)) {
+            if (IMAGE_COVERS.contains(file.getName().toLowerCase())) return file;
+        }
+        return null;
+    }
 
-        return (files!=null&&files.length>0)?files[0]:null;
+    /** Folder listings for cover lookups, by path, valid while the folder's modification time is unchanged. */
+    private static final Map<String, FolderEntries> FOLDER_ENTRIES = new ConcurrentHashMap<>();
+
+    private record FolderEntries(long lastModified, List<File> files) { }
+
+    /**
+     * The files in {@code dir}, through the installed access so covers hidden from a path listing are
+     * included. A scan looks up the cover once per track, so the listing is kept per folder until the
+     * folder changes (adding, removing or renaming an entry updates its modification time).
+     */
+    private static List<File> folderEntries(File dir) {
+        String key = dir.getAbsolutePath();
+        long lastModified = dir.lastModified();
+        FolderEntries cached = FOLDER_ENTRIES.get(key);
+        if (cached != null && cached.lastModified() == lastModified && lastModified != 0) return cached.files();
+        List<File> files = FileSystem.access().list(dir);
+        if (files.isEmpty()) return files; // a failed listing is not remembered
+        if (FOLDER_ENTRIES.size() > 4096) FOLDER_ENTRIES.clear();
+        FOLDER_ENTRIES.put(key, new FolderEntries(lastModified, files));
+        return files;
+    }
+
+    /**
+     * A file with {@code cover}'s content that can be opened by path, for code that decodes or serves
+     * it. Without all-files access a cover in a granted folder can only be read through the grant, so it
+     * is copied once to the cover cache and refreshed when the cover changes. Otherwise {@code cover}.
+     */
+    public static File readableCover(Context context, File cover) {
+        if (cover == null || FileSystem.access().readUri(cover) == null) return cover;
+        File copy = new File(getCoverartDir(context), "granted-" + StringUtils.md5Hex(cover.getAbsolutePath())
+                + "." + FileUtils.getExtension(cover).toLowerCase(Locale.US));
+        if (copy.isFile() && copy.length() == cover.length() && copy.lastModified() >= cover.lastModified()) {
+            return copy;
+        }
+        try {
+            FileSystem.access().copy(cover, copy);
+            return copy;
+        } catch (IOException e) {
+            Log.w(TAG, "Cannot copy cover " + cover, e);
+            return cover;
+        }
     }
 
     public static File getCoverartDir(Context context) {
@@ -372,8 +418,8 @@ public class FileRepository {
 
         if(folder == null) return null;
 
-        File[] files = folder.listFiles();
-        if (files != null && files.length > 0) {
+        File[] files = folderEntries(folder).toArray(new File[0]);
+        if (files.length > 0) {
             // --- Priority 1: Check for file matching the folder's name in same directory ---
             String folderName = file.getName();
             //Log.d(TAG, "Check for file matching in same directory: "+folder.getAbsolutePath());

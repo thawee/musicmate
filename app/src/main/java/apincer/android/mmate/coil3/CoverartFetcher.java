@@ -52,7 +52,7 @@ public class CoverartFetcher implements Fetcher {
             }
         }
         ImageSource source = new FileImageSource(
-                Path.get(covertFile),
+                Path.get(FileRepository.readableCover(context, covertFile)),
                 FileSystem.SYSTEM,
                 musicTag.getAlbumArtFilename(),
                 null,

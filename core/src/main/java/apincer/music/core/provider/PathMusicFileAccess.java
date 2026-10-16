@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -70,10 +71,19 @@ public class PathMusicFileAccess implements MusicFileAccess {
         if (!source.exists()) return false;
         mkdirs(target.getAbsoluteFile().getParentFile());
         try {
-            if (replaceExisting) {
-                Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } else {
-                Files.move(source.toPath(), target.toPath());
+            try {
+                if (replaceExisting) {
+                    Files.move(source.toPath(), target.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } else {
+                    if (target.exists()) return false;
+                    Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                }
+            } catch (AtomicMoveNotSupportedException e) {
+                // Another file system (app cache to shared storage): a plain move would copy straight
+                // onto the final name, so a crash could leave it truncated. Copy beside it, then rename.
+                writeAtomically(target, out -> Files.copy(source.toPath(), out));
+                Files.delete(source.toPath());
             }
             return true;
         } catch (IOException e) {

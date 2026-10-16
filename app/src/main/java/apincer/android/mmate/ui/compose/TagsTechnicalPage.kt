@@ -96,7 +96,9 @@ fun TagsTechnicalPage(
                 val options = android.graphics.BitmapFactory.Options().apply {
                     inJustDecodeBounds = true
                 }
-                android.graphics.BitmapFactory.decodeFile(coverArtFile.absolutePath, options)
+                // Decode a readable copy; the path and size shown stay the real cover's
+                android.graphics.BitmapFactory.decodeFile(
+                    FileRepository.readableCover(context, coverArtFile).absolutePath, options)
                 CoverArtInfo(
                     exists = true,
                     width = options.outWidth,
