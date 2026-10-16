@@ -24,6 +24,7 @@ import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.http.RateLimitingHandler;
 import apincer.music.core.http.WebSocket;
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
@@ -149,7 +150,9 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         if (song == null) return createErrorResponse(HTTP_NOT_FOUND, MSG_SONG_NOT_FOUND);
         if (song.getPath() == null) return createErrorResponse(HTTP_NOT_FOUND, MSG_SONG_NOT_FOUND);
         File audioFile = new File(song.getPath());
-        if (!audioFile.exists() || !audioFile.canRead()) return createErrorResponse(HTTP_NOT_FOUND, MSG_FILE_NOT_ACCESSIBLE);
+        // Without all-files access a DSF is readable only through the granted folder
+        boolean readable = audioFile.canRead() || FileSystem.access().readUri(audioFile) != null;
+        if (!audioFile.exists() || !readable) return createErrorResponse(HTTP_NOT_FOUND, MSG_FILE_NOT_ACCESSIBLE);
 
         // Prepare headers first to avoid exceptions after response creation
         String dlnaFeatures = getDLNAContentFeatures(song);

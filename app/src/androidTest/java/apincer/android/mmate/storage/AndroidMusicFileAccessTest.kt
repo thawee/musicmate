@@ -167,6 +167,18 @@ class AndroidMusicFileAccessTest {
     }
 
     @Test
+    fun aFolderInTheWayIsNeverReplaced() {
+        val folder = File(album, "Cover.jpg")
+        assertTrue(access.mkdirs(folder))
+        access.copy(asset("fixture.mp3"), File(folder, "inside.mp3"))
+
+        assertThrows(IOException::class.java) { access.writeAtomically(folder) { it.write(1) } }
+        assertFalse(access.move(File(album, "01 Song.flac"), folder, true))
+        assertEquals(listOf("inside.mp3"), names(folder))
+        assertTrue(names(album).contains("01 Song.flac"))
+    }
+
+    @Test
     fun readsDsfTagsThroughTheGrant() {
         val dsf = File(album, "02 Song.dsf")
         access.edit(dsf) { working ->

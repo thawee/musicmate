@@ -103,16 +103,22 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
         }
 
         boolean exists() {
-            return mimeType() != null;
+            try (Cursor cursor = resolver.query(uri,
+                    new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID}, null, null, null)) {
+                return cursor != null && cursor.moveToFirst();
+            } catch (Exception e) {
+                return false; // the provider reports a missing document by throwing
+            }
         }
 
-        /** The document's MIME type, {@link DocumentsContract.Document#MIME_TYPE_DIR} for a folder; null when missing. */
-        String mimeType() {
+        /** True for an existing folder; the provider would delete one with everything in it. */
+        boolean isFolder() {
             try (Cursor cursor = resolver.query(uri,
                     new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
-                return cursor != null && cursor.moveToFirst() ? cursor.getString(0) : null;
+                return cursor != null && cursor.moveToFirst()
+                        && DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(0));
             } catch (Exception e) {
-                return null; // the provider reports a missing document by throwing
+                return false;
             }
         }
     }
@@ -210,7 +216,7 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
                     out.getFD().sync();
                 }
             }
-            if (doc.exists() && !DocumentsContract.deleteDocument(resolver, doc.uri)) {
+            if (doc.exists() && !deleteFile(doc)) {
                 throw new IOException("Cannot replace " + doc.file);
             }
             originalGone = true;
@@ -229,6 +235,12 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
             // Otherwise the complete copy stays under its temp name and recover() renames it
             throw e instanceof IOException ? (IOException) e : new IOException(e);
         }
+    }
+
+    /** Deletes a file being replaced; refuses a folder, which the provider would delete with its contents. */
+    private boolean deleteFile(Doc doc) throws IOException {
+        if (doc.isFolder()) throw new IOException("A folder is in the way: " + doc.file);
+        return DocumentsContract.deleteDocument(resolver, doc.uri);
     }
 
     private static boolean hasName(String documentId, String name) {
@@ -313,7 +325,7 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
         if (sourceParent == null || targetParent == null) return false;
         if (!mkdirs(targetParent.file)) return false;
         String name = target.file.getName();
-        if (target.exists() && !DocumentsContract.deleteDocument(resolver, target.uri)) {
+        if (target.exists() && !deleteFile(target)) {
             throw new IOException("Cannot replace " + target.file);
         }
         if (sourceParent.file.equals(targetParent.file)) {
@@ -343,10 +355,9 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
         Doc doc = doc(file);
         if (doc == null) return paths.delete(file);
         try {
-            String mimeType = doc.mimeType();
-            if (mimeType == null) return false;
+            if (!doc.exists()) return false;
             // The provider deletes a folder with everything in it, even files a path listing cannot see
-            if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType) && !list(doc).isEmpty()) {
+            if (doc.isFolder() && !list(doc).isEmpty()) {
                 Log.w(TAG, "Not deleting a folder that is not empty: " + file);
                 return false;
             }
