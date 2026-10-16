@@ -1707,7 +1707,7 @@ public class TagsActivity extends AppCompatActivity {
                             String textValue = formatAudioSampleRate(track.getAudioSampleRate() /2, true);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = Double.isNaN(r.cutoffHz) ? "None found" : formatAudioSampleRate((long) r.cutoffHz, true);
+                            textValue = r.kind == null ? "-" : Double.isNaN(r.cutoffHz) ? "None found" : formatAudioSampleRate((long) r.cutoffHz, true);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             // The track's DR measurement, the same number as its DR badge

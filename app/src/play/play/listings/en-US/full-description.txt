@@ -24,7 +24,7 @@ Your files, your folders
 • Edit tags and cover art one song at a time.
 
 MusicMate Pro
-A one-time purchase, not a subscription. Pro adds the full quality report (spectrogram, the cutoff, DR and levels), saving tags to many songs at once, MusicBrainz lookup, and Organize, which files your music into artist and album folders. Playing, streaming, quality labels and editing one song at a time stay free.
+A one-time purchase, not a subscription. Pro adds the full quality report (spectrogram, the cutoff, and peak and RMS levels), saving tags to many songs at once, MusicBrainz lookup, and Organize, which files your music into artist and album folders. Playing, streaming, quality labels and editing one song at a time stay free.
 
 Privacy
 No accounts, no ads and no analytics. Your music stays on your phone, and online lookups happen only when you ask for one. MusicMate is open source (Apache 2.0): https://github.com/thawee/musicmate
