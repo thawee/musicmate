@@ -32,6 +32,10 @@ ALBUMS = [
      [("Blue Hour", 245), ("Brushes and Smoke", 200), ("Late Set", 230)]),
 ]
 
+# Albums sold as hi-res but made at CD quality and upsampled, like many "fake hi-res" releases:
+# rendered at this rate as 16-bit, then converted to the album's rate and bit depth.
+UPSAMPLED_FROM = {"Night Drive": 44100}
+
 SCALE = np.array([0, 2, 4, 5, 7, 9, 11])
 PROGRESSION = [0, 5, 3, 4]  # I vi IV V, as scale degrees
 
@@ -147,8 +151,17 @@ def main(out_dir):
         for i, (title, seconds) in enumerate(tracks, 1):
             base = os.path.join(folder, f"{i:02d} {title}")
             wav = base + ".wav"
-            write_wav(wav, synth_track(seconds, rate, tempo, dynamics, seed=a * 100 + i,
-                                       percussive=genre in ("Electronic", "Rock", "Luk Thung")), rate, bits)
+            source_rate = UPSAMPLED_FROM.get(album, rate)
+            mix = synth_track(seconds, source_rate, tempo, dynamics, seed=a * 100 + i,
+                              percussive=genre in ("Electronic", "Rock", "Luk Thung"))
+            if source_rate != rate:
+                cd = base + ".cd.wav"
+                write_wav(cd, mix, source_rate, 16)
+                subprocess.run(["afconvert", "-f", "WAVE", "-d", f"LEI{bits}@{rate}", "-r", "127",
+                                "--src-complexity", "bats", cd, wav], check=True)
+                os.remove(cd)
+            else:
+                write_wav(wav, mix, rate, bits)
             if codec == "flac":
                 path = base + ".flac"
                 subprocess.run(["afconvert", "-f", "flac", "-d", "flac", wav, path], check=True)
@@ -167,7 +180,8 @@ def main(out_dir):
                              "covr": [MP4Cover(art, imageformat=MP4Cover.FORMAT_JPEG)]})
             tags.save()
             os.remove(wav)
-            print(f"{os.path.relpath(path, out_dir)}  {bits}/{rate}  {dynamics}", flush=True)
+            made = f" (made at {source_rate})" if source_rate != rate else ""
+            print(f"{os.path.relpath(path, out_dir)}  {bits}/{rate}{made}  {dynamics}", flush=True)
         os.remove(cover)
 
 
