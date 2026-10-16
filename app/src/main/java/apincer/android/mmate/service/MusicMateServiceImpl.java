@@ -518,11 +518,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         try {
             // Only call it ONCE based on the Android version
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(SERVICE_ID, createInitialNotification());
-            } else {
-                startForeground(SERVICE_ID, createInitialNotification());
-            }
+            // Playback only; connectedDevice is added while the media server runs (setServerForeground)
+            startForeground(SERVICE_ID, createInitialNotification(),
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
         } catch (Exception e) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     e instanceof ForegroundServiceStartNotAllowedException) {
@@ -671,12 +669,39 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             return;
         }
 
+        setServerForeground(true);
         mediaHub.start(); // the hub reports STARTING, then RUNNING or ERROR
     }
 
     public void stopServers() {
         mediaHub.stop();
         statusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
+        setServerForeground(false);
+    }
+
+    /**
+     * The foreground service types: mediaPlayback always, plus connectedDevice while the media server
+     * serves TVs and streamers on the network. Re-posts the notification already shown, so nothing
+     * visible changes.
+     */
+    private void setServerForeground(boolean serverRunning) {
+        int types = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                | (serverRunning ? android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE : 0);
+        try {
+            startForeground(SERVICE_ID, currentNotification(), types);
+        } catch (Exception e) {
+            Log.w(TAG, "Cannot update the foreground service types", e);
+        }
+    }
+
+    private Notification currentNotification() {
+        android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+        if (manager != null) {
+            for (android.service.notification.StatusBarNotification shown : manager.getActiveNotifications()) {
+                if (shown.getId() == SERVICE_ID) return shown.getNotification();
+            }
+        }
+        return createInitialNotification();
     }
 
     // It just creates the *first* notification shown before anything is loaded.

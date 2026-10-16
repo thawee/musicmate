@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- The media server serves TVs and streamers on the network -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
     <!-- Added by the SimpleStorage library; they grant nothing on Android 14+ (minSdk 34) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
@@ -90,7 +92,7 @@
 
         <service
             android:name=".service.MusicMateServiceImpl"
-            android:foregroundServiceType="mediaPlayback"
+            android:foregroundServiceType="mediaPlayback|connectedDevice"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
