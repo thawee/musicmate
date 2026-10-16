@@ -54,7 +54,6 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -139,14 +138,8 @@ public class UIUtils  {
 
     @SuppressLint("RestrictedApi")
     public static void makePopForceShowIcon(PopupMenu popupMenu) {
-        try {
-            Field mFieldPopup=popupMenu.getClass().getDeclaredField("mPopup");
-            mFieldPopup.setAccessible(true);
-            MenuPopupHelper mPopup = (MenuPopupHelper) mFieldPopup.get(popupMenu);
-            mPopup.setForceShowIcon(true);
-        } catch (Exception e) {
-            Log.e(TAG, "makePopForceShowIcon",e);
-        }
+        // Public since AppCompat 1.4; the old reflection on mPopup failed once R8 renamed the field
+        popupMenu.setForceShowIcon(true);
     }
 
     public static Drawable scaleDrawable(Context context, Drawable drawable, int sizeDp) {
