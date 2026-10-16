@@ -515,6 +515,7 @@
     <string name="cd_volume">Volume, %1$d percent</string>
     <string name="cd_volume_down">Volume down</string>
     <string name="cd_volume_up">Volume up</string>
+    <string name="cd_volume_unavailable">Volume not available. Use the player\'s own volume control.</string>
     <string name="permission_title">Permissions Required</string>
     <string name="permission_intro">MusicMate needs local storage and audio permissions to index and tag your audiophile collection.</string>
     <string name="permission_audio_title">Access Audio Media</string>

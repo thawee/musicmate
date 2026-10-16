@@ -1030,12 +1030,17 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onAudioHubVolumeChanged(float vol) {
         apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
-        if (nps != null) nps.getVolume().setValue(vol);
 
         if (playbackService != null && playbackService.getPlayer() != null && playbackService.getPlayer().isStreaming()) {
-            playbackService.setVolume(Math.round(vol * 100));
+            // The service ignores this until the player's level is known, and keeps it within the limit
+            if (rendererVolume < 0) return;
+            int percent = apincer.music.core.playback.RendererVolume.clamp(Math.round(vol * 100),
+                    apincer.music.core.Settings.getRendererVolumeLimit(this));
+            if (nps != null) nps.getVolume().setValue(percent / 100f);
+            playbackService.setVolume(percent);
             return;
         }
+        if (nps != null) nps.getVolume().setValue(vol);
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {
             int max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC);
@@ -1052,14 +1057,26 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         } catch (Exception ignored) {}
     }
 
-    /** Shows the driven renderer's level while one plays, otherwise the phone's media volume. */
+    /**
+     * Shows the driven network player's level while one plays (never the phone's: that read 100% on
+     * players at a low level), or "--" while it is unknown; otherwise the phone's media volume.
+     */
     private void updateVolumeState() {
         int renderer = rendererVolume;
-        if (renderer >= 0 && playbackService != null && playbackService.getPlayer() != null
+        apincer.android.mmate.ui.compose.NowPlayingState state = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
+        if (playbackService != null && playbackService.getPlayer() != null
                 && playbackService.getPlayer().isStreaming()) {
-            apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
-            if (nps != null) nps.getVolume().setValue(renderer / 100f);
+            if (state != null) {
+                int limit = apincer.music.core.Settings.getRendererVolumeLimit(this);
+                state.getVolumeLimit().setValue(limit >= 100 ? 1f : limit / 100f);
+                state.getVolumeEnabled().setValue(renderer >= 0);
+                if (renderer >= 0) state.getVolume().setValue(renderer / 100f);
+            }
             return;
+        }
+        if (state != null) {
+            state.getVolumeEnabled().setValue(true);
+            state.getVolumeLimit().setValue(1f);
         }
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {

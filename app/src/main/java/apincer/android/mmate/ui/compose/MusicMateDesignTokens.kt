@@ -72,6 +72,12 @@ object MusicMateDesignTokens {
     /**
      * Text & Typography High-Contrast Scale
      */
+    object Controls {
+        val LimitMark = Color(0x99FFFFFF)     // the maximum on a volume slider
+        val Disabled = Color(0x40FFFFFF)      // thumb of a control that cannot be used yet
+        val TrackInactive = Color(0x26FFFFFF) // unfilled or disabled slider track
+    }
+
     object Text {
         val Primary = Color(0xFFFFFFFF)
         val Secondary = Color(0xFFAAAAAA)

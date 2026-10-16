@@ -132,6 +132,7 @@ public final class Constants {
     public static final String TAP_MODE_CURATE = "curate";
     public static final String TAP_MODE_LISTEN = "listen";
     public static final String PREF_STUDIO_KEEP_SCREEN_ON = "preference_studio_keep_screen_on";
+    public static final String PREF_RENDERER_VOLUME_LIMIT = "preference_renderer_volume_limit";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";

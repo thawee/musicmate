@@ -49,6 +49,9 @@ class SettingsActivity : ComponentActivity() {
             var studioKeepScreenOn by remember {
                 mutableStateOf(Settings.isStudioKeepScreenOn(this@SettingsActivity))
             }
+            var rendererVolumeLimit by remember {
+                mutableStateOf(Settings.getRendererVolumeLimit(this@SettingsActivity))
+            }
 
             MusicMateTheme {
                 SettingsScreen(
@@ -96,6 +99,11 @@ class SettingsActivity : ComponentActivity() {
                     onStudioKeepScreenOnChange = { checked ->
                         studioKeepScreenOn = checked
                         Settings.setStudioKeepScreenOn(this@SettingsActivity, checked)
+                    },
+                    rendererVolumeLimit = rendererVolumeLimit,
+                    onRendererVolumeLimitChange = { percent ->
+                        rendererVolumeLimit = percent
+                        Settings.setRendererVolumeLimit(this@SettingsActivity, percent)
                     },
                     onBackClick = { finish() }
                 )

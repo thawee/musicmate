@@ -131,4 +131,17 @@ public class Settings {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putBoolean(Constants.PREF_STUDIO_KEEP_SCREEN_ON, keepOn).apply();
     }
+
+    /** Highest volume MusicMate sets on a network player, in percent; 100 means no limit. */
+    public static int getRendererVolumeLimit(Context context) {
+        if (context == null) return apincer.music.core.playback.RendererVolume.DEFAULT_LIMIT;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getInt(Constants.PREF_RENDERER_VOLUME_LIMIT, apincer.music.core.playback.RendererVolume.DEFAULT_LIMIT);
+    }
+
+    public static void setRendererVolumeLimit(Context context, int percent) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putInt(Constants.PREF_RENDERER_VOLUME_LIMIT, percent).apply();
+    }
 }

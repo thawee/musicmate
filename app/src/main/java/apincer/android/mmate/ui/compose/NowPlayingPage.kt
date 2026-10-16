@@ -28,7 +28,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -797,12 +799,16 @@ fun NowPlayingPage(
             var draggedVolume by remember { mutableStateOf<Float?>(null) }
             val shownVolume = ((if (volumeHeld) draggedVolume else null) ?: state.volume.value).coerceIn(0f, 1f)
             val volumePercent = (shownVolume * 100).toInt()
+            // A network player's level is unknown until read, and capped by the user's maximum
+            val volumeEnabled = state.volumeEnabled.value
+            val volumeLimit = state.volumeLimit.value
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
                     onClick = onVolumeDown,
+                    enabled = volumeEnabled,
                     modifier = Modifier
                         .size(48.dp)
                         .semantics { contentDescription = context.getString(R.string.cd_volume_down) }
@@ -816,42 +822,60 @@ fun NowPlayingPage(
                 }
                 // Same thin family as the seek bar, in neutral white so the colored seek bar
                 // stays the primary control (the default Material slider looked unrelated).
-                @OptIn(ExperimentalMaterial3Api::class)
-                Slider(
-                    value = shownVolume,
-                    onValueChange = {
-                        draggedVolume = it
-                        onVolumeChanged(it)
-                    },
-                    onValueChangeFinished = { draggedVolume = null },
-                    interactionSource = volumeInteraction,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics {
-                            contentDescription = context.getString(R.string.cd_volume, volumePercent)
+                BoxWithConstraints(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    Slider(
+                        value = shownVolume,
+                        onValueChange = {
+                            val capped = it.coerceAtMost(volumeLimit)
+                            draggedVolume = capped
+                            onVolumeChanged(capped)
                         },
-                    thumb = {
+                        onValueChangeFinished = { draggedVolume = null },
+                        enabled = volumeEnabled,
+                        interactionSource = volumeInteraction,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = if (volumeEnabled) context.getString(R.string.cd_volume, volumePercent)
+                                else context.getString(R.string.cd_volume_unavailable)
+                            },
+                        thumb = {
+                            Box(
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .background(if (volumeEnabled) Color.White else MusicMateDesignTokens.Controls.Disabled, CircleShape)
+                            )
+                        },
+                        track = { sliderState ->
+                            SliderDefaults.Track(
+                                colors = SliderDefaults.colors(
+                                    activeTrackColor = Color(0xB3FFFFFF),
+                                    inactiveTrackColor = MusicMateDesignTokens.Controls.TrackInactive,
+                                    disabledActiveTrackColor = MusicMateDesignTokens.Controls.TrackInactive,
+                                    disabledInactiveTrackColor = MusicMateDesignTokens.Controls.TrackInactive
+                                ),
+                                enabled = volumeEnabled,
+                                sliderState = sliderState,
+                                drawStopIndicator = null,
+                                thumbTrackGapSize = 0.dp,
+                                modifier = Modifier.height(4.dp).clip(CircleShape)
+                            )
+                        }
+                    )
+                    if (volumeLimit < 1f) {
+                        // The maximum: the track runs between the thumb's centers (9dp in from each end)
+                        val thumbHalf = 9.dp
                         Box(
                             modifier = Modifier
-                                .size(18.dp)
-                                .background(Color.White, CircleShape)
-                        )
-                    },
-                    track = { sliderState ->
-                        SliderDefaults.Track(
-                            colors = SliderDefaults.colors(
-                                activeTrackColor = Color(0xB3FFFFFF),
-                                inactiveTrackColor = Color(0x26FFFFFF)
-                            ),
-                            sliderState = sliderState,
-                            drawStopIndicator = null,
-                            thumbTrackGapSize = 0.dp,
-                            modifier = Modifier.height(4.dp).clip(CircleShape)
+                                .offset(x = thumbHalf + (maxWidth - thumbHalf * 2) * volumeLimit - 1.dp)
+                                .size(width = 2.dp, height = 12.dp)
+                                .background(MusicMateDesignTokens.Controls.LimitMark, RoundedCornerShape(1.dp))
                         )
                     }
-                )
+                }
                 Text(
-                    text = "$volumePercent%",
+                    text = if (volumeEnabled) "$volumePercent%" else "--",
                     color = MusicMateDesignTokens.Text.Muted,
                     fontSize = 11.sp,
                     textAlign = TextAlign.End,
@@ -859,6 +883,7 @@ fun NowPlayingPage(
                 )
                 IconButton(
                     onClick = onVolumeUp,
+                    enabled = volumeEnabled,
                     modifier = Modifier
                         .size(48.dp)
                         .semantics { contentDescription = context.getString(R.string.cd_volume_up) }

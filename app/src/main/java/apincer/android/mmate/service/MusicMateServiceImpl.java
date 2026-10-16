@@ -52,6 +52,7 @@ import apincer.music.core.playback.AudioStreamCacheManager;
 import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.RendererVolume;
 import apincer.music.core.repository.QueueManager;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
@@ -1207,9 +1208,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     }
 
-    private volatile int dmrVolume = 50;
-    // The driven renderer's volume for the UI, -1 when the current target has none to show
-    private final MutableStateFlow<Integer> rendererVolumeFlow = StateFlowKt.MutableStateFlow(-1);
+    // The driven renderer's volume in percent, -1 until it has been read: nothing is sent before then
+    private volatile int dmrVolume = -1;
+    // The driven renderer's volume for the UI, or a RendererVolume state (NONE, READING, UNAVAILABLE)
+    private final MutableStateFlow<Integer> rendererVolumeFlow = StateFlowKt.MutableStateFlow(RendererVolume.NONE);
     private final VolumeCoalescer volumeCoalescer = new VolumeCoalescer(
             (task, delayMs) -> scheduler.schedule(task, delayMs, TimeUnit.MILLISECONDS),
             android.os.SystemClock::elapsedRealtime,
@@ -1224,12 +1226,13 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void setVolume(int volumePercent) {
         PlaybackTarget currentTarget = getPlayer();
-        if (currentTarget != null && currentTarget.isStreaming()) {
-            dmrVolume = Math.max(0, Math.min(100, volumePercent));
-            if (isControllable(currentTarget)) rendererVolumeFlow.setValue(dmrVolume);
-            boolean fragile = currentTarget instanceof DMRPlayer dmr && !dmr.getDeviceProfile().canFadeVolume();
-            volumeCoalescer.submit(currentTarget.getTargetId(), dmrVolume, fragile);
-        }
+        if (currentTarget == null || !currentTarget.isStreaming()) return;
+        // Only a driven player whose level has been read: a level picked against an unknown start could blast
+        if (!isControllable(currentTarget) || dmrVolume < 0) return;
+        dmrVolume = RendererVolume.clamp(volumePercent, apincer.music.core.Settings.getRendererVolumeLimit(getApplicationContext()));
+        rendererVolumeFlow.setValue(dmrVolume);
+        boolean fragile = currentTarget instanceof DMRPlayer dmr && !dmr.getDeviceProfile().canFadeVolume();
+        volumeCoalescer.submit(currentTarget.getTargetId(), dmrVolume, fragile);
     }
 
     @Override
@@ -1238,35 +1241,46 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     /**
-     * Reads a newly driven renderer's real volume, so the slider starts there. It runs on its own
-     * thread (the read blocks up to 2 s; the scheduler carries playback work), and a portable
-     * player is left to settle first so the read cannot collide with SetAVTransportURI or Play.
+     * Reads a newly driven renderer's real volume, so the slider starts there. Until then the slider
+     * shows nothing and sends nothing (it used to show the phone's volume, often 100%). It runs on its
+     * own thread (the read blocks up to 2 s; the scheduler carries playback work), a portable player
+     * is left to settle first so the read cannot collide with SetAVTransportURI or Play, and a failed
+     * read is tried once more before the volume is given up as unavailable.
      */
     private void refreshRendererVolume(PlaybackTarget target) {
+        dmrVolume = -1;
         if (!isControllable(target)) {
-            rendererVolumeFlow.setValue(-1);
+            rendererVolumeFlow.setValue(RendererVolume.NONE);
             return;
         }
+        rendererVolumeFlow.setValue(RendererVolume.READING);
         String targetId = target.getTargetId();
         long settleMs = ((DMRPlayer) target).getDeviceProfile().canFadeVolume() ? 0 : 5000;
         new Thread(() -> {
             try {
                 Thread.sleep(settleMs);
+                for (int attempt = 0; attempt < 2; attempt++) {
+                    if (!targetId.equals(controlledPlayerTargetId)) return;
+                    int volume = mediaHub.playerGetVolume(targetId, 2000);
+                    if (!targetId.equals(controlledPlayerTargetId)) return;
+                    if (volume >= 0) {
+                        dmrVolume = volume;
+                        rendererVolumeFlow.setValue(volume);
+                        return;
+                    }
+                    if (attempt == 0) Thread.sleep(3000);
+                }
+                rendererVolumeFlow.setValue(RendererVolume.UNAVAILABLE);
             } catch (InterruptedException e) {
-                return;
+                Thread.currentThread().interrupt();
             }
-            if (!targetId.equals(controlledPlayerTargetId)) return;
-            int volume = mediaHub.playerGetVolume(targetId, 2000);
-            if (volume < 0 || !targetId.equals(controlledPlayerTargetId)) return; // keep the last known level
-            dmrVolume = volume;
-            rendererVolumeFlow.setValue(volume);
         }, "RendererVolumeRead").start();
     }
 
     @Override
     public void adjustVolume(int direction) {
         PlaybackTarget currentTarget = getPlayer();
-        if (currentTarget != null && currentTarget.isStreaming()) {
+        if (currentTarget != null && currentTarget.isStreaming() && dmrVolume >= 0) {
             int step = 5 * (direction > 0 ? 1 : -1);
             setVolume(dmrVolume + step);
         }

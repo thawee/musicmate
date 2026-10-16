@@ -873,6 +873,8 @@ fun FullscreenStudioConsole(
                         StudioLinearVolumeFader(
                             volume = state.volume.value,
                             onVolumeChanged = onVolumeChanged,
+                            enabled = state.volumeEnabled.value,
+                            limit = state.volumeLimit.value,
                             colorGold = colorGold,
                             modifier = Modifier.width(220.dp)
                         )
@@ -1195,21 +1197,31 @@ private fun StudioLinearVolumeFader(
     volume: Float,
     onVolumeChanged: (Float) -> Unit,
     colorGold: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // False while a network player's level is unknown; limit is the user's maximum (1 = none)
+    enabled: Boolean = true,
+    limit: Float = 1f
 ) {
     var isDragging by remember { mutableStateOf(false) }
     var dragVol by remember { mutableFloatStateOf(volume) }
     val currentVol = if (isDragging) dragVol else volume
 
-    val dbText = remember(currentVol) {
-        if (currentVol <= 0.001f) "-∞ dB"
+    val dbText = remember(currentVol, enabled) {
+        if (!enabled) "--"
+        else if (currentVol <= 0.001f) "-∞ dB"
         else {
             val db = (20f * log10(currentVol.toDouble())).toFloat().coerceIn(-60f, 0f)
             String.format(Locale.US, "%.0f dB", db)
         }
     }
 
-    val currentVolumeChanged by rememberUpdatedState(onVolumeChanged)
+    val latestOnVolumeChanged by rememberUpdatedState(onVolumeChanged)
+    val latestEnabled by rememberUpdatedState(enabled)
+    val latestLimit by rememberUpdatedState(limit)
+    // Every change from this fader: nothing while disabled, never above the limit
+    val currentVolumeChanged: (Float) -> Unit = { value ->
+        if (latestEnabled) latestOnVolumeChanged(value.coerceAtMost(latestLimit))
+    }
 
     Row(
         modifier = modifier,
@@ -1257,13 +1269,15 @@ private fun StudioLinearVolumeFader(
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
                         onDragStart = { offset ->
+                            if (!latestEnabled) return@detectHorizontalDragGestures
                             isDragging = true
-                            dragVol = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                            dragVol = (offset.x / size.width.toFloat()).coerceIn(0f, latestLimit)
                             currentVolumeChanged(dragVol)
                         },
                         onHorizontalDrag = { change, _ ->
                             change.consume()
-                            dragVol = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
+                            if (!isDragging) return@detectHorizontalDragGestures
+                            dragVol = (change.position.x / size.width.toFloat()).coerceIn(0f, latestLimit)
                             currentVolumeChanged(dragVol)
                         },
                         onDragEnd = { isDragging = false },
@@ -1284,8 +1298,8 @@ private fun StudioLinearVolumeFader(
                     .background(Color(0x28FFFFFF))
             )
 
-            // Active rail
-            val activeWidth = (widthPx * currentVol.coerceIn(0f, 1f)).coerceIn(0f, widthPx)
+            // Active rail (none while the level is unknown)
+            val activeWidth = if (enabled) (widthPx * currentVol.coerceIn(0f, 1f)).coerceIn(0f, widthPx) else 0f
             Box(
                 modifier = Modifier
                     .width(with(density) { activeWidth.toDp() })
@@ -1293,6 +1307,16 @@ private fun StudioLinearVolumeFader(
                     .clip(CircleShape)
                     .background(colorGold)
             )
+
+            if (limit < 1f) {
+                // The maximum
+                Box(
+                    modifier = Modifier
+                        .offset(x = with(density) { (widthPx * limit).toDp() } - 1.dp)
+                        .size(width = 2.dp, height = 11.dp)
+                        .background(MusicMateDesignTokens.Controls.LimitMark)
+                )
+            }
 
             // Fader indicator pip
             val faderPipSize = 9.dp
@@ -1303,7 +1327,7 @@ private fun StudioLinearVolumeFader(
                     .offset(x = with(density) { pipOffsetPx.toDp() })
                     .size(faderPipSize)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(if (enabled) Color.White else MusicMateDesignTokens.Controls.Disabled)
                     .border(BorderStroke(0.5.dp, colorGold), CircleShape)
             )
         }

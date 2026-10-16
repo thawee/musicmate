@@ -29,6 +29,10 @@ class NowPlayingState {
     
     // Volume & Timer
     val volume = mutableStateOf(0f)
+    // False while a network player's level is unknown: the slider shows "--" and sends nothing
+    val volumeEnabled = mutableStateOf(true)
+    // Highest level the slider may set, 0..1 (1 = no limit); network players only
+    val volumeLimit = mutableStateOf(1f)
     val sleepTimerText = mutableStateOf("")
     val isSleepTimerActive = mutableStateOf(false)
     val sleepTimerMinutes = mutableStateOf(0L) // the chosen countdown; 0 for none or end of track

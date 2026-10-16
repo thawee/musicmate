@@ -1519,7 +1519,9 @@ public class MediaServerHubImpl implements MediaServerHub {
             Service renderingControlService = findServiceRecursively(device, RENDERING_CONTROL_TYPE);
             if (renderingControlService == null || controlPoint == null) return;
 
-            controlPoint.execute(new SetVolume(renderingControlService, Math.max(0, Math.min(100, volume))) {
+            long[] range = volumeRange(renderingControlService);
+            long units = apincer.music.core.playback.RendererVolume.toUnits(volume, range[0], range[1]);
+            controlPoint.execute(new SetVolume(renderingControlService, units) {
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                     Log.w(TAG, "SetVolume failed: " + defaultMsg);
@@ -1528,6 +1530,22 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
+    /** The player's Volume range {min, max} as its RenderingControl declares it; {0, 100} when it does not. */
+    private static long[] volumeRange(Service renderingControlService) {
+        try {
+            org.jupnp.model.meta.StateVariable<?> variable = renderingControlService.getStateVariable("Volume");
+            org.jupnp.model.meta.StateVariableAllowedValueRange range =
+                    variable != null ? variable.getTypeDetails().getAllowedValueRange() : null;
+            if (range != null && range.getMaximum() > range.getMinimum()) {
+                return new long[]{range.getMinimum(), range.getMaximum()};
+            }
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Volume range unreadable: " + e);
+        }
+        return new long[]{0, 100};
+    }
+
+    /** The player's volume in percent of its own range, or -1 when it cannot be read in time. */
     @Override
     public int playerGetVolume(String rendererUdn, long timeoutMs) {
         UpnpService service = upnpService;
@@ -1538,11 +1556,12 @@ public class MediaServerHubImpl implements MediaServerHub {
         if (renderingControlService == null) return -1;
 
         AtomicInteger volume = new AtomicInteger(-1);
+        long[] range = volumeRange(renderingControlService);
         java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
         controlPoint.execute(new GetVolume(renderingControlService) {
             @Override
             public void received(ActionInvocation<?> invocation, int currentVolume) {
-                volume.set(currentVolume);
+                volume.set(apincer.music.core.playback.RendererVolume.toPercent(currentVolume, range[0], range[1]));
                 done.countDown();
             }
 

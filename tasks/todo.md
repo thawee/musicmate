@@ -1918,3 +1918,13 @@ At fontScale 2 (900x480 preview) the right column's six rows overflow and the tr
 - [x] Update user documentation, changelog, and Android version for the verified changes.
 - [x] Run focused tests and release build, inspect the staged diff and signed APK. Web UI tests, playlist JSON validation, Android unit tests, release build, APK signature, and version metadata passed.
 - [x] Commit the release changes, update `main`, tag `v3.28.3`, and confirm the GitHub release asset. Workflow succeeded; downloaded APK is signed by the MusicMate key and reports version code 154.
+
+# DLNA player volume: safe start and a limit (2026-10-17)
+
+Cause (code): while a newly picked network player's volume is unknown (5 s settle for portable players, 2 s read timeout, or a failed read) the slider shows the phone's own media volume, often 100%, and a touch sends that level to the player. Volume changed on the device is never followed. Every player is assumed to use 0 to 100.
+Decisions (user, 2026-10-17): limit network players only; 80% default, adjustable in Settings (60% to 90%, or Off).
+- [x] V1 Unknown volume: on switching to a controllable renderer, mark its volume unknown; the slider is disabled and shows "--" and nothing is sent (slider, volume buttons) until a read succeeds; one retry after a failed read; if still unknown, the slider stays off with a hint to use the player's own control.
+- [x] V2 Volume range: read RenderingControl's Volume allowed range and convert percent to device units on get and set (0 to 100 assumed only when the range is missing).
+- [x] V3 Limit: setting "Maximum volume" under Network players (60, 70, 80 default, 90 or Off); the service clamps every set (slider, buttons) to it; the slider stops at it and marks it. A player already above the limit is shown as it is and only moves down.
+  Done (2026-10-17): `RendererVolume` (states, range conversion, clamp; 4 JVM tests), MediaServerHubImpl converts with RenderingControl's Volume range, the service marks a new player READING, retries a failed read once (3 s), then UNAVAILABLE, and ignores slider and buttons until the level is known (also for streams it does not drive). Music Center slider and Studio fader: disabled with "--" while unknown, stop at the limit, show a limit mark. Settings > Network players > Maximum volume (60, 70, 80, 90, Off; default 80). Emulator: card saves the choice; phone output slider unaffected (reaches 100%). Not testable on the emulator: anything with a real renderer.
+- [ ] V4 Tests: JVM tests for range conversion and clamping; app builds; emulator check of the Settings entry and that phone volume is unchanged; on the phone with the user's renderer: start shows "--" then the real level, drag stops at the limit.

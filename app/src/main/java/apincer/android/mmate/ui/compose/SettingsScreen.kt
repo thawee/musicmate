@@ -47,6 +47,8 @@ fun SettingsScreen(
     onTapActionModeChange: (String) -> Unit = {},
     studioKeepScreenOn: Boolean = true,
     onStudioKeepScreenOnChange: (Boolean) -> Unit = {},
+    rendererVolumeLimit: Int = 80,
+    onRendererVolumeLimitChange: (Int) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -186,6 +188,32 @@ fun SettingsScreen(
                         onCheckedChange = onReplayGainPreventClippingChange
                     )
                 }
+            }
+
+            // ── Network players: a ceiling for the volume MusicMate sets ─────
+            SettingsCard(
+                title = "NETWORK PLAYERS",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Maximum volume",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "The highest level MusicMate's slider and volume buttons set on a DLNA player. The player's own knob or remote is not limited.",
+                    color = MusicMateDesignTokens.Text.Muted,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                AdaptiveChoiceGroup(
+                    options = listOf(60 to "60%", 70 to "70%", 80 to "80%", 90 to "90%", 100 to "Off"),
+                    selected = { rendererVolumeLimit == it },
+                    onSelect = onRendererVolumeLimitChange
+                )
             }
 
             // ── Section 3: Library & User Interface ───────────────────────────

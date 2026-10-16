@@ -49,9 +49,10 @@ public interface MediaServerHub {
     void playerPause(String udn);
     default void playerResume(String udn) {}
     void playerSeek(String udn, long positionMs);
+    /** Sets the renderer volume in percent of its own range. */
     void playerSetVolume(String udn, int volume);
 
-    /** Reads the renderer volume (0-100), waiting up to {@code timeoutMs}; -1 when unknown. Not for the main thread. */
+    /** Reads the renderer volume in percent of its own range, waiting up to {@code timeoutMs}; -1 when unknown. Not for the main thread. */
     default int playerGetVolume(String udn, long timeoutMs) {
         return -1;
     }
