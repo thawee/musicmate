@@ -194,7 +194,8 @@ class MainLibraryAccessibilityTest {
 
         composeRule.onNodeWithContentDescription("MusicMate Menu").performClick()
         composeRule.onNodeWithText("System Access")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Storage needed"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription,
+                composeRule.activity.getString(apincer.android.mmate.R.string.system_access_summary_storage_needed)))
         composeRule.onNodeWithText("Storage Access").assertDoesNotExist()
         composeRule.onNodeWithText("Notification Access").assertDoesNotExist()
     }

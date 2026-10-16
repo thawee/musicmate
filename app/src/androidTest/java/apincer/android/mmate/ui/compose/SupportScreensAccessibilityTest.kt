@@ -62,9 +62,10 @@ class SupportScreensAccessibilityTest {
         }
 
         composeRule.onNodeWithText("System Access").assertExists()
-        composeRule.onNodeWithText("Full Storage Access").assertExists()
+        // The Play build words the storage card its own way (src/play/res)
+        composeRule.onNodeWithText(composeRule.activity.getString(apincer.android.mmate.R.string.permission_storage_title)).assertExists()
         composeRule.onNodeWithText("External Player Access").assertExists()
-        composeRule.onNodeWithText("Open storage settings").assertHasClickAction()
+        composeRule.onNodeWithText(composeRule.activity.getString(apincer.android.mmate.R.string.action_open_storage_settings)).assertHasClickAction()
         composeRule.onNodeWithText("Enable external player access").assertHasClickAction()
         runAccessibilityChecks()
     }
