@@ -1562,6 +1562,9 @@ public class MediaServerHubImpl implements MediaServerHub {
             @Override
             public void received(ActionInvocation<?> invocation, int currentVolume) {
                 volume.set(apincer.music.core.playback.RendererVolume.toPercent(currentVolume, range[0], range[1]));
+                // Warning level so release builds keep it: once per pick, and the only record of what a player reports
+                Log.w(TAG, "Renderer volume " + device.getDetails().getFriendlyName() + ": " + currentVolume
+                        + " in [" + range[0] + ", " + range[1] + "] = " + volume.get() + "%");
                 done.countDown();
             }
 

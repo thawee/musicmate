@@ -1281,6 +1281,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void adjustVolume(int direction) {
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget != null && currentTarget.isStreaming() && dmrVolume >= 0) {
+            // A player already at or above the limit stays put on "up" (the clamp would turn it down)
+            if (direction > 0 && dmrVolume >= apincer.music.core.Settings.getRendererVolumeLimit(getApplicationContext())) return;
             int step = 5 * (direction > 0 ? 1 : -1);
             setVolume(dmrVolume + step);
         }
@@ -1544,7 +1546,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 this.controlledPlayerTargetId = resolvedTarget instanceof DMRPlayer ? resolvedTarget.getTargetId() : null;
             }
             currentPlayerFlow.setValue(Optional.of(resolvedTarget));
-            if (!isSameTarget) refreshRendererVolume(resolvedTarget);
+            // Also read again when the listener picks the same player whose level is still unknown, or when
+            // the discovered player replaces its startup placeholder (same id) before a read succeeded
+            if (!isSameTarget || (controlled && dmrVolume < 0)) refreshRendererVolume(resolvedTarget);
 
             // 3. Activate the new player
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
@@ -1603,6 +1607,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                                 dmrStartupTimeoutTask = null;
                             }
                             currentPlayerFlow.setValue(Optional.of(live));
+                            // A read made while only the placeholder existed found no device
+                            if (dmrVolume < 0) refreshRendererVolume(live);
                         }
                         break;
                     }
