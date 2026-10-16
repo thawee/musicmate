@@ -1,0 +1,73 @@
+name: Renderer report
+description: How MusicMate's media server worked with a network player or control app
+title: "Renderer: "
+labels: ["renderer-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Results go into the [renderer compatibility page](https://github.com/thawee/musicmate/blob/main/docs/RENDERERS.md). Please report what you tried, including what did not work.
+  - type: input
+    id: renderer
+    attributes:
+      label: Renderer
+      description: Make and model of the player, streamer, TV or app that played the music
+      placeholder: e.g. HiBy R3 in DLNA renderer mode
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Renderer firmware or app version
+  - type: input
+    id: musicmate
+    attributes:
+      label: MusicMate version and where you got it
+      placeholder: e.g. 3.28.3 from Google Play
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: Phone and Android version
+      placeholder: e.g. Galaxy S25, Android 16
+  - type: input
+    id: played-from
+    attributes:
+      label: Played from
+      description: Picked in MusicMate's player picker, or the control app that browsed MusicMate's library
+      placeholder: MusicMate, or the name of the control app
+    validations:
+      required: true
+  - type: checkboxes
+    id: formats
+    attributes:
+      label: Formats that played correctly
+      description: Leave a format unticked if you did not try it, and mention failures below
+      options:
+        - label: FLAC 16-bit / 44.1 kHz
+        - label: FLAC 24-bit / 96 kHz
+        - label: FLAC 24-bit / 192 kHz
+        - label: ALAC (M4A)
+        - label: WAV or AIFF
+        - label: DSD (DSF)
+        - label: MP3 or AAC
+  - type: dropdown
+    id: gapless
+    attributes:
+      label: Gapless playback between songs
+      options: ["Not tried", "Yes", "No"]
+  - type: dropdown
+    id: seek
+    attributes:
+      label: Seeking within a song
+      options: ["Not tried", "Yes", "No"]
+  - type: dropdown
+    id: cover
+    attributes:
+      label: Cover art shown
+      options: ["Not tried", "Yes", "No"]
+  - type: textarea
+    id: notes
+    attributes:
+      label: What went wrong, or anything else worth knowing

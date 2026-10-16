@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <defs>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="5" y1="5" x2="18" y2="17">
+      <stop offset="0" stop-color="#FFE082"/><stop offset="0.5" stop-color="#FFB74D"/><stop offset="1" stop-color="#F57C00"/>
+    </linearGradient>
+    <linearGradient id="gs" gradientUnits="userSpaceOnUse" x1="5" y1="2" x2="22" y2="17">
+      <stop offset="0" stop-color="#FFE082" stop-opacity="0.4"/><stop offset="0.5" stop-color="#FFB74D" stop-opacity="0.4"/><stop offset="1" stop-color="#F57C00" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="gd" gradientUnits="userSpaceOnUse" x1="10" y1="14" x2="14" y2="18">
+      <stop offset="0" stop-color="#FFE082"/><stop offset="0.5" stop-color="#FFB74D"/><stop offset="1" stop-color="#F57C00"/>
+    </linearGradient>
+    <linearGradient id="gds" gradientUnits="userSpaceOnUse" x1="14" y1="11" x2="18" y2="15">
+      <stop offset="0" stop-color="#FFE082" stop-opacity="0.4"/><stop offset="0.5" stop-color="#FFB74D" stop-opacity="0.4"/><stop offset="1" stop-color="#F57C00" stop-opacity="0.4"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(19 29) scale(2.5)" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="url(#gs)" d="M 9.5,14.5 V 6 Q 9.5,2 13.5,5 L 16,6.875 L 18.5,5 Q 22.5,2 22.5,6 V 14.5"/>
+    <path fill="url(#gds)" stroke="none" d="M 16,11.5 A 1.5,1.5 0 1 1 16,14.5 A 1.5,1.5 0 1 1 16,11.5 Z"/>
+    <path stroke="url(#g)" d="M 5.5,17.5 V 9 Q 5.5,5 9.5,8 L 12,9.875 L 14.5,8 Q 18.5,5 18.5,9 V 17.5"/>
+    <path fill="url(#gd)" stroke="none" d="M 12,14.5 A 1.5,1.5 0 1 1 12,17.5 A 1.5,1.5 0 1 1 12,14.5 Z"/>
+  </g>
+</svg>

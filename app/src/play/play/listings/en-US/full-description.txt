@@ -1,7 +1,7 @@
 MusicMate turns your Android phone into a music server and a hi-res player for the music files you own.
 
 Your library, served to your hi-fi
-• MusicMate runs a DLNA/UPnP media server. Streamers and control apps on your Wi-Fi can browse your library and play it with tags and cover art. Files are sent as they are, with no transcoding.
+• MusicMate runs a DLNA/UPnP media server. Streamers and control apps on your Wi-Fi can browse your library and play it with tags and cover art. Files are sent unchanged; only players that cannot play a format (some TVs) get it converted.
 • Pick a DLNA player inside MusicMate and control it from your phone.
 • Works on home Wi-Fi and on your phone's own hotspot.
 • A web remote opens in any browser on the same network.
@@ -10,10 +10,10 @@ Know what you are hearing
 • Every track shows its format, bit depth and sample rate, with Hi-Res and DSD labels.
 • Dynamic range (DR) is measured for each track.
 • Verify Lossless finds "hi-res" files that were upsampled from CD quality, and files cut off by MP3 or AAC encoding.
-• The audio path shows how the sound leaves your phone and whether the output is bit-perfect.
+• The audio path shows how the sound leaves your phone, and at what sample rate and bit depth.
 
 Play it your way
-• Bit-perfect playback through a USB DAC, on phones that support it.
+• High-resolution USB DAC output: 24-bit at the song's own sample rate, when the DAC offers it.
 • Bluetooth, with the codec in use shown (such as LDAC, aptX or AAC).
 • Hand a song to another music app.
 • FLAC, ALAC, WAV, AIFF, MP3 and DSD (DSF) files.
