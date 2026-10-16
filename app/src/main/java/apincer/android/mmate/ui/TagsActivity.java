@@ -292,8 +292,10 @@ public class TagsActivity extends AppCompatActivity {
     @Inject
     FileOperationTask operationTask;
 
-    private final ActivityResultLauncher<String> coverArtPickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
+    // The photo picker itself: GetContent goes through a DocumentsUI trampoline whose forwarded
+    // launch Android cancels for this singleInstance activity, so no image ever came back
+    private final ActivityResultLauncher<androidx.activity.result.PickVisualMediaRequest> coverArtPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.PickVisualMedia(),
             uri -> {
                 if (uri != null) {
                     applySelectedCoverArt(uri);
@@ -1523,7 +1525,9 @@ public class TagsActivity extends AppCompatActivity {
                         doSearchAndMatchTags();
                     } else if (which == 1) {
                         try {
-                            coverArtPickerLauncher.launch("image/*");
+                            coverArtPickerLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                    .build());
                         } catch (Exception e) {
                             Toast.makeText(this, "Could not open photo picker", Toast.LENGTH_SHORT).show();
                         }
