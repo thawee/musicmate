@@ -210,7 +210,7 @@
             android:textStyle="bold"
             android:background="@drawable/shape_dot_indicator"
             android:backgroundTint="#24FFD700"
-            tools:text="Verified Lossless Studio Master (24-bit/96kHz)" />
+            tools:text="No sign of upsampling" />
 
         <!-- Spectrogram Image Surface -->
         <com.google.android.material.card.MaterialCardView

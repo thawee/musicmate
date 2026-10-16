@@ -38,27 +38,17 @@ public class VerdictFormatter {
     private static @StyleRes int getStyleForVerdict(String verdict) {
         if (verdict == null) return R.style.Text_MM_Verdict_CD;
 
-        // 1. Gold / Amber -> Studio Master
-        if (verdict.contains("Studio") || verdict.contains("Hi-Res")) {
-            return R.style.Text_MM_Verdict_Studio;
-        }
-
-        // 2. Green / Vintage -> Analog Master
-        if (verdict.contains("Analog")) {
-            return R.style.Text_MM_Verdict_Vintage;
-        }
-
-        // 3. Orange / Warning -> Upscaled Content
-        if (verdict.contains("Upscaled") || verdict.contains("Upsampled")) {
+        // Orange: upsampled from a lower rate
+        if (verdict.contains("Upsampled")) {
             return R.style.Text_MM_Verdict_Warning;
         }
 
-        // 4. Red -> MPEG/Lossy Source
+        // Red: a lossy source
         if (verdict.contains("Lossy")) {
             return R.style.Text_MM_Verdict_Lossy;
         }
 
-        // 5. Cyan / Blue -> Perfect CD Quality (Default)
+        // Cyan: no sign of either, or nothing to judge
         return R.style.Text_MM_Verdict_CD;
     }
 

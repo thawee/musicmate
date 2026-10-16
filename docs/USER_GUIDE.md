@@ -176,7 +176,7 @@ Press and hold a song to open its details. The screen shows the cover, quality a
 - **Add to Playlist…**
 - **Search & Match Tags** looks the song up on MusicBrainz. Matches become unsaved edits you can review before saving.
 - **Smart Clean & Format**
-- **Verify Lossless Quality** shows the frequency spectrum, which reveals files upsampled from CD or converted from lossy audio.
+- **Verify Lossless Quality** checks the top of the frequency spectrum for the marks that upsampling and lossy encoding leave. "Upsampled from 44.1 kHz" (or 48 kHz) means a hi-res file stops sharply at the CD (or 48 kHz) limit; "Lossy source" means the sound is cut off lower, as MP3 and AAC encoders do. "No sign of upsampling" and "No lossy cutoff found" mean neither mark was found, which does not prove a file is genuine: high-bitrate AAC can leave no mark, and many real recordings have little above 20 kHz. "Can't tell" means there is too little high-frequency sound to judge. MusicMate Pro adds the spectrum picture and the measurements.
 - **Show in File Manager**
 - **Search Song on Web**
 - **Delete**

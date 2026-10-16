@@ -1659,9 +1659,9 @@ public class TagsActivity extends AppCompatActivity {
         //Signal Analytics, Nyquist, Dynamic Range, Peak Amplitude, RMS Level
         analyticsSpan.append("ANALYTICS\n", labelColor, textSize, true);
         analyticsSpan.append("  Nyquist:\n", labelColor, textSize, true);
-        analyticsSpan.append("  Spectral Cutoff:\n", labelColor, textSize, true);
+        analyticsSpan.append("  Cutoff:\n", labelColor, textSize, true);
         analyticsSpan.append("  Dynamic Range:\n", labelColor, textSize, true);
-        analyticsSpan.append("  True Peak:\n", labelColor, textSize, true);
+        analyticsSpan.append("  Peak:\n", labelColor, textSize, true);
         analyticsSpan.append("  RMS Level:", labelColor, textSize, true);
         analyticsLabel.setText(analyticsSpan.build());
 
@@ -1686,16 +1686,6 @@ public class TagsActivity extends AppCompatActivity {
 
                     @Override
                     public void onResult(AudioAnalysisResult r) {
-                    /*
-                        Log.d("AudioAnalysis", "Verdict: " + r.verdict);
-                        Log.d("AudioAnalysis", "DR: " + r.dynamicRange);
-                        Log.d("AudioAnalysis", "Noise floor: " + r.noiseFloor);
-                        Log.d("AudioAnalysis", "Peak: " + r.peak);
-                        Log.d("AudioAnalysis", "bitDepth: " + r.bitDepth);
-                        Log.d("AudioAnalysis", "sampleRate: " + r.sampleRate);
-                        Log.d("AudioAnalysis", "highBandRms: " + r.highBandRms);
-                        Log.d("AudioAnalysis", "lowBandRms: " + r.lowBandRms);
-                        Log.d("AudioAnalysis", "Flatness: " + r.spectralFlatness); */
 
                         runOnUiThread(() -> {
                             String result = r.verdict;
@@ -1714,16 +1704,18 @@ public class TagsActivity extends AppCompatActivity {
                             String textValue = formatAudioSampleRate(track.getAudioSampleRate() /2, true);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = formatAudioSampleRate((long) r.rolloff, true);
+                            textValue = Double.isNaN(r.cutoffHz) ? "None found" : formatAudioSampleRate((long) r.cutoffHz, true);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.dynamicRange);
+                            // The track's DR measurement, the same number as its DR badge
+                            String dr = apincer.music.core.utils.TagUtils.getDynamicRangeScore(track);
+                            textValue = dr == null || dr.isEmpty() ? "-" : "DR" + dr;
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.peak);
+                            textValue = Double.isNaN(r.peak) ? "-" : String.format(Locale.ENGLISH,"%.2f dBFS", r.peak);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = String.format(Locale.ENGLISH,"%.2f dB", r.rms);
+                            textValue = Double.isNaN(r.rms) ? "-" : String.format(Locale.ENGLISH,"%.2f dBFS", r.rms);
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
                             analyticsText.setText(analyticsSpan.build());
@@ -1738,6 +1730,10 @@ public class TagsActivity extends AppCompatActivity {
                     @Override
                     public void onError(String error) {
                         Log.e("AudioAnalysis", error);
+                        runOnUiThread(() -> {
+                            qualityScore.setText(VerdictFormatter.format(getApplicationContext(), "Could not analyze this file"));
+                            if (spinner != null) spinner.setVisibility(GONE);
+                        });
                     }
                 });
 
