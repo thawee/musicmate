@@ -144,6 +144,25 @@ public class PathMusicFileAccessTest {
     }
 
     @Test
+    public void movingAFileOntoItselfKeepsIt() throws Exception {
+        File song = temporaryFolder.newFile("song.flac");
+        Files.write(song.toPath(), bytes("audio"));
+
+        assertTrue(access.move(song, song, false));
+        assertTrue(access.move(song, new File(song.getParentFile(), "./song.flac"), true));
+        assertArrayEquals(bytes("audio"), Files.readAllBytes(song.toPath()));
+    }
+
+    @Test
+    public void aRenameCanChangeOnlyTheLetterCase() throws Exception {
+        File song = temporaryFolder.newFile("song.flac");
+        Files.write(song.toPath(), bytes("audio"));
+
+        assertTrue(access.move(song, new File(temporaryFolder.getRoot(), "SONG.flac"), false));
+        assertEquals(List.of("SONG.flac"), List.of(temporaryFolder.getRoot().list()));
+    }
+
+    @Test
     public void deleteAndMkdirs() throws Exception {
         File file = temporaryFolder.newFile("a.flac");
         File dir = new File(temporaryFolder.getRoot(), "x/y");

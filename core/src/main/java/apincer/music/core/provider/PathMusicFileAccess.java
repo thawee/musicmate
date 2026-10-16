@@ -71,8 +71,11 @@ public class PathMusicFileAccess implements MusicFileAccess {
         if (!source.exists()) return false;
         mkdirs(target.getAbsoluteFile().getParentFile());
         try {
+            // The same file: nothing to do, unless only the letter case changes (case-insensitive storage)
+            boolean sameFile = target.exists() && Files.isSameFile(source.toPath(), target.toPath());
+            if (sameFile && source.getName().equals(target.getName())) return true;
             try {
-                if (replaceExisting) {
+                if (replaceExisting || sameFile) {
                     Files.move(source.toPath(), target.toPath(),
                             StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
                 } else {
@@ -82,7 +85,9 @@ public class PathMusicFileAccess implements MusicFileAccess {
             } catch (AtomicMoveNotSupportedException e) {
                 // Another file system (app cache to shared storage): a plain move would copy straight
                 // onto the final name, so a crash could leave it truncated. Copy beside it, then rename.
+                long lastModified = source.lastModified();
                 writeAtomically(target, out -> Files.copy(source.toPath(), out));
+                target.setLastModified(lastModified); // a move keeps the file's date
                 Files.delete(source.toPath());
             }
             return true;

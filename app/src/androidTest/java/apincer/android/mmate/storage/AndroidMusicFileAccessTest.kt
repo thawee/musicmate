@@ -212,7 +212,10 @@ class AndroidMusicFileAccessTest {
 
     @Test
     fun aPathMoveAcrossFileSystemsCopiesBesideTheTarget() {
-        val source = File(context.cacheDir, "cross.bin").apply { writeBytes(ByteArray(100_000) { 3 }) }
+        val source = File(context.cacheDir, "cross.bin").apply {
+            writeBytes(ByteArray(100_000) { 3 })
+            setLastModified(1_700_000_000_000L)
+        }
         val dir = context.getExternalFilesDir("cross")!!
         val target = File(dir, "moved.bin").apply { delete() }
         val probe = File(context.cacheDir, "probe.bin").apply { writeBytes(ByteArray(1)) }
@@ -224,6 +227,8 @@ class AndroidMusicFileAccessTest {
         assertTrue(PathMusicFileAccess().move(source, target, false))
         assertFalse(source.exists())
         assertArrayEquals(ByteArray(100_000) { 3 }, target.readBytes())
+        assertTrue("A move keeps the date: ${target.lastModified()}",
+            Math.abs(target.lastModified() - 1_700_000_000_000L) < 2000)
         assertEquals("No temp left beside the target", listOf("moved.bin"), dir.list()!!.toList())
         val again = File(context.cacheDir, "cross2.bin").apply { writeBytes(ByteArray(5)) }
         assertFalse("An existing target is kept", PathMusicFileAccess().move(again, target, false))
@@ -429,6 +434,15 @@ class AndroidMusicFileAccessTest {
         assertTrue(access.move(dsf, mp3, true))
         assertArrayEquals(asset("fixture.dsf").readBytes(), bytes(mp3))
         assertEquals(listOf("03 Song.mp3"), names(album))
+    }
+
+    @Test
+    fun renamesThatChangeOnlyTheLetterCase() {
+        val song = File(album, "01 Song.flac")
+        assertTrue("Moving a file onto itself keeps it", access.move(song, song, false))
+        assertTrue(access.move(song, File(album, "01 SONG.flac"), false))
+        assertEquals(listOf("01 SONG.flac", "02 Song.dsf", "03 Song.mp3"), names(album))
+        assertFalse(journal.exists())
     }
 
     @Test

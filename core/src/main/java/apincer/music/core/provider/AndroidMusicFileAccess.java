@@ -259,9 +259,18 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
     }
 
     private Uri renameExact(Uri uri, String name) throws IOException {
+        String documentId = DocumentsContract.getDocumentId(uri);
         Uri renamed = DocumentsContract.renameDocument(resolver, uri, name);
-        if (renamed == null || !hasName(DocumentsContract.getDocumentId(renamed), name)) {
-            throw new IOException("Cannot rename " + DocumentsContract.getDocumentId(uri) + " to " + name);
+        if (renamed == null) throw new IOException("Cannot rename " + documentId + " to " + name);
+        if (!hasName(DocumentsContract.getDocumentId(renamed), name)) {
+            // The provider picked another name ("name (1)"); put the old one back
+            String oldName = documentId.substring(Math.max(documentId.lastIndexOf('/'), documentId.indexOf(':')) + 1);
+            try {
+                DocumentsContract.renameDocument(resolver, renamed, oldName);
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot restore the name of " + DocumentsContract.getDocumentId(renamed), e);
+            }
+            throw new IOException("Cannot rename " + documentId + " to " + name);
         }
         return renamed;
     }
@@ -302,6 +311,20 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
         if (sourceDoc == null && targetDoc == null) return paths.move(source, target, replaceExisting);
         try {
             if (!exists(source, sourceDoc)) return false;
+            String sourcePath = source.getAbsolutePath();
+            String targetPath = target.getAbsolutePath();
+            if (sourcePath.equals(targetPath)) return true; // the same file: nothing to do
+            if (sourceDoc != null && targetDoc != null && sourcePath.equalsIgnoreCase(targetPath)) {
+                // Only the letter case changes. The provider sees that name as taken and would add
+                // " (1)", so go through a temporary name, journaled so recover() finishes it after a crash
+                String tempName = target.getName() + "." + Long.toHexString(System.nanoTime()) + TEMP_SUFFIX;
+                ReplaceJournal.Entry entry = new ReplaceJournal.Entry(targetPath, tempName);
+                journal.add(entry);
+                Uri temp = renameExact(sourceDoc.uri, tempName);
+                renameExact(temp, target.getName());
+                journal.remove(entry);
+                return true;
+            }
             if (!replaceExisting && exists(target, targetDoc)) return false;
             if (sourceDoc != null && targetDoc != null
                     && sourceDoc.root.volumeId.equals(targetDoc.root.volumeId)
