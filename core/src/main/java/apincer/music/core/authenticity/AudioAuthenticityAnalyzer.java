@@ -75,7 +75,7 @@ public class AudioAuthenticityAnalyzer {
         String command =
                 "-hide_banner -loglevel info " +
                         "-ss 30 -t 60 " +
-                        "-i \"" + inputPath + "\" " +
+                        "-i " + apincer.music.core.codec.FFMpegHelper.input(inputPath) + " " +
                         filters;
 
                        // "[0:a]asplit=5[a][b][c][d][e];" +

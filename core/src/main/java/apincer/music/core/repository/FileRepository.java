@@ -221,19 +221,23 @@ public class FileRepository {
                 if (knownMissing != null && knownMissing == lastModified) {
                     return null;
                 }
+                byte[] art = null;
                 try (android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever()) {
                     retriever.setDataSource(path);
-                    byte[] art = retriever.getEmbeddedPicture();
-                    // MediaMetadataRetriever skips ID3 pictures inside WAV/AIFF files
-                    if (art == null) art = readTaggedArtwork(path);
-                    if (art != null) {
-                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(pathFile)) {
-                            fos.write(art);
-                        }
-                    } else {
-                        NO_EMBEDDED_ART.put(path, lastModified);
-                        return null; // No embedded art found
-                    }
+                    art = retriever.getEmbeddedPicture();
+                } catch (Exception e) {
+                    // Unreadable by path (DSF under scoped storage) or a format it does not parse
+                    android.util.Log.d(TAG, "MediaMetadataRetriever: " + path + ": " + e.getMessage());
+                }
+                // MediaMetadataRetriever skips ID3 pictures inside WAV/AIFF files
+                if (art == null) art = readTaggedArtwork(path);
+                if (art != null) {
+                    byte[] picture = art;
+                    // Cover.jpg may go into the album folder, which only a granted folder can write
+                    FileSystem.access().writeAtomically(pathFile, out -> out.write(picture));
+                } else {
+                    NO_EMBEDDED_ART.put(path, lastModified);
+                    return null; // No embedded art found
                 }
             }
             
@@ -247,7 +251,7 @@ public class FileRepository {
     /** First embedded picture via the tag library, or null if there is none or it cannot be read. */
     private static byte[] readTaggedArtwork(String path) {
         try {
-            org.jaudiotagger.tag.Tag tag = org.jaudiotagger.audio.AudioFileIO.read(new File(path)).getTag();
+            org.jaudiotagger.tag.Tag tag = apincer.music.core.codec.TagReader.readAudioFile(new File(path)).getTag();
             org.jaudiotagger.tag.images.Artwork artwork = tag == null ? null : tag.getFirstArtwork();
             return artwork == null ? null : artwork.getBinaryData();
         } catch (Exception e) {
@@ -681,8 +685,9 @@ public class FileRepository {
         if(mediaDir.isDirectory()) {
            // boolean toClean = true;
             List<File> toDelete = new ArrayList<>();
-            File[] files = mediaDir.listFiles();
-            if (files != null) {
+            // Through the access: a path listing hides DSF, covers and .cue under scoped storage
+            List<File> files = FileSystem.access().list(mediaDir);
+            if (!files.isEmpty()) {
                 for (File f : files) {
                     if(f.isDirectory()) {
                         // if contains folder quit

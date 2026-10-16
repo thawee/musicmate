@@ -20,6 +20,11 @@ public class FFMpegHelper {
 
     private static final String TAG = "FFMpegHelper";
 
+    /** The "-i" argument for {@code path}; through the granted folder when its path cannot be read. Good for one run. */
+    public static String input(String path) {
+        return FileSystem.access().ffmpegInput(new File(path));
+    }
+
     /**
      * Extracts the embedded picture to {@code pathFile}. The target is replaced only when
      * extraction produced an image, so a file without art never clobbers an existing cover.
@@ -39,7 +44,7 @@ public class FFMpegHelper {
             String targetPath = pathFile.getAbsolutePath();
             String options = " -an -c:v copy -f image2 ";
 
-            String cmd = " -hide_banner -nostats -y -i \"" + path + "\" " + options + " \"" + partial.getAbsolutePath() + "\"";
+            String cmd = " -hide_banner -nostats -y -i " + input(path) + " " + options + " \"" + partial.getAbsolutePath() + "\"";
             LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (!ReturnCode.isSuccess(session.getReturnCode()) || partial.length() == 0) {
@@ -67,7 +72,7 @@ public class FFMpegHelper {
             String options = " -vn -codec:a copy ";
            // String options =" -map 0:V -y -codec copy ";
 
-            String cmd = " -hide_banner -nostats -y -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
+            String cmd = " -hide_banner -nostats -y -i " + input(tag.getPath()) + " " + options + " \"" + pathFile+ "\"";
             LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (ReturnCode.isSuccess(session.getReturnCode())
@@ -302,7 +307,7 @@ public class FFMpegHelper {
 
     /** Runs one FFmpeg conversion into {@code tmpTarget}; only a successful return code counts. */
     private static boolean runConversion(String srcPath, String options, String tmpTarget) {
-        String cmd = " -hide_banner -nostats -y -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
+        String cmd = " -hide_banner -nostats -y -i " + input(srcPath) + " " + options + " \"" + tmpTarget + "\"";
         Log.i(TAG, "Converting with cmd: " + cmd);
         FFmpegSession session = FFmpegKit.execute(cmd);
         if (ReturnCode.isSuccess(session.getReturnCode())) return true;
@@ -313,7 +318,7 @@ public class FFMpegHelper {
     }
 
     public static ReplayGainResult analyzeReplayGain(String path) {
-        String cmd = " -hide_banner -nostats -i \"" + path + "\" -filter:a ebur128 -f null -";
+        String cmd = " -hide_banner -nostats -i " + input(path) + " -filter:a ebur128 -f null -";
 
         Log.i(TAG, "Analyzing ReplayGain: " + path);
 

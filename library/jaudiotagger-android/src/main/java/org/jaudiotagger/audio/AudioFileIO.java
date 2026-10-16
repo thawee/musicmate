@@ -44,6 +44,7 @@ import org.jaudiotagger.tag.TagException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -190,6 +191,23 @@ public class AudioFileIO
           throws CannotReadException, IOException, TagException, ReadOnlyFileException, InvalidAudioFrameException
   {
       return getDefaultAudioFileIO().readFile(f);
+  }
+
+  /**
+   * Reads {@code f} from {@code channel}, an open read channel on its content, for a file that can be
+   * opened but not by path. Supported for DSF; other formats throw CannotReadException.
+   */
+  public static AudioFile read(File f, FileChannel channel) throws CannotReadException, IOException
+  {
+      String ext = Utils.getExtension(f);
+      AudioFileReader afr = getDefaultAudioFileIO().readers.get(ext);
+      if (!(afr instanceof AudioFileReader2))
+      {
+          throw new CannotReadException(ErrorMessage.NO_READER_FOR_THIS_FORMAT.getMsg(ext));
+      }
+      AudioFile audioFile = ((AudioFileReader2) afr).read(f, channel);
+      audioFile.setExt(ext);
+      return audioFile;
   }
 
     /**

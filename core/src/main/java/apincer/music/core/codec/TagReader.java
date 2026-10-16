@@ -8,15 +8,24 @@ import android.content.Context;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 
 import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.TagException;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Locale;
 import java.util.Set;
 
 import apincer.music.core.Constants;
 import apincer.music.core.model.AudioTag;
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
+import apincer.music.core.provider.MusicFileAccess;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
@@ -115,6 +124,19 @@ public abstract class TagReader {
         //set default, will be override by reader
         tag.setAudioEncoding(tag.getFileType());
         tag.setTitle(FileUtils.removeExtension(file.getName()));
+    }
+
+    /**
+     * Reads tags and audio header by path, or through the granted folder when scoped storage hides the
+     * file from paths (DSF has no audio MediaStore entry).
+     */
+    public static AudioFile readAudioFile(File file) throws CannotReadException, IOException, TagException,
+            ReadOnlyFileException, InvalidAudioFrameException {
+        MusicFileAccess access = FileSystem.access();
+        if (access.readUri(file) == null) return AudioFileIO.read(file);
+        try (FileChannel channel = access.openRead(file)) {
+            return AudioFileIO.read(file, channel);
+        }
     }
 
     protected static String extractField(String[] tags, int i) {

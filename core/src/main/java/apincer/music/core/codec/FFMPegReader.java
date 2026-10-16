@@ -142,7 +142,7 @@ public static class Loudness {
 
     public AudioTag extractTagFromFile(String path) {
 
-        String cmd ="-hide_banner -nostats -i \""+path+"\" -f null -";
+        String cmd ="-hide_banner -nostats -i "+FFMpegHelper.input(path)+" -f null -";
         LogHelper.setFFMpegOn();
         FFmpegSession session = FFmpegKit.execute(cmd);
         if (ReturnCode.isSuccess(session.getReturnCode())) {

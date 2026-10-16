@@ -2,7 +2,6 @@ package apincer.music.core.http;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +17,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import apincer.music.core.provider.FileSystem;
 
 /**
  * Streams a file or range with {@code FileChannel.transferTo()} and a bounded per-turn allowance.
@@ -99,14 +100,13 @@ final class FileResponse extends NioHttpServer.HttpResponse implements StreamBod
         if (!slots.acquire()) {
             throw new IOException("Service Unavailable - max concurrent streams reached");
         }
-        RandomAccessFile raf;
         try {
-            raf = new RandomAccessFile(file, "r");
+            // By path when readable; DSF under scoped storage comes through the granted folder
+            this.fileChannel = FileSystem.access().openRead(file);
         } catch (IOException e) {
             slots.release();
             throw e;
         }
-        this.fileChannel = raf.getChannel();
         this.fileSize = fileChannel.size();
 
         try {

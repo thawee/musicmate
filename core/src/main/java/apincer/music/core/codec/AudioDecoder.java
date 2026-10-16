@@ -82,8 +82,8 @@ public class AudioDecoder {
         File outputFile = File.createTempFile("decode", ".pcm");
 
         // -t limits the decoded duration
-        String command = String.format(Locale.US, "-y -i \"%s\" -t %d %s -f %s -acodec pcm_%s \"%s\"",
-                filePath, maxDurationSeconds, outputOptions, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
+        String command = String.format(Locale.US, "-y -i %s -t %d %s -f %s -acodec pcm_%s \"%s\"",
+                FFMpegHelper.input(filePath), maxDurationSeconds, outputOptions, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
 
         try {
             FFmpegSession session = FFmpegKit.execute(command);

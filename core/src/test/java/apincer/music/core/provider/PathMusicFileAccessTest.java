@@ -3,6 +3,8 @@ package apincer.music.core.provider;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -13,9 +15,12 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PathMusicFileAccessTest {
@@ -149,6 +154,78 @@ public class PathMusicFileAccessTest {
         assertTrue(access.mkdirs(dir));
         assertTrue(dir.isDirectory());
         assertTrue("An existing folder counts as success", access.mkdirs(dir));
+    }
+
+    @Test
+    public void deleteKeepsAFolderWithAnythingInIt() throws Exception {
+        File album = temporaryFolder.newFolder("Album");
+        File song = new File(album, "01.dsf");
+        Files.write(song.toPath(), bytes("dsd"));
+
+        assertFalse(access.delete(album));
+        assertTrue(song.isFile());
+        assertTrue(access.delete(song));
+        assertTrue("An empty folder is deleted", access.delete(album));
+        assertFalse(album.exists());
+    }
+
+    @Test
+    public void readsByPath() throws Exception {
+        File song = temporaryFolder.newFile("song.dsf");
+        Files.write(song.toPath(), bytes("dsd data"));
+
+        try (FileChannel channel = access.openRead(song)) {
+            ByteBuffer buffer = ByteBuffer.allocate(8);
+            channel.read(buffer, 0);
+            assertArrayEquals(bytes("dsd data"), buffer.array());
+            assertEquals(8, channel.size());
+        }
+        assertNull(access.readUri(song));
+        assertEquals("\"" + song.getPath() + "\"", access.ffmpegInput(song));
+        assertThrows(IOException.class, () -> access.openRead(new File(temporaryFolder.getRoot(), "missing.dsf")));
+    }
+
+    @Test
+    public void listsAndWalksFolders() throws Exception {
+        File root = temporaryFolder.getRoot();
+        Files.createDirectories(new File(root, "Artist/Album/Disc 1").toPath());
+        Files.createDirectories(new File(root, "Odd.flac").toPath()); // a folder, not a track
+        for (String path : List.of("Artist/Album/01.dsf", "Artist/Album/Cover.jpg", "Artist/Album/Disc 1/02.FLAC", "top.mp3")) {
+            Files.write(new File(root, path).toPath(), bytes("x"));
+        }
+
+        List<String> found = new ArrayList<>();
+        for (File file : access.walk(root, name -> name.toLowerCase().matches(".*\\.(dsf|flac|mp3)"))) {
+            found.add(root.toPath().relativize(file.toPath()).toString());
+        }
+        Collections.sort(found);
+        assertEquals(List.of("Artist/Album/01.dsf", "Artist/Album/Disc 1/02.FLAC", "top.mp3"), found);
+
+        List<String> names = new ArrayList<>();
+        for (File file : access.list(new File(root, "Artist/Album"))) names.add(file.getName());
+        Collections.sort(names);
+        assertEquals(List.of("01.dsf", "Cover.jpg", "Disc 1"), names);
+        assertTrue(access.list(new File(root, "missing")).isEmpty());
+    }
+
+    @Test
+    public void relatedFilesAreListedThroughTheInstalledAccess() throws Exception {
+        List<String> listed = new ArrayList<>();
+        FileSystem.setAccess(new PathMusicFileAccess() {
+            @Override public List<File> list(File dir) {
+                listed.add(dir.getName());
+                return super.list(dir);
+            }
+        });
+        File source = temporaryFolder.newFolder("Old");
+        File target = temporaryFolder.newFolder("New");
+        Files.write(new File(source, "Cover.jpg").toPath(), bytes("jpeg"));
+        Files.write(new File(source, "01.dsf").toPath(), bytes("dsd"));
+
+        FileSystem.copyRelatedFiles(new File(source, "01.dsf"), new File(target, "01.dsf"));
+
+        assertEquals(List.of("Old"), listed);
+        assertArrayEquals(bytes("jpeg"), Files.readAllBytes(new File(target, "Cover.jpg").toPath()));
     }
 
     @Test

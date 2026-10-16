@@ -10,8 +10,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import apincer.android.mmate.MusixMateApp
 import apincer.android.mmate.ui.FolderGrantActivity
+import apincer.music.core.Constants
+import apincer.music.core.codec.AudioDecoder
+import apincer.music.core.codec.TagReader
+import apincer.music.core.model.AudioTag
 import apincer.music.core.provider.AndroidMusicFileAccess
+import apincer.music.core.provider.MusicFileProvider
+import apincer.music.core.provider.PathMusicFileAccess
 import apincer.music.core.provider.StorageTreeRoots
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -102,10 +109,16 @@ class AndroidMusicFileAccessTest {
         return names.sorted()
     }
 
+    /** Deletes a folder and everything in it; the access itself only deletes empty folders. */
+    private fun deleteTree(file: File) {
+        if (file.isDirectory) access.list(file).forEach { deleteTree(it) }
+        access.delete(file)
+    }
+
     @Before
     fun freshAlbum() {
         journal.delete()
-        access.delete(base)
+        deleteTree(base)
         assertTrue(access.mkdirs(album))
         access.copy(asset("fixture.flac"), File(album, "01 Song.flac"))
         access.copy(asset("fixture.dsf"), File(album, "02 Song.dsf"))
@@ -119,6 +132,113 @@ class AndroidMusicFileAccessTest {
         assertThrows("DSF is not readable by path without all-files access", IOException::class.java) {
             FileInputStream(File(album, "02 Song.dsf")).use { it.read() }
         }
+    }
+
+    @Test
+    fun walkFindsDsfThatAPathWalkMisses() {
+        val supported = { name: String -> TagReader.isSupportedFileFormat(name) }
+        val all = listOf("01 Song.flac", "02 Song.dsf", "03 Song.mp3")
+        assertEquals(all, access.walk(base, supported).map { it.name }.sorted())
+        assertEquals(listOf("01 Song.flac", "03 Song.mp3"),
+            PathMusicFileAccess().walk(base, supported).map { it.name }.sorted())
+        assertEquals(all, access.list(album).map { it.name }.sorted())
+    }
+
+    /** Scan, library checks and the server's headers stat DSF by path; only opening it needs the grant. */
+    @Test
+    fun dsfStatsByPathWithoutTheGrant() {
+        val dsf = File(album, "02 Song.dsf")
+        assertTrue(dsf.exists() && dsf.isFile)
+        assertEquals(asset("fixture.dsf").length(), dsf.length())
+        assertTrue(dsf.lastModified() > 0)
+        assertEquals(dsf.length(), java.nio.file.Files.readAttributes(dsf.toPath(),
+            java.nio.file.attribute.BasicFileAttributes::class.java).size())
+        assertFalse("Opening it by path is still refused", dsf.canRead())
+    }
+
+    @Test
+    fun deleteKeepsAFolderHoldingFilesAPathListingHides() {
+        access.delete(File(album, "01 Song.flac"))
+        access.delete(File(album, "03 Song.mp3"))
+        assertEquals("Only the DSF is left, and a path listing cannot see it", 0, album.list()?.size ?: 0)
+
+        assertFalse(access.delete(album))
+        assertEquals(listOf("02 Song.dsf"), names(album))
+    }
+
+    @Test
+    fun readsDsfTagsThroughTheGrant() {
+        val dsf = File(album, "02 Song.dsf")
+        access.edit(dsf) { working ->
+            val audio = AudioFileIO.read(working)
+            audio.tagOrCreateAndSetDefault.setField(FieldKey.TITLE, "Read through the grant")
+            audio.commit()
+        }
+        assertNotNull("DSF is read through the grant", access.readUri(dsf))
+        assertEquals("FLAC is read by path", null, access.readUri(File(album, "01 Song.flac")))
+
+        val audio = TagReader.readAudioFile(dsf)
+        assertEquals("Read through the grant", audio.tag.getFirst(FieldKey.TITLE))
+        assertEquals("dsf", audio.ext)
+        assertTrue(audio.audioHeader.sampleRateAsNumber > 0)
+    }
+
+    @Test
+    fun scansDsfIntoTheLibrary() {
+        val app = context.applicationContext as MusixMateApp
+        val dsf = File(album, "02 Song.dsf")
+        access.edit(dsf) { working ->
+            val audio = AudioFileIO.read(working)
+            audio.tagOrCreateAndSetDefault.setField(FieldKey.TITLE, "Scanned DSF")
+            audio.commit()
+        }
+        app.fileRepository.scanMusicFile(dsf, true)
+        val tracks = app.tagRepository.getByPath(dsf.absolutePath)
+        try {
+            assertEquals("Scanned DSF", tracks.single().title)
+            assertTrue(tracks.single().audioSampleRate > 0)
+        } finally {
+            tracks.forEach { app.tagRepository.removeTag(it) }
+        }
+    }
+
+    @Test
+    fun decodesDsfWithFFmpegThroughTheGrant() {
+        val dsf = File(album, "02 Song.dsf")
+        val track = AudioTag(1L).apply {
+            path = dsf.absolutePath // outside apply: AudioTag has its own "album"
+            audioEncoding = Constants.MEDIA_ENC_DSF
+        }
+        // Android's own decoder, the fallback, cannot read DSF, so PCM here came from FFmpeg
+        val pcm = AudioDecoder.decodeAudio(track, 2)
+        assertTrue("decoded ${pcm.size} bytes", pcm.isNotEmpty())
+    }
+
+    private fun openDescriptors() = File("/proc/self/fd").list()!!.size
+
+    @Test
+    fun streamsDsfBytesAndReleasesDescriptors() {
+        val dsf = File(album, "02 Song.dsf")
+        val expected = asset("fixture.dsf").readBytes()
+        access.openRead(dsf).use { channel ->
+            assertEquals(expected.size.toLong(), channel.size())
+            val buffer = java.nio.ByteBuffer.allocate(expected.size)
+            while (buffer.hasRemaining() && channel.read(buffer, buffer.position().toLong()) > 0) { }
+            assertArrayEquals(expected, buffer.array())
+        }
+
+        val before = openDescriptors()
+        repeat(200) { access.openRead(dsf).use { it.size() } }
+        val after = openDescriptors()
+        assertTrue("descriptors before $before, after $after", after - before < 10)
+    }
+
+    @Test
+    fun externalPlayersGetDsfThroughTheProvider() {
+        val dsf = File(album, "02 Song.dsf")
+        val uri = MusicFileProvider.getUriForFile(dsf.absolutePath)
+        val bytes = context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+        assertArrayEquals(asset("fixture.dsf").readBytes(), bytes)
     }
 
     @Test

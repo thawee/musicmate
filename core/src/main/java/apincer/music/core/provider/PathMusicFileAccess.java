@@ -1,14 +1,22 @@
 package apincer.music.core.provider;
 
+import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /** Works on file paths directly; needs all-files access for files outside the app's own directories. */
 public class PathMusicFileAccess implements MusicFileAccess {
@@ -89,5 +97,36 @@ public class PathMusicFileAccess implements MusicFileAccess {
     @Override
     public boolean mkdirs(File dir) {
         return dir == null || dir.isDirectory() || dir.mkdirs() || dir.isDirectory();
+    }
+
+    @Override
+    public FileChannel openRead(File file) throws IOException {
+        return new RandomAccessFile(file, "r").getChannel();
+    }
+
+    @Override
+    public Uri readUri(File file) {
+        return null;
+    }
+
+    @Override
+    public String ffmpegInput(File file) {
+        return "\"" + file.getPath() + "\"";
+    }
+
+    @Override
+    public List<File> list(File dir) {
+        File[] children = dir.listFiles();
+        return children == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(children));
+    }
+
+    @Override
+    public List<File> walk(File dir, Predicate<String> nameFilter) throws IOException {
+        try (Stream<Path> found = Files.find(dir.toPath(), Integer.MAX_VALUE,
+                (path, attributes) -> attributes.isRegularFile() && nameFilter.test(path.getFileName().toString()))) {
+            List<File> files = new ArrayList<>();
+            found.forEach(path -> files.add(path.toFile()));
+            return files;
+        }
     }
 }

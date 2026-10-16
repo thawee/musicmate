@@ -5,7 +5,6 @@ import android.util.Log;
 import androidx.collection.LruCache;
 
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -13,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.provider.FileSystem;
 
 /**
  * High-performance, in-memory audio head-chunk cache for stutter-free local and DLNA streaming.
@@ -84,7 +84,7 @@ public class AudioStreamCacheManager {
             activePreloadFuture = preloadExecutor.submit(() -> {
                 try {
                     File file = new File(path);
-                    if (!file.exists() || !file.canRead()) return;
+                    if (!file.exists()) return;
 
                     long fileLength = file.length();
                     if (fileLength <= 0) return;
@@ -92,8 +92,7 @@ public class AudioStreamCacheManager {
                     int bytesToRead = (int) Math.min(fileLength, HEAD_CHUNK_SIZE);
                     ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
 
-                    try (RandomAccessFile raf = new RandomAccessFile(file, "r");
-                         FileChannel channel = raf.getChannel()) {
+                    try (FileChannel channel = FileSystem.access().openRead(file)) {
                         int totalRead = 0;
                         while (totalRead < bytesToRead && !Thread.currentThread().isInterrupted()) {
                             byteBuffer.clear();

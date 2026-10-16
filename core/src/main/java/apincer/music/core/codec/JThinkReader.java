@@ -13,7 +13,6 @@ import android.os.Looper;
 import android.util.Log;
 
 import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
@@ -177,7 +176,7 @@ public class JThinkReader extends TagReader{
         }
 
         try {
-            return AudioFileIO.read(new File(path));
+            return readAudioFile(new File(path));
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
                  BufferUnderflowException e) {

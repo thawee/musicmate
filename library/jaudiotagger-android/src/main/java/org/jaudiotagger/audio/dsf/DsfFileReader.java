@@ -4,11 +4,13 @@
  */
 package org.jaudiotagger.audio.dsf;
 
+import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.generic.AudioFileReader2;
 import org.jaudiotagger.audio.generic.GenericAudioHeader;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.audio.iff.IffHeaderChunk;
+import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
@@ -16,6 +18,7 @@ import org.jaudiotagger.tag.id3.ID3v22Tag;
 import org.jaudiotagger.tag.id3.ID3v23Tag;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -34,28 +37,47 @@ import static org.jaudiotagger.audio.dsf.DsdChunk.CHUNKSIZE_LENGTH;
 public class DsfFileReader extends AudioFileReader2
 {
     @Override
+    public AudioFile read(File f, FileChannel fc) throws CannotReadException, IOException
+    {
+        if (fc.size() <= MINIMUM_SIZE_FOR_VALID_AUDIO_FILE)
+        {
+            throw new CannotReadException(ErrorMessage.GENERAL_READ_FAILED_FILE_TOO_SMALL.getMsg(f.getAbsolutePath()));
+        }
+        fc.position(0);
+        GenericAudioHeader info = getEncodingInfo(fc, f.getPath());
+        fc.position(0);
+        Tag tag = getTag(fc, f.getPath());
+        return new AudioFile(f, info, tag);
+    }
+
+    @Override
     protected GenericAudioHeader getEncodingInfo(Path file) throws CannotReadException, IOException
     {
         try(FileChannel fc = FileChannel.open(file))
         {
-            DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
-            if (dsd != null)
+            return getEncodingInfo(fc, file.toString());
+        }
+    }
+
+    private GenericAudioHeader getEncodingInfo(FileChannel fc, String file) throws CannotReadException, IOException
+    {
+        DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
+        if (dsd != null)
+        {
+            ByteBuffer fmtChunkBuffer = Utils.readFileDataIntoBufferLE(fc, IffHeaderChunk.SIGNATURE_LENGTH + CHUNKSIZE_LENGTH);
+            FmtChunk fmt = FmtChunk.readChunkHeader(fmtChunkBuffer);
+            if (fmt != null)
             {
-                ByteBuffer fmtChunkBuffer = Utils.readFileDataIntoBufferLE(fc, IffHeaderChunk.SIGNATURE_LENGTH + CHUNKSIZE_LENGTH);
-                FmtChunk fmt = FmtChunk.readChunkHeader(fmtChunkBuffer);
-                if (fmt != null)
-                {
-                    return fmt.readChunkData(dsd, fc);
-                }
-                else
-                {
-                    throw new CannotReadException(file + " Not a valid dsf file. Content does not include 'fmt ' chunk");
-                }
+                return fmt.readChunkData(dsd, fc);
             }
             else
             {
-                throw new CannotReadException(file + " Not a valid dsf file. Content does not start with 'DSD '");
+                throw new CannotReadException(file + " Not a valid dsf file. Content does not include 'fmt ' chunk");
             }
+        }
+        else
+        {
+            throw new CannotReadException(file + " Not a valid dsf file. Content does not start with 'DSD '");
         }
     }
 
@@ -64,17 +86,22 @@ public class DsfFileReader extends AudioFileReader2
     {
         try(FileChannel fc = FileChannel.open(file))
         {
-            DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
-            if (dsd != null)
-            {
-                logger.config( file +":actualFileSize:" + fc.size()+":"+dsd.toString());
+            return getTag(fc, file.toString());
+        }
+    }
 
-                return readTag(fc, dsd, file.toString());
-            }
-            else
-            {
-                throw new CannotReadException(file +" Not a valid dsf file. Content does not start with 'DSD '.");
-            }
+    private Tag getTag(FileChannel fc, String file) throws CannotReadException, IOException
+    {
+        DsdChunk dsd = DsdChunk.readChunk(Utils.readFileDataIntoBufferLE(fc, DsdChunk.DSD_HEADER_LENGTH));
+        if (dsd != null)
+        {
+            logger.config( file +":actualFileSize:" + fc.size()+":"+dsd.toString());
+
+            return readTag(fc, dsd, file);
+        }
+        else
+        {
+            throw new CannotReadException(file +" Not a valid dsf file. Content does not start with 'DSD '.");
         }
     }
 

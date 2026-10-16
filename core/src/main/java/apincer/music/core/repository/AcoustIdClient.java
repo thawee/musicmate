@@ -79,7 +79,7 @@ public class AcoustIdClient {
      */
     private String generateFingerprint(String filePath) {
         // Run FFmpeg to output chromaprint to stdout
-        String command = "-i \"" + filePath.replace("\"", "\\\"") + "\" -vn -ar 44100 -ac 2 -f chromaprint -fp_format base64 -";
+        String command = "-i " + apincer.music.core.codec.FFMpegHelper.input(filePath) + " -vn -ar 44100 -ac 2 -f chromaprint -fp_format base64 -";
         FFmpegSession session = FFmpegKit.execute(command);
         
         if (ReturnCode.isSuccess(session.getReturnCode())) {

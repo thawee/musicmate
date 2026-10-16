@@ -9,20 +9,26 @@ import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
+import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Uses file paths when the app holds all-files access or the file is in the app's own storage, and
  * otherwise works through a folder the user granted in the system folder picker. Replacing a file in a
  * granted folder writes a "name.mmtmp" sibling, deletes the original and renames the sibling, with a
- * journal so a replace cut short by a crash is finished or undone by {@link #recover()}.
+ * journal so a replace cut short by a crash is finished or undone by {@link #recover()}. Reads use the
+ * path whenever it is readable (audio MediaStore indexes), and the granted folder only for the rest.
  */
 public class AndroidMusicFileAccess implements MusicFileAccess {
     private static final String TAG = "AndroidMusicFileAccess";
@@ -82,32 +88,64 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
             return new Doc(root, new File(file, name));
         }
 
+        /** Calls {@code visitor} with each name in this folder and whether it is a folder. */
+        void children(ChildVisitor visitor) {
+            Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(
+                    Uri.parse(root.treeUri), root.documentId(file.getAbsolutePath()));
+            try (Cursor cursor = resolver.query(children, new String[]{
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+                while (cursor != null && cursor.moveToNext()) {
+                    visitor.visit(cursor.getString(0),
+                            DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(1)));
+                }
+            }
+        }
+
         boolean exists() {
+            return mimeType() != null;
+        }
+
+        /** The document's MIME type, {@link DocumentsContract.Document#MIME_TYPE_DIR} for a folder; null when missing. */
+        String mimeType() {
             try (Cursor cursor = resolver.query(uri,
-                    new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID}, null, null, null)) {
-                return cursor != null && cursor.moveToFirst();
+                    new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+                return cursor != null && cursor.moveToFirst() ? cursor.getString(0) : null;
             } catch (Exception e) {
-                return false; // the provider reports a missing document by throwing
+                return null; // the provider reports a missing document by throwing
             }
         }
     }
 
+    private interface ChildVisitor {
+        void visit(String name, boolean folder);
+    }
+
     /** The granted document for {@code file}, or null when file paths are the way to reach it. */
     private Doc doc(File file) {
-        if (Environment.isExternalStorageManager()) return null;
-        String path = file.getAbsolutePath();
-        for (String dir : appDirs) {
-            if (path.equals(dir) || path.startsWith(dir + "/")) return null;
-        }
+        if (Environment.isExternalStorageManager() || inAppStorage(file)) return null;
         List<StorageTreeRoots.Root> known = roots;
-        StorageTreeRoots.Root root = known == null ? null : StorageTreeRoots.find(known, path);
-        if (root == null) {
+        Doc doc = known == null ? null : doc(known, file);
+        if (doc == null) {
             // A folder may have been granted since the last look
             known = StorageTreeRoots.load(context);
             roots = known;
-            root = StorageTreeRoots.find(known, path);
+            doc = doc(known, file);
         }
+        return doc;
+    }
+
+    private Doc doc(List<StorageTreeRoots.Root> known, File file) {
+        StorageTreeRoots.Root root = StorageTreeRoots.find(known, file.getAbsolutePath());
         return root == null ? null : new Doc(root, file.getAbsoluteFile());
+    }
+
+    private boolean inAppStorage(File file) {
+        String path = file.getAbsolutePath();
+        for (String dir : appDirs) {
+            if (path.equals(dir) || path.startsWith(dir + "/")) return true;
+        }
+        return false;
     }
 
     /** Forgets cached grants, for example after one was released. */
@@ -305,7 +343,14 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
         Doc doc = doc(file);
         if (doc == null) return paths.delete(file);
         try {
-            return doc.exists() && DocumentsContract.deleteDocument(resolver, doc.uri);
+            String mimeType = doc.mimeType();
+            if (mimeType == null) return false;
+            // The provider deletes a folder with everything in it, even files a path listing cannot see
+            if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType) && !list(doc).isEmpty()) {
+                Log.w(TAG, "Not deleting a folder that is not empty: " + file);
+                return false;
+            }
+            return DocumentsContract.deleteDocument(resolver, doc.uri);
         } catch (Exception e) {
             Log.e(TAG, "delete " + file, e);
             return false;
@@ -327,6 +372,83 @@ public class AndroidMusicFileAccess implements MusicFileAccess {
             Log.e(TAG, "mkdirs " + dir, e);
             return doc.exists();
         }
+    }
+
+    @Override
+    public FileChannel openRead(File file) throws IOException {
+        Uri uri = readUri(file);
+        if (uri == null) return paths.openRead(file);
+        ParcelFileDescriptor pfd = resolver.openFileDescriptor(uri, "r");
+        if (pfd == null) throw new IOException("Cannot read " + file);
+        // The stream owns the descriptor, and closing the channel closes the stream
+        return new ParcelFileDescriptor.AutoCloseInputStream(pfd).getChannel();
+    }
+
+    @Override
+    public Uri readUri(File file) {
+        // Checked first, so readable audio and app storage never pay for the grant lookup
+        if (Files.isReadable(file.toPath())) return null;
+        Doc doc = doc(file);
+        return doc == null ? null : doc.uri;
+    }
+
+    @Override
+    public String ffmpegInput(File file) {
+        Uri uri = readUri(file);
+        return uri == null ? paths.ffmpegInput(file) : FFmpegKitConfig.getSafParameterForRead(context, uri);
+    }
+
+    @Override
+    public List<File> list(File dir) {
+        Doc doc = doc(dir);
+        if (doc == null) return paths.list(dir);
+        try {
+            return list(doc);
+        } catch (Exception e) {
+            Log.e(TAG, "list " + dir, e);
+            return new ArrayList<>();
+        }
+    }
+
+    /** Throws when the folder cannot be listed, so {@link #delete} never takes that for empty. */
+    private List<File> list(Doc dir) {
+        List<File> files = new ArrayList<>();
+        dir.children((name, folder) -> files.add(new File(dir.file, name)));
+        return files;
+    }
+
+    @Override
+    public List<File> walk(File dir, Predicate<String> nameFilter) throws IOException {
+        if (Environment.isExternalStorageManager()) return paths.walk(dir, nameFilter);
+        List<StorageTreeRoots.Root> known = StorageTreeRoots.load(context);
+        roots = known;
+        List<File> found = new ArrayList<>();
+        ArrayDeque<File> folders = new ArrayDeque<>();
+        folders.add(dir.getAbsoluteFile());
+        while (!folders.isEmpty()) {
+            File folder = folders.poll();
+            // Each folder on its own: a grant may cover only part of the walk
+            Doc doc = inAppStorage(folder) ? null : doc(known, folder);
+            if (doc != null) {
+                try {
+                    doc.children((name, isFolder) -> {
+                        File child = new File(folder, name);
+                        if (isFolder) folders.add(child);
+                        else if (nameFilter.test(name)) found.add(child);
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "walk " + folder, e);
+                }
+            } else {
+                File[] children = folder.listFiles();
+                if (children == null) continue;
+                for (File child : children) {
+                    if (child.isDirectory()) folders.add(child);
+                    else if (nameFilter.test(child.getName())) found.add(child);
+                }
+            }
+        }
+        return found;
     }
 
     /** Finishes or undoes replaces cut short by a crash. Run once at start, off the main thread. */

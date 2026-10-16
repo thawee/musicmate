@@ -72,7 +72,7 @@ public class SpectrogramGenerator {
         String command =
                 "-y " +
                         "-hide_banner -loglevel error " +
-                        "-i \"" + inputPath + "\" " +
+                        "-i " + apincer.music.core.codec.FFMpegHelper.input(inputPath) + " " +
                         resampleArg +
                         "-ac 1 "+  // merge to 1 channel for speed
                         "-filter_complex "+

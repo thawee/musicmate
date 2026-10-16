@@ -1076,8 +1076,8 @@ public class MusicAnalyser {
 
         String command = String.format(
                 //"-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
-                "-i \"%s\" -ac 1 -ar 44100 -f s16le \"%s\" -y",
-                inputPath,
+                "-i %s -ac 1 -ar 44100 -f s16le \"%s\" -y",
+                FFMpegHelper.input(inputPath),
                 outputPath
         );
         setFFMpegOff();

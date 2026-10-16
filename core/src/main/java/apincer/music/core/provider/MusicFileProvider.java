@@ -92,6 +92,11 @@ public final class MusicFileProvider extends ContentProvider {
             if (!file.exists()) {
                 throw new FileNotFoundException("File not found: " + uri);
             }
+            // DSF under scoped storage: hand over the granted folder's descriptor, for reading only
+            Uri granted = "r".equals(str) ? FileSystem.access().readUri(file) : null;
+            if (granted != null && getContext() != null) {
+                return getContext().getContentResolver().openFileDescriptor(granted, "r");
+            }
             return ParcelFileDescriptor.open(file, b(str));
         }
 

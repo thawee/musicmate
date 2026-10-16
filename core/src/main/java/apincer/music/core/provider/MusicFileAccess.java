@@ -1,12 +1,18 @@
 package apincer.music.core.provider;
 
+import android.net.Uri;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Every change to files in the music library goes through this interface, so the app can work with
- * direct file paths (all-files access) or with a granted folder (scoped storage).
+ * direct file paths (all-files access) or with a granted folder (scoped storage). So do reads of files
+ * that scoped storage hides from paths (DSF, covers, .cue) and folder listings.
  * Files in the app's own directories may use it too; implementations handle both.
  */
 public interface MusicFileAccess {
@@ -43,7 +49,26 @@ public interface MusicFileAccess {
     /** Moves or renames {@code source}, creating the target folder if needed. */
     boolean move(File source, File target, boolean replaceExisting);
 
+    /** Deletes a file or an empty folder; a folder with anything in it is kept. */
     boolean delete(File file);
 
     boolean mkdirs(File dir);
+
+    /** Opens {@code file} for reading. Closing the channel releases everything it holds. */
+    FileChannel openRead(File file) throws IOException;
+
+    /** A content URI that reads {@code file} when its path cannot be read, otherwise null. */
+    Uri readUri(File file);
+
+    /**
+     * The FFmpeg input argument for {@code file}: its quoted path, or an ffmpeg-kit "saf:" input when
+     * only a granted folder can read it. A "saf:" input is good for one FFmpeg run.
+     */
+    String ffmpegInput(File file);
+
+    /** The files and folders directly in {@code dir}, including ones only a granted folder shows. */
+    List<File> list(File dir);
+
+    /** Files under {@code dir} at any depth whose names pass {@code nameFilter}. */
+    List<File> walk(File dir, Predicate<String> nameFilter) throws IOException;
 }

@@ -149,19 +149,17 @@ public class FileSystem {
 
     public static void copyDir(File sourceDir, File targetDir) {
         access.mkdirs(targetDir);
-        File [] files = sourceDir.listFiles();
-        if(files != null) {
-            for (File f : files) {
-                File newRelated = new File(targetDir, f.getName());
-                try {
-                    if(f.isDirectory()) {
-                        FileSystem.copyDir(f, newRelated);
-                    }else {
-                        FileSystem.copyFile(f, newRelated);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+        // Through the access: a path listing hides covers and .cue under scoped storage
+        for (File f : access.list(sourceDir)) {
+            File newRelated = new File(targetDir, f.getName());
+            try {
+                if(f.isDirectory()) {
+                    FileSystem.copyDir(f, newRelated);
+                }else {
+                    FileSystem.copyFile(f, newRelated);
                 }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -181,21 +179,17 @@ public class FileSystem {
         }
         access.mkdirs(targetDir);
 
-        File [] files = sourceDir.listFiles(file -> (
-                (isRelatedDir(file) || isRelatedFile(file))));
-       // File [] files = sourceDir.listFiles();
-        if(files != null) {
-            for (File f : files) {
-                if(isRelatedDir(f)) {
-                    File newRelated = new File(targetDir, f.getName());
-                    FileSystem.copyDir(f, newRelated);
-                }else if(isRelatedFile(f)) {
-                    File newRelated = new File(targetDir, f.getName());
-                    try {
-                        FileSystem.copyFile(f, newRelated);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+        // Through the access: a path listing hides covers and .cue under scoped storage
+        for (File f : access.list(sourceDir)) {
+            if(isRelatedDir(f)) {
+                File newRelated = new File(targetDir, f.getName());
+                FileSystem.copyDir(f, newRelated);
+            }else if(isRelatedFile(f)) {
+                File newRelated = new File(targetDir, f.getName());
+                try {
+                    FileSystem.copyFile(f, newRelated);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }

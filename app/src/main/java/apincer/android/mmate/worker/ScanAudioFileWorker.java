@@ -14,16 +14,13 @@ import androidx.work.WorkerParameters;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.TagReader;
+import apincer.music.core.provider.FileSystem;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.LogHelper;
@@ -75,7 +72,7 @@ public class ScanAudioFileWorker extends Worker {
             }
 
             List<File> list = pathList(getApplicationContext());
-            List<Path> allPaths = new ArrayList<>();
+            List<File> allPaths = new ArrayList<>();
 
             // First gather all paths
             for (File file : list) {
@@ -114,7 +111,7 @@ public class ScanAudioFileWorker extends Worker {
         }
     }
 
-    private int processPaths(List<Path> paths, boolean forceRead) {
+    private int processPaths(List<File> paths, boolean forceRead) {
         final int totalFiles = paths.size();
         final java.util.concurrent.atomic.AtomicInteger processedCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
@@ -124,15 +121,15 @@ public class ScanAudioFileWorker extends Worker {
                 break;
             }
             int end = Math.min(i + optimalBatchSize, paths.size());
-            List<Path> batch = paths.subList(i, end);
+            List<File> batch = paths.subList(i, end);
 
             java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(batch.size());
 
             // Submit tasks in parallel within the batch
-            for (Path path : batch) {
+            for (File path : batch) {
                 MusicMateExecutors.scan(() -> {
                     try {
-                        repos.scanMusicFile(path.toFile(), forceRead);
+                        repos.scanMusicFile(path, forceRead);
                     } finally {
                         int current = processedCount.incrementAndGet();
                         // Throttle progress updates to reduce Binder IPC overhead (every ~1% or 50 files)
@@ -191,41 +188,14 @@ public class ScanAudioFileWorker extends Worker {
         }
     }
 
-    private List<Path> search(String pathname) {
-        List<Path> result = new ArrayList<>();
+    private List<File> search(String pathname) {
         try {
-            // First do a quick filter by extension to improve performance
-            try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
-                pathStream
-                        .filter(this::filter)
-                        .forEach(result::add);
-            }
+            // Through the access, so a granted folder also yields the DSF files a path walk cannot see
+            return FileSystem.access().walk(new File(pathname), TagReader::isSupportedFileFormat);
         } catch (IOException e) {
             Log.e(TAG, "Error searching path: " + pathname, e);
+            return new ArrayList<>();
         }
-        return result;
-    }
-
-    // Only scan new or modified files
-    private boolean filter(Path path) {
-        try {
-            String pathString = path.toString();
-           // System.out.println("Filter: "+pathString);
-            if (!TagReader.isSupportedFileFormat(pathString)) {
-               // System.out.println("  NOT SUPPORT!, "+pathString);
-                return false;
-            }
-
-            if(pathString.toLowerCase().contains("download")) {
-                // always re-scan in-coming songs
-                return true;
-            }
-
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "filter", e);
-        }
-        return false;
     }
 
     public static List<File> pathList(Context context) {

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -71,6 +72,15 @@ public abstract class AudioFileReader2 extends AudioFileReader
      * @throws CannotReadException
      * @throws IOException
      */
+    /**
+     * Reads {@code f} from {@code channel}, an open read channel on its content, for files that can be
+     * opened but not by path (a document from a granted folder). Formats that support this override it.
+     */
+    public AudioFile read(File f, FileChannel channel) throws CannotReadException, IOException
+    {
+        throw new CannotReadException("Reading from a channel is not supported for " + f);
+    }
+
     protected abstract GenericAudioHeader getEncodingInfo(Path path) throws CannotReadException, IOException;
 
     protected GenericAudioHeader getEncodingInfo(RandomAccessFile raf) throws CannotReadException, IOException
