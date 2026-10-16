@@ -185,7 +185,7 @@ public class ReplayGainManager {
         try {
             FileSystem.access().edit(file, workingFile -> {
                 AudioFile audioFile = AudioFileIO.read(workingFile);
-                Tag tag = audioFile.getTagOrCreateDefault();
+                Tag tag = audioFile.getTagOrCreateAndSetDefault();
 
                 String gainStr = String.format(Locale.US, "%.2f dB", gainDb);
                 String peakStr = String.format(Locale.US, "%.6f", peak);

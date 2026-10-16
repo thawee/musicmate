@@ -82,7 +82,8 @@ public class JThinkWriter extends TagWriter {
                     throw new CannotReadException("audio file is null or unreadable for " + tag.getPath());
                 }
 
-                Tag newTag = audioFile.getTagOrCreateDefault();
+                // ...AndSet: a new tag must be attached, or commit() writes none (a DSF without tags failed)
+                Tag newTag = audioFile.getTagOrCreateAndSetDefault();
                 if (!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
                     // wave does not support encoding parameter
                     newTag.setEncoding(StandardCharsets.UTF_8);
