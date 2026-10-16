@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:fribidi",
+ "name": "FriBidi",
+ "description": "Bidirectional text, linked into FFmpeg.",
+ "website": "https://github.com/fribidi/fribidi",
+ "licenses": [
+  "LGPL-2.1-or-later"
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libass",
+ "name": "libass",
+ "description": "Subtitle rendering, linked into FFmpeg.",
+ "website": "https://github.com/libass/libass",
+ "licenses": [
+  "libass-notice"
+ ]
+}

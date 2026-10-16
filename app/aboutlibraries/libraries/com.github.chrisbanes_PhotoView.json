@@ -1,0 +1,9 @@
+{
+ "uniqueId": "com.github.chrisbanes:PhotoView",
+ "name": "PhotoView",
+ "description": "Zoomable image view. Its JitPack POM names no license; upstream is Apache 2.0.",
+ "website": "https://github.com/Baseflow/PhotoView",
+ "licenses": [
+  "Apache-2.0"
+ ]
+}

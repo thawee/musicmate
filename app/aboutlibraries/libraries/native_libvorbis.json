@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libvorbis",
+ "name": "libvorbis",
+ "description": "Vorbis codec, linked into FFmpeg.",
+ "website": "https://xiph.org/vorbis/",
+ "licenses": [
+  "libvorbis-notice"
+ ]
+}

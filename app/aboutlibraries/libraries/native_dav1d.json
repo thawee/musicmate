@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:dav1d",
+ "name": "dav1d",
+ "description": "AV1 decoder, linked into FFmpeg.",
+ "website": "https://code.videolan.org/videolan/dav1d",
+ "licenses": [
+  "dav1d-notice"
+ ]
+}

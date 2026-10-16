@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libxml2",
+ "name": "libxml2",
+ "description": "XML parsing, linked into FFmpeg.",
+ "website": "https://gitlab.gnome.org/GNOME/libxml2",
+ "licenses": [
+  "libxml2-notice"
+ ]
+}

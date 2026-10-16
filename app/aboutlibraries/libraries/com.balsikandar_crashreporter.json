@@ -1,0 +1,9 @@
+{
+ "uniqueId": "com.balsikandar:crashreporter",
+ "name": "CrashReporter",
+ "description": "Local crash logs. Included in source form (library/crashreporter).",
+ "website": "https://github.com/balsikandar/CrashReporter",
+ "licenses": [
+  "Apache-2.0"
+ ]
+}

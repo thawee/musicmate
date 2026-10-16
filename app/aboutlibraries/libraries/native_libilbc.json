@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libilbc",
+ "name": "libilbc",
+ "description": "iLBC codec, linked into FFmpeg.",
+ "website": "https://github.com/TimothyGu/libilbc",
+ "licenses": [
+  "libilbc-notice"
+ ]
+}

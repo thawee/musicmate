@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:snappy",
+ "name": "Snappy",
+ "description": "Compression, linked into FFmpeg.",
+ "website": "https://github.com/google/snappy",
+ "licenses": [
+  "snappy-notice"
+ ]
+}

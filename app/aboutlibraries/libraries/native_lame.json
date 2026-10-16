@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:lame",
+ "name": "LAME",
+ "description": "MP3 encoder, linked into FFmpeg.",
+ "website": "https://lame.sourceforge.io",
+ "licenses": [
+  "LGPL-2.0-or-later"
+ ]
+}

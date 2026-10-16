@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:zimg",
+ "name": "zimg",
+ "description": "Image scaling, linked into FFmpeg.",
+ "website": "https://github.com/sekrit-twc/zimg",
+ "licenses": [
+  "zimg-notice"
+ ]
+}

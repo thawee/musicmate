@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:gnutls",
+ "name": "GnuTLS",
+ "description": "TLS, linked into FFmpeg.",
+ "website": "https://www.gnutls.org",
+ "licenses": [
+  "LGPL-2.1-or-later"
+ ]
+}

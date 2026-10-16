@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libogg",
+ "name": "libogg",
+ "description": "Ogg container, linked into FFmpeg.",
+ "website": "https://xiph.org/ogg/",
+ "licenses": [
+  "libogg-notice"
+ ]
+}

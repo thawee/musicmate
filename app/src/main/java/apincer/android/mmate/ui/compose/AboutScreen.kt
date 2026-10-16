@@ -467,6 +467,16 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.about_github_source), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
+
+                    OutlinedButton(
+                        onClick = { ctx.startActivity(apincer.android.mmate.ui.LicensesActivity.createIntent(ctx)) },
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.about_open_source_licenses), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
                 }
             }
         }

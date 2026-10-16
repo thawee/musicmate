@@ -1,0 +1,9 @@
+{
+ "uniqueId": "org.kc7bfi:jflac",
+ "name": "JustFLAC (jFLAC)",
+ "description": "FLAC decoding. Included in source form (library/JustFLAC).",
+ "website": "https://jflac.sourceforge.net",
+ "licenses": [
+  "LGPL-2.0-or-later"
+ ]
+}

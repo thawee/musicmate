@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:freetype",
+ "name": "FreeType",
+ "description": "Font rendering. Portions of this software are copyright The FreeType Project (www.freetype.org). All rights reserved. Linked into FFmpeg.",
+ "website": "https://freetype.org",
+ "licenses": [
+  "freetype-notice"
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libuuid",
+ "name": "libuuid",
+ "description": "UUIDs for Fontconfig (util-linux), linked into FFmpeg.",
+ "website": "https://github.com/util-linux/util-linux",
+ "licenses": [
+  "libuuid-notice"
+ ]
+}

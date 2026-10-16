@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libpng",
+ "name": "libpng",
+ "description": "PNG images for FreeType and libwebp, linked into FFmpeg.",
+ "website": "http://www.libpng.org/pub/png/libpng.html",
+ "licenses": [
+  "libpng-notice"
+ ]
+}

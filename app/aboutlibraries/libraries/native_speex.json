@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:speex",
+ "name": "Speex",
+ "description": "Speex codec, linked into FFmpeg.",
+ "website": "https://speex.org",
+ "licenses": [
+  "speex-notice"
+ ]
+}

@@ -24,6 +24,7 @@ plugins {
     alias libs.plugins.kotlin.serialization
     alias libs.plugins.kotlin.compose
     alias libs.plugins.screenshot
+    alias libs.plugins.aboutlibraries.android
 }
 
 android {
@@ -217,6 +218,7 @@ dependencies {
     // Local Submodules
     implementation project(':library:library')
     implementation project(':library:crashreporter')
+    implementation libs.aboutlibraries.compose.m3
 
     // Testing
     testImplementation libs.junit
@@ -245,4 +247,17 @@ configurations.implementation {
 static def getDate() {
     def date = new Date()
     return date.format('yyMMdd')
+}
+
+// Open-source licenses screen: Maven dependencies are collected at build time; FFmpeg's native
+// libraries and the modules kept in source form are described in aboutlibraries/
+aboutLibraries {
+    // "collect { }" would resolve to Groovy's own collect(Closure), so set the properties directly
+    collect.configPath.set(file("aboutlibraries"))
+    collect.fetchRemoteLicense.set(false)
+    collect.fetchRemoteFunding.set(false)
+    // The POM lists LGPL 3.0 and GPL 3.0 for every variant; aboutlibraries/ffmpeg-kit.json describes this LGPL build
+    library.exclusionPatterns.add(java.util.regex.Pattern.compile("com\\.antonkarpenko:ffmpeg-kit-full"))
+    // A dependency without a license fails the build instead of showing up blank
+    library.requireLicense.set(true)
 }

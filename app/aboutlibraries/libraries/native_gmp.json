@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:gmp",
+ "name": "GMP",
+ "description": "Arithmetic used by GnuTLS. Dual LGPL v3 or later / GPL v2 or later, used under the LGPL.",
+ "website": "https://gmplib.org",
+ "licenses": [
+  "LGPL-3.0-or-later"
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:giflib",
+ "name": "giflib",
+ "description": "GIF images for libwebp, linked into FFmpeg.",
+ "website": "https://giflib.sourceforge.net",
+ "licenses": [
+  "giflib-notice"
+ ]
+}

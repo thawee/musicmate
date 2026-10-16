@@ -577,6 +577,7 @@
     <!-- Play build: folder grants -->
     <string name="directories_grant_explanation">Pick each folder in Android\'s folder picker so MusicMate can edit tags, covers and DSD files in it.</string>
     <string name="directories_add_folder">Add folder</string>
+    <string name="about_open_source_licenses">Open-source licenses</string>
     <string name="directories_empty">No folders yet. Tap Add folder to choose where your music is.</string>
     <string name="directories_allow_access">Allow access</string>
     <string name="directories_no_access">No access yet</string>

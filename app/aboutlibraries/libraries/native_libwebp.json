@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libwebp",
+ "name": "libwebp",
+ "description": "WebP images, linked into FFmpeg.",
+ "website": "https://developers.google.com/speed/webp",
+ "licenses": [
+  "libwebp-notice"
+ ]
+}

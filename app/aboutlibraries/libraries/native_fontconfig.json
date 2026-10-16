@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:fontconfig",
+ "name": "Fontconfig",
+ "description": "Font configuration, linked into FFmpeg.",
+ "website": "https://www.freedesktop.org/wiki/Software/fontconfig/",
+ "licenses": [
+  "fontconfig-notice"
+ ]
+}

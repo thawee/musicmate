@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libiconv",
+ "name": "libiconv",
+ "description": "Character set conversion, linked into FFmpeg.",
+ "website": "https://www.gnu.org/software/libiconv/",
+ "licenses": [
+  "LGPL-2.1-or-later"
+ ]
+}

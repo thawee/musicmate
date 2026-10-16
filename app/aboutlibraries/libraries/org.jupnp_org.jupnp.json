@@ -1,0 +1,7 @@
+{
+ "uniqueId": "org.jupnp:org.jupnp",
+ "licenses": [
+  "jupnp-notice"
+ ],
+ "description": "UPnP and DLNA stack. Source: https://github.com/jupnp/jupnp"
+}

@@ -144,6 +144,11 @@
         </activity>
 
         <activity
+            android:name="apincer.android.mmate.ui.LicensesActivity"
+            android:theme="@style/AboutAppTheme"
+            android:exported="false" />
+
+        <activity
             android:name="apincer.android.mmate.ui.AboutActivity"
             android:theme="@style/AboutAppTheme"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">

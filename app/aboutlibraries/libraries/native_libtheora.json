@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libtheora",
+ "name": "libtheora",
+ "description": "Theora codec, linked into FFmpeg.",
+ "website": "https://theora.org",
+ "licenses": [
+  "libtheora-notice"
+ ]
+}

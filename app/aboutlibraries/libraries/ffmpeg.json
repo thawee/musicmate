@@ -1,0 +1,10 @@
+{
+ "uniqueId": "ffmpeg",
+ "name": "FFmpeg",
+ "description": "Decoding, conversion and analysis. Built with --enable-version3 and without --enable-gpl or --enable-nonfree, so it is used under the LGPL v3 or later. Built from github.com/sk3llo/ffmpeg-kit-flutter (Maven com.antonkarpenko:ffmpeg-kit-full 2.2.1). FFmpeg source: ffmpeg.org.",
+ "website": "https://ffmpeg.org",
+ "licenses": [
+  "LGPL-3.0-or-later"
+ ],
+ "artifactVersion": "8.1.1"
+}

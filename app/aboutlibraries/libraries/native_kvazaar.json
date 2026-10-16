@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:kvazaar",
+ "name": "Kvazaar",
+ "description": "HEVC encoder, linked into FFmpeg.",
+ "website": "https://github.com/ultravideo/kvazaar",
+ "licenses": [
+  "kvazaar-notice"
+ ]
+}

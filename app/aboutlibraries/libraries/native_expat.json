@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:expat",
+ "name": "Expat",
+ "description": "XML parsing for Fontconfig, linked into FFmpeg.",
+ "website": "https://libexpat.github.io",
+ "licenses": [
+  "expat-notice"
+ ]
+}

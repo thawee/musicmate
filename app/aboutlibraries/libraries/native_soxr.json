@@ -1,0 +1,10 @@
+{
+ "uniqueId": "native:soxr",
+ "name": "SoX Resampler (soxr)",
+ "description": "Resampling, linked into FFmpeg.",
+ "website": "https://sourceforge.net/projects/soxr/",
+ "licenses": [
+  "LGPL-2.1-or-later",
+  "soxr-notice"
+ ]
+}

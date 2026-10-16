@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:shine",
+ "name": "shine",
+ "description": "MP3 encoder, linked into FFmpeg.",
+ "website": "https://github.com/toots/shine",
+ "licenses": [
+  "LGPL-2.0-or-later"
+ ]
+}

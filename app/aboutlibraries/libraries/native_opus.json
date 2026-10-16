@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:opus",
+ "name": "Opus",
+ "description": "Opus codec, linked into FFmpeg.",
+ "website": "https://opus-codec.org",
+ "licenses": [
+  "opus-notice"
+ ]
+}

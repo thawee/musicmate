@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:nettle",
+ "name": "Nettle",
+ "description": "Cryptography used by GnuTLS. Dual LGPL v3 or later / GPL v2 or later, used under the LGPL.",
+ "website": "https://www.lysator.liu.se/~nisse/nettle/",
+ "licenses": [
+  "LGPL-3.0-or-later"
+ ]
+}

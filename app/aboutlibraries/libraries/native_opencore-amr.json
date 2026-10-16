@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:opencore-amr",
+ "name": "OpenCORE AMR",
+ "description": "AMR codec, linked into FFmpeg.",
+ "website": "https://sourceforge.net/projects/opencore-amr/",
+ "licenses": [
+  "Apache-2.0"
+ ]
+}

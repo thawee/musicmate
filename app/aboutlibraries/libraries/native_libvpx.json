@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:libvpx",
+ "name": "libvpx",
+ "description": "VP8 and VP9 codecs, linked into FFmpeg.",
+ "website": "https://www.webmproject.org",
+ "licenses": [
+  "libvpx-notice"
+ ]
+}

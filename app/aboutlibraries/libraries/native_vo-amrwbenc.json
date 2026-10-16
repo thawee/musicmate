@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:vo-amrwbenc",
+ "name": "VisualOn AMR-WB encoder",
+ "description": "AMR-WB encoder, linked into FFmpeg.",
+ "website": "https://sourceforge.net/projects/opencore-amr/",
+ "licenses": [
+  "Apache-2.0"
+ ]
+}

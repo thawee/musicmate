@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:jpeg",
+ "name": "libjpeg-turbo",
+ "description": "JPEG images for libwebp. This software is based in part on the work of the Independent JPEG Group. Linked into FFmpeg.",
+ "website": "https://libjpeg-turbo.org",
+ "licenses": [
+  "jpeg-notice"
+ ]
+}

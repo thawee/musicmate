@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:harfbuzz",
+ "name": "HarfBuzz",
+ "description": "Text shaping, linked into FFmpeg.",
+ "website": "https://harfbuzz.github.io",
+ "licenses": [
+  "harfbuzz-notice"
+ ]
+}

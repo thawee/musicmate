@@ -1,0 +1,9 @@
+{
+ "uniqueId": "org.jaudiotagger:jaudiotagger",
+ "name": "jaudiotagger",
+ "description": "Tag reading and writing. Included in source form and modified for MusicMate; the modified source is in the MusicMate repository (library/jaudiotagger-android).",
+ "website": "https://www.jthink.net/jaudiotagger/",
+ "licenses": [
+  "LGPL-2.1-or-later"
+ ]
+}

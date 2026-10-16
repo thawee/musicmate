@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:twolame",
+ "name": "TwoLAME",
+ "description": "MPEG audio layer 2 encoder, linked into FFmpeg.",
+ "website": "https://www.twolame.org",
+ "licenses": [
+  "LGPL-2.1-or-later"
+ ]
+}

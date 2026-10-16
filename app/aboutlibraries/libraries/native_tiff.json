@@ -1,0 +1,9 @@
+{
+ "uniqueId": "native:tiff",
+ "name": "LibTIFF",
+ "description": "TIFF images for libwebp, linked into FFmpeg.",
+ "website": "https://libtiff.gitlab.io/libtiff/",
+ "licenses": [
+  "tiff-notice"
+ ]
+}
