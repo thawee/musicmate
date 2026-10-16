@@ -30,7 +30,9 @@ When you start the media server, MusicMate shares your music library with DLNA p
 
 ## Other apps
 
-If you open a song in another music app, or give MusicMate access to external player sessions, Android passes only that song, or that playback information, between the apps on your device.
+If you open a song in another music app, MusicMate passes only that song to it.
+
+If you turn on External Player Access, Android asks you to grant MusicMate notification access, which Android requires before an app can see other apps' media sessions. MusicMate uses it only to see which music apps are playing and to control them. It never reads, stores or sends your notifications.
 
 ## Permissions
 

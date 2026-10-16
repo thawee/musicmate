@@ -1,7 +1,7 @@
 {
  "uniqueId": "ffmpeg",
  "name": "FFmpeg",
- "description": "Decoding, conversion and analysis. Built with --enable-version3 and without --enable-gpl or --enable-nonfree, so it is used under the LGPL v3 or later. Built from github.com/sk3llo/ffmpeg-kit-flutter (Maven com.antonkarpenko:ffmpeg-kit-full 2.2.1). FFmpeg source: ffmpeg.org.",
+ "description": "Decoding, conversion and analysis. FFmpeg 8.1 (libavcodec 62.28), built with --enable-version3 and without --enable-gpl or --enable-nonfree, so it is used under the LGPL v3 or later. Published as com.antonkarpenko:ffmpeg-kit-full 2.2.1, built with the build scripts of github.com/sk3llo/ffmpeg-kit, which download FFmpeg and its libraries at build time. FFmpeg source: ffmpeg.org, release 8.1.",
  "website": "https://ffmpeg.org",
  "licenses": [
   "LGPL-3.0-or-later"

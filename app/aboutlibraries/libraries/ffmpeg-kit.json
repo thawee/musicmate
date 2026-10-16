@@ -1,8 +1,8 @@
 {
  "uniqueId": "ffmpeg-kit",
  "name": "FFmpegKit",
- "description": "Runs FFmpeg on Android. This \"full\" build is the LGPL variant (no GPL libraries). Built from github.com/sk3llo/ffmpeg-kit-flutter (Maven com.antonkarpenko:ffmpeg-kit-full 2.2.1). ",
- "website": "https://github.com/sk3llo/ffmpeg-kit-flutter",
+ "description": "Runs FFmpeg on Android. This \"full\" build is the LGPL variant (no GPL libraries). Published as com.antonkarpenko:ffmpeg-kit-full 2.2.1, built with the build scripts of github.com/sk3llo/ffmpeg-kit, which download FFmpeg and its libraries at build time. ",
+ "website": "https://github.com/sk3llo/ffmpeg-kit",
  "licenses": [
   "LGPL-3.0-or-later"
  ],

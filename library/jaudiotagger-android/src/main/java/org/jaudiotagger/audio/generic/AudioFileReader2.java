@@ -1,3 +1,7 @@
+/*
+ * Modified for MusicMate, 2026-10-16: reads a file from an open FileChannel, for files Android lets the app
+ * open only through a folder the user granted.
+ */
 package org.jaudiotagger.audio.generic;
 
 import org.jaudiotagger.audio.AudioFile;

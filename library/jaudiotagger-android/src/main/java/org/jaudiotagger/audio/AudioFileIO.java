@@ -1,4 +1,7 @@
 /*
+ * Modified for MusicMate, 2026-10-16: reads a file from an open FileChannel, for files Android lets the app
+ * open only through a folder the user granted.
+ *
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
  * 
