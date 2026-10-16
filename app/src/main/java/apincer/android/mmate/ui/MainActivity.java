@@ -144,6 +144,16 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private boolean reopenFoldersAfterStorageGrant = false;
     private static final String STATE_REOPEN_FOLDERS = "reopen_folders_after_storage_grant";
 
+    /** Play build: what the open system folder picker is for, and what to do with the folder. */
+    private static final String STATE_PENDING_FOLDER_GRANT = "pending_folder_grant";
+    private static final String GRANT_SCAN_FOLDER = "scan_folder";
+    private static final String GRANT_ORGANIZE = "organize";
+    private String pendingFolderGrantKind;
+    private java.util.function.Consumer<String> pendingFolderGrant;
+    private final androidx.activity.result.ActivityResultLauncher<android.content.Intent> folderGrantLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                    this::onFolderGrantResult);
+
     @Inject
     FileOperationTask operationTask;
 
@@ -406,6 +416,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
+            pendingFolderGrantKind = savedInstanceState.getString(STATE_PENDING_FOLDER_GRANT);
             restoreCriteria(savedInstanceState);
         }
 
@@ -717,6 +728,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_REOPEN_FOLDERS, reopenFoldersAfterStorageGrant);
+        outState.putString(STATE_PENDING_FOLDER_GRANT, pendingFolderGrantKind);
         // The open collection, filter and search survive configuration changes and process death
         if (currentCriteria != null) {
             outState.putString("criteria_type", currentCriteria.getType().name());
@@ -753,7 +765,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private void refreshSystemAccessState(boolean forcePlayerRefresh) {
         boolean previouslyHadExternalPlayerAccess = MainScaffoldState.get()
                 .getSystemAccess().getValue().getHasExternalPlayerAccess();
-        boolean hasStorageAccess = PermissionUtils.checkFullStorageAccessPermissions(this);
+        boolean hasStorageAccess = PermissionUtils.checkAccessPermissions(this);
         boolean hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this);
         MainScaffoldState.updateSystemAccess(hasStorageAccess, hasExternalPlayerAccess);
         boolean externalPlayerAccessChanged =
@@ -1804,7 +1816,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             return;
         }
 
-        List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
+        boolean allFilesAccess = apincer.music.core.provider.StorageMode.usesAllFilesAccess(this);
+        // The Play build has no default folders: each one is a folder the user granted
+        List<String> defaultPaths = allFilesAccess ? FileRepository.getDefaultMusicPaths(this) : new ArrayList<>();
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
         List<String> dirs = TagRepository.getDirectories(this);
         List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
@@ -1839,6 +1853,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 }
             },
             (sid, onSelected) -> { // onAddStorage: return the selection to the dialog's draft
+                if (!allFilesAccess) {
+                    // Play build: the system folder picker, opened at that volume's Music folder
+                    requestFolderGrant(GRANT_SCAN_FOLDER,
+                            DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"), onSelected::accept);
+                    return;
+                }
                 DialogProperties properties = new DialogProperties();
                 properties.selection_mode = DialogConfigs.SINGLE_MODE;
                 properties.selection_type = DialogConfigs.DIR_SELECT;
@@ -1850,7 +1870,15 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 });
                 dialog.setTitle("Select a Directory");
                 dialog.show();
-            }
+            },
+            allFilesAccess ? null : dir -> MusicFolderAccess.canWrite(getApplicationContext(), dir),
+            allFilesAccess ? null : (dir, onPicked) -> requestFolderGrant(GRANT_SCAN_FOLDER, dir, picked -> {
+                if (!MusicFolderAccess.covers(picked, dir)) {
+                    android.widget.Toast.makeText(this, getString(R.string.directories_grant_mismatch,
+                            apincer.android.mmate.ui.compose.MusicFoldersDialogKt.readableFolderPath(dir)), android.widget.Toast.LENGTH_LONG).show();
+                }
+                onPicked.accept(picked);
+            })
         );
 
         foldersDialog.setContentView(cview);
@@ -1862,6 +1890,32 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
 
         foldersDialog.show();
+    }
+
+    /** Play build: opens the system folder picker at {@code initialPath}; {@code onGranted} gets the granted folder. */
+    private void requestFolderGrant(String kind, String initialPath, java.util.function.Consumer<String> onGranted) {
+        pendingFolderGrantKind = kind;
+        pendingFolderGrant = onGranted;
+        folderGrantLauncher.launch(FolderGrantActivity.createIntent(this, initialPath));
+    }
+
+    private void onFolderGrantResult(androidx.activity.result.ActivityResult result) {
+        String path = MusicFolderAccess.grantedPath(result);
+        String kind = pendingFolderGrantKind;
+        java.util.function.Consumer<String> callback = pendingFolderGrant;
+        pendingFolderGrantKind = null;
+        pendingFolderGrant = null;
+        if (path == null) return;
+        if (callback != null) {
+            callback.accept(path);
+        } else if (GRANT_SCAN_FOLDER.equals(kind)) {
+            // Recreated while the picker was open, so the folder list is gone: save the folder, show the list again
+            List<String> dirs = new ArrayList<>(TagRepository.getDirectories(this));
+            if (!dirs.contains(path)) dirs.add(path);
+            apincer.music.core.Settings.setDirectories(getApplicationContext(), dirs);
+            doScanDirectories();
+        }
+        // An Organize grant after recreation is kept; Organize runs when the user starts it again
     }
 
     private static void setListViewHeightBasedOnChildren(ListView listView) {
@@ -1993,6 +2047,21 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private void doMoveMediaItems(List<Track> selections) {
         if (selections.isEmpty()) return;
+        if (!MusicFolderAccess.hasOrganizeAccess(this)) {
+            // Play build: Organize writes into Music, which needs a folder grant
+            pendingFolderGrantKind = GRANT_ORGANIZE;
+            pendingFolderGrant = picked -> {
+                if (MusicFolderAccess.hasOrganizeAccess(this)) {
+                    doMoveMediaItems(selections);
+                } else {
+                    android.widget.Toast.makeText(this, getString(R.string.directories_grant_mismatch,
+                            apincer.android.mmate.ui.compose.MusicFoldersDialogKt.readableFolderPath(
+                                    MusicFolderAccess.organizeRoot(this))), android.widget.Toast.LENGTH_LONG).show();
+                }
+            };
+            MusicFolderAccess.askForOrganizeAccess(this, folderGrantLauncher);
+            return;
+        }
 
         final AlertDialog[] alertHolder = new AlertDialog[1];
         final List<Track> failed = new ArrayList<>();

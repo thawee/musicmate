@@ -51,7 +51,7 @@ class SupportScreensAccessibilityTest {
             MusicMateTheme {
                 PermissionScreen(
                     systemAccess = SystemAccessState(
-                        hasFullStorageAccess = false,
+                        hasStorageAccess = false,
                         hasExternalPlayerAccess = false
                     ),
                     focusedCapability = SystemAccessCapability.STORAGE,

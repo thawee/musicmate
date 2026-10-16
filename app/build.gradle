@@ -74,6 +74,18 @@ android {
         }
     }
 
+    // github: all-files access, published as an APK on GitHub releases.
+    // play: no all-files access (Play policy); READ_MEDIA_AUDIO plus folders granted in the system picker.
+    flavorDimensions += "distribution"
+    productFlavors {
+        github {
+            dimension = "distribution"
+        }
+        play {
+            dimension = "distribution"
+        }
+    }
+
     buildTypes {
         release {
             if (releaseKeystore) {

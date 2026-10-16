@@ -156,9 +156,9 @@ class MainScaffoldState {
         }
 
         @JvmStatic
-        fun updateSystemAccess(hasFullStorageAccess: Boolean, hasExternalPlayerAccess: Boolean) {
+        fun updateSystemAccess(hasStorageAccess: Boolean, hasExternalPlayerAccess: Boolean) {
             instance.systemAccess.value = SystemAccessState(
-                hasFullStorageAccess = hasFullStorageAccess,
+                hasStorageAccess = hasStorageAccess,
                 hasExternalPlayerAccess = hasExternalPlayerAccess
             )
         }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Play build: no all-files access. Audio permission here, write access per folder the user adds. -->
+<resources>
+    <string name="system_access_intro">MusicMate checks access automatically. Allow access to music files here; choose music folders when you scan.</string>
+    <string name="permission_storage_title">Music Files</string>
+    <string name="permission_storage_description">Find and play the music on this device. Folders you add under Music Folders can also have their tags, covers and DSD files edited.</string>
+    <string name="action_open_storage_settings">Allow access</string>
+    <string name="system_access_summary_storage_needed">Music access needed</string>
+</resources>

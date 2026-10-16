@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -10,6 +11,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +24,7 @@ import apincer.android.mmate.ui.compose.PermissionScreen
 import apincer.android.mmate.ui.compose.SystemAccessCapability
 import apincer.android.mmate.ui.compose.SystemAccessState
 import apincer.android.mmate.utils.PermissionUtils
+import apincer.music.core.provider.StorageMode
 
 class PermissionActivity : ComponentActivity() {
 
@@ -50,29 +53,57 @@ class PermissionActivity : ComponentActivity() {
         }
     }
 
+    // Play build: READ_MEDIA_AUDIO is a runtime permission, asked here
+    private val requestAudio = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        refreshAndMaybeFinish()
+    }
+
     override fun onResume() {
         super.onResume()
-        val hadStorageAccess = systemAccess.hasFullStorageAccess
+        refreshAndMaybeFinish()
+    }
+
+    private fun refreshAndMaybeFinish() {
+        val hadStorageAccess = systemAccess.hasStorageAccess
         refreshSystemAccess()
         // Opened to grant storage for a scan: return to the folder picker as soon as it is granted
         if (focusedCapability == SystemAccessCapability.STORAGE && !hadStorageAccess
-                && systemAccess.hasFullStorageAccess) {
+                && systemAccess.hasStorageAccess) {
             finish()
         }
     }
 
     private fun refreshSystemAccess() {
         systemAccess = SystemAccessState(
-            hasFullStorageAccess = PermissionUtils.checkFullStorageAccessPermissions(this),
+            hasStorageAccess = PermissionUtils.checkAccessPermissions(this),
             hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this)
         )
     }
 
     private fun openStorageAccessSettings() {
+        if (!StorageMode.usesAllFilesAccess(this)) {
+            requestAudioAccess()
+            return
+        }
         val appSettings = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
             data = Uri.parse("package:$packageName")
         }
         launchSettings(appSettings, Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+    }
+
+    private fun requestAudioAccess() {
+        val permission = Manifest.permission.READ_MEDIA_AUDIO
+        val prefs = getPreferences(MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_AUDIO_ASKED, false) && !shouldShowRequestPermissionRationale(permission)) {
+            // Android stops showing the dialog once it was declined twice; the app's settings page still works
+            val appDetails = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            launchSettings(appDetails, Intent(Settings.ACTION_SETTINGS))
+        } else {
+            prefs.edit().putBoolean(KEY_AUDIO_ASKED, true).apply()
+            requestAudio.launch(permission)
+        }
     }
 
     private fun openExternalPlayerAccessSettings() {
@@ -97,6 +128,7 @@ class PermissionActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_FOCUS_CAPABILITY = "focus_capability"
+        private const val KEY_AUDIO_ASKED = "audio_permission_asked"
 
         @JvmStatic
         fun createIntent(context: Context, focus: SystemAccessCapability): Intent =

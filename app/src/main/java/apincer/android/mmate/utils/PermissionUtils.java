@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat;
 import android.content.ComponentName;
 
 import apincer.android.mmate.service.MediaNotificationListener;
+import apincer.music.core.provider.StorageMode;
 
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
@@ -83,9 +84,13 @@ public class PermissionUtils {
             return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * The access the library needs: all-files access in the GitHub build; READ_MEDIA_AUDIO in the Play
+     * build, where write access comes from the folders the user grants when adding them.
+     */
     public static boolean checkAccessPermissions(Context context) {
-      //  return checkMediaAccessPermissions(context) && checkFullStorageAccessPermissions(context);
-        return checkFullStorageAccessPermissions(context);
+        if (StorageMode.usesAllFilesAccess(context)) return checkFullStorageAccessPermissions(context);
+        return isPermissionEnabled(context, Manifest.permission.READ_MEDIA_AUDIO);
     }
 
     public static boolean checkFullStorageAccessPermissions(Context context) {

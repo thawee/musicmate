@@ -8,7 +8,7 @@ class SystemAccessStateTest {
     @Test
     fun `missing storage is the highest priority drawer status`() {
         val state = SystemAccessState(
-            hasFullStorageAccess = false,
+            hasStorageAccess = false,
             hasExternalPlayerAccess = true
         )
 
@@ -18,7 +18,7 @@ class SystemAccessStateTest {
     @Test
     fun `optional access is reported after required storage is granted`() {
         val state = SystemAccessState(
-            hasFullStorageAccess = true,
+            hasStorageAccess = true,
             hasExternalPlayerAccess = false
         )
 
@@ -28,7 +28,7 @@ class SystemAccessStateTest {
     @Test
     fun `all granted access is ready`() {
         val state = SystemAccessState(
-            hasFullStorageAccess = true,
+            hasStorageAccess = true,
             hasExternalPlayerAccess = true
         )
 

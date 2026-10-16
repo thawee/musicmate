@@ -29,7 +29,10 @@ object DialogInterop {
         onClose: Runnable,
         onCancel: Runnable,
         onScan: BiConsumer<Boolean, List<String>>,
-        onAddStorage: BiConsumer<String, Consumer<String>>
+        onAddStorage: BiConsumer<String, Consumer<String>>,
+        // Play build only: whether a folder is granted, and how to ask for it; null in the GitHub build
+        isGranted: java.util.function.Predicate<String>?,
+        requestAccess: BiConsumer<String, Consumer<String>>?
     ): View {
         return ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -46,7 +49,11 @@ object DialogInterop {
                     onClose = { onClose.run() },
                     onCancel = { onCancel.run() },
                     onScan = { isDeep, dirs -> onScan.accept(isDeep, dirs) },
-                    onAddStorage = { sid, onSelected -> onAddStorage.accept(sid, Consumer(onSelected)) }
+                    onAddStorage = { sid, onSelected -> onAddStorage.accept(sid, Consumer(onSelected)) },
+                    folderGrants = if (isGranted != null && requestAccess != null) FolderGrants(
+                        isGranted = { isGranted.test(it) },
+                        requestAccess = { dir, onPicked -> requestAccess.accept(dir, Consumer(onPicked)) }
+                    ) else null
                 )
             }
             }

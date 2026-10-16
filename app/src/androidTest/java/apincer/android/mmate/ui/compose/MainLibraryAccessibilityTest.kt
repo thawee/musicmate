@@ -178,7 +178,7 @@ class MainLibraryAccessibilityTest {
                     libraryEmpty.value = true
                     isFloatingDockVisible.value = false
                     systemAccess.value = SystemAccessState(
-                        hasFullStorageAccess = false,
+                        hasStorageAccess = false,
                         hasExternalPlayerAccess = false
                     )
                 }

@@ -19,16 +19,20 @@ Music Mate uses a modular architecture: the UPnP layer depends only on the `WebS
 
 ## 🚀 Building the Project
 
-There are **no Gradle flavors**. A single APK is built, with one streaming engine: SonicNIO (`NioWebServerImpl` in `:server-jupnp`, provided by `ServerModule`). There is no engine setting; Netty was retired in ADR-037.
+There are two product flavors (dimension `distribution`), with one streaming engine: SonicNIO (`NioWebServerImpl` in `:server-jupnp`, provided by `ServerModule`). There is no engine setting; Netty was retired in ADR-037.
+
+*   `github` - The APK published on GitHub releases. Requests all-files access (`MANAGE_EXTERNAL_STORAGE`, in `app/src/github/AndroidManifest.xml`) and works on the library by path.
+*   `play` - The Google Play build. No all-files access: it reads music with `READ_MEDIA_AUDIO` and changes files only in folders the user grants in the system folder picker (`AndroidMusicFileAccess`). `StorageMode` reads which mode applies from the manifest.
 
 ### Command Line Build
 
 ```bash
-# Build the app (single variant)
-./gradlew assembleDebug
+# Build the app
+./gradlew assembleGithubDebug
+./gradlew assemblePlayDebug
 
 # Build and install on a connected device
-./gradlew installDebug
+./gradlew installGithubDebug
 ```
 
 ## 🧪 Testing
@@ -36,8 +40,11 @@ There are **no Gradle flavors**. A single APK is built, with one streaming engin
 We use JUnit and AndroidX Test for verification.
 
 ```bash
-# Run unit tests
+# Run unit tests (all modules, both flavors)
 ./gradlew test
+
+# Screenshot tests (references in app/src/screenshotTestGithubDebug)
+./gradlew :app:validateGithubDebugScreenshotTest
 
 # Run lint checks
 ./gradlew lint

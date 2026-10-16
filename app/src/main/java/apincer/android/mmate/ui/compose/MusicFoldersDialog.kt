@@ -34,9 +34,12 @@ fun MusicFoldersDialog(
     onClose: () -> Unit,
     onCancel: () -> Unit,
     onScan: (Boolean, List<String>) -> Unit,
-    onAddStorage: (String, (String) -> Unit) -> Unit
+    onAddStorage: (String, (String) -> Unit) -> Unit,
+    folderGrants: FolderGrants? = null
 ) {
     var isDeepAudit by remember { mutableStateOf(false) }
+    // Bumped after the picker returns, so rows check their access again
+    var grantCheck by remember { mutableIntStateOf(0) }
     val dirs = remember { mutableStateListOf(*initialDirectories.distinct().toTypedArray()) }
 
     var isVisible by remember { mutableStateOf(false) }
@@ -165,6 +168,23 @@ fun MusicFoldersDialog(
                     }
                 }
 
+                if (folderGrants != null) {
+                    Text(
+                        text = stringResource(id = R.string.directories_grant_explanation),
+                        fontSize = 12.sp,
+                        color = MusicMateDesignTokens.Text.Muted,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
+                if (dirs.isEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.directories_empty),
+                        fontSize = 13.sp,
+                        color = MusicMateDesignTokens.Text.Secondary,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -196,6 +216,27 @@ fun MusicFoldersDialog(
                                         .weight(1f)
                                         .semantics { contentDescription = dir }
                                 )
+                                val needsAccess = folderGrants != null &&
+                                    !remember(dir, grantCheck) { folderGrants.isGranted(dir) }
+                                if (needsAccess) {
+                                    TextButton(
+                                        onClick = {
+                                            folderGrants!!.requestAccess(dir) { picked ->
+                                                // A different folder than this row's is added as its own row
+                                                if (!coversFolder(picked, dir) && picked !in dirs) dirs.add(picked)
+                                                grantCheck++
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp),
+                                        modifier = Modifier.height(32.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(id = R.string.directories_allow_access),
+                                            color = MusicMateDesignTokens.Brand.Gold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
                                 if (defaultPaths.contains(dir)) {
                                     // Default folders cannot be removed; say so instead of hiding the action
                                     Text(
@@ -259,6 +300,7 @@ fun MusicFoldersDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = { onScan(isDeepAudit, dirs.toList()) },
+                        enabled = dirs.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MusicMateDesignTokens.Brand.Gold,
                             contentColor = Color.Black
@@ -274,6 +316,17 @@ fun MusicFoldersDialog(
         }
     }
 }
+
+/** How the Play build checks and asks for access to a folder; the GitHub build has all-files access. */
+class FolderGrants(
+    val isGranted: (String) -> Boolean,
+    /** Opens the system folder picker at the folder and reports the folder the user granted. */
+    val requestAccess: (String, (String) -> Unit) -> Unit
+)
+
+/** True when [root] is [path] or one of its parent folders. */
+internal fun coversFolder(root: String, path: String): Boolean =
+    path == root || path.startsWith(root.trimEnd('/') + "/")
 
 /** "Add folder" when there is one storage volume; otherwise name the volume. */
 internal fun addFolderLabel(storageId: String, storageCount: Int): String = when {

@@ -39,13 +39,17 @@ jobs:
         env:
           MUSICMATE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           MUSICMATE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleGithubRelease
 
       - name: Verify signature
         run: |
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
-          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk
-          mv app/build/outputs/apk/release/app-release.apk "MusicMate-${GITHUB_REF_NAME}.apk"
+          APK=app/build/outputs/apk/github/release/app-github-release.apk
+          "$APKSIGNER" verify --print-certs "$APK"
+          # The GitHub build must keep all-files access; the Play build never ships here
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          "$AAPT2" dump permissions "$APK" | grep -q "android.permission.MANAGE_EXTERNAL_STORAGE"
+          mv "$APK" "MusicMate-${GITHUB_REF_NAME}.apk"
 
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2

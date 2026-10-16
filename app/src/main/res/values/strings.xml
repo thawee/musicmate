@@ -574,6 +574,16 @@
     <string name="permission_optional">Optional</string>
     <string name="permission_granted">Granted</string>
     <string name="action_open_storage_settings">Open storage settings</string>
+    <!-- Play build: folder grants -->
+    <string name="directories_grant_explanation">Pick each folder in Android\'s folder picker so MusicMate can edit tags, covers and DSD files in it.</string>
+    <string name="directories_add_folder">Add folder</string>
+    <string name="directories_empty">No folders yet. Tap Add folder to choose where your music is.</string>
+    <string name="directories_allow_access">Allow access</string>
+    <string name="directories_no_access">No access yet</string>
+    <string name="directories_grant_mismatch">That folder does not include %1$s. Pick the folder itself or one that contains it.</string>
+    <string name="organize_needs_music_title">Allow access to Music</string>
+    <string name="organize_needs_music_message">Organize moves files into the Music folder. Pick the Music folder in the next screen so MusicMate can create folders and move files there.</string>
+    <string name="organize_needs_music_action">Choose Music</string>
     <string name="action_enable_external_player_access">Enable external player access</string>
     <string name="system_access_settings_unavailable">Android settings are unavailable on this device.</string>
     <string name="player_picker_external_access_hint">Optional: enable access to discover and control playback from installed music apps.</string>

@@ -2021,7 +2021,24 @@ public class TagsActivity extends AppCompatActivity {
                 .show();
     }
 
+    /** Play build: the Music folder grant Organize needs; Organize continues once it covers Music. */
+    private final androidx.activity.result.ActivityResultLauncher<android.content.Intent> organizeGrantLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                if (MusicFolderAccess.grantedPath(result) == null) return;
+                if (MusicFolderAccess.hasOrganizeAccess(this)) {
+                    doMoveMediaItems();
+                } else {
+                    android.widget.Toast.makeText(this, getString(R.string.directories_grant_mismatch,
+                            apincer.android.mmate.ui.compose.MusicFoldersDialogKt.readableFolderPath(
+                                    MusicFolderAccess.organizeRoot(this))), android.widget.Toast.LENGTH_LONG).show();
+                }
+            });
+
     public void doMoveMediaItems() {
+        if (!MusicFolderAccess.hasOrganizeAccess(this)) {
+            MusicFolderAccess.askForOrganizeAccess(this, organizeGrantLauncher);
+            return;
+        }
         startProgressBar();
 
         operationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {

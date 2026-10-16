@@ -217,7 +217,8 @@ class AndroidMusicFileAccessTest {
             setLastModified(1_700_000_000_000L)
         }
         val dir = context.getExternalFilesDir("cross")!!
-        val target = File(dir, "moved.bin").apply { delete() }
+        dir.listFiles()?.forEach { it.delete() } // app storage survives between runs
+        val target = File(dir, "moved.bin")
         val probe = File(context.cacheDir, "probe.bin").apply { writeBytes(ByteArray(1)) }
         val crossDevice = runCatching { android.system.Os.rename(probe.path, File(dir, "probe.bin").path) }
             .exceptionOrNull() as? android.system.ErrnoException

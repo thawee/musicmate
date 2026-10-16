@@ -29,12 +29,12 @@ object ExternalPlayerAccessPolicy {
 }
 
 data class SystemAccessState(
-    val hasFullStorageAccess: Boolean = false,
+    val hasStorageAccess: Boolean = false,
     val hasExternalPlayerAccess: Boolean = false
 ) {
     val summary: SystemAccessSummary
         get() = when {
-            !hasFullStorageAccess -> SystemAccessSummary.STORAGE_NEEDED
+            !hasStorageAccess -> SystemAccessSummary.STORAGE_NEEDED
             !hasExternalPlayerAccess -> SystemAccessSummary.OPTIONAL_ACCESS_OFF
             else -> SystemAccessSummary.READY
         }

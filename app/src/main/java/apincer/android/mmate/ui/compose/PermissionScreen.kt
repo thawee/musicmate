@@ -110,7 +110,7 @@ fun PermissionScreen(
                     title = stringResource(R.string.permission_storage_title),
                     requirementText = stringResource(R.string.permission_required),
                     desc = stringResource(R.string.permission_storage_description),
-                    granted = systemAccess.hasFullStorageAccess,
+                    granted = systemAccess.hasStorageAccess,
                     actionText = stringResource(R.string.action_open_storage_settings),
                     focused = focusedCapability == SystemAccessCapability.STORAGE,
                     onClick = onStorageAccessClick
@@ -131,7 +131,7 @@ fun PermissionScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
                 // Continue once the required access is granted; otherwise allow leaving for now
-                if (systemAccess.hasFullStorageAccess) {
+                if (systemAccess.hasStorageAccess) {
                     Button(
                         onClick = onBack,
                         colors = ButtonDefaults.buttonColors(containerColor = MusicMateDesignTokens.Brand.Gold, contentColor = Color.Black),

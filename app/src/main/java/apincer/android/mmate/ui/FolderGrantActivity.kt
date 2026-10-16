@@ -15,10 +15,13 @@ import apincer.music.core.provider.StorageTreeRoots
 class FolderGrantActivity : ComponentActivity() {
 
     private val pickFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         val path = tree?.let {
-            contentResolver.takePersistableUriPermission(
-                it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            StorageTreeRoots.pathOf(this, it)
+            contentResolver.takePersistableUriPermission(it, flags)
+            StorageTreeRoots.pathOf(this, it).also { path ->
+                // A folder on a volume we cannot map to a path is of no use; do not keep its grant
+                if (path == null) contentResolver.releasePersistableUriPermission(it, flags)
+            }
         }
         if (path == null) {
             setResult(RESULT_CANCELED)
@@ -39,6 +42,7 @@ class FolderGrantActivity : ComponentActivity() {
         const val EXTRA_PATH = "path"
         const val EXTRA_INITIAL_PATH = "initial_path"
 
+        @JvmStatic
         fun createIntent(context: Context, initialPath: String?): Intent =
             Intent(context, FolderGrantActivity::class.java).putExtra(EXTRA_INITIAL_PATH, initialPath)
     }

@@ -32,6 +32,7 @@ import apincer.music.core.model.Track;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.model.SearchResultStats;
+import apincer.music.core.provider.StorageMode;
 import apincer.music.core.repository.spi.DbHelper;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
@@ -665,7 +666,9 @@ public class TagRepository {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
 
-        List<String> defaultDirs = getDefaultMusicPaths(context);
+        // The Play build scans only folders the user granted, so it has no default folders
+        List<String> defaultDirs = StorageMode.usesAllFilesAccess(context)
+                ? getDefaultMusicPaths(context) : new ArrayList<>();
         Set<String> defaultDirsSet = new HashSet<>(defaultDirs);
         Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, defaultDirsSet);
         return new ArrayList<>(dirs);
