@@ -1,0 +1,32 @@
+MusicMate turns your Android phone into a music server and a hi-res player for the music files you own.
+
+Your library, served to your hi-fi
+• MusicMate runs a DLNA/UPnP media server. Streamers and control apps on your Wi-Fi can browse your library and play it with tags and cover art. Files are sent as they are, with no transcoding.
+• Pick a DLNA player inside MusicMate and control it from your phone.
+• Works on home Wi-Fi and on your phone's own hotspot.
+• A web remote opens in any browser on the same network.
+
+Know what you are hearing
+• Every track shows its format, bit depth and sample rate, with Hi-Res and DSD labels.
+• Dynamic range (DR) is measured for each track.
+• Verify Lossless finds "hi-res" files that were upsampled from CD quality, and files cut off by MP3 or AAC encoding.
+• The audio path shows how the sound leaves your phone and whether the output is bit-perfect.
+
+Play it your way
+• Bit-perfect playback through a USB DAC, on phones that support it.
+• Bluetooth, with the codec in use shown (such as LDAC, aptX or AAC).
+• Hand a song to another music app.
+• FLAC, ALAC, WAV, AIFF, MP3 and DSD (DSF) files.
+
+Your files, your folders
+• Choose the folders that hold your music. MusicMate reads and edits files only there.
+• Browse by artist, album, genre, folder, audio quality or playlist. Smart playlists such as Hi-Res fill themselves.
+• Edit tags and cover art one song at a time.
+
+MusicMate Pro
+A one-time purchase, not a subscription. Pro adds the full quality report (spectrogram, the cutoff, DR and levels), saving tags to many songs at once, MusicBrainz lookup, and Organize, which files your music into artist and album folders. Playing, streaming, quality labels and editing one song at a time stay free.
+
+Privacy
+No accounts, no ads and no analytics. Your music stays on your phone, and online lookups happen only when you ask for one. MusicMate is open source (Apache 2.0): https://github.com/thawee/musicmate
+
+MusicMate plays music files stored on your phone. It does not play streaming services. Requires Android 14 or newer.
