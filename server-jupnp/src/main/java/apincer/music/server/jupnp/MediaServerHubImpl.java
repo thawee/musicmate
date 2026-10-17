@@ -540,6 +540,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     // Liveness misses in a row per renderer (root UDN); two and it is dropped
+    private final java.util.concurrent.atomic.AtomicInteger livenessPending = new java.util.concurrent.atomic.AtomicInteger();
     private final java.util.Map<String, Integer> livenessMisses = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ExecutorService livenessExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "RendererLiveness");
@@ -554,6 +555,13 @@ public class MediaServerHubImpl implements MediaServerHub {
      * announces itself or answers a search again.
      */
     private void checkRenderersAlive() {
+        // Without the phone's own network every player would miss: that is not their fault
+        if (!apincer.music.core.utils.NetworkUtils.isServerNetworkAvailable(context)) {
+            livenessMisses.clear();
+            return;
+        }
+        // Slow or dead players can make a round outlast the 30 s tick: never queue a second one behind it
+        if (livenessPending.get() > 0) return;
         for (RemoteDevice renderer : getMediaRenderers()) {
             RemoteDevice root = renderer.getRoot();
             if (root == null || root.getIdentity() == null || root.getIdentity().getDescriptorURL() == null) continue;
@@ -563,11 +571,16 @@ public class MediaServerHubImpl implements MediaServerHub {
             Device<?, ?, ?> casting = currentRenderer;
             if (serverStatus.getValue() == ServerStatus.CAST && casting instanceof RemoteDevice playing
                     && udn.equals(playing.getRoot().getIdentity().getUdn().getIdentifierString())) continue;
+            livenessPending.incrementAndGet();
             livenessExecutor.execute(() -> {
-                if (answers(url)) {
-                    livenessMisses.remove(udn);
-                } else if (livenessMisses.merge(udn, 1, Integer::sum) >= 2) {
-                    dropRenderer(root, "no answer to two liveness checks");
+                try {
+                    if (answers(url)) {
+                        livenessMisses.remove(udn);
+                    } else if (livenessMisses.merge(udn, 1, Integer::sum) >= 2) {
+                        dropRenderer(root, "no answer to two liveness checks");
+                    }
+                } finally {
+                    livenessPending.decrementAndGet();
                 }
             });
         }

@@ -1609,7 +1609,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             playbackStateFlow.setValue(paused);
             android.widget.Toast.makeText(getApplicationContext(),
                     getString(R.string.player_left_network, current.getDisplayName()), android.widget.Toast.LENGTH_LONG).show();
+            // Keep the listener's choice: after an outage the next start looks for that player again
+            String chosen = apincer.music.core.Settings.getLastPlayerTargetId(getApplicationContext());
             switchPlayer(ExternalAndroidPlayer.LOCAL_TARGET_ID, true);
+            apincer.music.core.Settings.setLastPlayerTargetId(getApplicationContext(), chosen);
         });
     }
 

@@ -1936,4 +1936,5 @@ Cause (code): jUPnP drops a renderer only on its goodbye or when its advertiseme
 - [x] Hub: a SetAVTransportURI, Play or position poll that gets no answer at all removes the player at once.
 - [x] Hub to service: `setOnRendererLostListener`, only while RUNNING (a restart clears the registry too).
 - [x] Service: the current player lost: switch to this phone, paused at the same song and position, with a message ("X is not responding. Switched to this phone; press Play to continue here.").
+- [x] Review fixes: jUPnP 3.0.5 `RegistryImpl.removeDevice` notifies listeners (checked in bytecode); stop/deactivate of the lost player run on the UPnP thread, not the main thread; no liveness checks while the phone has no server network (its own outage is not the players'); a round is skipped while the previous one runs; the listener's saved player is kept through the fallback so the next start looks for it again.
 - [ ] Phone test with the user's renderer: power it off while idle (gone from the picker within about a minute) and while playing (falls back with the message; Play continues on the phone).
