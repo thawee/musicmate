@@ -590,6 +590,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // Hook up live DLNA renderer discovery listener to automatically reconcile placeholder targets
         if (mediaHub != null) {
             mediaHub.setOnRenderersChangedListener(this::handleDiscoveredRenderers);
+            mediaHub.setOnRendererLostListener(this::handleRendererLost);
         }
 
         // Initialize Bluetooth A2DP proxy for real-time codec telemetry
@@ -766,6 +767,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // Unregister renderer listener to prevent Singleton from holding reference to destroyed service
         if (mediaHub != null) {
             mediaHub.setOnRenderersChangedListener(null);
+            mediaHub.setOnRendererLostListener(null);
         }
 
         // Ensure everything is cleaned up if the service is destroyed.
@@ -1585,6 +1587,30 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void setNextSongInQueue() {
         queueManager.setPlaybackTrack(getNowPlayingSong());
         preloadNextTrackSafe();
+    }
+
+    /**
+     * The current network player left (powered off, or gone from the network): fall back to this
+     * phone, paused at the same song and position, and say so. Without this a player that lost power
+     * stayed selected and Play went nowhere.
+     */
+    private void handleRendererLost(String targetId) {
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            PlaybackTarget current = currentPlayerFlow.getValue().orElse(null);
+            if (current == null || targetId == null || !targetId.equals(current.getTargetId())) return;
+            Log.w(TAG, "Current player left the network: " + current.getDisplayName());
+            // Paused, not playing: the switch then resumes on the phone only when the listener presses Play
+            apincer.music.core.playback.PlaybackState last = playbackStateFlow.getValue();
+            apincer.music.core.playback.PlaybackState paused = new apincer.music.core.playback.PlaybackState();
+            paused.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
+            paused.currentTrack = getNowPlayingSong();
+            paused.currentPositionSecond = last != null ? last.currentPositionSecond : 0;
+            paused.durationSecond = last != null ? last.durationSecond : 0;
+            playbackStateFlow.setValue(paused);
+            android.widget.Toast.makeText(getApplicationContext(),
+                    getString(R.string.player_left_network, current.getDisplayName()), android.widget.Toast.LENGTH_LONG).show();
+            switchPlayer(ExternalAndroidPlayer.LOCAL_TARGET_ID, true);
+        });
     }
 
     private void handleDiscoveredRenderers(List<PlaybackTarget> renderers) {

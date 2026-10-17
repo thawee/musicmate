@@ -305,7 +305,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         controlPoint = upnpService.getControlPoint();
 
-        RegistryListener listener = new SimpleRegistryListener(this::notifyRenderersChanged);
+        RegistryListener listener = new SimpleRegistryListener(this::notifyRenderersChanged, this::onRemoteDeviceRemoved);
         upnpService.getRegistry().addListener(listener);
 
         mediaServerDevice = MediaServerDeviceFactory.create(context, tagRepos);
@@ -533,9 +533,96 @@ public class MediaServerHubImpl implements MediaServerHub {
                 if (restartIfInterfacesChanged()) return;
             }
             triggerDiscoveryInner();
+            checkRenderersAlive();
         } catch (Exception e) {
             Log.w(TAG, "Periodic discovery failed; will retry", e);
         }
+    }
+
+    // Liveness misses in a row per renderer (root UDN); two and it is dropped
+    private final java.util.Map<String, Integer> livenessMisses = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.ExecutorService livenessExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "RendererLiveness");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
+     * A player that loses power sends no goodbye, and jUPnP keeps it until its advertisement expires
+     * (often 30 minutes), so it stayed listed and selectable. Each discovery tick (30 s) asks every
+     * known renderer for its description; two misses in a row remove it. It returns as soon as it
+     * announces itself or answers a search again.
+     */
+    private void checkRenderersAlive() {
+        for (RemoteDevice renderer : getMediaRenderers()) {
+            RemoteDevice root = renderer.getRoot();
+            if (root == null || root.getIdentity() == null || root.getIdentity().getDescriptorURL() == null) continue;
+            java.net.URL url = root.getIdentity().getDescriptorURL();
+            String udn = root.getIdentity().getUdn().getIdentifierString();
+            // The player being cast to is watched by its position polls; a slow answer while it streams must not drop it
+            Device<?, ?, ?> casting = currentRenderer;
+            if (serverStatus.getValue() == ServerStatus.CAST && casting instanceof RemoteDevice playing
+                    && udn.equals(playing.getRoot().getIdentity().getUdn().getIdentifierString())) continue;
+            livenessExecutor.execute(() -> {
+                if (answers(url)) {
+                    livenessMisses.remove(udn);
+                } else if (livenessMisses.merge(udn, 1, Integer::sum) >= 2) {
+                    dropRenderer(root, "no answer to two liveness checks");
+                }
+            });
+        }
+    }
+
+    /** Any HTTP answer within 2 s means the device is on the network. */
+    private static boolean answers(java.net.URL url) {
+        java.net.HttpURLConnection connection = null;
+        try {
+            connection = (java.net.HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(2000);
+            connection.getResponseCode();
+            return true;
+        } catch (java.io.IOException | RuntimeException e) {
+            return false;
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    private volatile java.util.function.Consumer<String> onRendererLostListener;
+
+    @Override
+    public void setOnRendererLostListener(java.util.function.Consumer<String> listener) {
+        this.onRendererLostListener = listener;
+    }
+
+    /** A device left the registry; its renderers are reported lost only while running (a restart clears the registry too). */
+    private void onRemoteDeviceRemoved(RemoteDevice device) {
+        java.util.function.Consumer<String> listener = onRendererLostListener;
+        if (listener == null || state != State.RUNNING) return;
+        List<String> ids = new ArrayList<>();
+        collectRendererIds(device, ids);
+        for (String id : ids) listener.accept(id);
+    }
+
+    private void collectRendererIds(Device<?, ?, ?> device, List<String> ids) {
+        if (device == null) return;
+        boolean renderer = (device.getType() != null && "MediaRenderer".equalsIgnoreCase(device.getType().getType()))
+                || findServiceRecursively(device, AV_TRANSPORT_TYPE) != null;
+        if (renderer && device.getIdentity() != null && device.getIdentity().getUdn() != null) {
+            ids.add(device.getIdentity().getUdn().getIdentifierString());
+        }
+        for (Device<?, ?, ?> child : device.getEmbeddedDevices()) collectRendererIds(child, ids);
+    }
+
+    /** Removes a renderer that stopped answering; the registry listener then updates the player list. */
+    private void dropRenderer(Device<?, ?, ?> device, String why) {
+        UpnpService service = upnpService;
+        if (service == null || !(device instanceof RemoteDevice remote)) return;
+        RemoteDevice root = remote.getRoot();
+        livenessMisses.remove(root.getIdentity().getUdn().getIdentifierString());
+        Log.w(TAG, "Dropping renderer " + root.getDetails().getFriendlyName() + ": " + why);
+        service.getRegistry().removeDevice(root);
     }
 
     private void triggerDiscoveryInner() {
@@ -1235,6 +1322,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                         Log.i(TAG, TAG+" - Play command failed: " + defaultMsg);
+                        if (operation == null) dropRenderer(avTransport.getDevice(), "no answer to Play");
                         isUserInitiatedStop = false;
                         stopPolling();
                         serverStatus.setValue(ServerStatus.RUNNING);
@@ -1251,6 +1339,8 @@ public class MediaServerHubImpl implements MediaServerHub {
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 Log.e(TAG, "SetAVTransportURI failed: " + defaultMsg);
+                // No response at all (rather than an error reply): the player is off or gone
+                if (operation == null) dropRenderer(avTransport.getDevice(), "no answer to SetAVTransportURI");
                 isUserInitiatedStop = false;
                 stopPolling();
                 serverStatus.setValue(ServerStatus.RUNNING);
@@ -1758,6 +1848,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                                 scheduleNextPoll(avTransport, gen, 2500);
                             } else {
                                 Log.i(TAG, "Renderer left playback state or stopped responding (" + defaultMsg + "). Halting polling loop.");
+                                if (operation == null) dropRenderer(avTransport.getDevice(), "no answer to position polls");
                                 stopPolling();
                                 if (serverStatus.getValue() == ServerStatus.CAST) {
                                     serverStatus.setValue(ServerStatus.RUNNING);

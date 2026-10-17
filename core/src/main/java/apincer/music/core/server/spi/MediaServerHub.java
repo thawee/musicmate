@@ -49,6 +49,12 @@ public interface MediaServerHub {
     void playerPause(String udn);
     default void playerResume(String udn) {}
     void playerSeek(String udn, long positionMs);
+    /**
+     * Called with a renderer's target id when it leaves while the server runs: it said goodbye, its
+     * advertisement expired, or it stopped answering. Not called while the server stops or restarts.
+     */
+    default void setOnRendererLostListener(java.util.function.Consumer<String> listener) {}
+
     /** Sets the renderer volume in percent of its own range. */
     void playerSetVolume(String udn, int volume);
 

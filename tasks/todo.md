@@ -1928,3 +1928,12 @@ Decisions (user, 2026-10-17): limit network players only; 80% default, adjustabl
 - [x] V3 Limit: setting "Maximum volume" under Network players (60, 70, 80 default, 90 or Off); the service clamps every set (slider, buttons) to it; the slider stops at it and marks it. A player already above the limit is shown as it is and only moves down.
   Done (2026-10-17): `RendererVolume` (states, range conversion, clamp; 4 JVM tests), MediaServerHubImpl converts with RenderingControl's Volume range, the service marks a new player READING, retries a failed read once (3 s), then UNAVAILABLE, and ignores slider and buttons until the level is known (also for streams it does not drive). Music Center slider and Studio fader: disabled with "--" while unknown, stop at the limit, show a limit mark. Settings > Network players > Maximum volume (60, 70, 80, 90, Off; default 80). Emulator: card saves the choice; phone output slider unaffected (reaches 100%). Not testable on the emulator: anything with a real renderer.
 - [ ] V4 Tests: JVM tests for range conversion and clamping; app builds; emulator check of the Settings entry and that phone volume is unchanged; on the phone with the user's renderer: start shows "--" then the real level, drag stops at the limit.
+
+# DLNA player that loses power stays selectable (2026-10-17)
+
+Cause (code): jUPnP drops a renderer only on its goodbye or when its advertisement expires (often 30 min); a player that loses power sends no goodbye, so it stayed listed and selected, and Play failed silently (state STOPPED, no message) after the 15 s connect timeout.
+- [x] Hub: every 30 s discovery tick asks each known renderer for its description (2 s timeout); two misses in a row remove it from the registry. The player being cast to is skipped (its position polls watch it).
+- [x] Hub: a SetAVTransportURI, Play or position poll that gets no answer at all removes the player at once.
+- [x] Hub to service: `setOnRendererLostListener`, only while RUNNING (a restart clears the registry too).
+- [x] Service: the current player lost: switch to this phone, paused at the same song and position, with a message ("X is not responding. Switched to this phone; press Play to continue here.").
+- [ ] Phone test with the user's renderer: power it off while idle (gone from the picker within about a minute) and while playing (falls back with the message; Play continues on the phone).

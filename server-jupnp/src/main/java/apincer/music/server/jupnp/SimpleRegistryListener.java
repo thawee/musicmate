@@ -8,9 +8,11 @@ import org.jupnp.registry.Registry;
 public class SimpleRegistryListener extends DefaultRegistryListener {
     private static final String TAG = "UPnP";
     private final Runnable onRegistryChanged;
+    private final java.util.function.Consumer<RemoteDevice> onRemoved;
 
-    public SimpleRegistryListener(Runnable onRegistryChanged) {
+    public SimpleRegistryListener(Runnable onRegistryChanged, java.util.function.Consumer<RemoteDevice> onRemoved) {
         this.onRegistryChanged = onRegistryChanged;
+        this.onRemoved = onRemoved;
     }
 
     @Override
@@ -31,6 +33,7 @@ public class SimpleRegistryListener extends DefaultRegistryListener {
     public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
         String type = device.getType() != null ? device.getType().getType() : "Unknown";
         Log.d(TAG, "Remote device removed: " + device.getDetails().getFriendlyName() + " [" + type + "]");
+        onRemoved.accept(device);
         notifyChanged();
     }
 
