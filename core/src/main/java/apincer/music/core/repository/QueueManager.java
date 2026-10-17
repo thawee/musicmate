@@ -100,6 +100,8 @@ public class QueueManager {
     private String activePlaylistName;
     private final java.util.Set<Long> sessionIds = new java.util.HashSet<>();
     private final java.util.Set<Long> smartTrackIds = new java.util.HashSet<>();
+    /** Tracks the user put next with Play Next; the queue marks only these, not every upcoming track. */
+    private final java.util.Set<Long> playNextIds = new java.util.HashSet<>();
     private long sourceRevision;
     private boolean autoFilling;
     private boolean sourceExhausted;
@@ -118,6 +120,10 @@ public class QueueManager {
         setShuffle(false);
         setRepeatMode(RepeatMode.OFF);
         persistSmartState();
+    }
+
+    public synchronized boolean isPlayNext(long trackId) {
+        return playNextIds.contains(trackId);
     }
 
     public synchronized boolean isSmartSuggested(long trackId) {
@@ -253,6 +259,7 @@ public class QueueManager {
         sourceRevision++;
         sessionIds.clear();
         smartTrackIds.clear();
+        playNextIds.clear();
         queueList.clear();
         
         // Use a Set to prevent duplicates efficiently
@@ -335,6 +342,7 @@ public class QueueManager {
             addPlayNext(song);
             return;
         }
+        playNextIds.remove(song.getId());
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -383,6 +391,7 @@ public class QueueManager {
         if (song == null || song.isContainer()) return;
         sessionIds.add(song.getId());
         smartTrackIds.remove(song.getId());
+        playNextIds.add(song.getId());
 
         // If track is already in queue, remove it from existing position first to prevent duplicates
         int existingIndex = -1;
@@ -454,6 +463,7 @@ public class QueueManager {
     public synchronized void savePlayingQueue(List<Track> songsInContext) {
         clearRemovedAnchor();
         queueList.clear();
+        playNextIds.clear();
         indexMap.clear();
         if (songsInContext != null) {
             for (int i = 0; i < songsInContext.size(); i++) {
@@ -577,6 +587,7 @@ public class QueueManager {
             List<Track> songs = dbHelper.getPlayingQueue();
             clearRemovedAnchor();
             queueList.clear();
+            playNextIds.clear();
             indexMap.clear();
             for (int i = 0; i < songs.size(); i++) {
                 Track track = songs.get(i);
@@ -1015,6 +1026,7 @@ public class QueueManager {
         if (removed != null) {
             sessionIds.add(removed.getId());
             smartTrackIds.remove(removed.getId());
+            playNextIds.remove(removed.getId());
         }
         queueList.remove(position);
         rebuildIndexMap();
@@ -1064,6 +1076,7 @@ public class QueueManager {
         sourceRevision++;
         sessionIds.clear();
         smartTrackIds.clear();
+        playNextIds.clear();
         dbHelper.emptyPlayingQueue();
         queueList.clear();
         indexMap.clear();

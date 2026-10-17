@@ -1938,3 +1938,26 @@ Cause (code): jUPnP drops a renderer only on its goodbye or when its advertiseme
 - [x] Service: the current player lost: switch to this phone, paused at the same song and position, with a message ("X is not responding. Switched to this phone; press Play to continue here.").
 - [x] Review fixes: jUPnP 3.0.5 `RegistryImpl.removeDevice` notifies listeners (checked in bytecode); stop/deactivate of the lost player run on the UPnP thread, not the main thread; no liveness checks while the phone has no server network (its own outage is not the players'); a round is skipped while the previous one runs; the listener's saved player is kept through the fallback so the next start looks for it again.
 - [ ] Phone test with the user's renderer: power it off while idle (gone from the picker within about a minute) and while playing (falls back with the message; Play continues on the phone).
+
+# UX/UI review fixes (2026-10-17)
+
+Source: rendered review on Medium_Phone (API 36), GitHub debug build. Full token migration (278 hardcoded colors in 37 files) is out of scope; only the DR color mismatch is fixed here.
+- [x] F1 Library tip banner scrolls with the list (inside the LazyColumn), so landscape and large text still show songs and the "Don't show" link. Same for the Queue tips.
+- [x] F2 Tip card Dismiss X visible on the card (`weight(1f)` instead of `fillMaxWidth()`).
+- [x] F3 Output picker: a Network players section that says how to find players when the server is off (start server action) and while searching.
+- [x] F4 Queue: PLAY NEXT badge only on tracks inserted with Play Next.
+- [x] F5 Tag editor: collapsed header clears the status bar; a back control stays reachable.
+- [x] F6 Settings "Display Storage Space": remove the dead toggle.
+- [x] F7 DR colors: one source; tokens match what the list shows.
+- [x] F8 "DIRECT OUTPUT" on the phone speaker: verify the claim in code; reword if wrong.
+- [x] F9 Maximum volume "Off" renamed "100%" (the stored value; "No limit" wrapped in its chip).
+- [~] F10 "New" means not organized yet (`!isManaged`, the drawer's Incoming Tracks), not recently added. Only the TalkBack label changed ("Incoming track, not organized yet"); hiding the dot is a product decision for the user.
+- [x] F11 Landscape nav rail: Playlists label no longer overlaps Settings.
+- [x] F12 Mini player subtitle: marquee stops after one pass.
+- [-] F13 Dropped: `MusicListScreen.kt` centers it on purpose (at the end it covered each row's menu button and the fast-scroll thumb).
+- [x] F14 Tech Info dock: a divider before the red Remove Art; all dock buttons 48dp tall (Song Info row was 36dp). Icons were tried and dropped: at 411dp and 130% text "Remove Art" broke mid-word.
+- [x] F15 "Maximum Volume" title case. Kept: the empty-state label (lessons: stable labels over dynamic ones) and the scan dialog's X plus Cancel (both dismiss; changing it touches three interop call sites).
+- [x] F16 Row overflow menu: "Edit tags" entry.
+- [x] Verify: app unit tests (both flavors), assembleGithubDebug, emulator screenshots of each fix (portrait, landscape, 130% font), advisor review of the diff.
+  Done (2026-10-17): core 245, app 158 (each flavor) unit tests, 0 failures, incl. new `QueueManagerTest.isPlayNext_onlyTracksInsertedWithPlayNext`; `assembleGithubDebug`, `assemblePlayDebug`, androidTest compile. Emulator (Medium_Phone): tips scroll away and each has a visible X; landscape shows songs and the rail scrolls; auto-scroll to the playing song lands right with the tip item; menu has Edit Tags; Play Next marks only that track; picker says "Start the media server..." and after Start "Searching your Wi-Fi..."; badge "THIS PHONE"; collapsed editor bar with working back; Tech Info dock at 100% and 130%; Settings without the storage toggle. Instrumented (installed with adb, `am instrument`, app not uninstalled): SupportScreensAccessibilityTest 3, MainLibraryAccessibilityTest 8, MusicCenterAccessibilityTest 5, all OK. Review fix: `savePlayingQueue` and `loadPlayingQueue` also clear the Play Next set (test extended, red then green). `validateGithubDebugScreenshotTest`: 33 of 34 fail on this branch and identically on clean HEAD (detached worktree), so the references were stale before this work; not regenerated. `SettingsScreenshotTest` source updated for the removed parameter. Not run: Play flavor on screen.
+- [ ] Left open: "UNTAGGED" ReplayGain pill breaks mid-word at 130% text (pre-existing, `TagsTechnicalPage.kt`); full color-token migration; stale screenshot references (33 of 34); Play store screenshots on this branch may still show "DIRECT OUTPUT".

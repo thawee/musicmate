@@ -29,8 +29,6 @@ import apincer.android.mmate.R
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    showStorageSpace: Boolean,
-    onShowStorageSpaceChange: (Boolean) -> Unit,
     prefixTrackNumber: Boolean,
     onPrefixTrackNumberChange: (Boolean) -> Unit,
     listFollowsNowPlaying: Boolean,
@@ -196,7 +194,7 @@ fun SettingsScreen(
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Maximum volume",
+                    text = "Maximum Volume",
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
@@ -210,7 +208,7 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 AdaptiveChoiceGroup(
-                    options = listOf(60 to "60%", 70 to "70%", 80 to "80%", 90 to "90%", 100 to "Off"),
+                    options = listOf(60 to "60%", 70 to "70%", 80 to "80%", 90 to "90%", 100 to "100%"),
                     selected = { rendererVolumeLimit == it },
                     onSelect = onRendererVolumeLimitChange
                 )
@@ -221,14 +219,6 @@ fun SettingsScreen(
                 title = "USER INTERFACE",
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
-                SettingsSwitchRow(
-                    title = "Display Storage Space",
-                    subtitle = "Show storage usage metrics on drawer menu",
-                    checked = showStorageSpace,
-                    onCheckedChange = onShowStorageSpaceChange
-                )
-                HorizontalDivider(color = Color(0x14FFFFFF), modifier = Modifier.padding(vertical = 8.dp))
-
                 SettingsSwitchRow(
                     title = "Show Track Number",
                     subtitle = "Prefix track number to song title in library",
@@ -430,8 +420,6 @@ private fun SettingsSwitchRow(
 @Composable
 private fun SettingsScreenPreview() {
     SettingsScreen(
-        showStorageSpace = true,
-        onShowStorageSpaceChange = {},
         prefixTrackNumber = false,
         onPrefixTrackNumberChange = {},
         listFollowsNowPlaying = true,

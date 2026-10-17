@@ -66,6 +66,8 @@ data class PlayerTargetItem @JvmOverloads constructor(
 fun PlayerPickerDialog(
     targets: List<PlayerTargetItem>,
     hasExternalPlayerAccess: Boolean,
+    serverRunning: Boolean,
+    onStartServerClick: () -> Unit,
     onDismissRequest: () -> Unit,
     onTargetSelected: (PlaybackTarget) -> Unit,
     onBluetoothOutputClick: () -> Unit,
@@ -178,12 +180,18 @@ fun PlayerPickerDialog(
                             .verticalFadingEdge(bottomHeight = if (listState.canScrollForward) 40.dp else 0.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        item(key = "hdr_streamers") {
+                            CategoryHeader("NETWORK STREAMERS")
+                        }
                         if (streamers.isNotEmpty()) {
-                            item(key = "hdr_streamers") {
-                                CategoryHeader("NETWORK STREAMERS")
-                            }
                             items(streamers, key = { "streamer_" + it.target.targetId }) { item ->
                                 PlayerTargetRow(item = item, onTargetSelected = onTargetSelected)
+                            }
+                        } else {
+                            // Players are found by the media server: say so, or a first-time user
+                            // never learns how to reach a DLNA player from here
+                            item(key = "streamers_hint") {
+                                NetworkPlayersHint(serverRunning, onStartServerClick)
                             }
                         }
 
@@ -288,6 +296,35 @@ fun PlayerPickerDialog(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetworkPlayersHint(serverRunning: Boolean, onStartServerClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (serverRunning) "Searching your Wi-Fi for DLNA players…"
+                   else "Start the media server to find DLNA players on your Wi-Fi.",
+            color = MusicMateDesignTokens.Text.Telemetry,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            modifier = Modifier.weight(1f)
+        )
+        if (!serverRunning) {
+            Spacer(modifier = Modifier.width(8.dp))
+            androidx.compose.material3.TextButton(onClick = onStartServerClick) {
+                Text(
+                    text = "Start server",
+                    color = MusicMateDesignTokens.Brand.Gold,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

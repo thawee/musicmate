@@ -22,9 +22,6 @@ class SettingsActivity : ComponentActivity() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         setContent {
-            var showStorageSpace by remember {
-                mutableStateOf(Settings.isShowStorageSpace(this@SettingsActivity))
-            }
             var prefixTrackNumber by remember {
                 mutableStateOf(Settings.isShowTrackNumber(this@SettingsActivity))
             }
@@ -55,11 +52,6 @@ class SettingsActivity : ComponentActivity() {
 
             MusicMateTheme {
                 SettingsScreen(
-                    showStorageSpace = showStorageSpace,
-                    onShowStorageSpaceChange = { checked ->
-                        showStorageSpace = checked
-                        prefs.edit().putBoolean(Constants.PREF_SHOW_STORAGE_SPACE, checked).apply()
-                    },
                     prefixTrackNumber = prefixTrackNumber,
                     onPrefixTrackNumberChange = { checked ->
                         prefixTrackNumber = checked

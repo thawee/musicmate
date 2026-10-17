@@ -340,7 +340,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Phone Speaker";
                     targetSubtitle = devName;
                     nps.getTargetTitle().setValue(devName);
-                    nps.getTargetBadge().setValue(isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "DIRECT OUTPUT"));
+                    // Speaker and wired outputs go through Android's mixer: name the place, claim nothing
+                    nps.getTargetBadge().setValue(isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "THIS PHONE"));
                     StringBuilder devBuf = new StringBuilder();
                     devBuf.append(device.getDescription());
                     if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
@@ -1617,6 +1618,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             doShowFilteredLibrary(Constants.FILTER_TYPE_ARTIST, track.getArtist());
         } else if (actionId == R.id.action_go_to_album) {
             doShowFilteredLibrary(Constants.FILTER_TYPE_ALBUM, track.getAlbum());
+        } else if (actionId == R.id.action_edit_metadata) {
+            doShowEditActivity(singleTrackList);
         } else if (actionId == R.id.action_encoding_file) {
             doEncodeAudioFiles(singleTrackList);
         } else if (actionId == R.id.action_open_with) {

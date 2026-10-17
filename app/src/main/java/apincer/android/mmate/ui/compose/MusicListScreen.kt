@@ -249,10 +249,27 @@ fun MusicListScreen(
                     savedPositions[listKey] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
                 }
             }
-            LaunchedEffect(listState, tracks.size, hasMoreItems, isRefreshing, loadError) {
+            // Gesture discovery hints for new users. They scroll with the list as its first item:
+            // pinned above it they filled the whole screen in landscape and at large text.
+            val pendingHints = GestureHints.rememberPendingHints(
+                // Describe what tap and long-press do in the current tap mode
+                if (listenerTapMode) listOf(
+                    GestureHints.HintType.TRACK_TAP,
+                    GestureHints.HintType.ART_TAP,
+                    GestureHints.HintType.LONG_PRESS_DETAILS
+                ) else listOf(
+                    GestureHints.HintType.TRACK_TAP_EDIT,
+                    GestureHints.HintType.ART_TAP,
+                    GestureHints.HintType.LONG_PRESS
+                )
+            )
+            // Track indexes are list indexes shifted by the hint item, when it shows
+            val headerCount = if (showGestureHints && pendingHints.isNotEmpty()) 1 else 0
+
+            LaunchedEffect(listState, tracks.size, hasMoreItems, isRefreshing, loadError, headerCount) {
                 if (hasMoreItems && !isRefreshing && loadError == null) {
                     snapshotFlow {
-                        (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1) >= tracks.size - 10
+                        (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1) - headerCount >= tracks.size - 10
                     }.distinctUntilChanged().collect { nearEnd ->
                         if (nearEnd) onLoadMore()
                     }
@@ -262,7 +279,7 @@ fun MusicListScreen(
             // Trigger scroll when scrollToIndex changes
             LaunchedEffect(scrollToIndex) {
                 if (scrollToIndex >= 0 && scrollToIndex < tracks.size) {
-                    listState.animateScrollToItem(scrollToIndex)
+                    listState.animateScrollToItem(scrollToIndex + headerCount)
                     onScrollComplete()
                 }
             }
@@ -275,22 +292,6 @@ fun MusicListScreen(
             // Box allows FastScrollbar and FAB to overlay on top
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Gesture discovery hints for new users
-                    if (showGestureHints) {
-                        GestureHints.GestureHintBanner(
-                            // Describe what tap and long-press do in the current tap mode
-                            hints = if (listenerTapMode) listOf(
-                                GestureHints.HintType.TRACK_TAP,
-                                GestureHints.HintType.ART_TAP,
-                                GestureHints.HintType.LONG_PRESS_DETAILS
-                            ) else listOf(
-                                GestureHints.HintType.TRACK_TAP_EDIT,
-                                GestureHints.HintType.ART_TAP,
-                                GestureHints.HintType.LONG_PRESS
-                            )
-                        )
-                    }
-
                     LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
@@ -300,6 +301,11 @@ fun MusicListScreen(
                         end = 10.dp   // make room for the scrollbar thumb
                     )
                 ) {
+                    if (headerCount > 0) {
+                        item(key = "gesture-hints") {
+                            GestureHints.GestureHintBanner(pending = pendingHints)
+                        }
+                    }
                     itemsIndexed(tracks, key = { _, track -> track.id }) { index, track ->
                         if (track.isContainer) {
                             FolderListItem(
@@ -344,10 +350,10 @@ fun MusicListScreen(
                 // Fast scrollbar overlay — gold thumb + letter bubble on drag
                 FastScrollbar(
                     listState = listState,
-                    totalItems = tracks.size,
+                    totalItems = tracks.size + headerCount,
                     modifier = Modifier.fillMaxSize().padding(top = 8.dp, bottom = 120.dp),
                     itemLabel = { index ->
-                        tracks.getOrNull(index)
+                        tracks.getOrNull(index - headerCount)
                             ?.title
                             ?.trimStart()
                             ?.firstOrNull()

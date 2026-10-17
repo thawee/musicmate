@@ -343,7 +343,7 @@ fun NowPlayingPage(
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .basicMarquee(iterations = Int.MAX_VALUE, velocity = 30.dp)
+                                .basicMarquee(iterations = 1, velocity = 30.dp) // once per song, then rests (WCAG 2.2.2)
                                 .fadingEdge(endWidth = 14.dp) // a start fade hid the first letter at rest
                                 .clickable(enabled = track != null) { onTrackClicked() }
                         )
@@ -360,7 +360,7 @@ fun NowPlayingPage(
                             maxLines = 1,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .basicMarquee(iterations = Int.MAX_VALUE, velocity = 24.dp)
+                                .basicMarquee(iterations = 1, velocity = 24.dp)
                                 .fadingEdge(endWidth = 12.dp)
                         )
 

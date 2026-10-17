@@ -1,6 +1,7 @@
 package apincer.music.core.repository;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -452,6 +453,45 @@ public class QueueManagerTest {
         assertEquals(2, queueManager.getQueueSize());
         assertEquals(1, queueManager.getCurrentIndex());
         assertEquals(t1.getId(), queueManager.getCurrentTrack().getId());
+    }
+
+    @Test
+    public void isPlayNext_onlyTracksInsertedWithPlayNext() {
+        List<Track> list = new ArrayList<>();
+        for (long id = 1; id <= 4; id++) list.add(createDummyTrack(id, "Track " + id));
+        queueManager.setPlayingQueue(list);
+        Track t5 = createDummyTrack(5L, "Track 5");
+
+        // Tracks queued as a list are not "play next"
+        assertFalse(queueManager.isPlayNext(2L));
+        assertFalse(queueManager.isPlayNext(4L));
+
+        queueManager.addPlayNext(t5);
+        assertTrue(queueManager.isPlayNext(5L));
+
+        // Re-added at the end, it is an ordinary queued track again
+        queueManager.addPlayingQueue(t5);
+        assertFalse(queueManager.isPlayNext(5L));
+
+        queueManager.addPlayNext(t5);
+        queueManager.removeTrackById(5L);
+        assertFalse(queueManager.isPlayNext(5L));
+
+        queueManager.addPlayNext(t5);
+        queueManager.setPlayingQueue(list);
+        assertFalse(queueManager.isPlayNext(5L));
+
+        queueManager.addPlayNext(t5);
+        queueManager.emptyPlayingQueue();
+        assertFalse(queueManager.isPlayNext(5L));
+
+        // A new list played from the library replaces the queue through savePlayingQueue
+        queueManager.setPlayingQueue(list);
+        queueManager.addPlayNext(t5);
+        List<Track> withT5 = new ArrayList<>(list);
+        withT5.add(t5);
+        queueManager.savePlayingQueue(withT5);
+        assertFalse(queueManager.isPlayNext(5L));
     }
 
     @Test

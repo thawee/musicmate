@@ -350,7 +350,17 @@ fun TrackListItem(
                             )
                         }
                         HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
-                        // File operations group
+                        // File operations group. Edit Tags is here too, not only behind long-press.
+                        DropdownMenuItem(
+                            text = { Text("Edit Tags", color = Color.White, fontSize = 15.sp) },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_baseline_edit_note_24), contentDescription = null, tint = Color.White)
+                            },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(R.id.action_edit_metadata)
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text("Convert Format", color = Color.White, fontSize = 15.sp) },
                             leadingIcon = {

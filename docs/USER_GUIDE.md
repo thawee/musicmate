@@ -73,7 +73,7 @@ Category cards (an artist, a genre, a playlist) have their own **Play** and **Ad
 
 **Music Center** has three tabs. Tap a tab or swipe between them.
 
-- **Playback.** Cover art, the song's quality and where it is playing (for example `Phone Speaker · DIRECT OUTPUT`), a seek bar, volume, and shuffle, repeat and sleep timer controls.
+- **Playback.** Cover art, the song's quality and where it is playing (for example `Phone Speaker · THIS PHONE`), a seek bar, volume, and shuffle, repeat and sleep timer controls.
   - **Volume** shows the level of the player you are using: the phone's media volume, or the DLNA player's own volume once MusicMate has read it after you pick that player. On a portable player such as a HiBy, the new level is sent when your finger stops moving.
   - **Sleep timer** pauses after 15 to 60 minutes, or at the end of the current song. Open it again to see the time left and the option that is running. It works on players MusicMate drives; a player that another app controls cannot be paused from MusicMate.
 - **Queue.** The songs coming up. See [The queue](#4-the-queue).

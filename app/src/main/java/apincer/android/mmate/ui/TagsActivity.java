@@ -135,6 +135,7 @@ public class TagsActivity extends AppCompatActivity {
     private ImageView coverArtView;
     private androidx.compose.ui.platform.ComposeView tabLayout;
     private AppBarLayout appBarLayout;
+    private com.google.android.material.appbar.MaterialToolbar collapsedBar;
 
     private TextView titleView;
     private TextView encInfo;
@@ -422,6 +423,11 @@ public class TagsActivity extends AppCompatActivity {
                 return true;
             });
         }
+        collapsedBar = findViewById(R.id.collapsed_bar);
+        collapsedBar.setNavigationOnClickListener(v -> {
+            performHapticClick(v);
+            getOnBackPressedDispatcher().onBackPressed();
+        });
         View btnBack = findViewById(R.id.btn_back);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> {
@@ -575,7 +581,8 @@ public class TagsActivity extends AppCompatActivity {
                 CollapsingToolbarLayout.LayoutParams params = new CollapsingToolbarLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 params.setCollapseMode(CollapsingToolbarLayout.LayoutParams.COLLAPSE_MODE_PARALLAX);
-                header.addView(coverPanel, params);
+                // Index 1: behind the pinned collapsed bar, so the scrim and bar draw over it
+                header.addView(coverPanel, 1, params);
             }
         }
         previewScroll.setVisibility(preview ? VISIBLE : GONE);
@@ -2267,6 +2274,12 @@ public class TagsActivity extends AppCompatActivity {
             double scale = (1 - (scrollRatio * 0.2));
             coverArtView.setScaleX((float) scale);
             coverArtView.setScaleY((float) scale);
+
+            // Collapsed bar fades in over the last 30% so the back control never goes missing
+            float barAlpha = (float) Math.max(0, Math.min(1, (scrollRatio - 0.7) / 0.3));
+            collapsedBar.setAlpha(barAlpha);
+            collapsedBar.setVisibility(barAlpha > 0f ? VISIBLE : View.INVISIBLE);
+            if (barAlpha > 0f && titleView != null) collapsedBar.setTitle(titleView.getText());
 
             // Mode transitions with hysteresis (previously only at exact extremes, which
             // left an intermediate band where tabs could sit under the action dock).

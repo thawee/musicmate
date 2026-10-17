@@ -36,7 +36,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/toolbar_layout"
-            app:contentScrim="@android:color/transparent"
+            android:minHeight="56dp"
+            app:contentScrim="#FF181A1D"
             app:statusBarScrim="@android:color/transparent"
             app:titleEnabled="false"
             app:scrimVisibleHeightTrigger="100dp"
@@ -202,6 +203,21 @@
                     app:layout_constraintEnd_toEndOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Collapsed editor: the solid scrim hides the cover under the status bar, and this
+                 bar keeps a back control and the song title. Faded out while expanded. -->
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/collapsed_bar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:alpha="0"
+                android:visibility="invisible"
+                android:background="@android:color/transparent"
+                app:layout_collapseMode="pin"
+                app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+                app:navigationIconTint="@android:color/white"
+                app:navigationContentDescription="@string/btn_back_cd"
+                app:titleTextColor="@android:color/white" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
@@ -409,7 +425,7 @@
                         android:id="@+id/action_reformat"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
@@ -424,7 +440,7 @@
                         android:id="@+id/action_read_tag"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
@@ -439,7 +455,7 @@
                         android:id="@+id/action_save"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="14dp"
                         android:layout_marginHorizontal="4dp"
@@ -467,7 +483,7 @@
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minHeight="40dp"
+                        android:minHeight="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
@@ -480,7 +496,7 @@
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minHeight="40dp"
+                        android:minHeight="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"
@@ -488,12 +504,19 @@
                         android:contentDescription="Save cover art to folder"
                         app:cornerRadius="18dp" />
 
+                    <!-- Keeps the destructive action apart from Save Art -->
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="#33FFFFFF" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_remove_coverart"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:minHeight="40dp"
+                        android:minHeight="48dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="10dp"
                         android:layout_marginHorizontal="4dp"

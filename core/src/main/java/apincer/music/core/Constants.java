@@ -117,7 +117,6 @@ public final class Constants {
 
    // public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
-    public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
    // public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
     public static final String PREF_MUSICMATE_DIRECTORIES = "preference_musicmate_directories";

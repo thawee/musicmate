@@ -499,7 +499,8 @@ fun NewBadge(track: Track?, modifier: Modifier = Modifier, dotOnly: Boolean = fa
     val accentColor = if (isDownload) Color(0xFF64B5F6) else Color(0xFFFFD700)
     val borderColor = if (isDownload) Color(0x5564B5F6) else Color(0x55FFD700)
     val bgBase = Color(0xD9141414)
-    val description = if (isDownload) "Downloaded track" else "New track"
+    // "New" means not organized yet (the drawer's Incoming Tracks), not recently added
+    val description = if (isDownload) "Downloaded track, not organized yet" else "Incoming track, not organized yet"
 
     // Over album art a labelled pill hid the cover; a ringed dot marks it instead
     if (dotOnly) {

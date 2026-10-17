@@ -626,6 +626,9 @@ fun MainScaffold(
         PlayerPickerDialog(
             targets = state.playerTargets,
             hasExternalPlayerAccess = state.systemAccess.value.hasExternalPlayerAccess,
+            serverRunning = state.mediaServerState.isServerRunning,
+            // The picker stays open: found players appear in it as they answer
+            onStartServerClick = { callbacks?.onStartServerClicked() },
             onDismissRequest = { state.showPlayerPickerDialog.value = false },
             onTargetSelected = { target ->
                 callbacks?.onPlayerTargetSelected(target)
@@ -680,39 +683,46 @@ private fun ExpandedNavigationRail(
                 contentDescription = null,
                 tint = drawerGold,
                 modifier = Modifier
-                    .padding(vertical = 18.dp)
+                    .padding(vertical = 12.dp)
                     .size(28.dp)
             )
         }
     ) {
-        destinations.forEach { (itemId, iconResId, labelResId) ->
-            NavigationRailItem(
-                selected = activeItemId == itemId,
-                onClick = { onNavigationItemClick(itemId) },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = iconResId),
-                        contentDescription = if (largeText) stringResource(labelResId) else null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = if (largeText) null else {
-                    {
-                        Text(
-                            text = stringResource(labelResId),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+        // A landscape phone is too short for all five items: scroll instead of overlapping
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            destinations.forEach { (itemId, iconResId, labelResId) ->
+                NavigationRailItem(
+                    selected = activeItemId == itemId,
+                    onClick = { onNavigationItemClick(itemId) },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = iconResId),
+                            contentDescription = if (largeText) stringResource(labelResId) else null,
+                            modifier = Modifier.size(24.dp)
                         )
-                    }
-                },
-                colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
-                    selectedIconColor = Color.Black,
-                    selectedTextColor = drawerGold,
-                    indicatorColor = drawerGold,
-                    unselectedIconColor = drawerGray,
-                    unselectedTextColor = drawerGray
+                    },
+                    label = if (largeText) null else {
+                        {
+                            Text(
+                                text = stringResource(labelResId),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    },
+                    colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
+                        selectedIconColor = Color.Black,
+                        selectedTextColor = drawerGold,
+                        indicatorColor = drawerGold,
+                        unselectedIconColor = drawerGray,
+                        unselectedTextColor = drawerGray
+                    )
                 )
-            )
+            }
         }
     }
 }
@@ -1080,8 +1090,9 @@ private fun FloatingMiniPlayerDock(
     val haptic = LocalHapticFeedback.current
     val currentScrollToPlaying by rememberUpdatedState(onScrollToPlaying)
     val currentOpenAudioHub by rememberUpdatedState(onOpenAudioHub)
-    // Long text scrolls only while playing; paused text rests at its start
-    val marqueeIterations = if (isPlaying) Int.MAX_VALUE else 0
+    // Long text scrolls once per song while playing, then rests at its start: endless motion
+    // next to the list is distracting (WCAG 2.2.2). Paused text does not move.
+    val marqueeIterations = if (isPlaying) 1 else 0
 
     Surface(
         shape = RoundedCornerShape(20.dp), // DESIGN.md §6A: 20dp corner radius

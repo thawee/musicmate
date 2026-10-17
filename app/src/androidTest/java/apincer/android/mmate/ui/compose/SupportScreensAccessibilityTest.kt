@@ -27,8 +27,6 @@ class SupportScreensAccessibilityTest {
         composeRule.setContent {
             MusicMateTheme {
                 SettingsScreen(
-                    showStorageSpace = true,
-                    onShowStorageSpaceChange = {},
                     prefixTrackNumber = false,
                     onPrefixTrackNumberChange = {},
                     listFollowsNowPlaying = true,
@@ -40,7 +38,7 @@ class SupportScreensAccessibilityTest {
             }
         }
 
-        composeRule.onNodeWithText("Display Storage Space").assertIsOn()
+        composeRule.onNodeWithText("Auto Scroll to Now Playing").assertIsOn()
         runAccessibilityChecks()
     }
 

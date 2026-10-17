@@ -52,17 +52,9 @@ object MusicMateDesignTokens {
         val BitPerfectGreen = Color(0xFF00E676)
     }
 
-    /**
-     * Dynamic Range (DR) Acoustic Meter Palette (Temperature Spectrum)
-     */
-    object DynamicRange {
-        val RedCompressed = Color(0xFFFF3300) // DR 1-4
-        val OrangeWarning = Color(0xFFFF9900)  // DR 5-8
-        val AmberStandard = Color(0xFFFFCC00)  // DR 9-12
-        val SkyBlueHigh = Color(0xFF33CCFF)    // DR 13-16
-        val RoyalBlueDynamic = Color(0xFF3366FF) // DR 17-20
-        val PurpleAudiophile = Color(0xFF9933CC) // DR 21+
-    }
+    // DR colors are not tokens here: R.color.dr_low / dr_medium / dr_high (below 8, 8 to 12,
+    // 13 and up) through TagUIUtils.getDRScoreColor are the one scale every screen uses.
+    // An unused six-band palette here contradicted it and was removed.
 
     /** Live status lights (server running, queue caught up) */
     object Status {

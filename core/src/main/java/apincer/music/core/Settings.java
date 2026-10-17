@@ -12,11 +12,6 @@ import java.util.Set;
 public class Settings {
     private static final String TAG = Settings.class.getSimpleName();
 
-    public static boolean isShowStorageSpace(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_SHOW_STORAGE_SPACE,true);
-    }
 
     public static boolean isListFollowNowPlaying(Context context) {
         SharedPreferences prefs =

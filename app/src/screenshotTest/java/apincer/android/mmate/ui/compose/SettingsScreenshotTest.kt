@@ -13,8 +13,6 @@ import com.android.tools.screenshot.PreviewTest
 fun SettingsVisualBaselinePreview() {
     MusicMateTheme {
         SettingsScreen(
-            showStorageSpace = true,
-            onShowStorageSpaceChange = {},
             prefixTrackNumber = false,
             onPrefixTrackNumberChange = {},
             listFollowsNowPlaying = true,

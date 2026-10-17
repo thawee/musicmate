@@ -385,16 +385,10 @@ fun QueuePage(
             }
         }
 
-        // Gesture discovery hints for queue
-        if (showGestureHints && state.tracks.isNotEmpty()) {
-            GestureHints.GestureHintBanner(
-                hints = listOf(
-                    GestureHints.HintType.SWIPE_QUEUE,
-                    GestureHints.HintType.DRAG_REORDER
-                ),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-            )
-        }
+        // Gesture discovery hints for queue; the list's first item, so they scroll away
+        val pendingHints = GestureHints.rememberPendingHints(
+            listOf(GestureHints.HintType.SWIPE_QUEUE, GestureHints.HintType.DRAG_REORDER)
+        )
 
         if (state.tracks.isEmpty()) {
             QueueEmptyState(
@@ -409,6 +403,14 @@ fun QueuePage(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
             ) {
+                if (showGestureHints && pendingHints.isNotEmpty()) {
+                    item(key = "gesture-hints") {
+                        GestureHints.GestureHintBanner(
+                            pending = pendingHints,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 itemsIndexed(
                     items = state.tracks,
                     key = { index, track -> "${index}_${track.uniqueKey ?: track.id}" }
@@ -416,7 +418,9 @@ fun QueuePage(
                     val isPlaying = track.uniqueKey == state.currentPlayingKey ||
                             (currentIdx in state.tracks.indices && state.tracks[currentIdx].id == track.id)
                     val isSmart = manager?.isSmartSuggested(track.id) == true
-                    val isNext = !isPlaying && !isSmart && index > currentIdx
+                    // Only tracks the user put next; the rest of a played list is just the list
+                    val isNext = !isPlaying && !isSmart && index > currentIdx &&
+                            manager?.isPlayNext(track.id) == true
 
                     val prevTrack = if (index > 0) state.tracks[index - 1] else null
                     val sectionHeader = getSectionHeader(
@@ -716,7 +720,9 @@ private fun getSectionHeader(
         return "NOW PLAYING" to MusicMateDesignTokens.Brand.Gold
     }
     if (index == currentIdx + 1 && !isSmart) {
-        return "UP NEXT · MANUAL PRIORITY" to Color(0xFF00E5FF)
+        // "Manual priority" only means something ahead of a smart refill
+        val title = if (source == QueueManager.Source.MANUAL) "UP NEXT" else "UP NEXT · MANUAL PRIORITY"
+        return title to Color(0xFF00E5FF)
     }
     if (isSmart && (index == currentIdx + 1 || !prevSmart)) {
         val label = when (source) {

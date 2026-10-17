@@ -19,10 +19,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -83,63 +83,65 @@ object GestureHints {
         getPrefs(context).edit().clear().apply()
     }
 
+    /**
+     * The hints from [hints] not dismissed yet. The caller owns the list so it can tell whether
+     * the banner shows (a LazyColumn header item shifts every index by one).
+     */
+    @Composable
+    fun rememberPendingHints(hints: List<HintType>): SnapshotStateList<HintType> {
+        val context = LocalContext.current
+        return remember(hints) { hints.filter { !hasShown(context, it) }.toMutableStateList() }
+    }
+
     @Composable
     fun GestureHintCard(
         hint: HintType,
         onDismiss: () -> Unit,
         modifier: Modifier = Modifier
     ) {
-        val context = LocalContext.current
-        val showHint = remember { mutableStateOf(!hasShown(context, hint)) }
-
-        if (showHint.value) {
-            Card(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E1E2E)
-                ),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300))
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E1E2E)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFB300))
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Icon(
+                    painter = painterResource(id = hint.iconRes),
+                    contentDescription = null,
+                    tint = Color(0xFFFFB300),
+                    modifier = Modifier.size(24.dp)
+                )
+                // weight, not fillMaxWidth: the text must leave room for the Dismiss button
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        painter = painterResource(id = hint.iconRes),
-                        contentDescription = null,
-                        tint = Color(0xFFFFB300),
-                        modifier = Modifier.size(24.dp)
+                    Text(
+                        text = hint.title,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = hint.title,
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = hint.message,
-                            color = Color(0xFFBDBDBD),
-                            fontSize = 12.sp
-                        )
-                    }
-                    IconButton(onClick = {
-                        markShown(context, hint)
-                        showHint.value = false
-                        onDismiss()
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_close_24),
-                            contentDescription = "Dismiss",
-                            tint = Color(0xFF9E9E9E)
-                        )
-                    }
+                    Text(
+                        text = hint.message,
+                        color = Color(0xFFBDBDBD),
+                        fontSize = 12.sp
+                    )
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.round_close_24),
+                        contentDescription = "Dismiss",
+                        tint = Color(0xFF9E9E9E)
+                    )
                 }
             }
         }
@@ -147,38 +149,36 @@ object GestureHints {
 
     @Composable
     fun GestureHintBanner(
-        hints: List<HintType> = listOf(HintType.TRACK_TAP, HintType.ART_TAP, HintType.LONG_PRESS),
-        onDismissAll: () -> Unit = {},
+        pending: SnapshotStateList<HintType>,
         modifier: Modifier = Modifier
     ) {
         val context = LocalContext.current
-        // Preferences are not observable: remember the dismissal so the banner hides at once
-        var dismissed by remember { mutableStateOf(false) }
-        val visibleHints = hints.filter { !hasShown(context, it) }
-
-        if (!dismissed && visibleHints.isNotEmpty()) {
-            Column(
-                modifier = modifier.fillMaxWidth()
+        if (pending.isEmpty()) return
+        Column(
+            modifier = modifier.fillMaxWidth()
+        ) {
+            pending.toList().forEach { hint ->
+                key(hint) {
+                    GestureHintCard(hint = hint, onDismiss = {
+                        markShown(context, hint)
+                        pending.remove(hint)
+                    })
+                }
+            }
+            TextButton(
+                onClick = {
+                    pending.forEach { markShown(context, it) }
+                    pending.clear()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                visibleHints.forEach { hint ->
-                    GestureHintCard(hint = hint, onDismiss = {})
-                }
-                TextButton(
-                    onClick = {
-                        visibleHints.forEach { markShown(context, it) }
-                        dismissed = true
-                        onDismissAll()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Don't show these tips again",
-                        color = Color(0xFF9E9E9E),
-                        fontSize = 12.sp
-                    )
-                }
+                Text(
+                    text = "Don't show these tips again",
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 12.sp
+                )
             }
         }
     }

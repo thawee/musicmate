@@ -10,11 +10,6 @@
             android:defaultValue="false"/>
             -->
         <SwitchPreferenceCompat
-            android:key="preference_show_storage_space"
-            android:summary="Show Storage space on left menu."
-            android:title="Display Storage space"
-            android:defaultValue="true"/>
-        <SwitchPreferenceCompat
             android:key="preference_prefix_title_with_track_number"
             android:summary="Prefix track number to song's title."
             android:title="Show Track Number"
