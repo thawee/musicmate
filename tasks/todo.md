@@ -1988,3 +1988,9 @@ throughput checkpoint: n/a, read-only investigation.
 - [x] Update the relevant release and UI documentation for the three verified fixes.
 - [x] Re-run focused verification and check the staged diff against `main`. App and core unit tests: 406 passed, 0 failures; GitHub debug APK built; staged diff has no whitespace errors.
 - [x] Commit only the fix and documentation files; leave unrelated working-tree changes untouched.
+
+# Install reviewed UI fixes on phone (2026-10-18)
+
+- [x] Build a signed GitHub release APK from commit `083024d9` and verify its package, permissions, and signing certificate against the installed phone APK. Package `apincer.android.mmate`, version `3.28.3-261018` (code 154), `MANAGE_EXTERNAL_STORAGE`, matching signer SHA-256 `b5757a1e…1d29ee`.
+- [x] Install the APK as an update on `192.168.1.54:42841` without clearing app data. `adb install -r` succeeded; first install time stayed 2026-10-04 21:24:56.
+- [x] Confirm the installed APK matches the build and the app launches with its library intact. Installed APK SHA-256 matches the build; version is `3.28.3-261018`; all-files access remains allowed; the library shows 8,094 tracks and playback is active to HiBy R3.
