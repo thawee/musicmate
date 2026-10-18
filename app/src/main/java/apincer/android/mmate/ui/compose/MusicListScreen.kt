@@ -1,19 +1,13 @@
 package apincer.android.mmate.ui.compose
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,15 +30,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -52,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 import apincer.android.mmate.utils.GestureHints
 import apincer.music.core.model.Track
-import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,7 +85,6 @@ fun MusicListScreen(
     val pullRefreshState = rememberPullToRefreshState()
     // Drilling into a collection starts at the top; Back returns to where that list was
     val savedPositions = remember { mutableMapOf<String, Pair<Int, Int>>() }
-    val coroutineScope = rememberCoroutineScope()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -284,15 +273,8 @@ fun MusicListScreen(
                 }
             }
             
-            // Only show FAB when scrolled down a bit
-            val showFab by remember(listState) {
-                derivedStateOf { listState.firstVisibleItemIndex > 5 }
-            }
-
-            // Box allows FastScrollbar and FAB to overlay on top
             Box(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(
+                LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -362,43 +344,6 @@ fun MusicListScreen(
                     }
                 )
             }
-
-            // Go to Top FAB - sibling of Column, child of outer Box.
-            // Centered: at the end it covered each row's ⋮ button and the fast-scroll thumb.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 112.dp)
-            ) {
-                AnimatedVisibility(
-                    visible = showFab,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            // Solid so row badges underneath do not show through
-                            .background(Color(0xFF262626))
-                            .border(1.5.dp, MusicMateDesignTokens.Surfaces.BorderElevated, CircleShape)
-                            .clickable {
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(0)
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.rounded_arrow_shape_up_stack_24),
-                            contentDescription = "Scroll to top",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 }

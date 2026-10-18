@@ -456,6 +456,56 @@ public class QueueManagerTest {
     }
 
     @Test
+    public void isPlayNext_survivesRestartAndForcedReload() {
+        Track current = createDummyTrack(1L, "Current");
+        Track queued = createDummyTrack(2L, "Queued");
+        Track chosen = createDummyTrack(5L, "Chosen");
+        queueManager.setPlayingQueue(java.util.Arrays.asList(current, queued));
+        queueManager.addPlayNext(chosen);
+
+        QueueManager restored = new QueueManager(repository);
+        assertEquals("Play Next marker after restart", true, restored.isPlayNext(5L));
+        assertFalse(restored.isPlayNext(2L));
+        assertEquals(5L, restored.getNextTrack().getId());
+
+        restored.loadPlayingQueue(true);
+        assertTrue(restored.isPlayNext(5L));
+        assertFalse(restored.isPlayNext(2L));
+    }
+
+    @Test
+    public void isPlayNext_restoresWithPlaylistAndIgnoresTracksOutsideQueue() {
+        Track current = createDummyTrack(1L, "Current");
+        Track chosen = createDummyTrack(5L, "Chosen");
+        queueManager.setPlayingQueue(Collections.singletonList(current));
+        queueManager.setActivePlaylist("Studio | Masters");
+        queueManager.addPlayNext(chosen);
+
+        QueueManager restored = new QueueManager(repository);
+        assertEquals(QueueManager.Source.PLAYLIST, restored.getSource());
+        assertEquals("Studio | Masters", restored.getActivePlaylistName());
+        assertEquals("Play Next marker in playlist after restart", true, restored.isPlayNext(5L));
+
+        savedQueue.removeIf(track -> track.getId() == 5L);
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
+    }
+
+    @Test
+    public void isPlayNext_legacyQueueStateRestoresWithoutMarkers() {
+        savedQueue.add(createDummyTrack(1L, "Current"));
+        smartState = "MANUAL|1|1,";
+        QueueManager restored = new QueueManager(repository);
+        assertEquals(1L, restored.getCurrentTrack().getId());
+        assertFalse(restored.isPlayNext(1L));
+
+        smartState = "PLAYLIST|1|1,|Studio Masters";
+        restored = new QueueManager(repository);
+        assertEquals(QueueManager.Source.PLAYLIST, restored.getSource());
+        assertEquals("Studio Masters", restored.getActivePlaylistName());
+        assertFalse(restored.isPlayNext(1L));
+    }
+
+    @Test
     public void isPlayNext_onlyTracksInsertedWithPlayNext() {
         List<Track> list = new ArrayList<>();
         for (long id = 1; id <= 4; id++) list.add(createDummyTrack(id, "Track " + id));
@@ -472,18 +522,22 @@ public class QueueManagerTest {
         // Re-added at the end, it is an ordinary queued track again
         queueManager.addPlayingQueue(t5);
         assertFalse(queueManager.isPlayNext(5L));
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
 
         queueManager.addPlayNext(t5);
         queueManager.removeTrackById(5L);
         assertFalse(queueManager.isPlayNext(5L));
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
 
         queueManager.addPlayNext(t5);
         queueManager.setPlayingQueue(list);
         assertFalse(queueManager.isPlayNext(5L));
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
 
         queueManager.addPlayNext(t5);
         queueManager.emptyPlayingQueue();
         assertFalse(queueManager.isPlayNext(5L));
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
 
         // A new list played from the library replaces the queue through savePlayingQueue
         queueManager.setPlayingQueue(list);
@@ -492,6 +546,7 @@ public class QueueManagerTest {
         withT5.add(t5);
         queueManager.savePlayingQueue(withT5);
         assertFalse(queueManager.isPlayNext(5L));
+        assertFalse(new QueueManager(repository).isPlayNext(5L));
     }
 
     @Test

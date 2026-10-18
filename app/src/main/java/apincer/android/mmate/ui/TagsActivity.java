@@ -1849,13 +1849,16 @@ public class TagsActivity extends AppCompatActivity {
     protected void updateTitlePanel(Track currentDisplayTag) {
         if (currentDisplayTag == null) {
             if (titleView != null) titleView.setText("");
+            if (collapsedBar != null) collapsedBar.setTitle("");
             return;
         }
 
         String title = trim(currentDisplayTag.getTitle(), " - ");
+        String displayTitle = title.isEmpty() ? "Unknown Title" : title;
         if (titleView != null) {
-            titleView.setText(title.isEmpty() ? "Unknown Title" : title);
+            titleView.setText(displayTitle);
         }
+        if (collapsedBar != null) collapsedBar.setTitle(displayTitle);
 
         // load coverArt & blur background
         loadImages(currentDisplayTag);
@@ -2279,7 +2282,6 @@ public class TagsActivity extends AppCompatActivity {
             float barAlpha = (float) Math.max(0, Math.min(1, (scrollRatio - 0.7) / 0.3));
             collapsedBar.setAlpha(barAlpha);
             collapsedBar.setVisibility(barAlpha > 0f ? VISIBLE : View.INVISIBLE);
-            if (barAlpha > 0f && titleView != null) collapsedBar.setTitle(titleView.getText());
 
             // Mode transitions with hysteresis (previously only at exact extremes, which
             // left an intermediate band where tabs could sit under the action dock).

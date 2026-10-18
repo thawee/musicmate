@@ -1961,3 +1961,30 @@ Source: rendered review on Medium_Phone (API 36), GitHub debug build. Full token
 - [x] Verify: app unit tests (both flavors), assembleGithubDebug, emulator screenshots of each fix (portrait, landscape, 130% font), advisor review of the diff.
   Done (2026-10-17): core 245, app 158 (each flavor) unit tests, 0 failures, incl. new `QueueManagerTest.isPlayNext_onlyTracksInsertedWithPlayNext`; `assembleGithubDebug`, `assemblePlayDebug`, androidTest compile. Emulator (Medium_Phone): tips scroll away and each has a visible X; landscape shows songs and the rail scrolls; auto-scroll to the playing song lands right with the tip item; menu has Edit Tags; Play Next marks only that track; picker says "Start the media server..." and after Start "Searching your Wi-Fi..."; badge "THIS PHONE"; collapsed editor bar with working back; Tech Info dock at 100% and 130%; Settings without the storage toggle. Instrumented (installed with adb, `am instrument`, app not uninstalled): SupportScreensAccessibilityTest 3, MainLibraryAccessibilityTest 8, MusicCenterAccessibilityTest 5, all OK. Review fix: `savePlayingQueue` and `loadPlayingQueue` also clear the Play Next set (test extended, red then green). `validateGithubDebugScreenshotTest`: 33 of 34 fail on this branch and identically on clean HEAD (detached worktree), so the references were stale before this work; not regenerated. `SettingsScreenshotTest` source updated for the removed parameter. Not run: Play flavor on screen.
 - [ ] Left open: "UNTAGGED" ReplayGain pill breaks mid-word at 130% text (pre-existing, `TagsTechnicalPage.kt`); full color-token migration; stale screenshot references (33 of 34); Play store screenshots on this branch may still show "DIRECT OUTPUT".
+
+# UI/UX update review (2026-10-18)
+
+- [x] Review the latest UI/UX commit against its F1-F16 scope and affected interaction paths.
+- [x] Verify suspected issues with focused tests or emulator checks and inspect the diff against its parent. `:app:assembleGithubDebug` and `:core:testDebugUnitTest` passed; QueueManagerTest ran 42 tests with no failures. Fresh emulator launch showed the empty-library state. Title editing and Play Next restart could not be exercised without a seeded library.
+- [x] Report concrete issues with severity, file locations, and verification limits. Found a stale collapsed-editor title after a save and lost Play Next badges after queue reload; both follow from code paths and need a seeded-library runtime check.
+
+throughput checkpoint: n/a, read-only investigation.
+
+## Phone verification (192.168.1.54:42841)
+
+- [x] Confirm the installed build, APK signature, and all-files permission before updating the phone. Installed base APK SHA-256 exactly matches `app-github-release.apk` built after HEAD; it is the GitHub flavor with all-files access. No update needed.
+- [~] Reproduce the collapsed title and Play Next restart behavior on the phone using existing library data. The phone was playing to HiBy R3; changing a real tag or restarting playback would disturb the user's music, so neither state-change case was exercised.
+- [x] Update the findings with observed phone behavior and leave the installed app/data intact. At font scale 1.0, the centered Go to Top button covers the fifth visible track's quality badge and details in `/private/tmp/musicmate-phone-review-20261018.png`. The app and queue were not changed.
+
+# Fix reviewed UI issues (2026-10-18)
+
+- [x] Persist Play Next provenance with the queue, including reload and removal cases. A new behavior test failed before the fix and passed afterward.
+- [x] Keep the collapsed editor title in sync when the displayed track changes; an emulator tag save updated the collapsed title immediately.
+- [x] Remove the obstructing Go to Top overlay; drag the fast scrollbar in both directions on the emulator.
+- [x] Run focused tests, build the GitHub variant, inspect the final diff, and verify the UI on an emulator without changing the phone's playback or library. App and core unit tests: 406 passed, 0 failures; GitHub debug APK built and installed on the emulator. The Play Next badge appeared before restart, and its saved state survived force-stop and relaunch.
+
+# Commit UI review fixes and documentation (2026-10-18)
+
+- [x] Update the relevant release and UI documentation for the three verified fixes.
+- [x] Re-run focused verification and check the staged diff against `main`. App and core unit tests: 406 passed, 0 failures; GitHub debug APK built; staged diff has no whitespace errors.
+- [x] Commit only the fix and documentation files; leave unrelated working-tree changes untouched.

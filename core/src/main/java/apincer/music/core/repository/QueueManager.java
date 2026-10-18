@@ -31,6 +31,7 @@ import apincer.music.core.repository.spi.DbHelper;
 @Singleton
 public class QueueManager {
     private static final String TAG = "QueueManager";
+    private static final String PLAY_NEXT_STATE_PREFIX = "PLAY_NEXT=";
 
     /**
      * Repository for accessing persistent queue items from the database.
@@ -220,9 +221,9 @@ public class QueueManager {
         StringBuilder state = new StringBuilder(source.name()).append('|')
                 .append(current == null ? -1 : current.getId()).append('|');
         for (Long id : sessionIds) state.append(id).append(',');
-        if (activePlaylistName != null) {
-            state.append('|').append(activePlaylistName);
-        }
+        state.append('|').append(activePlaylistName == null ? "" : activePlaylistName)
+                .append('|').append(PLAY_NEXT_STATE_PREFIX);
+        for (Long id : playNextIds) state.append(id).append(',');
         dbHelper.saveSmartQueueState(state.toString());
     }
 
@@ -237,8 +238,20 @@ public class QueueManager {
             sessionIds.clear();
             for (String id : parts[2].split(",")) if (!id.isEmpty()) sessionIds.add(Long.parseLong(id));
             for (Track track : queueList) sessionIds.add(track.getId());
-            if (parts.length > 3 && !parts[3].isEmpty()) {
-                activePlaylistName = parts[3];
+            boolean hasPlayNextState = parts.length > 4
+                    && parts[parts.length - 1].startsWith(PLAY_NEXT_STATE_PREFIX);
+            if (parts.length > 3) {
+                String playlistName = hasPlayNextState
+                        ? String.join("|", java.util.Arrays.copyOfRange(parts, 3, parts.length - 1))
+                        : parts[3];
+                activePlaylistName = playlistName.isEmpty() ? null : playlistName;
+            }
+            if (hasPlayNextState) {
+                for (String id : parts[parts.length - 1].substring(PLAY_NEXT_STATE_PREFIX.length()).split(",")) {
+                    if (id.isEmpty()) continue;
+                    long trackId = Long.parseLong(id);
+                    if (indexMap.containsKey(trackId)) playNextIds.add(trackId);
+                }
             }
             if (source == Source.PLAYLIST && (activePlaylistName == null || activePlaylistName.isEmpty())) {
                 source = Source.MANUAL;
@@ -247,6 +260,7 @@ public class QueueManager {
         } catch (RuntimeException e) {
             source = Source.MANUAL;
             sessionIds.clear();
+            playNextIds.clear();
             activePlaylistName = null;
             Log.w(TAG, "Ignoring invalid smart queue state", e);
         }
@@ -384,6 +398,7 @@ public class QueueManager {
             Log.e(TAG, "Failed to persist playing queue", e);
         }
         updateShuffleOrder();
+        persistSmartState();
         notifyQueueChanged();
     }
 
@@ -479,6 +494,7 @@ public class QueueManager {
         currentIndex = queueList.isEmpty() ? -1 : 0;
         playbackIndex = currentIndex;
         reshuffle();
+        persistSmartState();
     }
 
     /**

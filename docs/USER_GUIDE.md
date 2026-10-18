@@ -42,6 +42,8 @@ This guide walks through MusicMate screen by screen: adding your music, playing 
 
 The main screen lists your songs with their quality badge (such as `HI-RES 24/96` or `LOSSLESS 16/44.1`), dynamic range (`DR12`) and length. Song list headers show the track count and total play time. The About screen shows the library's storage size.
 
+Drag the slim scrollbar at the right edge to move through a long song list.
+
 **Search** from the box at the top.
 
 **Open the menu** with the MusicMate logo at the top left. It has three groups.
@@ -99,7 +101,7 @@ Open **Music Center**, then **Queue**.
 - **Drag** the handle on the right to reorder.
 - The buttons at the top **load a playlist**, **jump to the song that is playing**, and **clear the queue**.
 
-**Play Next** and anything you add yourself always come before automatic suggestions.
+**Play Next** and anything you add yourself always come before automatic suggestions. Songs added with Play Next show a badge in the queue, which stays after you close and reopen the app.
 
 **Automatic sources.** The row of buttons under the header decides what MusicMate adds when the queue runs low.
 
