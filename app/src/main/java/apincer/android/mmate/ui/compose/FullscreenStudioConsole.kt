@@ -870,14 +870,23 @@ fun FullscreenStudioConsole(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         // Bespoke Linear Studio Volume Attenuator
-                        StudioLinearVolumeFader(
-                            volume = state.volume.value,
-                            onVolumeChanged = onVolumeChanged,
-                            enabled = state.volumeEnabled.value,
-                            limit = state.volumeLimit.value,
-                            colorGold = colorGold,
-                            modifier = Modifier.width(220.dp)
-                        )
+                        if (state.volumeOnPlayer.value) {
+                            Text(
+                                text = context.getString(R.string.volume_on_hiby_r3),
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 12.sp,
+                                modifier = Modifier.width(220.dp)
+                            )
+                        } else {
+                            StudioLinearVolumeFader(
+                                volume = state.volume.value,
+                                onVolumeChanged = onVolumeChanged,
+                                enabled = state.volumeEnabled.value,
+                                limit = state.volumeLimit.value,
+                                colorGold = colorGold,
+                                modifier = Modifier.width(220.dp)
+                            )
+                        }
 
                         // Up Next Track Preview Capsule (Clickable -> Expands Studio Queue Overlay!)
                         val nextLabel = queueState.upNextLabel(state.isShuffle.value)

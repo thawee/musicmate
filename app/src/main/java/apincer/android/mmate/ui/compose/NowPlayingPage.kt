@@ -802,7 +802,19 @@ fun NowPlayingPage(
             // A network player's level is unknown until read, and capped by the user's maximum
             val volumeEnabled = state.volumeEnabled.value
             val volumeLimit = state.volumeLimit.value
-            Row(
+            if (state.volumeOnPlayer.value) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.volume_on_hiby_r3),
+                        color = MusicMateDesignTokens.Text.Muted,
+                        fontSize = 12.sp
+                    )
+                }
+            } else Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {

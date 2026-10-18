@@ -7,14 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Song list navigation:** Removed the floating Go to Top button that covered track details; the fast scrollbar remains available for moving through long lists.
-- **Tag editor title:** The collapsed toolbar shows the saved title immediately after a tag edit.
-- **Play Next queue badges:** Tracks added with Play Next keep their badge when the queue reloads or the app restarts. Removing or re-adding a track normally clears its Play Next status.
-
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.28.4] - 2026-10-18
+
+### Fixed
+- **HiBy R3 volume:** The R3 can report 100% over DLNA while its own output volume is much lower. MusicMate now directs volume changes to the R3 instead of showing that misleading value or sending a potentially loud remote adjustment.
+- **Song list navigation:** Removed the floating Go to Top button that covered track details; the fast scrollbar remains available for moving through long lists.
+- **Tag editor title:** The collapsed toolbar shows the saved title immediately after a tag edit.
+- **Play Next queue badges:** Tracks added with Play Next keep their badge when the queue reloads or the app restarts. Removing or re-adding a track normally clears its Play Next status.
 
 ## [3.28.3] - 2026-10-15
 

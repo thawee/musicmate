@@ -1229,6 +1229,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void setVolume(int volumePercent) {
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget == null || !currentTarget.isStreaming()) return;
+        if (currentTarget instanceof DMRPlayer dmr && !dmr.hasReliableRemoteVolume()) return;
         // Only a driven player whose level has been read: a level picked against an unknown start could blast
         if (!isControllable(currentTarget) || dmrVolume < 0) return;
         dmrVolume = RendererVolume.clamp(volumePercent, apincer.music.core.Settings.getRendererVolumeLimit(getApplicationContext()));
@@ -1243,7 +1244,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     /**
-     * Reads a newly driven renderer's real volume, so the slider starts there. Until then the slider
+     * Reads a newly driven renderer's reported volume, so the slider starts there. HiBy R3 is
+     * excluded because its report can be 100 while its output is quiet. Until a reliable read, the slider
      * shows nothing and sends nothing (it used to show the phone's volume, often 100%). It runs on its
      * own thread (the read blocks up to 2 s; the scheduler carries playback work), a portable player
      * is left to settle first so the read cannot collide with SetAVTransportURI or Play, and a failed
@@ -1253,6 +1255,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         dmrVolume = -1;
         if (!isControllable(target)) {
             rendererVolumeFlow.setValue(RendererVolume.NONE);
+            return;
+        }
+        if (!((DMRPlayer) target).hasReliableRemoteVolume()) {
+            rendererVolumeFlow.setValue(RendererVolume.UNAVAILABLE);
             return;
         }
         rendererVolumeFlow.setValue(RendererVolume.READING);

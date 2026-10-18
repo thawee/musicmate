@@ -76,6 +76,10 @@ public class DMRPlayer implements PlaybackTarget {
         return getDeviceProfile() == DeviceProfile.HIBY;
     }
 
+    public boolean hasReliableRemoteVolume() {
+        return !"HiBy R3".equalsIgnoreCase(displayName);
+    }
+
     public boolean supportsPreload() {
         return getDeviceProfile().isSupportsPreload();
     }

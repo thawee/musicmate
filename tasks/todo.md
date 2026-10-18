@@ -1994,3 +1994,9 @@ throughput checkpoint: n/a, read-only investigation.
 - [x] Build a signed GitHub release APK from commit `083024d9` and verify its package, permissions, and signing certificate against the installed phone APK. Package `apincer.android.mmate`, version `3.28.3-261018` (code 154), `MANAGE_EXTERNAL_STORAGE`, matching signer SHA-256 `b5757a1e…1d29ee`.
 - [x] Install the APK as an update on `192.168.1.54:42841` without clearing app data. `adb install -r` succeeded; first install time stayed 2026-10-04 21:24:56.
 - [x] Confirm the installed APK matches the build and the app launches with its library intact. Installed APK SHA-256 matches the build; version is `3.28.3-261018`; all-files access remains allowed; the library shows 8,094 tracks and playback is active to HiBy R3.
+
+# Fix first-connect HiBy R3 volume display (2026-10-18)
+
+- [x] Trace the initial DLNA volume request, response, and UI state on the phone and in code without changing playback volume. Phone log: `HiBy R3: 100 in [0, 100] = 100%`; the app displays exactly that UPnP response. The R3's physical output-port volume is a separate value not exposed by this response.
+- [x] Fix the first incorrect state at its source and cover the observable first-connect behavior with a focused test. Exact HiBy R3 targets no longer read or set DLNA volume; other renderers retain remote volume control. Both player screens direct users to the R3 itself.
+- [x] Build and test, then verify the live phone behavior before committing or installing an update. 408 app/core tests passed, signed GitHub 3.28.4 APK built and installed in place; installed APK hash matches the build, all-files access remains allowed, and both phone player screens show “Set volume on HiBy R3” with no 100% slider.

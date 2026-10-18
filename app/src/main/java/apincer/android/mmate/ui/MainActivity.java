@@ -1059,8 +1059,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     /**
-     * Shows the driven network player's level while one plays (never the phone's: that read 100% on
-     * players at a low level), or "--" while it is unknown; otherwise the phone's media volume.
+     * Shows a driven network player's reported level when reliable, or directs HiBy R3 volume changes
+     * to the player; otherwise shows the phone's media volume.
      */
     private void updateVolumeState() {
         int renderer = rendererVolume;
@@ -1068,14 +1068,18 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (playbackService != null && playbackService.getPlayer() != null
                 && playbackService.getPlayer().isStreaming()) {
             if (state != null) {
+                boolean volumeOnPlayer = playbackService.getPlayer() instanceof apincer.music.core.playback.DMRPlayer dmr
+                        && !dmr.hasReliableRemoteVolume();
+                state.getVolumeOnPlayer().setValue(volumeOnPlayer);
                 int limit = apincer.music.core.Settings.getRendererVolumeLimit(this);
                 state.getVolumeLimit().setValue(limit >= 100 ? 1f : limit / 100f);
-                state.getVolumeEnabled().setValue(renderer >= 0);
-                if (renderer >= 0) state.getVolume().setValue(renderer / 100f);
+                state.getVolumeEnabled().setValue(!volumeOnPlayer && renderer >= 0);
+                if (!volumeOnPlayer && renderer >= 0) state.getVolume().setValue(renderer / 100f);
             }
             return;
         }
         if (state != null) {
+            state.getVolumeOnPlayer().setValue(false);
             state.getVolumeEnabled().setValue(true);
             state.getVolumeLimit().setValue(1f);
         }
