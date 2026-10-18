@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.28.5] - 2026-10-18
+
+### Fixed
+- **HiBy R3 volume:** MusicMate can send volume commands to the R3 even though its DLNA volume reading is unreliable. Select HiBy R3 as the controlled output, then choose **Tap to set HiBy volume to 5%**. The slider appears after the R3 acknowledges that low setting; later values reflect commands sent by MusicMate, not the R3's reported physical volume.
+
 ## [3.28.4] - 2026-10-18
 
 ### Fixed

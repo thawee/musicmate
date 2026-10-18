@@ -76,7 +76,7 @@ Category cards (an artist, a genre, a playlist) have their own **Play** and **Ad
 **Music Center** has three tabs. Tap a tab or swipe between them.
 
 - **Playback.** Cover art, the song's quality and where it is playing (for example `Phone Speaker · THIS PHONE`), a seek bar, volume, and shuffle, repeat and sleep timer controls.
-  - **Volume** shows the phone's media volume or a DLNA player's reported volume. HiBy R3 reports 100% over DLNA even when its output volume is low, so MusicMate shows **Set volume on HiBy R3** and leaves volume changes to the player's controls.
+  - **Volume** shows the phone's media volume or a DLNA player's reported volume. HiBy R3 reports 100% over DLNA even when its output volume is low. If MusicMate is only following an R3 stream, choose **Select HiBy R3 to control volume** and select it in the output picker. Then choose **Tap to set HiBy volume to 5%** for a low starting level. After the R3 acknowledges it, the app's controls show the level MusicMate has set. The starting action appears again after reconnecting.
   - **Sleep timer** pauses after 15 to 60 minutes, or at the end of the current song. Open it again to see the time left and the option that is running. It works on players MusicMate drives; a player that another app controls cannot be paused from MusicMate.
 - **Queue.** The songs coming up. See [The queue](#4-the-queue).
 - **Server.** The media server that lets other devices play your music. See [Streaming](#6-streaming-to-other-devices).

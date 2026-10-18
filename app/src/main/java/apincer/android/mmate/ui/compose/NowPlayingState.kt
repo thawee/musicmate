@@ -31,7 +31,10 @@ class NowPlayingState {
     val volume = mutableStateOf(0f)
     // False while a network player's level is unknown or unreliable
     val volumeEnabled = mutableStateOf(true)
-    val volumeOnPlayer = mutableStateOf(false)
+    val volumeIsWriteOnly = mutableStateOf(false)
+    val volumeNeedsInitialization = mutableStateOf(false)
+    val volumeStartAvailable = mutableStateOf(false)
+    val volumeInitializing = mutableStateOf(false)
     // Highest level the slider may set, 0..1 (1 = no limit); network players only
     val volumeLimit = mutableStateOf(1f)
     val sleepTimerText = mutableStateOf("")

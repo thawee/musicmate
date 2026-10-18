@@ -1613,21 +1613,41 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void playerSetVolume(String rendererUdn, int volume) {
+        playerSetVolume(rendererUdn, volume, ignored -> {});
+    }
+
+    @Override
+    public void playerSetVolume(String rendererUdn, int volume, java.util.function.Consumer<Boolean> onComplete) {
         runOnUpnpThread(() -> {
-            if (upnpService == null) return;
+            if (upnpService == null) {
+                onComplete.accept(false);
+                return;
+            }
 
             Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-            if (device == null) return;
+            if (device == null) {
+                onComplete.accept(false);
+                return;
+            }
 
             Service renderingControlService = findServiceRecursively(device, RENDERING_CONTROL_TYPE);
-            if (renderingControlService == null || controlPoint == null) return;
+            if (renderingControlService == null || controlPoint == null) {
+                onComplete.accept(false);
+                return;
+            }
 
             long[] range = volumeRange(renderingControlService);
             long units = apincer.music.core.playback.RendererVolume.toUnits(volume, range[0], range[1]);
             controlPoint.execute(new SetVolume(renderingControlService, units) {
                 @Override
+                public void success(ActionInvocation invocation) {
+                    onComplete.accept(true);
+                }
+
+                @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                     Log.w(TAG, "SetVolume failed: " + defaultMsg);
+                    onComplete.accept(false);
                 }
             });
         });

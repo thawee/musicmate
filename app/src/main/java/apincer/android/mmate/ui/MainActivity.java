@@ -166,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private final android.os.Handler scrollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable scrollRunnable;
     private AutoCloseable playbackStateSubscription = null;
+    private AutoCloseable playbackTargetSubscription = null;
     private AutoCloseable rendererVolumeSubscription = null;
     private volatile int rendererVolume = -1; // the driven renderer's level, -1 when there is none
     private final androidx.lifecycle.Observer<apincer.music.core.server.spi.MediaServerHub.ServerStatus> serverStatusObserver = this::updateMediaServerState;
@@ -197,6 +198,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             playbackStateSubscription = playbackService.subscribePlaybackState(
                     playbackState -> setNowPlaying(playbackService.getNowPlayingSong(), playbackState),
                     throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
+            closeQuietly(playbackTargetSubscription);
+            playbackTargetSubscription = playbackService.subscribePlaybackTarget(
+                    target -> runOnUiThread(MainActivity.this::updateVolumeState),
+                    throwable -> Log.e(TAG, "Error in playback target subscription", throwable));
             closeQuietly(rendererVolumeSubscription);
             rendererVolumeSubscription = playbackService.subscribeRendererVolume(
                     volume -> {
@@ -231,6 +236,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             }
             closeQuietly(rendererVolumeSubscription);
             rendererVolumeSubscription = null;
+            closeQuietly(playbackTargetSubscription);
+            playbackTargetSubscription = null;
             isPlaybackServiceBound = false;
             MainScaffoldState.get().isPlaybackAvailable().setValue(false);
             playbackService = null;
@@ -790,6 +797,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         }
         closeQuietly(rendererVolumeSubscription);
         rendererVolumeSubscription = null;
+        closeQuietly(playbackTargetSubscription);
+        playbackTargetSubscription = null;
         if (isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -1033,11 +1042,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         apincer.android.mmate.ui.compose.NowPlayingState nps = apincer.android.mmate.ui.compose.MainScaffoldState.get().getNowPlayingState();
 
         if (playbackService != null && playbackService.getPlayer() != null && playbackService.getPlayer().isStreaming()) {
-            // The service ignores this until the player's level is known, and keeps it within the limit
-            if (rendererVolume < 0) return;
+            boolean writeOnlyUnknown = playbackService.getPlayer() instanceof apincer.music.core.playback.DMRPlayer dmr
+                    && !dmr.hasReliableRemoteVolume()
+                    && rendererVolume == apincer.music.core.playback.RendererVolume.UNAVAILABLE;
+            if (rendererVolume < 0 && !writeOnlyUnknown) return;
             int percent = apincer.music.core.playback.RendererVolume.clamp(Math.round(vol * 100),
                     apincer.music.core.Settings.getRendererVolumeLimit(this));
-            if (nps != null) nps.getVolume().setValue(percent / 100f);
+            if (rendererVolume >= 0 && nps != null) nps.getVolume().setValue(percent / 100f);
             playbackService.setVolume(percent);
             return;
         }
@@ -1059,8 +1070,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     /**
-     * Shows a driven network player's reported level when reliable, or directs HiBy R3 volume changes
-     * to the player; otherwise shows the phone's media volume.
+     * Shows a reliable reported level or one explicitly sent to the HiBy R3.
      */
     private void updateVolumeState() {
         int renderer = rendererVolume;
@@ -1068,18 +1078,26 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         if (playbackService != null && playbackService.getPlayer() != null
                 && playbackService.getPlayer().isStreaming()) {
             if (state != null) {
-                boolean volumeOnPlayer = playbackService.getPlayer() instanceof apincer.music.core.playback.DMRPlayer dmr
+                boolean writeOnly = playbackService.getPlayer() instanceof apincer.music.core.playback.DMRPlayer dmr
                         && !dmr.hasReliableRemoteVolume();
-                state.getVolumeOnPlayer().setValue(volumeOnPlayer);
+                boolean writeOnlyUnknown = writeOnly && renderer < 0;
+                state.getVolumeIsWriteOnly().setValue(writeOnly);
+                state.getVolumeNeedsInitialization().setValue(writeOnlyUnknown);
+                state.getVolumeStartAvailable().setValue(writeOnlyUnknown && playbackService instanceof MusicMateServiceImpl msi
+                        && msi.isControllable(playbackService.getPlayer()));
+                state.getVolumeInitializing().setValue(renderer == apincer.music.core.playback.RendererVolume.INITIALIZING);
                 int limit = apincer.music.core.Settings.getRendererVolumeLimit(this);
                 state.getVolumeLimit().setValue(limit >= 100 ? 1f : limit / 100f);
-                state.getVolumeEnabled().setValue(!volumeOnPlayer && renderer >= 0);
-                if (!volumeOnPlayer && renderer >= 0) state.getVolume().setValue(renderer / 100f);
+                state.getVolumeEnabled().setValue(renderer >= 0);
+                if (renderer >= 0) state.getVolume().setValue(renderer / 100f);
             }
             return;
         }
         if (state != null) {
-            state.getVolumeOnPlayer().setValue(false);
+            state.getVolumeIsWriteOnly().setValue(false);
+            state.getVolumeNeedsInitialization().setValue(false);
+            state.getVolumeStartAvailable().setValue(false);
+            state.getVolumeInitializing().setValue(false);
             state.getVolumeEnabled().setValue(true);
             state.getVolumeLimit().setValue(1f);
         }

@@ -1210,9 +1210,10 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     }
 
-    // The driven renderer's volume in percent, -1 until it has been read: nothing is sent before then
+    // The driven renderer's known level in percent, -1 until read or explicitly set.
     private volatile int dmrVolume = -1;
-    // The driven renderer's volume for the UI, or a RendererVolume state (NONE, READING, UNAVAILABLE)
+    private final java.util.concurrent.atomic.AtomicInteger rendererVolumeGeneration = new java.util.concurrent.atomic.AtomicInteger();
+    // The driven renderer's volume for the UI, or a RendererVolume state.
     private final MutableStateFlow<Integer> rendererVolumeFlow = StateFlowKt.MutableStateFlow(RendererVolume.NONE);
     private final VolumeCoalescer volumeCoalescer = new VolumeCoalescer(
             (task, delayMs) -> scheduler.schedule(task, delayMs, TimeUnit.MILLISECONDS),
@@ -1229,9 +1230,29 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public void setVolume(int volumePercent) {
         PlaybackTarget currentTarget = getPlayer();
         if (currentTarget == null || !currentTarget.isStreaming()) return;
-        if (currentTarget instanceof DMRPlayer dmr && !dmr.hasReliableRemoteVolume()) return;
-        // Only a driven player whose level has been read: a level picked against an unknown start could blast
-        if (!isControllable(currentTarget) || dmrVolume < 0) return;
+        if (!isControllable(currentTarget)) return;
+        if (dmrVolume < 0) {
+            if (currentTarget instanceof DMRPlayer dmr && !dmr.hasReliableRemoteVolume()
+                    && rendererVolumeFlow.getValue() == RendererVolume.UNAVAILABLE
+                    && RendererVolume.isSafeInitialRequest(volumePercent)) {
+                rendererVolumeFlow.setValue(RendererVolume.INITIALIZING);
+                String targetId = currentTarget.getTargetId();
+                int generation = rendererVolumeGeneration.get();
+                int firstLevel = RendererVolume.clamp(volumePercent,
+                        apincer.music.core.Settings.getRendererVolumeLimit(getApplicationContext()));
+                mediaHub.playerSetVolume(targetId, firstLevel, acknowledged -> {
+                    if (!targetId.equals(controlledPlayerTargetId)
+                            || generation != rendererVolumeGeneration.get()) return;
+                    if (acknowledged) {
+                        dmrVolume = firstLevel;
+                        rendererVolumeFlow.setValue(firstLevel);
+                    } else {
+                        rendererVolumeFlow.setValue(RendererVolume.UNAVAILABLE);
+                    }
+                });
+            }
+            return;
+        }
         dmrVolume = RendererVolume.clamp(volumePercent, apincer.music.core.Settings.getRendererVolumeLimit(getApplicationContext()));
         rendererVolumeFlow.setValue(dmrVolume);
         boolean fragile = currentTarget instanceof DMRPlayer dmr && !dmr.getDeviceProfile().canFadeVolume();
@@ -1245,13 +1266,14 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     /**
      * Reads a newly driven renderer's reported volume, so the slider starts there. HiBy R3 is
-     * excluded because its report can be 100 while its output is quiet. Until a reliable read, the slider
-     * shows nothing and sends nothing (it used to show the phone's volume, often 100%). It runs on its
+     * excluded because its report can be 100 while its output is quiet. It starts with an explicit
+     * low write instead. Until a reliable read or write, the slider shows nothing. It runs on its
      * own thread (the read blocks up to 2 s; the scheduler carries playback work), a portable player
      * is left to settle first so the read cannot collide with SetAVTransportURI or Play, and a failed
      * read is tried once more before the volume is given up as unavailable.
      */
     private void refreshRendererVolume(PlaybackTarget target) {
+        rendererVolumeGeneration.incrementAndGet();
         dmrVolume = -1;
         if (!isControllable(target)) {
             rendererVolumeFlow.setValue(RendererVolume.NONE);

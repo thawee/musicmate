@@ -1,6 +1,8 @@
 package apincer.music.core.playback;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -37,5 +39,14 @@ public class RendererVolumeTest {
         assertEquals(100, RendererVolume.clamp(100, 100));
         // A broken setting falls back to the default limit, never to full volume
         assertEquals(RendererVolume.DEFAULT_LIMIT, RendererVolume.clamp(100, 0));
+    }
+
+    @Test
+    public void unknownVolumeCanOnlyStartWithAnExplicitLowRequest() {
+        assertTrue(RendererVolume.isSafeInitialRequest(5));
+        assertTrue(RendererVolume.isSafeInitialRequest(0));
+        assertFalse(RendererVolume.isSafeInitialRequest(6));
+        assertFalse(RendererVolume.isSafeInitialRequest(100));
+        assertFalse(RendererVolume.isSafeInitialRequest(-1));
     }
 }

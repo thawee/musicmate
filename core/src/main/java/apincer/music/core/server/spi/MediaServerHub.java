@@ -58,6 +58,9 @@ public interface MediaServerHub {
     /** Sets the renderer volume in percent of its own range. */
     void playerSetVolume(String udn, int volume);
 
+    /** Reports whether the renderer acknowledged a volume command. */
+    void playerSetVolume(String udn, int volume, java.util.function.Consumer<Boolean> onComplete);
+
     /** Reads the renderer volume in percent of its own range, waiting up to {@code timeoutMs}; -1 when unknown. Not for the main thread. */
     default int playerGetVolume(String udn, long timeoutMs) {
         return -1;

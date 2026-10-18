@@ -517,7 +517,9 @@
     <string name="cd_volume_up">Volume up</string>
     <string name="player_left_network">%1$s is not responding. Switched to this phone; press Play to continue here.</string>
     <string name="cd_volume_unavailable">Volume not available. Use the player\'s own volume control.</string>
-    <string name="volume_on_hiby_r3">Set volume on HiBy R3</string>
+    <string name="volume_hiby_start">Tap to set HiBy volume to 5%</string>
+    <string name="volume_hiby_select">Select HiBy R3 to control volume</string>
+    <string name="volume_hiby_setting">Setting HiBy volume…</string>
     <string name="permission_title">Permissions Required</string>
     <string name="permission_intro">MusicMate needs local storage and audio permissions to index and tag your audiophile collection.</string>
     <string name="permission_audio_title">Access Audio Media</string>

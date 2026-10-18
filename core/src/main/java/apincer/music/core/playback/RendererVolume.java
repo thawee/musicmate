@@ -10,8 +10,12 @@ public final class RendererVolume {
     public static final int NONE = -1;
     /** A player was just picked and its volume is being read: show nothing, send nothing. */
     public static final int READING = -2;
-    /** The player gives no volume (no volume control, or reads failed): use its own control. */
+    /** The player gives no reliable volume reading; control may still be available by explicit write. */
     public static final int UNAVAILABLE = -3;
+    /** Waiting for the first explicitly chosen low level to reach a write-only renderer. */
+    public static final int INITIALIZING = -4;
+
+    public static final int SAFE_INITIAL_LEVEL = 5;
 
     public static final int DEFAULT_LIMIT = 80;
 
@@ -36,5 +40,10 @@ public final class RendererVolume {
     public static int clamp(int requested, int limit) {
         int top = limit <= 0 ? DEFAULT_LIMIT : Math.min(limit, 100);
         return Math.max(0, Math.min(top, requested));
+    }
+
+    /** An unknown renderer level may only be initialized by an explicit low request. */
+    public static boolean isSafeInitialRequest(int requested) {
+        return requested >= 0 && requested <= SAFE_INITIAL_LEVEL;
     }
 }

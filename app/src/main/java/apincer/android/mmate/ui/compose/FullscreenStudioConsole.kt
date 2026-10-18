@@ -870,12 +870,22 @@ fun FullscreenStudioConsole(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         // Bespoke Linear Studio Volume Attenuator
-                        if (state.volumeOnPlayer.value) {
+                        if (state.volumeNeedsInitialization.value) {
                             Text(
-                                text = context.getString(R.string.volume_on_hiby_r3),
-                                color = Color.White.copy(alpha = 0.6f),
+                                text = context.getString(
+                                    when {
+                                        state.volumeInitializing.value -> R.string.volume_hiby_setting
+                                        state.volumeStartAvailable.value -> R.string.volume_hiby_start
+                                        else -> R.string.volume_hiby_select
+                                    }
+                                ),
+                                color = if (state.volumeInitializing.value) Color.White.copy(alpha = 0.6f) else colorGold,
                                 fontSize = 12.sp,
                                 modifier = Modifier.width(220.dp)
+                                    .clickable(enabled = !state.volumeInitializing.value) {
+                                        if (state.volumeStartAvailable.value) onVolumeChanged(0.05f)
+                                        else onSelectTargetPlayer()
+                                    }
                             )
                         } else {
                             StudioLinearVolumeFader(
@@ -883,8 +893,10 @@ fun FullscreenStudioConsole(
                                 onVolumeChanged = onVolumeChanged,
                                 enabled = state.volumeEnabled.value,
                                 limit = state.volumeLimit.value,
+                                showSetLevel = state.volumeIsWriteOnly.value,
                                 colorGold = colorGold,
-                                modifier = Modifier.width(220.dp)
+                                modifier = Modifier.width(if (state.volumeIsWriteOnly.value) 180.dp else 220.dp)
+                                    .padding(end = if (state.volumeIsWriteOnly.value) 10.dp else 0.dp)
                             )
                         }
 
@@ -1209,14 +1221,16 @@ private fun StudioLinearVolumeFader(
     modifier: Modifier = Modifier,
     // False while a network player's level is unknown; limit is the user's maximum (1 = none)
     enabled: Boolean = true,
-    limit: Float = 1f
+    limit: Float = 1f,
+    showSetLevel: Boolean = false
 ) {
     var isDragging by remember { mutableStateOf(false) }
     var dragVol by remember { mutableFloatStateOf(volume) }
     val currentVol = if (isDragging) dragVol else volume
 
-    val dbText = remember(currentVol, enabled) {
+    val dbText = remember(currentVol, enabled, showSetLevel) {
         if (!enabled) "--"
+        else if (showSetLevel) "SET ${(currentVol * 100).toInt()}%"
         else if (currentVol <= 0.001f) "-∞ dB"
         else {
             val db = (20f * log10(currentVol.toDouble())).toFloat().coerceIn(-60f, 0f)

@@ -802,15 +802,25 @@ fun NowPlayingPage(
             // A network player's level is unknown until read, and capped by the user's maximum
             val volumeEnabled = state.volumeEnabled.value
             val volumeLimit = state.volumeLimit.value
-            if (state.volumeOnPlayer.value) {
+            if (state.volumeNeedsInitialization.value) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                        .clickable(enabled = !state.volumeInitializing.value) {
+                            if (state.volumeStartAvailable.value) onVolumeChanged(0.05f)
+                            else onSelectTargetPlayer()
+                        },
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.volume_on_hiby_r3),
-                        color = MusicMateDesignTokens.Text.Muted,
+                        text = stringResource(
+                            when {
+                                state.volumeInitializing.value -> R.string.volume_hiby_setting
+                                state.volumeStartAvailable.value -> R.string.volume_hiby_start
+                                else -> R.string.volume_hiby_select
+                            }
+                        ),
+                        color = if (state.volumeInitializing.value) MusicMateDesignTokens.Text.Muted else colorGold,
                         fontSize = 12.sp
                     )
                 }
@@ -887,11 +897,11 @@ fun NowPlayingPage(
                     }
                 }
                 Text(
-                    text = if (volumeEnabled) "$volumePercent%" else "--",
+                    text = if (!volumeEnabled) "--" else if (state.volumeIsWriteOnly.value) "Set $volumePercent%" else "$volumePercent%",
                     color = MusicMateDesignTokens.Text.Muted,
                     fontSize = 11.sp,
                     textAlign = TextAlign.End,
-                    modifier = Modifier.width(36.dp).clearAndSetSemantics { }
+                    modifier = Modifier.width(if (state.volumeIsWriteOnly.value) 58.dp else 36.dp).clearAndSetSemantics { }
                 )
                 IconButton(
                     onClick = onVolumeUp,

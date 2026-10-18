@@ -2000,3 +2000,10 @@ throughput checkpoint: n/a, read-only investigation.
 - [x] Trace the initial DLNA volume request, response, and UI state on the phone and in code without changing playback volume. Phone log: `HiBy R3: 100 in [0, 100] = 100%`; the app displays exactly that UPnP response. The R3's physical output-port volume is a separate value not exposed by this response.
 - [x] Fix the first incorrect state at its source and cover the observable first-connect behavior with a focused test. Exact HiBy R3 targets no longer read or set DLNA volume; other renderers retain remote volume control. Both player screens direct users to the R3 itself.
 - [x] Build and test, then verify the live phone behavior before committing or installing an update. 408 app/core tests passed, signed GitHub 3.28.4 APK built and installed in place; installed APK hash matches the build, all-files access remains allowed, and both phone player screens show “Set volume on HiBy R3” with no 100% slider.
+
+# Restore safe write-only HiBy R3 volume control (2026-10-18)
+
+- [x] Separate readable volume from writable volume and define the unknown-first-connection state. HiBy R3 remains unreadable; the first write is capped at 5% and waits for the renderer's SetVolume acknowledgment.
+- [x] Add an explicit low starting action in both player screens; enable normal controls only after the R3 acknowledges that value.
+- [x] Add focused tests, run app/core tests and APK build, verify the UI and device behavior. 409 unit tests passed, signed GitHub release built. On the phone, HiBy showed an unknown level on first connection; an explicit 5% command was acknowledged and Music Center showed “Set 5%” with the slider. Studio Console showed the same sent level. Physical loudness cannot be measured through DLNA.
+- [x] Update release/user docs, commit the fix, and install the verified update on the phone. Installed GitHub 3.28.5 (code 156) in place; signer and all-files permission verified, first install time retained.
