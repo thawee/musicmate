@@ -1,6 +1,6 @@
 # MusicMate Privacy Policy
 
-Effective: 2026-10-16
+Effective: 2026-10-23
 
 MusicMate is a music library manager, player and media server that runs on your device. It has no accounts, no ads, no analytics and no tracking. The app sends the developer no data; if you buy Pro, Google Play handles the sale (see Purchases).
 
@@ -9,6 +9,8 @@ MusicMate is a music library manager, player and media server that runs on your 
 Your music files, their tags, cover art, playlists, listening history, settings and crash logs stay on your device. MusicMate reads and changes music files only in the folders you choose (in the Google Play version, folders you grant in Android's folder picker).
 
 Crash logs are kept on the device. They are shared only if you choose to share one yourself.
+
+Car calibration uses the microphone, and only while you run it. MusicMate plays a test sweep and records it to measure how your car sounds. The recording is analysed in memory on the device and then discarded; only the resulting frequency response, the EQ settings and the name and Bluetooth address of the car you are connected to are saved, as a car profile on the device. The recording is never saved to a file and never sent anywhere.
 
 ## What leaves your device, and when
 
@@ -40,7 +42,7 @@ If you turn on External Player Access, Android asks you to grant MusicMate notif
 
 ## Permissions
 
-MusicMate uses access to your music, notifications (to show playback and server status), the local network (for the media server), Bluetooth (to show which headphones or DAC is playing), and optionally notification access to see playback in other music apps. It does not ask for your location, contacts, camera or microphone.
+MusicMate uses access to your music, notifications (to show playback and server status), the local network (for the media server), Bluetooth (to show which headphones or DAC is playing, and to recognise your car for car calibration), optionally notification access to see playback in other music apps, and the microphone only when you run car calibration. It does not ask for your location, contacts or camera.
 
 ## Children
 

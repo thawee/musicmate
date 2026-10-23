@@ -360,15 +360,18 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                         devBuf.append("\nDAC runs at ").append(apincer.android.mmate.audio.UsbOutputFormat.describe(usbFormat));
                     }
                     nps.getTargetDetails().setValue(devBuf.toString());
+                    nps.getCarDspAvailable().setValue(!device.isUsb());
                 } else {
                     nps.getTargetTitle().setValue(PlayerNameUtils.getDropdownPlayerLabel(player));
                     nps.getTargetBadge().setValue(player.isStreaming() ? "DLNA" : "EXTERNAL APP");
                     nps.getTargetDetails().setValue(player.getDescription() != null ? player.getDescription() : "");
+                    nps.getCarDspAvailable().setValue(false);
                 }
             } else {
                 nps.getTargetTitle().setValue("Local Audio");
                 nps.getTargetBadge().setValue("SYS OUT");
                 nps.getTargetDetails().setValue("System Default Output");
+                nps.getCarDspAvailable().setValue(false);
             }
 
             apincer.android.mmate.ui.compose.MainScaffoldState.updateNowPlaying(song, isPlaying, targetSubtitle, progress);

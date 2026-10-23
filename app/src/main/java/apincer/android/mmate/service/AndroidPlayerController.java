@@ -39,6 +39,7 @@ import androidx.media3.exoplayer.audio.AudioSink;
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider;
 import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import apincer.android.mmate.audio.AudioTelemetryManager;
+import apincer.android.mmate.audio.MediaRouteLog;
 import apincer.android.mmate.audio.MusicAudioOutputProvider;
 import apincer.android.mmate.audio.UsbOutputFormat;
 
@@ -54,6 +55,7 @@ public class AndroidPlayerController {
     private ExoPlayer internalExoPlayer;
     private Track nextTrack;
     private final UsbOutputFormat usbOutputFormat;
+    private final MediaRouteLog mediaRouteLog;
 
     private long lastUpdateSongTime;
 
@@ -147,6 +149,9 @@ public class AndroidPlayerController {
         this.mediaSessionManager = mediaSessionManager;
         this.usbOutputFormat = new UsbOutputFormat(context);
         this.usbOutputFormat.start();
+        this.mediaRouteLog = new MediaRouteLog(context, usbOutputFormat);
+        apincer.android.mmate.audio.dsp.CarDspPreferences.init(context);
+        this.mediaRouteLog.start();
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -249,6 +254,7 @@ public class AndroidPlayerController {
                 public void onIsPlayingChanged(boolean isPlaying) {
                     if (isPlaying) {
                         scheduleProgressUpdate();
+                        mediaRouteLog.check("playing");
                     } else {
                         stopProgressUpdate();
                         AudioTelemetryManager.INSTANCE.reset();
@@ -383,6 +389,7 @@ public class AndroidPlayerController {
                 if (playbackCallback != null) {
                     playbackCallback.onPlaybackStateTimeElapsedSeconds(internalExoPlayer.getCurrentPosition() / 1000);
                 }
+                mediaRouteLog.poll();
                 scheduleProgressUpdate();
             } else {
                 stopProgressUpdate();
@@ -603,6 +610,7 @@ public class AndroidPlayerController {
                 internalExoPlayer = null;
             }
             usbOutputFormat.release();
+            mediaRouteLog.release();
         });
     }
 

@@ -46,4 +46,6 @@ class NowPlayingState {
     val targetTitle = mutableStateOf("")
     val targetBadge = mutableStateOf("")
     val targetDetails = mutableStateOf("")
+    /** Local playback that is not on a USB DAC, where Car DSP can run. */
+    val carDspAvailable = mutableStateOf(false)
 }

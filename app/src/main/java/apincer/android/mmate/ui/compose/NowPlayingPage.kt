@@ -393,8 +393,10 @@ fun NowPlayingPage(
                             else -> Color(0xFFFFD700)
                         }
 
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                         Row(
                             modifier = Modifier
+                                .weight(1f, fill = false)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xD9141414))
                                 .border(0.75.dp, targetDotColor.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
@@ -436,6 +438,11 @@ fun NowPlayingPage(
                                     )
                                 }
                             }
+                        }
+                        if (state.carDspAvailable.value) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            CarDspChip()
+                        }
                         }
                     }
                 }

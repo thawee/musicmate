@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
@@ -212,6 +213,15 @@ fun SettingsScreen(
                     selected = { rendererVolumeLimit == it },
                     onSelect = onRendererVolumeLimitChange
                 )
+            }
+
+            // ── Car audio: calibration profiles for Car DSP ─────────────────
+            SettingsCard(
+                title = "CAR AUDIO",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
+                // Previews have no activity to launch calibration from
+                if (!LocalInspectionMode.current) CarAudioSettings()
             }
 
             // ── Section 3: Library & User Interface ───────────────────────────

@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Car calibration only: the sweep is analysed on the device and never stored or sent -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
@@ -52,6 +54,10 @@
         android:required="false" />
     <uses-feature
         android:name="android.hardware.location.gps"
+        android:required="false" />
+    <!-- RECORD_AUDIO is only for car calibration; players without a mic still install -->
+    <uses-feature
+        android:name="android.hardware.microphone"
         android:required="false" />
 
     <queries>
@@ -142,6 +148,12 @@
             android:theme="@style/AboutAppTheme"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>
+
+        <activity
+            android:name="apincer.android.mmate.ui.CarCalibrationActivity"
+            android:theme="@style/AboutAppTheme"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:exported="false" />
 
         <activity
             android:name="apincer.android.mmate.ui.LicensesActivity"

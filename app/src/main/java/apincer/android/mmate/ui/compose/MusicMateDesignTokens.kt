@@ -59,6 +59,7 @@ object MusicMateDesignTokens {
     /** Live status lights (server running, queue caught up) */
     object Status {
         val Positive = Color(0xFF00E676)
+        val Destructive = Color(0xFFEF5350) // Delete and Remove, the trigger and its confirm; matches the theme's error
     }
 
     /**

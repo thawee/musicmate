@@ -70,6 +70,10 @@ class UsbOutputFormat internal constructor(
         }
     }
 
+    /** True when Android routes media to a USB DAC; Car DSP never processes that route. */
+    @Synchronized
+    fun routesToUsb(): Boolean = mediaUsbDevice() != null
+
     /** Returns the USB DAC to Android's default format when playback stops. */
     @Synchronized
     fun clear() {
@@ -146,7 +150,11 @@ class UsbOutputFormat internal constructor(
             else -> 0
         }
 
-        private fun AudioDeviceInfo.isUsb() = type == AudioDeviceInfo.TYPE_USB_DEVICE ||
+        /** Device types MusicMate treats as a USB DAC and asks for the track's format. */
+        @JvmStatic
+        fun isUsbType(type: Int) = type == AudioDeviceInfo.TYPE_USB_DEVICE ||
             type == AudioDeviceInfo.TYPE_USB_HEADSET || type == AudioDeviceInfo.TYPE_USB_ACCESSORY
+
+        private fun AudioDeviceInfo.isUsb() = isUsbType(type)
     }
 }
