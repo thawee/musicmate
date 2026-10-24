@@ -24,3 +24,10 @@ Owner chose "Speaker Tuning": the feature now serves any measured speaker (car o
 - [x] S2. Settings card SPEAKER TUNING; wizard copy generic (car or room checklist, Front instead of Windscreen, speaker name); error hints. Wizard start screen seen on the emulator; Settings card not opened.
 - [x] S3. Privacy policy and CAR_AUDIO_DSP.md note the new name.
 - [x] S4. 196 tests per flavor, release built and installed on the phone 2026-10-24 (signer and all-files access verified).
+
+## Rename a tuned speaker (2026-10-24)
+Owner wants a friendly, editable name per speaker. The profile already has a `name` (set at save, prefilled with the Bluetooth name) but it cannot be changed afterwards.
+- [x] N1. `CarDspPreferences.renameProfile` saves the new name and updates the chip at once when that speaker is active; JVM test `renameKeepsTheModeAndUpdatesTheActiveName`.
+- [x] N2. Settings card: a Rename button per speaker opens a dialog with the name (1 to 40 characters) and the Bluetooth device name underneath. Opens focused with the old name selected; emulator rename to "Weekend MU-X" saved to the profile file.
+- [x] N3. Speaker rows in Settings and the Now Playing dialog show the Bluetooth name when it differs from the friendly name. Seen in Settings on the emulator.
+- [x] N4. 197 tests per flavor, release built and installed on the phone 2026-10-24 (signer, all-files access verified); screenshots from the emulator since the phone was asleep.

@@ -2,11 +2,17 @@ package apincer.android.mmate.audio.dsp
 
 import android.content.SharedPreferences
 import apincer.android.mmate.audio.calibration.CarProfile
+import apincer.android.mmate.audio.calibration.CarProfileStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class CarDspPreferencesTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
     private fun car(id: String) = CarProfile(
         id = id,
         name = "Car $id",
@@ -55,6 +61,24 @@ class CarDspPreferencesTest {
         assertEquals(false, choice.enabled)
         assertNull(choice.profileId)
         assertEquals(emptyList<PeqBand>(), choice.correction)
+    }
+
+    @Test
+    fun renameKeepsTheModeAndUpdatesTheActiveName() {
+        val store = CarProfileStore(folder.root)
+        store.save(car("a"))
+        store.save(car("b"))
+        val active = CarDspChoice(enabled = true, mode = CarSoundMode.DRIVE, profileName = "Car a", profileId = "a")
+
+        val renamed = CarDspPreferences.rename(store, "a", "Weekend MU-X", active)
+        assertEquals("Weekend MU-X", store.get("a")?.name)
+        assertEquals("Weekend MU-X", renamed.profileName)
+        assertEquals(CarSoundMode.DRIVE, renamed.mode)
+
+        val other = CarDspPreferences.rename(store, "b", "Kitchen speaker", renamed)
+        assertEquals("Kitchen speaker", store.get("b")?.name)
+        assertEquals("renaming another speaker leaves the active one alone", renamed, other)
+        assertEquals("an unknown id changes nothing", other, CarDspPreferences.rename(store, "gone", "X", other))
     }
 }
 

@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -313,15 +312,7 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName
         label = { Text("Speaker name") },
         placeholder = { Text("My speaker") },
         singleLine = true,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = MusicMateDesignTokens.Text.Primary,
-            unfocusedTextColor = MusicMateDesignTokens.Text.Primary,
-            focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
-            unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
-            focusedLabelColor = MusicMateDesignTokens.Brand.Gold,
-            unfocusedLabelColor = MusicMateDesignTokens.Text.Muted,
-            cursorColor = MusicMateDesignTokens.Brand.Gold
-        ),
+        colors = speakerNameFieldColors(),
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(8.dp))

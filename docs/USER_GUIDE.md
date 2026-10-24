@@ -246,7 +246,7 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
   - **Pre-Amp Gain** raises or lowers the result.
   - **Prevent Clipping** stops loud peaks from distorting.
-- **Speaker Tuning** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, delete one, or tune another. See [Speaker Tuning](#speaker-tuning).
+- **Speaker Tuning** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, rename one with the pencil button (its Bluetooth name stays visible underneath), delete one, or tune another. See [Speaker Tuning](#speaker-tuning).
 - **Display options.**
   - Show storage use in the menu.
   - Show track numbers before titles.

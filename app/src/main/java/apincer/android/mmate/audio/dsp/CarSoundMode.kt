@@ -114,6 +114,19 @@ object CarDspPreferences {
         if (prefs.getString(ACTIVE_PROFILE, null) == id) setActiveProfile(context, store.list().firstOrNull())
     }
 
+    /** Gives a saved profile a new name; the chip follows at once when it is the active one. */
+    @JvmStatic
+    fun renameProfile(context: Context, id: String, name: String) {
+        apply(rename(profiles(context), id, name, choice.value))
+    }
+
+    /** Its mode stays, since modes are keyed by id, not name. */
+    internal fun rename(store: CarProfileStore, id: String, name: String, current: CarDspChoice): CarDspChoice {
+        val profile = store.get(id) ?: return current
+        store.save(profile.copy(name = name))
+        return if (current.profileId == id) current.copy(profileName = name) else current
+    }
+
     /** The id of the active profile, if any. */
     @JvmStatic
     fun activeProfileId(context: Context): String? = prefs(context).getString(ACTIVE_PROFILE, null)

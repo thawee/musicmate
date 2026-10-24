@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Speaker Tuning:** Measure your car (through Android Auto) or a Bluetooth speaker once with the phone's microphone. A 10-second sweep at five spots around your head gives an EQ that corrects that speaker, applied to MusicMate's local playback. It is never applied to a USB DAC. On phones that only offer the voice microphone the result is marked approximate.
 - **Sound modes:** Reference, Bass, Vocal, Drive and Custom (your own bass and treble), chosen from the Speaker Tuning chip in Now Playing. The chip shows the active speaker and mode, for example "MU-X · DRIVE".
 - **Several speakers:** Every saved car or speaker is listed in the Speaker Tuning dialog and in Settings, and each remembers its own sound mode. A speaker that connects over Bluetooth hands-free (most cars and many speakers) becomes active when it connects, and No correction returns when it disconnects. Each switch is written to the route log.
+- **Speaker names:** Rename any tuned car or speaker from Settings, Speaker Tuning, so it is easy to recognise. Its Bluetooth device name stays visible under the friendly name.
 
 ### Fixed
 - **Now Playing output:** The output pill follows a Bluetooth device connecting or disconnecting, instead of keeping the old device until playback changes.

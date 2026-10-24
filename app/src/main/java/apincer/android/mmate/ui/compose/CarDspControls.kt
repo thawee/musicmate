@@ -7,6 +7,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -386,6 +393,7 @@ fun CarAudioSettings() {
     val context = LocalContext.current
     var refresh by remember { mutableIntStateOf(0) }
     var deleting by remember { mutableStateOf<CarProfile?>(null) }
+    var renaming by remember { mutableStateOf<CarProfile?>(null) }
     val profiles by produceState(emptyList<CarProfile>(), refresh) {
         value = withContext(Dispatchers.IO) { CarDspPreferences.profiles(context).list() }
     }
@@ -416,6 +424,13 @@ fun CarAudioSettings() {
                     refresh++
                 }
             }
+            IconButton(onClick = { renaming = profile }) {
+                Icon(
+                    painterResource(R.drawable.ic_round_edit_24),
+                    contentDescription = "Rename ${profile.name}",
+                    tint = MusicMateDesignTokens.Text.Secondary
+                )
+            }
             IconButton(onClick = { deleting = profile }) {
                 Icon(
                     painterResource(R.drawable.rounded_delete_24),
@@ -434,6 +449,18 @@ fun CarAudioSettings() {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(if (profiles.isEmpty()) "Tune a speaker" else "Tune another speaker", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
+    }
+
+    renaming?.let { profile ->
+        RenameSpeakerDialog(
+            profile = profile,
+            onRename = { name ->
+                CarDspPreferences.renameProfile(context, profile.id, name)
+                renaming = null
+                refresh++
+            },
+            onDismiss = { renaming = null }
+        )
     }
 
     deleting?.let { profile ->
@@ -458,8 +485,64 @@ fun CarAudioSettings() {
     }
 }
 
+/** The longest friendly name a speaker can have; the chip shortens it further. */
+private const val MAX_NAME = 40
+
+/** A friendly name for a saved speaker, with its Bluetooth name underneath so the device stays recognisable. */
+@Composable
+private fun RenameSpeakerDialog(profile: CarProfile, onRename: (String) -> Unit, onDismiss: () -> Unit) {
+    // Opens focused with the old name selected, so typing replaces it
+    var field by remember(profile.id) { mutableStateOf(TextFieldValue(profile.name, TextRange(0, profile.name.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val trimmed = field.text.trim()
+    val canSave = trimmed.isNotEmpty() && trimmed != profile.name
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename speaker") },
+        text = {
+            OutlinedTextField(
+                value = field,
+                onValueChange = { if (it.text.length <= MAX_NAME) field = it },
+                label = { Text("Speaker name") },
+                supportingText = profile.bluetoothName?.let { { Text("Bluetooth: $it") } },
+                singleLine = true,
+                colors = speakerNameFieldColors(),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onRename(trimmed) }, enabled = canSave) {
+                Text("Save", color = if (canSave) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Muted, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = MusicMateDesignTokens.Text.Secondary) }
+        },
+        containerColor = MusicMateDesignTokens.Surfaces.SurfaceElevated,
+        titleContentColor = MusicMateDesignTokens.Text.Primary,
+        textContentColor = MusicMateDesignTokens.Text.Telemetry
+    )
+}
+
+/** Shared by the rename dialog and the wizard's name field. */
+@Composable
+internal fun speakerNameFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = MusicMateDesignTokens.Text.Primary,
+    unfocusedTextColor = MusicMateDesignTokens.Text.Primary,
+    focusedBorderColor = MusicMateDesignTokens.Brand.Gold,
+    unfocusedBorderColor = MusicMateDesignTokens.Surfaces.BorderPrimary,
+    focusedLabelColor = MusicMateDesignTokens.Brand.Gold,
+    unfocusedLabelColor = MusicMateDesignTokens.Text.Muted,
+    cursorColor = MusicMateDesignTokens.Brand.Gold
+)
+
+/** "AL5125SH_BT · " when the friendly name hides which Bluetooth device this is. */
+private fun deviceNote(profile: CarProfile): String =
+    profile.bluetoothName?.takeIf { it != profile.name }?.let { "$it · " } ?: ""
+
 private fun calibratedOn(profile: CarProfile): String =
-    "Calibrated " + DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(profile.createdAtMillis))
+    deviceNote(profile) + "Calibrated " + DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(profile.createdAtMillis))
 
 private fun profileSummary(profile: CarProfile): String {
     val date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(profile.createdAtMillis))
@@ -468,5 +551,5 @@ private fun profileSummary(profile: CarProfile): String {
         false -> "check off by %.1f dB".format(profile.worstDeviationDb ?: 0.0)
         null -> "not checked"
     }
-    return "$date · ${profile.bands.size} bands · $check" + if (profile.approximate) " · approximate" else ""
+    return deviceNote(profile) + "$date · ${profile.bands.size} bands · $check" + if (profile.approximate) " · approximate" else ""
 }
