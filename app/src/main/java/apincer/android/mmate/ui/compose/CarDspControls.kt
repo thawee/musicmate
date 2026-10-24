@@ -41,7 +41,6 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import apincer.android.mmate.R
 import apincer.android.mmate.audio.dsp.DspChain
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,7 +56,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
@@ -90,42 +88,59 @@ import apincer.android.mmate.audio.dsp.CarDspPreferences
 import apincer.android.mmate.audio.dsp.CarSoundMode
 import kotlin.math.roundToInt
 
-/** "MU-X · DRIVE" (the active speaker, or TUNING) when Speaker Tuning is on, "TUNING · OFF" otherwise; tap to choose. */
+/**
+ * The sound mode beside the output pill: an EQ mark, "VOCAL", and a TUNED tag while a measured
+ * correction is active; "TUNING OFF" when off. The output pill already names the speaker, so the
+ * chip does not repeat it, and its short label never needs cutting. Tap to choose.
+ */
 @Composable
 fun CarDspChip(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val choice by CarDspPreferences.state.collectAsState()
     var picking by remember { mutableStateOf(false) }
-    val accent = if (choice.enabled) MusicMateDesignTokens.Brand.GoldAmber else MusicMateDesignTokens.Text.Secondary
-    val car = choice.profileName?.uppercase() ?: "TUNING"
-    val label = if (choice.enabled) " · ${choice.mode.label.uppercase()}" else "TUNING · OFF"
+    val accent = if (choice.enabled) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Secondary
+    val tuned = choice.enabled && choice.profileId != null
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(MusicMateDesignTokens.Geometry.RadiusMedium))
             .background(MusicMateDesignTokens.Surfaces.GlassPill)
-            .border(0.75.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+            .border(MusicMateDesignTokens.Geometry.BorderStandard, accent.copy(alpha = 0.4f), RoundedCornerShape(MusicMateDesignTokens.Geometry.RadiusMedium))
             .clickable { picking = true }
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "Speaker Tuning"
-                stateDescription = if (choice.enabled) "On, ${choice.profileName ?: "no speaker correction"}, ${choice.mode.label}" else "Off"
+                stateDescription = if (choice.enabled) "On, ${choice.mode.label}, ${choice.profileName?.let { "$it correction" } ?: "no speaker correction"}" else "Off"
             }
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(accent)
+        Icon(
+            painter = painterResource(R.drawable.rounded_equalizer_24),
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.size(12.dp)
         )
-        Spacer(modifier = Modifier.width(6.dp))
-        if (choice.enabled) {
-            // A long car name gives way to the mode
-            ChipText(car, Modifier.weight(1f, fill = false).widthIn(max = 104.dp), overflow = TextOverflow.Ellipsis)
+        Spacer(modifier = Modifier.width(5.dp))
+        ChipText(if (choice.enabled) choice.mode.label.uppercase() else "TUNING OFF", dimmed = !choice.enabled)
+        if (tuned) {
+            Spacer(modifier = Modifier.width(6.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(accent.copy(alpha = 0.15f))
+                    .padding(horizontal = 4.dp, vertical = 1.dp)
+            ) {
+                Text(
+                    text = "TUNED",
+                    color = accent,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1
+                )
+            }
         }
-        ChipText(label)
     }
 
     if (picking) {
@@ -374,10 +389,10 @@ private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Uni
 }
 
 @Composable
-private fun ChipText(text: String, modifier: Modifier = Modifier, overflow: TextOverflow = TextOverflow.Clip) {
+private fun ChipText(text: String, modifier: Modifier = Modifier, overflow: TextOverflow = TextOverflow.Clip, dimmed: Boolean = false) {
     Text(
         text = text,
-        color = MusicMateDesignTokens.Text.Primary,
+        color = if (dimmed) MusicMateDesignTokens.Text.Secondary else MusicMateDesignTokens.Text.Primary,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         fontFamily = FontFamily.Monospace,

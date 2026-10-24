@@ -398,7 +398,7 @@ fun NowPlayingPage(
                             modifier = Modifier
                                 .weight(1f, fill = false)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xD9141414))
+                                .background(MusicMateDesignTokens.Surfaces.GlassPill)
                                 .border(0.75.dp, targetDotColor.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
                                 .clickable { onSelectTargetPlayer() }
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -441,8 +441,8 @@ fun NowPlayingPage(
                         }
                         if (state.carDspAvailable.value) {
                             Spacer(modifier = Modifier.width(6.dp))
-                            // Both shrink when short of room; the chip's smaller share means the car name is cut first
-                            CarDspChip(modifier = Modifier.weight(0.5f, fill = false))
+                            // The chip's label is short and never cut; a long device name gives way instead
+                            CarDspChip()
                         }
                         }
                     }

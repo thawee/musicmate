@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Speaker Tuning follows the music:** The active tuning now follows where media plays instead of the Bluetooth hands-free link. A Bluetooth speaker's tuning turns on when music plays through it; a car's tuning turns on when music plays through its Android Auto, using the car's Bluetooth handshake to tell cars apart; anything else gets No correction. A tuning picked by hand stays until the output changes. The 3.29.0 hands-free switch did not work in cars that drop the hands-free link once wireless Android Auto starts.
 - **Android Auto output:** Now Playing names the output Android Auto with a CAR badge instead of the phone speaker.
 - **Custom range:** The Custom bass and treble sliders now reach +/-4 dB.
+- **Tuning chip:** The Now Playing chip shows an EQ mark and the sound mode, with a TUNED tag while a measured correction is active, instead of repeating the speaker name the output pill already shows. It no longer cuts its label short.
 
 ### Added
 - **Relax, Focus and Sleep sound modes:** Relax softens the highs and adds a little warmth. Focus sets voices back slightly for work or study. Sleep softens the treble and deep bass, and a light compressor turns loud moments down so they don't wake you; it is the only mode that compresses. Reference is described as the audiophile choice.
