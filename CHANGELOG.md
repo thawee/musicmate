@@ -18,8 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sound modes:** Reference, Bass, Vocal, Drive and Custom (your own bass and treble), chosen from the Speaker Tuning chip in Now Playing. The chip shows the active speaker and mode, for example "MU-X · DRIVE".
 - **Several speakers:** Every saved car or speaker is listed in the Speaker Tuning dialog and in Settings, and each remembers its own sound mode. A speaker that connects over Bluetooth hands-free (most cars and many speakers) becomes active when it connects, and No correction returns when it disconnects. Each switch is written to the route log.
 - **Speaker names:** Rename any tuned car or speaker from Settings, Speaker Tuning, so it is easy to recognise. Its Bluetooth device name stays visible under the friendly name.
+- **Android 14 and 15:** MusicMate now installs on Android 14 and newer; it needed Android 16 before.
+- **Maximum volume for network players:** A Settings choice (default 80%) caps what the slider and volume buttons set on a DLNA player, with a mark on the slider. The phone's own output is not limited.
+- **Open-source licenses:** About, Open-source licenses lists every library the app ships, with its license.
+
+### Changed
+- **Quality check:** Upsampled and lossy files are detected from the top edge of the spectrum, so an original and a fake made from it no longer get the same verdict. Verify Lossless no longer mistakes the noise DSD leaves after conversion for a cheap resampler.
+- **Quality report:** DR is the same number as the list badge; Pro adds the spectrogram, the cutoff, and peak and RMS levels. A DSD file shows "-" for the cutoff.
+- **Output picker:** Always shows a Network Streamers section that explains how to find DLNA players, with a Start server button. The phone output badge says THIS PHONE.
+- **Permissions:** Unused permissions are removed, and the media server runs as a connected-device foreground service only while it is on.
 
 ### Fixed
+- **DLNA player volume:** A newly picked player's slider shows "--" and sends nothing until the player's real level is read, instead of showing the phone's volume (often 100%) and sending it. An unknown level is read again, and the volume uses the player's own range.
+- **Powered-off DLNA players:** A player that loses power leaves the list within about 30 seconds and playback falls back to the phone. A Wi-Fi outage on the phone itself no longer drops every player.
+- **Deleted folders:** Albums or artists deleted in a file manager leave the library on the next scan.
+- **Tags:** Saving tags to a file that had none works; edits were lost before, and a DSF without an ID3 tag failed. The tag editor can take a cover from the photo picker on Android 16.
+- **Quality check and ReplayGain:** FFmpeg results no longer come back empty when another job runs at the same time.
+- **DSF in other apps:** An external player can open a DSF right after MusicMate starts cold.
+- **Screens:** Gesture tips scroll with the library and queue, so songs show again in landscape and at large text sizes. The queue marks only Play Next tracks. The song details More menu shows its icons. The song menu has Edit Tags.
 - **Now Playing output:** The output pill follows a Bluetooth device connecting or disconnecting, instead of keeping the old device until playback changes.
 - **Settings:** The 100% DLNA volume limit no longer wraps onto two lines.
 
