@@ -85,6 +85,14 @@ class MediaRouteLog internal constructor(
         if (System.nanoTime() - lastCheckNanos >= POLL_INTERVAL_NANOS) check("playing")
     }
 
+    /** Adds one event line, such as an automatic car switch, so a release build can show it. */
+    @Synchronized
+    fun note(event: String) {
+        val line = "${LocalDateTime.now().format(TIME)} $event"
+        Log.i(TAG, line)
+        file?.let { append(it, line) }
+    }
+
     /**
      * Hands the media route to [onRoute], which feeds Car DSP's USB guard (keep this call if the
      * logging is ever removed), then logs the route if it changed.

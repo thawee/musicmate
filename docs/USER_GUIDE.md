@@ -137,6 +137,15 @@ Tap the player icon in Music Center to choose where music plays.
 
 The list keeps updating while it is open, so a player that has just been switched on appears without closing the picker. MusicMate also notices when you turn the phone's hotspot on or off, and finds players on the new network by itself.
 
+### Speaker Tuning
+
+Speaker Tuning corrects how your car or a Bluetooth speaker sounds when MusicMate plays on this phone. It is never applied to a USB DAC, and it does nothing for DLNA players.
+
+- **Tune a speaker.** Tap the tuning chip in Now Playing, then **Tune a speaker**, or use **Settings, Speaker Tuning**. Play through the car (Android Auto) or the speaker, sit where you usually listen, and follow the steps: a 10-second sweep plays at five spots around your head while the phone listens. In a car, park with the engine off or idling. Set the car's or speaker's own EQ to flat first. On phones that only offer the voice microphone the result is marked approximate.
+- **Pick a sound mode.** The chip shows the active speaker and mode, for example *MU-X · DRIVE*. Tap it to choose Reference, Bass, Vocal, Drive or Custom (your own bass and treble), or to turn tuning off. Each speaker remembers its own mode.
+- **Several cars and speakers.** Each one you tune is listed in the dialog; tap one to switch. A car or speaker that connects over Bluetooth hands-free becomes active by itself when it connects, and **No correction** returns when it disconnects, so its EQ does not follow you onto the phone speaker or headphones.
+- **Headphones.** The phone's microphone cannot measure headphones, so don't tune them.
+
 ---
 
 ## 6. Streaming to other devices
@@ -237,6 +246,7 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
   - **Pre-Amp Gain** raises or lowers the result.
   - **Prevent Clipping** stops loud peaks from distorting.
+- **Speaker Tuning** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, delete one, or tune another. See [Speaker Tuning](#speaker-tuning).
 - **Display options.**
   - Show storage use in the menu.
   - Show track numbers before titles.

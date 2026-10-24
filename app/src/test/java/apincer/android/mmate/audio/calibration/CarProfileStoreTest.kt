@@ -44,6 +44,17 @@ class CarProfileStoreTest {
     }
 
     @Test
+    fun findsTheCarForABluetoothAddress() {
+        val store = CarProfileStore(File(folder.root, "car_profiles"))
+        store.save(profile("mux", 1_000))
+        store.save(profile("other", 2_000).copy(bluetoothAddress = "11:22:33:44:55:66"))
+
+        assertEquals("mux", store.forAddress("aa:bb:cc:dd:ee:ff")?.id)
+        assertEquals("other", store.forAddress("11:22:33:44:55:66")?.id)
+        assertNull(store.forAddress("00:00:00:00:00:00"))
+    }
+
+    @Test
     fun anUnreadableFileIsSkipped() {
         val dir = folder.newFolder("car_profiles")
         File(dir, "broken.json").writeText("{ not json")

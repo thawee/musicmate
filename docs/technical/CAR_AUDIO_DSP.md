@@ -1,6 +1,8 @@
 # Car Audio DSP Specification
 
-Status: design agreed with the owner on 2026-10-23, not yet built.
+Status: design agreed with the owner on 2026-10-23; slices 1 to 4 built 2026-10-24, slice 5 (car-only activation) open.
+
+Renamed on screen to **Speaker Tuning** on 2026-10-24: the same correction and auto-switch serve any measured speaker (a car, or a Bluetooth speaker at home). Code names (`CarDsp`, `CarProfile`), the `car_dsp` preferences and the `car_profiles` folder keep the Car name so saved profiles survive. A profile becomes active when its Bluetooth hands-free link connects and gives way to No correction when it disconnects.
 
 MusicMate plays locally; when Android routes that playback to the car through Android Auto, MusicMate applies a measured per-car correction plus a chosen sound mode. MusicMate does not appear in Android Auto: no browse tree, no car meta-data, no Play car review.
 

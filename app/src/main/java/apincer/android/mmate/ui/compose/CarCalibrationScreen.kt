@@ -97,7 +97,7 @@ fun CarCalibrationScreen(
                 Icon(painterResource(R.drawable.ic_baseline_arrow_back_24), contentDescription = "Close", tint = MusicMateDesignTokens.Text.Primary)
             }
             Text(
-                "Calibrate car audio",
+                "Tune a speaker",
                 color = MusicMateDesignTokens.Text.Primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -175,15 +175,15 @@ private fun StageStrip(current: Int, finished: Boolean) {
 
 @Composable
 private fun Checklist(unprocessedMic: Boolean) {
-    Title("Measure how your car sounds")
-    Body("A 10-second test sweep plays through the car while the phone listens at five spots around your head. MusicMate then builds an EQ that corrects the car.")
+    Title("Measure how your speaker sounds")
+    Body("A 10-second test sweep plays through the speaker while the phone listens at five spots around your head. MusicMate then builds an EQ that corrects it.")
     Spacer(Modifier.height(24.dp))
     Heading("Before you start")
     listOf(
-        "Parked, engine off or idling",
-        "Windows closed, fan off",
-        "Android Auto connected, so music plays in the car",
-        "The car's own EQ and sound effects set to flat",
+        "In a car: parked, engine off or idling, windows closed, fan off",
+        "At home: a quiet room, seated where you usually listen",
+        "Android Auto or the Bluetooth speaker connected, so music plays through it",
+        "The car's or speaker's own EQ and sound effects set to flat",
         "Volume at your usual level"
     ).forEachIndexed { i, text -> NumberedItem(i + 1, text) }
     if (!unprocessedMic) {
@@ -200,7 +200,7 @@ private fun Position(step: CalibrationWizard.Step.Position) {
     Small("Spot ${step.index + 1} of ${CalibrationWizard.POSITIONS.size}")
     Title(name)
     Body(
-        if (step.index == 0) "Hold the phone at ear height where your head is when driving, microphone facing forward."
+        if (step.index == 0) "Hold the phone at ear height where your head is when you listen, microphone facing the front."
         else "Move the phone about 15 cm ${name.lowercase()} of the centre spot. Same height, same grip."
     )
     Spacer(Modifier.height(16.dp))
@@ -213,7 +213,7 @@ private fun Position(step: CalibrationWizard.Step.Position) {
     }
 }
 
-/** Top view of the driver's head with the five spots: done ones teal, the current one gold. */
+/** Top view of the listener's head with the five spots: done ones teal, the current one gold. */
 @Composable
 private fun PositionMap(current: Int) {
     val ring = MusicMateDesignTokens.Surfaces.BorderPrimary
@@ -235,7 +235,7 @@ private fun PositionMap(current: Int) {
     ) {
         val c = Offset(size.width / 2, size.height / 2 + 8.dp.toPx())
         val step = 62.dp.toPx()
-        val forward = measurer.measure("Windscreen", label)
+        val forward = measurer.measure("Front", label)
         drawText(forward, topLeft = Offset(c.x - forward.size.width / 2, 8.dp.toPx()))
         drawCircle(ring, radius = step, center = c, style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))))
         // Head outline with the nose pointing forward; the centre spot sits inside it
@@ -294,8 +294,8 @@ private fun Countdown() {
 
 @Composable
 private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName: (String) -> Unit) {
-    Title("Your car, corrected")
-    Body("${fit.bands.size} EQ bands correct the car from %.0f Hz to 8 kHz.".format(fit.fromHz))
+    Title("Your speaker, corrected")
+    Body("${fit.bands.size} EQ bands correct the speaker from %.0f Hz to 8 kHz.".format(fit.fromHz))
     Spacer(Modifier.height(16.dp))
     ResponseGraph(fit)
     if (fit.fromHz > 31) {
@@ -310,8 +310,8 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName
     OutlinedTextField(
         value = name,
         onValueChange = onName,
-        label = { Text("Car name") },
-        placeholder = { Text("My car") },
+        label = { Text("Speaker name") },
+        placeholder = { Text("My speaker") },
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MusicMateDesignTokens.Text.Primary,
@@ -350,7 +350,7 @@ private fun Done(step: CalibrationWizard.Step.Done) {
         null -> Verdict("Not checked", "The check sweep could not be measured. The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
     }
     Spacer(Modifier.height(16.dp))
-    Body("Car DSP applies this correction under the sound mode you choose. Switch modes from the Car DSP chip in Now Playing, and manage cars in Settings.")
+    Body("Speaker Tuning applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the Speaker Tuning chip in Now Playing, and manage speakers in Settings.")
 }
 
 @Composable

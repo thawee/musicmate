@@ -34,6 +34,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import apincer.android.mmate.R
 import apincer.android.mmate.audio.dsp.DspChain
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -81,14 +83,15 @@ import apincer.android.mmate.audio.dsp.CarDspPreferences
 import apincer.android.mmate.audio.dsp.CarSoundMode
 import kotlin.math.roundToInt
 
-/** "CAR · DRIVE" when Car DSP is on, "CAR DSP · OFF" otherwise; tap to choose. */
+/** "MU-X · DRIVE" (the active speaker, or TUNING) when Speaker Tuning is on, "TUNING · OFF" otherwise; tap to choose. */
 @Composable
 fun CarDspChip(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val choice by CarDspPreferences.state.collectAsState()
     var picking by remember { mutableStateOf(false) }
     val accent = if (choice.enabled) MusicMateDesignTokens.Brand.GoldAmber else MusicMateDesignTokens.Text.Secondary
-    val label = if (choice.enabled) "CAR · ${choice.mode.label.uppercase()}" else "CAR DSP · OFF"
+    val car = choice.profileName?.uppercase() ?: "TUNING"
+    val label = if (choice.enabled) " · ${choice.mode.label.uppercase()}" else "TUNING · OFF"
 
     Row(
         modifier = modifier
@@ -98,8 +101,8 @@ fun CarDspChip(modifier: Modifier = Modifier) {
             .clickable { picking = true }
             .semantics {
                 role = Role.Button
-                contentDescription = "Car DSP"
-                stateDescription = if (choice.enabled) "On, ${choice.mode.label}" else "Off"
+                contentDescription = "Speaker Tuning"
+                stateDescription = if (choice.enabled) "On, ${choice.profileName ?: "no speaker correction"}, ${choice.mode.label}" else "Off"
             }
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -111,15 +114,11 @@ fun CarDspChip(modifier: Modifier = Modifier) {
                 .background(accent)
         )
         Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = label,
-            color = MusicMateDesignTokens.Text.Primary,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Monospace,
-            letterSpacing = 0.3.sp,
-            maxLines = 1
-        )
+        if (choice.enabled) {
+            // A long car name gives way to the mode
+            ChipText(car, Modifier.weight(1f, fill = false).widthIn(max = 104.dp), overflow = TextOverflow.Ellipsis)
+        }
+        ChipText(label)
     }
 
     if (picking) {
@@ -134,6 +133,18 @@ fun CarDspChip(modifier: Modifier = Modifier) {
 @Composable
 fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismissRequest: () -> Unit) {
     val context = LocalContext.current
+    val cars by produceState(emptyList<CarProfile>()) {
+        value = withContext(Dispatchers.IO) { CarDspPreferences.profiles(context).list() }
+    }
+    val calibrate = {
+        onDismissRequest()
+        context.startActivity(Intent(context, CarCalibrationActivity::class.java))
+    }
+    // Picking a car, like picking a mode, turns Car DSP on
+    fun pickCar(car: CarProfile?) {
+        CarDspPreferences.setActiveProfile(context, car)
+        if (!choice.enabled) CarDspPreferences.update(context, CarDspPreferences.state.value.copy(enabled = true))
+    }
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
             modifier = Modifier
@@ -144,7 +155,7 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 20.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Car DSP", color = MusicMateDesignTokens.Text.Primary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "Speaker Tuning", color = MusicMateDesignTokens.Text.Primary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Text(
                         text = if (choice.enabled) "On for local playback. Never applied to a USB DAC." else "Off. Playback is untouched.",
                         color = MusicMateDesignTokens.Text.Muted,
@@ -164,7 +175,7 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
                         uncheckedTrackColor = MusicMateDesignTokens.Surfaces.SurfaceElevated,
                         uncheckedBorderColor = MusicMateDesignTokens.Text.Muted
                     ),
-                    modifier = Modifier.semantics { contentDescription = "Car DSP" }
+                    modifier = Modifier.semantics { contentDescription = "Speaker Tuning" }
                 )
             }
             Column(
@@ -175,6 +186,17 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
                 if (choice.enabled) {
                     Spacer(Modifier.height(16.dp))
                     EqCurve(choice, modifier = Modifier.padding(horizontal = 20.dp))
+                }
+                if (cars.isNotEmpty()) {
+                    SectionLabel("SPEAKER")
+                    CarDspOption("No correction", "Sound modes only", selected = choice.profileId == null, dimmed = !choice.enabled) {
+                        pickCar(null)
+                    }
+                    cars.forEach { car ->
+                        CarDspOption(car.name, calibratedOn(car), selected = car.id == choice.profileId, dimmed = !choice.enabled) {
+                            pickCar(car)
+                        }
+                    }
                 }
                 SectionLabel("SOUND MODE")
                 CarSoundMode.entries.forEach { mode ->
@@ -187,33 +209,29 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
                     TrimSlider("Bass", choice.bassDb) { onChange(choice.copy(bassDb = it)) }
                     TrimSlider("Treble", choice.trebleDb) { onChange(choice.copy(trebleDb = it)) }
                 }
-                SectionLabel("CAR CORRECTION")
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 20.dp, end = 8.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = choice.profileName ?: "None",
-                            color = MusicMateDesignTokens.Text.Telemetry,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = if (choice.profileName != null) "Measured in your car; switch cars in Settings" else "Measure your car to correct its sound",
-                            color = MusicMateDesignTokens.Text.Muted,
-                            fontSize = 12.sp
-                        )
-                    }
-                    TextButton(onClick = {
-                        onDismissRequest()
-                        context.startActivity(Intent(context, CarCalibrationActivity::class.java))
-                    }) {
-                        Text(if (choice.profileName != null) "Recalibrate" else "Calibrate", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
+                if (cars.isEmpty()) {
+                    SectionLabel("SPEAKER CORRECTION")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 20.dp, end = 8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("None", color = MusicMateDesignTokens.Text.Telemetry, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Measure a car or speaker to correct its sound", color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
+                        }
+                        TextButton(onClick = calibrate) {
+                            Text("Tune", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {
+                if (cars.isNotEmpty()) {
+                    TextButton(onClick = calibrate) {
+                        Text("Tune a speaker", color = MusicMateDesignTokens.Text.Secondary)
+                    }
+                    Spacer(Modifier.weight(1f))
+                }
                 TextButton(onClick = onDismissRequest) {
                     Text("Done", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
                 }
@@ -289,7 +307,7 @@ private fun CarDspOption(title: String, summary: String, selected: Boolean, dimm
             .clip(RoundedCornerShape(10.dp))
             .background(if (highlight) MusicMateDesignTokens.Brand.GoldContainer else Color.Transparent)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect)
-            .semantics { if (dimmed && selected) stateDescription = "Saved, Car DSP off" }
+            .semantics { if (dimmed && selected) stateDescription = "Saved, Speaker Tuning off" }
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -347,6 +365,21 @@ private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Uni
     }
 }
 
+@Composable
+private fun ChipText(text: String, modifier: Modifier = Modifier, overflow: TextOverflow = TextOverflow.Clip) {
+    Text(
+        text = text,
+        color = MusicMateDesignTokens.Text.Primary,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontFamily = FontFamily.Monospace,
+        letterSpacing = 0.3.sp,
+        maxLines = 1,
+        overflow = overflow,
+        modifier = modifier
+    )
+}
+
 /** The Settings card body: saved car profiles, which one corrects the car, and the calibrate button. */
 @Composable
 fun CarAudioSettings() {
@@ -356,12 +389,14 @@ fun CarAudioSettings() {
     val profiles by produceState(emptyList<CarProfile>(), refresh) {
         value = withContext(Dispatchers.IO) { CarDspPreferences.profiles(context).list() }
     }
-    val activeId = remember(profiles, refresh) { CarDspPreferences.activeProfileId(context) }
+    // Follows the live choice, so a car switched from the dialog or by Bluetooth shows here too
+    remember { CarDspPreferences.init(context) }
+    val activeId = CarDspPreferences.state.collectAsState().value.profileId
     val calibrate = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { refresh++ }
     val hasMic = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) }
 
     Text(
-        text = "Measure your car once with the phone's microphone; Car DSP then corrects it under the sound mode you pick.",
+        text = "Measure your car or Bluetooth speaker once with the phone's microphone; Speaker Tuning then corrects it under the sound mode you pick, and picks it again when it connects.",
         color = MusicMateDesignTokens.Text.Muted,
         fontSize = 12.sp,
         lineHeight = 16.sp
@@ -398,14 +433,14 @@ fun CarAudioSettings() {
         border = BorderStroke(1.dp, MusicMateDesignTokens.Brand.GoldOutline),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(if (profiles.isEmpty()) "Calibrate car" else "Calibrate again", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
+        Text(if (profiles.isEmpty()) "Tune a speaker" else "Tune another speaker", color = MusicMateDesignTokens.Brand.Gold, fontWeight = FontWeight.Bold)
     }
 
     deleting?.let { profile ->
         AlertDialog(
             onDismissRequest = { deleting = null },
             title = { Text("Delete ${profile.name}?") },
-            text = { Text("Its correction is removed. You can calibrate again later.") },
+            text = { Text("Its correction is removed. You can tune it again later.") },
             confirmButton = {
                 TextButton(onClick = {
                     CarDspPreferences.deleteProfile(context, profile.id)
@@ -422,6 +457,9 @@ fun CarAudioSettings() {
         )
     }
 }
+
+private fun calibratedOn(profile: CarProfile): String =
+    "Calibrated " + DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(profile.createdAtMillis))
 
 private fun profileSummary(profile: CarProfile): String {
     val date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(profile.createdAtMillis))

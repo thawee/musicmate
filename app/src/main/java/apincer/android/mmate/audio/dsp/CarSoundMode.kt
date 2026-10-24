@@ -1,6 +1,7 @@
 package apincer.android.mmate.audio.dsp
 
 import android.content.Context
+import android.content.SharedPreferences
 import apincer.android.mmate.audio.calibration.CarProfile
 import apincer.android.mmate.audio.calibration.CarProfileStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,7 @@ import java.io.File
  * three filters and +4 dB per mode, no compression. The automatic preamp absorbs every boost.
  */
 enum class CarSoundMode(val label: String, val summary: String) {
-    REFERENCE("Reference", "Balanced, the car target"),
+    REFERENCE("Reference", "Balanced, the tuning target"),
     BASS("Bass", "Deeper, punchier low end"),
     VOCAL("Vocal", "Voices forward and clear"),
     DRIVE("Drive", "Lively: tight bass, crisp attack, sparkle"),
@@ -55,13 +56,18 @@ data class CarDspChoice(
     val trebleDb: Double = 0.0,
     /** The active car profile's correction; empty until a car is calibrated. */
     val correction: List<PeqBand> = emptyList(),
-    val profileName: String? = null
+    val profileName: String? = null,
+    val profileId: String? = null
 ) {
     /** The car correction with the mode on top. */
     fun settings(): CarDspSettings? = if (enabled) CarDspSettings(correction + mode.bands(bassDb, trebleDb)) else null
 }
 
-/** Keeps the choice in preferences and hands it to [CarDsp] whenever it changes. */
+/**
+ * Keeps the choice in preferences and hands it to [CarDsp] whenever it changes. On/off is one
+ * switch for all cars; the sound mode and Custom trims are kept per car (keys suffixed with the
+ * profile id), and "No correction" has its own set.
+ */
 object CarDspPreferences {
     private const val FILE = "car_dsp"
     private const val ENABLED = "enabled"
@@ -79,52 +85,78 @@ object CarDspPreferences {
     fun init(context: Context) {
         if (loaded) return
         loaded = true
-        val prefs = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+        val prefs = prefs(context)
         val profile = prefs.getString(ACTIVE_PROFILE, null)?.let { profiles(context).get(it) }
-        apply(CarDspChoice(
-            enabled = prefs.getBoolean(ENABLED, false),
-            mode = CarSoundMode.entries.firstOrNull { it.name == prefs.getString(MODE, null) } ?: CarSoundMode.REFERENCE,
-            bassDb = prefs.getFloat(BASS, 0f).toDouble(),
-            trebleDb = prefs.getFloat(TREBLE, 0f).toDouble(),
-            correction = profile?.bands ?: emptyList(),
-            profileName = profile?.name
-        ))
+        // Load "No correction"'s set first so a car with none saved starts from it
+        val base = load(prefs, null, CarDspChoice(enabled = prefs.getBoolean(ENABLED, false)))
+        apply(if (profile == null) base else load(prefs, profile, base))
     }
 
     @JvmStatic
     fun profiles(context: Context) = CarProfileStore(File(context.filesDir, "car_profiles"))
 
-    /** Makes [profile]'s correction the active one; null goes back to no correction. */
+    /**
+     * Makes [profile]'s correction the active one, with the mode last used in that car; a car with
+     * none saved keeps the current mode. Null goes back to no correction.
+     */
     @JvmStatic
     fun setActiveProfile(context: Context, profile: CarProfile?) {
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString(ACTIVE_PROFILE, profile?.id).apply()
-        apply(choice.value.copy(correction = profile?.bands ?: emptyList(), profileName = profile?.name))
+        apply(select(prefs(context), profile, choice.value))
     }
 
-    /** Deletes a profile; if it was active, the newest remaining one takes over. */
+    /** Deletes a profile and its saved mode; if it was active, the newest remaining one takes over. */
     @JvmStatic
     fun deleteProfile(context: Context, id: String) {
         val store = profiles(context)
         store.delete(id)
-        val active = context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(ACTIVE_PROFILE, null)
-        if (active == id) setActiveProfile(context, store.list().firstOrNull())
+        val prefs = prefs(context)
+        prefs.edit().remove(key(MODE, id)).remove(key(BASS, id)).remove(key(TREBLE, id)).apply()
+        if (prefs.getString(ACTIVE_PROFILE, null) == id) setActiveProfile(context, store.list().firstOrNull())
     }
 
     /** The id of the active profile, if any. */
     @JvmStatic
-    fun activeProfileId(context: Context): String? =
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(ACTIVE_PROFILE, null)
+    fun activeProfileId(context: Context): String? = prefs(context).getString(ACTIVE_PROFILE, null)
 
+    /** Saves on/off for every car and the mode for the active car only. */
     @JvmStatic
     fun update(context: Context, next: CarDspChoice) {
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit()
-            .putBoolean(ENABLED, next.enabled)
-            .putString(MODE, next.mode.name)
-            .putFloat(BASS, next.bassDb.toFloat())
-            .putFloat(TREBLE, next.trebleDb.toFloat())
-            .apply()
+        save(prefs(context), next)
         apply(next)
     }
+
+    internal fun select(prefs: SharedPreferences, profile: CarProfile?, current: CarDspChoice): CarDspChoice {
+        prefs.edit().putString(ACTIVE_PROFILE, profile?.id).apply()
+        val next = load(prefs, profile, current)
+        save(prefs, next)
+        return next
+    }
+
+    internal fun load(prefs: SharedPreferences, profile: CarProfile?, current: CarDspChoice): CarDspChoice {
+        val id = profile?.id
+        return current.copy(
+            mode = CarSoundMode.entries.firstOrNull { it.name == prefs.getString(key(MODE, id), null) } ?: current.mode,
+            bassDb = if (prefs.contains(key(BASS, id))) prefs.getFloat(key(BASS, id), 0f).toDouble() else current.bassDb,
+            trebleDb = if (prefs.contains(key(TREBLE, id))) prefs.getFloat(key(TREBLE, id), 0f).toDouble() else current.trebleDb,
+            correction = profile?.bands ?: emptyList(),
+            profileName = profile?.name,
+            profileId = id
+        )
+    }
+
+    internal fun save(prefs: SharedPreferences, next: CarDspChoice) {
+        val id = next.profileId
+        prefs.edit()
+            .putBoolean(ENABLED, next.enabled)
+            .putString(key(MODE, id), next.mode.name)
+            .putFloat(key(BASS, id), next.bassDb.toFloat())
+            .putFloat(key(TREBLE, id), next.trebleDb.toFloat())
+            .apply()
+    }
+
+    private fun key(name: String, profileId: String?) = if (profileId == null) name else "$name:$profileId"
+
+    private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
     private var loaded = false
 

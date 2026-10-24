@@ -137,6 +137,18 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private Track previouslyPlaying;
     private long artworkRequestGeneration;
     private PlaybackState lastPlaybackState;
+    // A Bluetooth device can leave after playback pauses, so the output pill also follows device changes
+    private final android.media.AudioDeviceCallback outputDevicesCallback = new android.media.AudioDeviceCallback() {
+        @Override
+        public void onAudioDevicesAdded(android.media.AudioDeviceInfo[] added) {
+            refreshOutputTarget();
+        }
+
+        @Override
+        public void onAudioDevicesRemoved(android.media.AudioDeviceInfo[] removed) {
+            refreshOutputTarget();
+        }
+    };
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
@@ -733,6 +745,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             reopenFoldersAfterStorageGrant = false;
             doScanDirectories();
         }
+        getSystemService(android.media.AudioManager.class).registerAudioDeviceCallback(outputDevicesCallback, null);
+    }
+
+    private void refreshOutputTarget() {
+        if (isPlaybackServiceBound && playbackService != null) {
+            setNowPlaying(playbackService.getNowPlayingSong(), lastPlaybackState);
+        }
     }
 
     @Override
@@ -770,6 +789,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     protected void onPause() {
         sleepTimerHandler.removeCallbacks(sleepTimerTick);
+        getSystemService(android.media.AudioManager.class).unregisterAudioDeviceCallback(outputDevicesCallback);
         super.onPause();
     }
 

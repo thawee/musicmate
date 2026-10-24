@@ -441,7 +441,8 @@ fun NowPlayingPage(
                         }
                         if (state.carDspAvailable.value) {
                             Spacer(modifier = Modifier.width(6.dp))
-                            CarDspChip()
+                            // Both shrink when short of room; the chip's smaller share means the car name is cut first
+                            CarDspChip(modifier = Modifier.weight(0.5f, fill = false))
                         }
                         }
                     }

@@ -10,7 +10,7 @@ Your music files, their tags, cover art, playlists, listening history, settings 
 
 Crash logs are kept on the device. They are shared only if you choose to share one yourself.
 
-Car calibration uses the microphone, and only while you run it. MusicMate plays a test sweep and records it to measure how your car sounds. The recording is analysed in memory on the device and then discarded; only the resulting frequency response, the EQ settings and the name and Bluetooth address of the car you are connected to are saved, as a car profile on the device. The recording is never saved to a file and never sent anywhere.
+Speaker Tuning uses the microphone, and only while you run it. MusicMate plays a test sweep and records it to measure how your car or speaker sounds. The recording is analysed in memory on the device and then discarded; only the resulting frequency response, the EQ settings and the name and Bluetooth address of the car or speaker you are connected to are saved, as a profile on the device. The recording is never saved to a file and never sent anywhere.
 
 ## What leaves your device, and when
 
@@ -42,7 +42,7 @@ If you turn on External Player Access, Android asks you to grant MusicMate notif
 
 ## Permissions
 
-MusicMate uses access to your music, notifications (to show playback and server status), the local network (for the media server), Bluetooth (to show which headphones or DAC is playing, and to recognise your car for car calibration), optionally notification access to see playback in other music apps, and the microphone only when you run car calibration. It does not ask for your location, contacts or camera.
+MusicMate uses access to your music, notifications (to show playback and server status), the local network (for the media server), Bluetooth (to show which headphones or DAC is playing, and to recognise your car or speaker for Speaker Tuning), optionally notification access to see playback in other music apps, and the microphone only when you run Speaker Tuning. It does not ask for your location, contacts or camera.
 
 ## Children
 

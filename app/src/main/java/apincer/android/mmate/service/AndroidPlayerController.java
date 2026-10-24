@@ -56,6 +56,7 @@ public class AndroidPlayerController {
     private Track nextTrack;
     private final UsbOutputFormat usbOutputFormat;
     private final MediaRouteLog mediaRouteLog;
+    private final apincer.android.mmate.audio.dsp.CarAutoSelect carAutoSelect;
 
     private long lastUpdateSongTime;
 
@@ -152,6 +153,8 @@ public class AndroidPlayerController {
         this.mediaRouteLog = new MediaRouteLog(context, usbOutputFormat);
         apincer.android.mmate.audio.dsp.CarDspPreferences.init(context);
         this.mediaRouteLog.start();
+        this.carAutoSelect = new apincer.android.mmate.audio.dsp.CarAutoSelect(context, mediaRouteLog::note);
+        this.carAutoSelect.start();
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -611,6 +614,7 @@ public class AndroidPlayerController {
             }
             usbOutputFormat.release();
             mediaRouteLog.release();
+            carAutoSelect.release();
         });
     }
 

@@ -215,9 +215,9 @@ fun SettingsScreen(
                 )
             }
 
-            // ── Car audio: calibration profiles for Car DSP ─────────────────
+            // ── Speaker Tuning: measured speakers and cars (Car DSP in code) ─────────────────
             SettingsCard(
-                title = "CAR AUDIO",
+                title = "SPEAKER TUNING",
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
                 // Previews have no activity to launch calibration from
@@ -332,12 +332,15 @@ private fun SettingsChoice(
                 role = Role.RadioButton,
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 4.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
+        // One line: five chips share a phone-width row, and "100%" broke after the digits
         Text(
             text = label,
             color = if (selected) MusicMateDesignTokens.Brand.Gold else Color.White,
+            maxLines = 1,
+            softWrap = false,
             fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )

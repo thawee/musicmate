@@ -50,6 +50,9 @@ class CarProfileStore(private val dir: File) {
 
     fun delete(id: String) = File(dir, id + SUFFIX).delete()
 
+    /** The saved car paired with the Bluetooth device at [address], newest first if several. */
+    fun forAddress(address: String): CarProfile? = list().firstOrNull { it.bluetoothAddress.equals(address, ignoreCase = true) }
+
     private fun read(file: File): CarProfile? = try {
         if (file.exists()) json.decodeFromString(CarProfile.serializer(), file.readText()) else null
     } catch (error: SerializationException) {

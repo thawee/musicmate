@@ -100,7 +100,7 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
             val fit = result.fit
             val profile = CarProfile(
                 id = UUID.randomUUID().toString(),
-                name = name.ifBlank { car?.name ?: "My car" },
+                name = name.ifBlank { car?.name ?: "My speaker" },
                 createdAtMillis = System.currentTimeMillis(),
                 bluetoothName = car?.name,
                 bluetoothAddress = car?.address,
@@ -137,14 +137,14 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
     }
 
     private fun advice(take: Take.Rejected): String = when (take.reason) {
-        Take.Reason.CLIPPED -> "Too loud for the microphone. Turn the car volume down a little and measure again."
-        Take.Reason.TOO_QUIET -> "${take.detail}. Turn the volume up, or switch off the engine or fan, and measure again."
-        Take.Reason.NO_RESPONSE -> "${take.detail}. Check the volume and that the phone is playing through the car."
+        Take.Reason.CLIPPED -> "Too loud for the microphone. Turn the volume down a little and measure again."
+        Take.Reason.TOO_QUIET -> "${take.detail}. Turn the volume up, or quieten the room (in a car, the engine and fan), and measure again."
+        Take.Reason.NO_RESPONSE -> "${take.detail}. Check the volume and that the phone is playing through the speaker."
         Take.Reason.TOO_SHORT -> "${take.detail}. Measure again; if it repeats, reconnect Android Auto."
     }
 
     companion object {
-        /** Around the driver's head at ear height, about 15 cm apart. */
+        /** Around the listener's head at ear height, about 15 cm apart. */
         val POSITIONS = listOf("Centre", "Left", "Right", "Forward", "Back")
         private const val TAG = "CarCalibration"
     }
