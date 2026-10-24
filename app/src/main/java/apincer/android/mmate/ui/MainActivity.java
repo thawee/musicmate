@@ -360,10 +360,12 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     targetSubtitle = devName;
                     nps.getTargetTitle().setValue(devName);
                     // Speaker and wired outputs go through Android's mixer: name the place, claim nothing
-                    nps.getTargetBadge().setValue(isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "THIS PHONE"));
+                    nps.getTargetBadge().setValue(device.isCar() ? "CAR" : isBluetooth ? "BLUETOOTH" : (device.isUsb() ? "USB AUDIO" : "THIS PHONE"));
                     StringBuilder devBuf = new StringBuilder();
                     devBuf.append(device.getDescription());
-                    if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
+                    if (device.isCar()) {
+                        // Android Auto reports no format to show
+                    } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getCodec()) && !"PCM".equalsIgnoreCase(device.getCodec()) && !"-".equals(device.getCodec())) {
                         devBuf.append(" — ").append(device.getCodec());
                     } else if (!apincer.music.core.utils.StringUtils.isEmpty(device.getFriendyDescription())) {
                         devBuf.append(" — ").append(device.getFriendyDescription());

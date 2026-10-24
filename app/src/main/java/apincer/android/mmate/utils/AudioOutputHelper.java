@@ -17,6 +17,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -34,6 +35,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.audio.dsp.CarRoute;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.ExternalAndroidPlayer;
@@ -55,6 +57,7 @@ public class AudioOutputHelper {
         private int id = -1;
         private boolean usb;
         private boolean bluetooth;
+        private boolean car;
 
         public int getId() {
             return id;
@@ -86,6 +89,11 @@ public class AudioOutputHelper {
 
         public boolean isBluetooth() {
             return bluetooth;
+        }
+
+        /** Media goes to the car through Android Auto. */
+        public boolean isCar() {
+            return car;
         }
 
         public void setBluetooth(boolean bluetooth) {
@@ -178,6 +186,16 @@ public class AudioOutputHelper {
         Device outputDevice = new Device();
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
+        // Wireless Android Auto routes media to a remote submix, which the output list alone would
+        // show as the phone speaker
+        if (isAndroidAutoRoute(audioManager)) {
+            outputDevice.car = true;
+            outputDevice.setName("Android Auto");
+            outputDevice.setDescription("Car speakers");
+            outputDevice.setResId(R.drawable.ic_baseline_directions_car_24);
+            return outputDevice;
+        }
+
         AudioDeviceInfo[] outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
         AudioDeviceInfo selectedDevice = getAudioDevice(outputs);
 
@@ -220,6 +238,17 @@ public class AudioOutputHelper {
         }
 
         return outputDevice;
+    }
+
+    private static boolean isAndroidAutoRoute(AudioManager audioManager) {
+        AudioAttributes media = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build();
+        try {
+            return CarRoute.ofDevices(audioManager.getAudioDevicesForAttributes(media)) == CarRoute.AndroidAuto.INSTANCE;
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Media route unavailable", e);
+            return false;
+        }
     }
 
     public static boolean isExternalAppTarget(PlaybackTarget target) {

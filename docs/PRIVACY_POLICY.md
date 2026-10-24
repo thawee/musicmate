@@ -10,7 +10,7 @@ Your music files, their tags, cover art, playlists, listening history, settings 
 
 Crash logs are kept on the device. They are shared only if you choose to share one yourself.
 
-Speaker Tuning uses the microphone, and only while you run it. MusicMate plays a test sweep and records it to measure how your car or speaker sounds. The recording is analysed in memory on the device and then discarded; only the resulting frequency response, the EQ settings and the name and Bluetooth address of the car or speaker you are connected to are saved, as a profile on the device. The recording is never saved to a file and never sent anywhere.
+Speaker Tuning uses the microphone, and only while you run it. MusicMate plays a test sweep and records it to measure how your car or speaker sounds. The recording is analysed in memory on the device and then discarded; only the resulting frequency response, the EQ settings and the name and Bluetooth address of the car or speaker you are connected to are saved, as a profile on the device. The recording is never saved to a file and never sent anywhere. To pick the right car in Android Auto, MusicMate also remembers the name and Bluetooth address of the last car that connected to the phone, even while MusicMate is closed. This stays on the device and is used only to choose that car's tuning.
 
 ## What leaves your device, and when
 

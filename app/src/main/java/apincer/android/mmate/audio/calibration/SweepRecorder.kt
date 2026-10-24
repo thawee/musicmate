@@ -1,8 +1,6 @@
 package apincer.android.mmate.audio.calibration
 
 import android.Manifest
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioDeviceInfo
@@ -15,8 +13,6 @@ import android.media.MediaRecorder
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import apincer.android.mmate.utils.AudioOutputHelper
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import kotlin.math.max
 
 /**
@@ -120,32 +116,5 @@ class SweepRecorder(context: Context) {
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build()
-    }
-}
-
-/** The Bluetooth device connected for calls, which in the car is the car itself. */
-object HeadsetLink {
-    class Device(val name: String?, val address: String)
-
-    suspend fun connected(context: Context): Device? {
-        val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter ?: return null
-        return suspendCancellableCoroutine { continuation ->
-            val listener = object : BluetoothProfile.ServiceListener {
-                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    val device = try {
-                        proxy.connectedDevices.firstOrNull()?.let { Device(it.name, it.address) }
-                    } catch (error: SecurityException) {
-                        null
-                    }
-                    adapter.closeProfileProxy(profile, proxy)
-                    if (continuation.isActive) continuation.resume(device)
-                }
-
-                override fun onServiceDisconnected(profile: Int) {
-                    if (continuation.isActive) continuation.resume(null)
-                }
-            }
-            if (!adapter.getProfileProxy(context.applicationContext, listener, BluetoothProfile.HEADSET)) continuation.resume(null)
-        }
     }
 }

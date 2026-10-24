@@ -26,8 +26,15 @@ data class CarProfile(
     val approximate: Boolean,
     /** The verify sweep's result, null until it runs. */
     val verified: Boolean? = null,
-    val worstDeviationDb: Double? = null
-)
+    val worstDeviationDb: Double? = null,
+    /** [KIND_CAR] when tuned through Android Auto, [KIND_SPEAKER] through a Bluetooth speaker. */
+    val kind: String? = null
+) {
+    companion object {
+        const val KIND_CAR = "car"
+        const val KIND_SPEAKER = "speaker"
+    }
+}
 
 /** One JSON file per car in [dir]. Unreadable files are skipped, never fatal. */
 class CarProfileStore(private val dir: File) {

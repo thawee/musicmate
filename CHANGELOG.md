@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Speaker Tuning follows the music:** The active tuning now follows where media plays instead of the Bluetooth hands-free link. A Bluetooth speaker's tuning turns on when music plays through it; a car's tuning turns on when music plays through its Android Auto, using the car's Bluetooth handshake to tell cars apart; anything else gets No correction. A tuning picked by hand stays until the output changes. The 3.29.0 hands-free switch did not work in cars that drop the hands-free link once wireless Android Auto starts.
+- **Android Auto output:** Now Playing names the output Android Auto with a CAR badge instead of the phone speaker.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.

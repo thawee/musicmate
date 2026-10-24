@@ -1,15 +1,9 @@
 package apincer.android.mmate.audio.dsp
 
 import android.Manifest
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothHeadset
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.media.AudioDeviceInfo
 import android.util.Log
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
@@ -17,116 +11,71 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.function.Consumer
 
 /**
- * Keeps the active car in step with its Bluetooth hands-free link, matched by the address saved at
- * calibration: the car becomes active when it connects, and No correction returns when it
- * disconnects, so its EQ never follows the phone out of the car. A device with no saved car changes
- * nothing: it may be headphones. Each event goes to [events], which release builds keep (they
- * strip Log.i).
+ * Keeps the active speaker in step with where media plays (see [CarRoute.choose]): a Bluetooth
+ * speaker by its address, Android Auto by the car's last handshake, anything else No correction,
+ * so a speaker's EQ never follows the music elsewhere. It acts only when the route changes, so a
+ * speaker picked by hand holds until then. Each switch goes to [events], which release builds keep
+ * (they strip Log.i).
  */
 class CarAutoSelect(context: Context, private val events: Consumer<String>) {
     private val app = context.applicationContext
     private val worker = Executors.newSingleThreadExecutor()
     @Volatile
-    private var registered = false
-
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
-            val address = address(device) ?: return
-            when (intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1)) {
-                BluetoothProfile.STATE_CONNECTED -> later { connected(address) }
-                BluetoothProfile.STATE_DISCONNECTED -> later { disconnected(address) }
-            }
-        }
-    }
+    private var route: CarRoute? = null
 
     fun start() {
-        // Without it Android delivers nothing and throws nothing, so say so in the log
         if (ContextCompat.checkSelfPermission(app, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            Log.w(TAG, "BLUETOOTH_CONNECT not granted, cars are not switched automatically")
-            events.accept("car auto-switch off: Bluetooth permission not granted")
-            return
+            Log.w(TAG, "BLUETOOTH_CONNECT not granted, the car is not recognised in Android Auto")
+            events.accept("speaker auto-switch: Bluetooth permission not granted, cars are not recognised")
         }
-        // Exported because the Bluetooth stack, not the system server, sends this; it is a
-        // protected broadcast, so no other app can fake it
-        ContextCompat.registerReceiver(
-            app, receiver, IntentFilter(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED), ContextCompat.RECEIVER_EXPORTED
-        )
-        registered = true
-        events.accept("car auto-switch listening")
-        // The car may have connected, or left, while the app was not running
-        val adapter = app.getSystemService(BluetoothManager::class.java)?.adapter ?: return
-        adapter.getProfileProxy(app, object : BluetoothProfile.ServiceListener {
-            override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                try {
-                    if (registered) {
-                        val addresses = proxy.connectedDevices.mapNotNull(::address)
-                        addresses.forEach { later { connected(it) } }
-                        later { leftWhileStopped(addresses) }
-                    }
-                } catch (error: SecurityException) {
-                    Log.w(TAG, "no Bluetooth permission to list connected devices")
-                }
-                adapter.closeProfileProxy(profile, proxy)
+        // A car that connects while Android Auto already plays is picked at once
+        CarHandshake.onRecorded = {
+            later {
+                events.accept("car handshake: ${CarHandshake.last(app)?.name}")
+                if (route == CarRoute.AndroidAuto) select(CarRoute.AndroidAuto)
             }
-
-            override fun onServiceDisconnected(profile: Int) {}
-        }, BluetoothProfile.HEADSET)
+        }
+        events.accept("speaker auto-switch listening")
     }
 
     fun release() {
-        if (registered) {
-            runCatching { app.unregisterReceiver(receiver) }
-            events.accept("car auto-switch stopped")
-        }
-        registered = false
+        CarHandshake.onRecorded = null
+        events.accept("speaker auto-switch stopped")
         worker.shutdown()
     }
 
-    private fun address(device: BluetoothDevice): String? = try {
-        device.address
-    } catch (error: SecurityException) {
-        null
+    /** Fed by every route check; acts only when the route differs from the last one. */
+    @Synchronized
+    fun onRoute(routed: List<AudioDeviceInfo>) {
+        val next = CarRoute.ofDevices(routed)
+        if (next.key == route?.key) return
+        route = next
+        // A USB DAC is never processed, so its speaker choice does not matter
+        if (next != CarRoute.Usb) later { select(next) }
     }
 
-    /** Runs [task] on the worker, which reads profile files off the main thread, in arrival order. */
+    /** Runs [task] on the worker, which reads profile files off the caller's thread, in order. */
     private fun later(task: () -> Unit) {
-        // The proxy callback can arrive after release(); a stopped worker must not crash the app
         if (worker.isShutdown) return
         try {
             worker.execute(task)
         } catch (error: RejectedExecutionException) {
-            Log.w(TAG, "car switch skipped, the player was released")
+            Log.w(TAG, "speaker switch skipped, the player was released")
         }
     }
 
-    private fun connected(address: String) {
-        val car = CarDspPreferences.profiles(app).forAddress(address)
-        when {
-            car == null -> events.accept("hands-free device connected, no saved car matches")
-            car.id == CarDspPreferences.activeProfileId(app) -> events.accept("car ${car.name} connected, already active")
-            else -> {
-                CarDspPreferences.setActiveProfile(app, car)
-                events.accept("car ${car.name} connected, its correction is now active")
-            }
-        }
+    private fun select(route: CarRoute) {
+        val car = CarRoute.choose(route, CarDspPreferences.profiles(app).list(), CarHandshake.last(app)?.address)
+        if (car?.id == CarDspPreferences.activeProfileId(app)) return
+        CarDspPreferences.setActiveProfile(app, car)
+        events.accept("${describe(route)}: " + (car?.let { "${it.name} correction is now active" } ?: "No correction"))
     }
 
-    private fun disconnected(address: String) {
-        val car = CarDspPreferences.profiles(app).forAddress(address) ?: return
-        if (car.id != CarDspPreferences.activeProfileId(app)) return
-        CarDspPreferences.setActiveProfile(app, null)
-        events.accept("car ${car.name} disconnected, back to No correction")
-    }
-
-    /** An active car whose saved address is not connected gives way to No correction. */
-    private fun leftWhileStopped(connected: List<String>) {
-        val id = CarDspPreferences.activeProfileId(app) ?: return
-        val car = CarDspPreferences.profiles(app).get(id) ?: return
-        val address = car.bluetoothAddress ?: return
-        if (connected.any { it.equals(address, ignoreCase = true) }) return
-        CarDspPreferences.setActiveProfile(app, null)
-        events.accept("car ${car.name} not connected, back to No correction")
+    private fun describe(route: CarRoute) = when (route) {
+        is CarRoute.Bluetooth -> "Bluetooth ${route.name ?: "speaker"}"
+        CarRoute.AndroidAuto -> "Android Auto" + (CarHandshake.last(app)?.name?.let { " ($it)" } ?: "")
+        CarRoute.Usb -> "USB"
+        CarRoute.Other -> "phone output"
     }
 
     private companion object {

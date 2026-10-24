@@ -58,6 +58,10 @@ class MediaRouteLog internal constructor(
     )
 
     private var lastRoute: String? = null
+
+    /** Also told each checked route, after Car DSP's USB guard; Speaker Tuning's auto-switch listens here. */
+    @Volatile
+    var routeListener: ((List<AudioDeviceInfo>) -> Unit)? = null
     private var lastCheckNanos = 0L
 
     private val deviceCallback = object : AudioDeviceCallback() {
@@ -103,6 +107,7 @@ class MediaRouteLog internal constructor(
         val route = try {
             val routed = audioManager.getAudioDevicesForAttributes(mediaAttributes)
             onRoute(routed)
+            routeListener?.invoke(routed)
             val media = routed.joinToString(" + ") { describe(it) }.ifEmpty { "none" }
             val usb = routed.firstNotNullOfOrNull { usbFormat(it.id) }?.let { UsbOutputFormat.describe(it) } ?: "android default"
             val outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)

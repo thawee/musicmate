@@ -183,5 +183,13 @@
             android:authorities="apincer.android.mmate.musicbrainz.coverart.provider"
             android:exported="false"
             android:grantUriPermissions="true"/> -->
+        <!-- Records the car's Bluetooth handshake for Speaker Tuning; this broadcast is exempt from the background limit -->
+        <receiver
+            android:name=".audio.dsp.CarHandshakeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

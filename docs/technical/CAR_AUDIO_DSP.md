@@ -2,7 +2,7 @@
 
 Status: design agreed with the owner on 2026-10-23; slices 1 to 4 built 2026-10-24, slice 5 (car-only activation) open.
 
-Renamed on screen to **Speaker Tuning** on 2026-10-24: the same correction and auto-switch serve any measured speaker (a car, or a Bluetooth speaker at home). Code names (`CarDsp`, `CarProfile`), the `car_dsp` preferences and the `car_profiles` folder keep the Car name so saved profiles survive. A profile becomes active when its Bluetooth hands-free link connects and gives way to No correction when it disconnects.
+Renamed on screen to **Speaker Tuning** on 2026-10-24: the same correction and auto-switch serve any measured speaker (a car, or a Bluetooth speaker at home). Code names (`CarDsp`, `CarProfile`), the `car_dsp` preferences and the `car_profiles` folder keep the Car name so saved profiles survive. Since 2026-10-24 the active profile follows the media route (`CarRoute`): a Bluetooth route picks the profile with that address, an Android Auto route (a remote submix) picks the car of the last car-class Bluetooth handshake (`CarHandshakeReceiver`, declared in the manifest) or else the only car profile, and any other route gives No correction. The switch acts only when the route changes, so a manual pick holds until then. The first design keyed on the hands-free link, which the MU-X drops about 5 s after wireless Android Auto starts, so it never held.
 
 MusicMate plays locally; when Android routes that playback to the car through Android Auto, MusicMate applies a measured per-car correction plus a chosen sound mode. MusicMate does not appear in Android Auto: no browse tree, no car meta-data, no Play car review.
 

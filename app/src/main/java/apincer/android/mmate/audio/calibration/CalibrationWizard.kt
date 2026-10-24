@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import apincer.android.mmate.audio.dsp.CarDspPreferences
+import apincer.android.mmate.audio.dsp.CarRoute
 import apincer.android.mmate.audio.dsp.DspChain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
 /**
@@ -28,12 +28,14 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
     private val takes = mutableListOf<Take.Accepted>()
     /** Set from the first tap on Save until Done, so a second tap cannot save twice. */
     private var saving = false
+    /** Taken while the sweep plays, so the saved profile names the car or speaker it measured. */
+    private var identity: CarRoute.Identity? = null
 
     sealed interface Step {
         data object Checklist : Step
         data class Position(val index: Int, val measuring: Boolean = false, val problem: String? = null) : Step
         data object Fitting : Step
-        /** [carName] is the connected car's Bluetooth name, offered as the profile name. */
+        /** [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name. */
         class Result(val fit: FitResult, val carName: String?) : Step
         class Verifying(val profile: CarProfile) : Step
         class Done(val profile: CarProfile) : Step
@@ -85,8 +87,8 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
         val fit = withContext(Dispatchers.Default) {
             PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }), TakeAnalyzer.reliableFromHz(takes))
         }
-        val car = withTimeoutOrNull(2_000) { HeadsetLink.connected(app) }
-        current.value = Step.Result(fit, car?.name)
+        identity = CarRoute.identity(app)
+        current.value = Step.Result(fit, identity?.name)
     }
 
     /** Saves the profile, makes it the active correction, then measures once more through it. */
@@ -96,7 +98,7 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
         if (saving) return
         saving = true
         scope.launch {
-            val car = withTimeoutOrNull(2_000) { HeadsetLink.connected(app) }
+            val car = identity
             val fit = result.fit
             val profile = CarProfile(
                 id = UUID.randomUUID().toString(),
@@ -104,6 +106,7 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
                 createdAtMillis = System.currentTimeMillis(),
                 bluetoothName = car?.name,
                 bluetoothAddress = car?.address,
+                kind = car?.kind,
                 bands = fit.bands,
                 fromHz = fit.fromHz,
                 measuredDb = fit.measuredDb.toList(),

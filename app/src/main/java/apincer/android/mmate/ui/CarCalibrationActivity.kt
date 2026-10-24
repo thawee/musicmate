@@ -43,21 +43,28 @@ class CarCalibrationActivity : ComponentActivity() {
             MusicMateTheme {
                 val step by wizard.step.collectAsState()
                 var confirmingExit by remember { mutableStateOf(false) }
+                var asked by remember { mutableStateOf(false) }
                 fun leave() {
                     if (wizard.hasUnsavedWork) confirmingExit = true else finish()
                 }
                 BackHandler { leave() }
-                val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-                    if (granted) pending?.invoke()
+                // Nearby devices names the car in Android Auto (CarHandshake): asked once per visit, and
+                // declining it never blocks calibration; only the mic is required
+                val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+                    val mic = granted[Manifest.permission.RECORD_AUDIO] ?: true
+                    if (mic) pending?.invoke()
                     else Toast.makeText(this, "Calibration needs the microphone. Allow it in Settings, Apps, MusicMate, Permissions.", Toast.LENGTH_LONG).show()
                     pending = null
                 }
                 fun withMic(action: () -> Unit) {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    val missing = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.BLUETOOTH_CONNECT)
+                        .filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+                    if (missing.isEmpty() || (Manifest.permission.RECORD_AUDIO !in missing && asked)) {
                         action()
                     } else {
+                        asked = true
                         pending = action
-                        permission.launch(Manifest.permission.RECORD_AUDIO)
+                        permission.launch(missing.toTypedArray())
                     }
                 }
                 CarCalibrationScreen(

@@ -152,9 +152,14 @@ public class AndroidPlayerController {
         this.usbOutputFormat.start();
         this.mediaRouteLog = new MediaRouteLog(context, usbOutputFormat);
         apincer.android.mmate.audio.dsp.CarDspPreferences.init(context);
-        this.mediaRouteLog.start();
         this.carAutoSelect = new apincer.android.mmate.audio.dsp.CarAutoSelect(context, mediaRouteLog::note);
         this.carAutoSelect.start();
+        // Speaker Tuning follows the media route, so it listens before the first route check
+        this.mediaRouteLog.setRouteListener(routed -> {
+            carAutoSelect.onRoute(routed);
+            return kotlin.Unit.INSTANCE;
+        });
+        this.mediaRouteLog.start();
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
