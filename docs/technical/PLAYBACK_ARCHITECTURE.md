@@ -114,8 +114,43 @@ MusicMate's internal player leverages Media3 ExoPlayer configured for hardware a
 1. **PCM output:** `DefaultAudioSink` runs with float output, because Media3 1.11.1 otherwise converts high-resolution PCM to 16-bit. `IntegerPcmAudioOutput` wraps each Media3 `AudioOutput`. It converts float to 24-bit integer before Android sees it, since float PCM distorted on Bluetooth A2DP and some device mixers (`tasks/lessons.md`), and 24 bits hold a 24-bit source exactly. It also feeds `AudioLevelMeter` with the samples Android accepted. Media3 skips custom audio processors in float mode, which is why metering lives at the output. 16-bit sources stay 16-bit.
 2. **CPU Wakelock Protection:** Configured with `setWakeMode(C.WAKE_MODE_LOCAL)` to acquire `PowerManager.PARTIAL_WAKE_LOCK` automatically during active playback, preventing Android Doze sleep pauses and buffer underruns during screen-off listening.
 3. **Hardware Disconnect Protection:** Configured with `setHandleAudioBecomingNoisy(true)` to automatically pause playback when headphones, USB DACs, or Bluetooth devices are disconnected.
-4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing across 24-bit/96kHz+ FLAC and DSD files.
+4. **Sample-Accurate Seeking:** Configured with `SeekParameters.EXACT` for sample-accurate scrubbing. FFmpeg-decoded formats seek by restarting FFmpeg at the exact sample (see Decoders per format).
 5. **Lifecycle Cleanup:** Complete `release()` method tied directly into `MusicMateServiceImpl.onDestroy()`.
+
+### Decoders per format
+
+`AndroidPlayerController.buildMediaItem` picks the path. ALAC, AIFF and DSD tracks get an `mmate-ffmpeg:` URI with MIME type `audio/wav`; everything else gets a plain file URI. `FfmpegPlayback.dataSourceFactory` hands `mmate-ffmpeg:` URIs to `FfmpegWavDataSource` and all others to Media3's `DefaultDataSource`.
+
+| Format | Read by | Decoded by | Why |
+| :--- | :--- | :--- | :--- |
+| FLAC | Media3 `FlacExtractor` | MediaCodec. `FlacDecoderSelector` puts `c2.android.flac.decoder` first, with the vendor decoders as fallbacks | Lossless and light. Samsung's `c2.sec.flac.decoder` returned garbage for a valid 16-bit FLAC with 1152-sample blocks (S25, 2026-10-24) |
+| WAV | Media3 `WavExtractor` | `c2.android.raw.decoder` (pass-through) | Bit-exact, nothing to decode |
+| MP3 | Media3 `Mp3Extractor` | MediaCodec default | Light; Media3 trims the encoder delay and padding for gapless playback |
+| AAC (.m4a) | Media3 `Mp4Extractor` | MediaCodec default | Light; gapless through the iTunes gapless tags |
+| ALAC (.m4a) | FFmpeg, served as WAV | FFmpeg (FFmpegKit 2.2.1) | Played silently through the phone's ALAC decoders on the S25. Lossless at the file's own rate and depth |
+| AIFF (.aif, .aiff, .aifc) | FFmpeg, served as WAV | FFmpeg | Media3 1.11.1 has no AIFF extractor. Lossless at the file's own rate and depth |
+| DSD (.dsf, .dff) | FFmpeg, served as WAV | FFmpeg, resampled with `-ar 88200` | Media3 has no DSD extractor. 32-bit float output, so no peak can clip inside FFmpeg |
+
+A track takes the FFmpeg path when `TagUtils` says ALAC, AIFF or DSD, or when its extension is `aif`, `aiff`, `aifc`, `dsf` or `dff`. The extension check catches files whose scan left the encoding empty. AAC in `.m4a` stays on Media3.
+
+How the FFmpeg path works:
+- `FfmpegPcm.probe` runs ffprobe once per file (cached by path, size and modification time) for the rate, channels, depth and exact length. The length comes from `duration_ts` and `time_base` when ffprobe reports them.
+- `WavImage` serves a 44-byte WAV header from memory, then PCM read from an FFmpeg named pipe. Media3's `WavExtractor` then supplies duration and seeking as for any WAV.
+- A seek reopens the data source at a byte offset. That becomes a new FFmpeg run with an input seek (`-ss` before `-i`, which decodes up to the exact sample), and the bytes of a partial frame are dropped. Closing the source cancels the FFmpeg session.
+- If FFmpeg ends early, the stream is padded with silence so the header stays true. No audio at all, more than one second before the end, raises an `IOException`, so the player skips the track.
+- FFmpeg sessions run on their own cached thread pool, so a blocked pipe never ties up FFmpegKit's shared pool, which DLNA conversion also uses.
+- The WAV header caps the data at 4 GB, about 62 minutes of 24-bit/192 kHz stereo ALAC or 101 minutes of DSD as float.
+
+Measured on the S25 and HiBy R3 (2026-10-24): the ALAC, AIFF and DSF test tracks play and seek. After Stop no FFmpeg session is left running. With FFmpeg 7.1 on a Mac, a seek to 5 s before the end of a DSD64 file takes 0.06 s. The same DSD64 file peaks at -6.1 dBFS after conversion, because FFmpeg puts DSD 0 dB at -6 dBFS.
+
+Why not decode everything with FFmpeg:
+- **No quality gain.** FLAC and WAV are already bit-exact. Standard MP3 and AAC decoders differ only by rounding.
+- **Seeks.** Media3 seeks inside the file at once. The FFmpeg path restarts FFmpeg on every seek, which shows as a short pause.
+- **Battery.** FFmpeg decodes on the CPU, while MediaCodec decoders are optimised and are hardware on some phones. FLAC costs about the same, since `c2.android.flac.decoder` is software too; MP3 and AAC would cost more.
+- **Gapless MP3 and AAC.** Media3 already trims encoder delay and padding; the FFmpeg path would need to be proven album by album.
+- **Risk.** The Media3 path carries the whole library, and the FFmpeg path is new. FFmpeg is used only where Media3 cannot read the format (AIFF, DSD) or the phone's decoder failed (ALAC).
+
+A possible next step: if a MediaCodec decoder fails on a track or returns non-finite samples, replay that one track through FFmpeg automatically.
 
 ### USB DAC output format
 
@@ -162,6 +197,8 @@ Queue advances & primes upcoming track       Queue advances & primes upcoming tr
 For high-resolution DSD (DSF/DFF) processing and conversions:
 - **Exact Integer Downsampling:** DSD64 (2.8224 MHz) is transcoded using native 32x integer multiples (**88.2 kHz** or **176.4 kHz**) rather than asynchronous non-integer 48 kHz resampling, eliminating inter-modulation distortion and timing jitter.
 - **Ultrasonic Noise Attenuation:** Applies an 8th-order 30 kHz lowpass filter (`-af "lowpass=30000, volume=6dB"`) to eliminate DSD high-frequency quantization noise while maintaining a +6dB standard DSD-to-PCM level match.
+
+Local playback of DSD does not use this pipeline. `FfmpegPcm` (section 3, Decoders per format) resamples to 88.2 kHz 32-bit float with no lowpass and no +6 dB, so DSD plays about 6 dB quieter than this conversion, and a master hotter than DSD 0 dB still cannot clip before Speaker Tuning or the 24-bit output.
 
 ---
 
@@ -313,6 +350,7 @@ MusicMate embeds one HTTP server, SonicNIO (`NioHttpServer`), optimized for bit-
 | `:core` | [`QueueManager.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/repository/QueueManager.java) | Deduplicated queue, shuffle order, and Room persistence. |
 | `:core` | [`PlaylistEntry.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/model/PlaylistEntry.java) | Dynamic Smart Playlist rules and metadata evaluation. |
 | `:core` | [`FFMpegHelper.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/codec/FFMpegHelper.java) | DSD 30kHz LPF filtering and 88.2kHz integer downsampling. |
+| `:core` | [`FfmpegPcm.java`](../../core/src/main/java/apincer/music/core/codec/FfmpegPcm.java) | ffprobe format and length, and FFmpeg PCM from any sample frame through a named pipe, for local ALAC, AIFF and DSD playback. |
 | `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
 | `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, ReplayGain volume leveling, and CPU wakelocks. |
 | `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
@@ -321,6 +359,8 @@ MusicMate embeds one HTTP server, SonicNIO (`NioHttpServer`), optimized for bit-
 | `:app` | [`AnalogVUMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AnalogVUMeter.kt) | Pure Compose Canvas ballistic VU meter with dual stereo dials, 3 audiophile themes, and live PCM input. |
 | `:app` | [`ReelToReelTapeDeck.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/ReelToReelTapeDeck.kt) | Pure Compose Canvas vintage reel-to-reel tape deck with differential angular physics and tape counter. |
 | `:app` | [`AudioLevelMeter.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/AudioLevelMeter.kt) | Real-time stereo RMS and peak decibels from the PCM written to the audio output. |
+| `:app` | [`FfmpegWavDataSource.kt`](../../app/src/main/java/apincer/android/mmate/audio/FfmpegWavDataSource.kt) | Media3 data source serving `FfmpegPcm` as a seekable WAV image (`WavImage`), and `FfmpegPlayback`, which picks the tracks and routes their URIs. |
+| `:app` | [`FlacDecoderSelector.kt`](../../app/src/main/java/apincer/android/mmate/audio/FlacDecoderSelector.kt) | Puts Android's own FLAC decoder ahead of the vendor ones. |
 | `:app` | [`IntegerPcmAudioOutput.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/IntegerPcmAudioOutput.kt) | Converts Media3 float PCM to 24-bit integer for Android and meters the written samples. |
 | `:app` | [`MusicAudioOutputProvider.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/MusicAudioOutputProvider.kt) | Opens integer PCM outputs, requests the USB format, and retries once without it if Android refuses. |
 | `:app` | [`UsbOutputFormat.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/audio/UsbOutputFormat.kt) | Requests a USB DAC mixer at the track's sample rate, releases it on pause, and clears it on stop, release, or unplug. |

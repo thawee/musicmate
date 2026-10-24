@@ -91,6 +91,8 @@ The icons at the top of Music Center pick a player, open the Studio Console, and
 
 **Headphones and Bluetooth.** Playback pauses when wired or Bluetooth headphones, a Bluetooth DAC or a car disconnects, so music never jumps to the phone speaker by surprise.
 
+**File formats.** MusicMate plays FLAC, WAV, MP3, AAC, ALAC, AIFF and DSD (DSF and DFF) on this phone. ALAC, AIFF and DSD are decoded by the built-in FFmpeg, because Android cannot play AIFF or DSD and some phones play ALAC as silence. ALAC and AIFF stay lossless. DSD is converted to 88.2 kHz PCM.
+
 ---
 
 ## 4. The queue

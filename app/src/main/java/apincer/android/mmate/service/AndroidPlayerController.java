@@ -24,6 +24,7 @@ import apincer.music.core.playback.ReplayGainManager;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
+import apincer.music.core.utils.TagUtils;
 
 import androidx.annotation.OptIn;
 import androidx.annotation.Nullable;
@@ -31,14 +32,17 @@ import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.SeekParameters;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.audio.AudioSink;
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider;
 import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import apincer.android.mmate.audio.AudioTelemetryManager;
+import apincer.android.mmate.audio.FfmpegPlayback;
 import apincer.android.mmate.audio.MediaRouteLog;
 import apincer.android.mmate.audio.MusicAudioOutputProvider;
 import apincer.android.mmate.audio.UsbOutputFormat;
@@ -137,11 +141,17 @@ public class AndroidPlayerController {
                 .setAlbumTitle(track.getAlbum())
                 .build();
                 
-        return new MediaItem.Builder()
+        File file = new File(track.getPath());
+        MediaItem.Builder item = new MediaItem.Builder()
                 .setMediaId(String.valueOf(track.getId()))
-                .setUri(Uri.fromFile(new File(track.getPath())))
-                .setMediaMetadata(metadata)
-                .build();
+                .setUri(Uri.fromFile(file))
+                .setMediaMetadata(metadata);
+        if (FfmpegPlayback.needsFfmpeg(track.getPath(),
+                TagUtils.isALACFile(track) || TagUtils.isAIFFile(track), TagUtils.isDSD(track))) {
+            // Served as WAV by FfmpegWavDataSource; the MIME type keeps the extension from steering extractor choice
+            item.setUri(FfmpegPlayback.uriFor(file)).setMimeType(MimeTypes.AUDIO_WAV);
+        }
+        return item.build();
     }
 
     @OptIn(markerClass = UnstableApi.class)
@@ -193,6 +203,7 @@ public class AndroidPlayerController {
             renderersFactory.setMediaCodecSelector(apincer.android.mmate.audio.FlacDecoderSelector.INSTANCE);
 
             this.internalExoPlayer = new ExoPlayer.Builder(context, renderersFactory)
+                    .setMediaSourceFactory(new DefaultMediaSourceFactory(FfmpegPlayback.dataSourceFactory(context)))
                     .setAudioAttributes(audioAttributes, true)
                     .setHandleAudioBecomingNoisy(true)
                     .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -274,6 +285,8 @@ public class AndroidPlayerController {
                         state.currentState = isPlaying ? 
                                 apincer.music.core.playback.PlaybackState.State.PLAYING : 
                                 apincer.music.core.playback.PlaybackState.State.PAUSED;
+                        // A seek pauses and resumes playback; without the position the slider jumps to 0
+                        state.currentPositionSecond = internalExoPlayer.getCurrentPosition() / 1000;
                         playbackCallback.onPlaybackStateChanged(state);
                     }
                 }

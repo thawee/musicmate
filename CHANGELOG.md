@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tuning chip:** The Now Playing chip shows an EQ mark and the sound mode, with a TUNED tag while a measured correction is active, instead of repeating the speaker name the output pill already shows. It no longer cuts its label short.
 
 ### Fixed
+- **ALAC, AIFF and DSD play on the phone:** ALAC (.m4a) songs played as silence on some phones, and AIFF and DSD (DSF, DFF) files could not play on the phone at all, because Android's player has no AIFF or DSD reader. MusicMate now decodes these three formats with its built-in FFmpeg: ALAC and AIFF stay lossless at their own rate and depth, and DSD becomes 88.2 kHz PCM. Seeking works in all three.
+- **Seek bar after a seek:** The slider no longer jumps to 0 for a moment after a seek before moving to the new position.
 - **FLAC noise on Samsung phones:** Some FLAC files played as loud noise, or stopped with a playback error when Speaker Tuning was on, because Samsung's FLAC decoder returned garbage for them (the file seen uses 1152-sample blocks). MusicMate now prefers Android's own FLAC decoder and falls back to the others.
 - **Bad samples never stop playback:** A NaN or infinite sample from any decoder now becomes silence instead of an error, with or without Speaker Tuning.
 
