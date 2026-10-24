@@ -343,7 +343,7 @@ private fun CarDspOption(title: String, summary: String, selected: Boolean, dimm
     }
 }
 
-/** Bass or treble trim in 0.5 dB steps across +/-3 dB. */
+/** Bass or treble trim in 0.5 dB steps across +/-[CarSoundMode.TRIM_DB]. */
 @Composable
 private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Unit) {
     val range = CarSoundMode.TRIM_DB.toFloat()
@@ -359,7 +359,8 @@ private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Uni
             value = valueDb.toFloat(),
             onValueChange = { onChange((it * 2).roundToInt() / 2.0) },
             valueRange = -range..range,
-            steps = 11,
+            // 0.5 dB stops between the ends
+            steps = (range * 4).roundToInt() - 1,
             colors = SliderDefaults.colors(
                 thumbColor = MusicMateDesignTokens.Brand.Gold,
                 activeTrackColor = MusicMateDesignTokens.Brand.Gold,

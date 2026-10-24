@@ -38,7 +38,7 @@ Media3 decoder (float for high-res, int16 for CD)
 - A USB DAC media route is never processed, whatever the target says (`CarDsp.updateRoute`, fed by the route log). Only float and 16-bit input are processed; any other encoding passes through.
 - DSP state is read once per buffer. Changes are heard after the queued AudioTrack audio drains (about 0.5 to 1 s).
 - Mode or profile changes crossfade the old and new filter chains over about 30 ms to avoid clicks.
-- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a log-frequency grid), never positive. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a safety net for overs, not a loudness tool. No compression in any mode.
+- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a log-frequency grid), never positive. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a safety net for overs, not a loudness tool. No compression in any mode except Sleep's light compressor (section 5).
 
 ## 3. Calibration
 
@@ -83,9 +83,16 @@ Android CDD 5.11 only requires the `UNPROCESSED` source to be flat within +/-10 
 | Bass | low shelf +4 dB at 80 Hz, bell -1 dB at 250 Hz |
 | Vocal | bell +2.5 dB at 2.5 kHz Q 1, low shelf -1.5 dB at 120 Hz, bell -1 dB at 300 Hz |
 | Drive | low shelf +3 dB at 70 Hz, bell +1.5 dB at 3 kHz, high shelf +2 dB at 8 kHz |
-| Custom | Bass and Treble sliders, each +/-3 dB |
+| Relax | high shelf -2.5 dB at 6 kHz, bell -1.5 dB at 3 kHz, low shelf +1.5 dB at 150 Hz |
+| Focus | bell -2 dB at 2.5 kHz Q 0.8, high shelf -1 dB at 8 kHz |
+| Sleep | high shelf -4 dB at 4 kHz, low shelf -2 dB at 60 Hz, plus the light compressor |
+| Custom | Bass and Treble sliders, each +/-4 dB |
 
-At most 3 filters and +4 dB per mode. Each profile remembers its last mode.
+At most 3 filters and +4 dB per mode. Each profile remembers its last mode, and every mode is offered on every output.
+
+Relax, Focus and Sleep were added on 2026-10-24 after a research pass. They follow Sony's Relaxed and Mellow presets. Focus and Sleep are educated guesses, not tested curves: the research says lyrics are what distract and slow, soft music is what helps sleep, and EQ changes neither.
+
+Sleep is the one compressed mode (owner decision, 2026-10-24): 2:1 above -20 dBFS with a 6 dB soft knee, 10 ms attack, 400 ms release, linked across channels, no makeup gain, placed after the EQ and before the safety limiter. Loud moments come down and quiet passages pass untouched. When Sleep is left, the processor keeps running until the compressor has released, so the level never jumps.
 
 ## 6. Storage and UI
 

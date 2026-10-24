@@ -6,11 +6,16 @@ import apincer.android.mmate.audio.UsbOutputFormat
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.exp
+import kotlin.math.log10
 import kotlin.math.max
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
-/** What Car DSP applies: the car correction plus the sound mode, as one fixed band list. */
-class CarDspSettings(bands: List<PeqBand>) {
+/**
+ * What Car DSP applies: the car correction plus the sound mode, as one fixed band list, and
+ * whether the light compressor runs (Sleep only).
+ */
+class CarDspSettings(bands: List<PeqBand>, val compress: Boolean = false) {
     val bands: List<PeqBand> = bands.toList()
 }
 
@@ -41,8 +46,9 @@ object CarDsp {
 
 /**
  * Applies [CarDsp]'s target to one output's PCM: chain, 30 ms crossfade on every change (on and
- * off included), then a linked safety limiter. Changes are picked up only at a block boundary, so
- * a block is processed once even when the AudioTrack takes it in several writes.
+ * off included), the light compressor when the target asks for it, then a linked safety limiter.
+ * Changes are picked up only at a block boundary, so a block is processed once even when the
+ * AudioTrack takes it in several writes.
  */
 class CarDspProcessor(private val sampleRate: Int, private val channels: Int, seed: Long = System.nanoTime()) {
     private var settings: CarDspSettings? = CarDsp.effectiveTarget()
@@ -55,6 +61,9 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
     private val previous = DoubleArray(channels)
     private var limiterGain = 1.0
     private val release = 1 - exp(-1 / (sampleRate * RELEASE_SECONDS))
+    private var compressorGain = 1.0
+    private val compressorAttack = 1 - exp(-1 / (sampleRate * COMPRESSOR_ATTACK_SECONDS))
+    private val compressorRelease = 1 - exp(-1 / (sampleRate * COMPRESSOR_RELEASE_SECONDS))
     private var random = seed or 1L
     private var engaged = false
 
@@ -68,7 +77,10 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
             fading = true
             fadePosition = 0
         }
-        val now = chain != null || fading
+        // Leaving Sleep keeps processing until the compressor has let go, so the level does not
+        // jump; a USB DAC route lets go at once, since it is never processed
+        if (!CarDsp.routeEligible) compressorGain = 1.0
+        val now = chain != null || fading || compressorGain < RECOVERED
         if (now != engaged) {
             engaged = now
             Log.i(TAG, if (now) "engaged at $sampleRate Hz, $channels ch" else "bypassed")
@@ -83,6 +95,7 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         fadeFrom = null
         fading = false
         limiterGain = 1.0
+        compressorGain = 1.0
     }
 
     /** Processes the remaining float samples of [source] into little-endian 24-bit PCM. */
@@ -141,7 +154,31 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         } else {
             chain?.process(frame)
         }
+        compress()
         limit()
+    }
+
+    /**
+     * 2:1 above [COMPRESSOR_THRESHOLD_DB] with a 6 dB soft knee, linked across channels, no makeup
+     * gain: loud moments come down and quiet ones pass untouched. With the target not asking for
+     * it the gain only releases back to unity, so switching mode never jumps in level.
+     */
+    private fun compress() {
+        var wanted = 1.0
+        if (settings?.compress == true) {
+            var peak = 0.0
+            for (c in 0 until channels) peak = max(peak, abs(frame[c]))
+            if (peak > KNEE_START) {
+                val over = 20 * log10(peak) - COMPRESSOR_THRESHOLD_DB
+                val reduction = if (over < KNEE_DB / 2) (over + KNEE_DB / 2).pow(2) / (2 * KNEE_DB) else over
+                wanted = 10.0.pow(-reduction * (1 - 1 / COMPRESSOR_RATIO) / 20)
+            }
+        } else if (compressorGain >= RECOVERED) {
+            compressorGain = 1.0
+            return
+        }
+        compressorGain += (wanted - compressorGain) * if (wanted < compressorGain) compressorAttack else compressorRelease
+        for (c in 0 until channels) frame[c] *= compressorGain
     }
 
     /** Instant attack, smooth release, same gain on every channel so the image does not shift. */
@@ -169,6 +206,15 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         const val RELEASE_SECONDS = 0.05
         /** -0.5 dBFS. */
         const val CEILING = 0.944
+        const val COMPRESSOR_THRESHOLD_DB = -20.0
+        const val COMPRESSOR_RATIO = 2.0
+        const val KNEE_DB = 6.0
+        /** Where the knee begins, -23 dBFS. */
+        val KNEE_START = 10.0.pow((COMPRESSOR_THRESHOLD_DB - KNEE_DB / 2) / 20)
+        const val COMPRESSOR_ATTACK_SECONDS = 0.01
+        const val COMPRESSOR_RELEASE_SECONDS = 0.4
+        /** Within 0.01 dB of unity. */
+        const val RECOVERED = 0.9988
         const val INT24_SCALE = 8_388_608.0
         const val INT16_SCALE = 32_768.0
 

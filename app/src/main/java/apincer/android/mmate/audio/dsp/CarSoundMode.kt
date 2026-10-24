@@ -10,13 +10,17 @@ import java.io.File
 
 /**
  * Taste layered on top of the car correction (docs/technical/CAR_AUDIO_DSP.md, section 5): at most
- * three filters and +4 dB per mode, no compression. The automatic preamp absorbs every boost.
+ * three filters and +4 dB per mode. The automatic preamp absorbs every boost. Only [SLEEP]
+ * compresses, so a loud moment does not wake the listener.
  */
-enum class CarSoundMode(val label: String, val summary: String) {
-    REFERENCE("Reference", "Balanced, the tuning target"),
+enum class CarSoundMode(val label: String, val summary: String, val compresses: Boolean = false) {
+    REFERENCE("Reference", "Audiophile: the pure tuning target"),
     BASS("Bass", "Deeper, punchier low end"),
     VOCAL("Vocal", "Voices forward and clear"),
     DRIVE("Drive", "Lively: tight bass, crisp attack, sparkle"),
+    RELAX("Relax", "Softer highs, warm and easy"),
+    FOCUS("Focus", "Voices set back for work or study"),
+    SLEEP("Sleep", "Soft and even, loud moments tamed", compresses = true),
     CUSTOM("Custom", "Your own bass and treble");
 
     /** Bands this mode adds; [bassDb] and [trebleDb] apply to [CUSTOM] only. */
@@ -36,6 +40,19 @@ enum class CarSoundMode(val label: String, val summary: String) {
             PeqBand(PeqBand.Type.PEAK, 3_000.0, 1.5, 1.0),
             PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, 2.0, SHELF_Q)
         )
+        RELAX -> listOf(
+            PeqBand(PeqBand.Type.HIGH_SHELF, 6_000.0, -2.5, SHELF_Q),
+            PeqBand(PeqBand.Type.PEAK, 3_000.0, -1.5, 1.0),
+            PeqBand(PeqBand.Type.LOW_SHELF, 150.0, 1.5, SHELF_Q)
+        )
+        FOCUS -> listOf(
+            PeqBand(PeqBand.Type.PEAK, 2_500.0, -2.0, 0.8),
+            PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, -1.0, SHELF_Q)
+        )
+        SLEEP -> listOf(
+            PeqBand(PeqBand.Type.HIGH_SHELF, 4_000.0, -4.0, SHELF_Q),
+            PeqBand(PeqBand.Type.LOW_SHELF, 60.0, -2.0, SHELF_Q)
+        )
         CUSTOM -> listOfNotNull(
             PeqBand(PeqBand.Type.LOW_SHELF, 100.0, bassDb.coerceIn(-TRIM_DB, TRIM_DB), SHELF_Q).takeIf { bassDb != 0.0 },
             PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, trebleDb.coerceIn(-TRIM_DB, TRIM_DB), SHELF_Q).takeIf { trebleDb != 0.0 }
@@ -43,7 +60,7 @@ enum class CarSoundMode(val label: String, val summary: String) {
     }
 
     companion object {
-        const val TRIM_DB = 3.0
+        const val TRIM_DB = 4.0
         private const val SHELF_Q = 0.707
     }
 }
@@ -60,7 +77,8 @@ data class CarDspChoice(
     val profileId: String? = null
 ) {
     /** The car correction with the mode on top. */
-    fun settings(): CarDspSettings? = if (enabled) CarDspSettings(correction + mode.bands(bassDb, trebleDb)) else null
+    fun settings(): CarDspSettings? =
+        if (enabled) CarDspSettings(correction + mode.bands(bassDb, trebleDb), compress = mode.compresses) else null
 }
 
 /**

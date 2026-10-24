@@ -235,6 +235,61 @@ class CarDspTest {
     private fun joined(parts: List<Taken>): ByteArray = parts.fold(ByteArray(0)) { all, part -> all + part.bytes }
 
     /** duplicate() resets the byte order to big-endian; Media3 hands over native order. */
+    @Test
+    fun sleepCompressorTamesLoudPassagesAndLeavesQuietOnesAlone() {
+        CarDsp.target = CarDspSettings(emptyList(), compress = true)
+        // -1 dBFS is 19 dB over the -20 dBFS threshold: 2:1 takes about 9.5 dB off
+        val loud = settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.89)
+        assertEquals(-10.5, 20 * log10(loud), 0.5)
+        // -30 dBFS sits below the knee and passes untouched
+        val quiet = settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.0316)
+        assertEquals(0.0316, quiet, 0.0005)
+    }
+
+    @Test
+    fun otherModesAreNotCompressed() {
+        CarDsp.target = CarDspSettings(emptyList())
+        assertEquals(0.89, settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.89), 0.005)
+    }
+
+    @Test
+    fun leavingSleepReleasesTheCompressorBeforeBypassing() {
+        CarDsp.target = CarDspSettings(emptyList(), compress = true)
+        val processor = CarDspProcessor(48_000, 2, seed = 3)
+        settledPeak(processor, amplitude = 0.89)
+        CarDsp.target = null
+        assertTrue("still releasing", processor.beginBlock())
+        val recovered = settledPeak(processor, amplitude = 0.89, seconds = 3)
+        assertEquals(0.89, recovered, 0.005)
+        assertFalse("bypassed once released", processor.beginBlock())
+    }
+
+    @Test
+    fun aUsbRouteEndsTheSleepReleaseAtOnce() {
+        CarDsp.target = CarDspSettings(emptyList(), compress = true)
+        val processor = CarDspProcessor(48_000, 2, seed = 3)
+        settledPeak(processor, amplitude = 0.89)
+        CarDsp.updateRoute(listOf(mockk<AudioDeviceInfo> { every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE }))
+        assertTrue("the 30 ms fade still runs", processor.beginBlock())
+        processor.processFloatToInt24(floats(FloatArray(4_800 * 2)), ByteBuffer.allocate(0))
+        assertFalse(processor.beginBlock())
+    }
+
+    /** Plays a 1 kHz stereo sine for [seconds] and returns the output peak over the last 100 ms. */
+    private fun settledPeak(processor: CarDspProcessor, amplitude: Double, seconds: Int = 1): Double {
+        val rate = 48_000
+        val frames = rate * seconds
+        var peak = 0
+        val block = 4_800
+        for (start in 0 until frames step block) {
+            processor.beginBlock()
+            val samples = FloatArray(block * 2) { (amplitude * sin(2 * PI * 1_000 * (start + it / 2) / rate)).toFloat() }
+            val out = int24(processor.processFloatToInt24(floats(samples), ByteBuffer.allocate(0)))
+            if (start >= frames - rate / 10) peak = maxOf(peak, out.maxOf { kotlin.math.abs(it) })
+        }
+        return peak / 8_388_608.0
+    }
+
     private fun native(buffer: ByteBuffer): ByteBuffer = buffer.duplicate().order(ByteOrder.nativeOrder())
 
     private fun bytes(buffer: ByteBuffer): ByteArray = ByteArray(buffer.remaining()).also { buffer.duplicate().get(it) }
