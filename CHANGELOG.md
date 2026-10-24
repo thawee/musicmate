@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.29.0] - 2026-10-24
+
+### Added
+- **Speaker Tuning:** Measure your car (through Android Auto) or a Bluetooth speaker once with the phone's microphone. A 10-second sweep at five spots around your head gives an EQ that corrects that speaker, applied to MusicMate's local playback. It is never applied to a USB DAC. On phones that only offer the voice microphone the result is marked approximate.
+- **Sound modes:** Reference, Bass, Vocal, Drive and Custom (your own bass and treble), chosen from the Speaker Tuning chip in Now Playing. The chip shows the active speaker and mode, for example "MU-X · DRIVE".
+- **Several speakers:** Every saved car or speaker is listed in the Speaker Tuning dialog and in Settings, and each remembers its own sound mode. A speaker that connects over Bluetooth hands-free (most cars and many speakers) becomes active when it connects, and No correction returns when it disconnects. Each switch is written to the route log.
+
+### Fixed
+- **Now Playing output:** The output pill follows a Bluetooth device connecting or disconnecting, instead of keeping the old device until playback changes.
+- **Settings:** The 100% DLNA volume limit no longer wraps onto two lines.
+
+### Privacy
+- The microphone is used only while you run Speaker Tuning. Recordings are analysed on the phone and discarded; only the measured response, the EQ and the speaker's name and Bluetooth address are saved on the device.
+
 ## [3.28.5] - 2026-10-18
 
 ### Fixed
