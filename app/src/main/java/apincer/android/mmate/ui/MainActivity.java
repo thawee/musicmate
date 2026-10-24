@@ -97,6 +97,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity implements apincer.android.mmate.ui.compose.MainScaffoldCallbacks {
     private static final String TAG = "MainActivity";
+    /** Boolean extra: open Music Center on Now Playing, e.g. from a song's details. */
+    public static final String EXTRA_OPEN_NOW_PLAYING = "apincer.android.mmate.OPEN_NOW_PLAYING";
 
     // Constants
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET = 8; //16
@@ -439,6 +441,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+        if (savedInstanceState == null) openNowPlayingIfAsked(getIntent());
         if (savedInstanceState != null) {
             reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
             pendingFolderGrantKind = savedInstanceState.getString(STATE_PENDING_FOLDER_GRANT);
@@ -733,6 +736,20 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
         }
         return currentCriteria.getFilterType() + ": " + filterText;
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        openNowPlayingIfAsked(intent);
+    }
+
+    private void openNowPlayingIfAsked(@androidx.annotation.Nullable Intent intent) {
+        if (intent == null || !intent.getBooleanExtra(EXTRA_OPEN_NOW_PLAYING, false)) return;
+        intent.removeExtra(EXTRA_OPEN_NOW_PLAYING);
+        apincer.android.mmate.ui.compose.MainScaffoldState.openAudioHub(
+                apincer.android.mmate.ui.navigation.MusicCenterTab.NOW_PLAYING.ordinal());
     }
 
     @Override
@@ -1463,6 +1480,14 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onAudioHubTrackClick() {
         onAudioHubTrackClicked();
+    }
+
+    /** Song details opens over Music Center, so Back returns to Now Playing. */
+    @Override
+    public void onAudioHubTrackLongClick() {
+        if (playbackService == null) return;
+        Track playing = playbackService.getNowPlayingSong();
+        if (playing != null) doShowEditActivity(java.util.Collections.singletonList(playing));
     }
 
     @Override

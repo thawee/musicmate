@@ -63,6 +63,7 @@ fun AudioHubSheet(
     onVolumeChanged: (Float) -> Unit,
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
+    onTrackLongClicked: () -> Unit = {},
     // Callbacks for QueuePage
     onQueueTrackClicked: (Track) -> Unit,
     onQueueTrackRemoved: (Track, Int) -> Unit,
@@ -385,6 +386,7 @@ fun AudioHubSheet(
                             onVolumeChanged = onVolumeChanged,
                             onSleepTimerSelected = onSleepTimerSelected,
                             onTrackClicked = onTrackClicked,
+                            onTrackLongClicked = onTrackLongClicked,
                             onSelectTargetPlayer = onSelectTargetPlayer,
                             trackArtwork = trackArtwork
                         )

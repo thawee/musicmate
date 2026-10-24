@@ -283,6 +283,8 @@ public class TagsActivity extends AppCompatActivity {
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
+    private AutoCloseable playbackStateSubscription;
+    private apincer.music.core.playback.PlaybackState lastPlaybackState;
 
     @Inject
     TagRepository tagRepos;
@@ -312,10 +314,18 @@ public class TagsActivity extends AppCompatActivity {
             MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
+            closePlaybackStateSubscription();
+            playbackStateSubscription = playbackService.subscribePlaybackState(
+                    state -> runOnUiThread(() -> {
+                        lastPlaybackState = state;
+                        updatePlayButton();
+                    }),
+                    throwable -> Log.e(TAG, "Error in PlaybackState subscription", throwable));
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            closePlaybackStateSubscription();
             playbackService = null;
             isPlaybackServiceBound = false;
         }
@@ -415,7 +425,12 @@ public class TagsActivity extends AppCompatActivity {
         if (btnPlaySong != null) {
             btnPlaySong.setOnClickListener(v -> {
                 performHapticClick(v);
-                doPlaySong();
+                // Once this song plays, the same button leads to the player
+                if (isShownSongPlaying()) {
+                    openPlayer();
+                } else {
+                    doPlaySong();
+                }
             });
             btnPlaySong.setOnLongClickListener(v -> {
                 performHapticClick(v);
@@ -476,6 +491,7 @@ public class TagsActivity extends AppCompatActivity {
         saveIndicatorHandler.removeCallbacks(saveConfirmReset);
         super.onDestroy();
         databaseExecutor.shutdown();
+        closePlaybackStateSubscription();
         if(isPlaybackServiceBound) {
             unbindService(serviceConnection);
         }
@@ -1110,10 +1126,72 @@ public class TagsActivity extends AppCompatActivity {
 
         if (playbackService != null) {
             playbackService.playSong(track);
-            Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+            showPlayingSnackbar(getString(R.string.snackbar_playing, track.getTitle()));
         } else {
             Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** "Playing: title" with an action that opens Now Playing; the toast it replaces left no way there. */
+    private void showPlayingSnackbar(String message) {
+        View anchor = findViewById(R.id.main_content);
+        if (anchor == null) anchor = findViewById(android.R.id.content);
+        com.google.android.material.snackbar.Snackbar
+                .make(anchor, message, com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                .setAction(R.string.action_open_player, v -> openPlayer())
+                .show();
+    }
+
+    /**
+     * Now Playing lives in MainActivity's Music Center, so song details closes on the way there.
+     * This activity is singleInstance: starting MainActivity from it would open a second task,
+     * so it opens Music Center on the existing MainActivity and finishes back to it.
+     */
+    private void openPlayer() {
+        if (hasUnsavedEdits()) {
+            confirmDiscard(this::goToPlayer);
+        } else {
+            goToPlayer();
+        }
+    }
+
+    private void goToPlayer() {
+        if (apincer.android.mmate.ui.navigation.MainNavigationInterop.isAttached()) {
+            apincer.android.mmate.ui.compose.MainScaffoldState.openAudioHub(
+                    apincer.android.mmate.ui.navigation.MusicCenterTab.NOW_PLAYING.ordinal());
+        } else {
+            startActivity(new Intent(this, MainActivity.class)
+                    .putExtra(MainActivity.EXTRA_OPEN_NOW_PLAYING, true));
+        }
+        finish();
+    }
+
+    private boolean isShownSongPlaying() {
+        Track shown = viewModel.displayTag.getValue();
+        Track playing = playbackService != null ? playbackService.getNowPlayingSong() : null;
+        return shown != null && playing != null && shown.getId() == playing.getId()
+                && lastPlaybackState != null
+                && lastPlaybackState.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
+    }
+
+    /** The play button shows an equalizer while the shown song plays, and then opens the player. */
+    private void updatePlayButton() {
+        View view = findViewById(R.id.btn_play_song);
+        if (!(view instanceof MaterialButton)) return;
+        MaterialButton button = (MaterialButton) view;
+        boolean playing = isShownSongPlaying();
+        button.setIconResource(playing ? R.drawable.rounded_equalizer_24 : R.drawable.ic_baseline_play_arrow_32);
+        button.setContentDescription(getString(playing ? R.string.btn_open_player_cd : R.string.btn_play_song_cd));
+    }
+
+    private void closePlaybackStateSubscription() {
+        if (playbackStateSubscription == null) return;
+        try {
+            playbackStateSubscription.close();
+        } catch (Exception ignored) {
+            // already closed
+        }
+        playbackStateSubscription = null;
     }
 
     private void doPlaySongNext() {
@@ -1135,7 +1213,7 @@ public class TagsActivity extends AppCompatActivity {
         if (track == null) return;
         if (playbackService != null) {
             playbackService.playSong(track);
-            Toast.makeText(this, "Playing: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+            showPlayingSnackbar(getString(R.string.snackbar_playing, track.getTitle()));
         } else {
             Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
         }
@@ -1150,7 +1228,7 @@ public class TagsActivity extends AppCompatActivity {
                     playbackService.getQueueManager().addPlayingQueue(tracks.get(i));
                 }
             }
-            Toast.makeText(this, "Playing " + tracks.size() + " tracks", Toast.LENGTH_SHORT).show();
+            showPlayingSnackbar(getString(R.string.snackbar_playing_tracks, tracks.size()));
         } else {
             Toast.makeText(this, "Playback service not connected", Toast.LENGTH_SHORT).show();
         }
@@ -1828,6 +1906,7 @@ public class TagsActivity extends AppCompatActivity {
         viewModel.displayTag.observe(this, musicTag -> {
             // This is your new 'displayTag'
             updateTitlePanel(musicTag); // Pass the new displayTag to the update method
+            updatePlayButton();
             // Update cover art using Coil based on this new displayTag
             loadImages(musicTag);
             updateViewPagers(musicTag);

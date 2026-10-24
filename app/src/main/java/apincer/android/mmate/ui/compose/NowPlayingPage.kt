@@ -21,6 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -107,6 +108,7 @@ fun NowPlayingPage(
     onVolumeChanged: (Float) -> Unit = {},
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
+    onTrackLongClicked: () -> Unit = {},
     onSelectTargetPlayer: () -> Unit = {},
     trackArtwork: (@Composable (Track) -> Unit)? = null,
     showAudioDetailsInitially: Boolean = false
@@ -345,7 +347,8 @@ fun NowPlayingPage(
                                 .fillMaxWidth()
                                 .basicMarquee(iterations = 1, velocity = 30.dp) // once per song, then rests (WCAG 2.2.2)
                                 .fadingEdge(endWidth = 14.dp) // a start fade hid the first letter at rest
-                                .clickable(enabled = track != null) { onTrackClicked() }
+                                // Tap shows the song in the list; long-press opens its details
+                                .combinedClickable(enabled = track != null, onLongClick = onTrackLongClicked) { onTrackClicked() }
                         )
 
                         // Artist Subtitle

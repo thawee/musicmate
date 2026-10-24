@@ -116,6 +116,7 @@ private fun MusicCenterOverlay(
             callbacks?.onAudioHubSleepTimerSelected(minutes, endOfTrack)
         },
         onTrackClicked = { callbacks?.onAudioHubTrackClick() },
+        onTrackLongClicked = { callbacks?.onAudioHubTrackLongClick() },
         onQueueTrackClicked = { track -> callbacks?.onAudioHubQueueTrackClick(track) },
         onQueueTrackRemoved = { track, index ->
             callbacks?.onAudioHubQueueTrackRemove(track, index)

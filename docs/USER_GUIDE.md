@@ -75,7 +75,7 @@ Category cards (an artist, a genre, a playlist) have their own **Play** and **Ad
 
 **Music Center** has three tabs. Tap a tab or swipe between them.
 
-- **Playback.** Cover art, the song's quality and where it is playing (for example `Phone Speaker · THIS PHONE`), a seek bar, volume, and shuffle, repeat and sleep timer controls.
+- **Playback.** Cover art, the song's quality and where it is playing (for example `Phone Speaker · THIS PHONE`), a seek bar, volume, and shuffle, repeat and sleep timer controls. Tap the song title to find the song in your list, or press and hold it to open the song's details.
   - **Volume** shows the phone's media volume or a DLNA player's reported volume. HiBy R3 reports 100% over DLNA even when its output volume is low. If MusicMate is only following an R3 stream, choose **Select HiBy R3 to control volume** and select it in the output picker. Then choose **Tap to set HiBy volume to 5%** for a low starting level. After the R3 acknowledges it, the app's controls show the level MusicMate has set. The starting action appears again after reconnecting.
   - **Sleep timer** pauses after 15 to 60 minutes, or at the end of the current song. Open it again to see the time left and the option that is running. It works on players MusicMate drives; a player that another app controls cannot be paused from MusicMate.
 - **Queue.** The songs coming up. See [The queue](#4-the-queue).
@@ -172,7 +172,7 @@ Streaming works on home Wi-Fi and on the phone's own hotspot, including both at 
   <img src="screenshots/tech-info.png" width="32%" alt="Tech Info">
 </p>
 
-Press and hold a song to open its details. The screen shows the cover, quality and DR, the genre, and shortcuts to the same artist, album and folder. The play button on the cover plays the song.
+Press and hold a song to open its details. The screen shows the cover, quality and DR, the genre, and shortcuts to the same artist, album and folder. The play button on the cover plays the song. While that song plays, the button shows an equalizer; tap it, or **Open player** in the bar that appears, to go to Now Playing.
 
 **Edit Song Info** opens the editor.
 

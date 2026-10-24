@@ -41,6 +41,8 @@ interface MainScaffoldCallbacks {
     fun onAudioHubVolumeChanged(volume: Float)
     fun onAudioHubSleepTimerSelected(minutes: Long, endOfTrack: Boolean)
     fun onAudioHubTrackClick()
+    /** Long-press on the Now Playing title: the playing song's details. */
+    fun onAudioHubTrackLongClick() {}
     fun onAudioHubQueueTrackClick(track: Track)
     fun onAudioHubQueueTrackRemove(track: Track, index: Int)
     fun onAudioHubQueueTrackMoved(fromIndex: Int, toIndex: Int)

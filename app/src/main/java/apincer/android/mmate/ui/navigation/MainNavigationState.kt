@@ -111,9 +111,15 @@ fun rememberMainNavigationState(
 
 object MainNavigationInterop {
     private var navigationState: MainNavigationState? = null
+    /** A Music Center tab asked for before the navigation was composed, opened on attach. */
+    private var pendingMusicCenter: MusicCenterTab? = null
 
     internal fun attach(state: MainNavigationState) {
         navigationState = state
+        pendingMusicCenter?.let {
+            pendingMusicCenter = null
+            state.openMusicCenter(it)
+        }
     }
 
     internal fun detach(state: MainNavigationState) {
@@ -121,8 +127,13 @@ object MainNavigationInterop {
     }
 
     fun openMusicCenter(initialPage: Int) {
-        navigationState?.openMusicCenter(MusicCenterTab.fromPage(initialPage))
+        val tab = MusicCenterTab.fromPage(initialPage)
+        navigationState?.openMusicCenter(tab) ?: run { pendingMusicCenter = tab }
     }
+
+    /** True while a MainActivity has its navigation composed. */
+    @JvmStatic
+    fun isAttached(): Boolean = navigationState != null
 
     fun closeMusicCenter() {
         navigationState?.dismissMusicCenter()

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bad samples never stop playback:** A NaN or infinite sample from any decoder now becomes silence instead of an error, with or without Speaker Tuning.
 
 ### Added
+- **From song details to the player:** After you tap Play in a song's details, a bar offers Open player, and the Play button becomes an equalizer that opens Now Playing while that song plays.
+- **From the player to song details:** Long-press the song title in Now Playing to open its details. Back returns to Now Playing.
 - **Relax, Focus and Sleep sound modes:** Relax softens the highs and adds a little warmth. Focus sets voices back slightly for work or study. Sleep softens the treble and deep bass, and a light compressor turns loud moments down so they don't wake you; it is the only mode that compresses. Reference is described as the audiophile choice.
 
 ### Experimental — held from release

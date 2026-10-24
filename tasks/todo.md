@@ -2091,3 +2091,7 @@ Media3 1.11.1 has no AIFF or DSD extractor (checked in its sources), so those fi
 - [x] P6. DSD level and seek checked with FFmpeg 7.1 on the Mac: the DSD64 track peaks at -6.1 dBFS after conversion, and a seek to 5 s before the end takes 0.06 s. The WAV header caps at 4 GB (about 62 min of 24/192 ALAC); no ALAC, AIFF or DSD file on the phone is over 1 GB.
 - [ ] P7. After a seek the slider jumped to 0 until the sound resumed: `onIsPlayingChanged` published a state without a position, and a seek pauses and resumes playback. It now carries the player position; installed 2026-10-24 18:20, waiting on the owner's seek check.
 - [x] P5. Docs: CHANGELOG [Unreleased], User Guide formats line.
+
+## Between song details and Now Playing (2026-10-24, owner picked the options)
+- [x] N1. Song details: tapping Play shows a "Playing: title" bar with OPEN PLAYER, and the Play button turns into an equalizer while that song plays; tapping it opens Now Playing. Song details is singleInstance, so it opens Music Center on the existing MainActivity and finishes instead of starting a second MainActivity task (the first build did, and landed on the song list). Owner confirmed both ways open Now Playing.
+- [x] N2. Now Playing: long-press the title opens the playing song's details; Back returns to Now Playing. Tap still shows the song in the list. Owner confirmed on the phone, 2026-10-24.

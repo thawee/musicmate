@@ -451,6 +451,10 @@
     <string name="menu_view_cover_art">View Fullscreen Cover Art</string>
     <string name="btn_edit_cover">Change Cover</string>
     <string name="btn_play_song_cd">Play song. Long press to play next</string>
+    <string name="btn_open_player_cd">Now playing. Open the player</string>
+    <string name="snackbar_playing">Playing: %1$s</string>
+    <string name="snackbar_playing_tracks">Playing %1$d tracks</string>
+    <string name="action_open_player">Open player</string>
     <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 
     <!-- New Indicator -->
