@@ -66,6 +66,8 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
     private val compressorRelease = 1 - exp(-1 / (sampleRate * COMPRESSOR_RELEASE_SECONDS))
     private var random = seed or 1L
     private var engaged = false
+    private var warnedInput = false
+    private var warnedOutput = false
 
     /** Takes up a changed target; true while this block needs processing. */
     fun beginBlock(): Boolean {
@@ -105,14 +107,14 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         var position = source.position()
         repeat(samples / channels) {
             for (c in 0 until channels) {
-                frame[c] = source.getFloat(position).toDouble()
+                frame[c] = finite(source.getFloat(position).toDouble())
                 position += 4
             }
             processFrame()
             for (c in 0 until channels) putInt24(target, (frame[c] * INT24_SCALE).roundToInt())
         }
         repeat(samples % channels) {
-            putInt24(target, (source.getFloat(position) * INT24_SCALE).roundToInt())
+            putInt24(target, (finite(source.getFloat(position).toDouble()) * INT24_SCALE).roundToInt())
             position += 4
         }
         target.flip()
@@ -156,6 +158,30 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         }
         compress()
         limit()
+        if (frame.any { !it.isFinite() }) recover()
+    }
+
+    /** A decoder's NaN or infinity becomes silence, so one bad sample cannot stop playback. */
+    private fun finite(sample: Double): Double {
+        if (sample.isFinite()) return sample
+        if (!warnedInput) {
+            warnedInput = true
+            Log.w(TAG, "Non-finite input sample at $sampleRate Hz replaced with silence")
+        }
+        return 0.0
+    }
+
+    /** Last line of defence: silence this frame and start the filters afresh. */
+    private fun recover() {
+        if (!warnedOutput) {
+            warnedOutput = true
+            Log.w(TAG, "DSP output went non-finite at $sampleRate Hz; filters reset")
+        }
+        frame.fill(0.0)
+        chain?.reset()
+        fadeFrom?.reset()
+        compressorGain = 1.0
+        limiterGain = 1.0
     }
 
     /**

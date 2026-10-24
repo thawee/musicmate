@@ -275,6 +275,21 @@ class CarDspTest {
         assertFalse(processor.beginBlock())
     }
 
+    @Test
+    fun nonFiniteInputBecomesSilenceAndPlaybackGoesOn() {
+        every { Log.w(any<String>(), any<String>()) } returns 0
+        CarDsp.target = presence
+        val processor = CarDspProcessor(44_100, 2, seed = 3)
+        assertTrue(processor.beginBlock())
+        val bad = floats(floatArrayOf(0.5f, Float.NaN, Float.POSITIVE_INFINITY, -0.5f, Float.NEGATIVE_INFINITY, 0.25f))
+        val out = int24(processor.processFloatToInt24(bad, ByteBuffer.allocate(0)))
+        assertEquals(6, out.size)
+        // The filters keep working on the next block instead of carrying NaN forward
+        assertTrue(settledPeak(processor, amplitude = 0.25) in 0.05..0.3)
+        val plain = int24(IntegerPcmAudioOutput.floatToInt24(floats(floatArrayOf(Float.NaN, 0.5f)), ByteBuffer.allocate(0)))
+        assertEquals(0, plain[0])
+    }
+
     /** Plays a 1 kHz stereo sine for [seconds] and returns the output peak over the last 100 ms. */
     private fun settledPeak(processor: CarDspProcessor, amplitude: Double, seconds: Int = 1): Double {
         val rate = 48_000

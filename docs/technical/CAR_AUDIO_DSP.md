@@ -35,6 +35,7 @@ Media3 decoder (float for high-res, int16 for CD)
 - Coefficients and filter state in `double`, recomputed per track sample rate (44.1 to 192 kHz). Low-frequency biquads at 192 kHz are not stable in `float`.
 - 16-bit input stays 16-bit out so the AudioTrack is never reopened mid-track.
 - Each input block is filtered once into a staging buffer, as the float path already does with `converted`; a partial `super.write` must never filter a sample twice.
+- Non-finite input (NaN or infinity from a decoder) becomes silence before processing; if a frame still comes out non-finite, it is silenced and the filters reset. A warning is logged once per output. Found on 2026-10-24: Samsung's `c2.sec.flac.decoder` returned noise and NaN for a valid 16-bit FLAC (that file uses 1152-sample blocks), so `FlacDecoderSelector` now puts `c2.android.flac.decoder` first.
 - A USB DAC media route is never processed, whatever the target says (`CarDsp.updateRoute`, fed by the route log). Only float and 16-bit input are processed; any other encoding passes through.
 - DSP state is read once per buffer. Changes are heard after the queued AudioTrack audio drains (about 0.5 to 1 s).
 - Mode or profile changes crossfade the old and new filter chains over about 30 ms to avoid clicks.

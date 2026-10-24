@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom range:** The Custom bass and treble sliders now reach +/-4 dB.
 - **Tuning chip:** The Now Playing chip shows an EQ mark and the sound mode, with a TUNED tag while a measured correction is active, instead of repeating the speaker name the output pill already shows. It no longer cuts its label short.
 
+### Fixed
+- **FLAC noise on Samsung phones:** Some FLAC files played as loud noise, or stopped with a playback error when Speaker Tuning was on, because Samsung's FLAC decoder returned garbage for them (the file seen uses 1152-sample blocks). MusicMate now prefers Android's own FLAC decoder and falls back to the others.
+- **Bad samples never stop playback:** A NaN or infinite sample from any decoder now becomes silence instead of an error, with or without Speaker Tuning.
+
 ### Added
 - **Relax, Focus and Sleep sound modes:** Relax softens the highs and adds a little warmth. Focus sets voices back slightly for work or study. Sleep softens the treble and deep bass, and a light compressor turns loud moments down so they don't wake you; it is the only mode that compresses. Reference is described as the audiophile choice.
 

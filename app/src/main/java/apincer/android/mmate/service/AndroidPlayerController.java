@@ -190,6 +190,8 @@ public class AndroidPlayerController {
                 }
             };
 
+            renderersFactory.setMediaCodecSelector(apincer.android.mmate.audio.FlacDecoderSelector.INSTANCE);
+
             this.internalExoPlayer = new ExoPlayer.Builder(context, renderersFactory)
                     .setAudioAttributes(audioAttributes, true)
                     .setHandleAudioBecomingNoisy(true)

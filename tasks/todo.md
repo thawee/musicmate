@@ -2058,3 +2058,26 @@ Drive log: the car's hands-free link connects for 5 s and drops before wireless 
 - [ ] (waiting on user: re-tune the MU-X with Android Auto playing, then restart Android Auto and check the route log for "Android Auto (...): ... correction is now active")
 - [ ] R8. Check whether screen mirroring (Smart View) also routes media to a remote submix; if so the pill says Android Auto and the only car's tuning applies. Log it on the next mirroring session before tightening the match.
 
+## New sound modes: Relax, Focus, Sleep (2026-10-24, from the DSP research)
+Owner approved the research direction and this list ("go"): every mode shows on every output, and Sleep may use a light compressor.
+- [x] M1. Add Relax (high shelf -2.5 dB at 6 kHz, peak -1.5 dB at 3 kHz, low shelf +1.5 dB at 150 Hz), Focus (peak -2 dB at 2.5 kHz, high shelf -1 dB at 8 kHz) and Sleep (high shelf -4 dB at 4 kHz, low shelf -2 dB at 60 Hz) to `CarSoundMode`, ordered Reference, Bass, Vocal, Drive, Relax, Focus, Sleep, Custom.
+- [x] M2. Sleep adds a light compressor after the EQ and before the safety limiter (about 2:1 above -20 dBFS, slow release), so loud moments do not wake you; no other mode is compressed. JVM test: peaks drop, quiet passages pass unchanged.
+- [x] M3. Reference's description says it is the audiophile choice; no separate Audiophile mode.
+- [x] M4. Custom's bass and treble range goes from ±3 dB to ±4 dB.
+- [x] M5. Check the mode picker on the phone with eight modes: a screenshot of the Speaker Tuning dialog, the Custom sliders at +/-4 dB and the chip reading SLEEP on one line. The app theme is dark only, and Settings does not list modes, so only the dialog needs checking. Checked 2026-10-24: all eight modes listed; Reference's summary shortened so every summary fits one line.
+- [x] M6. Docs: User Guide mode list, CAR_AUDIO_DSP.md section 5 (Sleep is the one compressed mode), CHANGELOG [Unreleased].
+- [ ] M7. Tests both flavors, release build, install, owner listening check of each new mode. 212 tests pass per flavor and the release APK is built; install is waiting for the phone's new adb port. Do the listening check in the same session as the R7 MU-X drive. Sleep is quieter by design (sample-peak detector, no makeup gain); if it pumps on dense tracks, switch to an RMS detector rather than changing the ratio.
+- [ ] L1. Later, separate change: bass and treble lift as the volume goes down (loudness compensation per ISO 226), the main gap the research found.
+
+## ReplayGain inside the DSP (2026-10-24, owner approved; build after the MU-X drive test)
+Today ReplayGain is the player volume, applied by the AudioTrack after Car DSP (`AndroidPlayerController.java:636`), so Sleep's compressor sees each file's original level and ReplayGain can never lift a quiet track (`ReplayGainManager.java:173` clamps at 1.0).
+- [ ] G1. While Speaker Tuning is on, apply the ReplayGain gain as a digital stage before the compressor and keep the player volume at 1.0; with tuning off or on a USB DAC, ReplayGain stays the player volume exactly as now.
+- [ ] G2. Allow positive ReplayGain inside the DSP only, with the safety limiter catching peaks; keep the user's pre-amp and prevent-clipping settings meaningful.
+- [ ] G3. Gain changes at gapless track boundaries land on the right sample (no step at the start of the next track), and seeks keep the current track's gain.
+- [ ] G4. JVM tests: Sleep compresses a loud and a quiet master to similar levels after ReplayGain; tuning off leaves the volume path unchanged; tests both flavors, release build, install, owner listening check.
+- [ ] G5. Then L1 (bass and treble lift at low volume) reads the level after ReplayGain.
+
+## Playback fixes found while testing (2026-10-24)
+- [x] F1. Some FLAC files played as noise or stopped with "Cannot round NaN value": Samsung's `c2.sec.flac.decoder` returned garbage for a valid 16-bit FLAC with 1152-sample blocks (Alza, "Almost Over You"). `FlacDecoderSelector` now prefers `c2.android.flac.decoder`; owner confirmed the song plays cleanly. A 24/96 FLAC also decodes to float at 96 kHz through the platform decoder (logcat, 2026-10-24 17:00).
+- [x] F2. Non-finite samples become silence in Car DSP and in the plain float path, with one warning per output, so a bad decoder can never stop playback.
+- [x] F3. Tuning chip redesigned: EQ mark, sound mode, TUNED tag while a correction is active; no speaker name, never truncated. All three states checked on the phone (VOCAL, DRIVE TUNED on AL5, TUNING OFF), 2026-10-24.

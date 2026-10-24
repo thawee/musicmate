@@ -65,7 +65,9 @@ class IntegerPcmAudioOutput(
             val target = if (reuse.capacity() >= samples * 3) reuse.apply { clear() } else ByteBuffer.allocateDirect(samples * 3)
             var position = source.position()
             repeat(samples) {
-                val value = (source.getFloat(position) * 8_388_608f).roundToInt().coerceIn(-8_388_608, 8_388_607)
+                val sample = source.getFloat(position)
+                // A decoder's NaN becomes silence; roundToInt would throw and stop playback
+                val value = if (sample.isNaN()) 0 else (sample * 8_388_608f).roundToInt().coerceIn(-8_388_608, 8_388_607)
                 target.put(value.toByte()).put((value shr 8).toByte()).put((value shr 16).toByte())
                 position += 4
             }
