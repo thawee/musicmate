@@ -1,11 +1,9 @@
-# MusicMate 3.29.0
+# MusicMate 3.30.0
 
-**Speaker Tuning** corrects how your car or Bluetooth speaker sounds. Measure it once with the phone's microphone (a couple of minutes, five spots around your head) and MusicMate builds an EQ for it. Pick a sound mode (Reference, Bass, Vocal, Drive or Custom) from the new chip in Now Playing.
+**More formats play on the phone.** ALAC, AIFF and DSD (DSF, DFF) files now play through MusicMate's built-in FFmpeg. ALAC and AIFF stay lossless at their own rate and depth, and DSD plays as 88.2 kHz PCM. FLAC files that played as loud noise on some Samsung phones now play cleanly.
 
-Save as many cars and speakers as you like. Each one keeps its own sound mode, becomes active when it connects over Bluetooth, and steps aside when it disconnects, so its EQ never follows you out of the car. A USB DAC is never touched.
+**Speaker Tuning follows the music.** A car's or speaker's tuning turns on when music actually plays through it, including cars on wireless Android Auto, and three new sound modes join the list: Relax, Focus and Sleep.
 
-MusicMate now installs on **Android 14 and newer**. DLNA players are safer to control: the volume starts from the player's real level, a new **Maximum volume** setting caps it, and a player that loses power drops out of the list so playback returns to the phone. The quality check is more reliable at spotting upsampled and lossy files, and several tag, library and screen fixes are included.
+**Playback is easier and more forgiving.** Artists and folders play in track order. A Play tapped while the player is still starting waits and plays when it is ready. Errors show in a bar above the mini player with a Retry button, and a network player that refuses a song moves on to the next one. Now Playing has an info button that opens the song's details, and song details offer a quick way back to the player.
 
-Now Playing also shows the right output as soon as a Bluetooth device connects or disconnects.
-
-Version code: 157. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.29.0/CHANGELOG.md) for details.
+Version code: 158. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.30.0/CHANGELOG.md) for details.

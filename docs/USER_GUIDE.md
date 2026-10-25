@@ -139,6 +139,8 @@ Tap the player icon in Music Center to choose where music plays.
 
 The list keeps updating while it is open, so a player that has just been switched on appears without closing the picker. MusicMate also notices when you turn the phone's hotspot on or off, and finds players on the new network by itself.
 
+If a network player refuses a song, for example a format it cannot play, MusicMate skips to the next one. After three refusals in a row it stops and leaves the queue as it is.
+
 ### Speaker Tuning
 
 Speaker Tuning corrects how your car or a Bluetooth speaker sounds when MusicMate plays on this phone. It is never applied to a USB DAC, and it does nothing for DLNA players.
@@ -172,7 +174,7 @@ Streaming works on home Wi-Fi and on the phone's own hotspot, including both at 
   <img src="screenshots/tech-info.png" width="32%" alt="Tech Info">
 </p>
 
-Press and hold a song to open its details. The screen shows the cover, quality and DR, the genre, and shortcuts to the same artist, album and folder. The play button on the cover plays the song. While that song plays, the button shows an equalizer; tap it, or **Open player** in the bar that appears, to go to Now Playing.
+Press and hold a song to open its details. The screen shows the cover, quality and DR, the genre, and shortcuts to the same artist, album and folder. The play button on the cover plays the song. While that song plays, the button shows an equalizer; tap it, or **Open player** in the bar that appears, to go to Now Playing. From Now Playing, tap the info button beside the song title to come back to its details.
 
 **Edit Song Info** opens the editor.
 

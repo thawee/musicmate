@@ -7,13 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.30.0] - 2026-10-25
+
 ### Changed
 - **Speaker Tuning follows the music:** The active tuning now follows where media plays instead of the Bluetooth hands-free link. A Bluetooth speaker's tuning turns on when music plays through it; a car's tuning turns on when music plays through its Android Auto, using the car's Bluetooth handshake to tell cars apart; anything else gets No correction. A tuning picked by hand stays until the output changes. The 3.29.0 hands-free switch did not work in cars that drop the hands-free link once wireless Android Auto starts.
 - **Android Auto output:** Now Playing names the output Android Auto with a CAR badge instead of the phone speaker.
 - **Custom range:** The Custom bass and treble sliders now reach +/-4 dB.
+- **Play before the player is ready:** A song, album, artist or folder Play tapped while the player is still starting now waits and plays once it is ready, instead of showing "No active player". If the player takes more than 10 seconds, a message offers Retry.
+- **Playback messages:** Playback errors and notices show in a bar above the mini player instead of a toast. Errors that can be repeated offer Retry, which plays the list you tapped even after you browse elsewhere. "Playing 1 track" and other notices use correct singular and plural wording.
+- **TalkBack in the mini player:** The swipe for Previous and the long-press that shows the playing song are also offered as TalkBack actions on the artwork and title.
 - **Tuning chip:** The Now Playing chip shows an EQ mark and the sound mode, with a TUNED tag while a measured correction is active, instead of repeating the speaker name the output pill already shows. It no longer cuts its label short.
 
 ### Fixed
+- **Play order:** Play on an artist or folder started with whichever title sorted first. Artists now play by album and track number, folders by file then track (CUE tracks included), and DLNA album browsing no longer puts track 10 before track 2.
+- **A bad file no longer stalls a DLNA player:** When a network player refuses a song, MusicMate moves to the next one, like the phone player does. After 3 refusals in a row it stops instead of racing through the queue.
 - **ALAC, AIFF and DSD play on the phone:** ALAC (.m4a) songs played as silence on some phones, and AIFF and DSD (DSF, DFF) files could not play on the phone at all, because Android's player has no AIFF or DSD reader. MusicMate now decodes these three formats with its built-in FFmpeg: ALAC and AIFF stay lossless at their own rate and depth, and DSD becomes 88.2 kHz PCM. Seeking works in all three.
 - **Seek bar after a seek:** The slider no longer jumps to 0 for a moment after a seek before moving to the new position.
 - **FLAC noise on Samsung phones:** Some FLAC files played as loud noise, or stopped with a playback error when Speaker Tuning was on, because Samsung's FLAC decoder returned garbage for them (the file seen uses 1152-sample blocks). MusicMate now prefers Android's own FLAC decoder and falls back to the others.
@@ -21,12 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **From song details to the player:** After you tap Play in a song's details, a bar offers Open player, and the Play button becomes an equalizer that opens Now Playing while that song plays.
-- **From the player to song details:** Long-press the song title in Now Playing to open its details. Back returns to Now Playing.
+- **From the player to song details:** Tap the info button beside the song title in Now Playing, or long-press the title, to open its details. Back returns to Now Playing.
 - **Relax, Focus and Sleep sound modes:** Relax softens the highs and adds a little warmth. Focus sets voices back slightly for work or study. Sleep softens the treble and deep bass, and a light compressor turns loud moments down so they don't wake you; it is the only mode that compresses. Reference is described as the audiophile choice.
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.29.0] - 2026-10-24
 
