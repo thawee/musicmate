@@ -34,7 +34,7 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE path = :path LIMIT 1")
     List<TrackEntity> findByPath(String path);
 
-    @Query("SELECT * FROM musictag WHERE path LIKE :path || '%' ORDER BY title ASC")
+    @Query("SELECT * FROM musictag WHERE path LIKE :path || '%' ORDER BY path ASC, CAST(track AS INTEGER) ASC, id ASC")
     List<TrackEntity> findInPath(String path);
 
     @Query("SELECT * FROM musictag WHERE path = :path")
@@ -103,10 +103,10 @@ public interface TrackDao {
     @Query("SELECT * FROM musictag WHERE albumArtFilename IS NULL OR albumArtFilename = '' ORDER BY title ASC")
     List<TrackEntity> findNoEmbedCoverArtSong();
 
-    @Query("SELECT * FROM musictag WHERE artist = :name OR artist LIKE :name || ',%' OR artist LIKE '%, ' || :name OR artist LIKE '%,' || :name OR artist LIKE '%,' || :name || ',%' OR artist LIKE '%, ' || :name || ',%' ORDER BY title ASC, id ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE artist = :name OR artist LIKE :name || ',%' OR artist LIKE '%, ' || :name OR artist LIKE '%,' || :name OR artist LIKE '%,' || :name || ',%' OR artist LIKE '%, ' || :name || ',%' ORDER BY album ASC, CAST(track AS INTEGER) ASC, title ASC, id ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByArtist(String name, long firstResult, long maxResults);
 
-    @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY track ASC, title ASC, id ASC LIMIT :maxResults OFFSET :firstResult")
+    @Query("SELECT * FROM musictag WHERE album = :album AND (albumArtist = :albumArtist OR artist = :albumArtist) ORDER BY CAST(track AS INTEGER) ASC, title ASC, id ASC LIMIT :maxResults OFFSET :firstResult")
     List<TrackEntity> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults);
 
     @Query("SELECT * FROM musictag WHERE album = :album ORDER BY CAST(track AS INTEGER) ASC, title ASC")
