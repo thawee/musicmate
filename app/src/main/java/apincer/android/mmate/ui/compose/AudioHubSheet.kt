@@ -386,7 +386,7 @@ fun AudioHubSheet(
                             onVolumeChanged = onVolumeChanged,
                             onSleepTimerSelected = onSleepTimerSelected,
                             onTrackClicked = onTrackClicked,
-                            onTrackLongClicked = onTrackLongClicked,
+                            onShowTrackDetails = onTrackLongClicked,
                             onSelectTargetPlayer = onSelectTargetPlayer,
                             trackArtwork = trackArtwork
                         )

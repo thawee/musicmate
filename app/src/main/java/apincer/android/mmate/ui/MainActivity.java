@@ -156,6 +156,17 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     private boolean isPlaybackServiceBound = false;
     /** A play request made before the service connected; it runs once the saved queue is restored. */
     private java.util.function.Consumer<PlaybackService> pendingPlayback;
+    private static final long PENDING_PLAYBACK_TIMEOUT_MS = 10_000;
+    private final android.os.Handler pendingPlaybackHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    /** A held tap that never got a service would otherwise do nothing, so give it up with a Retry. */
+    private final Runnable pendingPlaybackTimeout = () -> {
+        java.util.function.Consumer<PlaybackService> action = pendingPlayback;
+        pendingPlayback = null;
+        if (action == null) return;
+        MainScaffoldState.get().getPlaybackMessage().setValue(new apincer.android.mmate.ui.compose.PlaybackMessage(
+                getString(R.string.error_player_not_ready), getString(R.string.action_retry),
+                () -> withPlaybackService(action)));
+    };
     /** The folder picker sent the user to grant storage access; reopen it once access is granted. */
     private boolean reopenFoldersAfterStorageGrant = false;
     private static final String STATE_REOPEN_FOLDERS = "reopen_folders_after_storage_grant";
@@ -566,7 +577,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         });
         viewModel.playbackNotice.observe(this, notice -> {
             if (notice != null) {
-                MainScaffoldState.get().getPlaybackMessage().setValue(new apincer.android.mmate.ui.compose.PlaybackMessage(notice, null, null));
+                MainScaffoldState.get().getPlaybackMessage().setValue(new apincer.android.mmate.ui.compose.PlaybackMessage(
+                        getResources().getQuantityString(notice.getMessage(), notice.getCount(), notice.getCount()), null, null));
                 viewModel.playbackNotice.setValue(null);
             }
         });
@@ -840,6 +852,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     protected void onDestroy() {
         artworkRequestGeneration++;
         scrollHandler.removeCallbacksAndMessages(null);
+        pendingPlaybackHandler.removeCallbacks(pendingPlaybackTimeout);
         if (playbackStateSubscription != null) {
             try {
                 playbackStateSubscription.close();
@@ -2483,10 +2496,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
             action.accept(playbackService);
         } else {
             pendingPlayback = action;
+            pendingPlaybackHandler.removeCallbacks(pendingPlaybackTimeout);
+            pendingPlaybackHandler.postDelayed(pendingPlaybackTimeout, PENDING_PLAYBACK_TIMEOUT_MS);
         }
     }
 
     private void runPendingPlayback() {
+        pendingPlaybackHandler.removeCallbacks(pendingPlaybackTimeout);
         java.util.function.Consumer<PlaybackService> action = pendingPlayback;
         pendingPlayback = null;
         if (action != null && playbackService != null) action.accept(playbackService);

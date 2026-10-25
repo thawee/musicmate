@@ -16,10 +16,12 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import apincer.music.core.model.AudioTag
 import apincer.music.core.playback.PlaybackState
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -63,6 +65,7 @@ class MusicCenterAccessibilityTest {
             isSleepTimerActive.value = true
             sleepTimerText.value = "15m"
         }
+        var detailsOpened = 0
         composeRule.setContent {
             MusicMateTheme {
                 NowPlayingPage(
@@ -70,6 +73,7 @@ class MusicCenterAccessibilityTest {
                     onPlayPause = {}, onNext = {}, onPrevious = {},
                     onShuffleToggle = {}, onRepeatToggle = {}, onSeek = {},
                     onTrackClicked = {},
+                    onShowTrackDetails = { detailsOpened++ },
                     trackArtwork = { Box(Modifier.fillMaxSize().background(Color.DarkGray)) }
                 )
             }
@@ -83,6 +87,8 @@ class MusicCenterAccessibilityTest {
         composeRule.onNodeWithContentDescription("Volume, 0 percent").assertExists()
         composeRule.onNodeWithContentDescription("Volume down").assertExists()
         composeRule.onNodeWithContentDescription("Volume up").assertExists()
+        composeRule.onNodeWithContentDescription("Song details").performClick()
+        assertEquals(1, detailsOpened)
         runAccessibilityChecks()
     }
 

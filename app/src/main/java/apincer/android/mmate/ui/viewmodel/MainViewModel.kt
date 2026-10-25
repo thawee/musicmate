@@ -22,11 +22,14 @@ import kotlinx.coroutines.withContext
 import apincer.android.mmate.ui.compose.MainScaffoldState
 import apincer.music.core.utils.StringUtils
 import apincer.android.mmate.R
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import javax.inject.Inject
 
 /** A failed play request: the message to show, and how to repeat it with a connected service. */
 class PlaybackProblem(@StringRes val message: Int, val retry: ((PlaybackService) -> Unit)?)
+
+class PlaybackNotice(@PluralsRes val message: Int, val count: Int)
 
 @HiltViewModel
 class MainViewModel(
@@ -72,7 +75,7 @@ class MainViewModel(
     val playbackError = MutableLiveData<PlaybackProblem?>(null)
     /** Outcome of a successful collection play/enqueue, shown once and then cleared. */
     @JvmField
-    val playbackNotice = MutableLiveData<String?>(null)
+    val playbackNotice = MutableLiveData<PlaybackNotice?>(null)
     @JvmField
     val libraryEmpty = MutableLiveData(false)
     private var currentCriteria: SearchCriteria? = null
@@ -277,8 +280,9 @@ class MainViewModel(
                     val totalDurationStr = if (totalSec > 0) StringUtils.formatDuration(totalSec.toDouble(), true) else ""
                     withContext(Dispatchers.Main) {
                         MainScaffoldState.updateQueue(ArrayList(allQueueSongs), playingKey, totalDurationStr)
-                        playbackNotice.value = if (enqueueOnly) "Added ${songsToPlay.size} tracks to queue"
-                            else "Playing ${songsToPlay.size} tracks"
+                        playbackNotice.value = PlaybackNotice(
+                            if (enqueueOnly) R.plurals.notice_tracks_queued else R.plurals.notice_tracks_playing,
+                            songsToPlay.size)
                     }
                 } else {
                     withContext(Dispatchers.Main) {

@@ -108,7 +108,7 @@ fun NowPlayingPage(
     onVolumeChanged: (Float) -> Unit = {},
     onSleepTimerSelected: (Long, Boolean) -> Unit = { _, _ -> },
     onTrackClicked: () -> Unit,
-    onTrackLongClicked: () -> Unit = {},
+    onShowTrackDetails: (() -> Unit)? = null,
     onSelectTargetPlayer: () -> Unit = {},
     trackArtwork: (@Composable (Track) -> Unit)? = null,
     showAudioDetailsInitially: Boolean = false
@@ -336,20 +336,32 @@ fun NowPlayingPage(
                             .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 8.dp)
                     ) {
                         // Title
-                        Text(
-                            text = track?.title ?: "Ready to play",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            style = LocalTextStyle.current.copy(shadow = ArtTextShadow),
-                            maxLines = 1,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .basicMarquee(iterations = 1, velocity = 30.dp) // once per song, then rests (WCAG 2.2.2)
-                                .fadingEdge(endWidth = 14.dp) // a start fade hid the first letter at rest
-                                // Tap shows the song in the list; long-press opens its details
-                                .combinedClickable(enabled = track != null, onLongClick = onTrackLongClicked) { onTrackClicked() }
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = track?.title ?: "Ready to play",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                style = LocalTextStyle.current.copy(shadow = ArtTextShadow),
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .basicMarquee(iterations = 1, velocity = 30.dp) // once per song, then rests (WCAG 2.2.2)
+                                    .fadingEdge(endWidth = 14.dp) // a start fade hid the first letter at rest
+                                    // Tap shows the song in the list; long-press opens its details
+                                    .combinedClickable(enabled = track != null, onLongClick = onShowTrackDetails) { onTrackClicked() }
+                            )
+                            if (track != null && onShowTrackDetails != null) {
+                                IconButton(onClick = onShowTrackDetails, modifier = Modifier.size(48.dp)) {
+                                    Icon(
+                                        painterResource(id = R.drawable.ic_outline_info_24),
+                                        contentDescription = stringResource(R.string.cd_song_details),
+                                        tint = Color(0xFFEEEEEE),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
 
                         // Artist Subtitle
                         Text(

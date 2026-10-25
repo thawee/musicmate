@@ -274,6 +274,14 @@
     <string name="playlist_create_and_add">Create &amp; Add</string>
     <string name="playlist_added">Added to %1$s</string>
     <string name="playlist_already_in">Already in %1$s</string>
+    <plurals name="notice_tracks_playing">
+        <item quantity="one">Playing %d track</item>
+        <item quantity="other">Playing %d tracks</item>
+    </plurals>
+    <plurals name="notice_tracks_queued">
+        <item quantity="one">Added %d track to queue</item>
+        <item quantity="other">Added %d tracks to queue</item>
+    </plurals>
     <plurals name="playlist_added_songs">
         <item quantity="one">Added %1$d song to %2$s</item>
         <item quantity="other">Added %1$d songs to %2$s</item>
@@ -455,10 +463,12 @@
     <string name="snackbar_playing">Playing: %1$s</string>
     <string name="snackbar_playing_tracks">Playing %1$d tracks</string>
     <string name="action_open_player">Open player</string>
+    <string name="cd_song_details">Song details</string>
     <string name="cd_show_playing_song">Show playing song in list</string>
     <string name="action_retry">Retry</string>
     <string name="error_play_collection_empty">No playable tracks in this collection</string>
     <string name="error_play_collection">Couldn\'t play this collection</string>
+    <string name="error_player_not_ready">The player is taking too long to start</string>
     <string name="error_play_start">Couldn\'t start playback</string>
     <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 

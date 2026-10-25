@@ -157,6 +157,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     private volatile long lastPosition = -1;
     private volatile int stagnantCount = 0;
     private volatile int consecutivePollFailures = 0;
+    private final TrackFailureGuard trackFailures = new TrackFailureGuard();
 
     // Thread model (IMPORTANT)
     private final ExecutorService upnpExecutor =
@@ -1304,6 +1305,21 @@ public class MediaServerHubImpl implements MediaServerHub {
         });
     }
 
+    /**
+     * The renderer answered that it cannot play this track (a missing renderer gets no answer and
+     * is dropped instead). Move on like the phone player does, so one bad file does not stall the queue.
+     */
+    private boolean skipRefusedTrack(String action, String reason) {
+        if (playbackCallback == null) return false;
+        if (!trackFailures.shouldSkip()) {
+            Log.e(TAG, "Renderer refused " + TrackFailureGuard.MAX_CONSECUTIVE_FAILURES + " tracks in a row; stopping");
+            return false;
+        }
+        Log.w(TAG, action + " refused (" + reason + "); skipping to the next track");
+        playbackCallback.onPlaybackCompleted();
+        return true;
+    }
+
     private void executeSetUriAndPlay(ControlPoint controlPoint, Service avTransport, String songUrl, String metadata, long initialPositionMs) {
         controlPoint.execute(new SetAVTransportURI(avTransport, songUrl, metadata) {
             @Override
@@ -1339,6 +1355,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                         isUserInitiatedStop = false;
                         stopPolling();
                         serverStatus.setValue(ServerStatus.RUNNING);
+                        if (operation != null && skipRefusedTrack("Play", defaultMsg)) return;
                         if (playbackCallback != null) {
                             apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
                             state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
@@ -1357,6 +1374,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                 isUserInitiatedStop = false;
                 stopPolling();
                 serverStatus.setValue(ServerStatus.RUNNING);
+                if (operation != null && skipRefusedTrack("SetAVTransportURI", defaultMsg)) return;
                 if (playbackCallback != null) {
                     apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
                     state.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
@@ -1920,6 +1938,7 @@ public class MediaServerHubImpl implements MediaServerHub {
                             }
 
                             lastPosition = position;
+                            if (position > 0) trackFailures.playbackProgressed();
 
                             if (playbackCallback != null && position >= 0) {
                                 playbackCallback.onPlaybackStateTimeElapsedSeconds(position);
