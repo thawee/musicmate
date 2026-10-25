@@ -40,6 +40,8 @@ class MainScaffoldState {
     /** Destination of the shown tracks; the list keeps one scroll position per key. */
     var musicListKey = mutableStateOf("")
     var musicLoadError = mutableStateOf<String?>(null)
+    /** A playback outcome for the snackbar; cleared once it has been shown. */
+    var playbackMessage = mutableStateOf<PlaybackMessage?>(null)
     var libraryEmpty = mutableStateOf(false)
     var hasActiveMusicFilters = mutableStateOf(false)
     /** Uuid of the user's own song playlist on screen, or null; enables "Remove from Playlist". */
@@ -175,3 +177,5 @@ class MainScaffoldState {
         }
     }
 }
+
+class PlaybackMessage(val text: String, val actionLabel: String?, val onAction: Runnable?)

@@ -455,6 +455,11 @@
     <string name="snackbar_playing">Playing: %1$s</string>
     <string name="snackbar_playing_tracks">Playing %1$d tracks</string>
     <string name="action_open_player">Open player</string>
+    <string name="cd_show_playing_song">Show playing song in list</string>
+    <string name="action_retry">Retry</string>
+    <string name="error_play_collection_empty">No playable tracks in this collection</string>
+    <string name="error_play_collection">Couldn\'t play this collection</string>
+    <string name="error_play_start">Couldn\'t start playback</string>
     <string name="batch_editing_banner">%1$d Tracks Selected • Batch Mode</string>
 
     <!-- New Indicator -->

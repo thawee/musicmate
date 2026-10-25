@@ -245,7 +245,29 @@ class MainViewModelTest {
 
         verify(exactly = 0) { service.queueManager }
         verify(exactly = 0) { service.playSong(any()) }
-        assertEquals("Couldn't start playback. Please try again.", viewModel.playbackError.value)
+        assertEquals(apincer.android.mmate.R.string.error_play_start, viewModel.playbackError.value?.message)
+    }
+
+    @Test
+    fun retryAfterFailedQuickPlayPlaysTheTappedTrack() = runTest(testDispatcher) {
+        val criteria = SearchCriteria(SearchCriteria.TYPE.LIBRARY)
+        val library = tracks(1, 2)
+        every { tagRepository.findMusic(criteria, 0L, 500L) } returns library
+        every { tagRepository.findMusic(criteria, 0L, Long.MAX_VALUE) } throws IllegalStateException("Database unavailable") andThen library
+        viewModel.loadMusicItems(criteria)
+        advanceUntilIdle()
+        val service = mockk<apincer.music.core.playback.spi.PlaybackService>(relaxed = true)
+        val tapped = viewModel.musicItems.value!![1]
+
+        viewModel.playCurrentResults(tapped, service)
+        advanceUntilIdle()
+        val retry = viewModel.playbackError.value?.retry
+        assertTrue(retry != null)
+        retry!!(service)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { service.playSong(match { it.id == tapped.id }) }
+        assertEquals(null, viewModel.playbackError.value)
     }
 
     @Test

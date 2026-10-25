@@ -21,7 +21,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import apincer.android.mmate.ui.compose.MainScaffoldState
 import apincer.music.core.utils.StringUtils
+import apincer.android.mmate.R
+import androidx.annotation.StringRes
 import javax.inject.Inject
+
+/** A failed play request: the message to show, and how to repeat it with a connected service. */
+class PlaybackProblem(@StringRes val message: Int, val retry: ((PlaybackService) -> Unit)?)
 
 @HiltViewModel
 class MainViewModel(
@@ -64,7 +69,7 @@ class MainViewModel(
     @JvmField
     val loadError = MutableLiveData<String?>(null)
     @JvmField
-    val playbackError = MutableLiveData<String?>(null)
+    val playbackError = MutableLiveData<PlaybackProblem?>(null)
     /** Outcome of a successful collection play/enqueue, shown once and then cleared. */
     @JvmField
     val playbackNotice = MutableLiveData<String?>(null)
@@ -277,7 +282,7 @@ class MainViewModel(
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        playbackError.value = "No playable tracks in this collection"
+                        playbackError.value = PlaybackProblem(R.string.error_play_collection_empty, null)
                     }
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
@@ -285,7 +290,9 @@ class MainViewModel(
             } catch (e: Exception) {
                 android.util.Log.w("MainViewModel", "playCollection failed", e)
                 withContext(Dispatchers.Main) {
-                    playbackError.value = "Couldn't play this collection. Please try again."
+                    playbackError.value = PlaybackProblem(R.string.error_play_collection) {
+                        playCollection(collectionTag, it, enqueueOnly)
+                    }
                 }
             }
         }
@@ -295,6 +302,10 @@ class MainViewModel(
     fun playCurrentResults(startTrack: Track?, playbackService: PlaybackService?) {
         if (playbackService == null) return
         val criteria = snapshot(currentCriteria) ?: return
+        playResults(criteria, startTrack, playbackService)
+    }
+
+    private fun playResults(criteria: SearchCriteria, startTrack: Track?, playbackService: PlaybackService) {
         playbackError.value = null
 
         viewModelScope.launch(ioDispatcher) {
@@ -327,7 +338,10 @@ class MainViewModel(
                 throw cancelled
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    playbackError.value = "Couldn't start playback. Please try again."
+                    // Retry replays the list the user tapped, even if they have browsed elsewhere since
+                    playbackError.value = PlaybackProblem(R.string.error_play_start) {
+                        playResults(criteria, startTrack, it)
+                    }
                 }
             }
         }

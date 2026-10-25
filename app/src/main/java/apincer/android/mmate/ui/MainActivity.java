@@ -154,6 +154,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
+    /** A play request made before the service connected; it runs once the saved queue is restored. */
+    private java.util.function.Consumer<PlaybackService> pendingPlayback;
     /** The folder picker sent the user to grant storage access; reopen it once access is granted. */
     private boolean reopenFoldersAfterStorageGrant = false;
     private static final String STATE_REOPEN_FOLDERS = "reopen_folders_after_storage_grant";
@@ -233,7 +235,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                             : qm.getRepeatMode() == apincer.music.core.repository.QueueManager.RepeatMode.ONE ? 2 : 0;
                     nps.getRepeatMode().setValue(rMode);
                     syncQueueState();
+                    runPendingPlayback();
                 }));
+            } else {
+                runPendingPlayback();
             }
             updateVolumeState();
             syncQueueState();
@@ -549,15 +554,19 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         viewModel.hasMoreItems.observe(this, more -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getHasMoreMusic().setValue(Boolean.TRUE.equals(more)));
         viewModel.loadError.observe(this, error -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getMusicLoadError().setValue(error));
         viewModel.libraryEmpty.observe(this, empty -> apincer.android.mmate.ui.compose.MainScaffoldState.get().getLibraryEmpty().setValue(Boolean.TRUE.equals(empty)));
-        viewModel.playbackError.observe(this, error -> {
-            if (error != null) {
-                android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_LONG).show();
+        viewModel.playbackError.observe(this, problem -> {
+            if (problem != null) {
+                kotlin.jvm.functions.Function1<PlaybackService, kotlin.Unit> retry = problem.getRetry();
+                MainScaffoldState.get().getPlaybackMessage().setValue(new apincer.android.mmate.ui.compose.PlaybackMessage(
+                        getString(problem.getMessage()),
+                        retry == null ? null : getString(R.string.action_retry),
+                        retry == null ? null : () -> withPlaybackService(retry::invoke)));
                 viewModel.playbackError.setValue(null);
             }
         });
         viewModel.playbackNotice.observe(this, notice -> {
             if (notice != null) {
-                android.widget.Toast.makeText(this, notice, android.widget.Toast.LENGTH_SHORT).show();
+                MainScaffoldState.get().getPlaybackMessage().setValue(new apincer.android.mmate.ui.compose.PlaybackMessage(notice, null, null));
                 viewModel.playbackNotice.setValue(null);
             }
         });
@@ -1377,9 +1386,7 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     @Override
     public void onPlayResults() {
-        if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCurrentResults(null, playbackService);
-        }
+        withPlaybackService(service -> viewModel.playCurrentResults(null, service));
     }
 
     @Override
@@ -2467,11 +2474,22 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
 
     public void onTrackQuickPlayClicked(apincer.music.core.model.Track tag) {
         if (tag == null) return;
+        withPlaybackService(service -> viewModel.playCurrentResults(tag, service));
+    }
+
+    /** Runs a play request now, or right after the service connects when a tap beats the bind. */
+    private void withPlaybackService(java.util.function.Consumer<PlaybackService> action) {
         if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCurrentResults(tag, playbackService);
+            action.accept(playbackService);
         } else {
-            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
+            pendingPlayback = action;
         }
+    }
+
+    private void runPendingPlayback() {
+        java.util.function.Consumer<PlaybackService> action = pendingPlayback;
+        pendingPlayback = null;
+        if (action != null && playbackService != null) action.accept(playbackService);
     }
 
     public void onTrackLongClicked(apincer.music.core.model.Track tag, int position) {
@@ -2496,19 +2514,11 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     public void onFolderPlayClicked(apincer.music.core.model.Track tag) {
-        if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCollection(tag, playbackService, false); // reports its outcome via playbackNotice/Error
-        } else {
-            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
-        }
+        withPlaybackService(service -> viewModel.playCollection(tag, service, false)); // reports its outcome via playbackNotice/Error
     }
 
     public void onFolderEnqueueClicked(apincer.music.core.model.Track tag) {
-        if (isPlaybackServiceBound && playbackService != null) {
-            viewModel.playCollection(tag, playbackService, true); // reports its outcome via playbackNotice/Error
-        } else {
-            android.widget.Toast.makeText(this, "No active player — connect a device first", android.widget.Toast.LENGTH_SHORT).show();
-        }
+        withPlaybackService(service -> viewModel.playCollection(tag, service, true));
     }
 
     public void onLoadMoreMusic() {

@@ -53,6 +53,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -82,9 +86,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -579,11 +585,12 @@ fun MainScaffold(
             }
 
             // ── Floating Mini-Player Dock (DESIGN.md §6A: 20dp radius, 12dp horizontal / 8dp bottom margins)
+            val dockVisible = UiLayoutPolicy.showFloatingDock(
+                isRequested = state.isFloatingDockVisible.value,
+                hasTrack = state.nowPlayingTrack.value != null
+            )
             androidx.compose.animation.AnimatedVisibility(
-                visible = UiLayoutPolicy.showFloatingDock(
-                    isRequested = state.isFloatingDockVisible.value,
-                    hasTrack = state.nowPlayingTrack.value != null
-                ),
+                visible = dockVisible,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
@@ -608,6 +615,15 @@ fun MainScaffold(
                     }
                 )
             }
+
+            PlaybackMessageHost(
+                state = state,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    // Sits above the 76dp dock and its 8dp margin so Play stays reachable
+                    .padding(bottom = if (dockVisible) 92.dp else 8.dp)
+            )
         }
         }
     }
@@ -1073,9 +1089,28 @@ private fun ScanningIndicator(progressText: String) {
     }
 }
 
+/** Playback outcomes, shown above the mini player, with Retry when a failed request can be repeated. */
+@Composable
+internal fun PlaybackMessageHost(state: MainScaffoldState, modifier: Modifier = Modifier) {
+    val hostState = remember { SnackbarHostState() }
+    val message = state.playbackMessage.value
+    LaunchedEffect(message) {
+        if (message == null) return@LaunchedEffect
+        val result = hostState.showSnackbar(
+            message = message.text,
+            actionLabel = message.actionLabel,
+            withDismissAction = true,
+            duration = if (message.onAction != null) SnackbarDuration.Long else SnackbarDuration.Short
+        )
+        if (result == SnackbarResult.ActionPerformed) message.onAction?.run()
+        if (state.playbackMessage.value === message) state.playbackMessage.value = null
+    }
+    SnackbarHost(hostState, modifier = modifier)
+}
+
 // ── Floating Mini-Player Dock (DESIGN.md §6A) ─────────────────────────────────
 @Composable
-private fun FloatingMiniPlayerDock(
+internal fun FloatingMiniPlayerDock(
     track: Track?,
     isPlaying: Boolean,
     outputTarget: String,
@@ -1093,6 +1128,14 @@ private fun FloatingMiniPlayerDock(
     // Long text scrolls once per song while playing, then rests at its start: endless motion
     // next to the list is distracting (WCAG 2.2.2). Paused text does not move.
     val marqueeIterations = if (isPlaying) 1 else 0
+    val openLabel = stringResource(R.string.cd_open_music_center)
+    val showPlayingLabel = stringResource(R.string.cd_show_playing_song)
+    val previousLabel = stringResource(R.string.previous)
+    // TalkBack cannot swipe the title or long-press, so those gestures are also offered as actions
+    val gestureActions = buildList {
+        add(CustomAccessibilityAction(previousLabel) { onPreviousClick(); true })
+        if (track != null) add(CustomAccessibilityAction(showPlayingLabel) { currentScrollToPlaying(); true })
+    }
 
     Surface(
         shape = RoundedCornerShape(20.dp), // DESIGN.md §6A: 20dp corner radius
@@ -1118,7 +1161,8 @@ private fun FloatingMiniPlayerDock(
                         .background(Color(0xFF2A2A2A))
                         .semantics {
                             role = Role.Button
-                            onClick("Open Music Center") { currentOpenAudioHub(); true }
+                            onClick(openLabel) { currentOpenAudioHub(); true }
+                            customActions = gestureActions
                         }
                         .pointerInput(Unit) {
                             detectTapGestures(
@@ -1161,7 +1205,8 @@ private fun FloatingMiniPlayerDock(
                         .weight(1f)
                         .semantics {
                             role = Role.Button
-                            onClick("Open Music Center") { currentOpenAudioHub(); true }
+                            onClick(openLabel) { currentOpenAudioHub(); true }
+                            customActions = gestureActions
                         }
                         .pointerInput(Unit) {
                             detectTapGestures(
@@ -1264,14 +1309,14 @@ private fun FloatingMiniPlayerDock(
                         .clip(CircleShape)
                         .background(Color(0x22FFFFFF))
                         .border(1.dp, drawerGold.copy(alpha = 0.5f), CircleShape)
-                        .clickable(onClick = onPlayPauseClick),
+                        .clickable(role = Role.Button, onClick = onPlayPauseClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(
                             id = if (isPlaying) R.drawable.ic_baseline_pause_24 else R.drawable.ic_baseline_play_arrow_24
                         ),
-                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -1283,7 +1328,7 @@ private fun FloatingMiniPlayerDock(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_skip_next_24),
-                        contentDescription = "Next",
+                        contentDescription = stringResource(R.string.next),
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
