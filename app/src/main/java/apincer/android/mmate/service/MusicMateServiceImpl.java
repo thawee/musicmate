@@ -837,6 +837,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 drivenExternalTrackId = (externalApp && song != null) ? song.getId() : -1;
                 lastExternalPositionSec = 0;
                 drivenExternalStartedAt = android.os.SystemClock.elapsedRealtime();
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                    queueManager.setPlaybackTrack(song);
+                }
                 androidPlayer.play(song);
                 currentTrackFlow.setValue(Optional.ofNullable(song));
                 if (song != null) {

@@ -213,6 +213,7 @@ public class AndroidPlayerController {
             this.internalExoPlayer.addListener(new Player.Listener() {
                 @Override
                 public void onPlayerError(@NonNull androidx.media3.common.PlaybackException error) {
+                    mediaRouteLog.note("playback error: " + error.getErrorCodeName());
                     // Without this, one unreadable or missing file stopped playback for the rest of
                     // the queue. Skip to the next track, but stop after a few failures in a row
                     // (e.g. storage removed) instead of racing through the whole queue.
@@ -268,8 +269,16 @@ public class AndroidPlayerController {
                 }
                 @Override
                 public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+                    mediaRouteLog.note("playWhenReady=" + playWhenReady + " reason=" + reason
+                            + " positionMs=" + internalExoPlayer.getCurrentPosition()
+                            + " state=" + internalExoPlayer.getPlaybackState());
                     if (playWhenReady) usbOutputFormat.resume();
                     else usbOutputFormat.suspend();
+                }
+                @Override
+                public void onPlaybackSuppressionReasonChanged(int reason) {
+                    mediaRouteLog.note("playback suppression=" + reason
+                            + " positionMs=" + internalExoPlayer.getCurrentPosition());
                 }
                 @Override
                 public void onIsPlayingChanged(boolean isPlaying) {
@@ -558,6 +567,7 @@ public class AndroidPlayerController {
     }
 
     public void pause() {
+        mediaRouteLog.note("app pause requested target=" + playbackTargetId);
         MediaController controller = ensureMediaController();
         if (controller != null) {
             controller.getTransportControls().pause();
@@ -606,6 +616,7 @@ public class AndroidPlayerController {
     }
 
     public void stopPlaying() {
+        mediaRouteLog.note("app stop requested target=" + playbackTargetId);
         AudioTelemetryManager.INSTANCE.reset();
         MediaController controller = ensureMediaController();
         if (controller != null) {
