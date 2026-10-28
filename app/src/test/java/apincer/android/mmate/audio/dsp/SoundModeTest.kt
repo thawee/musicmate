@@ -5,18 +5,18 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class CarSoundModeTest {
+class SoundModeTest {
     @Test
     fun presetsDescribeListeningPreferences() {
         assertEquals(
-            listOf("Reference", "Bass", "Vocal", "Lively", "Relax", "Night", "Custom"),
-            CarSoundMode.entries.map { it.label }
+            listOf("Neutral", "Bass", "Vocal", "Lively", "Relax", "Night", "Custom"),
+            SoundMode.entries.map { it.label }
         )
     }
 
     @Test
     fun everyModeStaysWithinThreeFiltersAndFourDecibels() {
-        for (mode in CarSoundMode.entries) {
+        for (mode in SoundMode.entries) {
             val bands = mode.bands(bassDb = 4.0, trebleDb = 4.0)
             assertTrue(mode.name, bands.size <= 3)
             assertTrue(mode.name, bands.all { it.gainDb <= 4.0 })
@@ -25,7 +25,7 @@ class CarSoundModeTest {
 
     @Test
     fun theAutomaticPreampAbsorbsEachModesBoost() {
-        for (mode in CarSoundMode.entries) {
+        for (mode in SoundMode.entries) {
             val chain = DspChain(mode.bands(4.0, 4.0), 48_000, 2)
             val loudest = generateSequence(20.0) { it * 1.01 }.takeWhile { it < 20_000 }.maxOf { chain.responseDb(it) }
             assertTrue(mode.name, loudest + chain.preampDb <= 0.01)
@@ -34,23 +34,23 @@ class CarSoundModeTest {
 
     @Test
     fun customTrimsAreClampedAndFlatTrimsAddNoFilters() {
-        assertEquals(emptyList<PeqBand>(), CarSoundMode.CUSTOM.bands(0.0, 0.0))
-        val trimmed = CarSoundMode.CUSTOM.bands(bassDb = 9.0, trebleDb = -9.0)
+        assertEquals(emptyList<PeqBand>(), SoundMode.CUSTOM.bands(0.0, 0.0))
+        val trimmed = SoundMode.CUSTOM.bands(bassDb = 9.0, trebleDb = -9.0)
         assertEquals(listOf(4.0, -4.0), trimmed.map { it.gainDb })
-        assertEquals(emptyList<PeqBand>(), CarSoundMode.REFERENCE.bands())
+        assertEquals(emptyList<PeqBand>(), SoundMode.REFERENCE.bands())
     }
 
     @Test
     fun onlyNightCompresses() {
-        for (mode in CarSoundMode.entries) {
+        for (mode in SoundMode.entries) {
             val settings = CarDspChoice(enabled = true, mode = mode).settings()!!
-            assertEquals(mode.name, mode == CarSoundMode.NIGHT, settings.compress)
+            assertEquals(mode.name, mode == SoundMode.NIGHT, settings.compress)
         }
     }
 
     @Test
     fun offMeansNoTarget() {
-        assertNull(CarDspChoice(enabled = false, mode = CarSoundMode.LIVELY).settings())
-        assertEquals(CarSoundMode.LIVELY.bands(), CarDspChoice(enabled = true, mode = CarSoundMode.LIVELY).settings()!!.bands)
+        assertNull(CarDspChoice(enabled = false, mode = SoundMode.LIVELY).settings())
+        assertEquals(SoundMode.LIVELY.bands(), CarDspChoice(enabled = true, mode = SoundMode.LIVELY).settings()!!.bands)
     }
 }

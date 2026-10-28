@@ -97,7 +97,9 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
             fading = false
             compressorGain = 1.0
             limiterGain = 1.0
-        } else if (wanted !== settings) {
+        } else if (!fading && wanted !== settings) {
+            // Finish the current mix before taking the latest target. Replacing fadeFrom
+            // mid-fade jumps from the audible mix to just one of its chains and can click.
             fadeFrom = chain
             settings = wanted
             chain = wanted?.let {

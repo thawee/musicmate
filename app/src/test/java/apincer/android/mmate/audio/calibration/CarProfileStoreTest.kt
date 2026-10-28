@@ -1,7 +1,7 @@
 package apincer.android.mmate.audio.calibration
 
 import apincer.android.mmate.audio.dsp.CarDspChoice
-import apincer.android.mmate.audio.dsp.CarSoundMode
+import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.dsp.PeqBand
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -66,7 +66,7 @@ class CarProfileStoreTest {
     @Test
     fun theCorrectionSitsUnderTheMode() {
         val correction = profile("car", 1).bands
-        val choice = CarDspChoice(enabled = true, mode = CarSoundMode.LIVELY, correction = correction)
-        assertEquals(correction + CarSoundMode.LIVELY.bands(), choice.settings()!!.bands)
+        val choice = CarDspChoice(enabled = true, mode = SoundMode.LIVELY, correction = correction)
+        assertEquals(correction + SoundMode.LIVELY.bands(), choice.settings()!!.bands)
     }
 }

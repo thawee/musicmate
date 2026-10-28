@@ -1,5 +1,6 @@
 package apincer.android.mmate.audio.headphones
 
+import apincer.android.mmate.audio.dsp.SoundMode
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
@@ -23,6 +24,8 @@ class HeadphonePreferencesTest {
             "My headphones", "model.txt"
         )
         HeadphonePreferences.import(context, profile)
+        HeadphonePreferences.import(context, profile)
+        assertEquals(1, HeadphonePreferences.state.value.profiles.count { it.id == profile.id })
         HeadphonePreferences.select(context, endpoint, profile.id)
         assertFalse(HeadphonePreferences.state.value.bindings.getValue(endpoint.key).enabled)
         HeadphonePreferences.setEnabled(context, endpoint, true)
@@ -71,6 +74,33 @@ class HeadphonePreferencesTest {
         val usbBinding = store.load().bindings.getValue(usb.key)
         assertFalse(usbBinding.enabled)
         assertFalse(usbBinding.usbEqAllowed)
+        HeadphonePreferences.delete(context, pair.id)
+        HeadphoneDsp.updateLibrary(HeadphoneLibrary())
+    }
+
+    @Test
+    fun choosingSoundModeKeepsCalibrationAndConsentWhileAdjustingReturnsToCustom() {
+        val context = mockk<Context> { every { filesDir } returns temporary.root }
+        val endpoint = HeadphoneEndpoint("usb:sound-modes", "DAC", usb = true)
+        val pair = HeadphoneProfile.createManual("Calibrated pair", ManualHeadphoneTuning(
+            left = HeadphoneTone(2.0, -1.0), right = HeadphoneTone(trebleDb = -3.0), balanceDb = 2.0))
+        val store = HeadphoneProfileStore(File(temporary.root, "headphone_profiles.json"))
+        HeadphonePreferences.saveManual(context, pair, endpoint)
+        HeadphonePreferences.adjust(context, endpoint, 5.5, -6.0)
+        for (enabled in listOf(false, true)) {
+            HeadphonePreferences.setEnabled(context, endpoint, enabled)
+            val before = store.load()
+            for (preset in SoundMode.entries) {
+                HeadphonePreferences.setSoundMode(context, endpoint, preset)
+                val saved = store.load()
+                assertEquals(before.profiles, saved.profiles)
+                assertEquals(before.bindings.getValue(endpoint.key).copy(soundMode = preset), saved.bindings.getValue(endpoint.key))
+            }
+        }
+        HeadphonePreferences.setSoundMode(context, endpoint, SoundMode.BASS)
+        HeadphonePreferences.adjust(context, endpoint, 1.0, -2.0)
+        assertEquals(SoundMode.CUSTOM, store.load().bindings.getValue(endpoint.key).soundMode)
+        assertEquals(pair, store.load().profiles.first { it.id == pair.id })
         HeadphonePreferences.delete(context, pair.id)
         HeadphoneDsp.updateLibrary(HeadphoneLibrary())
     }

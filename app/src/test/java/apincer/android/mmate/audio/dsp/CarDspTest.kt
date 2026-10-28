@@ -22,6 +22,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.PI
 import kotlin.math.log10
+import kotlin.math.pow
 import kotlin.math.sin
 
 class CarDspTest {
@@ -294,6 +295,39 @@ class CarDspTest {
         assertTrue(settledPeak(processor, amplitude = 0.25) in 0.05..0.3)
         val plain = int24(IntegerPcmAudioOutput.floatToInt24(floats(floatArrayOf(Float.NaN, 0.5f)), ByteBuffer.allocate(0)))
         assertEquals(0, plain[0])
+    }
+
+    @Test
+    fun rapidGainChangesStayContinuousAndReachTheLatestTarget() {
+        for (rate in rates) {
+            CarDsp.target = null
+            val processor = CarDspProcessor(rate, 2, seed = 1)
+            fun render(frames: Int): IntArray {
+                assertTrue(processor.beginBlock())
+                return int24(processor.processFloatToInt24(
+                    floats(FloatArray(frames * 2) { 0.5f }), ByteBuffer.allocate(0)))
+            }
+
+            CarDsp.target = CarDspSettings(emptyList(), requestedPreampDb = -12.0)
+            val before = render(rate / 100).last()
+            CarDsp.target = CarDspSettings(emptyList(), requestedPreampDb = -6.0)
+            val after = render(rate / 100)
+            assertTrue("Rapid gain change clicked at $rate Hz: $before -> ${after.first()}",
+                kotlin.math.abs(after.first() - before) < 8_389)
+
+            CarDsp.target = CarDspSettings(emptyList(), requestedPreampDb = -3.0)
+            var previous = after.last()
+            repeat(12) {
+                val block = render(rate / 100)
+                for (sample in block) {
+                    assertTrue("Gain transition clicked at $rate Hz",
+                        kotlin.math.abs(sample - previous) < 8_389)
+                    previous = sample
+                }
+            }
+            val expected = 0.5 * 10.0.pow(-3.0 / 20) * 8_388_608
+            assertEquals(expected, previous.toDouble(), 1.0)
+        }
     }
 
     /** Plays a 1 kHz stereo sine for [seconds] and returns the output peak over the last 100 ms. */

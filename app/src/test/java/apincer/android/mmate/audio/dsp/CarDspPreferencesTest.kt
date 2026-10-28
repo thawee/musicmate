@@ -48,34 +48,34 @@ class CarDspPreferencesTest {
     fun eachCarKeepsItsOwnMode() {
         val prefs = MemoryPreferences()
         var choice = CarDspPreferences.select(prefs, car("a"), CarDspChoice(enabled = true))
-        choice = choice.copy(mode = CarSoundMode.LIVELY)
+        choice = choice.copy(mode = SoundMode.LIVELY)
         CarDspPreferences.save(prefs, choice)
 
         choice = CarDspPreferences.select(prefs, car("b"), choice)
-        assertEquals("a new car starts from the current mode", CarSoundMode.LIVELY, choice.mode)
-        choice = choice.copy(mode = CarSoundMode.CUSTOM, bassDb = 2.5)
+        assertEquals("a new car starts from the current mode", SoundMode.LIVELY, choice.mode)
+        choice = choice.copy(mode = SoundMode.CUSTOM, bassDb = 2.5)
         CarDspPreferences.save(prefs, choice)
 
         choice = CarDspPreferences.select(prefs, car("a"), choice)
-        assertEquals(CarSoundMode.LIVELY, choice.mode)
+        assertEquals(SoundMode.LIVELY, choice.mode)
         assertEquals("Car a", choice.profileName)
         assertEquals(car("a").bands, choice.correction)
 
         choice = CarDspPreferences.select(prefs, car("b"), choice)
-        assertEquals(CarSoundMode.CUSTOM, choice.mode)
+        assertEquals(SoundMode.CUSTOM, choice.mode)
         assertEquals(2.5, choice.bassDb, 1e-9)
     }
 
     @Test
     fun noCorrectionHasItsOwnModeAndOnOffIsShared() {
         val prefs = MemoryPreferences()
-        var choice = CarDspPreferences.select(prefs, null, CarDspChoice(enabled = true, mode = CarSoundMode.VOCAL))
+        var choice = CarDspPreferences.select(prefs, null, CarDspChoice(enabled = true, mode = SoundMode.VOCAL))
         CarDspPreferences.save(prefs, choice)
-        choice = CarDspPreferences.select(prefs, car("a"), choice).copy(mode = CarSoundMode.BASS, enabled = false)
+        choice = CarDspPreferences.select(prefs, car("a"), choice).copy(mode = SoundMode.BASS, enabled = false)
         CarDspPreferences.save(prefs, choice)
 
         choice = CarDspPreferences.select(prefs, null, choice)
-        assertEquals(CarSoundMode.VOCAL, choice.mode)
+        assertEquals(SoundMode.VOCAL, choice.mode)
         assertEquals(false, choice.enabled)
         assertNull(choice.profileId)
         assertEquals(emptyList<PeqBand>(), choice.correction)
@@ -86,12 +86,12 @@ class CarDspPreferencesTest {
         val store = CarProfileStore(folder.root)
         store.save(car("a"))
         store.save(car("b"))
-        val active = CarDspChoice(enabled = true, mode = CarSoundMode.LIVELY, profileName = "Car a", profileId = "a")
+        val active = CarDspChoice(enabled = true, mode = SoundMode.LIVELY, profileName = "Car a", profileId = "a")
 
         val renamed = CarDspPreferences.rename(store, "a", "Weekend MU-X", active)
         assertEquals("Weekend MU-X", store.get("a")?.name)
         assertEquals("Weekend MU-X", renamed.profileName)
-        assertEquals(CarSoundMode.LIVELY, renamed.mode)
+        assertEquals(SoundMode.LIVELY, renamed.mode)
 
         val other = CarDspPreferences.rename(store, "b", "Kitchen speaker", renamed)
         assertEquals("Kitchen speaker", store.get("b")?.name)

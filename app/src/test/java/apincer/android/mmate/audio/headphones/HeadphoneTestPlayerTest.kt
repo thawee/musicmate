@@ -7,8 +7,30 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.abs
+import kotlin.math.PI
+import kotlin.math.sin
 
 class HeadphoneTestPlayerTest {
+    @Test fun guidedTonesContainOnlyTheSelectedFrequencyAndKeepEarsSeparate() {
+        for (band in listOf(HeadphoneTestBand.BASS, HeadphoneTestBand.MIDS, HeadphoneTestBand.TREBLE)) {
+            val pcm = HeadphoneTestTone.render(HeadphoneTestSignal.LEFT, CarDspSettings(emptyList()), band)
+            assertTrue(pcm.size <= HeadphoneTestTone.RATE * 2 * 3)
+            assertEquals(0, pcm.first().toInt())
+            assertEquals(0, pcm[pcm.size - 2].toInt())
+            assertTrue(pcm.all { abs(it.toInt()) <= 520 })
+            for (frame in pcm.indices step 2) assertEquals(0, pcm[frame + 1].toInt())
+            for (frequency in listOf(100.0, 1_000.0, 8_000.0)) {
+                var projection = 0.0
+                for (frame in HeadphoneTestTone.RATE until HeadphoneTestTone.RATE * 2) {
+                    projection += pcm[frame * 2] * sin(2 * PI * frequency * frame / HeadphoneTestTone.RATE)
+                }
+                val amplitude = abs(projection) * 2 / HeadphoneTestTone.RATE
+                if (frequency == band.frequencyHz) assertTrue("Missing selected frequency $band", amplitude > 400)
+                else assertTrue("Unexpected $frequency Hz in $band", amplitude < 1)
+            }
+        }
+    }
+
     private val endpoint = HeadphoneEndpoint("usb:test", "DAC", true)
 
     @Test fun quietSignalsIdentifyEarsAndCenterUsesIdenticalSamples() {

@@ -60,6 +60,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
+import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.calibration.CalibrationWizard
 import apincer.android.mmate.audio.calibration.FitResult
 import apincer.android.mmate.audio.calibration.FrequencyGrid
@@ -81,8 +82,19 @@ fun CarCalibrationScreen(
     onStart: () -> Unit,
     onMeasure: () -> Unit,
     onSave: (String) -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    output: CalibrationOutput = CalibrationOutput.SPEAKER,
+    microphones: List<SweepRecorder.Microphone> = emptyList(),
+    onMicrophone: (Int) -> Unit = {},
+    targetName: String? = null,
+    onImportTarget: () -> Unit = {},
+    onFixtureConfirmed: (Boolean) -> Unit = {},
+    onFixtureName: (String) -> Unit = {}
 ) {
+    val headphone = output == CalibrationOutput.HEADPHONE
+    var fixtureConfirmed by remember { mutableStateOf(false) }
+    var fixtureName by remember { mutableStateOf("") }
+    var selectedMic by remember { mutableStateOf<Int?>(null) }
     var name by remember(step is CalibrationWizard.Step.Result) {
         mutableStateOf((step as? CalibrationWizard.Step.Result)?.carName.orEmpty())
     }
@@ -97,7 +109,7 @@ fun CarCalibrationScreen(
                 Icon(painterResource(R.drawable.ic_baseline_arrow_back_24), contentDescription = "Close", tint = MusicMateDesignTokens.Text.Primary)
             }
             Text(
-                "Tune a speaker",
+                if (headphone) "Measure headphones" else "Tune a speaker",
                 color = MusicMateDesignTokens.Text.Primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -113,18 +125,46 @@ fun CarCalibrationScreen(
                 .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             when (step) {
-                CalibrationWizard.Step.Checklist -> Checklist(unprocessedMic)
-                is CalibrationWizard.Step.Position -> Position(step)
+                CalibrationWizard.Step.Checklist -> {
+                    if (headphone) {
+                        Title("Measure with a headphone fixture")
+                        Body("Use a suitable ear simulator, coupler or repeatable sealed headphone fixture. A bare phone microphone cannot measure a flat headphone response. The target must come from this same fixture and microphone rig.")
+                        Spacer(Modifier.height(16.dp))
+                        Body("Import CSV or TSV with frequencyHz,targetDb columns, covering 100–8000 Hz. This creates a shared fixture correction. Listening creates a separate profile with per-ear preferences. Keep playback volume and microphone gain unchanged.")
+                        OutlinedTextField(value = fixtureName, onValueChange = {
+                            fixtureName = it.take(100)
+                            onFixtureName(fixtureName)
+                        }, label = { Text("Fixture / coupler name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        TextButton(onClick = onImportTarget) { Text(targetName ?: "Import fixture target") }
+                        TextButton(onClick = {
+                            fixtureConfirmed = !fixtureConfirmed
+                            onFixtureConfirmed(fixtureConfirmed)
+                        }) { Text(if (fixtureConfirmed) "✓ Fixture and matching target confirmed" else "Confirm fixture and matching target") }
+                    } else Checklist(unprocessedMic)
+                    if (microphones.isNotEmpty()) {
+                        Heading("Measurement microphone")
+                        microphones.forEach { mic ->
+                            TextButton(onClick = { selectedMic = mic.id; onMicrophone(mic.id) }) {
+                                Text((if (selectedMic == mic.id) "✓ " else "") + mic.name)
+                            }
+                        }
+                        Small("Keep the same microphone connected for every take and the check sweep.")
+                    }
+                }
+                is CalibrationWizard.Step.Position -> Position(step, headphone)
                 CalibrationWizard.Step.Fitting -> Working("Working out the correction")
-                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name) { name = it }
-                is CalibrationWizard.Step.Verifying -> Verifying(step)
-                is CalibrationWizard.Step.Done -> Done(step)
+                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name, headphone) { name = it }
+                is CalibrationWizard.Step.Verifying -> Verifying(step, headphone)
+                is CalibrationWizard.Step.Done -> Done(step, headphone)
             }
         }
 
         Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
             when (step) {
-                CalibrationWizard.Step.Checklist -> PrimaryButton("Start", onClick = onStart)
+                CalibrationWizard.Step.Checklist -> {
+                    if (!headphone || (fixtureConfirmed && fixtureName.isNotBlank() && targetName != null)) PrimaryButton("Start", onClick = onStart)
+                    else Small("Confirm your fixture and import its matching target to start.")
+                }
                 is CalibrationWizard.Step.Position ->
                     if (!step.measuring) PrimaryButton(if (step.problem == null) "Measure" else "Measure again", onClick = onMeasure)
                 // Beside the pinned button, so a failed save is explained wherever the page is scrolled
@@ -204,7 +244,15 @@ private fun Checklist(unprocessedMic: Boolean) {
 }
 
 @Composable
-private fun Position(step: CalibrationWizard.Step.Position) {
+private fun Position(step: CalibrationWizard.Step.Position, headphone: Boolean = false) {
+    if (headphone) {
+        Small("Reseat ${step.index + 1} of 5")
+        Title(if (step.index == 0) "Initial placement" else "Reseat the headphone")
+        Body("Place the same ear cup on the fixture with the same seal. Between takes, remove and reseat it to average placement differences. Keep the microphone, target, volume and output unchanged.")
+        if (step.measuring) Countdown() else step.problem?.let { Notice(it) }
+        NoiseNotice(step.noisyBandsHz)
+        return
+    }
     val name = CalibrationWizard.POSITIONS[step.index]
     Small("Spot ${step.index + 1} of ${CalibrationWizard.POSITIONS.size}")
     Title(name)
@@ -303,15 +351,15 @@ private fun Countdown() {
 }
 
 @Composable
-private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName: (String) -> Unit) {
-    Title("Your speaker, corrected")
-    Body("${fit.bands.size} EQ bands correct the speaker from %.0f Hz to 8 kHz.".format(fit.fromHz))
+private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headphone: Boolean = false, onName: (String) -> Unit) {
+    Title(if (headphone) "Your headphones, corrected" else "Your speaker, corrected")
+    Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to 8 kHz.".format(fit.fromHz))
     Spacer(Modifier.height(16.dp))
     ResponseGraph(fit)
     NoiseNotice(fit.excludedBandsHz)
     if (fit.fromHz > 31) {
         Spacer(Modifier.height(12.dp))
-        Small("Bass below %.0f Hz was too quiet to measure and is left as it is.".format(fit.fromHz))
+        Small(if (headphone) "Correction below %.0f Hz is left unchanged.".format(fit.fromHz) else "Bass below %.0f Hz was too quiet to measure and is left as it is.".format(fit.fromHz))
     }
     if (!unprocessedMic) {
         Spacer(Modifier.height(12.dp))
@@ -321,41 +369,41 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName
     OutlinedTextField(
         value = name,
         onValueChange = onName,
-        label = { Text("Speaker name") },
-        placeholder = { Text("My speaker") },
+        label = { Text(if (headphone) "Headphone name" else "Speaker name") },
+        placeholder = { Text(if (headphone) "My headphones" else "My speaker") },
         singleLine = true,
         colors = speakerNameFieldColors(),
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(8.dp))
-    Small("Saving makes this correction active, then one more sweep at the centre spot checks it.")
+    Small(if (headphone) "Saving selects this correction for this output. One more sweep checks the fixture response. USB EQ still needs its explicit enable switch." else "Saving makes this correction active, then one more sweep at the centre spot checks it.")
 }
 
 @Composable
-private fun Verifying(step: CalibrationWizard.Step.Verifying) {
+private fun Verifying(step: CalibrationWizard.Step.Verifying, headphone: Boolean = false) {
     Title("Checking the correction")
-    Body("Hold the phone at the centre spot again.")
+    Body(if (headphone) "Keep the headphone seated on the same fixture for the check sweep." else "Hold the phone at the centre spot again.")
     Spacer(Modifier.height(16.dp))
-    PositionMap(current = 0)
+    if (!headphone) PositionMap(current = 0)
     Spacer(Modifier.height(16.dp))
     Countdown()
     NoiseNotice(step.profile.excludedBandsHz)
 }
 
 @Composable
-private fun Done(step: CalibrationWizard.Step.Done) {
+private fun Done(step: CalibrationWizard.Step.Done, headphone: Boolean = false) {
     val profile = step.profile
     Title("${profile.name} is calibrated")
     Spacer(Modifier.height(4.dp))
     val worst = profile.worstDeviationDb ?: 0.0
     when (profile.verified) {
         true -> Verdict(if (profile.excludedBandsHz.isEmpty()) "Within ±3 dB of the target" else "Reliable frequencies within ±3 dB", "Largest difference %.1f dB.".format(worst), MusicMateDesignTokens.Brand.AcousticTeal)
-        false -> Verdict("Off by up to %.1f dB".format(worst), "The correction is saved and active. Measuring again may get closer.", MusicMateDesignTokens.Brand.GoldAmber)
-        null -> Verdict("Not checked", "The check sweep could not be measured. The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
+        false -> Verdict("Off by up to %.1f dB".format(worst), if (headphone) "The correction is saved for this output. Reseating and measuring again may get closer." else "The correction is saved and active. Measuring again may get closer.", MusicMateDesignTokens.Brand.GoldAmber)
+        null -> Verdict("Not checked", if (headphone) "The check sweep could not be measured. The correction is saved for this output." else "The check sweep could not be measured. The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
     }
     NoiseNotice(profile.excludedBandsHz)
     Spacer(Modifier.height(16.dp))
-    Body("Speaker Tuning applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the Speaker Tuning chip in Now Playing, and manage speakers in Settings.")
+    Body(if (headphone) "The check describes this fixture and target, not an absolute headphone response. Manage this profile in Headphone EQ. USB output requires explicit EQ consent." else "Speaker Tuning applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the Speaker Tuning chip in Now Playing, and manage speakers in Settings.")
 }
 
 @Composable

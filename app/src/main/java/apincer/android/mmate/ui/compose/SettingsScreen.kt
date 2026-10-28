@@ -215,20 +215,11 @@ fun SettingsScreen(
                 )
             }
 
-            // ── Speaker Tuning: measured speakers and cars (Car DSP in code) ─────────────────
             SettingsCard(
-                title = "SPEAKER TUNING",
+                title = "AUDIO TUNING",
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
-                // Previews have no activity to launch calibration from
-                if (!LocalInspectionMode.current) CarAudioSettings()
-            }
-
-            SettingsCard(
-                title = "HEADPHONE EQ",
-                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
-            ) {
-                if (!LocalInspectionMode.current) HeadphoneAudioSettings()
+                if (!LocalInspectionMode.current) AudioTuningSettingsEntry()
             }
 
             // ── Section 3: Library & User Interface ───────────────────────────

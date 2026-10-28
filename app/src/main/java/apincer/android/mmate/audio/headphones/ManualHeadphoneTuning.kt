@@ -39,6 +39,7 @@ data class ManualHeadphoneTuning(
 }
 
 /** Common starting sounds. The DIY controls shape only bass (100 Hz shelf), mids (1 kHz) and treble (8 kHz shelf). */
+@Serializable
 enum class HeadphoneTonePreset(val label: String, val tone: HeadphoneTone) {
     FLAT("Flat", HeadphoneTone()),
     WARM("Warm", HeadphoneTone(bassDb = 3.0, trebleDb = -2.0)),

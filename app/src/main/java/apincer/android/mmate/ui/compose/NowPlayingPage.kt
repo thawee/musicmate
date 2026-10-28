@@ -85,7 +85,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.palette.graphics.Palette
 import apincer.android.mmate.R
-import apincer.android.mmate.audio.headphones.HeadphoneDsp
 import apincer.android.mmate.coil3.CoverartFetcher
 import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
@@ -466,12 +465,7 @@ fun NowPlayingPage(
                         if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO") {
                             Spacer(modifier = Modifier.width(6.dp))
                             // The chip's label is short and never cut; a long device name gives way instead
-                            val headphone by HeadphoneDsp.state.collectAsState()
-                            if (headphone.endpoint != null && HeadphoneDsp.current.handlesRoute) {
-                                HeadphoneDspChip()
-                            } else if (state.carDspAvailable.value) {
-                                CarDspChip()
-                            }
+                            AudioTuningChip()
                         }
                         }
                     }

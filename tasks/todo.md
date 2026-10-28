@@ -1,3 +1,63 @@
+# Document and commit DSP tuning (2026-10-29)
+
+- [x] Update DSP documentation to match the shared tuning sheet, profile controls and calibration actions.
+- [x] Review the complete DSP diff and verification evidence; exclude unrelated local files.
+- [x] Prepare the reviewed DSP code, tests and documentation for commit; preserve unrelated local files.
+
+Verification: GitHub build and all 330 unit tests pass. The editor previously passed 20 UI tests, including compact-screen and large-text checks. Local documentation links and staged whitespace checked. Staging excludes `.claude/` and `.taste-skill/`.
+
+# DSP tuning UI redesign (2026-10-29)
+
+- [x] Inspect the current tuning screen, brand patterns and interaction coverage; define the visual hierarchy.
+- [x] Rebuild the tuning panel with a spacious sheet, clear output/profile controls, response visualization and deliberate calibration actions.
+- [x] Verify the key selection, bypass, USB consent and calibration flows; inspect emulator screenshots and large-text scrolling.
+- [x] Build the GitHub APK, review the scoped diff and install the verified update on the phone.
+
+Validation: 330 unit tests pass; 20 distinct UI tests pass across HeadphoneEqUiTest (8), ManualHeadphoneUiTest (8), ManualHeadphoneFlowTest (2), AudioTuningSheetUiTest (2). Inspected normal, 150% system font and compact-screen screenshots; corrected graph heading wrapping and compact tab wording. Shared profile selection, explicit USB consent, bypass, mode changes, imports, offline deletion and save/reopen remain covered. GitHub APK retains MANAGE_EXTERNAL_STORAGE. Installed with adb install -r on 192.168.1.54:41099; app data preserved. Scoped HEAD/main diff and whitespace reviewed.
+
+Design question: What correction and sound mode am I using on this output?
+Style: True-black flat, seed 1925248322; native Android adaptation retaining existing palette and type. Signature: actual gold frequency-response curve. Browser DOM inspection does not apply to Compose; verify emulator screenshots instead.
+Direction: Music Mate's dark surfaces and gold response line; flat audio-console sections with clear typography and quiet rules. Keep the shared profile dropdown. Calibration uses descriptive action rows; import and profile details remain secondary. Use actual correction data, never illustrative metrics.
+
+# Unified correction profiles and calibration methods (2026-10-28)
+
+- [x] Trace saved profile selection, output assignment, microphone measurement and listening flows; define shared profile presentation without losing existing data.
+- [x] Add one consistent saved-profile dropdown and creation methods: Microphone, Listening, AutoEQ.
+- [x] Support microphone and listening setup for speaker and headphone/earphone outputs, with accurate route/measurement requirements.
+- [x] Verify profile persistence, output isolation, correction playback and creation flows with focused tests and emulator checks.
+- [x] Run the app unit suite, review diffs against HEAD/main and document practical measurement limits.
+- Validation: 330 unit tests pass. Separate API 36 emulator suites pass HeadphoneEqUiTest (8), ManualHeadphoneUiTest (8), ManualHeadphoneFlowTest (2), HeadphoneMicrophoneUiTest (2), CalibrationNoiseUiTest (3): 23 distinct UI tests. Saved speaker and headphone listening profiles reopen with their output/method and correct binding; an open draft retains its chosen type through route changes. Reviewed HEAD/main diffs and whitespace. GitHub APK retains all-files access. Physical fixture accuracy, external microphone routing and acoustic listening remain hardware validation tasks.
+- Design: preserve released stores; adapt legacy microphone speaker profiles into the common selector with stable prefixed IDs. Route bindings own enablement/modes and explicit USB consent. Microphone headphones require a named fixture, rig-specific target and locked input/output; do not reuse the speaker target. AutoEQ searches headphone models; speakers use measured parametric imports.
+
+# Shared sound modes and guided listening tuning (2026-10-28)
+
+- [x] Ground and sketch: share sound-mode curves and UI labels, keep correction profiles/output consent separate; use bounded band-by-band listening tests rather than a continuous loudness-matching sweep.
+- [x] Unify speaker/headphone modes with Neutral/Bass/Vocal/Lively/Relax/Night/Custom; preserve released settings and correction values.
+- [x] Add low-to-high headphone listening steps with left/right tests, per-ear adjustments, skip/replay/bypass and stop on lifecycle/output changes.
+- [x] Verify generated frequencies, gain limits, ear isolation, persistence, mode composition and guide navigation with regression tests.
+- [x] Run app unit suites and affected emulator UI tests; review diffs and document listening-vs-microphone limits.
+- Validation: shared Bass curve, generated single-band frequencies, and guided UI each reproduced a failure before implementation. All 318 github app unit tests pass; separate API 36 emulator runs pass ManualHeadphoneUiTest (7), HeadphoneEqUiTest (6), ManualHeadphoneFlowTest (1). New guide preserves skipped bands/opposite ear values, supports manual fallback and saves/reopens its settings. Existing correction, bypass, consent and cancellation coverage passes. Reviewed diffs against HEAD/main and whitespace checks. No physical headphone listening or acoustic measurement performed.
+- Compatibility: named modes share curves and Night compression; legacy Custom ranges remain speaker +/-4 dB and headphone +/-6 dB. Stored car REFERENCE displays Neutral. The prior conversation's unreleased headphone soundPreset field is replaced by shared soundMode; released JSON without that field retains Custom trims.
+
+Design: a shared SoundMode owns named curves and Night compression; correction profiles remain independent. Extend the existing headphone test request with a typed test band (bass 100 Hz, mids 1 kHz, treble 8 kHz), defaulting to the existing multitone for compatibility. Keep draft listening adjustments local until Save. Reuse the existing player and cancellation/focus/route checks. Rejected a continuous sweep because adjusting while pitch changes is ambiguous; rejected frequency-to-frequency loudness matching because perceived loudness is not a flat-response measurement.
+
+# Headphone sound modes over calibration (2026-10-28)
+
+- [x] Add regression tests for calibrated profiles plus per-output sound presets and persistence.
+- [x] Compose selected presets over imported/manual corrections, preserving channel calibration and legacy custom trims.
+- [x] Add accessible preset selection to headphone settings with the active mode visible.
+- [x] Run unit tests, build instrumentation tests, and verify the UI on a device if available.
+- Validation: reproduced missing preset composition in three failing routing tests before the fix; all 316 github app unit tests pass afterward. Six Headphone EQ and six DIY UI tests pass in separate runs on the API 36 emulator, including Bass-to-Neutral selection with calibration and EQ enablement retained, plus Custom controls on DIY profiles. Diff checked against main and HEAD. No physical DAC/headphone listening test performed.
+
+# DSP quality and stability (2026-10-28)
+
+- [x] Trace DSP processing, PCM conversion and output lifecycle; identify reachable defects.
+- [x] Reproduce confirmed audio defects with failing regression tests.
+- [x] Implement minimal fixes, verifying each slice.
+- [x] Run audio tests, inspect the diff against main, and document hardware validation limits.
+- Fixed a discontinuity when settings change during a crossfade: finish the current fade, then pick up the latest target at a block boundary. Immediate unconsented USB bypass remains covered by the existing tests.
+- Validation: the new continuity regression failed before the fix and passes at 44.1/48/96/192 kHz afterward. DSP/headphone/output tests and the full github debug app unit suite pass; diff checked against main (the existing branch contains prior DSP changes). No hardware listening, long-session, or acoustic/distortion measurements performed.
+
 # Google Play launch plan (2026-10-15, from the product strategy canvas)
 
 Goal: MusicMate on Google Play as freemium within about 12 weeks. First segment: streamer owners with no server (the phone serves the library to a DLNA renderer). Hook: the fake hi-res and DR check.

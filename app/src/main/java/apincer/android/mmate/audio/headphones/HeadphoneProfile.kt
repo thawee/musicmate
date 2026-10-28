@@ -1,6 +1,9 @@
 package apincer.android.mmate.audio.headphones
 
 import apincer.android.mmate.audio.dsp.PeqBand
+import apincer.android.mmate.audio.dsp.SoundMode
+import apincer.android.mmate.audio.calibration.CalibrationOutput
+import apincer.android.mmate.audio.calibration.CalibrationMethod
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -11,13 +14,18 @@ data class HeadphoneProfile(
     val source: String,
     val preampDb: Double,
     val bands: List<PeqBand>,
-    val manual: ManualHeadphoneTuning? = null
+    val manual: ManualHeadphoneTuning? = null,
+    val output: CalibrationOutput = CalibrationOutput.HEADPHONE,
+    val method: CalibrationMethod = CalibrationMethod.AUTO_EQ
 ) {
+    val calibrationMethod: CalibrationMethod get() = if (manual != null) CalibrationMethod.LISTENING else method
+
     companion object {
-        fun createManual(name: String, tuning: ManualHeadphoneTuning): HeadphoneProfile {
+        fun createManual(name: String, tuning: ManualHeadphoneTuning, output: CalibrationOutput = CalibrationOutput.HEADPHONE): HeadphoneProfile {
             HeadphoneValidation.text(name, "Headphone name", 200)
             tuning.validate()
-            return HeadphoneProfile(UUID.randomUUID().toString(), name.trim(), "Listening setup", 0.0, emptyList(), tuning)
+            return HeadphoneProfile(UUID.randomUUID().toString(), name.trim(), "Listening setup", 0.0, emptyList(), tuning,
+                output, CalibrationMethod.LISTENING)
         }
     }
 }
@@ -28,7 +36,9 @@ data class HeadphoneBinding(
     val enabled: Boolean = false,
     val bassDb: Double = 0.0,
     val trebleDb: Double = 0.0,
-    val usbEqAllowed: Boolean = false
+    val usbEqAllowed: Boolean = false,
+    /** Legacy files default to Custom so their saved trims retain their sound. */
+    val soundMode: SoundMode = SoundMode.CUSTOM
 )
 
 @Serializable
@@ -121,7 +131,9 @@ internal object HeadphoneValidation {
             if (profile.manual != null) {
                 require(profile.bands.isEmpty() && profile.preampDb == 0.0) { "Listening profiles use their own tone controls." }
                 profile.manual.validate()
-            } else require(profile.bands.size in 1..20) { "Profiles must contain 1–20 active filters." }
+            } else require(profile.bands.size in (if (profile.method == CalibrationMethod.MICROPHONE) 0 else 1)..20) {
+                "Profiles must contain 1–20 active filters; a measured flat correction may have none."
+            }
             profile.bands.forEach { band ->
                 require(band.frequencyHz.isFinite() && band.frequencyHz in 20.0..20_000.0) { "Filter frequency must be between 20 and 20000 Hz." }
                 require(band.gainDb.isFinite() && band.gainDb in -24.0..12.0) { "Filter gain must be between -24 and 12 dB." }

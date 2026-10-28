@@ -20,7 +20,7 @@ object CarTarget {
         shelf.magnitudeDb(frequencyHz, 48_000) + if (frequencyHz <= 1_000.0) 0.0 else -3.0 * ln(frequencyHz / 1_000.0) / ln(20.0)
 
     @JvmField
-    val CURVE: DoubleArray = DoubleArray(FrequencyGrid.HZ.size) { db(FrequencyGrid.HZ[it]) }
+    val CURVE: DoubleArray = FrequencyGrid.HZ.map(::db).toDoubleArray()
 }
 
 /** Curves on [FrequencyGrid.HZ], all aligned to the target's level. */
@@ -64,10 +64,12 @@ object PeqFitter {
     /** [fromHz] comes from [TakeAnalyzer.reliableFromHz]; nothing below it is corrected. */
     @JvmStatic
     @JvmOverloads
-    fun fit(measuredDb: DoubleArray, fromHz: Double = MIN_HZ, excludedBandsHz: List<Double> = emptyList()): FitResult {
+    fun fit(measuredDb: DoubleArray, fromHz: Double = MIN_HZ, excludedBandsHz: List<Double> = emptyList(), targetDb: DoubleArray = CarTarget.CURVE): FitResult {
+        require(measuredDb.size == grid.size && measuredDb.all { it.isFinite() })
+        require(targetDb.size == grid.size && targetDb.all { it.isFinite() })
         val excluded = BooleanArray(grid.size) { isExcluded(grid[it], excludedBandsHz) }
         val inRange = BooleanArray(grid.size) { grid[it] in maxOf(MIN_HZ, fromHz)..MAX_HZ && !excluded[it] }
-        val target = CarTarget.CURVE
+        val target = targetDb.copyOf()
         val measured = align(measuredDb, target, excludedBandsHz)
         // Mask before null detection as well as fitting: contaminated depths convey no information.
         val error = DoubleArray(grid.size) { if (excluded[it]) 0.0 else target[it] - measured[it] }

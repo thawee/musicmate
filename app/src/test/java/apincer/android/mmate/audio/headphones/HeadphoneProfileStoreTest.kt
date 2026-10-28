@@ -1,5 +1,6 @@
 package apincer.android.mmate.audio.headphones
 
+import apincer.android.mmate.audio.dsp.SoundMode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -14,12 +15,21 @@ class HeadphoneProfileStoreTest {
 
     private fun profile() = HeadphoneProfileParser.parse("Preamp: -5.5 dB\nFilter 1: ON PK Fc 1000 Hz Gain -3 dB Q 1.4", "HD 600", "AutoEq.txt")
 
+    @Test fun outputAndCalibrationMethodSurviveReopenIncludingMeasuredFlatCorrections() {
+        val flat = profile().copy(bands = emptyList(),
+            output = apincer.android.mmate.audio.calibration.CalibrationOutput.SPEAKER,
+            method = apincer.android.mmate.audio.calibration.CalibrationMethod.MICROPHONE)
+        val store = HeadphoneProfileStore(File(folder.root, "profiles.json"))
+        store.save(HeadphoneLibrary(listOf(flat)))
+        assertEquals(flat, store.load().profiles.single())
+    }
+
     @Test
     fun persistsProfilesAndIndependentOutputBindingsAcrossInstances() {
         val file = File(folder.root, "settings/headphones.json")
         val profile = profile()
         val library = HeadphoneLibrary(listOf(profile), mapOf(
-            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true),
+            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true, SoundMode.BASS),
             "bt:AA:BB" to HeadphoneBinding(profile.id, false, -3.0, 1.0)
         ))
         HeadphoneProfileStore(file).save(library)
@@ -38,6 +48,24 @@ class HeadphoneProfileStoreTest {
             file.writeText(it)
             assertEquals(HeadphoneLibrary(), store.load())
         }
+    }
+
+    @Test
+    fun legacyJsonWithoutASoundModePreservesCustomTrims() {
+        val file = File(folder.root, "headphones.json")
+        val profile = profile()
+        val old = HeadphoneLibrary(listOf(profile), mapOf("bt:old" to
+            HeadphoneBinding(profile.id, enabled = true, bassDb = 5.5, trebleDb = -6.0)))
+        // Default-valued soundMode is omitted just as in released JSON files.
+        val json = Json.encodeToString(old)
+        org.junit.Assert.assertFalse(json.contains("soundMode"))
+        file.writeText(json)
+        val restored = HeadphoneProfileStore(file).load()
+        assertEquals(old, restored)
+        val binding = restored.bindings.getValue("bt:old")
+        assertEquals(SoundMode.CUSTOM, binding.soundMode)
+        assertEquals(5.5, binding.bassDb, 0.0)
+        assertEquals(-6.0, binding.trebleDb, 0.0)
     }
 
     @Test

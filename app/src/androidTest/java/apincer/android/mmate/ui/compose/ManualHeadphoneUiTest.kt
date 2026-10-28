@@ -1,6 +1,10 @@
 package apincer.android.mmate.ui.compose
 
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
@@ -20,6 +24,10 @@ import apincer.android.mmate.audio.headphones.HeadphoneLibrary
 import apincer.android.mmate.audio.headphones.HeadphoneProfile
 import apincer.android.mmate.audio.headphones.HeadphoneStatus
 import apincer.android.mmate.audio.headphones.HeadphoneTonePreset
+import apincer.android.mmate.audio.headphones.HeadphoneTone
+import apincer.android.mmate.audio.headphones.HeadphoneTestSignal
+import apincer.android.mmate.audio.headphones.HeadphoneTestBand
+import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.headphones.ManualHeadphoneTuning
 import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.assertEquals
@@ -34,21 +42,37 @@ class ManualHeadphoneUiTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
     private val endpoint = HeadphoneEndpoint("usb:test", "USB DAC", usb = true)
 
+    @Test fun changingRouteDoesNotChangeTheDraftsOutputType() {
+        val selected = mutableStateOf(apincer.android.mmate.audio.calibration.CalibrationOutput.HEADPHONE)
+        var saved: HeadphoneProfile? = null
+        composeRule.setContent {
+            TuningTestContent {
+                ManualHeadphoneDialog(null, endpoint, onDismiss = {}, onSave = { saved = it }, output = selected.value)
+            }
+        }
+        composeRule.onNodeWithText("Pair name").performTextInput("Unplugged pair")
+        composeRule.runOnIdle { selected.value = apincer.android.mmate.audio.calibration.CalibrationOutput.SPEAKER }
+        composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Save profile").performClick()
+        composeRule.runOnIdle { assertEquals(apincer.android.mmate.audio.calibration.CalibrationOutput.HEADPHONE, saved!!.output) }
+    }
+
     @Test fun diyCreationWorksWithoutConnectedOutput() {
         var requested = false
         composeRule.setContent {
-            MusicMateTheme {
+            TuningTestContent {
                 HeadphoneEqControls(HeadphoneLibrary(), HeadphoneStatus(), onManual = { requested = true })
             }
         }
-        composeRule.onNodeWithText("Create DIY profile").performClick()
+        composeRule.onNodeWithText("Listening").performScrollTo().performClick()
         composeRule.runOnIdle { assertTrue(requested) }
     }
 
     @Test fun guidedSetupSavesNameTypeBalanceAndIndependentEarTones() {
         var saved: HeadphoneProfile? = null
         composeRule.setContent {
-            MusicMateTheme {
+            TuningTestContent {
                 ManualHeadphoneDialog(profile = null, endpoint = endpoint, onDismiss = {}, onSave = { saved = it })
             }
         }
@@ -58,6 +82,7 @@ class ManualHeadphoneUiTest {
         composeRule.onNodeWithText("Next").performClick()
         composeRule.onNodeWithContentDescription("Left-right balance").performSemanticsAction(SemanticsActions.SetProgress) { it(2f) }
         composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Manual controls").performClick()
         composeRule.onNodeWithText("Left").performClick()
         composeRule.onNodeWithContentDescription("Bass adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
         composeRule.onNodeWithText("Right").performClick()
@@ -79,13 +104,14 @@ class ManualHeadphoneUiTest {
     @Test fun presetChipSetsBothEarsAndShowsSelected() {
         var saved: HeadphoneProfile? = null
         composeRule.setContent {
-            MusicMateTheme {
+            TuningTestContent {
                 ManualHeadphoneDialog(profile = null, endpoint = endpoint, onDismiss = {}, onSave = { saved = it })
             }
         }
         composeRule.onNodeWithText("Pair name").performTextInput("Preset pair")
         composeRule.onNodeWithText("Next").performClick()
         composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Manual controls").performClick()
         composeRule.onNodeWithText("Flat").performScrollTo().assertIsSelected()
         composeRule.onNodeWithText("V-shape").performScrollTo().performClick()
         composeRule.onNodeWithText("V-shape").assertIsSelected()
@@ -103,7 +129,7 @@ class ManualHeadphoneUiTest {
         var saved: HeadphoneProfile? = null
         var dismissed = false
         composeRule.setContent {
-            MusicMateTheme {
+            TuningTestContent {
                 ManualHeadphoneDialog(original, endpoint, onDismiss = { dismissed = true }, onSave = { saved = it })
             }
         }
@@ -116,18 +142,24 @@ class ManualHeadphoneUiTest {
         }
     }
 
-    @Test fun selectedManualProfileOpensEditAndOmitsLegacyToneControls() {
+    @Test fun selectedManualProfileKeepsCalibrationWhenSwitchingSoundModes() {
         val profile = HeadphoneProfile.createManual("DIY pair", ManualHeadphoneTuning())
         var editing: HeadphoneProfile? = null
         composeRule.setContent {
-            MusicMateTheme {
+            var preset by remember { mutableStateOf(SoundMode.CUSTOM) }
+            TuningTestContent {
                 HeadphoneEqControls(HeadphoneLibrary(listOf(profile)),
-                    HeadphoneStatus(endpoint, HeadphoneBinding(profile.id), profile), onManual = { editing = it })
+                    HeadphoneStatus(endpoint, HeadphoneBinding(profile.id, soundMode = preset), profile),
+                    onManual = { editing = it }, onSoundMode = { preset = it })
             }
         }
+        composeRule.onNodeWithText("Custom").performScrollTo().assertIsSelected()
+        composeRule.onNodeWithContentDescription("Bass adjustment").assertExists()
+        composeRule.onNodeWithText("Bass").performClick().assertIsSelected()
+        composeRule.onNodeWithText("Neutral").performScrollTo().performClick().assertIsSelected()
         composeRule.onNodeWithContentDescription("Bass adjustment").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Treble adjustment").assertDoesNotExist()
-        composeRule.onNodeWithText("Edit listening setup").performClick()
+        composeRule.onNodeWithText("Edit listening setup").performScrollTo().performClick()
         composeRule.runOnIdle { assertEquals(profile.id, editing?.id) }
     }
 
@@ -135,9 +167,9 @@ class ManualHeadphoneUiTest {
         var stopped = 0
         var playedFlat = false
         composeRule.setContent {
-            MusicMateTheme {
+            TuningTestContent {
                 ManualHeadphoneDialog(null, endpoint, onDismiss = {}, onSave = {},
-                    onPlay = { _, settings, _ ->
+                    onPlay = { _, settings, _, _ ->
                         playedFlat = settings.bands.isEmpty()
                         awaitCancellation()
                     }, onStop = { stopped++ })
@@ -152,5 +184,38 @@ class ManualHeadphoneUiTest {
         composeRule.runOnIdle { before = stopped }
         composeRule.onNodeWithText("Next").performClick()
         composeRule.runOnIdle { assertTrue(stopped > before) }
+    }
+
+    @Test fun guidedTonesProgressLowToHighAndPreserveSkippedAndOppositeEarValues() {
+        val original = HeadphoneProfile.createManual("Guide pair", ManualHeadphoneTuning(
+            left = HeadphoneTone(midDb = -1.0), right = HeadphoneTone(trebleDb = 2.0)))
+        var saved: HeadphoneProfile? = null
+        val heard = mutableListOf<Pair<HeadphoneTestSignal, HeadphoneTestBand>>()
+        composeRule.setContent {
+            TuningTestContent {
+                ManualHeadphoneDialog(original, endpoint, onDismiss = {}, onSave = { saved = it },
+                    onPlay = { signal, _, _, band -> heard += signal to band })
+            }
+        }
+        composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Next").performClick()
+        composeRule.onNodeWithText("Bass · 100 Hz").assertExists()
+        composeRule.onNodeWithText("Left").performScrollTo().performClick()
+        composeRule.onNodeWithContentDescription("Bass adjustment").performScrollTo()
+            .performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
+        composeRule.onNodeWithText("Play left").performScrollTo().performClick()
+        composeRule.onNodeWithText("Next tone").performScrollTo().performClick()
+        composeRule.onNodeWithText("Mids · 1 kHz").assertExists()
+        composeRule.onNodeWithText("Skip tone").performScrollTo().performClick()
+        composeRule.onNodeWithText("Treble · 8 kHz").assertExists()
+        composeRule.onNodeWithText("Play right").performScrollTo().performClick()
+        composeRule.onNodeWithText("Finish tones").performScrollTo().performClick()
+        composeRule.onNodeWithText("Save profile").performClick()
+        composeRule.runOnIdle {
+            assertEquals(listOf(HeadphoneTestSignal.LEFT to HeadphoneTestBand.BASS,
+                HeadphoneTestSignal.RIGHT to HeadphoneTestBand.TREBLE), heard)
+            assertEquals(original.manual!!.left.copy(bassDb = 3.0), saved!!.manual!!.left)
+            assertEquals(original.manual!!.right, saved!!.manual!!.right)
+        }
     }
 }

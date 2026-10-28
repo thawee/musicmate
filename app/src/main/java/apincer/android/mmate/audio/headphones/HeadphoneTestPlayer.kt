@@ -26,15 +26,24 @@ import kotlin.math.sin
 
 enum class HeadphoneTestSignal { LEFT, RIGHT, ALTERNATING, CENTER }
 
-/** A bounded multitone signal, never a measurement sweep or a microphone calibration. */
+enum class HeadphoneTestBand(val label: String, val frequencyHz: Double?) {
+    MULTITONE("All bands", null),
+    BASS("Bass · 100 Hz", 100.0),
+    MIDS("Mids · 1 kHz", 1_000.0),
+    TREBLE("Treble · 8 kHz", 8_000.0)
+}
+
+/** Bounded multitone or single-band listening signals, never a microphone measurement. */
 internal object HeadphoneTestTone {
     const val RATE = 48_000
     private const val PEAK = 0.0158 // About -36 dBFS; system volume is left under the user's control.
     private val frequencies = doubleArrayOf(125.0, 250.0, 500.0, 1_000.0, 2_000.0, 4_000.0, 8_000.0)
 
-    fun render(signal: HeadphoneTestSignal, settings: CarDspSettings): ShortArray {
+    fun render(signal: HeadphoneTestSignal, settings: CarDspSettings,
+               band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE): ShortArray {
         val seconds = if (signal == HeadphoneTestSignal.ALTERNATING) 4 else 3
         val frames = RATE * seconds
+        val testFrequencies = band.frequencyHz?.let { doubleArrayOf(it) } ?: frequencies
         val chain = DspChain(settings.bands, RATE, 2, settings.requestedPreampDb,
             settings.leftBands, settings.rightBands, settings.balanceDb)
         val frame = DoubleArray(2)
@@ -44,7 +53,7 @@ internal object HeadphoneTestTone {
             val length = if (signal == HeadphoneTestSignal.ALTERNATING) RATE else frames
             val edge = minOf(position, length - 1 - position, RATE / 25).toDouble() / (RATE / 25)
             val envelope = (1 - cos(PI * edge)) * 0.5
-            val sample = frequencies.sumOf { sin(2 * PI * it * i / RATE) } / frequencies.size * PEAK * envelope
+            val sample = testFrequencies.sumOf { sin(2 * PI * it * i / RATE) } / testFrequencies.size * PEAK * envelope
             val left = signal == HeadphoneTestSignal.LEFT || signal == HeadphoneTestSignal.CENTER ||
                 (signal == HeadphoneTestSignal.ALTERNATING && i / RATE % 2 == 0)
             val right = signal == HeadphoneTestSignal.RIGHT || signal == HeadphoneTestSignal.CENTER ||
@@ -78,18 +87,19 @@ class HeadphoneTestPlayer internal constructor(private val open: (HeadphoneEndpo
 
     @Synchronized fun stop() { active?.set(true) }
 
-    suspend fun play(signal: HeadphoneTestSignal, settings: CarDspSettings, endpoint: HeadphoneEndpoint) = withContext(Dispatchers.IO) {
+    suspend fun play(signal: HeadphoneTestSignal, settings: CarDspSettings, endpoint: HeadphoneEndpoint,
+                     band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE) = withContext(Dispatchers.IO) {
         val stopped = AtomicBoolean(false)
         synchronized(this@HeadphoneTestPlayer) { active?.set(true); active = stopped }
         playback.withLock {
           var output: HeadphoneTestOutput? = null
           try {
-            val pcm = HeadphoneTestTone.render(signal, settings)
+            val pcm = HeadphoneTestTone.render(signal, settings, band)
             currentCoroutineContext().ensureActive()
             if (stopped.get()) return@withContext
             val session = open(endpoint)
             output = session
-            check(session.routeValid) { "The headphone output changed. Reconnect it and try again." }
+            check(session.routeValid) { "The audio output changed. Reconnect it and try again." }
             session.start()
             var offset = 0
             val deadline = System.nanoTime() + 6_000_000_000L
@@ -123,7 +133,7 @@ private class AndroidHeadphoneTestOutput(context: Context, private val endpoint:
             if (change <= 0) focusLost.set(true)
         }, Handler(Looper.getMainLooper())).build()
     private val device = mediaDevices().singleOrNull()
-        ?: error("Connect one headphone output before playing a test.")
+        ?: error("Connect one audio output before playing a test.")
     private val track: AudioTrack
 
     init {

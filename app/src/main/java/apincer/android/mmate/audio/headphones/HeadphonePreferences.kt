@@ -3,6 +3,7 @@ package apincer.android.mmate.audio.headphones
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
+import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.dsp.CarDsp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,7 @@ object HeadphonePreferences {
 
     @Synchronized
     fun import(context: Context, profile: HeadphoneProfile) = update(context) {
-        it.copy(profiles = it.profiles + profile)
+        it.copy(profiles = it.profiles.filterNot { saved -> saved.id == profile.id } + profile)
     }
 
     @Synchronized
@@ -73,7 +74,13 @@ object HeadphonePreferences {
     @Synchronized
     fun adjust(context: Context, endpoint: HeadphoneEndpoint, bassDb: Double, trebleDb: Double) = update(context) {
         val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
-        it.copy(bindings = it.bindings + (endpoint.key to old.copy(bassDb = bassDb, trebleDb = trebleDb)))
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(bassDb = bassDb, trebleDb = trebleDb, soundMode = SoundMode.CUSTOM)))
+    }
+
+    @Synchronized
+    fun setSoundMode(context: Context, endpoint: HeadphoneEndpoint, mode: SoundMode) = update(context) {
+        val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(soundMode = mode)))
     }
 
     @Synchronized

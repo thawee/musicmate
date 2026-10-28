@@ -1,6 +1,8 @@
 # Car Audio DSP Specification
 
-Status: design agreed with the owner on 2026-10-23; slices 1 to 4 built 2026-10-24, slice 5 (car-only activation) open.
+Status: speaker calibration, route matching and shared audio tuning are implemented. Acoustic accuracy and external-device playback require hardware verification.
+
+Since 2026-10-28, **Audio tuning** presents speaker and headphone profiles in one dropdown with Microphone, Listening and AutoEQ creation methods. Speakers can use the existing microphone room calibration or guided listening; AutoEQ imports measured speaker corrections rather than searching the headphone database. Legacy speaker files and Bluetooth matching remain readable. Selecting a saved speaker in the unified controls binds its correction and sound mode to the current output. See [the shared tuning interface](AUDIO_TUNING.md) for method and hardware requirements.
 
 Renamed on screen to **Speaker Tuning** on 2026-10-24: the same correction and auto-switch serve any measured speaker (a car, or a Bluetooth speaker at home). Code names (`CarDsp`, `CarProfile`), the `car_dsp` preferences and the `car_profiles` folder keep the Car name so saved profiles survive. Since 2026-10-24 the active profile follows the media route (`CarRoute`): a Bluetooth route picks the profile with that address, an Android Auto route (a remote submix) picks the car of the last car-class Bluetooth handshake (`CarHandshakeReceiver`, declared in the manifest) or else the only car profile, and any other route gives No correction. The switch acts only when the route changes, so a manual pick holds until then. The first design keyed on the hands-free link, which the MU-X drops about 5 s after wireless Android Auto starts, so it never held.
 
@@ -18,7 +20,7 @@ MusicMate plays locally; when Android routes that playback to the car through An
 | Q4 | Measurement goes through MusicMate's own playback path with DSP bypassed (log sweep, `UNPROCESSED` mic, 5 positions averaged, noise check, head unit EQ flat). |
 | Q5 | Revised 2026-10-23 after the first car log: wireless Android Auto only. The car is a `TYPE_REMOTE_SUBMIX` media route while a Bluetooth car link is connected; the first time, the user confirms that link is a car, and the choice is remembered by Bluetooth address. Any other route turns DSP off. Manual bypass from Now Playing. |
 | Q6 | v1 scope: wizard, Car Audio settings section, response graph, Now Playing chip, 10-band PEQ + auto preamp + safety limiter. Deferred: volume-dependent loudness, road-noise adaptation, manual PEQ editor, WebUI controls. |
-| Q7 | Seven sound modes on top of the correction: Reference, Bass, Vocal, Lively, Relax, Night, Custom. |
+| Q7 | Seven sound modes on top of the correction: Neutral, Bass, Vocal, Lively, Relax, Night, Custom. |
 | Q8 | Verification bar and build order in sections 7 and 8. |
 
 ## 2. Signal path
@@ -64,11 +66,9 @@ Android CDD 5.11 only requires the `UNPROCESSED` source to be flat within +/-10 
 
 ## 4. Activation
 
-- Rule (owner, 2026-10-23): Car DSP is active when the media route is `TYPE_REMOTE_SUBMIX` and a Bluetooth device the user has confirmed as a car is connected (HFP). The phone always joins the car's Bluetooth before wireless Android Auto starts. The first time a remote submix appears with an unconfirmed Bluetooth device connected, MusicMate asks once ("Use Car DSP with CAR2-4BF4?") and stores the answer by Bluetooth address, with the name for display. Each confirmed car has its own profile. Casting or mirroring without a confirmed car never turns DSP on.
-- On every routing change, read the routed device's `type`, `productName` and `id`. Media3's `AudioOutput` may not expose the AudioTrack's routing listener; with minSdk 36, prefer `AudioManager.getAudioDevicesForAttributes()` with the `USAGE_MEDIA` attributes, re-checked from an `AudioDeviceCallback`. Confirm against the Media3 1.11 API in slice 1.
-- Match against saved signatures. Match: load that profile and its last-used mode. No match: DSP off.
-- Wired and wireless Android Auto get separate profiles if their signatures differ.
-- Note: `AudioOutputHelper.java:188-190` classes `TYPE_USB_ACCESSORY` as USB. If wired Android Auto reports that type, the USB DAC format logic (`UsbOutputFormat.prepare`) may already act on the car route. Slice 1 settles this.
+Legacy speaker selection follows `CarRoute`. A Bluetooth media route selects the saved profile with that address. A remote submix selects the profile matching the last car-class Bluetooth handshake, or the only car profile if no handshake matches. With multiple car profiles and no matching handshake, no correction is selected. Other routes select no legacy correction. A manual profile choice holds until the route changes. An active hands-free connection is not required.
+
+The shared tuning library stores explicit bindings separately. Selecting a saved correction in Audio tuning binds it to the compatible current output. An existing disabled binding bypasses EQ. USB processing requires the explicit USB EQ switch; a legacy speaker preference cannot grant that consent.
 
 ### Measured route (SM-S931B, MU-X, wireless Android Auto, 2026-10-23, first session)
 
@@ -80,9 +80,11 @@ Android CDD 5.11 only requires the `UNPROCESSED` source to be flat within +/-10 
 
 ## 5. Sound modes
 
+Speakers and headphones share these named mode curves and Night compression. Preferences remain separate per car and headphone output. Neutral applies the correction alone; Off bypasses processing. The stored `REFERENCE` value retains existing car choices. Custom retains the released ranges: +/-4 dB for speakers and +/-6 dB for headphones.
+
 | Mode | Filters on top of the correction |
 |---|---|
-| Reference (default) | none |
+| Neutral (default) | none |
 | Bass | low shelf +4 dB at 80 Hz, bell -1 dB at 250 Hz |
 | Vocal | bell +2.5 dB at 2.5 kHz Q 1, low shelf -1.5 dB at 120 Hz, bell -1 dB at 300 Hz |
 | Lively | low shelf +3 dB at 70 Hz, bell +1.5 dB at 3 kHz, high shelf +2 dB at 8 kHz |
@@ -100,10 +102,13 @@ ReplayGain remains a separate playback setting (Off, Track or Album), applied at
 
 ## 6. Storage and UI
 
-- One JSON file per car profile in the app files directory: name, date, route signature, sample rate measured, PEQ bands, measured and target curves, last mode, Custom trims, mic source used.
-- Settings (`SettingsScreen.kt`): Car Audio section with profile list, Calibrate, Re-measure, Delete.
-- Calibration wizard: full-screen Compose flow.
-- Now Playing: chip "Car · <mode>"; tap opens Off, Reference, Bass, Vocal, Lively, Relax, Night, Custom. Off is the A/B bypass.
+Settings → Audio tuning → Open audio tuning and the Now Playing tuning chip open the shared [audio tuning sheet](AUDIO_TUNING.md). The Speaker tab uses the same profile dropdown and sound modes as Headphone. Microphone and Listening create speaker corrections. AutoEQ imports measured speaker EQ text because its searchable database contains headphone measurements.
+
+Existing microphone speaker profiles remain in `files/car_profiles/`. `CorrectionProfiles` presents them in the shared selector with stable `speaker:` IDs. Explicit selection copies the correction into the shared library without removing the original measurement. The first copy preserves the legacy speaker mode, Custom trims and non-USB enablement. USB still requires explicit consent.
+
+`HeadphonePreferences` stores the shared library in `files/headphone_profiles.json`, including profile output types, methods and output bindings. Bindings hold the selected profile, EQ enablement, USB consent, sound mode and Custom trims. Legacy `car_dsp` preferences remain available before a shared binding exists. Legacy profile rename and deletion keep the shared copy in sync.
+
+`HeadphoneControls.kt` owns the common controls and callbacks. `DspTuningComponents.kt` owns the sheet, output tabs, response panel and calibration action rows. `CorrectionProfileSelector.kt` renders the shared dropdown. `CarDspControls.kt` retains legacy speaker modes and profile management. The microphone wizard remains a separate Compose activity.
 
 ## 7. Verification
 

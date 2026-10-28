@@ -2,6 +2,9 @@ package apincer.android.mmate.audio.calibration
 
 import android.Manifest
 import android.content.Context
+import apincer.android.mmate.audio.headphones.HeadphoneEndpoint
+import apincer.android.mmate.audio.headphones.HeadphonePreferences
+import apincer.android.mmate.audio.headphones.HeadphoneProfile
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import apincer.android.mmate.audio.dsp.CarDspPreferences
@@ -24,9 +27,10 @@ import java.util.UUID
 class CalibrationWizard internal constructor(
     context: Context,
     private val scope: CoroutineScope,
-    private val recorder: SweepCapture
+    private val recorder: SweepCapture,
+    val output: CalibrationOutput = CalibrationOutput.SPEAKER
 ) {
-    constructor(context: Context, scope: CoroutineScope) : this(context, scope, SweepRecorder(context.applicationContext))
+    constructor(context: Context, scope: CoroutineScope, output: CalibrationOutput = CalibrationOutput.SPEAKER) : this(context, scope, SweepRecorder(context.applicationContext), output)
 
     private val app = context.applicationContext
     private val sweep = LogSweep()
@@ -36,6 +40,20 @@ class CalibrationWizard internal constructor(
     private var saving = false
     /** Taken while the sweep plays, so the saved profile names the car or speaker it measured. */
     private var identity: CarRoute.Identity? = null
+    private var endpoint: HeadphoneEndpoint? = null
+    private var rigTarget: RigTarget? = null
+    private var fixtureName = "Headphone fixture/coupler"
+    val microphones: List<SweepRecorder.Microphone> get() = (recorder as? SweepRecorder)?.microphones.orEmpty()
+    fun selectMicrophone(id: Int) { if (current.value == Step.Checklist) (recorder as? SweepRecorder)?.selectMicrophone(id) }
+    fun setTarget(target: RigTarget) { if (current.value == Step.Checklist) rigTarget = target }
+    fun beginHeadphone(fixtureConfirmed: Boolean, fixtureDescription: String = "Headphone fixture/coupler") {
+        require(fixtureDescription.isNotBlank() && fixtureDescription.length <= 100 && fixtureDescription.none { it.isISOControl() }) { "Name the fixture or coupler (up to 100 characters)." }
+        fixtureName = fixtureDescription.trim()
+        require(fixtureConfirmed && rigTarget != null) { "Confirm the fixture and import a target from the same rig first." }
+        endpoint = HeadphoneEndpoint.current(app)
+        require(endpoint?.supports(CalibrationOutput.HEADPHONE) == true) { "Connect the headphones before starting calibration." }
+        begin()
+    }
 
     sealed interface Step {
         data object Checklist : Step
@@ -62,7 +80,13 @@ class CalibrationWizard internal constructor(
         }
 
     fun begin() {
+        if (output == CalibrationOutput.SPEAKER) {
+            endpoint = attempt("Output route") { HeadphoneEndpoint.current(app) }
+            require(endpoint == null || endpoint?.supports(CalibrationOutput.SPEAKER) == true) { "Connect a speaker before starting calibration." }
+        }
+        if (output == CalibrationOutput.HEADPHONE && (rigTarget == null || endpoint == null)) return
         measurements.clear()
+        (recorder as? SweepRecorder)?.beginSession()
         current.value = Step.Position(0)
     }
 
@@ -73,6 +97,8 @@ class CalibrationWizard internal constructor(
         current.value = position.copy(measuring = true, problem = null)
         scope.launch {
             val take = withContext(Dispatchers.Default) {
+                if (endpoint != null && HeadphoneEndpoint.current(app)?.key != endpoint?.key)
+                    return@withContext Take.Rejected(Take.Reason.CAPTURE, "Output changed. Restart calibration with the same playback output.")
                 val capture = attempt("Take") { recorder.capture(sweep.toPcm16()) { !isActive } }
                     ?: return@withContext Take.Rejected(Take.Reason.CAPTURE, MIC_FAILED)
                 capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) } ?: analyzer.analyze(capture.recording)
@@ -99,7 +125,9 @@ class CalibrationWizard internal constructor(
         val fit = attempt("Fit") {
             withContext(Dispatchers.Default) {
                 val takes = measurements.takes
-                PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }), TakeAnalyzer.reliableFromHz(takes), TakeAnalyzer.unreliableBands(takes))
+                PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }),
+                    maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
+                    TakeAnalyzer.unreliableBands(takes), if (output == CalibrationOutput.HEADPHONE) requireNotNull(rigTarget).curve else CarTarget.CURVE)
             }
         }
         if (fit == null) {
@@ -108,7 +136,7 @@ class CalibrationWizard internal constructor(
             return
         }
         identity = attempt("Speaker name") { CarRoute.identity(app) }
-        current.value = Step.Result(fit, identity?.name)
+        current.value = Step.Result(fit, endpoint?.name ?: identity?.name)
     }
 
     /** Saves the profile, makes it the active correction, then measures once more through it. */
@@ -122,7 +150,7 @@ class CalibrationWizard internal constructor(
             val fit = result.fit
             val profile = CarProfile(
                 id = UUID.randomUUID().toString(),
-                name = name.ifBlank { car?.name ?: "My speaker" },
+                name = name.ifBlank { endpoint?.name ?: car?.name ?: "My speaker" },
                 createdAtMillis = System.currentTimeMillis(),
                 bluetoothName = car?.name,
                 bluetoothAddress = car?.address,
@@ -136,10 +164,32 @@ class CalibrationWizard internal constructor(
                 approximate = !recorder.unprocessed,
                 excludedBandsHz = fit.excludedBandsHz
             )
-            val store = CarDspPreferences.profiles(app)
+            val store by lazy { CarDspPreferences.profiles(app) }
             val saved = attempt("Save") {
-                withContext(Dispatchers.IO) { store.save(profile) }
-                CarDspPreferences.setActiveProfile(app, profile)
+                if (output == CalibrationOutput.HEADPHONE) {
+                    val captured = requireNotNull(endpoint)
+                    require(HeadphoneEndpoint.current(app)?.key == captured.key) { "Output changed; restart calibration." }
+                    val headphone = HeadphoneProfile(profile.id, profile.name,
+                        "Microphone; fixture: $fixtureName; target: ${requireNotNull(rigTarget).source}; mic: ${recorder.micSource}",
+                        0.0, fit.bands, output = CalibrationOutput.HEADPHONE, method = CalibrationMethod.MICROPHONE)
+                    withContext(Dispatchers.IO) { HeadphonePreferences.import(app, headphone) }
+                    HeadphonePreferences.select(app, captured, headphone.id)
+                    if (!captured.usb) HeadphonePreferences.setEnabled(app, captured, true)
+                } else {
+                    val captured = endpoint
+                    if (captured != null) require(HeadphoneEndpoint.current(app)?.key == captured.key) { "Output changed; restart calibration." }
+                    withContext(Dispatchers.IO) { store.save(profile) }
+                    CarDspPreferences.setActiveProfile(app, profile)
+                    if (captured != null) {
+                        val converted = CorrectionProfiles.fromSpeaker(profile)
+                        val legacy = CarDspPreferences.state.value
+                        withContext(Dispatchers.IO) { HeadphonePreferences.import(app, converted) }
+                        HeadphonePreferences.select(app, captured, converted.id)
+                        HeadphonePreferences.adjust(app, captured, legacy.bassDb, legacy.trebleDb)
+                        HeadphonePreferences.setSoundMode(app, captured, legacy.mode)
+                        if (!captured.usb) HeadphonePreferences.setEnabled(app, captured, true)
+                    }
+                }
             }
             if (saved == null) {
                 current.value = Step.Result(fit, result.carName, SAVE_FAILED)
@@ -151,6 +201,7 @@ class CalibrationWizard internal constructor(
             // A check sweep that cannot run leaves the saved correction unverified
             val verdict = attempt("Check sweep") {
                 withContext(Dispatchers.Default) {
+                    if (endpoint != null && HeadphoneEndpoint.current(app)?.key != endpoint?.key) return@withContext null
                     val chain = DspChain(fit.bands, sweep.sampleRate, 1)
                     val frame = DoubleArray(1)
                     val corrected = DoubleArray(sweep.length) {
@@ -164,7 +215,7 @@ class CalibrationWizard internal constructor(
                 }
             }
             val checked = profile.copy(verified = verdict?.passed, worstDeviationDb = verdict?.worstDeviationDb)
-            attempt("Saving the check") { withContext(Dispatchers.IO) { store.save(checked) } }
+            if (output == CalibrationOutput.SPEAKER) attempt("Saving the check") { withContext(Dispatchers.IO) { store.save(checked) } }
             current.value = Step.Done(checked)
             saving = false
         }
