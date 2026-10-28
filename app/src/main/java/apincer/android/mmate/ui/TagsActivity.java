@@ -1180,7 +1180,7 @@ public class TagsActivity extends AppCompatActivity {
         if (!(view instanceof MaterialButton)) return;
         MaterialButton button = (MaterialButton) view;
         boolean playing = isShownSongPlaying();
-        button.setIconResource(playing ? R.drawable.rounded_equalizer_24 : R.drawable.ic_baseline_play_arrow_32);
+        button.setIconResource(playing ? R.drawable.rounded_equalizer_24 : R.drawable.ic_round_play_arrow_24);
         button.setContentDescription(getString(playing ? R.string.btn_open_player_cd : R.string.btn_play_song_cd));
     }
 

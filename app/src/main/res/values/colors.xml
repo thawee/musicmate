@@ -614,6 +614,8 @@
     <color name="colorMuted">#B0B0B0</color>
     <color name="colorDivider">#33FFFFFF</color>
     <color name="colorGold">#FFD700</color>
+    <color name="song_navigation_background">#E61C1C1E</color>
+    <color name="song_navigation_outline">#55FFD700</color>
     <color name="colorDividerSubtle">#1AFFFFFF</color>
 
 </resources>
