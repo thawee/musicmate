@@ -28,7 +28,9 @@ data class CarProfile(
     val verified: Boolean? = null,
     val worstDeviationDb: Double? = null,
     /** [KIND_CAR] when tuned through Android Auto, [KIND_SPEAKER] through a Bluetooth speaker. */
-    val kind: String? = null
+    val kind: String? = null,
+    /** Noisy 1/3-octave band centres, excluded from fitting and verification. */
+    val excludedBandsHz: List<Double> = emptyList()
 ) {
     companion object {
         const val KIND_CAR = "car"

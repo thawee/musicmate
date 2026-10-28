@@ -52,12 +52,6 @@ class CalibrationTest {
 
     @Test
     fun badTakesAreRejectedWithTheirReason() {
-        val hum = record(sweep.samples, noiseRms = 1e-4).also { recording ->
-            for (i in recording.indices) recording[i] += 0.3 * kotlin.math.sin(2 * Math.PI * 160 * i / sweep.sampleRate)
-        }
-        val quiet = analyzer.analyze(hum)
-        assertEquals(Take.Reason.TOO_QUIET, (quiet as Take.Rejected).reason)
-        assertTrue(quiet.detail, quiet.detail.contains("157 Hz"))
         val late = analyzer.analyze(record(sweep.samples, delaySeconds = 2.0))
         assertEquals(Take.Reason.TOO_SHORT, (late as Take.Rejected).reason)
         val clipped = analyzer.analyze(record(sweep.samples.map { it * 2.5 }.toDoubleArray()))

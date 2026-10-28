@@ -66,7 +66,7 @@ class CarProfileStoreTest {
     @Test
     fun theCorrectionSitsUnderTheMode() {
         val correction = profile("car", 1).bands
-        val choice = CarDspChoice(enabled = true, mode = CarSoundMode.DRIVE, correction = correction)
-        assertEquals(correction + CarSoundMode.DRIVE.bands(), choice.settings()!!.bands)
+        val choice = CarDspChoice(enabled = true, mode = CarSoundMode.LIVELY, correction = correction)
+        assertEquals(correction + CarSoundMode.LIVELY.bands(), choice.settings()!!.bands)
     }
 }

@@ -7,6 +7,7 @@ import androidx.annotation.RequiresPermission
 import apincer.android.mmate.audio.dsp.CarDspPreferences
 import apincer.android.mmate.audio.dsp.CarRoute
 import apincer.android.mmate.audio.dsp.DspChain
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,12 +21,17 @@ import java.util.UUID
  * The calibration steps (docs/technical/CAR_AUDIO_DSP.md, section 3): five positions, fit, save,
  * verify. Measuring and analysis run on [Dispatchers.Default]; [step] is what the screen shows.
  */
-class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
+class CalibrationWizard internal constructor(
+    context: Context,
+    private val scope: CoroutineScope,
+    private val recorder: SweepCapture
+) {
+    constructor(context: Context, scope: CoroutineScope) : this(context, scope, SweepRecorder(context.applicationContext))
+
     private val app = context.applicationContext
-    private val recorder = SweepRecorder(app)
     private val sweep = LogSweep()
     private val analyzer by lazy { TakeAnalyzer(Deconvolver(sweep)) }
-    private val takes = mutableListOf<Take.Accepted>()
+    private val measurements = MeasurementSession()
     /** Set from the first tap on Save until Done, so a second tap cannot save twice. */
     private var saving = false
     /** Taken while the sweep plays, so the saved profile names the car or speaker it measured. */
@@ -33,10 +39,10 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
 
     sealed interface Step {
         data object Checklist : Step
-        data class Position(val index: Int, val measuring: Boolean = false, val problem: String? = null) : Step
+        data class Position(val index: Int, val measuring: Boolean = false, val problem: String? = null, val noisyBandsHz: List<Double> = emptyList()) : Step
         data object Fitting : Step
-        /** [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name. */
-        class Result(val fit: FitResult, val carName: String?) : Step
+        /** [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name; [problem] says why saving failed. */
+        class Result(val fit: FitResult, val carName: String?, val problem: String? = null) : Step
         class Verifying(val profile: CarProfile) : Step
         class Done(val profile: CarProfile) : Step
     }
@@ -56,7 +62,7 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
         }
 
     fun begin() {
-        takes.clear()
+        measurements.clear()
         current.value = Step.Position(0)
     }
 
@@ -67,16 +73,22 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
         current.value = position.copy(measuring = true, problem = null)
         scope.launch {
             val take = withContext(Dispatchers.Default) {
-                val capture = recorder.capture(sweep.toPcm16()) { !isActive }
-                capture.problem?.let { Take.Rejected(Take.Reason.NO_RESPONSE, it) } ?: analyzer.analyze(capture.recording)
+                val capture = attempt("Take") { recorder.capture(sweep.toPcm16()) { !isActive } }
+                    ?: return@withContext Take.Rejected(Take.Reason.CAPTURE, MIC_FAILED)
+                capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) } ?: analyzer.analyze(capture.recording)
             }
             when (take) {
                 is Take.Rejected -> current.value = position.copy(measuring = false, problem = advice(take))
                 is Take.Accepted -> {
+                    if (!measurements.add(take)) {
+                        current.value = position.copy(measuring = false, problem = "Background noise affected too many frequencies across the measured spots. Quieten the engine or fan and retry this spot.")
+                        return@launch
+                    }
                     // Wireless Android Auto latency is unmeasured; the peak search allows 2.5 s
-                    Log.i(TAG, "take ${takes.size + 1}: delay %.3f s".format(take.delaySeconds))
-                    takes += take
-                    if (takes.size < POSITIONS.size) current.value = Step.Position(takes.size) else fit()
+                    val takes = measurements.takes
+                    val noisyBands = TakeAnalyzer.unreliableBands(takes)
+                    Log.i(TAG, "take ${takes.size}: delay %.3f s".format(take.delaySeconds))
+                    if (takes.size < POSITIONS.size) current.value = Step.Position(takes.size, noisyBandsHz = noisyBands) else fit()
                 }
             }
         }
@@ -84,10 +96,18 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
 
     private suspend fun fit() {
         current.value = Step.Fitting
-        val fit = withContext(Dispatchers.Default) {
-            PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }), TakeAnalyzer.reliableFromHz(takes))
+        val fit = attempt("Fit") {
+            withContext(Dispatchers.Default) {
+                val takes = measurements.takes
+                PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }), TakeAnalyzer.reliableFromHz(takes), TakeAnalyzer.unreliableBands(takes))
+            }
         }
-        identity = CarRoute.identity(app)
+        if (fit == null) {
+            // The five takes stay; measuring the last spot again fits them once more
+            current.value = Step.Position(POSITIONS.lastIndex, problem = FIT_FAILED)
+            return
+        }
+        identity = attempt("Speaker name") { CarRoute.identity(app) }
         current.value = Step.Result(fit, identity?.name)
     }
 
@@ -113,27 +133,38 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
                 targetDb = fit.targetDb.toList(),
                 predictedDb = fit.predictedDb.toList(),
                 micSource = recorder.micSource,
-                approximate = !recorder.unprocessed
+                approximate = !recorder.unprocessed,
+                excludedBandsHz = fit.excludedBandsHz
             )
             val store = CarDspPreferences.profiles(app)
-            withContext(Dispatchers.IO) { store.save(profile) }
-            CarDspPreferences.setActiveProfile(app, profile)
+            val saved = attempt("Save") {
+                withContext(Dispatchers.IO) { store.save(profile) }
+                CarDspPreferences.setActiveProfile(app, profile)
+            }
+            if (saved == null) {
+                current.value = Step.Result(fit, result.carName, SAVE_FAILED)
+                saving = false
+                return@launch
+            }
             current.value = Step.Verifying(profile)
 
-            val verdict = withContext(Dispatchers.Default) {
-                val chain = DspChain(fit.bands, sweep.sampleRate, 1)
-                val frame = DoubleArray(1)
-                val corrected = DoubleArray(sweep.length) {
-                    frame[0] = sweep.samples[it]
-                    chain.process(frame)
-                    frame[0]
+            // A check sweep that cannot run leaves the saved correction unverified
+            val verdict = attempt("Check sweep") {
+                withContext(Dispatchers.Default) {
+                    val chain = DspChain(fit.bands, sweep.sampleRate, 1)
+                    val frame = DoubleArray(1)
+                    val corrected = DoubleArray(sweep.length) {
+                        frame[0] = sweep.samples[it]
+                        chain.process(frame)
+                        frame[0]
+                    }
+                    val capture = recorder.capture(sweep.toPcm16(corrected)) { !isActive }
+                    val take = if (capture.problem == null) analyzer.analyze(capture.recording) else null
+                    (take as? Take.Accepted)?.let { PeqFitter.verify(fit, it) }
                 }
-                val capture = recorder.capture(sweep.toPcm16(corrected)) { !isActive }
-                val take = if (capture.problem == null) analyzer.analyze(capture.recording) else null
-                (take as? Take.Accepted)?.let { PeqFitter.verify(fit, it.responseDb) }
             }
             val checked = profile.copy(verified = verdict?.passed, worstDeviationDb = verdict?.worstDeviationDb)
-            withContext(Dispatchers.IO) { store.save(checked) }
+            attempt("Saving the check") { withContext(Dispatchers.IO) { store.save(checked) } }
             current.value = Step.Done(checked)
             saving = false
         }
@@ -144,11 +175,25 @@ class CalibrationWizard(context: Context, private val scope: CoroutineScope) {
         Take.Reason.TOO_QUIET -> "${take.detail}. Turn the volume up, or quieten the room (in a car, the engine and fan), and measure again."
         Take.Reason.NO_RESPONSE -> "${take.detail}. Check the volume and that the phone is playing through the speaker."
         Take.Reason.TOO_SHORT -> "${take.detail}. Measure again; if it repeats, reconnect Android Auto."
+        Take.Reason.CAPTURE -> take.detail
+    }
+
+    /** Android audio and storage can fail at any time; [block]'s failure is logged and returns null. */
+    private inline fun <T> attempt(what: String, block: () -> T): T? = try {
+        block()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: Exception) {
+        Log.w(TAG, "$what failed", failure)
+        null
     }
 
     companion object {
         /** Around the listener's head at ear height, about 15 cm apart. */
         val POSITIONS = listOf("Centre", "Left", "Right", "Forward", "Back")
         private const val TAG = "CarCalibration"
+        private const val MIC_FAILED = "The microphone could not record. Close apps that may be using it, such as a call or voice assistant, and measure again."
+        private const val FIT_FAILED = "The correction could not be worked out from these measurements. Measure this spot again."
+        private const val SAVE_FAILED = "The correction could not be saved. Check that the phone has free storage, then save again."
     }
 }

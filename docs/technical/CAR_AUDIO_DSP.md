@@ -18,7 +18,7 @@ MusicMate plays locally; when Android routes that playback to the car through An
 | Q4 | Measurement goes through MusicMate's own playback path with DSP bypassed (log sweep, `UNPROCESSED` mic, 5 positions averaged, noise check, head unit EQ flat). |
 | Q5 | Revised 2026-10-23 after the first car log: wireless Android Auto only. The car is a `TYPE_REMOTE_SUBMIX` media route while a Bluetooth car link is connected; the first time, the user confirms that link is a car, and the choice is remembered by Bluetooth address. Any other route turns DSP off. Manual bypass from Now Playing. |
 | Q6 | v1 scope: wizard, Car Audio settings section, response graph, Now Playing chip, 10-band PEQ + auto preamp + safety limiter. Deferred: volume-dependent loudness, road-noise adaptation, manual PEQ editor, WebUI controls. |
-| Q7 | Five sound modes on top of the correction: Reference, Bass, Vocal, Drive, Custom. |
+| Q7 | Seven sound modes on top of the correction: Reference, Bass, Vocal, Lively, Relax, Night, Custom. |
 | Q8 | Verification bar and build order in sections 7 and 8. |
 
 ## 2. Signal path
@@ -36,10 +36,10 @@ Media3 decoder (float for high-res, int16 for CD)
 - 16-bit input stays 16-bit out so the AudioTrack is never reopened mid-track.
 - Each input block is filtered once into a staging buffer, as the float path already does with `converted`; a partial `super.write` must never filter a sample twice.
 - Non-finite input (NaN or infinity from a decoder) becomes silence before processing; if a frame still comes out non-finite, it is silenced and the filters reset. A warning is logged once per output. Found on 2026-10-24: Samsung's `c2.sec.flac.decoder` returned noise and NaN for a valid 16-bit FLAC (that file uses 1152-sample blocks), so `FlacDecoderSelector` now puts `c2.android.flac.decoder` first.
-- A USB DAC media route is never processed, whatever the target says (`CarDsp.updateRoute`, fed by the route log). Only float and 16-bit input are processed; any other encoding passes through.
+- Speaker DSP bypasses USB DAC media routes (`CarDsp.updateRoute`, fed by the route log). Separate [headphone EQ](HEADPHONE_EQ.md) can process USB only after explicit enablement for that output. Speaker DSP handles float and 16-bit input; headphone EQ also handles packed 24/32-bit PCM.
 - DSP state is read once per buffer. Changes are heard after the queued AudioTrack audio drains (about 0.5 to 1 s).
 - Mode or profile changes crossfade the old and new filter chains over about 30 ms to avoid clicks.
-- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a log-frequency grid), never positive. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a safety net for overs, not a loudness tool. No compression in any mode except Sleep's light compressor (section 5).
+- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a log-frequency grid), never positive. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a safety net for overs, not a loudness tool. No compression in any mode except Night's light compressor (section 5).
 
 ## 3. Calibration
 
@@ -50,11 +50,13 @@ Revised 2026-10-23 while building slice 4: the sweep plays on its own track, and
 3. Pause MusicMate playback. Play a 10 s exponential sine sweep, 20 Hz to 20 kHz at 48 kHz (Farina), on a dedicated 16-bit `AudioTrack` with the player's media attributes, so it takes the same Android route as music; nothing enters the queue or history, and ReplayGain, speed and Car DSP do not apply. Record from 0.5 s before to 3 s after with `AudioRecord`, source `UNPROCESSED` when the device reports support, else `VOICE_RECOGNITION` marked approximate, forced to the built-in mic.
 4. Reject the take if the recorder is not on the built-in mic, the sweep track is not on the music route, the recording clips (>= 0.99), no response stands out from the noise, or the response arrives too late to measure the noise after it.
 5. Deconvolve with the inverse sweep (one 2^20 FFT; latency independent). Window the response from 0.2 s before its peak (the low-frequency ringing ahead of the peak; harmonic responses sit about 1 s earlier) to 0.5 s after, then take 1/6-octave smoothed power on a 1/48-octave grid. Measured flat within 0.1 dB from 30 Hz to 16 kHz on a clean synthetic sweep (above, the smoothing band runs past the sweep's end).
-6. Noise: the same window 0.6 s after the peak in the deconvolved output, within the recording (so a late sweep is rejected, not given a flattering SNR; with 3 s recorded after the sweep, up to about 1.7 s of latency fits). Reject the take if any 1/3-octave band from 100 Hz to 8 kHz is less than 20 dB above it. A band below 100 Hz under the limit in any take is not a rejection: the fit leaves everything from that band down uncorrected and the verify check skips it. This revises the Q4 rule (owner informed 2026-10-23): a phone or small speaker cannot play deep bass, so raising the volume would not help.
+6. Noise: compare the response with the same window 0.6 s after its peak in the deconvolved output, within the recording (a late sweep is rejected). Also compare a 250 ms Hann-windowed raw recording around each sweep frequency with the louder of the first and last 250 ms of ambient audio. Use the lower SNR estimate. The limit remains 20 dB per 1/3-octave band. Up to three unreliable bands at or above 100 Hz may be excluded across all five positions; broader noise rejects the current take without discarding earlier positions. A band below 100 Hz under the limit raises the correction's lower boundary above it. Clipping, missing response and late arrival remain rejection conditions.
 7. Repeat at 5 positions around the driver's head at ear height (centre, left, right, forward, back, about 15 cm). Average in power.
-8. Fit at most 10 peaking bands toward the target within the Q3 limits. Boost allowed: none below 100 Hz, rising to +3 dB at 200 Hz, +3 dB above, and none into a narrow deep null (> 6 dB below target over < 1/3 octave); the combined curve must respect the same limit at every point. Level is aligned by the median difference over 200 Hz-2 kHz.
+8. Fit at most 10 peaking bands toward the target within the Q3 limits. Boost allowed: none below 100 Hz, rising to +3 dB at 200 Hz, +3 dB above, and none into a narrow deep null (> 6 dB below target over < 1/3 octave); the combined curve must respect the same limit at every point. Excluded bands have a quarter-octave margin on each side, covering the band and response smoothing. Their values do not influence level alignment, null detection or filter selection. Their desired correction is zero; combined filter tails are constrained to within 1 dB, checked at 1/192-octave spacing and the exact region boundaries with a 0.02 dB margin. Level alignment uses reliable points over 200 Hz-2 kHz.
 9. Show measured, target and predicted curves. Name and save the profile with the car's Bluetooth link. The latest saved profile is the active one; the Car Audio section can switch or delete profiles.
-10. Verify sweep: the sweep pre-filtered offline by the correction (the live DSP does not touch the dedicated track), deconvolved with the plain inverse (section 7).
+10. Verify sweep: the sweep pre-filtered offline by the correction (the live DSP does not touch the dedicated track), deconvolved with the plain inverse (section 7). Check only the original reliable frequencies. Additional unreliable bands require another measurement; they cannot silently reduce verification coverage. Save excluded band centres in the profile, show a partial-calibration warning, and leave gaps in the graph at excluded frequencies. Profiles without this metadata retain their previous behavior.
+
+Engine-noise handling (2026-10-27) identifies unreliable frequency regions; it does not notch the microphone recording or cancel the physical engine sound. The displayed frequency near 157 Hz is a band centre. Repeated sweeps at the same spot are deferred until car measurements establish their benefit and alignment requirements; the five-position power average remains. Phone-microphone headphone calibration is unsupported. A separate headphone-profile workflow is planned next.
 
 ## 3a. Mic accuracy
 
@@ -83,24 +85,25 @@ Android CDD 5.11 only requires the `UNPROCESSED` source to be flat within +/-10 
 | Reference (default) | none |
 | Bass | low shelf +4 dB at 80 Hz, bell -1 dB at 250 Hz |
 | Vocal | bell +2.5 dB at 2.5 kHz Q 1, low shelf -1.5 dB at 120 Hz, bell -1 dB at 300 Hz |
-| Drive | low shelf +3 dB at 70 Hz, bell +1.5 dB at 3 kHz, high shelf +2 dB at 8 kHz |
+| Lively | low shelf +3 dB at 70 Hz, bell +1.5 dB at 3 kHz, high shelf +2 dB at 8 kHz |
 | Relax | high shelf -2.5 dB at 6 kHz, bell -1.5 dB at 3 kHz, low shelf +1.5 dB at 150 Hz |
-| Focus | bell -2 dB at 2.5 kHz Q 0.8, high shelf -1 dB at 8 kHz |
-| Sleep | high shelf -4 dB at 4 kHz, low shelf -2 dB at 60 Hz, plus the light compressor |
+| Night | high shelf -4 dB at 4 kHz, low shelf -2 dB at 60 Hz, plus the light compressor |
 | Custom | Bass and Treble sliders, each +/-4 dB |
 
 At most 3 filters and +4 dB per mode. Each profile remembers its last mode, and every mode is offered on every output.
 
-Relax, Focus and Sleep were added on 2026-10-24 after a research pass. They follow Sony's Relaxed and Mellow presets. Focus and Sleep are educated guesses, not tested curves: the research says lyrics are what distract and slow, soft music is what helps sleep, and EQ changes neither.
+The preset list was simplified on 2026-10-26: Drive became Lively, Sleep became Night, and Focus was removed. Saved Focus choices migrate to Relax; renamed modes retain their curves. These are listening preferences, not validated concentration or sleep treatments.
 
-Sleep is the one compressed mode (owner decision, 2026-10-24): 2:1 above -20 dBFS with a 6 dB soft knee, 10 ms attack, 400 ms release, linked across channels, no makeup gain, placed after the EQ and before the safety limiter. Loud moments come down and quiet passages pass untouched. When Sleep is left, the processor keeps running until the compressor has released, so the level never jumps.
+Night is the one compressed mode (owner decision, 2026-10-24): 2:1 above -20 dBFS with a 6 dB soft knee, 10 ms attack, 400 ms release, linked across channels, no makeup gain, placed after the EQ and before the safety limiter. Loud moments come down and quiet passages pass untouched. When Night is left, the processor keeps running until the compressor has released, so the level never jumps.
+
+ReplayGain remains a separate playback setting (Off, Track or Album), applied at track start and transitions alongside any preset. Presets do not change the ReplayGain preference. Its metadata peak guard is independent of the DSP headroom calculation and safety limiter. Night compression reduces louder passages within a track; ReplayGain adjusts level between tagged tracks. The sleep timer remains independent of both.
 
 ## 6. Storage and UI
 
 - One JSON file per car profile in the app files directory: name, date, route signature, sample rate measured, PEQ bands, measured and target curves, last mode, Custom trims, mic source used.
 - Settings (`SettingsScreen.kt`): Car Audio section with profile list, Calibrate, Re-measure, Delete.
 - Calibration wizard: full-screen Compose flow.
-- Now Playing: chip "Car · <mode>"; tap opens Off, Reference, Bass, Vocal, Drive, Custom. Off is the A/B bypass.
+- Now Playing: chip "Car · <mode>"; tap opens Off, Reference, Bass, Vocal, Lively, Relax, Night, Custom. Off is the A/B bypass.
 
 ## 7. Verification
 
@@ -114,7 +117,7 @@ JVM unit tests:
 In car:
 - Verify sweep with DSP on: within +/-3 dB of the achievable target (the target clipped by the boost cap, and by the cuts-only rule below 100 Hz) from 60 Hz to 8 kHz after 1/6-octave smoothing; otherwise show where it misses.
 - The verify sweep uses the same phone mic as the fit, so a pass proves the fit is self-consistent, not that the car is accurate. Only a reference mic or listening confirms absolute accuracy.
-- Listening A/B with the chip across all modes; no clicks on switching. Judge Bass and Drive while driving, not only parked: whole-body vibration lowers preferred bass by up to about 3 dB (AES E-Library 15150).
+- Listening A/B with the chip across all modes; no clicks on switching. Judge Bass and Lively while driving, not only parked: whole-body vibration lowers preferred bass by up to about 3 dB (AES E-Library 15150).
 
 ## 8. Build order
 

@@ -3,6 +3,7 @@ package apincer.android.mmate.audio.dsp
 import android.media.AudioDeviceInfo
 import android.util.Log
 import apincer.android.mmate.audio.UsbOutputFormat
+import apincer.android.mmate.audio.headphones.HeadphoneDsp
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.exp
@@ -10,18 +11,30 @@ import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 /**
  * What Car DSP applies: the car correction plus the sound mode, as one fixed band list, and
- * whether the light compressor runs (Sleep only).
+ * whether the light compressor runs (Night only).
  */
-class CarDspSettings(bands: List<PeqBand>, val compress: Boolean = false) {
+class CarDspSettings(
+    bands: List<PeqBand>,
+    val compress: Boolean = false,
+    val requestedPreampDb: Double = 0.0,
+    leftBands: List<PeqBand> = emptyList(),
+    rightBands: List<PeqBand> = emptyList(),
+    val balanceDb: Double = 0.0,
+    monoBands: List<PeqBand> = emptyList()
+) {
     val bands: List<PeqBand> = bands.toList()
+    val leftBands: List<PeqBand> = leftBands.toList()
+    val rightBands: List<PeqBand> = rightBands.toList()
+    val monoBands: List<PeqBand> = monoBands.toList()
 }
 
 /**
- * The switch every audio output reads at each block. A USB DAC route is never processed, so the
- * bit-perfect path stays untouched whatever the target says (docs/technical/CAR_AUDIO_DSP.md).
+ * The switch every audio output reads at each block. USB remains untouched unless the headphone
+ * route selection supplies an explicitly enabled correction.
  */
 object CarDsp {
     @JvmStatic
@@ -30,29 +43,32 @@ object CarDsp {
 
     /** Closed until the first route report, so a missed report never lets DSP reach a USB DAC. */
     @JvmStatic
-    @Volatile
-    var routeEligible = false
-        private set
+    val routeEligible: Boolean get() = HeadphoneDsp.current.speakerEligible
 
     @JvmStatic
-    fun effectiveTarget(): CarDspSettings? = target.takeIf { routeEligible }
+    fun effectiveTarget(): CarDspSettings? = effectiveTarget(HeadphoneDsp.current)
+
+    internal fun effectiveTarget(headphone: HeadphoneDsp.Selection): CarDspSettings? =
+        if (headphone.handlesRoute) headphone.settings else target.takeIf { headphone.speakerEligible }
 
     /** Call with the devices Android routes media to. */
     @JvmStatic
     fun updateRoute(routed: List<AudioDeviceInfo>) {
-        routeEligible = routed.none { UsbOutputFormat.isUsbType(it.type) }
+        HeadphoneDsp.updateRoute(routed)
     }
 }
 
 /**
- * Applies [CarDsp]'s target to one output's PCM: chain, 30 ms crossfade on every change (on and
- * off included), the light compressor when the target asks for it, then a linked safety limiter.
+ * Applies [CarDsp]'s target to one output's PCM: chain, 30 ms crossfade on target changes, the light
+ * compressor when requested, then a linked safety limiter. Unconsented USB bypass is immediate.
  * Changes are picked up only at a block boundary, so a block is processed once even when the
  * AudioTrack takes it in several writes.
  */
 class CarDspProcessor(private val sampleRate: Int, private val channels: Int, seed: Long = System.nanoTime()) {
     private var settings: CarDspSettings? = CarDsp.effectiveTarget()
-    private var chain: DspChain? = settings?.let { DspChain(it.bands, sampleRate, channels) }
+    private var chain: DspChain? = settings?.let {
+        DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
+    }
     private var fadeFrom: DspChain? = null
     private var fading = false
     private var fadePosition = 0
@@ -71,17 +87,25 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
 
     /** Takes up a changed target; true while this block needs processing. */
     fun beginBlock(): Boolean {
-        val wanted = CarDsp.effectiveTarget()
-        if (wanted !== settings) {
+        val route = HeadphoneDsp.current
+        val wanted = CarDsp.effectiveTarget(route)
+        if (!route.speakerEligible && wanted == null) {
+            // A route change or revoked USB consent must not carry the old correction into USB.
+            settings = null
+            chain = null
+            fadeFrom = null
+            fading = false
+            compressorGain = 1.0
+            limiterGain = 1.0
+        } else if (wanted !== settings) {
             fadeFrom = chain
             settings = wanted
-            chain = wanted?.let { DspChain(it.bands, sampleRate, channels) }
+            chain = wanted?.let {
+                DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
+            }
             fading = true
             fadePosition = 0
         }
-        // Leaving Sleep keeps processing until the compressor has let go, so the level does not
-        // jump; a USB DAC route lets go at once, since it is never processed
-        if (!CarDsp.routeEligible) compressorGain = 1.0
         val now = chain != null || fading || compressorGain < RECOVERED
         if (now != engaged) {
             engaged = now
@@ -93,7 +117,9 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
     /** After a seek: clear filter state and land on the current target without a fade. */
     fun reset() {
         settings = CarDsp.effectiveTarget()
-        chain = settings?.let { DspChain(it.bands, sampleRate, channels) }
+        chain = settings?.let {
+            DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
+        }
         fadeFrom = null
         fading = false
         limiterGain = 1.0
@@ -137,6 +163,35 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         repeat(samples % channels) {
             putInt16(target, source.getShort(position).toInt())
             position += 2
+        }
+        target.flip()
+        return target
+    }
+
+    /** Processes packed little-endian 24-bit samples without changing [source]'s position. */
+    fun processInt24(source: ByteBuffer, reuse: ByteBuffer): ByteBuffer = processInteger(source, reuse, 3, INT24_SCALE)
+
+    /** Processes little-endian 32-bit samples without changing [source]'s position. */
+    fun processInt32(source: ByteBuffer, reuse: ByteBuffer): ByteBuffer = processInteger(source, reuse, 4, INT32_SCALE)
+
+    private fun processInteger(source: ByteBuffer, reuse: ByteBuffer, width: Int, scale: Double): ByteBuffer {
+        val samples = source.remaining() / width
+        val target = buffer(reuse, samples * width)
+        var position = source.position()
+        repeat(samples / channels) {
+            for (c in 0 until channels) {
+                frame[c] = readInteger(source, position, width) / scale
+                position += width
+            }
+            processFrame()
+            for (c in 0 until channels) {
+                val value = (frame[c] * scale).roundToLong().coerceIn(-scale.toLong(), scale.toLong() - 1).toInt()
+                putInteger(target, value, width)
+            }
+        }
+        repeat(samples % channels) {
+            putInteger(target, readInteger(source, position, width), width)
+            position += width
         }
         target.flip()
         return target
@@ -243,6 +298,17 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         const val RECOVERED = 0.9988
         const val INT24_SCALE = 8_388_608.0
         const val INT16_SCALE = 32_768.0
+        const val INT32_SCALE = 2_147_483_648.0
+
+        fun readInteger(source: ByteBuffer, position: Int, width: Int): Int {
+            var value = source.get(position + width - 1).toInt()
+            for (byte in width - 2 downTo 0) value = (value shl 8) or (source.get(position + byte).toInt() and 0xff)
+            return value
+        }
+
+        fun putInteger(target: ByteBuffer, value: Int, width: Int) {
+            repeat(width) { target.put((value shr (8 * it)).toByte()) }
+        }
 
         fun buffer(reuse: ByteBuffer, bytes: Int): ByteBuffer =
             if (reuse.capacity() >= bytes) reuse.apply { clear() } else ByteBuffer.allocateDirect(bytes)

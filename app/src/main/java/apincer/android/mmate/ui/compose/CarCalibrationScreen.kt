@@ -63,6 +63,7 @@ import apincer.android.mmate.R
 import apincer.android.mmate.audio.calibration.CalibrationWizard
 import apincer.android.mmate.audio.calibration.FitResult
 import apincer.android.mmate.audio.calibration.FrequencyGrid
+import apincer.android.mmate.audio.calibration.PeqFitter
 import apincer.android.mmate.audio.calibration.SweepRecorder
 import kotlin.math.ln
 
@@ -116,7 +117,7 @@ fun CarCalibrationScreen(
                 is CalibrationWizard.Step.Position -> Position(step)
                 CalibrationWizard.Step.Fitting -> Working("Working out the correction")
                 is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name) { name = it }
-                is CalibrationWizard.Step.Verifying -> Verifying()
+                is CalibrationWizard.Step.Verifying -> Verifying(step)
                 is CalibrationWizard.Step.Done -> Done(step)
             }
         }
@@ -126,7 +127,14 @@ fun CarCalibrationScreen(
                 CalibrationWizard.Step.Checklist -> PrimaryButton("Start", onClick = onStart)
                 is CalibrationWizard.Step.Position ->
                     if (!step.measuring) PrimaryButton(if (step.problem == null) "Measure" else "Measure again", onClick = onMeasure)
-                is CalibrationWizard.Step.Result -> PrimaryButton("Save and check") { onSave(name) }
+                // Beside the pinned button, so a failed save is explained wherever the page is scrolled
+                is CalibrationWizard.Step.Result -> Column {
+                    step.problem?.let {
+                        Notice(it)
+                        Spacer(Modifier.height(12.dp))
+                    }
+                    PrimaryButton("Save and check") { onSave(name) }
+                }
                 is CalibrationWizard.Step.Done -> PrimaryButton("Done", onClick = onClose)
                 else -> {}
             }
@@ -191,6 +199,8 @@ private fun Checklist(unprocessedMic: Boolean) {
     }
     Spacer(Modifier.height(16.dp))
     Small("Recordings are analysed on this phone and discarded. Only the measured response and the EQ are saved.")
+    Spacer(Modifier.height(8.dp))
+    Small("Steady engine noise may limit correction at a few frequencies. For the fullest calibration, switch the engine off when possible.")
 }
 
 @Composable
@@ -210,6 +220,7 @@ private fun Position(step: CalibrationWizard.Step.Position) {
     } else {
         step.problem?.let { Notice(it) } ?: Small("Keep still and quiet for about 14 seconds once you press Measure.")
     }
+    NoiseNotice(step.noisyBandsHz)
 }
 
 /** Top view of the listener's head with the five spots: done ones teal, the current one gold. */
@@ -297,6 +308,7 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName
     Body("${fit.bands.size} EQ bands correct the speaker from %.0f Hz to 8 kHz.".format(fit.fromHz))
     Spacer(Modifier.height(16.dp))
     ResponseGraph(fit)
+    NoiseNotice(fit.excludedBandsHz)
     if (fit.fromHz > 31) {
         Spacer(Modifier.height(12.dp))
         Small("Bass below %.0f Hz was too quiet to measure and is left as it is.".format(fit.fromHz))
@@ -320,13 +332,14 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, onName
 }
 
 @Composable
-private fun Verifying() {
+private fun Verifying(step: CalibrationWizard.Step.Verifying) {
     Title("Checking the correction")
     Body("Hold the phone at the centre spot again.")
     Spacer(Modifier.height(16.dp))
     PositionMap(current = 0)
     Spacer(Modifier.height(16.dp))
     Countdown()
+    NoiseNotice(step.profile.excludedBandsHz)
 }
 
 @Composable
@@ -336,12 +349,20 @@ private fun Done(step: CalibrationWizard.Step.Done) {
     Spacer(Modifier.height(4.dp))
     val worst = profile.worstDeviationDb ?: 0.0
     when (profile.verified) {
-        true -> Verdict("Within ±3 dB of the target", "Largest difference %.1f dB.".format(worst), MusicMateDesignTokens.Brand.AcousticTeal)
+        true -> Verdict(if (profile.excludedBandsHz.isEmpty()) "Within ±3 dB of the target" else "Reliable frequencies within ±3 dB", "Largest difference %.1f dB.".format(worst), MusicMateDesignTokens.Brand.AcousticTeal)
         false -> Verdict("Off by up to %.1f dB".format(worst), "The correction is saved and active. Measuring again may get closer.", MusicMateDesignTokens.Brand.GoldAmber)
         null -> Verdict("Not checked", "The check sweep could not be measured. The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
     }
+    NoiseNotice(profile.excludedBandsHz)
     Spacer(Modifier.height(16.dp))
     Body("Speaker Tuning applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the Speaker Tuning chip in Now Playing, and manage speakers in Settings.")
+}
+
+@Composable
+private fun NoiseNotice(bandsHz: List<Double>) {
+    if (bandsHz.isEmpty()) return
+    Spacer(Modifier.height(12.dp))
+    Notice("Partial calibration: background noise near ${bandsHz.joinToString { "%.0f Hz".format(it) }}. These regions receive at most 1 dB of EQ and are excluded from the check.")
 }
 
 @Composable
@@ -376,7 +397,7 @@ private fun ResponseGraph(fit: FitResult) {
                 .clip(RoundedCornerShape(12.dp))
                 .background(MusicMateDesignTokens.Surfaces.Surface)
                 .border(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(12.dp))
-                .semantics { contentDescription = "Frequency response: measured, target and corrected" }
+                .semantics { contentDescription = "Frequency response: measured, target and corrected" + if (fit.excludedBandsHz.isEmpty()) "" else "; gaps mark frequencies obscured by noise" }
         ) {
             val plotH = size.height - 18.dp.toPx()
             fun x(hz: Double) = (ln(hz / 20.0) / ln(1_000.0) * size.width).toFloat()
@@ -394,7 +415,15 @@ private fun ResponseGraph(fit: FitResult) {
             drawText(measurer, "Hz", Offset(size.width - 18.dp.toPx(), plotH + 3.dp.toPx()), axis)
             fun curve(values: DoubleArray, color: Color, dashed: Boolean = false) {
                 val path = Path()
-                values.forEachIndexed { i, db -> if (i == 0) path.moveTo(x(grid[i]), y(db)) else path.lineTo(x(grid[i]), y(db)) }
+                var connected = false
+                values.forEachIndexed { i, db ->
+                    if (PeqFitter.isExcluded(grid[i], fit.excludedBandsHz)) {
+                        connected = false
+                    } else {
+                        if (connected) path.lineTo(x(grid[i]), y(db)) else path.moveTo(x(grid[i]), y(db))
+                        connected = true
+                    }
+                }
                 drawPath(path, color, style = Stroke(width = 2.dp.toPx(), pathEffect = if (dashed) PathEffect.dashPathEffect(floatArrayOf(12f, 8f)) else null))
             }
             curve(fit.measuredDb, Measured)

@@ -47,6 +47,9 @@ class LogSweep(
     fun toPcm16(source: DoubleArray = samples): ShortArray =
         ShortArray(source.size) { (source[it] * 32_767).roundToInt().coerceIn(-32_768, 32_767).toShort() }
 
+    /** Time the sweep crosses a frequency, relative to the beginning of playback. */
+    fun timeAtFrequency(hz: Double): Double = rate * ln(hz / startHz)
+
     private fun fade(n: Int): Double {
         val fadeIn = (sampleRate * 0.05).roundToInt()
         val fadeOut = (sampleRate * 0.005).roundToInt()
@@ -92,13 +95,30 @@ class Deconvolver(val sweep: LogSweep, val size: Int = 1 shl 20) {
 sealed class Take {
     /**
      * [responseDb] is on [FrequencyGrid.HZ], 1/6-octave smoothed; level is arbitrary. [bandSnrDb]
-     * follows [TakeAnalyzer.SNR_BANDS_HZ]; bands below 100 Hz may be under the limit.
+     * follows [TakeAnalyzer.SNR_BANDS_HZ]; low bass and a bounded set of noisy bands may be under
+     * the limit. Fitting must respect both [TakeAnalyzer.reliableFromHz] and [TakeAnalyzer.unreliableBands].
      */
     class Accepted(val responseDb: DoubleArray, val bandSnrDb: DoubleArray, val delaySeconds: Double) : Take()
 
     class Rejected(val reason: Reason, val detail: String) : Take()
 
-    enum class Reason { CLIPPED, NO_RESPONSE, TOO_QUIET, TOO_SHORT }
+    /** [CAPTURE] means the recording itself failed; its detail is complete advice for the user. */
+    enum class Reason { CLIPPED, NO_RESPONSE, TOO_QUIET, TOO_SHORT, CAPTURE }
+}
+
+/** Keeps the session's noise exclusions bounded even when noise changes between positions. */
+class MeasurementSession {
+    private val positions = mutableListOf<Take.Accepted>()
+    val takes: List<Take.Accepted> get() = positions.toList()
+
+    fun clear() = positions.clear()
+
+    /** A rejected position leaves previous measurements intact so the user can retry it. */
+    fun add(take: Take.Accepted): Boolean {
+        if (TakeAnalyzer.unreliableBands(positions + take).size > TakeAnalyzer.MAX_UNRELIABLE_BANDS) return false
+        positions += take
+        return true
+    }
 }
 
 /** Turns one recording of the sweep into a smoothed response, or says why it cannot. */
@@ -109,6 +129,7 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
     private val window = preRoll + (rate * IR_SECONDS).roundToInt()
     private val fadeIn = (rate * FADE_IN_SECONDS).roundToInt()
     private val spectrumFft = Fft(SPECTRUM_SIZE)
+    private val ambientFft = Fft(AMBIENT_FFT_SIZE)
 
     fun analyze(recording: DoubleArray): Take {
         val loudest = recording.maxOfOrNull { abs(it) } ?: 0.0
@@ -138,17 +159,38 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
             return Take.Rejected(Take.Reason.NO_RESPONSE, "No sweep found in the recording")
         }
 
-        val bandSnr = DoubleArray(SNR_BANDS_HZ.size) {
-            10 * log10(bandSum(irPower, SNR_BANDS_HZ[it], 1.0 / 6) / max(bandSum(noisePower, SNR_BANDS_HZ[it], 1.0 / 6), TINY))
+        val delay = (peak - (sweep.length - 1)).toDouble() / rate
+        // The recorder leaves silence before and after playback. Compare it with the raw sweep
+        // as well: matched filtering alone can give steady background noise processing gain.
+        val ambientLength = (rate * AMBIENT_SECONDS).roundToInt()
+        val before = ambientPower(recording, 0, ambientLength)
+        val after = ambientPower(recording, recording.size - ambientLength, ambientLength)
+        val bandSnr = DoubleArray(SNR_BANDS_HZ.size) { b ->
+            val hz = SNR_BANDS_HZ[b]
+            val deconvolvedSnr = 10 * log10(bandSum(irPower, hz, 1.0 / 6) / max(bandSum(noisePower, hz, 1.0 / 6), TINY))
+            val start = ((delay + sweep.timeAtFrequency(hz)) * rate).roundToInt() - ambientLength / 2
+            val playing = ambientPower(recording, start, ambientLength)
+            val background = max(bandSum(before, hz, 1.0 / 6, AMBIENT_FFT_SIZE), bandSum(after, hz, 1.0 / 6, AMBIENT_FFT_SIZE))
+            val rawSnr = 10 * log10(max(bandSum(playing, hz, 1.0 / 6, AMBIENT_FFT_SIZE), TINY) / max(background, TINY))
+            min(deconvolvedSnr, rawSnr)
         }
-        // Below 100 Hz a quiet band is left uncorrected (reliableFromHz); a phone speaker has no bass to raise
-        val worst = SNR_BANDS_HZ.indices.filter { SNR_BANDS_HZ[it] >= 100.0 }.minBy { bandSnr[it] }
-        if (bandSnr[worst] < MIN_SNR_DB) {
+        // A few contaminated bands can be protected during fitting; broad noise still rejects.
+        val noisy = SNR_BANDS_HZ.indices.filter { SNR_BANDS_HZ[it] >= 100.0 && bandSnr[it] < MIN_SNR_DB }
+        if (noisy.size > MAX_UNRELIABLE_BANDS) {
+            val worst = noisy.minBy { bandSnr[it] }
             return Take.Rejected(Take.Reason.TOO_QUIET, "Only %.0f dB above the noise near %.0f Hz".format(bandSnr[worst], SNR_BANDS_HZ[worst]))
         }
-        // From the start of the recording to the start of the sweep in it
-        val delay = (peak - (sweep.length - 1)).toDouble() / rate
         return Take.Accepted(smoothedDb(irPower, rate), bandSnr, delay)
+    }
+
+    private fun ambientPower(signal: DoubleArray, start: Int, length: Int): DoubleArray {
+        val re = DoubleArray(AMBIENT_FFT_SIZE)
+        val im = DoubleArray(AMBIENT_FFT_SIZE)
+        for (i in 0 until length) {
+            re[i] = signal[start + i] * (0.5 - 0.5 * cos(2 * PI * i / (length - 1)))
+        }
+        ambientFft.forward(re, im)
+        return DoubleArray(AMBIENT_FFT_SIZE / 2) { re[it] * re[it] + im[it] * im[it] }
     }
 
     /**
@@ -171,8 +213,8 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
         return DoubleArray(SPECTRUM_SIZE / 2) { re[it] * re[it] + im[it] * im[it] }
     }
 
-    private fun bandSum(power: DoubleArray, centre: Double, halfWidthOctaves: Double): Double {
-        val binHz = rate.toDouble() / SPECTRUM_SIZE
+    private fun bandSum(power: DoubleArray, centre: Double, halfWidthOctaves: Double, fftSize: Int = SPECTRUM_SIZE): Double {
+        val binHz = rate.toDouble() / fftSize
         val low = (centre * 2.0.pow(-halfWidthOctaves) / binHz).roundToInt().coerceIn(1, power.size - 1)
         val high = (centre * 2.0.pow(halfWidthOctaves) / binHz).roundToInt().coerceIn(low, power.size - 1)
         var sum = 0.0
@@ -190,12 +232,22 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
         private const val MAX_DELAY_SECONDS = 2.5
         private const val CLIP = 0.99
         const val MIN_SNR_DB = 20.0
+        /** At most one octave's worth of bands above 100 Hz may be excluded in a session. */
+        const val MAX_UNRELIABLE_BANDS = 3
+        private const val AMBIENT_SECONDS = 0.25
+        private const val AMBIENT_FFT_SIZE = 1 shl 14
         private const val MIN_PEAK_RATIO = 3.0
         private const val TINY = 1e-30
 
         /** 1/3-octave centres from 31.5 Hz to 8 kHz, the corrected range. */
         @JvmField
         val SNR_BANDS_HZ: List<Double> = (-15..9).map { 1000.0 * 2.0.pow(it / 3.0) }
+
+        /** Exclude a band if any measured position could not distinguish it from the noise. */
+        @JvmStatic
+        fun unreliableBands(takes: List<Take.Accepted>): List<Double> = SNR_BANDS_HZ.indices
+            .filter { b -> SNR_BANDS_HZ[b] >= 100.0 && takes.any { it.bandSnrDb[b] < MIN_SNR_DB } }
+            .map { SNR_BANDS_HZ[it] }
 
         /**
          * The lowest frequency every take measured cleanly: just above the highest band under the

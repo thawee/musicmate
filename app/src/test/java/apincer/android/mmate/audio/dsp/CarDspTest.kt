@@ -131,7 +131,11 @@ class CarDspTest {
     @Test
     fun usbRouteIsNeverProcessed() {
         CarDsp.target = presence
-        val dac = mockk<AudioDeviceInfo> { every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE }
+        val dac = mockk<AudioDeviceInfo> {
+            every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE
+            every { address } returns "card=1;device=0"
+            every { productName } returns "USB DAC"
+        }
         CarDsp.updateRoute(listOf(dac))
         assertFalse(CarDspProcessor(48_000, 2, seed = 1).beginBlock())
         CarDsp.updateRoute(listOf(speaker))
@@ -269,10 +273,12 @@ class CarDspTest {
         CarDsp.target = CarDspSettings(emptyList(), compress = true)
         val processor = CarDspProcessor(48_000, 2, seed = 3)
         settledPeak(processor, amplitude = 0.89)
-        CarDsp.updateRoute(listOf(mockk<AudioDeviceInfo> { every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE }))
-        assertTrue("the 30 ms fade still runs", processor.beginBlock())
-        processor.processFloatToInt24(floats(FloatArray(4_800 * 2)), ByteBuffer.allocate(0))
-        assertFalse(processor.beginBlock())
+        CarDsp.updateRoute(listOf(mockk<AudioDeviceInfo> {
+            every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE
+            every { address } returns "card=1;device=0"
+            every { productName } returns "USB DAC"
+        }))
+        assertFalse("USB bypass must not contain the previous speaker correction", processor.beginBlock())
     }
 
     @Test

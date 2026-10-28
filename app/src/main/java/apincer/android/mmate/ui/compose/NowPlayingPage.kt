@@ -49,6 +49,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,6 +68,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -83,6 +85,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.palette.graphics.Palette
 import apincer.android.mmate.R
+import apincer.android.mmate.audio.headphones.HeadphoneDsp
 import apincer.android.mmate.coil3.CoverartFetcher
 import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
@@ -352,12 +355,18 @@ fun NowPlayingPage(
                                     .combinedClickable(enabled = track != null, onLongClick = onShowTrackDetails) { onTrackClicked() }
                             )
                             if (track != null && onShowTrackDetails != null) {
-                                IconButton(onClick = onShowTrackDetails, modifier = Modifier.size(48.dp)) {
+                                IconButton(
+                                    onClick = onShowTrackDetails,
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(colorResource(R.color.song_navigation_background), RoundedCornerShape(16.dp))
+                                        .border(1.dp, colorResource(R.color.song_navigation_outline), RoundedCornerShape(16.dp))
+                                ) {
                                     Icon(
-                                        painterResource(id = R.drawable.ic_outline_info_24),
+                                        painterResource(id = R.drawable.rounded_preview_24),
                                         contentDescription = stringResource(R.string.cd_song_details),
-                                        tint = Color(0xFFEEEEEE),
-                                        modifier = Modifier.size(22.dp)
+                                        tint = colorGold,
+                                        modifier = Modifier.size(24.dp)
                                     )
                                 }
                             }
@@ -454,10 +463,15 @@ fun NowPlayingPage(
                                 }
                             }
                         }
-                        if (state.carDspAvailable.value) {
+                        if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO") {
                             Spacer(modifier = Modifier.width(6.dp))
                             // The chip's label is short and never cut; a long device name gives way instead
-                            CarDspChip()
+                            val headphone by HeadphoneDsp.state.collectAsState()
+                            if (headphone.endpoint != null && HeadphoneDsp.current.handlesRoute) {
+                                HeadphoneDspChip()
+                            } else if (state.carDspAvailable.value) {
+                                CarDspChip()
+                            }
                         }
                         }
                     }

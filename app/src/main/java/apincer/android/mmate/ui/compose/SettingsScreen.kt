@@ -224,6 +224,13 @@ fun SettingsScreen(
                 if (!LocalInspectionMode.current) CarAudioSettings()
             }
 
+            SettingsCard(
+                title = "HEADPHONE EQ",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
+                if (!LocalInspectionMode.current) HeadphoneAudioSettings()
+            }
+
             // ── Section 3: Library & User Interface ───────────────────────────
             SettingsCard(
                 title = "USER INTERFACE",

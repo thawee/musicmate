@@ -15,27 +15,36 @@ import androidx.annotation.RequiresPermission
 import apincer.android.mmate.utils.AudioOutputHelper
 import kotlin.math.max
 
+/** What the calibration wizard needs from a recorder. */
+interface SweepCapture {
+    /** True when the phone offers a mic path without noise suppression or gain control. */
+    val unprocessed: Boolean
+    val micSource: String
+
+    /** Blocks for about [SweepRecorder.TOTAL_SECONDS]; call off the main thread. [cancelled] stops it early. */
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    fun capture(pcm: ShortArray, cancelled: () -> Boolean = { false }): SweepRecorder.Capture
+}
+
 /**
  * Plays a sweep on its own media AudioTrack and records it with the phone's built-in mic. The
  * track uses the player's attributes, so Android routes it like music (to Android Auto in the
  * car); nothing enters the queue, and ReplayGain, speed and Car DSP do not touch it. Taking
  * exclusive focus pauses MusicMate's player for the duration.
  */
-class SweepRecorder(context: Context) {
+class SweepRecorder(context: Context) : SweepCapture {
     private val audioManager = context.getSystemService(AudioManager::class.java)
 
-    /** [problem] is set when the take must be thrown away whatever it sounds like. */
+    /** [problem] is set when the take must be thrown away whatever it sounds like; it is advice shown as is. */
     class Capture(val recording: DoubleArray, val problem: String?)
 
-    /** True when the phone offers a mic path without noise suppression or gain control. */
-    val unprocessed: Boolean =
+    override val unprocessed: Boolean =
         audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true"
 
-    val micSource: String get() = if (unprocessed) "UNPROCESSED" else "VOICE_RECOGNITION"
+    override val micSource: String get() = if (unprocessed) "UNPROCESSED" else "VOICE_RECOGNITION"
 
-    /** Blocks for about [TOTAL_SECONDS]; call off the main thread. [cancelled] stops it early. */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    fun capture(pcm: ShortArray, cancelled: () -> Boolean = { false }): Capture {
+    override fun capture(pcm: ShortArray, cancelled: () -> Boolean): Capture {
         val total = (RATE * TOTAL_SECONDS).toInt()
         val lead = (RATE * LEAD_SECONDS).toInt()
         val recording = FloatArray(total)
@@ -48,13 +57,18 @@ class SweepRecorder(context: Context) {
         audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
             .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_MIC }
             ?.let { record.setPreferredDevice(it) }
-        val track = AudioTrack.Builder()
-            .setAudioAttributes(MEDIA)
-            .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
-            .setTransferMode(AudioTrack.MODE_STREAM)
-            .setBufferSizeInBytes(AudioTrack.getMinBufferSize(RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT) * 4)
-            .build()
+        val track = try {
+            AudioTrack.Builder()
+                .setAudioAttributes(MEDIA)
+                .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .setBufferSizeInBytes(AudioTrack.getMinBufferSize(RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT) * 4)
+                .build()
+        } catch (failure: Exception) {
+            record.release()
+            throw failure
+        }
         // Streamed from its own thread: a 1 MB static buffer is more than some phones accept
         val player = Thread({
             track.play()
@@ -63,7 +77,9 @@ class SweepRecorder(context: Context) {
         val focus = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE).setAudioAttributes(MEDIA).build()
         var problem: String? = null
         try {
-            audioManager.requestAudioFocus(focus)
+            if (audioManager.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                return Capture(DoubleArray(0), "Another app is holding the audio, such as a call. End it and measure again.")
+            }
             record.startRecording()
             var read = 0
             var routesChecked = false
@@ -75,7 +91,7 @@ class SweepRecorder(context: Context) {
                     problem = routeProblem(record, track)
                 }
                 val count = record.read(recording, read, minOf(CHUNK, total - read), AudioRecord.READ_BLOCKING)
-                if (count <= 0) return Capture(DoubleArray(0), "The microphone stopped delivering sound ($count)")
+                if (count <= 0) return Capture(DoubleArray(0), "The microphone stopped delivering sound ($count). Measure again.")
                 read += count
             }
         } finally {
@@ -89,18 +105,18 @@ class SweepRecorder(context: Context) {
         return Capture(DoubleArray(total) { recording[it].toDouble() }, problem)
     }
 
-    /** The recorder must be on the built-in mic and the sweep on the same output as music. */
+    /** The recorder must be on the built-in mic and the sweep on the same output as music; the result is advice for the user. */
     private fun routeProblem(record: AudioRecord, track: AudioTrack): String? {
         val mic = record.routedDevice
         val output = track.routedDevice
         val music = audioManager.getAudioDevicesForAttributes(MEDIA).firstOrNull()
         Log.i(TAG, "mic=${mic?.type}:${mic?.productName} sweep=${output?.type}:${output?.productName}#${output?.id} music=${music?.type}#${music?.id}")
         return when {
-            mic == null -> "Could not confirm the phone's microphone was recording"
+            mic == null -> "Could not confirm the phone's microphone was recording. Measure again."
             mic.type != AudioDeviceInfo.TYPE_BUILTIN_MIC ->
-                "Recording used ${AudioOutputHelper.typeToString(mic.type)} instead of the phone's microphone"
+                "Recording used ${AudioOutputHelper.typeToString(mic.type)} instead of the phone's microphone. Disconnect any headset with a microphone and measure again."
             output != null && music != null && output.id != music.id ->
-                "The test sound went to ${AudioOutputHelper.typeToString(output.type)}, not where music plays"
+                "The test sound went to ${AudioOutputHelper.typeToString(output.type)}, not where music plays. Play a song to check it comes from the speaker, then measure again."
             else -> null
         }
     }

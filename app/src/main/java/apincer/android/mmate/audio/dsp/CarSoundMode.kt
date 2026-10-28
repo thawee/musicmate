@@ -4,23 +4,23 @@ import android.content.Context
 import android.content.SharedPreferences
 import apincer.android.mmate.audio.calibration.CarProfile
 import apincer.android.mmate.audio.calibration.CarProfileStore
+import apincer.android.mmate.audio.headphones.HeadphonePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 
 /**
  * Taste layered on top of the car correction (docs/technical/CAR_AUDIO_DSP.md, section 5): at most
- * three filters and +4 dB per mode. The automatic preamp absorbs every boost. Only [SLEEP]
- * compresses, so a loud moment does not wake the listener.
+ * three filters and +4 dB per mode. The automatic preamp absorbs every boost. Only [NIGHT]
+ * compresses to reduce louder passages.
  */
 enum class CarSoundMode(val label: String, val summary: String, val compresses: Boolean = false) {
     REFERENCE("Reference", "Audiophile: the pure tuning target"),
     BASS("Bass", "Deeper, punchier low end"),
     VOCAL("Vocal", "Voices forward and clear"),
-    DRIVE("Drive", "Lively: tight bass, crisp attack, sparkle"),
+    LIVELY("Lively", "Tight bass, crisp attack, sparkle"),
     RELAX("Relax", "Softer highs, warm and easy"),
-    FOCUS("Focus", "Voices set back for work or study"),
-    SLEEP("Sleep", "Soft and even, loud moments tamed", compresses = true),
+    NIGHT("Night", "Soft and even, loud moments tamed", compresses = true),
     CUSTOM("Custom", "Your own bass and treble");
 
     /** Bands this mode adds; [bassDb] and [trebleDb] apply to [CUSTOM] only. */
@@ -35,7 +35,7 @@ enum class CarSoundMode(val label: String, val summary: String, val compresses: 
             PeqBand(PeqBand.Type.LOW_SHELF, 120.0, -1.5, SHELF_Q),
             PeqBand(PeqBand.Type.PEAK, 300.0, -1.0, 1.0)
         )
-        DRIVE -> listOf(
+        LIVELY -> listOf(
             PeqBand(PeqBand.Type.LOW_SHELF, 70.0, 3.0, SHELF_Q),
             PeqBand(PeqBand.Type.PEAK, 3_000.0, 1.5, 1.0),
             PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, 2.0, SHELF_Q)
@@ -45,11 +45,7 @@ enum class CarSoundMode(val label: String, val summary: String, val compresses: 
             PeqBand(PeqBand.Type.PEAK, 3_000.0, -1.5, 1.0),
             PeqBand(PeqBand.Type.LOW_SHELF, 150.0, 1.5, SHELF_Q)
         )
-        FOCUS -> listOf(
-            PeqBand(PeqBand.Type.PEAK, 2_500.0, -2.0, 0.8),
-            PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, -1.0, SHELF_Q)
-        )
-        SLEEP -> listOf(
+        NIGHT -> listOf(
             PeqBand(PeqBand.Type.HIGH_SHELF, 4_000.0, -4.0, SHELF_Q),
             PeqBand(PeqBand.Type.LOW_SHELF, 60.0, -2.0, SHELF_Q)
         )
@@ -101,6 +97,7 @@ object CarDspPreferences {
     @JvmStatic
     @Synchronized
     fun init(context: Context) {
+        HeadphonePreferences.init(context)
         if (loaded) return
         loaded = true
         val prefs = prefs(context)
@@ -165,8 +162,18 @@ object CarDspPreferences {
 
     internal fun load(prefs: SharedPreferences, profile: CarProfile?, current: CarDspChoice): CarDspChoice {
         val id = profile?.id
+        val savedMode = prefs.getString(key(MODE, id), null)
+        val mode = when (savedMode) {
+            "DRIVE" -> CarSoundMode.LIVELY
+            "SLEEP" -> CarSoundMode.NIGHT
+            "FOCUS" -> CarSoundMode.RELAX
+            else -> CarSoundMode.entries.firstOrNull { it.name == savedMode } ?: current.mode
+        }
+        if (savedMode in listOf("DRIVE", "SLEEP", "FOCUS")) {
+            prefs.edit().putString(key(MODE, id), mode.name).apply()
+        }
         return current.copy(
-            mode = CarSoundMode.entries.firstOrNull { it.name == prefs.getString(key(MODE, id), null) } ?: current.mode,
+            mode = mode,
             bassDb = if (prefs.contains(key(BASS, id))) prefs.getFloat(key(BASS, id), 0f).toDouble() else current.bassDb,
             trebleDb = if (prefs.contains(key(TREBLE, id))) prefs.getFloat(key(TREBLE, id), 0f).toDouble() else current.trebleDb,
             correction = profile?.bands ?: emptyList(),

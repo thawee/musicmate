@@ -7,6 +7,14 @@ import org.junit.Test
 
 class CarSoundModeTest {
     @Test
+    fun presetsDescribeListeningPreferences() {
+        assertEquals(
+            listOf("Reference", "Bass", "Vocal", "Lively", "Relax", "Night", "Custom"),
+            CarSoundMode.entries.map { it.label }
+        )
+    }
+
+    @Test
     fun everyModeStaysWithinThreeFiltersAndFourDecibels() {
         for (mode in CarSoundMode.entries) {
             val bands = mode.bands(bassDb = 4.0, trebleDb = 4.0)
@@ -33,16 +41,16 @@ class CarSoundModeTest {
     }
 
     @Test
-    fun onlySleepCompresses() {
+    fun onlyNightCompresses() {
         for (mode in CarSoundMode.entries) {
             val settings = CarDspChoice(enabled = true, mode = mode).settings()!!
-            assertEquals(mode.name, mode == CarSoundMode.SLEEP, settings.compress)
+            assertEquals(mode.name, mode == CarSoundMode.NIGHT, settings.compress)
         }
     }
 
     @Test
     fun offMeansNoTarget() {
-        assertNull(CarDspChoice(enabled = false, mode = CarSoundMode.DRIVE).settings())
-        assertEquals(CarSoundMode.DRIVE.bands(), CarDspChoice(enabled = true, mode = CarSoundMode.DRIVE).settings()!!.bands)
+        assertNull(CarDspChoice(enabled = false, mode = CarSoundMode.LIVELY).settings())
+        assertEquals(CarSoundMode.LIVELY.bands(), CarDspChoice(enabled = true, mode = CarSoundMode.LIVELY).settings()!!.bands)
     }
 }

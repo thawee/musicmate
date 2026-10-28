@@ -41,6 +41,8 @@ class AudioLevelMeterTest {
         assertEquals(0f, initial.levelL, 0.001f)
         assertEquals(0f, initial.levelR, 0.001f)
 
+        // Other PCM tests may have published within the hub's 16 ms throttle window.
+        Thread.sleep(20)
         AudioTelemetryManager.updateLevels(0.76f, 0.65f, 0.85f, 0.75f)
         val updated = AudioTelemetryManager.levels.value
         assertTrue(updated.isRealtime)

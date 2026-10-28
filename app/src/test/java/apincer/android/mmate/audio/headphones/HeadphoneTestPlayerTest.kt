@@ -1,0 +1,110 @@
+package apincer.android.mmate.audio.headphones
+
+import apincer.android.mmate.audio.dsp.CarDspSettings
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
+import org.junit.Test
+import kotlin.math.abs
+
+class HeadphoneTestPlayerTest {
+    private val endpoint = HeadphoneEndpoint("usb:test", "DAC", true)
+
+    @Test fun quietSignalsIdentifyEarsAndCenterUsesIdenticalSamples() {
+        for (signal in HeadphoneTestSignal.entries) {
+            val pcm = HeadphoneTestTone.render(signal, CarDspSettings(emptyList()))
+            assertTrue(pcm.any { it != 0.toShort() })
+            assertTrue(pcm.all { abs(it.toInt()) <= 520 })
+            assertTrue(pcm.size <= 48_000 * 2 * 4)
+            for (frame in 0 until pcm.size / 2) {
+                if (signal == HeadphoneTestSignal.LEFT) assertEquals(0, pcm[frame * 2 + 1].toInt())
+                if (signal == HeadphoneTestSignal.RIGHT) assertEquals(0, pcm[frame * 2].toInt())
+                if (signal == HeadphoneTestSignal.CENTER) assertEquals(pcm[frame * 2], pcm[frame * 2 + 1])
+                if (signal == HeadphoneTestSignal.ALTERNATING) assertTrue(pcm[frame * 2] == 0.toShort() || pcm[frame * 2 + 1] == 0.toShort())
+            }
+            assertEquals(0, pcm.first().toInt())
+            assertEquals(0, pcm.last().toInt())
+        }
+    }
+
+    @Test fun userStopAndCoroutineCancellationReleaseOutput() = runBlocking {
+        val output = FakeOutput()
+        val player = HeadphoneTestPlayer { output }
+        val job = async { player.play(HeadphoneTestSignal.LEFT, CarDspSettings(emptyList()), endpoint) }
+        while (!output.started) delay(1)
+        player.stop()
+        job.await()
+        assertTrue(output.closed)
+        val cancelledOutput = FakeOutput()
+        val cancelledPlayer = HeadphoneTestPlayer { cancelledOutput }
+        val cancelled = async { cancelledPlayer.play(HeadphoneTestSignal.RIGHT, CarDspSettings(emptyList()), endpoint) }
+        while (!cancelledOutput.started) delay(1)
+        cancelled.cancel()
+        cancelled.join()
+        assertTrue(cancelledOutput.closed)
+    }
+
+    @Test fun routeOrFocusLossStopsPlaybackAndAlwaysCloses() = runBlocking {
+        val output = FakeOutput()
+        val player = HeadphoneTestPlayer { output }
+        val job = async { runCatching { player.play(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), endpoint) } }
+        while (!output.started) delay(1)
+        output.valid = false
+        assertTrue(job.await().isFailure)
+        assertTrue(output.closed)
+    }
+
+    @Test fun normalCompletionAndOutputErrorsReleaseResources() = runBlocking {
+        val completed = FakeOutput(consume = true)
+        HeadphoneTestPlayer { completed }.play(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), endpoint)
+        assertTrue(completed.closed)
+        assertEquals(48_000 * 3, completed.playedFrames)
+        for (failStart in listOf(true, false)) {
+            val failed = FakeOutput(failStart = failStart, failWrite = !failStart)
+            val result = runCatching {
+                HeadphoneTestPlayer { failed }.play(HeadphoneTestSignal.LEFT, CarDspSettings(emptyList()), endpoint)
+            }
+            assertTrue(result.isFailure)
+            assertTrue(failed.closed)
+        }
+    }
+
+    @Test fun replacingATestClosesItsOutputBeforeOpeningTheNext() = runBlocking {
+        val first = FakeOutput()
+        val second = FakeOutput()
+        var opens = 0
+        val player = HeadphoneTestPlayer {
+            if (opens++ == 0) first else {
+                assertTrue(first.closed)
+                second
+            }
+        }
+        val original = async { player.play(HeadphoneTestSignal.LEFT, CarDspSettings(emptyList()), endpoint) }
+        while (!first.started) delay(1)
+        val replacement = async { player.play(HeadphoneTestSignal.RIGHT, CarDspSettings(emptyList()), endpoint) }
+        while (!second.started) delay(1)
+        player.stop()
+        original.await()
+        replacement.await()
+        assertTrue(second.closed)
+    }
+
+    private class FakeOutput(private val consume: Boolean = false,
+        private val failStart: Boolean = false, private val failWrite: Boolean = false) : HeadphoneTestOutput {
+        @Volatile var started = false
+        @Volatile var closed = false
+        @Volatile var valid = true
+        override val routeValid get() = valid
+        private var written = 0
+        override val playedFrames get() = written / 2
+        override fun start() { check(!failStart); started = true }
+        override fun write(samples: ShortArray, offset: Int, size: Int): Int {
+            check(!failWrite)
+            if (!consume) return 0
+            written += size
+            return size
+        }
+        override fun close() { closed = true }
+    }
+}
