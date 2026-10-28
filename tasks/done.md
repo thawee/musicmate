@@ -31,3 +31,15 @@ Owner wants a friendly, editable name per speaker. The profile already has a `na
 - [x] N2. Settings card: a Rename button per speaker opens a dialog with the name (1 to 40 characters) and the Bluetooth device name underneath. Opens focused with the old name selected; emulator rename to "Weekend MU-X" saved to the profile file.
 - [x] N3. Speaker rows in Settings and the Now Playing dialog show the Bluetooth name when it differs from the friendly name. Seen in Settings on the emulator.
 - [x] N4. 197 tests per flavor, release built and installed on the phone 2026-10-24 (signer, all-files access verified); screenshots from the emulator since the phone was asleep.
+
+# AutoEq search and DIY presets (2026-10-28)
+- [x] Feature 1. `how` over the affected subsystem (explorer map of headphones package, dialog and import flow).
+- [x] Feature 2. `architect` for parallel design exploration. skip: two small additions on an existing shape; one design pass reviewed by the advisor instead.
+- [x] Feature 3. Throughput checkpoint. Blocking first: data shapes for presets and the AutoEq index entry. Independent workstreams: presets (manual tuning model and dialog) and AutoEq (new fetch/index code and import UI) touch disjoint files except HeadphoneControls.kt. Shared mutable state: HeadphoneControls.kt, so the AutoEq UI wiring goes last. Smallest safe decomposition: one owner, because the code is untracked and cannot be split into worktrees.
+- [x] Feature 4. Delegate code-writing. Adapted: the headphone code is untracked, so a worktree would not contain it; one worker edits the main tree while I do not touch it.
+- [x] Feature 5. Verify on the matching surface: JVM tests, emulator UI tests, phone install.
+- [x] Feature 6. Small ordered commits. skip: user commits on request only.
+- [x] Feature 7. interrogate if contested. skip unless the advisor disputes the design.
+- [x] Feature 8. Opening a PR. skip: no commit or PR requested.
+- [x] DIY presets: a preset table (Flat, U-shape, V-shape, Warm, Bright, Vocal and similar) applied to the selected ear (Both, Left or Right) in the DIY dialog, then still adjustable.
+- [x] AutoEq: download and cache results/INDEX.md, search by model, fetch the chosen ParametricEQ.txt, import with "AutoEq, by <source>" as the source, and show an offline or not-found message. Verified live on the phone: index 0.8 s and profile 0.3 s after moving httpGet to OkHttp, since HttpURLConnection took 60 to 326 s on this Wi-Fi because IPv6 to GitHub is dropped.

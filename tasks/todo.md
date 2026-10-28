@@ -2008,6 +2008,15 @@ throughput checkpoint: n/a, read-only investigation.
 - [x] Add focused tests, run app/core tests and APK build, verify the UI and device behavior. 409 unit tests passed, signed GitHub release built. On the phone, HiBy showed an unknown level on first connection; an explicit 5% command was acknowledged and Music Center showed “Set 5%” with the slider. Studio Console showed the same sent level. Physical loudness cannot be measured through DLNA.
 - [x] Update release/user docs, commit the fix, and install the verified update on the phone. Installed GitHub 3.28.5 (code 156) in place; signer and all-files permission verified, first install time retained.
 
+# MusicMate product strategy (2026-10-19)
+
+Priority confirmed by the owner: reliable core and repeat usage. Capacity: one developer. Budget, usage baseline and revenue targets are unspecified.
+
+- [x] Ground current positioning, capabilities and constraints in repository evidence; check current competitor positioning using primary sources. Read the README, user guide, compatibility register, current release notes, Play listing and recorded owner decisions. Checked publisher pages for BubbleUPnP, USB Audio Player PRO, Poweramp and Symfonium.
+- [x] Draft all nine Product Strategy Canvas sections with explicit trade-offs, metric definitions and realistic capacity allocation. Written in `docs/PRODUCT_STRATEGY.md`, preserving the confirmed open-source and Pro decisions.
+- [x] Add a 90-day sequence, critical hypotheses and inexpensive experiments; validate coherence and clearly label assumptions. Proposed a voluntary ten-person cohort, explicit retention denominators, support-time constraints and a narrow tested-device promise.
+- [x] Review the written artifact against the confirmed priority and provide the recommendation with a link to the strategy. All nine sections present; local document targets checked. Targets are proposed learning gates, not measured results.
+
 # Car Audio DSP for the Android Auto route (2026-10-23)
 
 Design agreed in a grilling session; spec in `docs/technical/CAR_AUDIO_DSP.md`. MusicMate stays out of the Android Auto UI.
@@ -2095,3 +2104,129 @@ Media3 1.11.1 has no AIFF or DSD extractor (checked in its sources), so those fi
 ## Between song details and Now Playing (2026-10-24, owner picked the options)
 - [x] N1. Song details: tapping Play shows a "Playing: title" bar with OPEN PLAYER, and the Play button turns into an equalizer while that song plays; tapping it opens Now Playing. Song details is singleInstance, so it opens Music Center on the existing MainActivity and finishes instead of starting a second MainActivity task (the first build did, and landed on the song list). Owner confirmed both ways open Now Playing.
 - [x] N2. Now Playing: long-press the title opens the playing song's details; Back returns to Now Playing. Tap still shows the song in the list. Owner confirmed on the phone, 2026-10-24.
+
+# Playback UX fixes (2026-10-25, from the playback review)
+
+throughput checkpoint: blocking first step is none; one owner, because the three fixes share `MainActivity.java`; no shared state beyond that file; smallest decomposition is one commit per fix.
+
+- [x] Mini player: offer Previous and Show playing song as TalkBack actions on the artwork and title, give the Play box a button role, and use string resources for its labels. `MiniPlayerAccessibilityTest` checks the actions run and Play has the button role.
+- [x] Play before the player service connects: hold the request and run it once the service binds and the saved queue is restored, instead of the "No active player" toast. Song tap, header Play and artist Play reach PLAYING on the emulator; the early-tap branch itself was not observed because the list draws after the bind.
+- [x] Playback errors: show them in a snackbar above the mini player with a Retry action, and move the messages to `strings.xml`. Success notices use the same snackbar. A unit test checks Retry plays the tapped track; the "Playing 4 tracks" snackbar sits above the mini player on the emulator.
+- [x] Verify: app unit tests pass for both flavors (225 in github, 0 failures), both debug APKs build, and 2 of 2 instrumented tests pass on Medium_Phone (API 36).
+
+# Artist and folder play order (2026-10-25)
+- [x] Order findByArtist by album, then track number, so "Play" on an artist starts with track 01 of each album.
+- [x] Order findInPath by path, then track number for CUE tracks that share one file.
+- [x] Add a db-room instrumented test that inserts tracks out of order and checks both queries. Done: TrackOrderTest passes 2/2 and fails 2/2 against the old queries.
+- [x] Order findByAlbumAndAlbumArtist by numeric track number, so track 10 comes after track 2. Done: TrackOrderTest passes 3/3, and the album case fails on the old text sort.
+- [x] Verify on the emulator that "Play Aurora Lane" starts with "Neon Avenue". Done: media session showed Neon Avenue, and the artist list reads 01 to 04.
+
+# Playback follow-ups (2026-10-25, open points after the playback review)
+- [x] Skip a track a DLNA renderer refuses (failed SetAVTransportURI or Play), stopping after 3 refusals in a row. TrackFailureGuardTest passes; no renderer reachable from the emulator, so it was not run against one.
+- [x] Add a visible "Song details" action to Now Playing. An info button beside the title opens the details screen on the emulator.
+- [x] Move the "Playing N tracks" notice into string resources. Plurals are used, and "Playing 2 tracks" / "Added 2 tracks to queue" were seen on screen.
+- [x] Show an error when a held Play tap waits too long for the playback service. After 10s, "The player is taking too long to start" with Retry shows, and Retry plays once the service binds.
+- [x] Check a Play tap held at cold start, before the playback service connects. With a 6s delayed bind, the held tap played after the bind.
+- [x] Run unit tests, build both flavors, check on the emulator, commit. server-jupnp 45/0, app 225/0 per flavor, both APKs built, connected UI tests pass.
+
+
+## Bluetooth song repeats after completion (2026-10-25)
+- [x] Reproduce it yourself on the matching surface via the driver skill. Check device availability and capture completion/queue behavior.
+- [x] Binary-search the cause. Trace completion, repeat mode, queue consumption and Bluetooth commands; prove the mechanism.
+- [x] Plan the fix. Add a failing regression before the smallest justified change.
+- [x] Verify on the same surface. Run focused and module tests; report unavailable Bluetooth coverage explicitly.
+- [x] Stage the commits so the failing repro lands before the fix in git history. Skip commits unless requested; retain reviewable diff.
+- [x] Run Opening a PR. Skip publication unless requested.
+
+Evidence: stale `playbackIndex` survived local `playSong` selection. Local start now calls `setPlaybackTrack` before the controller starts playback; remote confirmation remains unchanged. JVM regression RED: 4 tests, 3 failures, including expected [3,4] / actual [3,3]; GREEN: 4/4. Full app/core: 229 + 259 tests, zero failures/errors/skips. Emulator natural completion RED: expected 800003 / actual 800002; fixed debug GREEN: OK (1 test), follower position advanced. Debug and GitHub release builds pass; diff checked against main.
+
+Phone 192.168.1.54:35889: GitHub release installed in place after matching signing SHA-256 and MANAGE_EXTERNAL_STORAGE. Updated app launched; retained queue started via media Next, PLAYING position 11422ms, HiBy R3 Bluetooth A2DP active. Phone natural completion was not observed; deterministic end-of-track verification ran on emulator. No commit or PR requested. Logs: /tmp/musicmate-local-queue-{full-tests,fixed-build,device-completion-red,device-green}.log.
+
+
+## Preview / playback navigation icon redesign (2026-10-25)
+- [x] Inspect both controls and nearby visual conventions (`how`).
+- [x] Choose a cohesive treatment using existing icon, color, shape and spacing tokens. No arena per user instructions.
+- [x] Blocking first steps: identify navigation semantics and capture current appearance before edits. Layout/glyph resources inspected; initial emulator capture was the launcher.
+- [x] Independent workstreams: read-only exploration may run alongside inspection; implementation stays in one stream.
+- [x] Shared mutable state: preserve playback/queue fixes and unrelated dirty files.
+- [x] Smallest safe decomposition: one owner for the reciprocal controls so their visual language matches.
+- [x] Implement only icon/button styling; preserve existing navigation and playback behavior.
+- [x] Verify rendered controls, accessibility labels, build and reciprocal navigation on emulator. GithubDebug build and MusicCenterAccessibilityTest pass (5/5). Inspected preview play/equalizer and playback preview glyph screenshots under /tmp/musicmate-icons-*.png. Fresh-queue Play has a separate existing Room crash, tracked below.
+- [x] Build and install the verified GitHub release update on the connected phone. 2026-10-26: connected Galaxy S25 at 192.168.1.67:40251; assembleGithubRelease passed, installed/new certificate SHA-256 matches b5757a1e…1d29ee, MANAGE_EXTERNAL_STORAGE present. adb install -r succeeded; app launched. Data retained; no commit or PR requested.
+
+## Discovered during icon verification (2026-10-26)
+- [ ] Preview Play crashes when its track is absent from the queue. Logcat: RoomDatabase.assertNotMainThread -> TrackDao_Impl.findById -> QueueManager.addPlayingQueue(long):346 -> MusicMateServiceImpl.playSong:826 -> TagsActivity.doPlaySong:1128. Existing callback and queue logic were untouched by icon work. Library playback succeeds; opening preview from playback and returning via its active equalizer succeeds. Fix queue insertion without a main-thread database read in a separate playback change, preserving the existing service edits.
+
+## Android Auto playback stops (2026-10-26)
+- [x] Capture phone playback state, route file, audio focus and errors before changing code. User is away from car; saved logs show Android Auto 07:34–07:48, not a live repro. User confirms pauses occur mid-song.
+- [ ] Trace the first stop trigger; distinguish route/noisy events, audio focus, playback errors and DSP. Initial 07:34 focus loss is confirmed; repeated 07:35 pauses have no matching focus changes. Existing release logs lack pause reasons. Add persistent controller diagnostics for next car session, without changing behavior.
+- [x] Prepare diagnostic release: AndroidPlayerController writes playWhenReady reasons/position/state, suppression reasons, errors and app pause/stop requests to media_route_log.txt. MediaRouteLogTest 6/6; real emulator LocalQueueCompletionProbe 1/1, saved playWhenReady and app-stop events inspected. Signed GithubRelease build passed, certificate matches phone. Diagnostics do not change transport behavior.
+- [x] Install diagnostic release on S25 at 192.168.1.67:40251 with adb install -r; Success. Data retained. Pending: next real Android Auto mid-song pause and retrieval of the saved log; user is currently away from the car. Do not claim a playback fix or car verification yet.
+- [ ] Add a focused failing regression and implement only the evidence-backed fix, preserving existing edits.
+- [ ] Run relevant tests, build, install signed update and verify on the phone/car route. No commit or PR requested.
+# DSP preset cleanup (2026-10-26)
+- [x] Update presets to Reference, Bass, Vocal, Lively, Relax, Night, Custom; migrate saved Drive/Sleep/Focus choices without losing calibration or trims. Added failing tests first, then verified migration with and without a profile.
+- [x] Inspect existing ReplayGain integration and retain independent loudness control across presets. Already applied at track start/transitions; no preset-dependent changes. Current volume scalar cannot boost quiet tracks above unity.
+- [x] Verify focused DSP tests (41), ReplayGain tests (4), full app unit suite (231), debug/release builds and rendered seven-preset picker on emulator and signed phone release (scrolled to verify all modes). Signed release certificate matches phone; installed with data retained, Vocal/Tuned and timer off retained. Existing playback/icon edits preserved; no car listening validation claimed.
+# Engine-noise-aware speaker calibration (2026-10-27)
+- [x] Inspect measurement, fitting, verification and saved-profile/UI contracts; preserve existing worktree edits.
+- [x] Add failing synthetic engine-noise regressions, including narrow contamination, broad noise, clipping and fit/verification safety. RED: original rejection/noise-estimation behavior fails the narrow-tone and silent-lead tests; GREEN: calibration suite passes.
+- [x] Implement measured background-noise handling and bounded partial calibration, preserving reliable response and avoiding EQ notches caused by noise. Use pre/post ambient audio; allow at most three noisy bands across all positions; constrain combined EQ to within 1 dB in protected regions.
+- [x] Integrate warnings and consistent verification; assess repeated sweeps against alignment, duration and noise-rejection evidence. Persist excluded bands, omit them from graph/verification, decline checks with additional noise. Same-position repeated sweeps deferred pending car evidence; five-position power averaging remains.
+- [x] Resolve headphone scope with user; keep unsupported phone-mic headphone measurements out of speaker calibration. User chose speaker fix now, headphone profiles next.
+- [x] Run calibration and app tests, build, inspect scoped diff against main, and verify available runtime behavior. 247 app JVM tests (30 calibration) pass; 2 CalibrationNoiseUiTest checks pass on API 36 emulator. Debug app/test builds, release R8 and release lint analysis pass. Scoped main/HEAD diffs reviewed; diff check clean; unrelated edits retained.
+
+Evidence: /tmp/musicmate-engine-red.log, /tmp/musicmate-calibration-green.log, /tmp/musicmate-calibration-full.log, /tmp/musicmate-calibration-runtime.log, /tmp/musicmate-calibration-release-check.log. The synthetic 160 Hz case covers measurement, fitting and verification together. Independent correctness review found no confirmed issue; its session-limit and trailing-noise test gaps were closed.
+
+Remaining hardware/release checks:
+- [ ] Restore the configured MUSICMATE_KEYSTORE file before building a signed update. assembleGithubRelease cannot find /Users/thawee.p/.config/musicmate/musicmate-release.jks; no replacement signing key used and no phone update installed.
+- [ ] Run engine-on calibration in the parked car, confirm the warning near the affected band and compare listening with tuning bypassed. Emulator tests do not establish real-car noise rejection.
+
+## Headphone profiles follow-up
+- [x] Define headphone model selection/import, profile provenance and supported formats; use a headphone target independent of the speaker target.
+- [x] Keep headphone and speaker profiles separate and bind activation to the appropriate output route.
+- [x] Apply safe gain/preamp limits and provide a flat bypass plus personal adjustments.
+- [x] Verify profile import, routing and playback; do not offer phone-microphone acoustic headphone calibration.
+
+# Headphone EQ profiles implementation (2026-10-27)
+- [x] Inspect existing local DSP, routing, settings and profile persistence; define minimal headphone import/selection contracts and protect speaker settings.
+- [x] Add failing tests for profile import/validation, storage, gain/preamp limits and headphone-only routing.
+- [x] Implement headphone profile import, persistence, device association and local DSP integration with a flat bypass.
+- [x] Add accessible settings controls for import, selection and personal adjustment using existing UI patterns.
+- [x] Run focused/full tests, debug build and emulator import/select/bypass checks; inspect main/HEAD diffs and document hardware/release limits.
+
+Validation: 276 app JVM tests and four HeadphoneEqUiTest checks pass on the API 36 emulator; GitHub debug app/test builds pass. Review found split route publication; eligibility and headphone settings now publish in one immutable snapshot, covered by a regression. The existing meter lifecycle test now observes its 16 ms throttle window. Import/parser/store, live PCM, preamp, output isolation and USB consent are covered.
+
+- [ ] Install the new signed GitHub release on the phone after the complete wireless debugging IP:port is provided and the original release keystore is restored. User corrected the address to `192.168.1.67:38773`; connected successfully and verified installed release certificate SHA-256 b5757a1e…1d29ee. Current debug certificate differs from the installed release certificate; no uninstall or stale release install attempted.
+- [ ] Verify real USB DAC/Bluetooth playback and reconnection; select a matching headphone model profile (user supplied connection types only).
+
+Headphone release verification: optimized GitHub release R8 and release lint analysis pass. Signed assembly remains blocked by the missing configured keystore; phone connected and original release certificate verified. No phone installation performed.
+
+## Debug phone installation (2026-10-27)
+- [x] User explicitly authorized uninstalling the release app and using debug signing; explained app data removal.
+- [x] Reconnected 192.168.1.67:38773 and verified GitHub debug APK requests all-files access.
+- [x] Uninstalled apincer.android.mmate; adb returned Success.
+- [x] Installed verified GitHub debug APK on 192.168.1.67:38773; adb returned Success. Launched MainActivity (Status ok), confirmed PID 16199, DEBUGGABLE, version 3.30.0-261027/code 158 and MANAGE_EXTERNAL_STORAGE requested. Recent crash buffer contains no MusicMate crash. User-authorized clean debug installation supersedes the blocked signed-update plan; real headphone route/listening checks remain.
+
+# DIY headphone listening setup (2026-10-28)
+- [x] Inspect current headphone profiles, per-channel DSP and test-audio lifecycle; define a compatible manual-profile model. Preserve the existing worktree.
+- [x] Add failing tests, then implement named DIY profiles with headphone type, saved per-pair bass/mids/treble, independent left/right tuning and attenuation-only balance. Keep imported profiles compatible.
+- [x] Add short quiet left/right/alternating test audio with stop, route-change, focus-loss and screen-close cleanup.
+- [x] Add guided create/edit controls, EQ bypass comparison and current-output selection; retain explicit USB processing consent.
+- [x] Verify unit tests, emulator create/tune/save/reopen/bypass flow, debug build and scoped diffs; document real USB/Bluetooth limits.
+
+DIY verification: 292 app JVM tests pass. Five ManualHeadphoneUiTest checks, one real ManualHeadphoneFlowTest create/save/reopen check, and four existing HeadphoneEqUiTest import/bypass checks pass on API 36 emulator. Debug app/test builds and diff checks pass. Reviewer concern about mono correction was resolved with averaged tone filters and dedicated headroom/response regressions. Test-player tests cover quiet channel signals, stop, cancellation, route/focus loss, completion, output errors and serialized replacement.
+
+- [x] Updated debug app on 192.168.1.67:38773 with adb install -r (Success), preserving current app data. MainActivity launches with Status ok; confirmed running PID 622, DEBUGGABLE, version 3.30.0-261028/code 158. Recent crash buffer has no MusicMate crash.
+- [ ] Confirm acoustic results and real USB/Bluetooth route/focus behavior with the DIY pairs. Emulator and fake-output tests do not establish hardware listening quality.
+
+Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass (/tmp/musicmate-diy-import-release.log). No commit or push performed. Hardware acoustic/route listening remains unchecked above.
+
+# Calibration and headphone review fixes (2026-10-28)
+- [x] Add failing JVM tests: a recorder failure during a take, a failed save and a failed check sweep must not crash the wizard; saving a DIY profile turns EQ on for Bluetooth and wired outputs but not USB.
+- [x] Wizard: catch capture and save failures, show a retry message, and reach Done when the check sweep fails.
+- [x] SweepRecorder: release the recorder when the track cannot be built, and stop when audio focus is refused.
+- [x] Show capture and route problems with their own advice instead of the volume hint.
+- [x] Auto-enable DIY EQ on save for Bluetooth and wired outputs; mention wired headphones in the copy.
+- [x] Run the JVM and affected emulator tests and a debug build, then review the diff.
+- Validation (after review fixes: fit guarded, take attempt narrowed to capture, save notice moved beside the pinned button): 297 JVM tests pass for github and play; on the API 36 emulator CalibrationNoiseUiTest (3), HeadphoneEqUiTest (4), ManualHeadphoneUiTest (5) and ManualHeadphoneFlowTest (1) pass; assembleGithubDebug passes.
