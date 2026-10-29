@@ -25,6 +25,12 @@ Headphone fitting starts at 100 Hz or the measurement's reliable lower limit, wh
 
 Each profile stores its output type, tone settings and balance, independent of the DAC. Creation and editing also work without a connected output; test sounds require a single compatible local output. Speaker tests adjust channels from the listening position; a mono speaker cannot give separate left/right comparisons. Cancel discards the draft. Saving writes the profile atomically. Changing headphone types does not erase adjustments.
 
+### Comparing your listening setup
+
+Keep the same sample and device volume when switching Original and Adjusted. Original removes the draft EQ and balance; Adjusted applies them. Both use the same stereo reference for level matching, even when playing only one ear, so a balance adjustment is not normalized away. Silence stays silent, and neither comparison is boosted above the quiet preview ceiling.
+
+After saving, select Neutral and replay familiar music to judge the calibration alone. Other sound modes add their own processing. Bluetooth or Android mixer processing can still affect both previews and music; this guide does not measure a flat acoustic response or guarantee bit-perfect output.
+
 The guide includes synthesized kick/bass grooves, acoustic plucks, piano, shaker/cymbals and a musical mix, plus real male and female speech recordings. The bundled Open Speech Repository recordings originate at 8 kHz: upsampling them to 48 kHz does not restore content above approximately 4 kHz. Use speech for body and vocal naturalness; use shaker/cymbals for treble detail. See the [speech provenance and rebuild instructions](../../app/src/main/assets/listening/README.md). Instrument phrases synthesize directly at 48 kHz; no samples download during playback.
 
 Each replay fades in and out and lasts three seconds, or six seconds for alternating left/right playback. Advanced and the balance check use the musical mix. Previews use a separate stereo output and temporarily request exclusive audio focus. Playback stops on cancellation, screen pause/dismissal, output change or focus loss. The app does not raise system volume. Digital signal level does not establish acoustic listening level, so start with low device volume.

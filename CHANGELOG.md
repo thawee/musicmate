@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Fairer listening comparisons:** Original and Adjusted musical examples now match average signal levels by turning down the louder version. Left/right balance stays intact; diagnostic tones retain their gain differences. Matching applies only to listening examples, not normal music playback.
+- **Clearer calibration previews:** The listening guide explains that previews contain calibration only and identifies the current playback sound mode. Neutral adds no extra shaping; saving with Custom clears its extra bass and treble trims.
+
+### Fixed
+- **EQ shelf headroom:** Automatic attenuation now checks the full PCM bandwidth, including DC and Nyquist, so shelf boosts outside 20 Hz–20 kHz are accounted for. This reduces avoidable limiter activity; the limiter remains sample-peak based.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.

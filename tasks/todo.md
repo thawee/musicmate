@@ -2450,3 +2450,7 @@ Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass 
 - [x] Add regression coverage for matched Original/Adjusted levels without undoing channel balance or exceeding the quiet preview ceiling.
 - [x] Implement attenuation-only stereo RMS comparison matching; retain diagnostic tone gain cues. Explain calibration-only previews, active playback modes, and Custom trim reset without changing saved modes.
 - [x] Verify unit/UI behavior, build, and document the result. All 368 unit tests passed; focused listening guide emulator tests and assembleGithubDebug passed. Matching estimates average signal level, not perceived loudness. No hardware listening comparison performed.
+# Document and install listening comparison update (2026-10-29)
+
+- [x] Update user-facing documentation and changelog for DSP headroom and fair listening comparisons.
+- [x] Verify documentation and install the tested GitHub debug APK on the connected Galaxy S25, retaining data. ADB install -r returned Success; build validation remains 368 unit tests and 11 emulator UI tests passed.
