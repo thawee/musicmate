@@ -1,5 +1,12 @@
+- **Keep playback tuning focused:** The Now Playing tuning action should prioritize saved profile and sound-mode selection, with direct access to profile creation and the full editor. Keep calibration forms and response details in the full editor.
 - **Design tuning as an audio tool, not a stacked settings form:** A long column of default outlined buttons and explanatory paragraphs made DSP tuning feel cheap. Establish a clear output/profile/response hierarchy, style controls consistently with Music Mate, and inspect real emulator screenshots before calling a UI redesign complete.
+- **Keep playback sound status compact:** Use one readable mode/status line in the playback entry, with a 48dp touch area. Reserve explanatory status text for quick tuning; inspect beside the actual device selector on the phone before judging balance.
+
 # Lessons Learned: MusicMate Notification & Scroll Refactoring
+
+- **Explain signatures before selection:** Sound-mode choices need visible tonal descriptions on every card, not only after a tap. Use a restrained selected border/checkmark and keep the quick panel's full-editor action visible outside scrolling content; validate on the phone's actual display configuration.
+
+- **Make microphone level guidance actionable:** Distinguish overload, background noise and missing signal instead of repeatedly prescribing opposite volume changes. Verify the acceptance range against realistic coarse volume steps and preserve true clipping protection.
 
 ## Learnings & Patterns
 - **Unify calibrated profile selection, not only sound modes:** When the user asks for the same speaker/headphone profile dropdown, make saved corrections and creation methods visible in one consistent flow. Offer Microphone and Listening for either output and AutoEQ as a measured-profile source; keep output assignment and measurement requirements explicit.
@@ -545,3 +552,10 @@
 
 - **Match reciprocal navigation to the app's controls:** When preview/playback shortcuts look out of place, inspect both directions together and reuse the surrounding icon weight, surface, tint and touch target before adding a new visual treatment.
 - **Confirm the live car connection before interpreting route state:** A report about Android Auto may describe an earlier drive. When the user is away from the car, use historical route/focus logs and do not treat the phone's current output as the failing route or start playback to reproduce it.
+- **Verify real swipe gestures in tuning sheets:** Scroll-to-node checks do not cover nested sheet dragging and flings. Keep the tuning sheet anchored while its body scrolls, and exercise repeated swipes before shipping sheet changes.
+
+- **Keep playback tuning focused on listening:** Creation and full-editor navigation are secondary management actions. Do not give either a prominent body row or large pinned button in the quick sound selector; use one compact management entry and keep creation in the full editor.
+
+- **Playback transport needs reachability beyond minimum touch size:** Previous and Next must be visually prominent with generous targets and separation for in-car use. Inspect the actual playback layout, keep secondary controls away from the main transport, and verify compact widths before calling the controls easy to access.
+
+- **Separate transport visual hierarchy from hit area:** Larger touch targets do not require equally large visible circles. Keep Previous/Next visually subordinate to Play/Pause (about two-thirds diameter when requested), while retaining generous non-overlapping hit areas and verify the rendered result.

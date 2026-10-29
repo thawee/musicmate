@@ -36,7 +36,8 @@ internal fun CorrectionProfileSelector(
     selectedName: String?,
     output: CalibrationOutput,
     enabled: Boolean,
-    onSelect: (String?) -> Unit
+    onSelect: (String?) -> Unit,
+    supportsOutput: (CalibrationOutput) -> Boolean = { it == output }
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -55,8 +56,8 @@ internal fun CorrectionProfileSelector(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.Start) {
-                Text("CORRECTION PROFILE", color = MusicMateDesignTokens.Text.Muted, fontSize = 10.sp, letterSpacing = 1.sp)
-                Text(selectedName ?: "Flat / bypass", fontSize = 16.sp, fontWeight = FontWeight.Medium,
+                Text("CORRECTION PROFILE", color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp, letterSpacing = 1.sp)
+                Text(selectedName ?: "No correction", fontSize = 16.sp, fontWeight = FontWeight.Medium,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Icon(androidx.compose.ui.res.painterResource(apincer.android.mmate.R.drawable.ic_expand_more), contentDescription = null, modifier = Modifier.size(24.dp),
@@ -69,18 +70,18 @@ internal fun CorrectionProfileSelector(
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false },
             containerColor = MusicMateDesignTokens.Surfaces.SurfaceElevated,
             shape = RoundedCornerShape(12.dp)) {
-            DropdownMenuItem(text = { Text("Flat / bypass") }, colors = menuColors,
+            DropdownMenuItem(text = { Text("No correction") }, colors = menuColors,
                 onClick = { expanded = false; onSelect(null) })
             profiles.forEach { profile ->
                 DropdownMenuItem(
                     text = {
                         Column {
                             Text(profile.name)
-                            Text("${profile.output.label} · ${profile.method}${if (profile.id == selectedId) " · Selected" else ""}",
+                            Text("${profile.output.label} · ${profile.method}${if (!supportsOutput(profile.output)) " · Connect a compatible output" else if (profile.id == selectedId) " · Selected" else ""}",
                                 color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
                         }
                     },
-                    enabled = profile.output == output,
+                    enabled = supportsOutput(profile.output),
                     colors = menuColors,
                     onClick = { expanded = false; onSelect(profile.id) }
                 )

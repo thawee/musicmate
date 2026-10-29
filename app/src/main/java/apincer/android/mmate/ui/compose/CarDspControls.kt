@@ -11,7 +11,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.material3.TextButton
 import apincer.android.mmate.audio.calibration.CarProfile
 import androidx.compose.foundation.Canvas
-import androidx.compose.material3.Switch
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,7 +44,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,11 +54,7 @@ import apincer.android.mmate.audio.dsp.CarDspPreferences
 import apincer.android.mmate.audio.dsp.SoundMode
 import kotlin.math.roundToInt
 
-/**
- * The sound mode beside the output pill: an EQ mark, "VOCAL", and a TUNED tag while a measured
- * correction is active; "TUNING OFF" when off. The output pill already names the speaker, so the
- * chip does not repeat it, and its short label never needs cutting. Tap to choose.
- */
+/** Compatibility entry point for the shared playback tuning chip. */
 @Composable
 fun CarDspChip(modifier: Modifier = Modifier) = AudioTuningChip(modifier)
 
@@ -72,30 +65,39 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
 
 /** Sound-mode-only speaker playback remains available before a correction is selected. */
 @Composable
-internal fun LegacySpeakerSoundModes() {
+internal fun LegacySpeakerSoundModes(compact: Boolean = false, available: Boolean = true, busy: Boolean = false,
+    showStatus: Boolean = true, onEditCustom: () -> Unit = {}) {
     val context = LocalContext.current
     val choice by CarDspPreferences.state.collectAsState()
-    TuningResponseCurve(choice.correction + choice.mode.bands(choice.bassDb, choice.trebleDb), choice.mode)
-    Text("Speaker sound mode", color = MusicMateDesignTokens.Text.Primary, fontWeight = FontWeight.Medium, fontSize = 18.sp)
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Enable speaker sound mode", color = MusicMateDesignTokens.Text.Primary, modifier = Modifier.weight(1f))
-        Switch(checked = choice.enabled, onCheckedChange = { CarDspPreferences.update(context, choice.copy(enabled = it)) },
-            colors = androidx.compose.material3.SwitchDefaults.colors(checkedThumbColor = MusicMateDesignTokens.Surfaces.Canvas, checkedTrackColor = Color.White))
+    val audibility = legacySpeakerAudibility(available, choice.enabled)
+    if (showStatus) LegacySpeakerStatus(available, busy)
+    TuningSoundModes(choice.mode, available && !busy) { mode ->
+        CarDspPreferences.update(context, choice.copy(mode = mode))
     }
-    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SoundMode.entries.forEach { mode ->
-            androidx.compose.material3.FilterChip(selected = choice.mode == mode,
-                onClick = { CarDspPreferences.update(context, choice.copy(enabled = true, mode = mode)) },
-                label = { Text(mode.label) },
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.heightIn(min = 48.dp),
-                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(selectedContainerColor = Color.White, selectedLabelColor = MusicMateDesignTokens.Surfaces.Canvas, labelColor = MusicMateDesignTokens.Text.Secondary))
+    if (choice.mode == SoundMode.CUSTOM) {
+        if (compact) {
+            TextButton(onClick = onEditCustom) { Text("Edit Custom", color = MusicMateDesignTokens.Brand.Gold) }
+        } else {
+            TrimSlider("Bass", choice.bassDb, available && !busy) { CarDspPreferences.update(context, choice.copy(bassDb = it)) }
+            TrimSlider("Treble", choice.trebleDb, available && !busy) { CarDspPreferences.update(context, choice.copy(trebleDb = it)) }
         }
     }
-    if (choice.enabled && choice.mode == SoundMode.CUSTOM) {
-        TrimSlider("Bass", choice.bassDb) { CarDspPreferences.update(context, choice.copy(bassDb = it)) }
-        TrimSlider("Treble", choice.trebleDb) { CarDspPreferences.update(context, choice.copy(trebleDb = it)) }
-    }
+    if (!compact) TuningResponseCurve(choice.correction + choice.mode.bands(choice.bassDb, choice.trebleDb), choice.mode,
+        active = available && choice.enabled, previewState = audibility.label)
+}
+
+@Composable
+internal fun LegacySpeakerStatus(available: Boolean = true, busy: Boolean = false) {
+    val context = LocalContext.current
+    val choice by CarDspPreferences.state.collectAsState()
+    TuningStatusControl(legacySpeakerAudibility(available, choice.enabled), choice.enabled, available && !busy,
+        { CarDspPreferences.update(context, choice.copy(enabled = it)) }, switchLabel = "Enable speaker sound mode")
+}
+
+private fun legacySpeakerAudibility(available: Boolean, enabled: Boolean): TuningAudibility = when {
+    !available -> TuningAudibility("Unavailable", "Connect a compatible speaker output")
+    enabled -> TuningAudibility("Active", "Speaker sound mode is applied")
+    else -> TuningAudibility("Bypassed", "Your profile and sound mode are saved")
 }
 
 /** What the chosen mode and car correction do together, 20 Hz to 20 kHz; the scale is ±6 dB, wider when the curve needs it. */
@@ -161,7 +163,7 @@ private const val CURVE_POINTS = 120
 
 /** Bass or treble trim in 0.5 dB steps across +/-[SoundMode.TRIM_DB]. */
 @Composable
-private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Unit) {
+private fun TrimSlider(label: String, valueDb: Double, enabled: Boolean = true, onChange: (Double) -> Unit) {
     val range = SoundMode.TRIM_DB.toFloat()
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
@@ -173,6 +175,7 @@ private fun TrimSlider(label: String, valueDb: Double, onChange: (Double) -> Uni
         )
         Slider(
             value = valueDb.toFloat(),
+            enabled = enabled,
             onValueChange = { onChange((it * 2).roundToInt() / 2.0) },
             valueRange = -range..range,
             // 0.5 dB stops between the ends

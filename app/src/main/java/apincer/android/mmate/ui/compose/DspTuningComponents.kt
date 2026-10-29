@@ -2,13 +2,15 @@ package apincer.android.mmate.ui.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -22,33 +24,61 @@ import apincer.android.mmate.audio.calibration.CalibrationOutput
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AudioTuningSheet(onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
+internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = false,
+    onManage: (() -> Unit)? = null, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        // The body owns vertical scrolling; dragging the sheet competes at scroll boundaries.
+        sheetGesturesEnabled = false,
+        dragHandle = null,
         containerColor = MusicMateDesignTokens.Surfaces.Canvas,
         contentColor = MusicMateDesignTokens.Text.Primary,
         sheetMaxWidth = 640.dp
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.94f)) {
-            Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.fillMaxWidth().then(if (compact) Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.86f) else Modifier.fillMaxHeight(0.94f))) {
+            Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, bottom = 16.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     TuningLabel("MUSIC MATE / DSP")
-                    Text("Audio tuning", fontSize = 26.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                    Spacer(Modifier.weight(1f))
+                    onManage?.let { manage ->
+                        TextButton(onClick = manage, modifier = Modifier.heightIn(min = 48.dp)) {
+                            Text("Manage tuning", color = MusicMateDesignTokens.Text.Secondary, fontSize = 14.sp)
+                        }
+                    }
                 }
-                IconButton(onClick = onDismissRequest) {
-                    Icon(painterResource(R.drawable.round_close_24), "Close audio tuning", tint = MusicMateDesignTokens.Text.Secondary)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (compact) "Quick tuning" else "Audio tuning", Modifier.weight(1f),
+                        fontSize = 26.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                    IconButton(onClick = onDismissRequest) {
+                        Icon(painterResource(R.drawable.round_close_24), if (compact) "Close quick tuning" else "Close audio tuning", tint = MusicMateDesignTokens.Text.Secondary)
+                    }
                 }
             }
             HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp)) { content() }
+            Column(Modifier.weight(1f, fill = !compact).verticalScroll(remember(compact) { ScrollState(0) }).padding(24.dp)) { content() }
+
+        }
+    }
+}
+
+@Composable
+internal fun TuningCurrentSound(outputName: String, content: @Composable ColumnScope.() -> Unit) {
+    Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(20.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TuningLabel("CURRENT SOUND")
+                Text(outputName, color = MusicMateDesignTokens.Text.Primary, fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium)
+            }
+            content()
         }
     }
 }
 
 @Composable
 internal fun TuningLabel(text: String) {
-    Text(text, color = MusicMateDesignTokens.Text.Secondary, fontSize = 11.sp, letterSpacing = 1.sp, fontWeight = FontWeight.Medium)
+    Text(text, color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp, letterSpacing = 1.sp, fontWeight = FontWeight.Medium)
 }
 
 @Composable
@@ -86,14 +116,15 @@ internal fun TuningAction(title: String, description: String, enabled: Boolean =
 }
 
 @Composable
-internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, mode: apincer.android.mmate.audio.dsp.SoundMode, averageEars: Boolean = false) {
+internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, mode: apincer.android.mmate.audio.dsp.SoundMode, averageEars: Boolean = false, active: Boolean = true, previewState: String = "Bypassed") {
     Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(16.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TuningLabel("FREQUENCY RESPONSE")
-                Text("${mode.label} mode", color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp)
+                TuningLabel("EQ CURVE")
+                Text(if (active) "${mode.label} mode" else "Preview · ${mode.label} · $previewState", color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp)
             }
             CorrectionCurve(bands)
+            if (mode.compresses) TuningHint("Night also tames loud moments with dynamics processing, which is not shown in this curve.")
             TuningHint(if (averageEars) "Correction + sound mode · average of left and right" else "Correction + sound mode · 20 Hz–20 kHz")
         }
     }

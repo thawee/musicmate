@@ -36,6 +36,7 @@ class CalibrationWizard internal constructor(
     private val sweep = LogSweep()
     private val analyzer by lazy { TakeAnalyzer(Deconvolver(sweep)) }
     private val measurements = MeasurementSession()
+    private val takeGuidance = CalibrationTakeGuidance()
     /** Set from the first tap on Save until Done, so a second tap cannot save twice. */
     private var saving = false
     /** Taken while the sweep plays, so the saved profile names the car or speaker it measured. */
@@ -86,6 +87,7 @@ class CalibrationWizard internal constructor(
         }
         if (output == CalibrationOutput.HEADPHONE && (rigTarget == null || endpoint == null)) return
         measurements.clear()
+        takeGuidance.reset()
         (recorder as? SweepRecorder)?.beginSession()
         current.value = Step.Position(0)
     }
@@ -104,12 +106,16 @@ class CalibrationWizard internal constructor(
                 capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) } ?: analyzer.analyze(capture.recording)
             }
             when (take) {
-                is Take.Rejected -> current.value = position.copy(measuring = false, problem = advice(take))
+                is Take.Rejected -> {
+                    Log.i(TAG, "take rejected: ${take.reason}: ${take.detail}")
+                    current.value = position.copy(measuring = false, problem = takeGuidance.advice(take))
+                }
                 is Take.Accepted -> {
                     if (!measurements.add(take)) {
                         current.value = position.copy(measuring = false, problem = "Background noise affected too many frequencies across the measured spots. Quieten the engine or fan and retry this spot.")
                         return@launch
                     }
+                    takeGuidance.reset()
                     // Wireless Android Auto latency is unmeasured; the peak search allows 2.5 s
                     val takes = measurements.takes
                     val noisyBands = TakeAnalyzer.unreliableBands(takes)
@@ -219,14 +225,6 @@ class CalibrationWizard internal constructor(
             current.value = Step.Done(checked)
             saving = false
         }
-    }
-
-    private fun advice(take: Take.Rejected): String = when (take.reason) {
-        Take.Reason.CLIPPED -> "Too loud for the microphone. Turn the volume down a little and measure again."
-        Take.Reason.TOO_QUIET -> "${take.detail}. Turn the volume up, or quieten the room (in a car, the engine and fan), and measure again."
-        Take.Reason.NO_RESPONSE -> "${take.detail}. Check the volume and that the phone is playing through the speaker."
-        Take.Reason.TOO_SHORT -> "${take.detail}. Measure again; if it repeats, reconnect Android Auto."
-        Take.Reason.CAPTURE -> take.detail
     }
 
     /** Android audio and storage can fail at any time; [block]'s failure is logged and returns null. */

@@ -439,6 +439,7 @@ Transitioned from a single congested bottom sheet to a full-height **3-Tab Viewp
 
 ### A. Minimum Touch Target Boundaries
 - All interactive action icons (`⋮` overflow button, play overlay, transport buttons) strictly enforce a minimum touch target area of **48dp × 48dp**, regardless of icon graphic size (e.g., 24dp icon padded to 48dp container).
+- Playback gives Previous and Next dedicated 80dp touch areas with 60dp visible circles and 28dp icons, separated from an 88dp Play/Pause control. The smaller visible circles establish hierarchy while the larger hit areas preserve reachability. Shuffle, Repeat and Sleep timer occupy a secondary row so their smaller targets do not crowd track navigation. Playback callbacks and enabled-state rules are unchanged.
 
 ### B. Dynamic `contentDescription` Telemetry
 Interactive stateful views update their accessibility labels in real time:
@@ -494,6 +495,10 @@ For file-altering operations (`Delete`, `Move Files`, `Convert Format`), dialogs
 - **Design Rule:** Never present a confirmation dialog for batch file operations without displaying a preview of the affected track list and total data volume.
 
 ### C. Music Center Bottom Sheets (`AudioHubSheet.kt`)
+
+Music Center, Related tracks, Tags from filename and Audio tuning keep the sheet anchored while their contents scroll. Body swipes do not drag or dismiss the sheet, and these sheets omit the drag handle. Close or Cancel, Android Back and the outside scrim provide dismissal. Music Center tab swipes and queue reorder gestures remain separate from vertical body scrolling.
+
+Playback's equalizer entry shows the mode and status on one line (for example, Vocal · On), with a 48dp touch target and full audio-tuning accessibility description. Output and tuning controls wrap rather than squeezing the connection badge at enlarged text sizes. Quick tuning and the full editor group current sound information and share descriptive sound cards with restrained selected borders/checkmarks; a compact Manage tuning action stays in the quick-panel header. Profile creation belongs in the full editor, leaving quick tuning focused on saved profiles and sound modes. Both panels share status reasons and mutually exclusive mode controls; mode selection preserves bypass. Full tuning presents listening controls before its EQ curve, with calibration and disclosed profile management below. See [Audio tuning](AUDIO_TUNING.md).
 
 ```
 ┌─────────────────────────────────────────────────────────┐

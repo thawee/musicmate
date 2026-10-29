@@ -429,24 +429,15 @@ private fun AudioHubContainer(
         .widthIn(max = 840.dp)
         .fillMaxWidth()
     val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-    val dragHandle: @Composable () -> Unit = {
-        Box(
-            modifier = Modifier
-                .padding(top = 10.dp, bottom = 6.dp)
-                .size(width = 40.dp, height = 4.dp)
-                .clip(CircleShape)
-                .background(Color(0x4DFFFFFF))
-        )
-    }
-
     if (presentation == MusicCenterPresentation.MODAL) {
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
+            sheetGesturesEnabled = false,
             shape = sheetShape,
             containerColor = Color.Transparent,
             scrimColor = MusicCenterScrimColor,
-            dragHandle = dragHandle,
+            dragHandle = null,
             modifier = sheetModifier,
             content = {
                 DisablePlatformWindowDimming()
@@ -485,7 +476,6 @@ private fun AudioHubContainer(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    dragHandle()
                     content()
                 }
             }

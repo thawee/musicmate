@@ -20,7 +20,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -69,28 +68,42 @@ fun AudioTuningChip(modifier: Modifier = Modifier) {
     val library by HeadphonePreferences.state.collectAsState()
     var open by remember { mutableStateOf(false) }
     val general = status.profile != null || status.endpoint?.key in library.bindings || status.endpoint?.wired == true || status.endpoint?.usb == true
-    val enabled = if (general) status.active else legacy.enabled
+    val enabled = if (general) status.active else status.endpoint != null && legacy.enabled
+    val unavailable = if (general) tuningAudibility(status).label == "Unavailable" else status.endpoint == null
+    val stateLabel = if (unavailable) "Unavailable" else if (enabled) "On" else "Bypassed"
     val mode = if (general) status.binding.soundMode else legacy.mode
     val accent = if (enabled) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Secondary
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
             .background(MusicMateDesignTokens.Surfaces.GlassPill)
-            .clickable { open = true }
+            .clickable { open = true }.heightIn(min = 48.dp)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "Audio tuning"
-                stateDescription = if (enabled) "On, ${mode.label}, ${status.profile?.name ?: legacy.profileName ?: "no correction"}" else "Off"
+                stateDescription = "$stateLabel, ${mode.label}, ${status.profile?.name ?: legacy.profileName ?: "No correction"}"
             }.padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Icon(androidx.compose.ui.res.painterResource(apincer.android.mmate.R.drawable.rounded_equalizer_24), null, tint = accent, modifier = Modifier.size(12.dp))
-        Text(if (enabled) mode.label.uppercase() else "TUNING OFF", color = accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        if (enabled && (status.profile != null || !general && legacy.profileId != null)) {
-            Text("TUNED", color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-        }
+        Icon(androidx.compose.ui.res.painterResource(apincer.android.mmate.R.drawable.rounded_equalizer_24), null, tint = accent, modifier = Modifier.size(18.dp))
+        Text(androidx.compose.ui.text.buildAnnotatedString {
+            append("${mode.label} · ")
+            pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
+            append(stateLabel)
+            pop()
+        }, color = MusicMateDesignTokens.Text.Primary, fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
     }
-    if (open) AudioTuningDialog { open = false }
+    if (open) QuickAudioTuningDialog { open = false }
+}
+
+@Composable
+internal fun QuickAudioTuningDialog(onDismissRequest: () -> Unit) {
+    var full by remember { mutableStateOf(false) }
+    AudioTuningSheet(onDismissRequest, compact = !full,
+        onManage = if (full) null else ({ full = true })) {
+        HeadphoneAudioSettings(quick = !full, onFullTuning = { full = true })
+    }
 }
 
 @Composable
@@ -100,7 +113,7 @@ internal fun AudioTuningDialog(onDismissRequest: () -> Unit) {
 
 /** Storage and document reads stay off the main thread; the controls only render immutable state. */
 @Composable
-fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
+fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Boolean = false, onFullTuning: () -> Unit = {}) {
     val context = LocalContext.current.applicationContext
     val lifecycleOwner = LocalView.current.findViewTreeLifecycleOwner()
     val library by HeadphonePreferences.state.collectAsState()
@@ -110,7 +123,9 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
     var speakers by remember { mutableStateOf(emptyList<CarProfile>()) }
     val speakerChoice by CarDspPreferences.state.collectAsState()
     val hasGeneralBinding = status.endpoint?.key in library.bindings
-    val targetEndpoint = status.endpoint?.takeIf { it.supports(output) }
+    val useLegacy = !hasGeneralBinding && status.profile == null && status.endpoint != null &&
+        status.endpoint?.usb != true && status.endpoint?.wired != true
+    val targetEndpoint = status.endpoint
     LaunchedEffect(status.profile?.id, status.endpoint?.key) {
         output = status.profile?.output ?: initialOutput ?: status.endpoint?.output ?: CalibrationOutput.HEADPHONE
     }
@@ -212,22 +227,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
         }
     }
 
-    HeadphoneEqControls(
-        library = library, status = status, busy = busy, error = error,
-        output = output, onOutput = { output = it },
-        choices = CorrectionProfiles.choices(speakers, library.profiles),
-        selectedName = status.profile?.takeIf { it.output == output }?.name ?: if (output == CalibrationOutput.SPEAKER && !hasGeneralBinding) speakerChoice.profileName else null,
-        onMicrophone = { calibration.launch(Intent(context, CarCalibrationActivity::class.java).putExtra("calibration_output", if (output == CalibrationOutput.SPEAKER) "speaker" else "headphone")) },
-        speakerControls = if (output == CalibrationOutput.SPEAKER && !hasGeneralBinding) ({ LegacySpeakerSoundModes() }) else null,
-        onFile = { fileOutput = output; picker.launch(arrayOf("text/*", "application/octet-stream")) },
-        onPaste = { error = null; draft = HeadphoneImportDraft(output = output) },
-        onAutoEq = {
-            searching = true
-            var loaded: List<AutoEqEntry>? = null
-            execute(work = { loaded = autoEq.entries() }, onSuccess = { autoEqEntries = loaded })
-        },
-        onManual = { profile -> error = null; manualDraft = ManualHeadphoneDraft(profile, profile?.output ?: output) },
-        onSelect = { id -> targetEndpoint?.let { endpoint -> execute({
+    val selectProfile: (String?) -> Unit = { id -> targetEndpoint?.let { endpoint -> execute({
             val legacy = speakers.firstOrNull { "speaker:${it.id}" == id }
             val firstMigration = legacy != null && library.profiles.none { it.id == id }
             if (legacy != null) {
@@ -241,7 +241,38 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
                 if (previous.mode == SoundMode.CUSTOM) HeadphonePreferences.adjust(context, endpoint, previous.bassDb, previous.trebleDb)
                 if (!endpoint.usb) HeadphonePreferences.setEnabled(context, endpoint, previous.enabled)
             }
-        }) } },
+        }) } }
+    val openMicrophone = {
+        calibration.launch(Intent(context, CarCalibrationActivity::class.java).putExtra("calibration_output", if (output == CalibrationOutput.SPEAKER) "speaker" else "headphone"))
+    }
+    val openAutoEq = {
+        searching = true
+        var loaded: List<AutoEqEntry>? = null
+        execute(work = { loaded = autoEq.entries() }, onSuccess = { autoEqEntries = loaded })
+    }
+    if (quick) QuickTuningControls(
+        status = status, choices = CorrectionProfiles.choices(speakers, library.profiles), busy = busy, error = error,
+        selectedName = status.profile?.name ?: if (useLegacy) speakerChoice.profileName else null,
+        onSelect = selectProfile,
+        onEnabled = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setEnabled(context, endpoint, enabled) }) } },
+        onSoundMode = { mode -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setSoundMode(context, endpoint, mode) }) } },
+        onFullTuning = onFullTuning,
+        speakerControls = if (useLegacy) ({ LegacySpeakerSoundModes(compact = true, busy = busy, showStatus = false, onEditCustom = onFullTuning) }) else null,
+        speakerStatus = if (useLegacy) ({ LegacySpeakerStatus(busy = busy) }) else null
+    ) else {
+    HeadphoneEqControls(
+        library = library, status = status, busy = busy, error = error,
+        output = output, onOutput = { output = it },
+        choices = CorrectionProfiles.choices(speakers, library.profiles),
+        selectedName = status.profile?.name ?: if (useLegacy) speakerChoice.profileName else null,
+        onMicrophone = openMicrophone,
+        speakerControls = if (useLegacy) ({ LegacySpeakerSoundModes(busy = busy, showStatus = false) }) else null,
+        speakerStatus = if (useLegacy) ({ LegacySpeakerStatus(busy = busy) }) else null,
+        onFile = { fileOutput = output; picker.launch(arrayOf("text/*", "application/octet-stream")) },
+        onPaste = { error = null; draft = HeadphoneImportDraft(output = output) },
+        onAutoEq = openAutoEq,
+        onManual = { profile -> error = null; manualDraft = ManualHeadphoneDraft(profile, profile?.output ?: output) },
+        onSelect = selectProfile,
         onEnabled = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setEnabled(context, endpoint, enabled) }) } },
         onAdjust = { bass, treble -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.adjust(context, endpoint, bass, treble) }) } },
         onSoundMode = { preset -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setSoundMode(context, endpoint, preset) }) } },
@@ -262,6 +293,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
             HeadphonePreferences.delete(context, "speaker:${profile.id}")
             speakers = CarDspPreferences.profiles(context).list()
         }) })
+    }
     if (searching) {
         AutoEqSearchDialog(
             entries = autoEqEntries, busy = busy, error = error,
@@ -325,71 +357,37 @@ internal fun HeadphoneEqControls(
     choices: List<CorrectionProfileChoice> = CorrectionProfiles.choices(emptyList(), library.profiles),
     selectedName: String? = status.profile?.name,
     onMicrophone: () -> Unit = {},
-    speakerControls: (@Composable () -> Unit)? = null
+    speakerControls: (@Composable () -> Unit)? = null,
+    speakerStatus: (@Composable () -> Unit)? = null
 ) {
     var deleting by remember { mutableStateOf<HeadphoneProfile?>(null) }
     var bass by remember(status.endpoint?.key, status.binding.bassDb) { mutableFloatStateOf(status.binding.bassDb.toFloat()) }
     var treble by remember(status.endpoint?.key, status.binding.trebleDb) { mutableFloatStateOf(status.binding.trebleDb.toFloat()) }
-    val canEdit = status.endpoint?.supports(output) == true && !busy
-    val canEnable = canEdit && status.profile?.output == output
+    val canEdit = status.endpoint != null && !busy
+    val canEnable = canEdit && status.profile?.let { status.endpoint?.supports(it.output) } == true
     var details by remember(status.profile?.id) { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        TuningOutputSelector(output, onOutput)
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            TuningLabel("OUTPUT")
-            Text(status.endpoint?.name ?: "No audio output connected", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            if (status.endpoint?.supports(output) == false) {
-                TuningHint("Connect a ${output.label.lowercase()} output to apply this profile. You can create and save it now.")
+        TuningCurrentSound(status.endpoint?.name ?: "No audio output connected") {
+            CorrectionProfileSelector(choices, status.profile?.id, selectedName, output, canEdit, onSelect,
+                supportsOutput = { status.endpoint?.supports(it) == true })
+            if (speakerStatus != null) speakerStatus() else if (speakerControls == null) {
+                TuningStatusControl(tuningAudibility(status), status.binding.enabled, canEnable, onEnabled,
+                    usb = status.endpoint?.usb == true)
             }
         }
-        CorrectionProfileSelector(choices, status.profile?.id, selectedName, output, canEdit, onSelect)
-        if (status.endpoint != null && speakerControls == null) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    Modifier.fillMaxWidth().toggleable(value = status.binding.enabled, enabled = canEnable, role = Role.Switch, onValueChange = onEnabled),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(if (status.active) "EQ active" else "EQ bypassed", color = if (status.active) MusicMateDesignTokens.Brand.Gold else Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                        Text(if (status.endpoint.usb) "Enable USB EQ (changes samples)" else "Enable ${output.label.lowercase()} EQ", color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp)
-                    }
-                    Switch(checked = status.binding.enabled, onCheckedChange = null, enabled = canEnable,
-                        colors = SwitchDefaults.colors(checkedThumbColor = MusicMateDesignTokens.Surfaces.Canvas, checkedTrackColor = Color.White))
-                }
-                if (status.endpoint.usb) TuningHint("USB EQ processes audio samples. Your choice is saved for this DAC.")
-            }
-        }
-        status.profile?.takeIf { it.output == output }?.let { profile ->
+        status.profile?.let { profile ->
             val settings = HeadphoneDsp.settingsFor(profile, status.binding)
-            TuningResponseCurve(settings.bands + settings.monoBands, status.binding.soundMode, profile.manual != null)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Sound mode", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    SoundMode.entries.forEach { preset ->
-                        FilterChip(
-                            selected = status.binding.soundMode == preset,
-                            onClick = { onSoundMode(preset) }, enabled = canEnable,
-                            label = { Text(preset.label) },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color.White, selectedLabelColor = MusicMateDesignTokens.Surfaces.Canvas, labelColor = MusicMateDesignTokens.Text.Secondary),
-                            modifier = Modifier.heightIn(min = 48.dp)
-                        )
-                    }
-                }
-                TuningHint("Layered over your calibration. Neutral keeps the correction unchanged.")
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                TuningSoundModes(status.binding.soundMode, canEnable, onSoundMode)
                 if (status.binding.soundMode == SoundMode.CUSTOM) {
                     HeadphoneToneSlider("Bass", bass, canEnable, { bass = it }, { onAdjust(bass.toDouble(), treble.toDouble()) })
                     HeadphoneToneSlider("Treble", treble, canEnable, { treble = it }, { onAdjust(bass.toDouble(), treble.toDouble()) })
                 }
-                if (profile.manual != null) TextButton(onClick = { onManual(profile) }, enabled = !busy) { Text("Edit listening setup", color = Color.White) }
-                TextButton(onClick = { details = !details }) { Text(if (details) "Hide profile details" else "Profile details", color = MusicMateDesignTokens.Text.Secondary) }
-                if (details) {
-                    TuningHint(if (profile.manual != null) "Personal listening setup · independent left/right adjustments\nAutomatic headroom may reduce gain further." else "${profile.source}\nImported preamp: ${db(profile.preampDb)} dB · ${profile.bands.size} filters\nAutomatic headroom may reduce gain further.")
-                    TextButton(onClick = { deleting = profile }, enabled = !busy) { Text("Delete profile", color = MusicMateDesignTokens.Status.Destructive) }
-                }
             }
+            TuningResponseCurve(settings.bands + settings.monoBands, status.binding.soundMode, profile.manual != null, active = status.active, previewState = tuningAudibility(status).label)
         }
-        if (status.profile?.output != output && speakerControls == null) {
+        if (status.profile == null && speakerControls == null) {
+            TuningSoundModes(status.binding.soundMode, enabled = false, onSelect = onSoundMode)
             Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Your sound starts here", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
@@ -402,26 +400,38 @@ internal fun HeadphoneEqControls(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Calibrate your sound", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
             TuningHint("Create a profile for your ${if (output == CalibrationOutput.SPEAKER) "speakers" else "headphones or earphones"}.")
+            TuningOutputSelector(output, onOutput)
         }
         Column {
             TuningAction("Microphone", "Measure with a suitable microphone and setup", !busy, onMicrophone)
-            TuningAction("Listening", "Tune bass, mids and treble by ear", !busy) { onManual(null) }
+            TuningAction("Listening", "Tune with five musical listening steps", !busy) { onManual(null) }
             TuningAction("AutoEQ", if (output == CalibrationOutput.HEADPHONE) "Find measurements for your exact headphone model" else "Import your measured speaker correction", !busy,
                 if (output == CalibrationOutput.HEADPHONE) onAutoEq else onFile)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            TextButton(onClick = onFile, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Import text file", color = MusicMateDesignTokens.Text.Secondary) }
-            TextButton(onClick = onPaste, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Paste profile", color = MusicMateDesignTokens.Text.Secondary) }
+        TextButton(onClick = { details = !details }) {
+            Text(if (details) "Hide profile management" else "Manage profiles", color = MusicMateDesignTokens.Text.Secondary)
         }
-        if (status.endpoint?.supports(output) != true && library.profiles.any { it.manual != null && it.output == output }) {
-            TuningLabel("Saved listening profiles")
-            library.profiles.filter { it.manual != null && it.output == output }.forEach { profile ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { onManual(profile) }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                        Text(profile.name, color = Color.White, modifier = Modifier.fillMaxWidth())
-                    }
-                    TextButton(onClick = { deleting = profile }, enabled = !busy, modifier = Modifier.semantics { contentDescription = "Delete ${profile.name}" }) {
-                        Text("Delete", color = MusicMateDesignTokens.Status.Destructive)
+        if (details) {
+            status.profile?.let { profile ->
+                TuningLabel("PROFILE DETAILS")
+                TuningHint(if (profile.manual != null) "Personal listening setup · independent left/right adjustments\nAutomatic headroom may reduce gain further." else "${profile.source}\nImported preamp: ${db(profile.preampDb)} dB · ${profile.bands.size} filters\nAutomatic headroom may reduce gain further.")
+                if (profile.manual != null) TextButton(onClick = { onManual(profile) }, enabled = !busy) { Text("Edit listening setup") }
+                TextButton(onClick = { deleting = profile }, enabled = !busy) { Text("Delete profile", color = MusicMateDesignTokens.Status.Destructive) }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TextButton(onClick = onFile, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Import text file", color = MusicMateDesignTokens.Text.Secondary) }
+                TextButton(onClick = onPaste, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Paste profile", color = MusicMateDesignTokens.Text.Secondary) }
+            }
+            if (status.endpoint?.supports(output) != true && library.profiles.any { it.manual != null && it.output == output }) {
+                TuningLabel("Saved listening profiles")
+                library.profiles.filter { it.manual != null && it.output == output }.forEach { profile ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { onManual(profile) }, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(profile.name, color = Color.White, modifier = Modifier.fillMaxWidth())
+                        }
+                        TextButton(onClick = { deleting = profile }, enabled = !busy, modifier = Modifier.semantics { contentDescription = "Delete ${profile.name}" }) {
+                            Text("Delete", color = MusicMateDesignTokens.Status.Destructive)
+                        }
                     }
                 }
             }

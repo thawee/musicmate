@@ -42,6 +42,8 @@ class HeadphoneMicrophoneWizardTest {
     }
 
     @Test fun rejectsChangedEndpointBeforeCapture() {
+        mockkStatic(Log::class)
+        every { Log.i(any(), any()) } returns 0
         mockkObject(HeadphoneEndpoint.Companion)
         every { HeadphoneEndpoint.current(any()) } returns HeadphoneEndpoint("usb:a", "A", true)
         val wizard = CalibrationWizard(context, scope, recorder, CalibrationOutput.HEADPHONE)

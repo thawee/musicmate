@@ -4,6 +4,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -416,10 +418,11 @@ fun NowPlayingPage(
                             else -> Color(0xFFFFD700)
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier
-                                .weight(1f, fill = false)
+                                .widthIn(max = 220.dp)
+                                .heightIn(min = 48.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MusicMateDesignTokens.Surfaces.GlassPill)
                                 .border(0.75.dp, targetDotColor.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
@@ -436,6 +439,7 @@ fun NowPlayingPage(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = cleanTargetTitle,
+                                modifier = Modifier.weight(1f, fill = false),
                                 color = Color.White.copy(alpha = 0.95f),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -454,6 +458,8 @@ fun NowPlayingPage(
                                 ) {
                                     Text(
                                         text = state.targetBadge.value,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                         color = targetDotColor,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -463,8 +469,7 @@ fun NowPlayingPage(
                             }
                         }
                         if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO") {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            // The chip's label is short and never cut; a long device name gives way instead
+                            // Wrap the controls at large text sizes instead of squeezing the device badge.
                             AudioTuningChip()
                         }
                         }
@@ -964,34 +969,10 @@ fun NowPlayingPage(
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp),
-                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                        onShuffleToggle()
-                    },
-                    enabled = controlsEnabled,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .semantics {
-                            contentDescription = context.getString(
-                                R.string.cd_shuffle_state,
-                                context.getString(if (state.isShuffle.value) R.string.state_on else R.string.state_off)
-                            )
-                        }
-                ) {
-                    Icon(
-                        painterResource(id = R.drawable.ic_baseline_shuffle_24),
-                        contentDescription = null,
-                        tint = if (state.isShuffle.value) colorGold else colorGrey400,
-                        modifier = Modifier.size(19.dp)
-                    )
-                }
                 IconButton(
                     onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
@@ -999,20 +980,27 @@ fun NowPlayingPage(
                     },
                     enabled = controlsEnabled,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(80.dp)
                         .semantics { contentDescription = context.getString(R.string.cd_previous_track) }
                 ) {
-                    Icon(
-                        painterResource(id = R.drawable.ic_skip_previous_rounded),
-                        contentDescription = null,
-                        tint = if (controlsEnabled) Color.White else Color(0x66FFFFFF),
-                        modifier = Modifier.size(26.dp)
-                    )
+                    Box(
+                        modifier = Modifier.size(60.dp).clip(CircleShape)
+                            .background(MusicMateDesignTokens.Surfaces.SurfaceElevated)
+                            .border(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.ic_skip_previous_rounded),
+                            contentDescription = null,
+                            tint = if (controlsEnabled) Color.White else Color(0x66FFFFFF),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
                 // Play / Pause Button with tactile spring scale and refined gold/amber accent rim
                 Box(
                     modifier = Modifier
-                        .size(58.dp)
+                        .size(88.dp)
                         .graphicsLayer {
                             scaleX = playPauseScale
                             scaleY = playPauseScale
@@ -1040,7 +1028,7 @@ fun NowPlayingPage(
                         painterResource(id = if (isPlaying) R.drawable.ic_pause_rounded else R.drawable.ic_play_rounded),
                         contentDescription = null,
                         tint = Color(0xFF141414),
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                 }
 
@@ -1051,14 +1039,49 @@ fun NowPlayingPage(
                     },
                     enabled = playControlsEnabled,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(80.dp)
                         .semantics { contentDescription = context.getString(R.string.cd_next_track) }
                 ) {
+                    Box(
+                        modifier = Modifier.size(60.dp).clip(CircleShape)
+                            .background(MusicMateDesignTokens.Surfaces.SurfaceElevated)
+                            .border(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.ic_skip_next_rounded),
+                            contentDescription = null,
+                            tint = if (playControlsEnabled) Color.White else Color(0x66FFFFFF),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onShuffleToggle()
+                    },
+                    enabled = controlsEnabled,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics {
+                            contentDescription = context.getString(
+                                R.string.cd_shuffle_state,
+                                context.getString(if (state.isShuffle.value) R.string.state_on else R.string.state_off)
+                            )
+                        }
+                ) {
                     Icon(
-                        painterResource(id = R.drawable.ic_skip_next_rounded),
+                        painterResource(id = R.drawable.ic_baseline_shuffle_24),
                         contentDescription = null,
-                        tint = if (playControlsEnabled) Color.White else Color(0x66FFFFFF),
-                        modifier = Modifier.size(26.dp)
+                        tint = if (state.isShuffle.value) colorGold else colorGrey400,
+                        modifier = Modifier.size(19.dp)
                     )
                 }
                 IconButton(

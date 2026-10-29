@@ -60,6 +60,8 @@ Revised 2026-10-23 while building slice 4: the sweep plays on its own track, and
 
 Engine-noise handling (2026-10-27) identifies unreliable frequency regions; it does not notch the microphone recording or cancel the physical engine sound. The displayed frequency near 157 Hz is a band centre. Repeated sweeps at the same spot are deferred until car measurements establish their benefit and alignment requirements; the five-position power average remains. Phone-microphone headphone calibration is unsupported. A separate headphone-profile workflow is planned next.
 
+Retry guidance distinguishes recording overload from insufficient signal-to-noise ratio. Low SNR first asks for a quieter room and steady microphone placement. If recent retries alternate between clipping and low SNR, keep the lower playback setting and address room noise or microphone placement rather than repeatedly reversing volume changes. This history clears after an accepted position or a new calibration session. Rejected takes remain rejected; the clipping and SNR thresholds are unchanged.
+
 ## 3a. Mic accuracy
 
 Android CDD 5.11 only requires the `UNPROCESSED` source to be flat within +/-10 dB from 100 Hz to 7 kHz, +/-20 dB below 100 Hz and +/-30 dB above 7 kHz. A phone mic is therefore an approximate instrument: its own roll-off, especially in the bass, is indistinguishable from the car's response, and a fit down to 30 Hz can end up correcting the mic. Decision (owner, 2026-10-23): below 100 Hz the fit may only cut, never boost, so a mic roll-off can tame a real bass peak but never adds bass. Bass level below 100 Hz is set by ear through the Bass mode or the Custom slider. A USB measurement mic is out of scope for v1.
@@ -102,7 +104,7 @@ ReplayGain remains a separate playback setting (Off, Track or Album), applied at
 
 ## 6. Storage and UI
 
-Main menu → Audio tuning and the Now Playing tuning chip open the shared [audio tuning sheet](AUDIO_TUNING.md). The Speaker tab uses the same profile dropdown and sound modes as Headphone. Microphone and Listening create speaker corrections. AutoEQ imports measured speaker EQ text because its searchable database contains headphone measurements.
+Main menu → Audio tuning opens the shared [audio tuning sheet](AUDIO_TUNING.md). The Now Playing tuning chip offers quick saved-profile and sound-mode selection, profile creation and access to the full editor. The Speaker tab uses the same profile dropdown and sound modes as Headphone. Microphone and Listening create speaker corrections. AutoEQ imports measured speaker EQ text because its searchable database contains headphone measurements.
 
 Existing microphone speaker profiles remain in `files/car_profiles/`. `CorrectionProfiles` presents them in the shared selector with stable `speaker:` IDs. Explicit selection copies the correction into the shared library without removing the original measurement. The first copy preserves the legacy speaker mode, Custom trims and non-USB enablement. USB still requires explicit consent.
 

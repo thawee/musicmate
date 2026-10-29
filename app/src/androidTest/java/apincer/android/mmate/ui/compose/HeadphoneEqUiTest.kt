@@ -58,8 +58,8 @@ class HeadphoneEqUiTest {
                 )
             }
         }
-        composeRule.onNodeWithText("Flat / bypass").performClick()
-        composeRule.onNodeWithText("Speaker · Microphone").assertIsDisplayed()
+        composeRule.onNodeWithText("No correction").performClick()
+        composeRule.onNodeWithText("Speaker · Microphone", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Living room").assertIsNotEnabled()
         composeRule.onNodeWithText("Headphone / earphone · Listening").assertIsDisplayed()
         composeRule.onNodeWithText("DIY pair").performClick()
@@ -98,7 +98,7 @@ class HeadphoneEqUiTest {
         }
         composeRule.onNodeWithText("Neutral").performScrollTo().performClick().assertIsSelected()
         composeRule.onNodeWithText("My headphones").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Enable USB EQ (changes samples)").assertIsOn()
+        composeRule.onNodeWithContentDescription("Enable USB EQ").assertIsOn()
     }
 
     private val profile = HeadphoneProfile("test", "My headphones", "AutoEq.txt", -5.0,
@@ -119,15 +119,15 @@ class HeadphoneEqUiTest {
             }
         }
         composeRule.onNodeWithText("USB DAC").assertIsDisplayed()
-        composeRule.onNodeWithText("EQ bypassed").assertIsDisplayed()
-        composeRule.onNodeWithText("Enable USB EQ (changes samples)").assertIsOff().performClick().assertIsOn()
-        composeRule.onNodeWithText("EQ active").assertIsDisplayed()
-        composeRule.onNodeWithText("Enable USB EQ (changes samples)").performClick().assertIsOff()
-        composeRule.onNodeWithText("EQ bypassed").assertIsDisplayed()
+        composeRule.onNodeWithText("Bypassed").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Enable USB EQ").assertIsOff().performClick().assertIsOn()
+        composeRule.onNodeWithText("Active").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Enable USB EQ").performClick().assertIsOff()
+        composeRule.onNodeWithText("Bypassed").assertIsDisplayed()
     }
 
     @Test
-    fun choosingFlatDisablesEqUntilAProfileIsSelected() {
+    fun removingCorrectionDisablesEqUntilAProfileIsSelected() {
         composeRule.setContent {
             var selected by remember { mutableStateOf<HeadphoneProfile?>(profile) }
             TuningTestContent {
@@ -139,8 +139,8 @@ class HeadphoneEqUiTest {
             }
         }
         composeRule.onNodeWithText("My headphones").performClick()
-        composeRule.onNodeWithText("Flat / bypass").performClick()
-        composeRule.onNodeWithText("Enable USB EQ (changes samples)").assertIsNotEnabled().assertIsOff()
+        composeRule.onNodeWithText("No correction").performClick()
+        composeRule.onNodeWithContentDescription("Enable USB EQ").assertIsNotEnabled().assertIsOff()
     }
 
     @Test
@@ -157,6 +157,7 @@ class HeadphoneEqUiTest {
                 )
             }
         }
+        composeRule.onNodeWithText("Manage profiles").performScrollTo().performClick()
         composeRule.onNodeWithText("Paste profile").performScrollTo().performClick()
         composeRule.onNodeWithText("Import profile").assertIsNotEnabled()
         composeRule.onNodeWithText("Headphone model / name").performTextInput("Test headphones")
@@ -202,6 +203,7 @@ class HeadphoneEqUiTest {
                 HeadphoneEqControls(library = HeadphoneLibrary(listOf(pair)), status = HeadphoneStatus(), onDelete = { deleted = it })
             }
         }
+        composeRule.onNodeWithText("Manage profiles").performScrollTo().performClick()
         composeRule.onNodeWithContentDescription("Delete DIY earbuds").performScrollTo().performClick()
         composeRule.onNodeWithText("Delete DIY earbuds?").assertIsDisplayed()
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()

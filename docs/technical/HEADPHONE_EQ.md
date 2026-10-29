@@ -1,6 +1,6 @@
 # Headphone EQ
 
-Main menu → Audio tuning and the Now Playing tuning chip open the same [audio tuning sheet](AUDIO_TUNING.md). One dropdown lists saved speaker and headphone/earphone corrections, labeled by output type and method. The Speaker and Headphone tabs choose the correction type. Dropdown entries use the full Headphone / earphone label. Bluetooth and USB identify the transport, so choose the type of device attached to it. A built-in phone speaker cannot preview a headphone setup.
+Main menu → Audio tuning opens the full [audio tuning sheet](AUDIO_TUNING.md). The Now Playing tuning chip opens quick profile and sound-mode selection; Full audio tuning expands it into the full editor. One dropdown lists saved speaker and headphone/earphone corrections, labeled by output type and method. The Speaker and Headphone tabs choose the correction type. Dropdown entries use the full Headphone / earphone label. Bluetooth and USB identify the transport, so choose the type of device attached to it. A built-in phone speaker cannot preview a headphone setup.
 
 The calibration methods are Microphone, Listening and AutoEQ. Microphone and Listening support both output types. AutoEQ searches measured headphone models; for speakers its button imports a measured Equalizer APO correction. The headphone database does not contain speaker room profiles. Existing speaker measurements remain in their original files and appear alongside listening and imported profiles.
 
@@ -48,10 +48,10 @@ Stereo music receives independent ear corrections and balance. Mono music averag
 ## Set up a headphone
 
 1. Connect the USB DAC or Bluetooth headphone used for playback.
-2. Open Main menu → Audio tuning → Headphone, or tap the tuning indicator on the playback screen.
+2. Open Main menu → Audio tuning → Headphone, or tap the tuning indicator on the playback screen and choose Full audio tuning.
 3. Import a parametric EQ text file, or paste its contents and enter the headphone model name. Use correction data for the exact model, pads and measurement target you intend to use.
 4. Select the imported profile for the current output and enable headphone EQ. For USB, the enable control explicitly permits processing the samples.
-5. Choose a Sound mode over the saved correction. Neutral keeps the correction alone; Bass, Vocal, Lively, Relax and Night add the same curves used for speakers; Night also compresses louder passages. Custom uses the saved bass and treble sliders. Disable EQ or select Flat / bypass in the profile selector to bypass headphone processing.
+5. Choose a Sound mode over the saved correction. Neutral keeps the correction alone; Bass, Vocal, Lively, Relax and Night add the same curves used for speakers; Night also compresses louder passages. Custom uses the saved bass and treble sliders. Turn EQ off to bypass processing while retaining the selected correction and sound mode. No correction in the profile selector removes the assignment. Mode selection alone never enables EQ.
 
 The shared modes are Neutral, Bass, Vocal, Lively, Relax, Night and Custom. Sound modes are saved per output and apply to both imported corrections and listening setups. They preserve the correction's shared/per-ear bands, mono tuning, balance and imported preamp. Automatic headroom accounts for the combined correction and mode. Neutral is different from bypass: the selected correction remains active. Changing a mode never enables EQ or grants USB processing consent. Existing installations retain their custom trims until a named mode is selected; selecting Custom restores those trims. The unified output profiles use +/-6 dB Custom trims; the legacy speaker mode controls retain +/-4 dB. Starting templates remain separate from sound modes.
 

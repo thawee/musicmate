@@ -47,9 +47,10 @@ fun TagsFromFilenameSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        sheetGesturesEnabled = false,
         containerColor = MusicMateDesignTokens.Surfaces.Surface,
         contentColor = Color.White,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0x66FFFFFF)) },
+        dragHandle = null,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(

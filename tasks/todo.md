@@ -1,3 +1,121 @@
+# Stabilize car playback (2026-10-29)
+- [x] Correct disconnect handling and verify active-output behavior.
+- [x] Improve persisted pause and playback-error diagnostics.
+- [x] Run focused verification and review the combined changes.
+
+# Investigate car playback interruptions, October 28–29 (2026-10-29)
+
+- [x] Preserve available historical phone logs and identify coverage for yesterday and this morning.
+- [x] Trace stop/pause/focus/route/error sequences against playback code and identify supported causes.
+- [x] Report timeline and evidence; implement and verify a focused fix only if a code defect is established.
+
+# Refine transport visual hierarchy (2026-10-29)
+
+- [x] Check primary guidance and reduce visible Previous/Next circles to about two-thirds of Play/Pause, retaining large hit areas.
+- [x] Verify targets/callbacks and affected screenshots.
+- [x] Update docs, install and inspect on the phone when unlocked.
+
+Checked Android accessibility (48dp phone minimum) and Google Design for Driving sizing (76dp head-unit minimum); neither prescribes a visual ratio. Previous/Next now have 60dp visible circles and 28dp icons inside the retained 80dp IconButton targets, compared with 88dp Play/Pause. Two transport checks pass at compact width and normal/150% text, proving targets, separation and callbacks. Three updated playback screenshot checks pass. Installed with data retained, inspected fresh emulator and unlocked-phone captures, left playback stopped and sound settings unchanged. UI documentation updated.
+
+# Improve playback transport reachability (2026-10-29)
+
+- [x] Inspect transport sizing and layout; give Previous and Next prominent, well-separated controls.
+- [x] Verify touch targets, callbacks, compact layout and accessibility.
+- [x] Update docs, install and inspect the phone layout.
+
+Reproduced 48dp navigation targets with failing compact/large-text tests. Previous/Next now have 80dp circular targets and 36dp icons, Play/Pause is 88dp, and Shuffle/Repeat/Sleep timer have a separate 48dp row. Navigation callbacks and enabled-state behavior are retained. Nine focused UI checks pass (transport 2, accessibility 5, playback tuning 2), covering 320dp width, 150% text, separation, viewport bounds and callback delivery. Fresh normal/large emulator captures inspected. Installed with app data retained and inspected on the unlocked phone: Previous [54,1851][294,2091], Next [786,1851][1026,2091] are both 240px/80dp with generous separation. Phone shows AL5125SH_BT and Lively · On; no playback, mode or volume changes made. Updated UI docs; all three affected playback screenshot checks pass after intentional reference updates. Whitespace checks pass for working tree and main comparison.
+
+# Focus quick tuning on listening (2026-10-29)
+
+- [x] Replace the large footer with compact header management access; remove quick profile creation.
+- [x] Verify management navigation, saved profile/mode controls and normal/large text.
+- [x] Update docs and install on phone.
+- [x] Inspect the latest phone layout after unlock.
+
+Removed the quick creation callback/dialog and full-width footer rather than keeping unused navigation. Manage tuning is a compact fixed-header text action; the editor retains all three creation methods. A failing regression first confirmed the unwanted Create profile entry, then all 353 unit tests and 16 focused UI checks passed (QuickTuning 8, SoundSignature 3, AudioTuningSheet 5). Signature checks also pass at 150% system text, and sheet checks ran with the system text enlarged. Emulator font restored to 1.0. Fresh quick-panel capture inspected. Updated Audio tuning/UI/review docs and installed with data retained on `192.168.1.67:34667`; after unlock, fresh physical-phone capture confirmed compact Manage tuning, readable mode cards and no creation row/footer. Header action retained identical bounds [700,323][1008,387] after scrolling, Custom remained reachable, and Manage tuning opened the full editor with AL5125SH_BT / Active preserved. Returned to playback. No playback or sound settings changed. Whitespace checks pass against the working tree and main.
+
+# Descriptive sound signature cards (2026-10-29)
+
+- [x] Replace mode pills with shared descriptive cards and restrained selected styling; retain truthful status and USB consent.
+- [x] Group current sound information and pin Full audio tuning outside the quick panel scroll area.
+- [x] Verify selection, pinned action and large-text scrolling; inspect emulator, update docs and install.
+- [x] Inspect the installed quick/full panels on the physical phone after it is unlocked.
+
+Verification: 353 unit tests pass. Separate emulator runs pass QuickTuningUiTest (8), HeadphoneEqUiTest (8), AudioTuningSheetUiTest (5) and SoundSignatureUiTest (3). The three signature checks also pass at 150% system font size; emulator text restored to 1.0. Text-layout checks exposed fractional-width overflow in wrap-content descriptions; descriptions now use the full card width. Fresh quick/full/large captures inspected, including restrained selection and pinned footer. Working-tree and main-comparison whitespace checks pass. Updated Audio tuning/UI/review documentation. Installed with data retained on `192.168.1.67:34667`; phone reports last update `2026-10-29 11:51:43`. After user unlocked the phone, fresh quick/full captures were inspected: descriptions wrap, Vocal uses the restrained selected state, and Full audio tuning stays at identical bounds [144,2138][876,2212] before/after scrolling. Full editor opens and all three calibration methods plus profile management are reachable; Close stays pinned. Returned to playback with AL5125SH_BT / Vocal / Active preserved. No mode/profile/volume changes or autoplay performed. Changes remain uncommitted.
+
+# Compact playback sound control (2026-10-29)
+
+- [x] Verify the playback entry uses one readable mode/status line and retains its 48dp target.
+- [x] Replace the stacked label, preserving status semantics and responsive output layout.
+- [x] Check normal/large text, update documentation, install and inspect on the phone.
+
+Reproduced the missing compact label with failing playback checks, then replaced the stacked text with one annotated mode/status line. Both normal and 150% text checks pass, asserting one line with no visual overflow, a 48dp target and access to quick tuning. Accessibility name/state remain intact. Updated Audio tuning/UI docs; working-tree and main-comparison whitespace checks pass. Installed with data retained on `192.168.1.67:34667` and inspected a fresh physical-phone capture: equalizer + Vocal · On fits beside AL5125SH_BT / BLUETOOTH with aligned 48dp controls. No automatic playback started; changes remain uncommitted.
+
+# Implement reviewed DSP tuning experience (2026-10-29)
+
+- [x] Prove and unify mode-selection, bypass and route-status behavior without granting USB consent implicitly.
+- [x] Polish playback entry and shared quick/full tuning controls; reorder listening controls ahead of curve and group management actions.
+- [x] Verify focused regressions, full unit suite and emulator layouts at normal/large text; update documentation and inspect diffs.
+
+Implementation starts from `docs/technical/DSP_UX_REVIEW.md`. Preserve existing uncommitted work; use shared controls for consistent behavior. No DLNA processing or level-matched comparison is added.
+
+Implemented shared active/bypassed/unavailable feedback, consistent explicit enablement, mode descriptions/radio semantics, No correction naming, Edit Custom shortcut, listening controls before the EQ curve and disclosed profile management. Creation type no longer gates the current profile's controls. The playback entry has a 48dp target; output controls wrap at larger text sizes. A new regression reproduced both normal/large device badges expanding vertically under a long output name; bounded device width, weighted name and single-line badge fix the cause.
+
+Verification: reproduced legacy speaker mode auto-enablement with a failing UI regression, then confirmed the fix. All 353 app unit tests pass. Separate emulator runs pass QuickTuningUiTest (8), AudioTuningSheetUiTest (5, including whole-sheet 150% text and stable swipes), HeadphoneEqUiTest (8), PlaybackTuningUiTest (2) and MusicCenterAccessibilityTest (5): 28 UI/accessibility checks. Fresh quick/full/large-text/playback captures inspected. Seven affected playback screenshot previews pass after intentional reference updates. A broader comparison also exposed four closed-library reference mismatches outside this change; those references were restored and left untouched. Both working-tree and main-comparison whitespace checks pass. Updated Audio tuning, Headphone EQ, UI and review documentation. No physical sound-quality claim, phone installation or commit made for this redesign.
+
+# Review playback DSP and Audio tuning UX (2026-10-29)
+
+Installation follow-up: user requested installation after the redesign. Verified the GitHub debug APK includes all-files access, installed with `adb install -r` on `192.168.1.67:34667`, and opened MainActivity. Phone reports version `3.30.0-261029`, last update `2026-10-29 11:09:42`. App data retained.
+
+Phone inspection follow-up: captured real playback, quick tuning and full tuning on `192.168.1.67:34667`. Playback shows AL5125SH_BT and Vocal / On; both panels show the saved profile and Active. No observed overlap/clipping in the inspected controls. Quick mode choices wrap to three rows at the phone's current display configuration (system font scale 1.0), placing Full audio tuning below the first viewport; one scroll reaches it. Full editor keeps Close pinned; EQ curve, all three calibration actions and Manage profiles are reachable by scrolling. Returned to playback without changing sound mode, profile, enablement or volume. Remaining polish: make Full audio tuning persistently accessible in the quick panel.
+
+- [x] Inspect current Compose controls, playback state and fresh quick/full tuning layouts using the requested UI/UX Pro Max skill.
+- [x] Assess clarity, profile/mode interaction, visual hierarchy, accessibility and audio-specific trust cues.
+- [x] Deliver a prioritized design review and concrete target flows for a polished audio app.
+
+Review saved in `docs/technical/DSP_UX_REVIEW.md`. Fresh quick/full emulator captures inspected, including full tuning at 150% text; four quick and four full-sheet UI checks pass. Highest priority: consistent mode activation, truthful active/bypassed/unavailable states, and bypass that preserves profile selection. Proposed quick/full hierarchy and acceptance checks documented; no production UI changed for this review.
+
+# Fix microphone calibration level prompts (2026-10-29)
+
+- [x] Trace clipping, noise and level decisions; reproduce the repeated up/down guidance with focused tests.
+- [x] Fix the root cause and make guidance match the measured condition while preserving clipping and SNR protection.
+- [x] Run relevant unit/UI checks, document behavior and install the verified build with data retained.
+
+Finding: each rejection previously gave independent volume advice even though TOO_QUIET measures SNR and CLIPPED tests the whole recording. Added retry history so opposite rejections produce consistent lower-setting/noise/placement guidance; reset after an accepted position or new session. Seven guidance regressions and all 48 calibration unit tests pass. Capture and analyzer thresholds remain unchanged. User confirmed an external speaker/car system with the phone microphone; physical acoustic conditions still require an on-device retry. Rejection diagnostics now record reason/detail for follow-up.
+
+Final verification: all 348 unit tests and four calibration UI tests pass, including long retry guidance at 150% text with the pinned Measure again action. Updated calibration documentation; diff whitespace against main passes. Confirmed GitHub APK all-files access and installed with app data retained on `192.168.1.67:34667`, then launched MainActivity. Version `3.30.0-261029`, update time `2026-10-29 10:17:37`. No automatic acoustic sweep was played on the phone. Changes remain uncommitted.
+
+# Review and fix other sheet swipes (2026-10-29)
+
+- [x] Review Music Center, Related tracks and Tags from filename; reproduce sheet movement with touch tests.
+- [x] Fix confirmed body-scroll/drag conflicts and preserve scrolling, actions and dismissal.
+- [x] Run targeted UI and unit checks, review documentation and install the GitHub build with app data retained.
+
+Confirmed red: body swipes dismissed Music Center and Related tracks; filename tags moved off-screen (header y=485 to y=2315). Disabled modal sheet gestures and removed drag handles, including the Music Center preview handle. All three new swipe regression checks now pass, including bottom-row access, callbacks, Music Center tab selection and explicit dismissal. Queue reorder code remains unchanged.
+
+Final verification: 341 unit tests, three new sheet swipe checks and five Music Center accessibility checks pass. Updated and validated ten affected Music Center screenshot references; inspected compact and queue layouts. Documented the sheet gesture contract in `docs/technical/UI.md`; diff whitespace against main passes. Confirmed the GitHub APK's all-files access, installed with data retained on `192.168.1.67:34667`, and launched MainActivity. Version `3.30.0-261029`, update time `2026-10-29 09:38:07`. Changes remain uncommitted.
+
+# Fix tuning swipe bounce (2026-10-29)
+
+- [x] Reproduce the reported swipe movement with real touch gestures and identify sheet/scroll ownership.
+- [x] Apply the smallest fix and add a swipe regression check.
+- [x] Verify quick/full tuning, build and install the corrected GitHub APK with data retained.
+
+Cause and fix: vertical body scrolling competed with the modal sheet's drag gestures. The original gesture check showed 119 px of unwanted sheet movement in both panels. Disable sheet gestures and remove the drag handle; keep body scrolling and explicit dismissal. Four sheet UI checks now pass, including real swipes in quick/full panels and existing normal/large-text editor controls. Complete-swipe position recording avoids waiting for UI idle while a touch is held at an overscroll boundary.
+
+Verification: 341 unit tests and four quick-tuning UI tests pass in the final build, in addition to the four sheet checks. Diff whitespace against main passes. Confirmed the GitHub APK retains all-files access, installed with data retained on `192.168.1.67:34667`, and launched MainActivity. Package update time: `2026-10-29 09:11:43`.
+
+# Now Playing quick tuning (2026-10-29)
+
+- [x] Add a compact playback tuning panel with saved speaker/headphone profile selection, mode selection and processing state.
+- [x] Reuse full tuning persistence and route safeguards; provide full tuning and new-profile access without leaving playback.
+- [x] Verify profile/mode changes, USB and incompatible outputs, navigation and compact/large-text layouts; update docs.
+- [x] Install the verified build when the phone's current wireless debugging address is available.
+
+Design: one labeled profile selector rather than speaker/headphone tabs in the quick panel. Keep the full editor in the main menu. Reuse existing profile and mode callbacks, preserve USB consent and explain when a saved correction cannot apply to the current output.
+
+Verification: 341 unit tests pass. Four quick-panel UI tests pass at normal size and on a compact display at 150% text. Eight existing profile UI tests and two full-sheet UI tests pass. Inspected both quick-panel layouts; checked documentation links and diff whitespace against main. Installed with app data retained on `192.168.1.67:34667` and launched MainActivity; version `3.30.0-261029`, update time `2026-10-29 08:29:55`. Changes remain uncommitted.
+
 # Commit musical DSP tuning and menu update (2026-10-29)
 
 - [x] Review the pending DSP changes and finish user/developer documentation.
