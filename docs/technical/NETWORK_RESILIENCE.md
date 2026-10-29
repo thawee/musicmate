@@ -426,7 +426,9 @@ To prevent hardware DAC FIFO buffer acquisition stalls on renderers (e.g. HiBy R
 * **Position Verification:** `MediaServerHubImpl` cross-references effective position against the authoritative database track duration (`currentPlayingTrack.getAudioDuration()`). Only events occurring near track completion ($\ge 90\%$ or within 5 seconds of the end) trigger `onPlaybackCompleted()`, while premature events are ignored to maintain continuous playback.
 
 ### Bluetooth Disconnect Isolation (`MusicMateServiceImpl.java`)
-* **Local-Only Auto-Pause:** `BroadcastReceiver` handlers for `ACTION_AUDIO_BECOMING_NOISY` and Bluetooth `ACTION_ACL_DISCONNECTED` are strictly gated behind `isLocalTarget()`.
+* **Audio disconnect handling:** `ACTION_AUDIO_BECOMING_NOISY` pauses active local playback. Bluetooth ACL disconnects refresh device and codec state without independently pausing: a link can disconnect while Android Auto continues on its remote-submix route.
+* **Media session controls:** External trusted controllers can play, pause, and skip tracks, but cannot seek within a track or use seek-back / seek-forward. MusicMate’s own controller retains seek access. Android Auto chooses which controls to display.
+* **Playback diagnostics:** The route log records pause callers, named playback-change reasons, and playback error context and cause types without exception messages or file paths. A timeout still needs its underlying cause diagnosed; recovery is unchanged.
 * **Remote Stream Continuity:** Disconnecting a smartwatch, automotive hands-free system, or secondary Bluetooth accessory does not interrupt or pause active DLNA Wi-Fi streaming to external Hi-Fi receivers.
 
 

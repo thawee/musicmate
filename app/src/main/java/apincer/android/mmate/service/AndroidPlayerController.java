@@ -213,12 +213,28 @@ public class AndroidPlayerController {
             this.internalExoPlayer.addListener(new Player.Listener() {
                 @Override
                 public void onPlayerError(@NonNull androidx.media3.common.PlaybackException error) {
-                    mediaRouteLog.note("playback error: " + error.getErrorCodeName());
+                    MediaItem failed = internalExoPlayer != null ? internalExoPlayer.getCurrentMediaItem() : null;
+                    String trackId = failed != null && failed.mediaId.matches("[0-9]+")
+                            ? failed.mediaId : "unknown";
+                    String details = "playback error: " + error.getErrorCodeName()
+                            + " trackId=" + trackId
+                            + " positionMs=" + (internalExoPlayer != null ? internalExoPlayer.getCurrentPosition() : -1)
+                            + " state=" + (internalExoPlayer != null ? internalExoPlayer.getPlaybackState() : -1);
+                    if (error instanceof androidx.media3.exoplayer.ExoPlaybackException) {
+                        androidx.media3.exoplayer.ExoPlaybackException exoError =
+                                (androidx.media3.exoplayer.ExoPlaybackException) error;
+                        details += " type=" + exoError.type + " renderer=" + exoError.rendererName;
+                        if (exoError.rendererFormat != null) {
+                            details += " mime=" + exoError.rendererFormat.sampleMimeType
+                                    + " sampleRate=" + exoError.rendererFormat.sampleRate
+                                    + " channels=" + exoError.rendererFormat.channelCount;
+                        }
+                    }
+                    mediaRouteLog.note(details + " causes=" + describeErrorCauses(error));
                     // Without this, one unreadable or missing file stopped playback for the rest of
                     // the queue. Skip to the next track, but stop after a few failures in a row
                     // (e.g. storage removed) instead of racing through the whole queue.
                     // ExoPlayer can report one bad item more than once; skip it only once
-                    MediaItem failed = internalExoPlayer != null ? internalExoPlayer.getCurrentMediaItem() : null;
                     if (failed != null && failed == lastFailedItem) return;
                     lastFailedItem = failed;
                     consecutivePlayerErrors++;
@@ -270,6 +286,7 @@ public class AndroidPlayerController {
                 @Override
                 public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
                     mediaRouteLog.note("playWhenReady=" + playWhenReady + " reason=" + reason
+                            + " (" + playWhenReadyReason(reason) + ")"
                             + " positionMs=" + internalExoPlayer.getCurrentPosition()
                             + " state=" + internalExoPlayer.getPlaybackState());
                     if (playWhenReady) usbOutputFormat.resume();
@@ -308,6 +325,36 @@ public class AndroidPlayerController {
     private static final int MAX_CONSECUTIVE_PLAYER_ERRORS = 3;
     private int consecutivePlayerErrors = 0;
     private MediaItem lastFailedItem;
+
+    // Messages can contain private file paths and titles. Keep only failure types and code locations.
+    static String describeErrorCauses(Throwable error) {
+        StringBuilder details = new StringBuilder();
+        int depth = 0;
+        while (error != null && depth++ < 8) {
+            if (details.length() > 0) details.append(" -> ");
+            details.append(error.getClass().getName());
+            StackTraceElement[] frames = error.getStackTrace();
+            if (frames.length > 0) {
+                StackTraceElement frame = frames[0];
+                details.append('@').append(frame.getClassName()).append('.')
+                        .append(frame.getMethodName()).append(':').append(frame.getLineNumber());
+            }
+            error = error.getCause();
+        }
+        if (error != null) details.append(" -> ...");
+        return details.toString();
+    }
+
+    private static String playWhenReadyReason(int reason) {
+        switch (reason) {
+            case Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST: return "user request";
+            case Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS: return "audio focus loss";
+            case Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY: return "audio becoming noisy";
+            case Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE: return "remote";
+            case Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM: return "end of media item";
+            default: return "other";
+        }
+    }
 
     public void registerCallback(ExternalAndroidPlayer player, PlaybackCallback playbackCallback) {
         unregisterCallback();
@@ -567,7 +614,17 @@ public class AndroidPlayerController {
     }
 
     public void pause() {
-        mediaRouteLog.note("app pause requested target=" + playbackTargetId);
+        StringBuilder callers = new StringBuilder();
+        for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+            if (frame.getClassName().startsWith("apincer.")
+                    && !frame.getClassName().equals(AndroidPlayerController.class.getName())) {
+                if (callers.length() > 0) callers.append(" <- ");
+                callers.append(frame.getClassName()).append('.').append(frame.getMethodName())
+                        .append(':').append(frame.getLineNumber());
+                if (callers.length() > 400) break;
+            }
+        }
+        mediaRouteLog.note("app pause requested target=" + playbackTargetId + " callers=" + callers);
         MediaController controller = ensureMediaController();
         if (controller != null) {
             controller.getTransportControls().pause();

@@ -229,23 +229,22 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         }
     };
 
-    private final BroadcastReceiver becomingNoisyReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver becomingNoisyReceiver = new AudioOutputReceiver();
+
+    final class AudioOutputReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent != null ? intent.getAction() : null;
-            if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)
-                    || BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+            if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)) {
                 if (isPlaying() && isLocalTarget()) {
-                    Log.d(TAG, "Audio output disconnected / becoming noisy. Auto-pausing local playback.");
+                    Log.d(TAG, "Audio output becoming noisy. Auto-pausing local playback.");
                     pausePlayer();
-                } else {
-                    Log.d(TAG, "Audio output disconnected / becoming noisy, but active playback is remote (DLNA/Cast). Continuing playback.");
                 }
-                if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                    AudioOutputHelper.clearCachedBluetoothCodec();
-                    AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                    refreshExternalPlayersSafe();
-                }
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                // An ACL disconnect may be unrelated to the active output (for example Android Auto).
+                AudioOutputHelper.clearCachedBluetoothCodec();
+                AudioOutputHelper.refreshBluetoothCodecStatus(context);
+                refreshExternalPlayersSafe();
             } else if ("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED".equals(action)) {
                 Log.d(TAG, "Bluetooth codec configuration changed.");
                 try {
@@ -307,7 +306,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 }, 1000);
             }
         }
-    };
+    }
 
     private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
             controllers -> {
@@ -558,7 +557,26 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             // Session Next/Previous (notification, lock screen, headset) follow the MusicMate queue
             QueueAwareSessionPlayer sessionPlayer = new QueueAwareSessionPlayer(
                     androidPlayer.getInternalExoPlayer(), this::skipToNextInQueue, this::skipToPrevious);
-            mediaLibrarySession = new MediaLibrarySession.Builder(this, sessionPlayer, new MediaLibrarySession.Callback() {})
+            mediaLibrarySession = new MediaLibrarySession.Builder(this, sessionPlayer, new MediaLibrarySession.Callback() {
+                @Override
+                public MediaSession.ConnectionResult onConnect(MediaSession session, MediaSession.ControllerInfo controller) {
+                    if (getPackageName().equals(controller.getPackageName())) {
+                        return MediaLibrarySession.Callback.super.onConnect(session, controller);
+                    }
+                    androidx.media3.common.Player.Commands commands =
+                            MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
+                                    .remove(androidx.media3.common.Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+                                    .remove(androidx.media3.common.Player.COMMAND_SEEK_TO_MEDIA_ITEM)
+                                    .remove(androidx.media3.common.Player.COMMAND_SEEK_BACK)
+                                    .remove(androidx.media3.common.Player.COMMAND_SEEK_FORWARD)
+                                    .build();
+                    if (!controller.isTrusted()) {
+                        return MediaLibrarySession.Callback.super.onConnect(session, controller);
+                    }
+                    return new MediaSession.ConnectionResult.AcceptedResultBuilder(session, controller)
+                            .setAvailablePlayerCommands(commands).build();
+                }
+            })
                 .build();
                 
             DefaultMediaNotificationProvider notificationProvider = new DefaultMediaNotificationProvider.Builder(this)
@@ -596,7 +614,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         // Initialize Bluetooth A2DP proxy for real-time codec telemetry
         AudioOutputHelper.initializeBluetooth(getApplicationContext());
 
-        // Register receiver for headphone / Bluetooth disconnect auto-pause & codec configuration changes
+        // Register receiver for becoming-noisy auto-pause and Bluetooth device / codec changes
         IntentFilter audioNoisyFilter = new IntentFilter();
         audioNoisyFilter.addAction(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         audioNoisyFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
