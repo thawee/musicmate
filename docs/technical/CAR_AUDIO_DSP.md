@@ -102,7 +102,7 @@ ReplayGain remains a separate playback setting (Off, Track or Album), applied at
 
 ## 6. Storage and UI
 
-Settings → Audio tuning → Open audio tuning and the Now Playing tuning chip open the shared [audio tuning sheet](AUDIO_TUNING.md). The Speaker tab uses the same profile dropdown and sound modes as Headphone. Microphone and Listening create speaker corrections. AutoEQ imports measured speaker EQ text because its searchable database contains headphone measurements.
+Main menu → Audio tuning and the Now Playing tuning chip open the shared [audio tuning sheet](AUDIO_TUNING.md). The Speaker tab uses the same profile dropdown and sound modes as Headphone. Microphone and Listening create speaker corrections. AutoEQ imports measured speaker EQ text because its searchable database contains headphone measurements.
 
 Existing microphone speaker profiles remain in `files/car_profiles/`. `CorrectionProfiles` presents them in the shared selector with stable `speaker:` IDs. Explicit selection copies the correction into the shared library without removing the original measurement. The first copy preserves the legacy speaker mode, Custom trims and non-USB enablement. USB still requires explicit consent.
 

@@ -82,12 +82,12 @@ class ManualHeadphoneUiTest {
         composeRule.onNodeWithText("Next").performClick()
         composeRule.onNodeWithContentDescription("Left-right balance").performSemanticsAction(SemanticsActions.SetProgress) { it(2f) }
         composeRule.onNodeWithText("Next").performClick()
-        composeRule.onNodeWithText("Manual controls").performClick()
+        composeRule.onNodeWithText("Advanced").performClick()
         composeRule.onNodeWithText("Left").performClick()
-        composeRule.onNodeWithContentDescription("Bass adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
+        composeRule.onNodeWithContentDescription("Bass impact adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
         composeRule.onNodeWithText("Right").performClick()
-        composeRule.onNodeWithContentDescription("Mids adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(-2f) }
-        composeRule.onNodeWithContentDescription("Treble adjustment").performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(1f) }
+        composeRule.onNodeWithContentDescription("Vocal naturalness adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(-2f) }
+        composeRule.onNodeWithContentDescription("Treble detail adjustment").performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(1f) }
         composeRule.onNodeWithText("Save profile").performClick()
         composeRule.runOnIdle {
             assertEquals("Workshop pair", saved?.name)
@@ -111,7 +111,7 @@ class ManualHeadphoneUiTest {
         composeRule.onNodeWithText("Pair name").performTextInput("Preset pair")
         composeRule.onNodeWithText("Next").performClick()
         composeRule.onNodeWithText("Next").performClick()
-        composeRule.onNodeWithText("Manual controls").performClick()
+        composeRule.onNodeWithText("Advanced").performClick()
         composeRule.onNodeWithText("Flat").performScrollTo().assertIsSelected()
         composeRule.onNodeWithText("V-shape").performScrollTo().performClick()
         composeRule.onNodeWithText("V-shape").assertIsSelected()
@@ -169,15 +169,16 @@ class ManualHeadphoneUiTest {
         composeRule.setContent {
             TuningTestContent {
                 ManualHeadphoneDialog(null, endpoint, onDismiss = {}, onSave = {},
-                    onPlay = { _, settings, _, _ ->
-                        playedFlat = settings.bands.isEmpty()
+                    onPlay = { _, settings, _, _, _ ->
+                        playedFlat = settings.bands.isEmpty() && settings.leftBands.isEmpty() &&
+                            settings.rightBands.isEmpty() && settings.monoBands.isEmpty() && settings.balanceDb == 0.0
                         awaitCancellation()
                     }, onStop = { stopped++ })
             }
         }
         composeRule.onNodeWithText("Pair name").performTextInput("Test pair")
         composeRule.onNodeWithText("Next").performClick()
-        composeRule.onNodeWithText("Bypass draft EQ").performScrollTo().performClick()
+        composeRule.onNodeWithText("Original").performScrollTo().performClick()
         composeRule.onNodeWithText("Play centered").performScrollTo().performClick()
         composeRule.runOnIdle { assertTrue(playedFlat) }
         var before = 0
@@ -186,30 +187,34 @@ class ManualHeadphoneUiTest {
         composeRule.runOnIdle { assertTrue(stopped > before) }
     }
 
-    @Test fun guidedTonesProgressLowToHighAndPreserveSkippedAndOppositeEarValues() {
+    @Test fun musicalGuideProgressesAcrossFiveStepsAndPreservesSkippedAndOppositeEarValues() {
         val original = HeadphoneProfile.createManual("Guide pair", ManualHeadphoneTuning(
-            left = HeadphoneTone(midDb = -1.0), right = HeadphoneTone(trebleDb = 2.0)))
+            left = HeadphoneTone(midDb = -1.0, trebleDb = 1.5, warmthDb = 2.0, clarityDb = -2.5),
+            right = HeadphoneTone(bassDb = -2.0, midDb = 1.0, trebleDb = 2.0, warmthDb = -1.5, clarityDb = 3.0)))
         var saved: HeadphoneProfile? = null
         val heard = mutableListOf<Pair<HeadphoneTestSignal, HeadphoneTestBand>>()
         composeRule.setContent {
             TuningTestContent {
                 ManualHeadphoneDialog(original, endpoint, onDismiss = {}, onSave = { saved = it },
-                    onPlay = { signal, _, _, band -> heard += signal to band })
+                    onPlay = { signal, _, _, band, _ -> heard += signal to band })
             }
         }
         composeRule.onNodeWithText("Next").performClick()
         composeRule.onNodeWithText("Next").performClick()
-        composeRule.onNodeWithText("Bass · 100 Hz").assertExists()
+        composeRule.onNodeWithText("Bass impact").assertExists()
         composeRule.onNodeWithText("Left").performScrollTo().performClick()
-        composeRule.onNodeWithContentDescription("Bass adjustment").performScrollTo()
+        composeRule.onNodeWithContentDescription("Bass impact adjustment").performScrollTo()
             .performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
         composeRule.onNodeWithText("Play left").performScrollTo().performClick()
-        composeRule.onNodeWithText("Next tone").performScrollTo().performClick()
-        composeRule.onNodeWithText("Mids · 1 kHz").assertExists()
-        composeRule.onNodeWithText("Skip tone").performScrollTo().performClick()
-        composeRule.onNodeWithText("Treble · 8 kHz").assertExists()
+        composeRule.onNodeWithText("Next step").performScrollTo().performClick()
+        for (step in listOf("Warmth", "Vocal naturalness", "Clarity")) {
+            composeRule.onNodeWithText(step).assertExists()
+            composeRule.onNodeWithText("Skip step").performScrollTo().performClick()
+        }
+        composeRule.onNodeWithText("Treble detail").assertExists()
         composeRule.onNodeWithText("Play right").performScrollTo().performClick()
-        composeRule.onNodeWithText("Finish tones").performScrollTo().performClick()
+        composeRule.onNodeWithText("Skip step").performScrollTo().performClick()
+        composeRule.onNodeWithText("Final music check").assertExists()
         composeRule.onNodeWithText("Save profile").performClick()
         composeRule.runOnIdle {
             assertEquals(listOf(HeadphoneTestSignal.LEFT to HeadphoneTestBand.BASS,

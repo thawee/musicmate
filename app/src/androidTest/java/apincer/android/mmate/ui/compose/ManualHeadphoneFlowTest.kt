@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
@@ -48,7 +49,7 @@ class ManualHeadphoneFlowTest {
             compose.onNodeWithText("Speaker name").performTextInput(name)
             compose.onNodeWithText("Next").performClick()
             compose.onNodeWithText("Next").performClick()
-            compose.onNodeWithContentDescription("Bass adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(-2f) }
+            compose.onNodeWithContentDescription("Bass impact adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(-2f) }
             compose.onNodeWithText("Save profile").performClick()
             compose.waitUntil(5_000) { HeadphonePreferences.state.value.profiles.any { it.name == name } }
             val profile = HeadphonePreferences.state.value.profiles.single { it.name == name }
@@ -83,11 +84,11 @@ class ManualHeadphoneFlowTest {
             }
             compose.onNodeWithText("Listening").performScrollTo().performClick()
             compose.onNodeWithText("Pair name").performTextInput(name)
-            compose.onNodeWithText("In-ear").performClick()
+            compose.onNodeWithText("In-ear").performScrollTo().performClick().assertIsSelected()
             compose.onNodeWithText("Next").performClick()
             compose.onNodeWithContentDescription("Left-right balance").performSemanticsAction(SemanticsActions.SetProgress) { it(-2f) }
             compose.onNodeWithText("Next").performClick()
-            compose.onNodeWithContentDescription("Bass adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(2f) }
+            compose.onNodeWithContentDescription("Bass impact adjustment").performSemanticsAction(SemanticsActions.SetProgress) { it(2f) }
             compose.onNodeWithText("Save profile").performClick()
             compose.waitUntil(5_000) { HeadphonePreferences.state.value.profiles.any { it.name == name } }
             val saved = HeadphonePreferences.state.value.profiles.single { it.name == name }

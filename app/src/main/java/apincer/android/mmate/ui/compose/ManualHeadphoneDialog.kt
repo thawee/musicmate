@@ -1,6 +1,15 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.text.font.FontWeight
+import apincer.android.mmate.audio.headphones.ListeningSample
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -10,11 +19,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -58,7 +67,7 @@ import java.util.Locale
 
 private enum class TuningEar(val label: String) { BOTH("Both"), LEFT("Left"), RIGHT("Right") }
 
-private val GUIDED_BANDS = listOf(HeadphoneTestBand.BASS, HeadphoneTestBand.MIDS, HeadphoneTestBand.TREBLE)
+private val GUIDED_BANDS = listOf(HeadphoneTestBand.BASS, HeadphoneTestBand.WARMTH, HeadphoneTestBand.MIDS, HeadphoneTestBand.CLARITY, HeadphoneTestBand.TREBLE)
 
 @Composable
 internal fun ManualHeadphoneDialog(
@@ -68,7 +77,7 @@ internal fun ManualHeadphoneDialog(
     error: String? = null,
     onDismiss: () -> Unit,
     onSave: (HeadphoneProfile) -> Unit,
-    onPlay: suspend (HeadphoneTestSignal, CarDspSettings, HeadphoneEndpoint, HeadphoneTestBand) -> Unit = { _, _, _, _ -> },
+    onPlay: suspend (HeadphoneTestSignal, CarDspSettings, HeadphoneEndpoint, HeadphoneTestBand, ListeningSample?) -> Unit = { _, _, _, _, _ -> },
     onStop: () -> Unit = {},
     output: CalibrationOutput = profile?.output ?: CalibrationOutput.HEADPHONE
 ) {
@@ -79,7 +88,16 @@ internal fun ManualHeadphoneDialog(
     var page by remember(profile?.id) { mutableStateOf(0) }
     var guided by remember(profile?.id) { mutableStateOf(true) }
     var guideIndex by remember(profile?.id) { mutableStateOf(0) }
-    val testBand = if (page == 2 && guided) GUIDED_BANDS[guideIndex] else HeadphoneTestBand.MULTITONE
+    val testBand = if (page == 2 && guided) GUIDED_BANDS.getOrNull(guideIndex) ?: HeadphoneTestBand.MULTITONE else HeadphoneTestBand.MULTITONE
+    val samples = when (testBand) {
+        HeadphoneTestBand.BASS -> listOf(ListeningSample.BASS_GROOVE, ListeningSample.MUSIC)
+        HeadphoneTestBand.WARMTH -> listOf(ListeningSample.ACOUSTIC, ListeningSample.MALE_VOICE, ListeningSample.FEMALE_VOICE)
+        HeadphoneTestBand.MIDS -> listOf(ListeningSample.MALE_VOICE, ListeningSample.FEMALE_VOICE, ListeningSample.ACOUSTIC)
+        HeadphoneTestBand.CLARITY -> listOf(ListeningSample.PIANO, ListeningSample.MALE_VOICE, ListeningSample.FEMALE_VOICE)
+        HeadphoneTestBand.TREBLE -> listOf(ListeningSample.SHAKER, ListeningSample.MUSIC)
+        HeadphoneTestBand.MULTITONE -> listOf(ListeningSample.MUSIC)
+    }
+    var sample by remember(profile?.id, page, guided, guideIndex) { mutableStateOf(samples.first()) }
     var ear by remember { mutableStateOf(TuningEar.BOTH) }
     var bypass by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
@@ -103,7 +121,7 @@ internal fun ManualHeadphoneDialog(
         var request: Job? = null
         request = scope.launch {
             try {
-                onPlay(signal, if (bypass) CarDspSettings(emptyList()) else tuning.settings(), output, testBand)
+                onPlay(signal, if (bypass) CarDspSettings(emptyList()) else tuning.settings(), output, testBand, sample)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
@@ -135,8 +153,7 @@ internal fun ManualHeadphoneDialog(
         )
     }
 
-    AlertDialog(
-        modifier = Modifier.imePadding(),
+    ListeningDialogFrame(
         onDismissRequest = { if (!busy) { stopTest(); onDismiss() } },
         title = { Text(if (profile == null) "Create listening profile" else "Edit listening setup") },
         text = {
@@ -160,7 +177,7 @@ internal fun ManualHeadphoneDialog(
                     }
                     1 -> {
                         Text("Check sides and center")
-                        Text("Start with your device volume low. Each quiet test ends within 4 seconds. Adjust balance until the centered sound feels centered.", fontSize = 12.sp)
+                        Text("Start with your device volume low. Each sample lasts 3 seconds, or 6 seconds alternating sides. Adjust balance until the centered sound feels centered.", fontSize = 12.sp)
                         Text("Balance: ${formatDb(tuning.balanceDb)} dB")
                         Text("Negative favors left; positive favors right. Balance only turns down the opposite ear.", fontSize = 12.sp)
                         Slider(value = tuning.balanceDb.toFloat(), onValueChange = {
@@ -172,18 +189,28 @@ internal fun ManualHeadphoneDialog(
                         Text("Tune by listening")
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = guided, onClick = { stopTest(); guideIndex = 0; guided = true },
-                                label = { Text("Guided tones") }, enabled = !busy)
+                                label = { Text("Musical guide") }, enabled = !busy)
                             FilterChip(selected = !guided, onClick = { stopTest(); guided = false },
-                                label = { Text("Manual controls") }, enabled = !busy)
+                                label = { Text("Advanced") }, enabled = !busy)
                         }
                         if (guided) {
-                            Text("Tone ${guideIndex + 1} of ${GUIDED_BANDS.size}", fontSize = 12.sp)
-                            Text(testBand.label)
-                            Text(if (speaker) "Play left and right at the same frequency. Adjust each speaker channel gently from your listening position. A mono speaker cannot provide separate left/right comparisons."
-                                else "Play left and right at the same frequency. Adjust the selected ear gently until the sides feel balanced. Recheck the fit first if they differ.", fontSize = 12.sp)
-                            Text("Do not match loudness between different frequencies. If a tone is faint or inaudible, skip it; do not raise the volume to chase it. This is a listening preference, not a measured response.", fontSize = 12.sp)
+                            TuningLabel(if (guideIndex < GUIDED_BANDS.size) "LISTENING ${guideIndex + 1} / ${GUIDED_BANDS.size}" else "READY TO COMPARE")
+                            Text(testBand.label, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                            TuningHint(when (testBand) {
+                                HeadphoneTestBand.BASS -> "Listen for the weight of the kick and bass. Aim for impact without boom."
+                                HeadphoneTestBand.WARMTH -> "Listen to the body of the plucks or a voice. Aim for fullness without muddiness."
+                                HeadphoneTestBand.MIDS -> "Choose a male or female voice. Aim for a natural voice that feels present."
+                                HeadphoneTestBand.CLARITY -> "Listen to piano attacks or spoken words. Aim for definition without sharpness."
+                                HeadphoneTestBand.TREBLE -> "Listen to the shaker and cymbals. Aim for detail without harshness."
+                                HeadphoneTestBand.MULTITONE -> "Compare the full musical mix with Original and Adjusted. Save when the overall balance feels comfortable."
+                            })
+                        } else {
+                            TuningHint("Five independent controls, each −6 to +6 dB. Frequencies show where each adjustment is centered.")
                         }
-                        Text("Choose which ear to change. Bass, mids and treble each allow −6 to +6 dB.", fontSize = 12.sp)
+                        TuningHint("Keep volume low. Compare the same example; this tunes your preference.")
+                        if (testBand != HeadphoneTestBand.MULTITONE || !guided) {
+                            Text(if (speaker) "Channel to adjust" else "Ear to adjust", fontSize = 12.sp)
+                        }
                         Row(Modifier.fillMaxWidth()) {
                             TuningEar.entries.forEach { option ->
                                 Column(Modifier.weight(1f)) {
@@ -192,7 +219,7 @@ internal fun ManualHeadphoneDialog(
                             }
                         }
                         if (ear == TuningEar.BOTH && tuning.left != tuning.right) {
-                            Text("Ears differ. Sliders show the left ear; moving one applies that tone value to both ears.", fontSize = 12.sp)
+                            TuningHint("Sides differ. Moving a slider sets both sides to that value.")
                         }
                         val tone = if (ear == TuningEar.RIGHT) tuning.right else tuning.left
                         if (!guided) {
@@ -205,34 +232,45 @@ internal fun ManualHeadphoneDialog(
                                 }
                             }
                         }
+                        if (!guided) TuningHint("100 Hz bass · 300 Hz warmth · 1 kHz vocals · 3 kHz clarity · 8 kHz detail")
                         if (!guided || testBand == HeadphoneTestBand.BASS)
-                            ListeningToneSlider("Bass", tone.bassDb, !busy) { value -> updateTone { it.copy(bassDb = value) } }
+                            ListeningToneSlider("Bass impact", tone.bassDb, !busy) { value -> updateTone { it.copy(bassDb = value) } }
+                        if (!guided || testBand == HeadphoneTestBand.WARMTH)
+                            ListeningToneSlider("Warmth", tone.warmthDb, !busy) { value -> updateTone { it.copy(warmthDb = value) } }
                         if (!guided || testBand == HeadphoneTestBand.MIDS)
-                            ListeningToneSlider("Mids", tone.midDb, !busy) { value -> updateTone { it.copy(midDb = value) } }
+                            ListeningToneSlider("Vocal naturalness", tone.midDb, !busy) { value -> updateTone { it.copy(midDb = value) } }
+                        if (!guided || testBand == HeadphoneTestBand.CLARITY)
+                            ListeningToneSlider("Clarity", tone.clarityDb, !busy) { value -> updateTone { it.copy(clarityDb = value) } }
                         if (!guided || testBand == HeadphoneTestBand.TREBLE)
-                            ListeningToneSlider("Treble", tone.trebleDb, !busy) { value -> updateTone { it.copy(trebleDb = value) } }
-                        if (guided) {
+                            ListeningToneSlider("Treble detail", tone.trebleDb, !busy) { value -> updateTone { it.copy(trebleDb = value) } }
+                        if (guided && guideIndex < GUIDED_BANDS.size) {
                             fun advanceTone() {
                                 stopTest()
-                                if (guideIndex < GUIDED_BANDS.lastIndex) guideIndex++ else guided = false
+                                guideIndex++
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 TextButton(onClick = { advanceTone() }, enabled = !busy) {
-                                    Text(if (guideIndex < GUIDED_BANDS.lastIndex) "Next tone" else "Finish tones")
+                                    Text("Next step")
                                 }
-                                TextButton(onClick = { advanceTone() }, enabled = !busy) { Text("Skip tone") }
+                                TextButton(onClick = { advanceTone() }, enabled = !busy) { Text("Skip step") }
                             }
                         }
-                        Text(if (endpoint?.usb == true) "Compare the draft with bypass before saving. Save selects this profile for the USB DAC; turn on its EQ switch to process audio."
-                            else "Compare the draft with bypass before saving. Save turns this EQ on for the connected output.", fontSize = 12.sp)
+                        if (endpoint?.usb == true) TuningHint("Save selects this USB profile. Enable its EQ switch to process audio.")
                     }
                 }
                 if (page > 0) {
                     Text(endpoint?.name ?: "Connect one local audio output to play a listening test.", fontSize = 12.sp)
-                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(bypass, enabled = !busy, role = Role.Checkbox,
-                        onValueChange = { stopTest(); bypass = it }), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = bypass, onCheckedChange = null, enabled = !busy)
-                        Text("Bypass draft EQ")
+                    TuningLabel("LISTENING EXAMPLE")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        samples.forEach { choice ->
+                            FilterChip(selected = sample == choice, enabled = !busy,
+                                onClick = { stopTest(); sample = choice }, label = { Text(choice.label) })
+                        }
+                    }
+                    if (sample.speechAssetPath != null) TuningHint("Voices: Open Speech Repository · speech recording, limited high treble.")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = bypass, enabled = !busy, onClick = { stopTest(); bypass = true }, label = { Text("Original") })
+                        FilterChip(selected = !bypass, enabled = !busy, onClick = { stopTest(); bypass = false }, label = { Text("Adjusted") })
                     }
                     val playing = playback?.isActive == true
                     val canPlay = endpoint != null && !busy && !playing
@@ -240,8 +278,10 @@ internal fun ManualHeadphoneDialog(
                         OutlinedButton(onClick = { play(HeadphoneTestSignal.LEFT) }, enabled = canPlay, modifier = Modifier.weight(1f)) { Text("Play left") }
                         OutlinedButton(onClick = { play(HeadphoneTestSignal.RIGHT) }, enabled = canPlay, modifier = Modifier.weight(1f)) { Text("Play right") }
                     }
-                    OutlinedButton(onClick = { play(HeadphoneTestSignal.ALTERNATING) }, enabled = canPlay, modifier = Modifier.fillMaxWidth()) { Text("Play alternating") }
-                    OutlinedButton(onClick = { play(HeadphoneTestSignal.CENTER) }, enabled = canPlay, modifier = Modifier.fillMaxWidth()) { Text("Play centered") }
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { play(HeadphoneTestSignal.ALTERNATING) }, enabled = canPlay) { Text("Play alternating") }
+                        OutlinedButton(onClick = { play(HeadphoneTestSignal.CENTER) }, enabled = canPlay) { Text("Play centered") }
+                    }
                     TextButton(onClick = { stopTest() }, enabled = playing, modifier = Modifier.fillMaxWidth()) { Text("Stop test") }
                 }
                 (localError ?: error)?.let { Text(it, color = MusicMateDesignTokens.Status.Destructive, fontSize = 12.sp) }
@@ -269,6 +309,45 @@ internal fun ManualHeadphoneDialog(
             }
         }
     )
+}
+
+@Composable
+private fun ListeningDialogFrame(
+    onDismissRequest: () -> Unit,
+    title: @Composable () -> Unit,
+    text: @Composable () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable () -> Unit
+) {
+    Dialog(onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        MaterialTheme(colorScheme = darkColorScheme(
+            primary = MusicMateDesignTokens.Brand.Gold,
+            secondaryContainer = Color.White,
+            onSecondaryContainer = MusicMateDesignTokens.Surfaces.Canvas,
+            surface = MusicMateDesignTokens.Surfaces.Canvas,
+            onSurface = MusicMateDesignTokens.Text.Primary,
+            onSurfaceVariant = MusicMateDesignTokens.Text.Secondary,
+            outline = MusicMateDesignTokens.Surfaces.BorderSubtle
+        )) {
+            Surface(modifier = Modifier.widthIn(max = 640.dp).fillMaxWidth().fillMaxHeight(0.94f).imePadding(),
+                shape = RoundedCornerShape(24.dp), color = MusicMateDesignTokens.Surfaces.Canvas,
+                contentColor = MusicMateDesignTokens.Text.Primary) {
+                Column {
+                    Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TuningLabel("MUSIC MATE / LISTENING")
+                        title()
+                    }
+                    HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
+                    Column(Modifier.weight(1f).padding(horizontal = 24.dp, vertical = 16.dp)) { text() }
+                    HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
+                    FlowRow(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.End) {
+                        dismissButton()
+                        confirmButton()
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

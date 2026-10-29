@@ -38,6 +38,8 @@ class SupportScreensAccessibilityTest {
             }
         }
 
+        composeRule.onNodeWithText("Open audio tuning").assertDoesNotExist()
+        composeRule.onNodeWithText("AUDIO TUNING").assertDoesNotExist()
         composeRule.onNodeWithText("Auto Scroll to Now Playing").assertIsOn()
         runAccessibilityChecks()
     }

@@ -614,6 +614,7 @@
     <string name="nav_incoming_tracks">Incoming Tracks</string>
     <string name="nav_music_folders_scan">Music Folders &amp; Scan</string>
     <string name="nav_settings">Settings</string>
+    <string name="nav_audio_tuning">Audio tuning</string>
     <string name="nav_system_access">System Access</string>
     <string name="system_access_summary_storage_needed">Storage needed</string>
     <string name="system_access_summary_optional_off">Optional access off</string>

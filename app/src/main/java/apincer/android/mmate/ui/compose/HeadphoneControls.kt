@@ -98,18 +98,6 @@ internal fun AudioTuningDialog(onDismissRequest: () -> Unit) {
     AudioTuningSheet(onDismissRequest) { HeadphoneAudioSettings() }
 }
 
-@Composable
-internal fun AudioTuningSettingsEntry() {
-    val status by HeadphoneDsp.state.collectAsState()
-    var open by remember { mutableStateOf(false) }
-    TuningAction(
-        title = "Open audio tuning",
-        description = status.profile?.name ?: "Correction profiles, sound modes and calibration",
-        onClick = { open = true }
-    )
-    if (open) AudioTuningDialog { open = false }
-}
-
 /** Storage and document reads stay off the main thread; the controls only render immutable state. */
 @Composable
 fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
@@ -309,7 +297,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null) {
                 execute(work = { HeadphonePreferences.saveManual(context, profile, status.endpoint?.takeIf { it.supports(profile.output) }) },
                     onSuccess = { manualDraft = null })
             },
-            onPlay = { signal, settings, endpoint, band -> withContext(Dispatchers.IO) { testPlayer.play(signal, settings, endpoint, band) } },
+            onPlay = { signal, settings, endpoint, band, sample -> withContext(Dispatchers.IO) { testPlayer.play(signal, settings, endpoint, band, sample) } },
             onStop = { testPlayer.stop() }
         )
     }

@@ -136,6 +136,8 @@ fun MainScaffold(
     showGestureHints: Boolean = true,
     trackArtwork: (@Composable (Track) -> Unit)? = null
 ) {
+    var showAudioTuning by remember { mutableStateOf(false) }
+    if (showAudioTuning) AudioTuningDialog { showAudioTuning = false }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val appVersion = remember(context) {
@@ -433,6 +435,19 @@ fun MainScaffold(
                                 coroutineScope.launch { drawerState.close() }
                             }
                             HorizontalDivider(color = Color(0x0FFFFFFF), thickness = 0.5.dp)
+                            DrawerCardItem(
+                                text = stringResource(R.string.nav_audio_tuning),
+                                iconResId = R.drawable.rounded_equalizer_24,
+                                isSelected = false,
+                                showChevron = true
+                            ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                coroutineScope.launch {
+                                    drawerState.close()
+                                    showAudioTuning = true
+                                }
+                            }
+                            HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle, thickness = 0.5.dp)
                             DrawerCardItem(
                                 text = stringResource(R.string.nav_system_access),
                                 iconResId = R.drawable.round_sd_storage_24,

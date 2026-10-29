@@ -1,3 +1,30 @@
+# Commit musical DSP tuning and menu update (2026-10-29)
+
+- [x] Review the pending DSP changes and finish user/developer documentation.
+- [x] Confirm verification evidence, file scope and staged whitespace; exclude unrelated local files.
+- [x] Commit code, samples, tests, screenshot references and documentation.
+
+Verification: final 341-test unit suite passes, including the color-token budget check. Preserved prior emulator and four screenshot validation evidence. Checked documentation links and staged whitespace. Commit scope includes only the reviewed DSP/menu delivery; unrelated local directories remain untracked.
+
+# Audio tuning in the main menu (2026-10-29)
+
+- [x] Put Audio tuning directly below Settings and open the shared tuning sheet after closing the drawer.
+- [x] Remove the Settings entry and unused wrapper; update navigation documentation.
+- [x] Build and verify menu order, opening/dismissal and Settings; install the updated GitHub build on the connected phone.
+
+Verification: GitHub app and test APKs build. Emulator menu-order/open/dismiss and Settings accessibility checks pass. Four Settings screenshot references refreshed and validated, including 200% text; expanded preview inspected. Navigation documentation updated, diff whitespace checked against main. Installed with data retained and launched on `192.168.1.54:39189`; package update time `2026-10-29 07:08:34`.
+
+# Five-step musical listening calibration (2026-10-29)
+
+- [x] Define five independent bands, repeatable musical examples and compatibility with saved three-band profiles.
+- [x] Add regression coverage and implement profile persistence, validation, mono averaging and sample playback.
+- [x] Update the guide with musical labels, Original / Adjusted, advanced controls and a final musical comparison.
+- [x] Verify unit and emulator flows, inspect the UI, update documentation and install the GitHub build.
+
+Design: retain the existing 100 Hz shelf, 1 kHz peak and 8 kHz shelf exactly. Add neutral-default 300 Hz warmth and 3 kHz clarity controls. Five steps: Bass impact, Warmth, Vocal naturalness, Clarity, Treble detail. Samples must be bundled or generated repeatably offline, with fixed audition level and identical source data for Original / Adjusted. Keep per-ear calibration, skip/replay, USB consent, route/focus cancellation and explicit playback.
+
+Verification: 341 unit tests pass. Twelve UI tests pass across the musical guide, existing calibration controls and speaker/headphone save/reopen flows; the new guide and save flows also pass on a compact emulator at 150% text size. Inspected guide/comparison screenshots, checked documentation links and diff whitespace. Installed the GitHub APK with app data retained on `192.168.1.54:39189` (3.30.0-261029, update time 2026-10-29 06:56:08), then launched MainActivity. Physical acoustic quality still requires listening on the intended output.
+
 # Document and commit DSP tuning (2026-10-29)
 
 - [x] Update DSP documentation to match the shared tuning sheet, profile controls and calibration actions.

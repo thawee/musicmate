@@ -21,6 +21,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -36,6 +38,26 @@ class MainLibraryAccessibilityTest {
 
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun drawer_audioTuningBelowSettingsOpensAndDismissesSharedSheet() {
+        composeRule.setContent {
+            val state = remember { MainScaffoldState().apply {
+                libraryEmpty.value = true
+                isFloatingDockVisible.value = false
+            } }
+            MusicMateTheme {
+                MainScaffold(rememberDrawerState(DrawerValue.Open), state = state, showGestureHints = false)
+            }
+        }
+        composeRule.onNodeWithText("Audio tuning").performScrollTo()
+        val settingsBounds = composeRule.onNodeWithText("Settings").fetchSemanticsNode().boundsInRoot
+        val tuningBounds = composeRule.onNodeWithText("Audio tuning").fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue(tuningBounds.top > settingsBounds.bottom)
+        composeRule.onNodeWithText("Audio tuning").performClick()
+        composeRule.onNodeWithContentDescription("Close audio tuning").assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription("MusicMate Menu").assertIsDisplayed()
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test

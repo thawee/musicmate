@@ -31,6 +31,29 @@ class HeadphoneTestPlayerTest {
         }
     }
 
+    @Test fun musicalComparisonUsesTheSameCompletePhraseForEachEar() {
+        val source = FloatArray(48_000 * 3) { i -> (sin(2 * PI * 300 * i / 48_000) * (0.2 + 0.8 * i / (48_000.0 * 3))).toFloat() }
+        val pcm = HeadphoneTestTone.render(HeadphoneTestSignal.ALTERNATING, CarDspSettings(emptyList()), source = source)
+        assertEquals(48_000 * 6 * 2, pcm.size)
+        for (i in source.indices) {
+            assertEquals(pcm[i * 2], pcm[(i + source.size) * 2 + 1])
+            assertEquals(0, pcm[i * 2 + 1].toInt())
+            assertEquals(0, pcm[(i + source.size) * 2].toInt())
+        }
+        assertTrue(pcm.all { abs(it.toInt()) <= 520 })
+    }
+
+    @Test fun musicalOriginalAndAdjustedUseIdenticalSourceWithAudibleEq() {
+        val source = FloatArray(144_000) { sin(2 * PI * 300 * it / 48_000).toFloat() * 0.5f }
+        val original = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), source = source)
+        val settings = ManualHeadphoneTuning(left = HeadphoneTone(warmthDb = -6.0), right = HeadphoneTone(warmthDb = -6.0)).settings()
+        val adjusted = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = source)
+        assertArrayEquals(original, HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), source = source))
+        assertTrue(adjusted.sumOf { abs(it.toInt()).toLong() } < original.sumOf { abs(it.toInt()).toLong() } * 0.7)
+        assertEquals(0, adjusted.first().toInt())
+        assertEquals(0, adjusted.last().toInt())
+    }
+
     private val endpoint = HeadphoneEndpoint("usb:test", "DAC", true)
 
     @Test fun quietSignalsIdentifyEarsAndCenterUsesIdenticalSamples() {
