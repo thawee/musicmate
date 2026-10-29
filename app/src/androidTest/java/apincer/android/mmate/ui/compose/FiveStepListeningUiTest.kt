@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.headphones.*
 import org.junit.Assert.*
@@ -21,7 +22,7 @@ class FiveStepListeningUiTest {
         compose.setContent {
             MusicMateTheme {
                 ManualHeadphoneDialog(profile, endpoint, onDismiss = {}, onSave = { saved = it },
-                    onPlay = { _, _, _, _, sample -> heard += sample })
+                    onPlay = { _, _, _, _, sample, _ -> heard += sample })
             }
         }
         compose.onNodeWithText("Next").performClick()
@@ -44,14 +45,15 @@ class FiveStepListeningUiTest {
         }
     }
 
-    @Test fun originalAndAdjustedKeepTheSameChosenVoiceAndOriginalIsFlat() {
+    @Test fun originalAndAdjustedKeepTheSameDraftAndVoiceForMatching() {
         val settings = mutableListOf<CarDspSettings>()
+        val originals = mutableListOf<Boolean>()
         val samples = mutableListOf<ListeningSample?>()
         val calibrated = profile.copy(manual = ManualHeadphoneTuning(left = HeadphoneTone(warmthDb = 2.0), right = HeadphoneTone(clarityDb = -2.0)))
         compose.setContent {
             MusicMateTheme {
-                ManualHeadphoneDialog(calibrated, endpoint, onDismiss = {}, onSave = {},
-                    onPlay = { _, eq, _, _, sample -> settings += eq; samples += sample })
+                ManualHeadphoneDialog(calibrated, endpoint, onDismiss = {}, onSave = {}, playbackMode = SoundMode.LIVELY,
+                    onPlay = { _, eq, _, _, sample, original -> settings += eq; samples += sample; originals += original })
             }
         }
         compose.onNodeWithText("Next").performClick()
@@ -60,6 +62,7 @@ class FiveStepListeningUiTest {
         compose.onNodeWithText("Female voice").performScrollTo().performClick()
         compose.onNodeWithText("Warmth").performScrollTo()
         screenshot("five-step-listening")
+        compose.onNodeWithText("Playback mode: Lively. This adds processing after saving. Choose Neutral in Audio tuning to hear only your calibration.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Original").performScrollTo().performClick()
         compose.onNodeWithText("Play left").performScrollTo().performClick()
         screenshot("five-step-comparison")
@@ -67,7 +70,10 @@ class FiveStepListeningUiTest {
         compose.onNodeWithText("Play left").performScrollTo().performClick()
         compose.runOnIdle {
             assertEquals(listOf(ListeningSample.FEMALE_VOICE, ListeningSample.FEMALE_VOICE), samples)
-            assertTrue(settings.first().bands.isEmpty() && settings.first().leftBands.isEmpty() && settings.first().rightBands.isEmpty())
+            assertEquals(listOf(true, false), originals)
+            assertEquals(settings.first().leftBands, settings.last().leftBands)
+            assertEquals(settings.first().rightBands, settings.last().rightBands)
+            assertEquals(settings.first().balanceDb, settings.last().balanceDb, 0.0)
             val expected = calibrated.manual!!.settings()
             val actual = settings.last()
             assertEquals(expected.bands, actual.bands)
@@ -77,6 +83,17 @@ class FiveStepListeningUiTest {
             assertEquals(expected.balanceDb, actual.balanceDb, 0.0)
         }
     }
+    @Test fun customPlaybackExplainsThatSavingClearsExtraTrims() {
+        compose.setContent {
+            MusicMateTheme {
+                ManualHeadphoneDialog(profile, endpoint, onDismiss = {}, onSave = {}, playbackMode = SoundMode.CUSTOM)
+            }
+        }
+        compose.onNodeWithText("Next").performClick()
+        compose.onNodeWithText("Playback mode: Custom. Saving clears its extra bass and treble trims; your calibration remains.")
+            .performScrollTo().assertIsDisplayed()
+    }
+
     private fun screenshot(name: String) {
         compose.onNodeWithText("Edit listening setup").captureToImage()
         val descriptor = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation

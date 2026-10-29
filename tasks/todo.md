@@ -2445,3 +2445,8 @@ Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass 
 - [x] Audit PCM/output routing and inspect available connected-device evidence: HiBy R3 LDAC, active 44.1 kHz track into a 96 kHz A2DP mixer, zero track underruns in the snapshot.
 - [x] Stress-test EQ headroom and limiter with reproducible signals; fix demonstrated defects with regression coverage. Full-band response estimate corrects missing shelf headroom; 31 focused checks passed.
 - [x] Run full GitHub debug unit suite and assembleGithubDebug, review scoped changes against main, and document measured results and hardware limits. Build passed; no installation or listening comparison performed. True-peak protection remains unproven.
+# Fair listening calibration comparisons (2026-10-29)
+
+- [x] Add regression coverage for matched Original/Adjusted levels without undoing channel balance or exceeding the quiet preview ceiling.
+- [x] Implement attenuation-only stereo RMS comparison matching; retain diagnostic tone gain cues. Explain calibration-only previews, active playback modes, and Custom trim reset without changing saved modes.
+- [x] Verify unit/UI behavior, build, and document the result. All 368 unit tests passed; focused listening guide emulator tests and assembleGithubDebug passed. Matching estimates average signal level, not perceived loudness. No hardware listening comparison performed.

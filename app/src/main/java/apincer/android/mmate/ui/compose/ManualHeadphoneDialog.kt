@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.headphones.HeadphoneEndpoint
 import apincer.android.mmate.audio.headphones.HeadphoneKind
@@ -77,9 +78,10 @@ internal fun ManualHeadphoneDialog(
     error: String? = null,
     onDismiss: () -> Unit,
     onSave: (HeadphoneProfile) -> Unit,
-    onPlay: suspend (HeadphoneTestSignal, CarDspSettings, HeadphoneEndpoint, HeadphoneTestBand, ListeningSample?) -> Unit = { _, _, _, _, _ -> },
+    onPlay: suspend (HeadphoneTestSignal, CarDspSettings, HeadphoneEndpoint, HeadphoneTestBand, ListeningSample?, Boolean) -> Unit = { _, _, _, _, _, _ -> },
     onStop: () -> Unit = {},
-    output: CalibrationOutput = profile?.output ?: CalibrationOutput.HEADPHONE
+    output: CalibrationOutput = profile?.output ?: CalibrationOutput.HEADPHONE,
+    playbackMode: SoundMode? = null
 ) {
     val calibrationOutput = remember(profile?.id) { profile?.output ?: output }
     val speaker = calibrationOutput == CalibrationOutput.SPEAKER
@@ -121,7 +123,7 @@ internal fun ManualHeadphoneDialog(
         var request: Job? = null
         request = scope.launch {
             try {
-                onPlay(signal, if (bypass) CarDspSettings(emptyList()) else tuning.settings(), output, testBand, sample)
+                onPlay(signal, tuning.settings(), output, testBand, sample, bypass)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
@@ -268,6 +270,14 @@ internal fun ManualHeadphoneDialog(
                         }
                     }
                     if (sample.speechAssetPath != null) TuningHint("Voices: Open Speech Repository · speech recording, limited high treble.")
+                    TuningHint("Musical examples use matched average levels. These previews include only your calibration.")
+                    TuningHint(if (playbackMode == null)
+                        "Choose Neutral in Audio tuning to hear your saved calibration without extra tone shaping."
+                    else if (playbackMode == SoundMode.REFERENCE)
+                        "Playback mode: Neutral. Your saved calibration plays without extra tone shaping."
+                    else if (playbackMode == SoundMode.CUSTOM)
+                        "Playback mode: Custom. Saving clears its extra bass and treble trims; your calibration remains."
+                    else "Playback mode: ${playbackMode.label}. This adds processing after saving. Choose Neutral in Audio tuning to hear only your calibration.")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = bypass, enabled = !busy, onClick = { stopTest(); bypass = true }, label = { Text("Original") })
                         FilterChip(selected = !bypass, enabled = !busy, onClick = { stopTest(); bypass = false }, label = { Text("Adjusted") })

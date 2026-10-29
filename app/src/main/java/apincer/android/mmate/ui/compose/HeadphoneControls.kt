@@ -324,12 +324,13 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         ManualHeadphoneDialog(
             profile = current.profile, endpoint = status.endpoint?.takeIf { it.supports(current.output) },
             busy = busy, error = error, output = current.output,
+            playbackMode = status.endpoint?.takeIf { it.supports(current.output) }?.let { status.binding.soundMode },
             onDismiss = { if (!busy) { manualDraft = null; error = null } },
             onSave = { profile ->
                 execute(work = { HeadphonePreferences.saveManual(context, profile, status.endpoint?.takeIf { it.supports(profile.output) }) },
                     onSuccess = { manualDraft = null })
             },
-            onPlay = { signal, settings, endpoint, band, sample -> withContext(Dispatchers.IO) { testPlayer.play(signal, settings, endpoint, band, sample) } },
+            onPlay = { signal, settings, endpoint, band, sample, original -> withContext(Dispatchers.IO) { testPlayer.play(signal, settings, endpoint, band, sample, original) } },
             onStop = { testPlayer.stop() }
         )
     }

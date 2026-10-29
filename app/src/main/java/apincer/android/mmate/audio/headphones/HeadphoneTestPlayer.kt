@@ -23,6 +23,7 @@ import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 enum class HeadphoneTestSignal { LEFT, RIGHT, ALTERNATING, CENTER }
 
@@ -42,15 +43,44 @@ internal object HeadphoneTestTone {
     private val frequencies = doubleArrayOf(125.0, 250.0, 500.0, 1_000.0, 2_000.0, 4_000.0, 8_000.0)
 
     fun render(signal: HeadphoneTestSignal, settings: CarDspSettings,
-               band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE, source: FloatArray? = null): ShortArray {
+               band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE, source: FloatArray? = null,
+               original: Boolean = false): ShortArray {
         require(source == null || source.size == RATE * 3 && source.all { it.isFinite() && kotlin.math.abs(it) <= 1f })
+        val flat = CarDspSettings(emptyList())
+        val selectedSettings = if (original) flat else settings
+        var gain = 1.0
+        var reference: DoubleArray? = null
+        // Match musical A/B energy using the same stereo reference for every ear selection.
+        // Single-frequency diagnostics retain gain cues: matching would erase their EQ change.
+        if (source != null || band == HeadphoneTestBand.MULTITONE) {
+            val originalReference = renderSamples(HeadphoneTestSignal.CENTER, flat, band, source)
+            val adjustedReference = renderSamples(HeadphoneTestSignal.CENTER, settings, band, source)
+            val originalEnergy = originalReference.sumOf { it * it }
+            val adjustedEnergy = adjustedReference.sumOf { it * it }
+            val targetEnergy = minOf(originalEnergy, adjustedEnergy)
+            val originalGain = if (originalEnergy == 0.0) 1.0 else sqrt(targetEnergy / originalEnergy)
+            val adjustedGain = if (adjustedEnergy == 0.0) 1.0 else sqrt(targetEnergy / adjustedEnergy)
+            val peak = max(originalReference.maxOf { kotlin.math.abs(it) } * originalGain,
+                adjustedReference.maxOf { kotlin.math.abs(it) } * adjustedGain)
+            val ceilingGain = if (peak > PEAK) PEAK / peak else 1.0
+            gain = (if (original) originalGain else adjustedGain) * ceilingGain
+            if (signal == HeadphoneTestSignal.CENTER) reference = if (original) originalReference else adjustedReference
+        }
+        val samples = reference ?: renderSamples(signal, selectedSettings, band, source)
+        return ShortArray(samples.size) { i ->
+            ((samples[i] * gain).coerceIn(-PEAK, PEAK) * Short.MAX_VALUE).roundToInt().toShort()
+        }
+    }
+
+    private fun renderSamples(signal: HeadphoneTestSignal, settings: CarDspSettings,
+                              band: HeadphoneTestBand, source: FloatArray?): DoubleArray {
         val seconds = if (signal == HeadphoneTestSignal.ALTERNATING) { if (source == null) 4 else 6 } else 3
         val frames = RATE * seconds
         val testFrequencies = band.frequencyHz?.let { doubleArrayOf(it) } ?: frequencies
         val chain = DspChain(settings.bands, RATE, 2, settings.requestedPreampDb,
             settings.leftBands, settings.rightBands, settings.balanceDb)
         val frame = DoubleArray(2)
-        val pcm = ShortArray(frames * 2)
+        val pcm = DoubleArray(frames * 2)
         for (i in 0 until frames) {
             val segment = if (source == null) RATE else source.size
             val position = if (signal == HeadphoneTestSignal.ALTERNATING) i % segment else i
@@ -69,7 +99,7 @@ internal object HeadphoneTestTone {
             for (c in 0..1) {
                 // Gate filter tails on the silent ear and fade the final output, too.
                 val value = if ((c == 0 && left) || (c == 1 && right)) frame[c] * envelope else 0.0
-                pcm[i * 2 + c] = (value.coerceIn(-PEAK, PEAK) * Short.MAX_VALUE).roundToInt().toShort()
+                pcm[i * 2 + c] = value
             }
         }
         return pcm
@@ -104,14 +134,15 @@ class HeadphoneTestPlayer internal constructor(
     @Synchronized fun stop() { active?.set(true) }
 
     suspend fun play(signal: HeadphoneTestSignal, settings: CarDspSettings, endpoint: HeadphoneEndpoint,
-                     band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE, sample: ListeningSample? = null) = withContext(Dispatchers.IO) {
+                     band: HeadphoneTestBand = HeadphoneTestBand.MULTITONE, sample: ListeningSample? = null,
+                     original: Boolean = false) = withContext(Dispatchers.IO) {
         val stopped = AtomicBoolean(false)
         synchronized(this@HeadphoneTestPlayer) { active?.set(true); active = stopped }
         playback.withLock {
           var output: HeadphoneTestOutput? = null
           try {
             val source = sample?.let { ListeningSamples.render(it, if (it.speechAssetPath != null) loadSpeech(it) else null) }
-            val pcm = HeadphoneTestTone.render(signal, settings, band, source)
+            val pcm = HeadphoneTestTone.render(signal, settings, band, source, original)
             currentCoroutineContext().ensureActive()
             if (stopped.get()) return@withContext
             val session = open(endpoint)

@@ -159,6 +159,7 @@ class ManualHeadphoneUiTest {
         composeRule.onNodeWithText("Neutral").performScrollTo().performClick().assertIsSelected()
         composeRule.onNodeWithContentDescription("Bass adjustment").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Treble adjustment").assertDoesNotExist()
+        composeRule.onNodeWithText("Manage profiles").performScrollTo().performClick()
         composeRule.onNodeWithText("Edit listening setup").performScrollTo().performClick()
         composeRule.runOnIdle { assertEquals(profile.id, editing?.id) }
     }
@@ -169,8 +170,8 @@ class ManualHeadphoneUiTest {
         composeRule.setContent {
             TuningTestContent {
                 ManualHeadphoneDialog(null, endpoint, onDismiss = {}, onSave = {},
-                    onPlay = { _, settings, _, _, _ ->
-                        playedFlat = settings.bands.isEmpty() && settings.leftBands.isEmpty() &&
+                    onPlay = { _, settings, _, _, _, original ->
+                        playedFlat = original && settings.bands.isEmpty() && settings.leftBands.isEmpty() &&
                             settings.rightBands.isEmpty() && settings.monoBands.isEmpty() && settings.balanceDb == 0.0
                         awaitCancellation()
                     }, onStop = { stopped++ })
@@ -196,7 +197,7 @@ class ManualHeadphoneUiTest {
         composeRule.setContent {
             TuningTestContent {
                 ManualHeadphoneDialog(original, endpoint, onDismiss = {}, onSave = { saved = it },
-                    onPlay = { signal, _, _, band, _ -> heard += signal to band })
+                    onPlay = { signal, _, _, band, _, _ -> heard += signal to band })
             }
         }
         composeRule.onNodeWithText("Next").performClick()

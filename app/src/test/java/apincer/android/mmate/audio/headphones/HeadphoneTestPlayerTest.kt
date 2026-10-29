@@ -9,6 +9,7 @@ import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class HeadphoneTestPlayerTest {
     @Test fun guidedTonesContainOnlyTheSelectedFrequencyAndKeepEarsSeparate() {
@@ -44,15 +45,73 @@ class HeadphoneTestPlayerTest {
     }
 
     @Test fun musicalOriginalAndAdjustedUseIdenticalSourceWithAudibleEq() {
-        val source = FloatArray(144_000) { sin(2 * PI * 300 * it / 48_000).toFloat() * 0.5f }
-        val original = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), source = source)
+        val source = FloatArray(144_000) { ((sin(2 * PI * 300 * it / 48_000) + sin(2 * PI * 3_000 * it / 48_000)) * 0.25).toFloat() }
         val settings = ManualHeadphoneTuning(left = HeadphoneTone(warmthDb = -6.0), right = HeadphoneTone(warmthDb = -6.0)).settings()
+        val original = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = source, original = true)
         val adjusted = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = source)
-        assertArrayEquals(original, HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()), source = source))
-        assertTrue(adjusted.sumOf { abs(it.toInt()).toLong() } < original.sumOf { abs(it.toInt()).toLong() } * 0.7)
+        assertArrayEquals(original, HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = source, original = true))
+        assertEquals(rms(original), rms(adjusted), 0.5)
+        assertTrue(abs(amplitude(adjusted, 300.0) / amplitude(adjusted, 3_000.0) -
+            amplitude(original, 300.0) / amplitude(original, 3_000.0)) > 0.15)
         assertEquals(0, adjusted.first().toInt())
         assertEquals(0, adjusted.last().toInt())
     }
+
+    @Test fun comparisonAttenuatesLouderReferenceWithoutBoostingQuieterDraft() {
+        val settings = CarDspSettings(emptyList(), requestedPreampDb = -12.0)
+        val flat = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, CarDspSettings(emptyList()))
+        val original = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, original = true)
+        val adjusted = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings)
+        assertEquals(rms(flat) * 0.25119, rms(adjusted), 0.5)
+        assertEquals(rms(original), rms(adjusted), 0.5)
+        assertTrue(original.maxOf { abs(it.toInt()) } < flat.maxOf { abs(it.toInt()) })
+    }
+
+    @Test fun matchingUsesOneCenterReferenceAcrossEarsAndSignals() {
+        val settings = CarDspSettings(emptyList(), balanceDb = 6.0)
+        val center = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings)
+        assertEquals(0.50119, rms(center, 0) / rms(center, 1), 0.005)
+        for (signal in listOf(HeadphoneTestSignal.LEFT, HeadphoneTestSignal.RIGHT)) {
+            val ear = if (signal == HeadphoneTestSignal.LEFT) 0 else 1
+            val pcm = HeadphoneTestTone.render(signal, settings)
+            for (i in ear until pcm.size step 2) assertEquals(center[i], pcm[i])
+            val original = HeadphoneTestTone.render(signal, settings, original = true)
+            val originalCenter = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, original = true)
+            for (i in ear until pcm.size step 2) assertEquals(originalCenter[i], original[i])
+        }
+        val alternating = HeadphoneTestTone.render(HeadphoneTestSignal.ALTERNATING, settings)
+        val segment = HeadphoneTestTone.RATE * 2
+        assertEquals(0.50119, rms(alternating.copyOfRange(0, segment), 0) /
+            rms(alternating.copyOfRange(segment, segment * 2), 1), 0.005)
+        assertEquals(rms(HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, original = true)), rms(center), 0.5)
+    }
+
+    @Test fun silentSourceAndQuietCeilingRemainSafe() {
+        val settings = ManualHeadphoneTuning(left = HeadphoneTone(warmthDb = 6.0), right = HeadphoneTone(warmthDb = -6.0)).settings()
+        for (original in listOf(true, false)) {
+            val silence = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = FloatArray(144_000), original = original)
+            assertTrue(silence.all { it == 0.toShort() })
+            val loud = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, source = FloatArray(144_000) { 1f }, original = original)
+            assertTrue(loud.all { abs(it.toInt()) <= 518 })
+        }
+    }
+
+    @Test fun diagnosticToneRetainsTheAdjustedGainCue() {
+        val settings = CarDspSettings(emptyList(), requestedPreampDb = -6.0)
+        val original = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, HeadphoneTestBand.MIDS, original = true)
+        val adjusted = HeadphoneTestTone.render(HeadphoneTestSignal.CENTER, settings, HeadphoneTestBand.MIDS)
+        assertEquals(0.50119, rms(adjusted) / rms(original), 0.005)
+    }
+
+    private fun rms(pcm: ShortArray, channel: Int? = null): Double {
+        val values = if (channel == null) pcm.toList() else pcm.filterIndexed { i, _ -> i % 2 == channel }
+        return sqrt(values.sumOf { it.toDouble() * it } / values.size)
+    }
+
+    private fun amplitude(pcm: ShortArray, frequency: Double): Double = abs(
+        (HeadphoneTestTone.RATE until HeadphoneTestTone.RATE * 2).sumOf { i ->
+            pcm[i * 2] * sin(2 * PI * frequency * i / HeadphoneTestTone.RATE)
+        })
 
     private val endpoint = HeadphoneEndpoint("usb:test", "DAC", true)
 
