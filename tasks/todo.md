@@ -2454,3 +2454,8 @@ Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass 
 
 - [x] Update user-facing documentation and changelog for DSP headroom and fair listening comparisons.
 - [x] Verify documentation and install the tested GitHub debug APK on the connected Galaxy S25, retaining data. ADB install -r returned Success; build validation remains 368 unit tests and 11 emulator UI tests passed.
+# Show library status in Now Playing (2026-10-29)
+
+- [x] Trace Preview status rules: NEW/DL describe unorganized files; managed tracks show Organized, without claiming duplicate detection.
+- [x] Reuse NEW/DL beside the quality badge and add a descriptive Organized badge. Two emulator checks pass, including track changes and idle state at 320dp width and 150% text.
+- [x] Update docs/changelog, assembleGithubDebug, inspect text visibility/accessibility and check scoped diffs against main. Build and whitespace checks pass; no phone installation performed.

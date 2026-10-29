@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Track organization in Now Playing:** An Organized, NEW or DL badge beside audio quality shows the playing track's organization status without opening Preview. NEW and DL retain their existing incoming-track meaning.
 - **Fairer listening comparisons:** Original and Adjusted musical examples now match average signal levels by turning down the louder version. Left/right balance stays intact; diagnostic tones retain their gain differences. Matching applies only to listening examples, not normal music playback.
 - **Clearer calibration previews:** The listening guide explains that previews contain calibration only and identifies the current playback sound mode. Neutral adds no extra shaping; saving with Custom clears its extra bass and treble trims.
 

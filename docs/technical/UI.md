@@ -8,6 +8,8 @@
 
 ## 1. Core Product Philosophy & Design Principles
 
+Now Playing shows the current track's organization status beside its audio-quality badge: **Organized** for a managed library track, or the existing **NEW/DL** badge for an incoming track. These describe organization and download-folder status, not whether a duplicate exists elsewhere in the library. The badges wrap as whole items at larger text sizes and expose descriptive accessibility labels. Idle playback shows no organization badge.
+
 ### Smart queue source control & audiophile console
 - **Ultra-Compact Audiophile Header Bar (34dp):** Integrates live status jewel LED (pulsing Emerald for auto-fill, Amber for replenishing, Slate for manual), queue track count and duration, lookahead slot badge (`[18/20]`), manual refresh pulse icon button, and dedicated action triggers (Load Playlist `[📋]`, Focus Playing, and Clear Queue) into a unified, high-density row.
 - **Segmented Smart Source Micro-Capsules (28dp):** Single-line obsidian micro-capsules for six sources: Manual (`#B0BEC5`), New (`#FFD700`), Downloads (`#00E5FF`), Discover (`#00E676`), Rediscover (`#FF7043`), and dynamic Playlist (`#BA68C8`), saving over 65% vertical space compared to stacked multi-line cards.

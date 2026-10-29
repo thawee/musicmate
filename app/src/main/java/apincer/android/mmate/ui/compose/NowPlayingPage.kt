@@ -391,11 +391,13 @@ fun NowPlayingPage(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Quality Tier Badge (Expanded / Wide Pill)
-                        Row(
+                        // Keep organization status visible alongside the audio quality.
+                        FlowRow(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
+                            PlaybackLibraryStatus(track)
                             if (track != null) {
                                 QualityBadge(track = track, expanded = true)
                             } else if (state.specsVerdict.value.isNotEmpty()) {

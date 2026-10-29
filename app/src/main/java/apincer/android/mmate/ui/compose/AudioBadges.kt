@@ -492,6 +492,29 @@ private fun ProvenanceDivider() {
 }
 
 @Composable
+fun PlaybackLibraryStatus(track: Track?, modifier: Modifier = Modifier) {
+    if (track == null) return
+    if (!track.isManaged) {
+        NewBadge(track, modifier)
+        return
+    }
+    Text(
+        text = "Organized",
+        modifier = modifier
+            .clip(CircleShape)
+            .background(Color(0xD9141414))
+            .border(0.5.dp, Color(0x5566BB6A), CircleShape)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .semantics { contentDescription = "Organized in your library" },
+        color = Color(0xFFA5D6A7),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        softWrap = false
+    )
+}
+
+@Composable
 fun NewBadge(track: Track?, modifier: Modifier = Modifier, dotOnly: Boolean = false) {
     if (track == null || track.isManaged) return
 
