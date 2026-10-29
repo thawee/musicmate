@@ -98,21 +98,38 @@ fun AudioHubSheet(
     val queueCount = queueState.tracks.size
     val isServerActive = mediaServerState.isServerRunning
 
-    // Cast icon turns brand gold while a DLNA renderer is the target
-    val target = nowPlayingState.targetTitle.value
-    val isDlnaCastActive = target.contains("DLNA", ignoreCase = true) || target.contains("Renderer", ignoreCase = true) || target.contains("Streamer", ignoreCase = true)
-    val castIconTint = if (isDlnaCastActive) MusicMateDesignTokens.Brand.Gold else Color.White
-
     AudioHubContainer(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         presentation = presentation,
         modifier = modifier
     ) {
+        val view = LocalView.current
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val preferences = remember(context) { androidx.preference.PreferenceManager.getDefaultSharedPreferences(context) }
+        var keepAwake by remember(preferences) { mutableStateOf(apincer.music.core.Settings.isStudioKeepScreenOn(context)) }
+        DisposableEffect(preferences) {
+            val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == apincer.music.core.Constants.PREF_STUDIO_KEEP_SCREEN_ON) {
+                    keepAwake = apincer.music.core.Settings.isStudioKeepScreenOn(context)
+                }
+            }
+            preferences.registerOnSharedPreferenceChangeListener(listener)
+            onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
+        DisposableEffect(view, keepAwake, pagerState.currentPage, presentation) {
+            if (keepAwake && pagerState.currentPage == 0 && presentation != MusicCenterPresentation.PREVIEW) {
+                val wasKeptAwake = view.keepScreenOn
+                view.keepScreenOn = true
+                onDispose { view.keepScreenOn = wasKeptAwake }
+            } else {
+                onDispose { }
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header Row: Music Center title, Cast picker & Close button
+            // Header Row: Music Center title and display controls
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,14 +155,6 @@ fun AudioHubSheet(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onSelectTargetPlayer, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.rounded_music_cast_24),
-                            contentDescription = stringResource(R.string.cd_select_player),
-                            tint = castIconTint,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
                     IconButton(
                         onClick = {
                             coroutineScope.launch {

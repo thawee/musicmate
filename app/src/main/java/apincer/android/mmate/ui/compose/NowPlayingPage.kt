@@ -467,6 +467,13 @@ fun NowPlayingPage(
                                     )
                                 }
                             }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                painter = painterResource(R.drawable.ic_expand_more),
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.75f),
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                         if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO") {
                             // Wrap the controls at large text sizes instead of squeezing the device badge.

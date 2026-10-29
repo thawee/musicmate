@@ -244,8 +244,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = Color(0x14FFFFFF), modifier = Modifier.padding(vertical = 8.dp))
 
                 SettingsSwitchRow(
-                    title = "Keep Screen Awake in Studio Console",
-                    subtitle = "Keeps the screen on while the Studio Console is open",
+                    title = "Keep Screen Awake During Playback",
+                    subtitle = "Keeps the screen on in the playback screen and Studio Console",
                     checked = studioKeepScreenOn,
                     onCheckedChange = onStudioKeepScreenOnChange
                 )

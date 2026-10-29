@@ -1,3 +1,8 @@
+# Playback output and screen awake
+- [x] Clarify output selection and remove duplicate header action.
+- [x] Apply the existing screen-awake setting to playback.
+- [x] Verify build; device UI and screen timeout remain to be checked.
+
 # Stabilize car playback (2026-10-29)
 - [x] Correct disconnect handling and verify active-output behavior.
 - [x] Improve persisted pause and playback-error diagnostics.
