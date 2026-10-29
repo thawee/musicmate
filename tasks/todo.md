@@ -2440,3 +2440,8 @@ Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass 
 - [x] Auto-enable DIY EQ on save for Bluetooth and wired outputs; mention wired headphones in the copy.
 - [x] Run the JVM and affected emulator tests and a debug build, then review the diff.
 - Validation (after review fixes: fit guarded, take attempt narrowed to capture, save notice moved beside the pinned button): 297 JVM tests pass for github and play; on the API 36 emulator CalibrationNoiseUiTest (3), HeadphoneEqUiTest (4), ManualHeadphoneUiTest (5) and ManualHeadphoneFlowTest (1) pass; assembleGithubDebug passes.
+# Verify DSP sound quality (2026-10-29)
+
+- [x] Audit PCM/output routing and inspect available connected-device evidence: HiBy R3 LDAC, active 44.1 kHz track into a 96 kHz A2DP mixer, zero track underruns in the snapshot.
+- [x] Stress-test EQ headroom and limiter with reproducible signals; fix demonstrated defects with regression coverage. Full-band response estimate corrects missing shelf headroom; 31 focused checks passed.
+- [x] Run full GitHub debug unit suite and assembleGithubDebug, review scoped changes against main, and document measured results and hardware limits. Build passed; no installation or listening comparison performed. True-peak protection remains unproven.

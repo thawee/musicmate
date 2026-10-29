@@ -21,9 +21,11 @@ import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class CarDspTest {
     private val rates = intArrayOf(44_100, 48_000, 96_000, 192_000)
@@ -91,7 +93,7 @@ class CarDspTest {
         assertEquals(-3.0, narrow.preampDb, 0.01)
         assertTrue(DspChain(presence.bands, 48_000, 2).preampDb <= -3.0)
         val cutsOnly = DspChain(listOf(PeqBand(PeqBand.Type.PEAK, 160.0, -4.0, 1.0)), 48_000, 2)
-        assertEquals(0.0, cutsOnly.preampDb, 0.0)
+        assertEquals(0.0, cutsOnly.preampDb, 1e-9)
     }
 
     @Test
@@ -102,6 +104,61 @@ class CarDspTest {
         val source = floats(FloatArray(4_800) { if (it % 4 < 2) 1.0f else -1.0f })
         val peak = int24(processor.processFloatToInt24(source, ByteBuffer.allocate(0))).maxOf { kotlin.math.abs(it) }
         assertTrue("peak $peak", peak <= (0.944 * 8_388_608).toInt() + 1)
+    }
+
+    @Test
+    fun limiterControlsTransientsAndMultitoneWithLinkedStereoAtEveryRate() {
+        CarDsp.target = CarDspSettings(emptyList())
+        for (rate in rates) {
+            val processor = CarDspProcessor(rate, 2, seed = 7)
+            assertTrue(processor.beginBlock())
+            val samples = FloatArray(rate / 5 * 2) { i ->
+                val n = i / 2
+                val left = when (n % 2_048) {
+                    0 -> 1.0
+                    in 1..32 -> if (n % 2 == 0) 1.0 else -1.0
+                    else -> 0.65 * sin(2 * PI * 31 * n / rate) + 0.35 * sin(2 * PI * 997 * n / rate)
+                }
+                (left * if (i % 2 == 0) 1.0 else 0.25).toFloat()
+            }
+            val output = int24(processor.processFloatToInt24(floats(samples), ByteBuffer.allocate(0)))
+            assertTrue("Sample ceiling at $rate Hz", output.maxOf { kotlin.math.abs(it) } <= 0.944 * 8_388_608 + 1)
+            for (i in output.indices step 2) {
+                assertEquals("Stereo ratio at $rate Hz", output[i] / 4.0, output[i + 1].toDouble(), 2.0)
+            }
+        }
+    }
+
+    @Test
+    fun limiterPreservesQuietTonesAndBoundsFullScaleToneDistortion() {
+        CarDsp.target = CarDspSettings(emptyList())
+        for (rate in rates) {
+            for (amplitude in doubleArrayOf(0.5, 1.0)) {
+                val processor = CarDspProcessor(rate, 1, seed = 7)
+                assertTrue(processor.beginBlock())
+                val samples = FloatArray(rate / 2) { n -> (amplitude * sin(2 * PI * 100 * n / rate)).toFloat() }
+                val output = int24(processor.processFloatToInt24(floats(samples), ByteBuffer.allocate(0)))
+                if (amplitude == 0.5) {
+                    for (n in samples.indices) assertEquals(samples[n] * 8_388_608.0, output[n].toDouble(), 1.5)
+                }
+                // Analyse the last 200 ms: an integer number of cycles after limiter settling.
+                val start = output.size - rate / 5
+                val count = output.size - start
+                var sine = 0.0
+                var cosine = 0.0
+                var power = 0.0
+                for (n in start until output.size) {
+                    val value = output[n] / 8_388_608.0
+                    sine += value * sin(2 * PI * 100 * n / rate)
+                    cosine += value * cos(2 * PI * 100 * n / rate)
+                    power += value * value
+                }
+                val fundamental = 2 * (sine * sine + cosine * cosine) / (count * count)
+                val residual = sqrt(maxOf(0.0, power / count - fundamental) / fundamental)
+                println("Limiter 100Hz rate=$rate amplitude=$amplitude residual=$residual")
+                assertTrue("Tone residual $residual at $rate Hz", residual < 0.01)
+            }
+        }
     }
 
     @Test

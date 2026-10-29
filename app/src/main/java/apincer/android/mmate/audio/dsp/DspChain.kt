@@ -75,11 +75,11 @@ class DspChain(
     private fun combinedResponseDb(frequencyHz: Double): Double =
         channelFilters.maxOfOrNull { ear -> ear.sumOf { it.magnitudeDb(frequencyHz, sampleRate) } } ?: 0.0
 
-    /** Checks a 1/48-octave grid plus every band centre, so a narrow peak is not stepped over. */
+    /** Estimates the full PCM band on a 1/48-octave grid, plus band centres, DC and Nyquist. */
     private fun maxResponseDb(): Double {
         if (channelFilters.all { it.isEmpty() }) return 0.0
-        val top = min(MAX_HZ, sampleRate * NYQUIST_LIMIT)
-        var peak = Double.NEGATIVE_INFINITY
+        val top = sampleRate / 2.0
+        var peak = max(combinedResponseDb(0.0), combinedResponseDb(top))
         var frequency = MIN_HZ
         while (frequency <= top) {
             peak = max(peak, combinedResponseDb(frequency))
@@ -90,8 +90,7 @@ class DspChain(
     }
 
     private companion object {
-        const val MIN_HZ = 20.0
-        const val MAX_HZ = 20_000.0
+        const val MIN_HZ = 1.0
         const val NYQUIST_LIMIT = 0.45
         val GRID_STEP = 2.0.pow(1.0 / 48)
     }

@@ -41,7 +41,13 @@ Media3 decoder (float for high-res, int16 for CD)
 - Speaker DSP bypasses USB DAC media routes (`CarDsp.updateRoute`, fed by the route log). Separate [headphone EQ](HEADPHONE_EQ.md) can process USB only after explicit enablement for that output. Speaker DSP handles float and 16-bit input; headphone EQ also handles packed 24/32-bit PCM.
 - DSP state is read once per buffer. Changes are heard after the queued AudioTrack audio drains (about 0.5 to 1 s).
 - Mode or profile changes crossfade the old and new filter chains over about 30 ms to avoid clicks.
-- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a log-frequency grid), never positive. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a safety net for overs, not a loudness tool. No compression in any mode except Night's light compressor (section 5).
+- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a 1/48-octave grid from 1 Hz to Nyquist, plus band centres and DC/Nyquist endpoints), never positive. Including the full PCM bandwidth accounts for shelf boost outside 20 Hz–20 kHz. This is a sampled response estimate, not a guarantee against transient or inter-sample overs. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a sample-peak safety net, not a true-peak limiter or loudness tool. No compression in any mode except Night's light compressor (section 5).
+
+### Sound-quality validation (2026-10-29)
+
+Regression signals exposed missing headroom outside the previous 20 Hz–20 kHz response grid: a +6 dB low shelf at 20 Hz reserved only 3 dB, and a +6 dB high shelf at 8 kHz, rendered at 192 kHz, produced a steady 48 kHz sine sample peak of 1.014539 before limiting. The full-band estimate fixes these cases. Tests also cover transient/multitone sample peaks and linked stereo gain at 44.1, 48, 96 and 192 kHz. These are digital checks, not acoustic measurements or evidence of audible superiority.
+
+On the connected phone with HiBy R3 Bluetooth playback, AudioFlinger showed MusicMate's active 44.1 kHz track feeding a 96 kHz, 32-bit PCM A2DP mixer; AudioService reported LDAC. The track had zero recorded underruns in that snapshot and `BitPerfect=false`. This route resamples before Bluetooth transport. The HAL's PCM format does not establish the codec bitrate, receiver DAC format or end-to-end fidelity. No output settings were changed during inspection.
 
 ## 3. Calibration
 
