@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.audio.dsp.CarDspChoice
 import apincer.android.mmate.audio.dsp.CarDspPreferences
+import apincer.android.mmate.audio.dsp.AutoSoundPreferences
 import apincer.android.mmate.audio.dsp.SoundMode
 import kotlin.math.roundToInt
 
@@ -71,10 +72,10 @@ internal fun LegacySpeakerSoundModes(compact: Boolean = false, available: Boolea
     val choice by CarDspPreferences.state.collectAsState()
     val audibility = legacySpeakerAudibility(available, choice.enabled)
     if (showStatus) LegacySpeakerStatus(available, busy)
-    TuningSoundModes(choice.mode, available && !busy) { mode ->
+    AutoTuningSoundModes(choice.mode, available && !busy) { mode ->
         CarDspPreferences.update(context, choice.copy(mode = mode))
     }
-    if (choice.mode == SoundMode.CUSTOM) {
+    if (!AutoSoundPreferences.state.collectAsState().value.config.enabled && choice.mode == SoundMode.CUSTOM) {
         if (compact) {
             TextButton(onClick = onEditCustom) { Text("Edit Custom", color = MusicMateDesignTokens.Brand.Gold) }
         } else {
@@ -82,7 +83,7 @@ internal fun LegacySpeakerSoundModes(compact: Boolean = false, available: Boolea
             TrimSlider("Treble", choice.trebleDb, available && !busy) { CarDspPreferences.update(context, choice.copy(trebleDb = it)) }
         }
     }
-    if (!compact) TuningResponseCurve(choice.correction + choice.mode.bands(choice.bassDb, choice.trebleDb), choice.mode,
+    if (!compact) TuningResponseCurve(choice.correction + AutoSoundPreferences.effectiveMode(choice.mode).bands(choice.bassDb, choice.trebleDb), AutoSoundPreferences.effectiveMode(choice.mode),
         active = available && choice.enabled, previewState = audibility.label)
 }
 

@@ -8,6 +8,7 @@ import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.UsbOutputFormat
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.dsp.SoundMode
+import apincer.android.mmate.audio.dsp.AutoSoundPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
@@ -95,6 +96,9 @@ object HeadphoneDsp {
         publish()
     }
 
+    @Synchronized
+    fun refreshSoundMode() = publish()
+
     private fun publish() {
         val endpoint = HeadphoneEndpoint.of(devices)
         val binding = endpoint?.let { library.bindings[it.key] }
@@ -108,12 +112,13 @@ object HeadphoneDsp {
 
     /** Shared by the playback decision and the curve preview. */
     fun settingsFor(profile: HeadphoneProfile, binding: HeadphoneBinding): CarDspSettings {
-        val personal = if (binding.soundMode == SoundMode.CUSTOM)
+        val mode = AutoSoundPreferences.effectiveMode(binding.soundMode)
+        val personal = if (mode == SoundMode.CUSTOM)
             HeadphoneTone(bassDb = binding.bassDb, trebleDb = binding.trebleDb).bands()
-        else binding.soundMode.bands()
+        else mode.bands()
         val correction = profile.manual?.settings()
             ?: CarDspSettings(profile.bands, requestedPreampDb = profile.preampDb)
-        return CarDspSettings(correction.bands + personal, compress = binding.soundMode.compresses,
+        return CarDspSettings(correction.bands + personal, compress = mode.compresses,
             requestedPreampDb = correction.requestedPreampDb, leftBands = correction.leftBands,
             rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands)
     }

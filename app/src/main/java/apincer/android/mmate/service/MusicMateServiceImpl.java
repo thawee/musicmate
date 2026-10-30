@@ -749,6 +749,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
         public void onDestroy() {
+        apincer.android.mmate.audio.dsp.AutoSoundPreferences.resetSession();
         queueManager.setQueueChangeListener(null);
         historyTracker.end(false);
         acceptingHistory = false;
@@ -856,6 +857,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 lastExternalPositionSec = 0;
                 drivenExternalStartedAt = android.os.SystemClock.elapsedRealtime();
                 if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                    apincer.android.mmate.audio.dsp.AutoSoundPreferences.updateTrack(
+                            song == null ? null : song.getGenre(), song == null ? null : song.getStyle());
                     queueManager.setPlaybackTrack(song);
                 }
                 androidPlayer.play(song);
@@ -2014,6 +2017,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onMediaTrackChanged(Track song) {
+        apincer.android.mmate.audio.dsp.AutoSoundPreferences.updateTrack(
+                song == null ? null : song.getGenre(), song == null ? null : song.getStyle());
         if (song == null || song.getId() != drivenExternalTrackId) {
             drivenExternalTrackId = -1; // the app moved on by itself (its own queue or the listener)
         }

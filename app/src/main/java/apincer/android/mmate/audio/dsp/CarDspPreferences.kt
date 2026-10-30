@@ -21,8 +21,10 @@ data class CarDspChoice(
     val profileId: String? = null
 ) {
     /** The car correction with the mode on top. */
-    fun settings(): CarDspSettings? =
-        if (enabled) CarDspSettings(correction + mode.bands(bassDb, trebleDb), compress = mode.compresses) else null
+    fun settings(): CarDspSettings? {
+        val effective = AutoSoundPreferences.effectiveMode(mode)
+        return if (enabled) CarDspSettings(correction + effective.bands(bassDb, trebleDb), compress = effective.compresses) else null
+    }
 }
 
 /**
@@ -45,6 +47,7 @@ object CarDspPreferences {
     @JvmStatic
     @Synchronized
     fun init(context: Context) {
+        AutoSoundPreferences.init(context)
         HeadphonePreferences.init(context)
         if (loaded) return
         loaded = true
@@ -148,6 +151,10 @@ object CarDspPreferences {
 
     private fun apply(next: CarDspChoice) {
         choice.value = next
-        CarDsp.target = next.settings()
+        refreshSoundMode()
+    }
+
+    internal fun refreshSoundMode() {
+        CarDsp.target = choice.value.settings()
     }
 }

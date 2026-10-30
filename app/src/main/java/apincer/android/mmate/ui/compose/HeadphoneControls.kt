@@ -50,6 +50,7 @@ import apincer.android.mmate.audio.headphones.HeadphoneProfile
 import apincer.android.mmate.audio.headphones.HeadphoneProfileParser
 import apincer.android.mmate.audio.headphones.HeadphoneStatus
 import apincer.android.mmate.audio.headphones.HeadphoneTestPlayer
+import apincer.android.mmate.audio.dsp.AutoSoundPreferences
 import apincer.android.mmate.audio.dsp.SoundMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +72,9 @@ fun AudioTuningChip(modifier: Modifier = Modifier) {
     val enabled = if (general) status.active else status.endpoint != null && legacy.enabled
     val unavailable = if (general) tuningAudibility(status).label == "Unavailable" else status.endpoint == null
     val stateLabel = if (unavailable) "Unavailable" else if (enabled) "On" else "Bypassed"
-    val mode = if (general) status.binding.soundMode else legacy.mode
+    val auto by AutoSoundPreferences.state.collectAsState()
+    val mode = AutoSoundPreferences.effectiveMode(if (general) status.binding.soundMode else legacy.mode)
+    val modeLabel = if (auto.config.enabled) "Auto · ${mode.label}" else mode.label
     val accent = if (enabled) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Secondary
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
@@ -80,14 +83,14 @@ fun AudioTuningChip(modifier: Modifier = Modifier) {
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "Audio tuning"
-                stateDescription = "$stateLabel, ${mode.label}, ${status.profile?.name ?: legacy.profileName ?: "No correction"}"
+                stateDescription = "$stateLabel, $modeLabel, ${status.profile?.name ?: legacy.profileName ?: "No correction"}"
             }.padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Icon(androidx.compose.ui.res.painterResource(apincer.android.mmate.R.drawable.rounded_equalizer_24), null, tint = accent, modifier = Modifier.size(18.dp))
         Text(androidx.compose.ui.text.buildAnnotatedString {
-            append("${mode.label} · ")
+            append("$modeLabel · ")
             pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
             append(stateLabel)
             pop()
@@ -379,16 +382,16 @@ internal fun HeadphoneEqControls(
         status.profile?.let { profile ->
             val settings = HeadphoneDsp.settingsFor(profile, status.binding)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TuningSoundModes(status.binding.soundMode, canEnable, onSoundMode)
-                if (status.binding.soundMode == SoundMode.CUSTOM) {
+                AutoTuningSoundModes(status.binding.soundMode, canEnable, onSoundMode)
+                if (!AutoSoundPreferences.state.collectAsState().value.config.enabled && status.binding.soundMode == SoundMode.CUSTOM) {
                     HeadphoneToneSlider("Bass", bass, canEnable, { bass = it }, { onAdjust(bass.toDouble(), treble.toDouble()) })
                     HeadphoneToneSlider("Treble", treble, canEnable, { treble = it }, { onAdjust(bass.toDouble(), treble.toDouble()) })
                 }
             }
-            TuningResponseCurve(settings.bands + settings.monoBands, status.binding.soundMode, profile.manual != null, active = status.active, previewState = tuningAudibility(status).label)
+            TuningResponseCurve(settings.bands + settings.monoBands, AutoSoundPreferences.effectiveMode(status.binding.soundMode), profile.manual != null, active = status.active, previewState = tuningAudibility(status).label)
         }
         if (status.profile == null && speakerControls == null) {
-            TuningSoundModes(status.binding.soundMode, enabled = false, onSelect = onSoundMode)
+            AutoTuningSoundModes(status.binding.soundMode, enabled = false, onSelect = onSoundMode)
             Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Your sound starts here", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)

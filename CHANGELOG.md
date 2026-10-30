@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Automatic sound modes:** Auto selects a sound mode from ordered genre/style matches, with an editable fallback and a session hold. Returning to Manual restores the output's saved choice; correction profiles and USB EQ consent stay unchanged.
+- **Searchable Auto matches:** In Audio mode → Auto settings → Add/Edit match, choose Genre or Style and type to filter the default tag list. Custom tag values are also supported.
+
 ### Changed
 - **Track organization in Now Playing:** An Organized, NEW or DL badge beside audio quality shows the playing track's organization status without opening Preview. NEW and DL retain their existing incoming-track meaning.
 - **Fairer listening comparisons:** Original and Adjusted musical examples now match average signal levels by turning down the louder version. Left/right balance stays intact; diagnostic tones retain their gain differences. Matching applies only to listening examples, not normal music playback.

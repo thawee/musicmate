@@ -22,6 +22,23 @@ Active, Bypassed and Unavailable show effective processing state, with a reason 
 
 ## Response and sound modes
 
+### Automatic sound modes
+
+Auto and Manual select how the listening mode is chosen. Auto matches the current track's genre/style tags against an ordered, editable rule list; the first match wins. Missing or unmatched tags use the selected fallback (Neutral initially). Starter matches are listening preferences and can be edited or removed. Matching ignores case and uses complete tag values, not substring guesses. Auto settings, including fallback and rules, are shared across local outputs. Mood inference is not included.
+
+To configure a match:
+
+1. Open Audio tuning and select Auto under Sound mode.
+2. Open Auto settings and choose Add match, or edit an existing match.
+3. Choose Genre or Style, then open Tag value to browse the default list. Type to filter the choices, or enter a custom tag value. Filtering ignores case and shows word-prefix matches first; switching Genre/Style changes the choices.
+4. Choose the sound mode and select Save match. Move higher-priority matches above other matches and choose the fallback. Changes save immediately; select Done to close settings.
+
+Auto shows its resolved mode and matching reason in both tuning panels. Keep for this session freezes the current mode until Resume Auto or service shutdown. Switching to Manual restores the output's saved manual choice. Automatic results never overwrite manual preferences or correction profiles, enable processing, or grant USB consent. Custom matches use the current output's saved bass/treble trims. The response preview follows the resolved mode; existing PCM target transitions smooth the change. Remote DLNA playback does not receive local DSP.
+
+Explicit local playback resolves tags before starting the player. Gapless advances follow the Media3 track-transition callback, so the updated mode takes effect on the following processed audio block rather than during preloading.
+
+### Response preview
+
 The EQ curve panel plots the selected correction plus its sound mode from 20 Hz to 20 kHz. It samples the actual filter response and uses a logarithmic frequency axis. The vertical scale starts at ±6 dB and expands for larger responses. This is an EQ preview, not a new acoustic measurement or a display of the room's measured response. The curve remains visible while EQ is bypassed or unavailable, with an explicit Preview status.
 
 Listening profiles display the average left and right correction. The graph does not display channel balance, total preamp attenuation or the time-varying effect of Night compression.
@@ -53,6 +70,8 @@ The editor opens as an expanded bottom sheet with a maximum width of 640 dp. The
 Text and graph headings wrap at larger font sizes. The graph reserves space for its measured axis labels. Creation-type controls and sound modes expose selected semantics, the EQ switch exposes its checked state, and tone sliders have named accessibility descriptions.
 
 ## Verification
+
+Auto mode was verified on an Android 14 (API 34) emulator: all six `AutoSoundUiTest` checks and all 374 app unit tests passed. Auto UI coverage includes matching and fallback, session hold/resume, restoring the manual choice, rule editing, searchable default tags, switching Genre/Style, and scrolling at 320 dp with 150% text. Unit tests also cover matching priority, complete tag values, persistence and USB consent. The debug build was installed on the phone with app data retained.
 
 The implementation was checked on an Android 16 emulator at normal size, 150% system text and a compact display. See the current verification entry in tasks/todo.md for the unit-suite count. UI coverage includes:
 

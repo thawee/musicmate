@@ -436,7 +436,7 @@ fun StudioProvenanceSection(
                         fieldLabel = stringResource(R.string.preview_artist_label),
                         label = provenance.artist,
                         count = provenance.artistCount,
-                        accentColor = Color(0xFFFFD700), // Gold accented
+                        accentColor = MusicMateDesignTokens.Brand.Gold, // Gold accented
                         onClick = {
                             onOpenRelated(Constants.FILTER_TYPE_ARTIST, provenance.artist, "More by ${provenance.artist}")
                         }
@@ -519,7 +519,7 @@ fun NewBadge(track: Track?, modifier: Modifier = Modifier, dotOnly: Boolean = fa
     if (track == null || track.isManaged) return
 
     val isDownload = TagUtils.isOnDownloadDir(track)
-    val accentColor = if (isDownload) Color(0xFF64B5F6) else Color(0xFFFFD700)
+    val accentColor = if (isDownload) Color(0xFF64B5F6) else MusicMateDesignTokens.Brand.Gold
     val borderColor = if (isDownload) Color(0x5564B5F6) else Color(0x55FFD700)
     val bgBase = Color(0xD9141414)
     // "New" means not organized yet (the drawer's Incoming Tracks), not recently added
@@ -630,7 +630,7 @@ fun TagPreviewHeader(
             ) {
                 Text(
                     text = "🎯 BATCH MODE • $itemCount TRACKS SELECTED",
-                    color = Color(0xFFFFD700),
+                    color = MusicMateDesignTokens.Brand.Gold,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp

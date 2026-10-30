@@ -71,9 +71,9 @@ internal fun TuningStatusControl(
 }
 
 @Composable
-internal fun TuningSoundModes(mode: SoundMode, enabled: Boolean = true, onSelect: (SoundMode) -> Unit) {
+internal fun TuningSoundModes(mode: SoundMode, enabled: Boolean = true, showHeading: Boolean = true, onSelect: (SoundMode) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        TuningLabel("SOUND MODE")
+        if (showHeading) TuningLabel("SOUND MODE")
         val fontScale = LocalDensity.current.fontScale
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val columns = if (maxWidth >= 300.dp && fontScale <= 1.3f) 2 else 1

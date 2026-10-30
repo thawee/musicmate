@@ -3,11 +3,13 @@ package apincer.android.mmate.ui.compose
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.calibration.CorrectionProfileChoice
+import apincer.android.mmate.audio.dsp.AutoSoundPreferences
 import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.headphones.HeadphoneStatus
 
@@ -41,8 +43,8 @@ internal fun QuickTuningControls(
         if (speakerControls != null) {
             speakerControls()
         } else {
-            TuningSoundModes(status.binding.soundMode, canEnable, onSoundMode)
-            if (status.binding.soundMode == SoundMode.CUSTOM) {
+            AutoTuningSoundModes(status.binding.soundMode, canEnable, onSoundMode)
+            if (!AutoSoundPreferences.state.collectAsState().value.config.enabled && status.binding.soundMode == SoundMode.CUSTOM) {
                 TextButton(onClick = onFullTuning) { Text("Edit Custom", color = MusicMateDesignTokens.Brand.Gold) }
             }
             if (status.profile == null) TuningHint("Choose a saved profile, or open Manage tuning to create one.")

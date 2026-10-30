@@ -1,3 +1,27 @@
+# Document and commit Auto sound mode (2026-10-30)
+
+- [x] Update the tuning guide and Unreleased changelog with Auto behavior and searchable match settings.
+- [x] Review the staged changes and recorded test results.
+- [x] Commit the feature, tests and documentation, leaving unrelated files untouched.
+
+# Searchable Auto match tags (2026-10-30)
+
+- [x] Find MusicMate's default genre/style vocabularies and existing dropdown pattern.
+- [x] Replace Add/Edit match tag text entry with a dropdown that filters as the user types; test field switching and saving.
+- [x] Verify tests/build, inspect on Android and install the update on the phone.
+
+Verification: the new test first failed against the plain field, then all six AutoSoundUiTest checks passed on the emulator, including opening the default list, filtering Electronic, switching to Style, filtering Ambient and saving the selected rule. All 374 app unit tests pass. Built and installed with data retained on 192.168.1.54:42765; emulator activity setting restored. Only Audio Auto match creation/editing changed; tag editor source is untouched. Custom rule text remains supported. Updated guidance and docs; included in the Auto sound mode feature commit.
+
+# Auto sound mode (2026-10-30)
+
+- [x] Trace track metadata, shared DSP status, persistence, and quick/full tuning controls.
+- [x] Implement and test deterministic genre/style matching, editable rules and fallback, preserving manual settings and correction profiles.
+- [x] Apply resolved modes on track changes and support a session hold without persisting automatic results.
+- [x] Add shared Auto/Manual controls, active reason, settings and session override to quick/full tuning.
+- [x] Run focused and full checks, inspect runtime UI and review diffs; document limitations and verification.
+
+Verification: 374 app unit tests pass. Separate emulator invocations pass AutoSoundUiTest (5), QuickTuningUiTest (8), PlaybackTuningUiTest (2), AudioTuningSheetUiTest (5), and HeadphoneEqUiTest (8); Auto's five checks pass again after gold-theme polish. Fixed a pre-existing color-budget failure by replacing three identical gold literals with the existing Brand.Gold token. Whitespace checks pass against the working tree and main. Matching/session tests cover fallback, priority, complete tags, persistence, manual retention and USB consent. No acoustic quality claim or mood inference. Installed the final build on 192.168.1.54:42765 with data retained. Inspected fresh phone Auto/settings screenshots and text hierarchy; actions remain reachable by scrolling. Restored Manual with Vocal and the HiBy correction unchanged, left playback stopped, and restored the emulator activity setting. Included in the Auto sound mode feature commit.
+
 # Playback output and screen awake
 - [x] Clarify output selection and remove duplicate header action.
 - [x] Apply the existing screen-awake setting to playback.
