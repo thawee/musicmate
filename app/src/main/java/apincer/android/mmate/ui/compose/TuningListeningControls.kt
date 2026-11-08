@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -30,13 +29,15 @@ import apincer.android.mmate.R
 
 internal data class TuningAudibility(val label: String, val reason: String)
 
-internal fun tuningAudibility(status: HeadphoneStatus): TuningAudibility = when {
+internal val NOT_APPLIED_TO_PLAYER = TuningAudibility("Unavailable", "Not applied to the current player")
+
+internal fun tuningAudibility(status: HeadphoneStatus, remoteTarget: String? = null): TuningAudibility = when {
+    remoteTarget != null -> NOT_APPLIED_TO_PLAYER
     status.endpoint == null -> TuningAudibility("Unavailable", "Connect a compatible output")
-    status.profile == null -> TuningAudibility("Unavailable", "Select a profile to enable correction")
-    !status.endpoint.supports(status.profile.output) -> TuningAudibility("Unavailable", "Select a profile compatible with this output")
-    status.active -> TuningAudibility("Active", "Correction and sound mode are applied")
-    status.endpoint.usb && !status.binding.usbEqAllowed -> TuningAudibility("Bypassed", "Enable USB EQ to allow sample processing")
-    !status.binding.enabled -> TuningAudibility("Bypassed", "Your profile and sound mode are saved")
+    status.profile != null && !status.endpoint.supports(status.profile.output) -> TuningAudibility("Unavailable", "Select a profile compatible with this output")
+    status.active -> TuningAudibility("EQ on", if (status.profile == null) "Sound mode is applied without correction" else "Correction and sound mode are applied")
+    status.endpoint.usb && !status.binding.usbEqAllowed -> TuningAudibility("EQ off", "Enable USB EQ to allow sample processing")
+    !status.binding.enabled -> TuningAudibility("EQ off", "Your profile and sound mode are saved")
     else -> TuningAudibility("Unavailable", "Processing is not active on this output")
 }
 
@@ -46,21 +47,19 @@ internal fun TuningStatusControl(
     checked: Boolean,
     enabled: Boolean,
     onEnabled: (Boolean) -> Unit,
-    usb: Boolean = false,
-    switchLabel: String = if (usb) "Enable USB EQ" else "Enable output EQ"
+    usb: Boolean = false
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 56.dp)
             .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onEnabled)
             .semantics {
-                contentDescription = switchLabel
                 stateDescription = "${audibility.label}. ${audibility.reason}"
             }, verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(audibility.label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                    color = if (audibility.label == "Active") MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Primary)
-                TuningHint(audibility.reason)
+                Text(if (usb) "USB sound tuning" else "Sound tuning", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = if (audibility.label == "EQ on") MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Primary)
+                TuningHint(if (audibility.label == "EQ on") "On" else if (audibility.label == "EQ off" && !usb) "Bypassed · your settings are saved" else audibility.reason)
             }
             Switch(checked, onCheckedChange = null, enabled = enabled,
                 colors = SwitchDefaults.colors(checkedThumbColor = MusicMateDesignTokens.Surfaces.Canvas,
@@ -74,34 +73,31 @@ internal fun TuningStatusControl(
 internal fun TuningSoundModes(mode: SoundMode, enabled: Boolean = true, showHeading: Boolean = true, onSelect: (SoundMode) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (showHeading) TuningLabel("SOUND MODE")
-        val fontScale = LocalDensity.current.fontScale
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val columns = if (maxWidth >= 300.dp && fontScale <= 1.3f) 2 else 1
-            Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SoundMode.entries.chunked(columns).forEach { options ->
-                    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        options.forEach { option ->
-                            SoundModeCard(option, mode == option, enabled, Modifier.weight(1f).fillMaxHeight()) { onSelect(option) }
-                        }
-                        if (options.size < columns) Spacer(Modifier.weight(1f))
-                    }
+        FlowRow(Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SoundMode.selectable.forEach { option ->
+                val selected = mode == option
+                Row(Modifier.clip(RoundedCornerShape(24.dp))
+                    .background(if (selected) MusicMateDesignTokens.Brand.GoldContainer else MusicMateDesignTokens.Surfaces.SurfaceElevated)
+                    .border(1.dp, if (selected) MusicMateDesignTokens.Brand.GoldOutline else MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(24.dp))
+                    .selectable(selected, enabled = enabled, role = Role.RadioButton) { onSelect(option) }
+                    .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (selected) Icon(painterResource(R.drawable.ic_check_24), null,
+                        Modifier.size(16.dp), tint = MusicMateDesignTokens.Brand.Gold)
+                    Text(option.label, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+                        color = if (enabled) MusicMateDesignTokens.Text.Primary else MusicMateDesignTokens.Text.Muted)
                 }
             }
         }
-        TuningHint(when (mode) {
-            SoundMode.REFERENCE -> "Adds no extra tone shaping; your calibration still applies when EQ is enabled."
-            SoundMode.BASS -> "Lifts deep lows while easing the low mids to keep bass defined."
-            SoundMode.VOCAL -> "Lifts vocal presence and reduces low-end masking."
-            SoundMode.LIVELY -> "Adds low-end weight, attack and high-frequency sparkle."
-            SoundMode.RELAX -> "Eases upper-mid presence and treble while adding gentle warmth."
-            SoundMode.NIGHT -> "Reduces the gap between quiet and loud passages, with gentler bass and highs."
-            SoundMode.CUSTOM -> "Adjust bass and treble independently on top of your correction."
-        })
+        TuningHint(soundModeDescription(mode))
     }
 }
 
 internal fun soundModeDescription(mode: SoundMode): String = when (mode) {
-    SoundMode.REFERENCE -> "Your calibration unchanged"
+    SoundMode.REFERENCE -> "Balanced sound, no added tone shaping"
     SoundMode.BASS -> "Deeper, punchier bass"
     SoundMode.VOCAL -> "Clearer, forward voices"
     SoundMode.LIVELY -> "Punchy bass, crisp detail"
@@ -111,20 +107,16 @@ internal fun soundModeDescription(mode: SoundMode): String = when (mode) {
 }
 
 @Composable
-private fun SoundModeCard(mode: SoundMode, selected: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
-    Column(modifier.clip(shape)
-        .background(if (selected) MusicMateDesignTokens.Brand.GoldContainer else MusicMateDesignTokens.Surfaces.SurfaceElevated)
-        .border(1.dp, if (selected) MusicMateDesignTokens.Brand.GoldOutline else MusicMateDesignTokens.Surfaces.BorderSubtle, shape)
-        .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-        .heightIn(min = 48.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(mode.label, Modifier.weight(1f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                color = if (enabled) MusicMateDesignTokens.Text.Primary else MusicMateDesignTokens.Text.Muted)
-            if (selected) Icon(painterResource(R.drawable.ic_check_24), contentDescription = null,
-                modifier = Modifier.size(16.dp), tint = MusicMateDesignTokens.Brand.Gold)
+internal fun NightListeningControl(checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp)
+        .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
+        .semantics { contentDescription = "Night listening" },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Night listening", color = MusicMateDesignTokens.Text.Primary, fontSize = 14.sp)
+            TuningHint("Reduces loud passages for quieter listening")
         }
-        Text(soundModeDescription(mode), Modifier.fillMaxWidth(), fontSize = 12.sp, lineHeight = 17.sp,
-            color = if (enabled) MusicMateDesignTokens.Text.Secondary else MusicMateDesignTokens.Text.Muted)
+        Switch(checked, onCheckedChange = null, enabled = enabled)
     }
 }

@@ -60,14 +60,13 @@ object HeadphonePreferences {
     fun select(context: Context, endpoint: HeadphoneEndpoint, profileId: String?) = update(context) {
         require(profileId == null || it.profiles.any { profile -> profile.id == profileId }) { "Choose a headphone profile." }
         val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
-        it.copy(bindings = it.bindings + (endpoint.key to old.copy(profileId = profileId, enabled = old.enabled && profileId != null)))
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(profileId = profileId)))
     }
 
     /** The USB control explicitly tells the user that enabling EQ changes the samples. */
     @Synchronized
     fun setEnabled(context: Context, endpoint: HeadphoneEndpoint, enabled: Boolean) = update(context) {
         val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
-        require(!enabled || it.profiles.any { profile -> profile.id == old.profileId }) { "Select a headphone profile first." }
         it.copy(bindings = it.bindings + (endpoint.key to old.copy(enabled = enabled, usbEqAllowed = endpoint.usb && enabled)))
     }
 
@@ -84,11 +83,17 @@ object HeadphonePreferences {
     }
 
     @Synchronized
+    fun setNightListening(context: Context, endpoint: HeadphoneEndpoint, enabled: Boolean) = update(context) {
+        val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(nightListening = enabled)))
+    }
+
+    @Synchronized
     fun delete(context: Context, id: String) = update(context) { saved ->
         saved.copy(
             profiles = saved.profiles.filterNot { it.id == id },
             bindings = saved.bindings.mapValues { (_, binding) ->
-                if (binding.profileId == id) binding.copy(profileId = null, enabled = false, usbEqAllowed = false) else binding
+                if (binding.profileId == id) binding.copy(profileId = null) else binding
             }
         )
     }

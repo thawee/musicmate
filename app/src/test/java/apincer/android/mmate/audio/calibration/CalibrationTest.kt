@@ -51,6 +51,28 @@ class CalibrationTest {
     }
 
     @Test
+    fun aCleanSweepWithALateReflectionIsAccepted() {
+        val recording = record(sweep.samples)
+        val echoStart = (sweep.sampleRate * 1.2).toInt() // 0.5 s lead plus 0.7 s reflection
+        for (i in sweep.samples.indices) recording[echoStart + i] += sweep.samples[i] * 0.15
+        val take = analyzer.analyze(recording)
+        assertTrue("A clean room reflection is not background noise: ${(take as? Take.Rejected)?.detail}", take is Take.Accepted)
+    }
+
+    @Test
+    fun aLateReflectionDoesNotHideBroadBackgroundNoise() {
+        val random = Random(71)
+        val recording = record(sweep.samples).also { samples ->
+            for (i in samples.indices) samples[i] += (random.nextDouble() * 2 - 1) * 0.3
+        }
+        val echoStart = (sweep.sampleRate * 1.2).toInt()
+        for (i in sweep.samples.indices) recording[echoStart + i] += sweep.samples[i] * 0.15
+        val take = analyzer.analyze(recording)
+        assertTrue("Background noise must still reject a reflected sweep", take is Take.Rejected)
+        assertEquals(Take.Reason.TOO_QUIET, (take as Take.Rejected).reason)
+    }
+
+    @Test
     fun badTakesAreRejectedWithTheirReason() {
         val late = analyzer.analyze(record(sweep.samples, delaySeconds = 2.0))
         assertEquals(Take.Reason.TOO_SHORT, (late as Take.Rejected).reason)

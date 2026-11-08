@@ -16,6 +16,33 @@ class HeadphonePreferencesTest {
     @get:Rule val temporary = TemporaryFolder()
 
     @Test
+    fun processingWithoutCorrectionAndRemovingCorrectionPreserveModeNightAndConsent() {
+        val context = mockk<Context> { every { filesDir } returns temporary.root }
+        val endpoint = HeadphoneEndpoint("usb:optional-correction", "DAC", usb = true)
+        val profile = HeadphoneProfile.createManual("Optional correction", ManualHeadphoneTuning())
+        val store = HeadphoneProfileStore(File(temporary.root, "headphone_profiles.json"))
+        HeadphonePreferences.setSoundMode(context, endpoint, SoundMode.VOCAL)
+        HeadphonePreferences.setNightListening(context, endpoint, true)
+        assertFalse(store.load().bindings.getValue(endpoint.key).usbEqAllowed)
+        HeadphonePreferences.setEnabled(context, endpoint, true)
+        val withoutCorrection = store.load().bindings.getValue(endpoint.key)
+        assertEquals(null, withoutCorrection.profileId)
+        assertTrue(withoutCorrection.enabled)
+        assertTrue(withoutCorrection.usbEqAllowed)
+        assertTrue(withoutCorrection.nightListening)
+        HeadphonePreferences.import(context, profile)
+        HeadphonePreferences.select(context, endpoint, profile.id)
+        HeadphonePreferences.select(context, endpoint, null)
+        assertEquals(withoutCorrection, store.load().bindings.getValue(endpoint.key))
+        HeadphonePreferences.select(context, endpoint, profile.id)
+        HeadphonePreferences.delete(context, profile.id)
+        assertEquals(withoutCorrection, store.load().bindings.getValue(endpoint.key))
+        HeadphonePreferences.setEnabled(context, endpoint, false)
+        assertFalse(store.load().bindings.getValue(endpoint.key).usbEqAllowed)
+        HeadphoneDsp.updateLibrary(HeadphoneLibrary())
+    }
+
+    @Test
     fun selectionConsentAdjustmentsAndDeletionArePersistedWithoutSpeakerFallback() {
         val context = mockk<Context> { every { filesDir } returns temporary.root }
         val endpoint = HeadphoneEndpoint("usb:test", "USB DAC", usb = true)
@@ -90,7 +117,7 @@ class HeadphonePreferencesTest {
         for (enabled in listOf(false, true)) {
             HeadphonePreferences.setEnabled(context, endpoint, enabled)
             val before = store.load()
-            for (preset in SoundMode.entries) {
+            for (preset in SoundMode.selectable) {
                 HeadphonePreferences.setSoundMode(context, endpoint, preset)
                 val saved = store.load()
                 assertEquals(before.profiles, saved.profiles)

@@ -7,12 +7,19 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -37,22 +44,19 @@ internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = f
         sheetMaxWidth = 640.dp
     ) {
         Column(Modifier.fillMaxWidth().then(if (compact) Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.86f) else Modifier.fillMaxHeight(0.94f))) {
-            Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, bottom = 16.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    TuningLabel("MUSIC MATE / DSP")
-                    Spacer(Modifier.weight(1f))
-                    onManage?.let { manage ->
-                        TextButton(onClick = manage, modifier = Modifier.heightIn(min = 48.dp)) {
-                            Text("Manage tuning", color = MusicMateDesignTokens.Text.Secondary, fontSize = 14.sp)
-                        }
+            Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(if (compact) "Quick tuning" else "Audio tuning", Modifier.weight(1f),
+                    fontSize = 22.sp, fontWeight = FontWeight.Medium)
+                onManage?.let { manage ->
+                    IconButton(onClick = manage) {
+                        Icon(painterResource(R.drawable.ic_round_settings_24), "Manage tuning",
+                            tint = MusicMateDesignTokens.Text.Secondary)
                     }
                 }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (compact) "Quick tuning" else "Audio tuning", Modifier.weight(1f),
-                        fontSize = 26.sp, fontWeight = FontWeight.Medium, color = Color.White)
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(painterResource(R.drawable.round_close_24), if (compact) "Close quick tuning" else "Close audio tuning", tint = MusicMateDesignTokens.Text.Secondary)
-                    }
+                IconButton(onClick = onDismissRequest) {
+                    Icon(painterResource(R.drawable.round_close_24), if (compact) "Close quick tuning" else "Close audio tuning",
+                        tint = MusicMateDesignTokens.Text.Secondary)
                 }
             }
             HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
@@ -63,16 +67,32 @@ internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = f
 }
 
 @Composable
-internal fun TuningCurrentSound(outputName: String, content: @Composable ColumnScope.() -> Unit) {
-    Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(20.dp)) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TuningLabel("CURRENT SOUND")
-                Text(outputName, color = MusicMateDesignTokens.Text.Primary, fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium)
+internal fun TuningCurrentSound(outputName: String, remoteTarget: String? = null, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(outputName, color = MusicMateDesignTokens.Text.Secondary, fontSize = 13.sp)
+        remoteTarget?.let { TuningHint("Playing on $it. Tuning applies only when Music Mate plays on this phone.") }
+        content()
+    }
+}
+
+@Composable
+internal fun TuningDisclosure(title: String, summary: String? = null, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button) { expanded = !expanded }
+            .semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
+            .heightIn(min = 56.dp).padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                summary?.let { TuningHint(it) }
             }
-            content()
+            Icon(painterResource(R.drawable.ic_expand_more), null,
+                Modifier.size(24.dp).then(if (expanded) Modifier.graphicsLayer(rotationZ = 180f) else Modifier),
+                tint = MusicMateDesignTokens.Text.Secondary)
         }
+        if (expanded) content()
     }
 }
 
@@ -124,7 +144,6 @@ internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.Peq
                 Text(if (active) "${mode.label} mode" else "Preview · ${mode.label} · $previewState", color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp)
             }
             CorrectionCurve(bands)
-            if (mode.compresses) TuningHint("Night also tames loud moments with dynamics processing, which is not shown in this curve.")
             TuningHint(if (averageEars) "Correction + sound mode · average of left and right" else "Correction + sound mode · 20 Hz–20 kHz")
         }
     }

@@ -9,8 +9,8 @@ class SoundModeTest {
     @Test
     fun presetsDescribeListeningPreferences() {
         assertEquals(
-            listOf("Neutral", "Bass", "Vocal", "Lively", "Relax", "Night", "Custom"),
-            SoundMode.entries.map { it.label }
+            listOf("Neutral", "Warm", "Vocal", "Lively", "Custom"),
+            SoundMode.selectable.map { it.label }
         )
     }
 
@@ -41,10 +41,11 @@ class SoundModeTest {
     }
 
     @Test
-    fun onlyNightCompresses() {
+    fun nightListeningIsIndependentOfEverySoundMode() {
         for (mode in SoundMode.entries) {
             val settings = CarDspChoice(enabled = true, mode = mode).settings()!!
-            assertEquals(mode.name, mode == SoundMode.NIGHT, settings.compress)
+            assertEquals(mode.name, false, settings.compress)
+            assertEquals(mode.name, true, CarDspChoice(enabled = true, mode = mode, nightListening = true).settings()!!.compress)
         }
     }
 

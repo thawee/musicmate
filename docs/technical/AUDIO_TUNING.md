@@ -4,13 +4,17 @@ Music Mate uses one tuning sheet for speaker, headphone and earphone corrections
 
 ## Quick tuning during playback
 
-The 48dp Now Playing entry shows an equalizer icon and one line such as Vocal · On, Vocal · Bypassed or Vocal · Unavailable. Tap it to choose a saved correction profile and sound mode without leaving playback. One dropdown lists speaker and headphone/earphone profiles with their output type and calibration method. Compatible profiles can be selected directly; incompatible corrections remain visible but disabled. Bluetooth and USB can carry either type, while a built-in phone speaker cannot apply a headphone correction.
+The 48dp Now Playing entry shows an equalizer icon and a primary line such as Vocal · On, Vocal · Bypassed or Vocal · Unavailable, with the correction profile below it. The profile remains visible while bypassed; No correction identifies outputs without a selected correction. Long names are shortened visually, with the full name available to screen readers and in the tuning panel. A moon icon appears only while Night listening is actually active; it can be combined with any sound mode. Bypassed means the mode remains selected but correction, tonal shaping and Night dynamics are not applied. Tap it to choose a saved correction profile and sound mode without leaving playback. One dropdown lists speaker and headphone/earphone profiles with their output type and calibration method. Compatible profiles can be selected directly; incompatible corrections remain visible but disabled. Bluetooth and USB can carry either type, while a built-in phone speaker cannot apply a headphone correction.
 
-A Current sound card groups the local output, correction selector and effective EQ state in both panels. Its switch controls processing separately from profile and mode selection; choosing a profile or mode does not grant USB EQ consent. Without a shared speaker profile, the existing speaker sound modes remain available. A new headphone output needs a saved profile before its sound modes can apply.
+The local output and Sound tuning switch sit above the sound choices in both panels. The switch controls processing separately from profile and mode selection; choosing a profile or mode does not grant USB EQ consent. Sound modes, Custom adjustments and Night listening work without a correction profile on both speaker and headphone outputs.
 
 Quick tuning keeps profile creation out of the listening controls. A compact Manage tuning action in the fixed header expands the same sheet into the full editor, starting at the top. Calibrate your sound in the editor offers Speaker or Headphone creation with Microphone, Listening and AutoEQ. Listening starts a draft; AutoEQ searches headphone measurements or imports measured speaker correction. Closing either panel returns to playback. Profile and mode changes reuse the same persistence and route checks as the full editor.
 
-The quick panel omits the EQ curve, custom trim sliders, import forms and profile management. Edit Custom opens the full editor with the selected mode retained. Use the full editor for these controls. The displayed output is the Android local audio route; this panel does not establish that a remote DLNA stream receives DSP.
+Custom bass and treble controls are available directly in both panels. The quick panel omits the EQ curve, import forms and profile management; use the full editor for these controls. The displayed output is the Android local audio route.
+
+### Tuning while another player plays
+
+DSP runs only in Music Mate's local audio sink. A DLNA renderer pulls the original file, or a bit-perfect WAV conversion of FLAC/ALAC, from the media server, and an external player app decodes the file itself, so neither receives tuning. When one of them is the selected player, `MainActivity` sets `NowPlayingState.remoteTarget` to its label. The playback tuning badge stays visible with an Unavailable status and "Not applied to this player". Quick and full tuning show "Playing on <player>. Tuning applies only when Music Mate plays on this phone." and report the status as Unavailable, and Compare is disabled. Profile and mode choices can still be edited; they apply the next time Music Mate plays on this phone. `PlaybackTuningUiTest` and `QuickTuningUiTest` cover the renderer state, including 150% text.
 
 ## Output and profile selection
 
@@ -22,20 +26,15 @@ Active, Bypassed and Unavailable show effective processing state, with a reason 
 
 ## Response and sound modes
 
-### Automatic sound modes
+Expand **Correction** to choose an optional saved profile. Use the header's Manage tuning icon, then Correction, to create or manage profiles. Profile menus list compatible corrections first and group unavailable ones under Other profiles; a checkmark identifies the selection, and the selected name wraps. Sound tuning shows On or Bypassed; USB tuning explains its consent requirement.
 
-Auto and Manual select how the listening mode is chosen. Auto matches the current track's genre/style tags against an ordered, editable rule list; the first match wins. Missing or unmatched tags use the selected fallback (Neutral initially). Starter matches are listening preferences and can be edited or removed. Matching ignores case and uses complete tag values, not substring guesses. Auto settings, including fallback and rules, are shared across local outputs. Mood inference is not included.
+### Saved sound modes
 
-To configure a match:
+Choose a sound mode directly in quick tuning or the full editor. Each output restores its saved manual choice and Custom bass/treble trims. Track genre, style, mood and tempo do not change the selected sound. Automatic sound rules and session holds have been removed; older Auto settings are ignored, leaving the output's saved manual choice in effect.
 
-1. Open Audio tuning and select Auto under Sound mode.
-2. Open Auto settings and choose Add match, or edit an existing match.
-3. Choose Genre or Style, then open Tag value to browse the default list. Type to filter the choices, or enter a custom tag value. Filtering ignores case and shows word-prefix matches first; switching Genre/Style changes the choices.
-4. Choose the sound mode and select Save match. Move higher-priority matches above other matches and choose the fallback. Changes save immediately; select Done to close settings.
+Choose **Neutral, Warm, Vocal, Lively or Custom**. Warm keeps the former Relax tuning. Older Bass selections migrate to Custom with an approximate +4 dB bass shelf (the former low-mid cut is retired); older Night selections become Neutral with Night listening enabled.
 
-Auto shows its resolved mode and matching reason in both tuning panels. Keep for this session freezes the current mode until Resume Auto or service shutdown. Switching to Manual restores the output's saved manual choice. Automatic results never overwrite manual preferences or correction profiles, enable processing, or grant USB consent. Custom matches use the current output's saved bass/treble trims. The response preview follows the resolved mode; existing PCM target transitions smooth the change. Remote DLNA playback does not receive local DSP.
-
-Explicit local playback resolves tags before starting the player. Gapless advances follow the Media3 track-transition callback, so the updated mode takes effect on the following processed audio block rather than during preloading.
+Sound selection remains separate from correction and processing enablement. Selecting a mode never enables EQ or grants USB consent. **Night listening** is a separate setting remembered for each output: it reduces loud/quiet differences without adding a tonal EQ curve and works with any preset. Leave it off for normal listening. Remote DLNA playback does not receive local DSP.
 
 ### Response preview
 
@@ -43,7 +42,7 @@ The EQ curve panel plots the selected correction plus its sound mode from 20 Hz 
 
 Listening profiles display the average left and right correction. The graph does not display channel balance, total preamp attenuation or the time-varying effect of Night compression.
 
-Sound modes sit above the curve as descriptive cards. Every card shows its tonal character before selection; the selected card uses a subtle gold border/background and a checkmark. Cards expose mutually exclusive selection semantics and 48dp minimum touch targets. They use two columns where space permits and one column at narrow widths or enlarged text sizes, with wrapping descriptions and no truncation. Details beneath the cards explain the selected mode, including calibration retention for Neutral and dynamics for Night. Neutral keeps the saved correction. Bass, Vocal, Lively, Relax and Night add shared mode processing. Custom exposes the saved bass and treble trims. Edit listening setup reopens a listening profile. Manage profiles reveals the source, correction details, listening-profile editing and Delete profile action. Deleting a shared profile bypasses EQ on every binding that used it.
+Sound modes sit above the curve as descriptive cards. Every card shows its tonal character before selection; the selected card uses a subtle gold border/background and a checkmark. Cards expose mutually exclusive selection semantics and 48dp minimum touch targets. They use two columns where space permits and one column at narrow widths or enlarged text sizes, with wrapping descriptions and no truncation. Details beneath the cards explain the selected mode. Neutral keeps the saved correction; Warm, Vocal and Lively add their described tonal shaping. Custom exposes bass and treble sliders with a live sound-signature description. Sound updates as a slider moves and the final setting is saved when released. Reset returns both trims to zero. Compare temporarily removes only the Custom trims while retaining correction and Night listening; leaving the controls ends comparison. These descriptions predict the EQ character, not a measured acoustic result. Edit listening setup reopens a listening profile. Manage profiles reveals the source, correction details, listening-profile editing and Delete profile action. Deleting a shared profile bypasses EQ on every binding that used it.
 
 ## Calibration actions
 
@@ -71,14 +70,14 @@ Text and graph headings wrap at larger font sizes. The graph reserves space for 
 
 ## Verification
 
-Auto mode was verified on an Android 14 (API 34) emulator: all six `AutoSoundUiTest` checks and all 374 app unit tests passed. Auto UI coverage includes matching and fallback, session hold/resume, restoring the manual choice, rule editing, searchable default tags, switching Genre/Style, and scrolling at 320 dp with 150% text. Unit tests also cover matching priority, complete tag values, persistence and USB consent. The debug build was installed on the phone with app data retained.
 
 The implementation was checked on an Android 16 emulator at normal size, 150% system text and a compact display. See the current verification entry in tasks/todo.md for the unit-suite count. UI coverage includes:
 
+- `ManualSoundUiTest`: direct quick/full mode selection, Custom editing and absence of automatic sound controls.
 - `HeadphoneEqUiTest`: profile selection, mode selection, USB consent, bypass, import errors and offline deletion.
 - `ManualHeadphoneUiTest`: draft isolation, five-step progression, skipped values, cancellation and calibration preservation.
-- `SoundSignatureUiTest`: descriptions readable before selection, mutually exclusive selection, large text without clipping and compact header management access during quick-panel scrolling, without profile creation in the body.
-- `QuickTuningUiTest`: compact profile/mode selection, USB consent, incompatible outputs, profile creation and full-editor navigation.
+- `SoundSignatureUiTest`: selected descriptions, mutually exclusive selection, large text without clipping and compact header management access during quick-panel scrolling.
+- `QuickTuningUiTest`: compact profile/mode selection, USB consent, incompatible outputs, normal/large-text reachability and full-editor profile creation.
 - `FiveStepListeningUiTest`: independent five-band saving, final music check, voice selection and identical-source Original / Adjusted comparisons.
 - `ManualHeadphoneFlowTest`: save and reopen speaker and headphone profiles.
 - `AudioTuningSheetUiTest`: response visibility, calibration access, expandable details, fixed close control at normal and large text sizes, and real body swipes without sheet movement in quick and full tuning.
@@ -90,3 +89,7 @@ The five-step guide and save/reopen flows also pass on a compact display at 150%
 Run the unit suite with `./gradlew :app:testGithubDebugUnitTest`. Run each UI class in a separate invocation with `ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=apincer.android.mmate.ui.compose.AudioTuningSheetUiTest`, replacing the class name for each suite. Results depend on the emulator serial. UI tests do not establish microphone accuracy, acoustic sound quality or external-device playback stability.
 
 For whole-sheet large-text verification, record `adb -s emulator-5554 shell settings get system font_scale`, set it to `1.5`, run the sheet checks, inspect the capture, then restore the recorded value. A density provider inside the sheet tests body scaling; a provider outside the modal alone does not reliably scale the dialog header.
+
+Correction is optional: presets, Custom bass/treble and Night listening work with No correction selected. The output EQ switch controls processing independently; removing a correction keeps the saved mode, Night setting and enablement. USB processing still requires explicit consent.
+
+The tuning sheet puts listening first: output and one processing switch, five compact sound choices, Custom controls only when selected, then Night listening. The quick header uses one Manage tuning icon; profile creation lives in the full editor. Correction is collapsed by default, with the selected profile (or None) visible as its summary. Expand it to switch corrections; the full editor also exposes setup and profile management there. Response curves are collapsed separately. Preset descriptions appear only for the selected sound.

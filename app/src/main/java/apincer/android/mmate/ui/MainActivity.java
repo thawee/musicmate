@@ -393,17 +393,21 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                     }
                     nps.getTargetDetails().setValue(devBuf.toString());
                     nps.getCarDspAvailable().setValue(!device.isUsb());
+                    nps.getRemoteTarget().setValue(null);
                 } else {
-                    nps.getTargetTitle().setValue(PlayerNameUtils.getDropdownPlayerLabel(player));
+                    String playerLabel = PlayerNameUtils.getDropdownPlayerLabel(player);
+                    nps.getTargetTitle().setValue(playerLabel);
                     nps.getTargetBadge().setValue(player.isStreaming() ? "DLNA" : "EXTERNAL APP");
                     nps.getTargetDetails().setValue(player.getDescription() != null ? player.getDescription() : "");
                     nps.getCarDspAvailable().setValue(false);
+                    nps.getRemoteTarget().setValue(playerLabel);
                 }
             } else {
                 nps.getTargetTitle().setValue("Local Audio");
                 nps.getTargetBadge().setValue("SYS OUT");
                 nps.getTargetDetails().setValue("System Default Output");
                 nps.getCarDspAvailable().setValue(false);
+                nps.getRemoteTarget().setValue(null);
             }
 
             apincer.android.mmate.ui.compose.MainScaffoldState.updateNowPlaying(song, isPlaying, targetSubtitle, progress);

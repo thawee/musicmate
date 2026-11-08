@@ -1,21 +1,26 @@
 package apincer.android.mmate.audio.dsp
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 /**
  * Shared listening modes layered over speaker or headphone correction: at most
- * three filters and +4 dB per mode. The automatic preamp absorbs every boost. Only [NIGHT]
- * compresses to reduce louder passages.
+ * three filters and +4 dB per mode. The automatic preamp absorbs every boost.
+ * Night listening compression is an independent output setting.
  */
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 @Serializable
 enum class SoundMode(val label: String, val summary: String, val compresses: Boolean = false) {
     // Keep the stored name for existing car preferences.
     REFERENCE("Neutral", "The correction alone"),
     BASS("Bass", "Deeper, punchier low end"),
     VOCAL("Vocal", "Voices forward and clear"),
+    @JsonNames("DRIVE")
     LIVELY("Lively", "Tight bass, crisp attack, sparkle"),
-    RELAX("Relax", "Softer highs, warm and easy"),
-    NIGHT("Night", "Soft and even, loud moments tamed", compresses = true),
+    @JsonNames("FOCUS")
+    RELAX("Warm", "Softer highs, warm and easy"),
+    @JsonNames("SLEEP")
+    NIGHT("Night", "Legacy night listening"),
     CUSTOM("Custom", "Your own bass and treble");
 
     /** Bands this mode adds; [bassDb] and [trebleDb] apply to [CUSTOM] only. */
@@ -40,10 +45,7 @@ enum class SoundMode(val label: String, val summary: String, val compresses: Boo
             PeqBand(PeqBand.Type.PEAK, 3_000.0, -1.5, 1.0),
             PeqBand(PeqBand.Type.LOW_SHELF, 150.0, 1.5, SHELF_Q)
         )
-        NIGHT -> listOf(
-            PeqBand(PeqBand.Type.HIGH_SHELF, 4_000.0, -4.0, SHELF_Q),
-            PeqBand(PeqBand.Type.LOW_SHELF, 60.0, -2.0, SHELF_Q)
-        )
+        NIGHT -> emptyList()
         CUSTOM -> listOfNotNull(
             PeqBand(PeqBand.Type.LOW_SHELF, 100.0, bassDb.coerceIn(-TRIM_DB, TRIM_DB), SHELF_Q).takeIf { bassDb != 0.0 },
             PeqBand(PeqBand.Type.HIGH_SHELF, 8_000.0, trebleDb.coerceIn(-TRIM_DB, TRIM_DB), SHELF_Q).takeIf { trebleDb != 0.0 }
@@ -51,6 +53,8 @@ enum class SoundMode(val label: String, val summary: String, val compresses: Boo
     }
 
     companion object {
+        val selectable = listOf(REFERENCE, RELAX, VOCAL, LIVELY, CUSTOM)
+
         const val TRIM_DB = 4.0
         private const val SHELF_Q = 0.707
     }

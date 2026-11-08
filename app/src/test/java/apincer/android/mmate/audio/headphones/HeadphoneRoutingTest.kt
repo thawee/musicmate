@@ -13,6 +13,85 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class HeadphoneRoutingTest {
+    private fun assertSettingsEqual(expected: CarDspSettings?, actual: CarDspSettings?) {
+        requireNotNull(expected)
+        requireNotNull(actual)
+        assertEquals(expected.bands, actual.bands)
+        assertEquals(expected.leftBands, actual.leftBands)
+        assertEquals(expected.rightBands, actual.rightBands)
+        assertEquals(expected.monoBands, actual.monoBands)
+        assertEquals(expected.requestedPreampDb, actual.requestedPreampDb, 0.0)
+        assertEquals(expected.balanceDb, actual.balanceDb, 0.0)
+        assertEquals(expected.compress, actual.compress)
+    }
+
+
+    @Test
+    fun customComparisonPreservesCalibrationNightPreampAndUsbConsentWithoutPersistence() {
+        val endpoint = HeadphoneEndpoint.of(listOf(usb))!!
+        val custom = HeadphoneBinding(profile.id, enabled = true, usbEqAllowed = true,
+            bassDb = 3.0, trebleDb = -2.0, nightListening = true)
+        bind(endpoint, custom)
+        HeadphoneDsp.updateDevices(listOf(usb))
+        val original = HeadphoneDsp.current.settings!!
+        HeadphoneDsp.setCustomComparison(endpoint.key, true)
+        assertTrue(HeadphoneDsp.state.value.comparingCustom)
+        assertEquals(custom, HeadphoneDsp.state.value.binding)
+        assertEquals(profile.bands, HeadphoneDsp.current.settings!!.bands)
+        assertEquals(original.requestedPreampDb, HeadphoneDsp.current.settings!!.requestedPreampDb, 0.0)
+        assertTrue(HeadphoneDsp.current.settings!!.compress)
+        HeadphoneDsp.updateDevices(emptyList())
+        HeadphoneDsp.updateDevices(listOf(usb))
+        assertFalse(HeadphoneDsp.state.value.comparingCustom)
+        assertSettingsEqual(original, HeadphoneDsp.current.settings)
+        HeadphoneDsp.setCustomComparison(endpoint.key, true)
+        bind(endpoint, custom.copy(usbEqAllowed = false))
+        assertFalse(HeadphoneDsp.state.value.comparingCustom)
+        assertNull(HeadphoneDsp.current.settings)
+        HeadphoneDsp.setCustomComparison(endpoint.key, true)
+        assertNull(HeadphoneDsp.current.settings)
+    }
+
+    @Test
+    fun trimPreviewIsImmediateAndClearsOnCancellationSettingsAndRouteChanges() {
+        val endpoint = HeadphoneEndpoint.of(listOf(bluetooth))!!
+        val binding = HeadphoneBinding(profile.id, enabled = true, bassDb = 1.0, nightListening = true)
+        bind(endpoint, binding)
+        HeadphoneDsp.updateDevices(listOf(bluetooth))
+        val saved = HeadphoneDsp.current.settings
+        HeadphoneDsp.previewCustomTrims(endpoint.key, 4.0, -3.0)
+        assertEquals(4.0, HeadphoneDsp.state.value.binding.bassDb, 0.0)
+        assertNotEquals(saved!!.bands, HeadphoneDsp.current.settings!!.bands)
+        HeadphoneDsp.clearCustomPreview(endpoint.key)
+        assertSettingsEqual(saved, HeadphoneDsp.current.settings)
+        HeadphoneDsp.previewCustomTrims(endpoint.key, 4.0, -3.0)
+        bind(endpoint, binding.copy(trebleDb = 2.0))
+        assertEquals(1.0, HeadphoneDsp.state.value.binding.bassDb, 0.0)
+        HeadphoneDsp.setCustomComparison("other", true)
+        assertFalse(HeadphoneDsp.state.value.comparingCustom)
+        HeadphoneDsp.previewCustomTrims(endpoint.key, 4.0, -3.0)
+        HeadphoneDsp.updateDevices(emptyList())
+        HeadphoneDsp.updateDevices(listOf(bluetooth))
+        assertEquals(1.0, HeadphoneDsp.state.value.binding.bassDb, 0.0)
+    }
+
+    @Test
+    fun comparisonKeepsManualStereoCorrectionAndDoesNotAlterNamedModes() {
+        val manual = HeadphoneProfile.createManual("Manual", ManualHeadphoneTuning(
+            left = HeadphoneTone(2.0, -1.0), right = HeadphoneTone(trebleDb = -3.0), balanceDb = 2.0))
+        val binding = HeadphoneBinding(bassDb = 3.0, nightListening = true)
+        val correction = manual.manual!!.settings()
+        val comparing = HeadphoneDsp.settingsFor(manual, binding, comparingCustom = true)
+        assertEquals(correction.bands, comparing.bands)
+        assertEquals(correction.leftBands, comparing.leftBands)
+        assertEquals(correction.rightBands, comparing.rightBands)
+        assertEquals(correction.balanceDb, comparing.balanceDb, 0.0)
+        assertEquals(correction.monoBands, comparing.monoBands)
+        assertTrue(comparing.compress)
+        val warm = binding.copy(soundMode = SoundMode.RELAX)
+        assertSettingsEqual(HeadphoneDsp.settingsFor(manual, warm), HeadphoneDsp.settingsFor(manual, warm, true))
+    }
+
     @Test
     fun namedBassUsesTheSameCurveAsSpeakers() {
         val endpoint = HeadphoneEndpoint.of(listOf(bluetooth))!!
@@ -183,4 +262,53 @@ class HeadphoneRoutingTest {
 
     private fun bind(endpoint: HeadphoneEndpoint, binding: HeadphoneBinding) =
         HeadphoneDsp.updateLibrary(HeadphoneLibrary(listOf(profile), mapOf(endpoint.key to binding)))
+
+    @Test
+    fun soundModesAndNightWorkWithoutCorrectionOnEachHeadphoneRoute() {
+        val wired = Triple(AudioDeviceInfo.TYPE_WIRED_HEADPHONES, "", "Headphones")
+        for (device in listOf(bluetooth, wired, usb)) {
+            val endpoint = HeadphoneEndpoint.of(listOf(device))!!
+            for (mode in SoundMode.selectable) {
+                val binding = HeadphoneBinding(enabled = true, usbEqAllowed = endpoint.usb,
+                    soundMode = mode, nightListening = true)
+                HeadphoneDsp.updateLibrary(HeadphoneLibrary(bindings = mapOf(endpoint.key to binding)))
+                HeadphoneDsp.updateDevices(listOf(device))
+                val settings = HeadphoneDsp.current.settings!!
+                assertTrue(HeadphoneDsp.state.value.active)
+                assertNull(HeadphoneDsp.state.value.profile)
+                assertSame(settings, CarDsp.effectiveTarget())
+                assertEquals(mode.bands(), settings.bands)
+                assertTrue(settings.compress)
+                assertEquals(0.0, settings.requestedPreampDb, 0.0)
+                assertTrue(settings.leftBands.isEmpty())
+                assertTrue(settings.rightBands.isEmpty())
+            }
+            if (endpoint.usb) {
+                HeadphoneDsp.updateLibrary(HeadphoneLibrary(bindings = mapOf(endpoint.key to
+                    HeadphoneBinding(enabled = true, soundMode = SoundMode.VOCAL, nightListening = true))))
+                assertFalse(HeadphoneDsp.state.value.active)
+                assertNull(CarDsp.effectiveTarget())
+            }
+        }
+    }
+
+    @Test
+    fun customPreviewAndComparisonWorkWithoutCorrectionAndKeepNight() {
+        val endpoint = HeadphoneEndpoint.of(listOf(bluetooth))!!
+        val binding = HeadphoneBinding(enabled = true, bassDb = 3.0, trebleDb = -2.0, nightListening = true)
+        HeadphoneDsp.updateLibrary(HeadphoneLibrary(bindings = mapOf(endpoint.key to binding)))
+        HeadphoneDsp.updateDevices(listOf(bluetooth))
+        val original = HeadphoneDsp.current.settings!!
+        assertEquals(HeadphoneTone(bassDb = 3.0, trebleDb = -2.0).bands(), original.bands)
+        HeadphoneDsp.setCustomComparison(endpoint.key, true)
+        assertTrue(HeadphoneDsp.state.value.comparingCustom)
+        assertTrue(HeadphoneDsp.current.settings!!.bands.isEmpty())
+        assertTrue(HeadphoneDsp.current.settings!!.compress)
+        HeadphoneDsp.setCustomComparison(endpoint.key, false)
+        assertSettingsEqual(original, HeadphoneDsp.current.settings)
+        HeadphoneDsp.previewCustomTrims(endpoint.key, 5.0, -4.0)
+        assertEquals(HeadphoneTone(bassDb = 5.0, trebleDb = -4.0).bands(), HeadphoneDsp.current.settings!!.bands)
+        HeadphoneDsp.clearCustomPreview(endpoint.key)
+        assertSettingsEqual(original, HeadphoneDsp.current.settings)
+    }
 }

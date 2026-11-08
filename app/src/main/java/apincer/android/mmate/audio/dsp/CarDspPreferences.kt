@@ -18,12 +18,14 @@ data class CarDspChoice(
     /** The active car profile's correction; empty until a car is calibrated. */
     val correction: List<PeqBand> = emptyList(),
     val profileName: String? = null,
-    val profileId: String? = null
+    val profileId: String? = null,
+    val nightListening: Boolean = false
 ) {
     /** The car correction with the mode on top. */
-    fun settings(): CarDspSettings? {
-        val effective = AutoSoundPreferences.effectiveMode(mode)
-        return if (enabled) CarDspSettings(correction + effective.bands(bassDb, trebleDb), compress = effective.compresses) else null
+    fun settings(comparingCustom: Boolean = false): CarDspSettings? {
+        if (!enabled) return null
+        val personal = if (comparingCustom && mode == SoundMode.CUSTOM) emptyList() else mode.bands(bassDb, trebleDb)
+        return CarDspSettings(correction + personal, compress = nightListening)
     }
 }
 
@@ -38,16 +40,52 @@ object CarDspPreferences {
     private const val MODE = "mode"
     private const val BASS = "custom_bass_db"
     private const val TREBLE = "custom_treble_db"
+    private const val NIGHT = "night_listening"
     private const val ACTIVE_PROFILE = "active_profile"
 
-    private val choice = MutableStateFlow(CarDspChoice())
+    private var previewing = false
+    private var savedChoice = CarDspChoice()
+    private val choice = MutableStateFlow(savedChoice)
     val state: StateFlow<CarDspChoice> = choice
+    private val comparison = MutableStateFlow(false)
+    val comparingCustom: StateFlow<Boolean> = comparison
+
+    @JvmStatic
+    @Synchronized
+    fun setCustomComparison(comparing: Boolean) {
+        comparison.value = comparing && choice.value.enabled && choice.value.mode == SoundMode.CUSTOM
+        CarDsp.target = choice.value.settings(comparison.value)
+    }
+
+    /** Slider preview is transient until update saves the completed gesture. */
+    @JvmStatic
+    @Synchronized
+    fun previewCustomTrims(bassDb: Double, trebleDb: Double) {
+        require(bassDb.isFinite() && trebleDb.isFinite())
+        comparison.value = false
+        previewing = true
+        val next = choice.value.copy(mode = SoundMode.CUSTOM,
+            bassDb = bassDb.coerceIn(-SoundMode.TRIM_DB, SoundMode.TRIM_DB),
+            trebleDb = trebleDb.coerceIn(-SoundMode.TRIM_DB, SoundMode.TRIM_DB))
+        choice.value = next
+        CarDsp.target = next.settings()
+    }
+
+    @Synchronized
+    internal fun onRouteChanged() {
+        if (previewing || comparison.value) apply(savedChoice)
+    }
+
+    @JvmStatic
+    @Synchronized
+    fun clearCustomPreview() {
+        if (previewing) apply(savedChoice)
+    }
 
     /** Loads the saved choice once per process and applies it. */
     @JvmStatic
     @Synchronized
     fun init(context: Context) {
-        AutoSoundPreferences.init(context)
         HeadphonePreferences.init(context)
         if (loaded) return
         loaded = true
@@ -67,7 +105,7 @@ object CarDspPreferences {
      */
     @JvmStatic
     fun setActiveProfile(context: Context, profile: CarProfile?) {
-        apply(select(prefs(context), profile, choice.value))
+        apply(select(prefs(context), profile, savedChoice))
     }
 
     /** Deletes a profile and its saved mode; if it was active, the newest remaining one takes over. */
@@ -76,14 +114,14 @@ object CarDspPreferences {
         val store = profiles(context)
         store.delete(id)
         val prefs = prefs(context)
-        prefs.edit().remove(key(MODE, id)).remove(key(BASS, id)).remove(key(TREBLE, id)).apply()
+        prefs.edit().remove(key(MODE, id)).remove(key(BASS, id)).remove(key(TREBLE, id)).remove(key(NIGHT, id)).apply()
         if (prefs.getString(ACTIVE_PROFILE, null) == id) setActiveProfile(context, store.list().firstOrNull())
     }
 
     /** Gives a saved profile a new name; the chip follows at once when it is the active one. */
     @JvmStatic
     fun renameProfile(context: Context, id: String, name: String) {
-        apply(rename(profiles(context), id, name, choice.value))
+        apply(rename(profiles(context), id, name, savedChoice))
     }
 
     /** Its mode stays, since modes are keyed by id, not name. */
@@ -116,27 +154,31 @@ object CarDspPreferences {
         val savedMode = prefs.getString(key(MODE, id), null)
         val mode = when (savedMode) {
             "DRIVE" -> SoundMode.LIVELY
-            "SLEEP" -> SoundMode.NIGHT
+            "SLEEP", "NIGHT" -> SoundMode.REFERENCE
+            "BASS" -> SoundMode.CUSTOM
             "FOCUS" -> SoundMode.RELAX
             else -> SoundMode.entries.firstOrNull { it.name == savedMode } ?: current.mode
         }
-        if (savedMode in listOf("DRIVE", "SLEEP", "FOCUS")) {
-            prefs.edit().putString(key(MODE, id), mode.name).apply()
-        }
-        return current.copy(
+        val legacyNight = savedMode == "NIGHT" || savedMode == "SLEEP"
+        val legacyBass = savedMode == "BASS"
+        val next = current.copy(
             mode = mode,
-            bassDb = if (prefs.contains(key(BASS, id))) prefs.getFloat(key(BASS, id), 0f).toDouble() else current.bassDb,
+            bassDb = if (legacyBass) 4.0 else if (prefs.contains(key(BASS, id))) prefs.getFloat(key(BASS, id), 0f).toDouble() else current.bassDb,
             trebleDb = if (prefs.contains(key(TREBLE, id))) prefs.getFloat(key(TREBLE, id), 0f).toDouble() else current.trebleDb,
             correction = profile?.bands ?: emptyList(),
             profileName = profile?.name,
-            profileId = id
+            profileId = id,
+            nightListening = legacyNight || prefs.getBoolean(key(NIGHT, id), false)
         )
+        if (savedMode in listOf("DRIVE", "SLEEP", "FOCUS", "NIGHT", "BASS")) save(prefs, next)
+        return next
     }
 
     internal fun save(prefs: SharedPreferences, next: CarDspChoice) {
         val id = next.profileId
         prefs.edit()
             .putBoolean(ENABLED, next.enabled)
+            .putBoolean(key(NIGHT, id), next.nightListening)
             .putString(key(MODE, id), next.mode.name)
             .putFloat(key(BASS, id), next.bassDb.toFloat())
             .putFloat(key(TREBLE, id), next.trebleDb.toFloat())
@@ -150,11 +192,10 @@ object CarDspPreferences {
     private var loaded = false
 
     private fun apply(next: CarDspChoice) {
+        comparison.value = false
+        previewing = false
+        savedChoice = next
         choice.value = next
-        refreshSoundMode()
-    }
-
-    internal fun refreshSoundMode() {
-        CarDsp.target = choice.value.settings()
+        CarDsp.target = next.settings()
     }
 }

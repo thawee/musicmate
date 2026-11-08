@@ -171,16 +171,17 @@
     </string-array>
 
     <string-array name="styles">
+        <item>Acoustic</item>
         <item>Ballad</item>
         <item>Live</item>
         <item>Orchestral</item>
-        <item>Audiophile Vocal</item>
+        <item>Vocal</item>
         <item>Instrumental</item>
         <item>Unplugged</item>
-        <item>Synth-based</item>
+        <item>Synth-driven</item>
         <item>Indie</item>
         <item>Ambient</item>
-        <item>Groove</item>
+        <item>Groove-driven</item>
         <item>Fusion</item>
         <item>Lo-Fi</item>
         <item>Remix</item>

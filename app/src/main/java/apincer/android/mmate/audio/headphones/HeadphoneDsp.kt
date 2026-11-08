@@ -8,7 +8,7 @@ import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.UsbOutputFormat
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.dsp.SoundMode
-import apincer.android.mmate.audio.dsp.AutoSoundPreferences
+import apincer.android.mmate.audio.dsp.CarDspPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
@@ -61,7 +61,8 @@ data class HeadphoneStatus(
     val endpoint: HeadphoneEndpoint? = null,
     val binding: HeadphoneBinding = HeadphoneBinding(),
     val profile: HeadphoneProfile? = null,
-    val active: Boolean = false
+    val active: Boolean = false,
+    val comparingCustom: Boolean = false
 )
 
 /** Route changes and settings publish one decision; audio blocks never read preferences or files. */
@@ -75,6 +76,34 @@ object HeadphoneDsp {
     val state: StateFlow<HeadphoneStatus> = status
     private var devices = emptyList<Triple<Int, String?, String?>>()
     private var library = HeadphoneLibrary()
+    private var comparisonEndpoint: String? = null
+    private var preview: Pair<String, HeadphoneBinding>? = null
+
+    @Synchronized
+    fun setCustomComparison(endpointKey: String, comparing: Boolean) {
+        if (status.value.endpoint?.key != endpointKey) return
+        comparisonEndpoint = endpointKey.takeIf { comparing && status.value.active && status.value.binding.soundMode == SoundMode.CUSTOM }
+        publish()
+    }
+
+    @Synchronized
+    fun clearCustomPreview(endpointKey: String) {
+        if (preview?.first != endpointKey) return
+        preview = null
+        publish()
+    }
+
+    /** Applies a slider gesture immediately; the caller saves once the gesture finishes. */
+    @Synchronized
+    fun previewCustomTrims(endpointKey: String, bassDb: Double, trebleDb: Double) {
+        if (status.value.endpoint?.key != endpointKey) return
+        require(bassDb.isFinite() && trebleDb.isFinite())
+        val binding = library.bindings[endpointKey] ?: return
+        preview = endpointKey to binding.copy(soundMode = SoundMode.CUSTOM,
+            bassDb = bassDb.coerceIn(-6.0, 6.0), trebleDb = trebleDb.coerceIn(-6.0, 6.0))
+        comparisonEndpoint = null
+        publish()
+    }
 
     fun updateRoute(routed: List<AudioDeviceInfo>) = updateDevices(routed.map {
         if (it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER || it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER_SAFE)
@@ -85,40 +114,43 @@ object HeadphoneDsp {
     @Synchronized
     internal fun updateDevices(next: List<Triple<Int, String?, String?>>) {
         if (devices == next) return
+        comparisonEndpoint = null
+        preview = null
+        CarDspPreferences.onRouteChanged()
         devices = next.toList()
         publish()
     }
 
     @Synchronized
     fun updateLibrary(next: HeadphoneLibrary) {
-        if (library == next) return
+        if (library == next && comparisonEndpoint == null && preview == null) return
+        comparisonEndpoint = null
+        preview = null
         library = next
         publish()
     }
 
-    @Synchronized
-    fun refreshSoundMode() = publish()
-
     private fun publish() {
         val endpoint = HeadphoneEndpoint.of(devices)
-        val binding = endpoint?.let { library.bindings[it.key] }
+        val binding = endpoint?.let { device -> preview?.takeIf { it.first == device.key }?.second ?: library.bindings[device.key] }
         val profile = library.profiles.firstOrNull { it.id == binding?.profileId }
         val handles = endpoint != null && (endpoint.usb || endpoint.wired || binding != null)
-        val active = handles && binding?.enabled == true && profile != null && (!endpoint.usb || binding.usbEqAllowed)
-        val settings = if (active) settingsFor(profile!!, binding!!) else null
+        val active = handles && binding?.enabled == true && (binding.profileId == null || profile != null) && (!endpoint.usb || binding.usbEqAllowed)
+        val comparing = active && comparisonEndpoint == endpoint?.key && binding?.soundMode == SoundMode.CUSTOM
+        val settings = if (active) settingsFor(profile, binding!!, comparing) else null
         selection = Selection(handles, settings, devices.isNotEmpty() && devices.none { UsbOutputFormat.isUsbType(it.first) })
-        status.value = HeadphoneStatus(endpoint, binding ?: HeadphoneBinding(), profile, active)
+        status.value = HeadphoneStatus(endpoint, binding ?: HeadphoneBinding(), profile, active, comparing)
     }
 
     /** Shared by the playback decision and the curve preview. */
-    fun settingsFor(profile: HeadphoneProfile, binding: HeadphoneBinding): CarDspSettings {
-        val mode = AutoSoundPreferences.effectiveMode(binding.soundMode)
-        val personal = if (mode == SoundMode.CUSTOM)
-            HeadphoneTone(bassDb = binding.bassDb, trebleDb = binding.trebleDb).bands()
-        else mode.bands()
-        val correction = profile.manual?.settings()
-            ?: CarDspSettings(profile.bands, requestedPreampDb = profile.preampDb)
-        return CarDspSettings(correction.bands + personal, compress = mode.compresses,
+    fun settingsFor(profile: HeadphoneProfile?, binding: HeadphoneBinding, comparingCustom: Boolean = false): CarDspSettings {
+        val mode = binding.soundMode
+        val personal = if (mode == SoundMode.CUSTOM) {
+            if (comparingCustom) emptyList() else HeadphoneTone(bassDb = binding.bassDb, trebleDb = binding.trebleDb).bands()
+        } else mode.bands()
+        val correction = profile?.manual?.settings()
+            ?: CarDspSettings(profile?.bands.orEmpty(), requestedPreampDb = profile?.preampDb ?: 0.0)
+        return CarDspSettings(correction.bands + personal, compress = binding.nightListening,
             requestedPreampDb = correction.requestedPreampDb, leftBands = correction.leftBands,
             rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands)
     }

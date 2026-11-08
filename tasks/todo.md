@@ -1,3 +1,43 @@
+# Tuning status while a renderer plays (2026-11-08)
+
+- [x] Publish the remote player name in NowPlayingState from MainActivity.
+- [x] Keep the Now Playing tuning chip visible and unavailable for remote players.
+- [x] Show a renderer notice and an unavailable status in quick and full tuning; disable Compare there.
+- [x] Name the tuning switch by its visible label and update the UI tests.
+- [x] Use one fallback string for a missing output.
+- [x] Build, run unit and tuning UI tests, inspect the diff.
+
+Verification: 385 app unit tests pass, including the new TuningAudibilityTest renderer case. On the MM_API34 emulator, QuickTuningUiTest (14), HeadphoneEqUiTest (8), AudioTuningSheetUiTest (5), PlaybackTuningUiTest (4, two new renderer cases at 100% and 150% text) and SoundSignatureUiTest (3) pass. The 150% renderer case first failed because "Neutral · Unavailable" wrapped, so the badge text cap went from 220dp to 280dp. Renderer screenshots were inspected. Not verified: a real DLNA renderer on the phone, and what TalkBack announces for the merged switch row (the hint and stateDescription may repeat the reason).
+
+# Simplify tuning selection (2026-11-06)
+
+- [x] Add direct profile creation from the quick empty state and clarify EQ labels.
+- [x] Group compatible profiles first and make selected profiles clear.
+- [x] Update affected checks, run targeted validation and inspect diffs.
+
+Verification: app/test APK builds passed; all five TuningAudibilityTest unit cases passed. API 34 emulator: 26 distinct tuning UI checks passed across QuickTuningUiTest, HeadphoneEqUiTest, PlaybackTuningUiTest, AudioTuningSheetUiTest and SoundSignatureUiTest (the signature class was rerun after updating its obsolete no-creation assertion). Direct creation/cancellation also passed at 150% system text. Inspected quick tuning and enlarged chooser screenshots in /tmp/musicmate-quick-tuning.png and /tmp/musicmate-quick-profile-creation-large.png. Restored emulator activity and font settings. Working-tree and main diff whitespace checks passed. Build/UI logs: /tmp/musicmate-tuning-*.log. Existing unrelated changes retained.
+
+# Audio tuning UX review (2026-11-06)
+
+- [x] Trace quick tuning, profile/sound selection, Auto settings and full editor.
+- [x] Check layout, labels, accessibility and available runtime evidence (source only; no connected Android device).
+- [x] Rank simplifications with source references and verification limits; see tasks/audio-tuning-ux-review-2026-11-06.md.
+
+# Mood-aware Auto sound rules (2026-10-30)
+
+- [x] Add Mood metadata matching with deterministic priority and unit coverage.
+- [x] Add searchable Mood choices and an explicit way to load improved starter matches without replacing saved edits silently.
+- [x] Verify unit/UI behavior and document the rule choices and limitations.
+
+Verification: all 381 app unit tests and all eight AutoSoundUiTest checks pass on API 34. The reset test failed before the control existed, then passed with confirmation, cancellation and fallback preservation. Mood matching, hold/resume, legacy JSON defaults and tag aliases are covered. All 27 starter rules were checked against the actual Genre/Style/Mood resource lists, without duplicate field/value pairs. Updated the guide and changelog; working-tree and main whitespace checks pass. Restored the emulator activity setting. Installed the updated build on 192.168.1.54:42765 with app data retained.
+
+# Refine default music styles (2026-10-30)
+
+- [x] Update the shared Style vocabulary with the agreed names and Acoustic only.
+- [x] Verify the exact list and Android resource compilation; update the changelog.
+
+Verification: checked the exact 14-entry list for duplicates and excluded additions. `:app:processGithubDebugResources` passed. The shared defaults serve both the tag editor and Auto match picker; existing track tags and saved rules are unchanged.
+
 # Document and commit Auto sound mode (2026-10-30)
 
 - [x] Update the tuning guide and Unreleased changelog with Auto behavior and searchable match settings.
@@ -2483,3 +2523,58 @@ Final DIY build gate: optimized GithubRelease R8 and release lint analysis pass 
 - [x] Trace Preview status rules: NEW/DL describe unorganized files; managed tracks show Organized, without claiming duplicate detection.
 - [x] Reuse NEW/DL beside the quality badge and add a descriptive Organized badge. Two emulator checks pass, including track changes and idle state at 320dp width and 150% text.
 - [x] Update docs/changelog, assembleGithubDebug, inspect text visibility/accessibility and check scoped diffs against main. Build and whitespace checks pass; no phone installation performed.
+
+# Microphone measurement reliability (2026-11-03)
+- [x] Inspect capture and rejection logic; reproduce false rejection with realistic signals.
+- [x] Fix demonstrated cause while keeping measurement quality limits.
+- [x] Run calibration tests, build, and inspect scoped diff; report hardware limitations.
+- Evidence: calibration JVM suite and assembleGithubDebug pass; clean 0.7 s echo regression failed before the fix and passes after it. No physical microphone trial performed. Scoped diff reviewed against HEAD and main.
+
+## Remove automatic sound mode (2026-11-06)
+- [x] Remove metadata-driven sound resolution and playback hooks; retain saved manual output choices.
+- [x] Replace Auto/Manual UI with direct sound choices and remove rule settings; update affected tests.
+- [x] Update tuning documentation and changelog; build, run focused tests, verify runtime and diff.
+Scope: remove Auto completely; retain existing manual presets and calibration. Album-aware volume leveling is separate future work.
+
+Removal validation: full GitHub debug unit suite passes (373 tests); app and instrumentation APK builds pass. API 34 emulator passes 23 UI checks across ManualSoundUiTest, QuickTuningUiTest, HeadphoneEqUiTest, PlaybackTuningUiTest and SoundSignatureUiTest. git diff --check and git diff master --check pass. No AutoSound/AutoTuningSoundModes/auto_sound_mode references remain in app sources. Emulator always_finish_activities restored to 1. Evidence: /tmp/musicmate-remove-auto-build.log and /tmp/musicmate-remove-auto-ui.log.
+Device update: adb install -r succeeded on 192.168.1.51:41677; app data preserved.
+
+## Simple sound presets and Custom feedback (2026-11-06)
+- [x] Keep Neutral/Warm/Vocal/Lively/Custom; migrate saved Bass/Night choices safely.
+- [x] Persist Night listening separately per output, applying compression without tonal filters.
+- [x] Add live Custom signature text, immediate sliders, Reset and temporary comparison that retains correction.
+- [x] Update meaningful backend/UI tests and docs; build, run tests, verify runtime and install the verified update.
+Design: retain stored RELAX name with Warm label. Legacy Bass becomes equivalent Custom trims where practical; legacy Night becomes Neutral plus Night listening. Compare is transient, never saved, and ends on dismissal/output change. Preserve USB consent and correction.
+
+Validation: 380 GitHub debug unit tests pass; app and instrumentation APKs build. All 26 affected emulator UI checks pass across six classes (QuickTuningUiTest rerun: 8/8 after replacing an ambiguous generic switch selector). Runtime coverage includes live drag preview before release, signature text, Reset/Compare cleanup, independent Night and large-text cards. Whitespace checks against working tree and master pass. Emulator always_finish_activities restored to 1. Evidence: /tmp/musicmate-simple-sound-build.log, /tmp/musicmate-simple-sound-ui.log and /tmp/musicmate-simple-sound-quick-ui.log. No physical listening comparison performed.
+Device update: adb install -r succeeded on 192.168.1.51:41677; existing app data preserved.
+
+## Clarify playback tuning badge (2026-11-06)
+- [x] Show On/Bypassed status with preset and an active-only Night moon indicator.
+- [x] Explain processing and saved Night state in accessibility text; document badge semantics.
+- [x] Build, verify focused badge behavior and install the updated APK.
+
+Validation: app/test APK builds pass; QuickTuningUiTest passes 9 tests including Night indicators across all five presets, bypass/unavailable/off behavior and accessibility wording. git diff --check and git diff master --check pass. Emulator always_finish_activities restored to 1. Logs: /tmp/musicmate-night-badge-build.log and /tmp/musicmate-night-badge-ui.log.
+Device: updated 192.168.1.51:41677 successfully with adb install -r; app data retained.
+
+## Show correction in playback badge (2026-11-06)
+- [x] Add a secondary correction-profile line, retaining the preset/status hierarchy and Night icon.
+- [x] Verify profile visibility while bypassed, no-correction state and long names at enlarged text.
+- [x] Build, run focused UI checks and install the verified APK.
+
+Validation: GitHub debug app/test builds pass. QuickTuningUiTest passes 10 tests including secondary-line position, long profile at 150% text, bypass retention and No correction; PlaybackTuningUiTest passes 2 tests after updating its stale EQ on/off matcher to On/Bypassed. Badge fits playback and remains tappable at normal/large text. Working-tree and master whitespace checks pass. Emulator always_finish_activities restored to 1. Evidence: /tmp/musicmate-profile-badge-build.log, /tmp/musicmate-profile-badge-ui.log and /tmp/musicmate-profile-badge-playback-ui.log.
+Device: adb install -r succeeded on 192.168.1.51:41677; app data retained.
+
+## Optional correction and independent sound modes (2026-11-06)
+- [x] Remove correction prerequisite in processing and preferences.
+- [x] Enable sound controls without correction and clarify status wording.
+- [x] Verify no-correction behavior, build and install.
+
+Validation: app and instrumentation APK builds pass; full JVM suite 384 tests, zero failures/errors. Focused runtime UI suite passes 21 tests including no-correction quick controls and correction removal in the full editor. DSP tests cover each preset, Night, USB consent, Custom preview/comparison and preference persistence without correction. Legacy transition preserves mode/Night/enablement. git diff --check and git diff master --check pass. Emulator always_finish_activities restored to 1. Installed on 192.168.1.51:41677 with adb install -r successfully; data retained. Logs: /tmp/musicmate-optional-correction-verified.log and /tmp/musicmate-optional-correction-ui.log.
+
+## Simplify audio tuning interface (2026-11-06)
+- [x] Review rendered quick/full tuning and define a simpler control hierarchy.
+- [x] Put sound selection first, consolidate status, and tuck correction setup behind management.
+- [x] Verify touch/scroll, large text, independent correction behavior; build and install.
+
+Validation: app and instrumentation builds pass. Main runtime suite passes 28 tests; selected-description and fixed-header suite passes 3 tests after measuring actual line bounds with 1px rounding tolerance. Reviewed rendered quick/full panels at normal text and full panel at 150%; modes and Night are visible, correction/curve collapsed, no clipping. Working-tree and master whitespace checks pass. Emulator always_finish_activities restored to 1. Logs: /tmp/musicmate-simplify-ui.log, /tmp/musicmate-simplify-complete-ui.log, /tmp/musicmate-simplify-complete-build.log. Screenshots: /tmp/musicmate-tuning-simple.png, /tmp/musicmate-dsp-simple.png, /tmp/musicmate-dsp-simple-large.png. Installed successfully on 192.168.1.51:41677 with data retained; streamed transfer stalled, final file-based install succeeded. Evidence: /tmp/musicmate-simplify-device-install.log.

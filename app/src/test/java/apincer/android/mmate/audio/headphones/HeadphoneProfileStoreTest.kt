@@ -15,6 +15,28 @@ class HeadphoneProfileStoreTest {
 
     private fun profile() = HeadphoneProfileParser.parse("Preamp: -5.5 dB\nFilter 1: ON PK Fc 1000 Hz Gain -3 dB Q 1.4", "HD 600", "AutoEq.txt")
 
+    @Test fun legacyModesMigrateWithoutLosingOtherBindingsOrUserSettings() {
+        val file = File(folder.root, "legacy.json")
+        file.writeText("""{"bindings":{
+            "bt:bass":{"soundMode":"BASS","trebleDb":-2.5,"enabled":true},
+            "usb:night":{"soundMode":"NIGHT","usbEqAllowed":true,"bassDb":1.5},
+            "bt:sleep":{"soundMode":"SLEEP"},
+            "bt:drive":{"soundMode":"DRIVE"},
+            "bt:focus":{"soundMode":"FOCUS"}
+        }}""")
+        val store = HeadphoneProfileStore(file)
+        val migrated = store.load()
+        assertEquals(HeadphoneBinding(enabled = true, soundMode = SoundMode.CUSTOM, bassDb = 4.0, trebleDb = -2.5), migrated.bindings["bt:bass"])
+        assertEquals(HeadphoneBinding(soundMode = SoundMode.REFERENCE, usbEqAllowed = true, bassDb = 1.5, nightListening = true), migrated.bindings["usb:night"])
+        assertEquals(true, migrated.bindings.getValue("bt:sleep").nightListening)
+        assertEquals(SoundMode.LIVELY, migrated.bindings.getValue("bt:drive").soundMode)
+        assertEquals(SoundMode.RELAX, migrated.bindings.getValue("bt:focus").soundMode)
+        assertEquals(migrated, store.load())
+        assertEquals(false, file.readText().contains("NIGHT"))
+        store.save(migrated.copy(bindings = migrated.bindings.mapValues { it.value.copy(nightListening = false) }))
+        assertEquals(false, store.load().bindings.values.any { it.nightListening })
+    }
+
     @Test fun outputAndCalibrationMethodSurviveReopenIncludingMeasuredFlatCorrections() {
         val flat = profile().copy(bands = emptyList(),
             output = apincer.android.mmate.audio.calibration.CalibrationOutput.SPEAKER,
@@ -29,7 +51,7 @@ class HeadphoneProfileStoreTest {
         val file = File(folder.root, "settings/headphones.json")
         val profile = profile()
         val library = HeadphoneLibrary(listOf(profile), mapOf(
-            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true, SoundMode.BASS),
+            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true, SoundMode.RELAX, nightListening = true),
             "bt:AA:BB" to HeadphoneBinding(profile.id, false, -3.0, 1.0)
         ))
         HeadphoneProfileStore(file).save(library)

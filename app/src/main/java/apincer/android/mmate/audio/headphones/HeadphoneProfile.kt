@@ -38,8 +38,16 @@ data class HeadphoneBinding(
     val trebleDb: Double = 0.0,
     val usbEqAllowed: Boolean = false,
     /** Legacy files default to Custom so their saved trims retain their sound. */
-    val soundMode: SoundMode = SoundMode.CUSTOM
-)
+    val soundMode: SoundMode = SoundMode.CUSTOM,
+    val nightListening: Boolean = false
+) {
+    /** Bass migration keeps its shelf approximately; its old mid cut is intentionally retired. */
+    internal fun migrated(): HeadphoneBinding = when (soundMode) {
+        SoundMode.NIGHT -> copy(soundMode = SoundMode.REFERENCE, nightListening = true)
+        SoundMode.BASS -> copy(soundMode = SoundMode.CUSTOM, bassDb = 4.0)
+        else -> this
+    }
+}
 
 @Serializable
 data class HeadphoneLibrary(

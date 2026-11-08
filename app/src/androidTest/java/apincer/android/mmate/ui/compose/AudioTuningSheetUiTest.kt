@@ -47,10 +47,11 @@ class AudioTuningSheetUiTest {
                 }
             }
         }
+        compose.onNodeWithText("Correction").performScrollTo().performClick()
         compose.onNodeWithText("Speaker").performScrollTo().performClick()
         compose.onNodeWithText("Vocal").performScrollTo().assertIsEnabled().performClick()
         compose.runOnIdle { assertEquals(SoundMode.VOCAL, chosenMode) }
-        compose.onNodeWithText("Studio headphones").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("CORRECTION PROFILE").performScrollTo().assertIsDisplayed()
     }
 
     private fun verifySwipe(compact: Boolean) {
@@ -108,9 +109,11 @@ class AudioTuningSheetUiTest {
         compose.onNodeWithText("Studio headphones").assertIsDisplayed()
         compose.waitForIdle()
         screenshot("dsp-$name")
+        compose.onNodeWithText("Response curve").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Combined correction and sound mode EQ curve").performScrollTo()
         screenshot("dsp-$name-response")
-        compose.onNodeWithText("Bass").performScrollTo().performClick().assertIsSelected()
+        compose.onNodeWithText("Vocal").performScrollTo().performClick().assertIsSelected()
+        compose.onNodeWithText("Correction").performScrollTo().performClick()
         compose.onNodeWithText("Manage profiles").performScrollTo().performClick()
         compose.onNodeWithText("Delete profile").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Listening").performScrollTo().performClick()

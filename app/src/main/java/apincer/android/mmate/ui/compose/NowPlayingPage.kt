@@ -477,9 +477,10 @@ fun NowPlayingPage(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                        if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO") {
+                        val remoteTarget = state.remoteTarget.value
+                        if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO" || remoteTarget != null) {
                             // Wrap the controls at large text sizes instead of squeezing the device badge.
-                            AudioTuningChip()
+                            AudioTuningChip(remoteTarget = remoteTarget)
                         }
                         }
                     }

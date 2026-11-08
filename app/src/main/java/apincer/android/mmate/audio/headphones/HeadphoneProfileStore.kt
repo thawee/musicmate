@@ -26,7 +26,14 @@ class HeadphoneProfileStore(private val file: File) {
                 }
                 bytes.toString(Charsets.UTF_8.name())
             }
-            json.decodeFromString<HeadphoneLibrary>(content).also(HeadphoneValidation::library)
+            json.decodeFromString<HeadphoneLibrary>(content).also(HeadphoneValidation::library).let { saved ->
+                val migrated = saved.copy(bindings = saved.bindings.mapValues { it.value.migrated() })
+                if (migrated != saved) {
+                    // An unavailable rewrite must not discard a usable decoded library.
+                    try { save(migrated) } catch (_: IOException) { /* Retry with the next save. */ }
+                }
+                migrated
+            }
         } catch (_: IllegalArgumentException) {
             HeadphoneLibrary()
         } catch (_: IOException) {

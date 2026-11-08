@@ -152,7 +152,12 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
         }
 
         val irPower = power(output, irStart)
-        val noisePower = power(output, noiseStart)
+        // A late reflection can occupy the first noise window. Prefer the quieter whole
+        // window after the response has decayed, without selecting individual quiet bands.
+        // The independent raw before/after noise check below still rejects noisy captures.
+        val earlyNoise = power(output, noiseStart)
+        val lateNoise = power(output, validEnd - window)
+        val noisePower = if (lateNoise.sum() < earlyNoise.sum()) lateNoise else earlyNoise
         val noiseRms = sqrt(noisePower.sum() / noisePower.size)
         val peakRms = sqrt(irPower.sum() / irPower.size)
         if (peakRms < noiseRms * MIN_PEAK_RATIO) {

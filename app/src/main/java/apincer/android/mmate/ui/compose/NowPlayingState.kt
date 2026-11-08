@@ -48,4 +48,6 @@ class NowPlayingState {
     val targetDetails = mutableStateOf("")
     /** Local playback that is not on a USB DAC, where Car DSP can run. */
     val carDspAvailable = mutableStateOf(false)
+    /** The renderer or app playing instead of this phone, where on-device tuning cannot run. */
+    val remoteTarget = mutableStateOf<String?>(null)
 }

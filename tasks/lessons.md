@@ -1,3 +1,4 @@
+- **Review the music vocabulary itself:** When asked to review default music styles, assess the existing entries and their musical meaning before proposing picker labels or interaction changes.
 - **Keep searchable matches in Audio Auto settings:** The genre/style dropdown request applies to Audio mode → Auto settings → Add/Edit match, not changes to the tag editor. Reuse MusicMate's existing default lists and filtering control without changing the tag editor.
 - **Keep playback tuning focused:** The Now Playing tuning action should prioritize saved profile and sound-mode selection, with direct access to profile creation and the full editor. Keep calibration forms and response details in the full editor.
 - **Design tuning as an audio tool, not a stacked settings form:** A long column of default outlined buttons and explanatory paragraphs made DSP tuning feel cheap. Establish a clear output/profile/response hierarchy, style controls consistently with Music Mate, and inspect real emulator screenshots before calling a UI redesign complete.
@@ -560,3 +561,7 @@
 - **Playback transport needs reachability beyond minimum touch size:** Previous and Next must be visually prominent with generous targets and separation for in-car use. Inspect the actual playback layout, keep secondary controls away from the main transport, and verify compact widths before calling the controls easy to access.
 
 - **Separate transport visual hierarchy from hit area:** Larger touch targets do not require equally large visible circles. Keep Previous/Next visually subordinate to Play/Pause (about two-thirds diameter when requested), while retaining generous non-overlapping hit areas and verify the rendered result.
+
+- Verify UI and processing gates before claiming sound modes work without correction; cover the no-profile path in tests.
+
+- Treat repeated reports of clutter as a hierarchy problem: review the whole rendered tuning flow, reduce competing sections and management actions before adding more copy or controls.

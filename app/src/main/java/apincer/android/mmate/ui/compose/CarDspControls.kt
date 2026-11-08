@@ -29,8 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,9 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.audio.dsp.CarDspChoice
 import apincer.android.mmate.audio.dsp.CarDspPreferences
-import apincer.android.mmate.audio.dsp.AutoSoundPreferences
 import apincer.android.mmate.audio.dsp.SoundMode
-import kotlin.math.roundToInt
 
 /** Compatibility entry point for the shared playback tuning chip. */
 @Composable
@@ -67,38 +63,47 @@ fun CarDspDialog(choice: CarDspChoice, onChange: (CarDspChoice) -> Unit, onDismi
 /** Sound-mode-only speaker playback remains available before a correction is selected. */
 @Composable
 internal fun LegacySpeakerSoundModes(compact: Boolean = false, available: Boolean = true, busy: Boolean = false,
-    showStatus: Boolean = true, onEditCustom: () -> Unit = {}) {
+    showStatus: Boolean = true) {
     val context = LocalContext.current
     val choice by CarDspPreferences.state.collectAsState()
     val audibility = legacySpeakerAudibility(available, choice.enabled)
     if (showStatus) LegacySpeakerStatus(available, busy)
-    AutoTuningSoundModes(choice.mode, available && !busy) { mode ->
+    TuningSoundModes(choice.mode, available && !busy) { mode ->
         CarDspPreferences.update(context, choice.copy(mode = mode))
     }
-    if (!AutoSoundPreferences.state.collectAsState().value.config.enabled && choice.mode == SoundMode.CUSTOM) {
-        if (compact) {
-            TextButton(onClick = onEditCustom) { Text("Edit Custom", color = MusicMateDesignTokens.Brand.Gold) }
-        } else {
-            TrimSlider("Bass", choice.bassDb, available && !busy) { CarDspPreferences.update(context, choice.copy(bassDb = it)) }
-            TrimSlider("Treble", choice.trebleDb, available && !busy) { CarDspPreferences.update(context, choice.copy(trebleDb = it)) }
-        }
+    val comparing by CarDspPreferences.comparingCustom.collectAsState()
+    if (choice.mode == SoundMode.CUSTOM) {
+        CustomSoundControls(choice.profileId, choice.bassDb, choice.trebleDb, choice.nightListening,
+            enabled = available && !busy, canCompare = available && choice.enabled, rangeDb = SoundMode.TRIM_DB.toFloat(),
+            onAdjust = { bass, treble -> CarDspPreferences.previewCustomTrims(bass, treble) },
+            onAdjustFinished = { bass, treble -> CarDspPreferences.update(context,
+                CarDspPreferences.state.value.copy(bassDb = bass, trebleDb = treble)) },
+            onCompare = { CarDspPreferences.setCustomComparison(it) },
+            onPreviewEnd = { CarDspPreferences.clearCustomPreview() })
     }
-    if (!compact) TuningResponseCurve(choice.correction + AutoSoundPreferences.effectiveMode(choice.mode).bands(choice.bassDb, choice.trebleDb), AutoSoundPreferences.effectiveMode(choice.mode),
+    NightListeningControl(choice.nightListening, available && !busy) {
+        CarDspPreferences.update(context, CarDspPreferences.state.value.copy(nightListening = it))
+    }
+    if (!compact) TuningDisclosure("Response curve") {
+        TuningResponseCurve(choice.settings(comparingCustom = comparing)?.bands
+        ?: (choice.correction + if (comparing && choice.mode == SoundMode.CUSTOM) emptyList() else choice.mode.bands(choice.bassDb, choice.trebleDb)), choice.mode,
         active = available && choice.enabled, previewState = audibility.label)
+    }
 }
 
 @Composable
-internal fun LegacySpeakerStatus(available: Boolean = true, busy: Boolean = false) {
+internal fun LegacySpeakerStatus(available: Boolean = true, busy: Boolean = false, remoteTarget: String? = null) {
     val context = LocalContext.current
     val choice by CarDspPreferences.state.collectAsState()
-    TuningStatusControl(legacySpeakerAudibility(available, choice.enabled), choice.enabled, available && !busy,
-        { CarDspPreferences.update(context, choice.copy(enabled = it)) }, switchLabel = "Enable speaker sound mode")
+    TuningStatusControl(legacySpeakerAudibility(available, choice.enabled, remoteTarget), choice.enabled, available && !busy,
+        { CarDspPreferences.update(context, choice.copy(enabled = it)) })
 }
 
-private fun legacySpeakerAudibility(available: Boolean, enabled: Boolean): TuningAudibility = when {
+private fun legacySpeakerAudibility(available: Boolean, enabled: Boolean, remoteTarget: String? = null): TuningAudibility = when {
+    remoteTarget != null -> NOT_APPLIED_TO_PLAYER
     !available -> TuningAudibility("Unavailable", "Connect a compatible speaker output")
-    enabled -> TuningAudibility("Active", "Speaker sound mode is applied")
-    else -> TuningAudibility("Bypassed", "Your profile and sound mode are saved")
+    enabled -> TuningAudibility("EQ on", "Speaker sound mode is applied")
+    else -> TuningAudibility("EQ off", "Your profile and sound mode are saved")
 }
 
 /** What the chosen mode and car correction do together, 20 Hz to 20 kHz; the scale is ±6 dB, wider when the curve needs it. */
@@ -161,37 +166,6 @@ internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand
 }
 
 private const val CURVE_POINTS = 120
-
-/** Bass or treble trim in 0.5 dB steps across +/-[SoundMode.TRIM_DB]. */
-@Composable
-private fun TrimSlider(label: String, valueDb: Double, enabled: Boolean = true, onChange: (Double) -> Unit) {
-    val range = SoundMode.TRIM_DB.toFloat()
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        Text(
-            text = "$label %+.1f dB".format(valueDb),
-            color = MusicMateDesignTokens.Text.Telemetry,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
-        )
-        Slider(
-            value = valueDb.toFloat(),
-            enabled = enabled,
-            onValueChange = { onChange((it * 2).roundToInt() / 2.0) },
-            valueRange = -range..range,
-            // 0.5 dB stops between the ends
-            steps = (range * 4).roundToInt() - 1,
-            colors = SliderDefaults.colors(
-                thumbColor = MusicMateDesignTokens.Brand.Gold,
-                activeTrackColor = MusicMateDesignTokens.Brand.Gold,
-                inactiveTrackColor = MusicMateDesignTokens.Controls.TrackInactive,
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent
-            ),
-            modifier = Modifier.semantics { contentDescription = "$label trim" }
-        )
-    }
-}
 
 @Composable
 private fun ChipText(text: String, modifier: Modifier = Modifier, overflow: TextOverflow = TextOverflow.Clip, dimmed: Boolean = false) {

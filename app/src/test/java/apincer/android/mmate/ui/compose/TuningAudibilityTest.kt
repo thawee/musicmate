@@ -10,10 +10,20 @@ class TuningAudibilityTest {
     private val wired = HeadphoneEndpoint("wired", "Wired headphones", false, wired = true)
     private val usb = HeadphoneEndpoint("usb:test", "DAC", true)
 
-    @Test fun missingRouteAndMissingProfileExplainUnavailableProcessing() {
+    @Test fun missingRouteIsUnavailableButCorrectionIsOptional() {
         assertEquals(TuningAudibility("Unavailable", "Connect a compatible output"), tuningAudibility(HeadphoneStatus()))
-        assertEquals(TuningAudibility("Unavailable", "Select a profile to enable correction"),
+        assertEquals(TuningAudibility("EQ off", "Your profile and sound mode are saved"),
             tuningAudibility(HeadphoneStatus(wired)))
+    }
+
+    @Test fun remotePlayerIsUnavailableEvenWhenLocalOutputIsActive() {
+        assertEquals(TuningAudibility("Unavailable", "Not applied to the current player"),
+            tuningAudibility(HeadphoneStatus(wired, HeadphoneBinding(enabled = true), active = true), "Living Room"))
+    }
+
+    @Test fun soundModeCanBeActiveWithoutCorrection() {
+        assertEquals(TuningAudibility("EQ on", "Sound mode is applied without correction"),
+            tuningAudibility(HeadphoneStatus(wired, HeadphoneBinding(enabled = true), active = true)))
     }
 
     @Test fun incompatibleProfileCannotAppearActive() {
@@ -26,16 +36,16 @@ class TuningAudibilityTest {
     @Test fun savedEnablementAloneDoesNotClaimAudibleProcessing() {
         val binding = HeadphoneBinding(profile.id, true)
         assertEquals("Unavailable", tuningAudibility(HeadphoneStatus(wired, binding, profile)).label)
-        assertEquals("Active", tuningAudibility(HeadphoneStatus(wired, binding, profile, active = true)).label)
+        assertEquals("EQ on", tuningAudibility(HeadphoneStatus(wired, binding, profile, active = true)).label)
     }
 
     @Test fun usbWithoutConsentExplainsHowToEnableRatherThanClaimingActive() {
-        assertEquals(TuningAudibility("Bypassed", "Enable USB EQ to allow sample processing"),
+        assertEquals(TuningAudibility("EQ off", "Enable USB EQ to allow sample processing"),
             tuningAudibility(HeadphoneStatus(usb, HeadphoneBinding(profile.id), profile)))
     }
 
     @Test fun bypassRetainsTheSavedConfiguration() {
-        assertEquals(TuningAudibility("Bypassed", "Your profile and sound mode are saved"),
+        assertEquals(TuningAudibility("EQ off", "Your profile and sound mode are saved"),
             tuningAudibility(HeadphoneStatus(wired, HeadphoneBinding(profile.id), profile)))
     }
 }
