@@ -7,21 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Automatic sound modes:** Auto selects a sound mode from ordered genre/style matches, with an editable fallback and a session hold. Returning to Manual restores the output's saved choice; correction profiles and USB EQ consent stay unchanged.
-- **Searchable Auto matches:** In Audio mode → Auto settings → Add/Edit match, choose Genre or Style and type to filter the default tag list. Custom tag values are also supported.
-
-### Changed
-- **Track organization in Now Playing:** An Organized, NEW or DL badge beside audio quality shows the playing track's organization status without opening Preview. NEW and DL retain their existing incoming-track meaning.
-- **Fairer listening comparisons:** Original and Adjusted musical examples now match average signal levels by turning down the louder version. Left/right balance stays intact; diagnostic tones retain their gain differences. Matching applies only to listening examples, not normal music playback.
-- **Clearer calibration previews:** The listening guide explains that previews contain calibration only and identifies the current playback sound mode. Neutral adds no extra shaping; saving with Custom clears its extra bass and treble trims.
-
-### Fixed
-- **EQ shelf headroom:** Automatic attenuation now checks the full PCM bandwidth, including DC and Nyquist, so shelf boosts outside 20 Hz–20 kHz are accounted for. This reduces avoidable limiter activity; the limiter remains sample-peak based.
-
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.31.0] - 2026-11-08
+
+### Added
+- **Headphone EQ:** Each headphone or earphone output keeps its own correction. Import AutoEQ or Equalizer APO text, or build a DIY profile (bass, mids, treble, balance) from presets such as U-shape and V-shape.
+- **AutoEQ search:** Search AutoEQ headphone measurements in the app. The index is fetched on request and cached for 30 days, and profiles download reliably on networks with a broken IPv6 route.
+- **Musical calibration guide:** Listening calibration walks through Bass impact, Warmth, Vocal naturalness, Clarity and Treble detail, then a final music check, using instrument phrases and real male and female speech. Advanced exposes all five bands.
+
+### Changed
+- **One tuning sheet for every output:** Speakers, headphones and earphones share correction profiles, sound modes and calibration methods. Open it from Audio tuning in the main menu, below Settings, or from the tuning badge in Now Playing. Existing profiles, sound choices and USB EQ consent carry over.
+- **Simpler audio tuning:** Compact sound choices, a smaller output and status header, and collapsed correction and response details. Profile setup stays in the full editor; quick tuning creates correction profiles directly, lists compatible profiles first and shows clearer on/off status.
+- **Five sound choices:** Neutral, Warm, Vocal, Lively and Custom, selected directly for each output. Custom has live tonal descriptions, immediate slider preview, Reset and temporary comparison. Night listening is a separate per-output dynamics setting that works with any choice. Older Bass and Night selections migrate automatically.
+- **Tuning while a renderer plays:** With a DLNA renderer or another app selected, the playback tuning badge stays visible as Unavailable, and quick and full tuning say tuning applies only when Music Mate plays on this phone. Compare is disabled there. The Sound tuning switch is now announced by its visible label.
+- **Playback tuning badge:** Shows the preset and On, Bypassed or Unavailable on one line, with the selected correction below it, including while bypassed. A moon marks active Night listening.
+- **Fairer listening comparisons:** Original and Adjusted musical examples now match average signal levels by turning down the louder version. Left/right balance stays intact; diagnostic tones keep their gain differences. Matching applies only to listening examples, not normal music playback.
+- **Clearer calibration previews:** The listening guide explains that previews contain calibration only and names the current playback sound mode. Neutral adds no extra shaping; saving with Custom clears its extra bass and treble trims.
+- **Track organization in Now Playing:** An Organized, NEW or DL badge beside audio quality shows the playing track's organization status without opening Preview. NEW and DL keep their existing incoming-track meaning.
+- **Playback screen:** The existing keep-screen-awake setting now applies to Now Playing, and output selection is clearer, without the duplicate header action. Previous and Next have larger touch areas, separated from Play/Pause.
+- **Clearer default music styles:** Added Acoustic and renamed Audiophile Vocal to Vocal, Synth-based to Synth-driven, and Groove to Groove-driven. Existing track tags are unchanged.
+- **Song details:** The Play button is outlined.
+
+### Fixed
+- **Sound modes without a correction profile:** Sound modes, Custom and Night listening no longer require a correction profile.
+- **EQ shelf headroom:** Automatic attenuation now checks the full PCM bandwidth, including DC and Nyquist, so shelf boosts outside 20 Hz to 20 kHz are accounted for. This reduces avoidable limiter activity; the limiter remains sample-peak based.
+- **Car playback interruptions:** A Bluetooth disconnect no longer pauses music that continues through Android Auto, and connected controllers such as Android Auto can play, pause and skip but no longer seek within a track. Pause and playback-error causes are logged for diagnosis.
+- **Car calibration:** Calibration survives microphone, fit and save failures, and flags bands masked by engine noise.
+- **Local queue position:** The local queue's current track stays in step with the player at the end of a track, and playback stalls are logged.
 
 ## [3.30.0] - 2026-10-25
 
