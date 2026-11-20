@@ -9,7 +9,8 @@ data class OutputGuardState(val limitedAtMs: Long = 0L, val clippedAtMs: Long = 
 
 /**
  * What the processed output had to do to stay within full scale, for a clip light. The limiter
- * counts from 1 dB of reduction, so a full-scale master meeting the -0.5 dBFS ceiling stays dark. A clip is a sample
+ * counts from 1 dB of reduction. The live lookahead limiter includes a conservative true-peak
+ * allowance, so full-scale material can light this indicator even without EQ boost. A clip is a sample
  * clamped at full scale: leveling alone runs without the limiter, and a float decoder can exceed it.
  */
 object OutputGuard {

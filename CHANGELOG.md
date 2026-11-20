@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.33.0] - 2026-11-20
+
+### Changed
+- **DSP peak protection:** Linked lookahead limiting detects intersample peaks before final PCM quantization, targeting -1 dBTP with an additional 1.2 dB detector allowance. It adds about 6 ms at 48 kHz while tuning is active, preserves the stereo balance, and leaves gain-only playback outside the limiter.
+- **Playback transitions:** Delayed frames drain at track endings and format changes, and partial output writes never process a sample twice. Unity 24/32-bit bypass remains exact at the processing wrapper; Android's existing output conversion still applies.
+- **Limiting indicator:** Reports attenuation actually applied to outgoing frames, including the new conservative peak headroom.
+
+### Validation
+- 268 audio tests passed, including independent 16-times output reconstruction at 44.1, 48, 96 and 192 kHz. Highest tested reconstructed peak: -1.144 dBTP. Phone performance, listening and DAC loopback checks remain pending; these fixtures do not establish a universal peak bound or audible superiority.
+
 ## [3.32.0] - 2026-11-20
 
 ### Added

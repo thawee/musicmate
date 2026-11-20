@@ -154,6 +154,7 @@ Speaker Tuning corrects how your car or a Bluetooth speaker sounds when MusicMat
 
 - **Crossfeed.** In headphone tuning, **Crossfeed** blends a little of each side into the other, the way each ear hears both speakers in a room. Hard-panned old stereo recordings sound less tiring. It works on Bluetooth headphones and, once you allow processing, on a USB DAC, while tuning is on for that output. Each output remembers it. The tuning chip shows *Crossfeed* next to the profile while it is on.
 - **Limiting.** While tuning is on, the tuning chip shows **Limiting** for a few seconds when MusicMate turned a peak down by more than 1 dB to keep it from distorting. A moment now and then is harmless. If it keeps lighting up with a bass boost or a high Pre-Amp Gain, lower one of them.
+- **Peak protection.** Tuning looks slightly ahead to catch peaks between digital samples and turns both channels down together to keep the stereo balance. This adds about 6 ms at 48 kHz. Very loud recordings may play a little quieter; quieter passages are unchanged by the limiter. If loud passages sound flattened or seem to pump, reduce the EQ boost or Pre-Amp Gain. The protection applies while tuning is active; volume leveling alone does not engage it.
 - **Clipping.** The chip shows **Clipping** in red when a peak went past full scale and had to be cut. Lower the Pre-Amp Gain or turn on Prevent Clipping.
 
 ---

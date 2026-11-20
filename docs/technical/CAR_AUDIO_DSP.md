@@ -27,25 +27,26 @@ MusicMate plays locally; when Android routes that playback to the car through An
 
 ```
 Media3 decoder (float for high-res, int16 for CD)
-   -> IntegerPcmAudioOutput.write()
-        DSP off : unchanged path (byte-identical)
+   -> LookaheadAudioSink.handleBuffer()
+        DSP off : unity 24/32-bit PCM remains byte-identical
         DSP on  : to double -> preamp -> correction PEQ (<=10) -> mode filters (<=3)
-                  -> safety limiter -> float input: int24 | int16 input: TPDF-dithered int16
+                  -> linked true-peak lookahead limiter -> integer PCM (24/32-bit)
+   -> IntegerPcmAudioOutput.write() -> output metering
    -> AudioTrack -> Android audio -> Android Auto -> head unit -> cabin
 ```
 
 - Coefficients and filter state in `double`, recomputed per track sample rate (44.1 to 192 kHz). Low-frequency biquads at 192 kHz are not stable in `float`.
-- 16-bit input stays 16-bit out so the AudioTrack is never reopened mid-track.
+- Float and 16-bit input become 24-bit PCM; packed 24/32-bit sources retain their width. Gain, EQ and limiting run in double precision before final quantization.
 - Each input block is filtered once into a staging buffer, as the float path already does with `converted`; a partial `super.write` must never filter a sample twice.
 - Non-finite input (NaN or infinity from a decoder) becomes silence before processing; if a frame still comes out non-finite, it is silenced and the filters reset. A warning is logged once per output. Found on 2026-10-24: Samsung's `c2.sec.flac.decoder` returned noise and NaN for a valid 16-bit FLAC (that file uses 1152-sample blocks), so `FlacDecoderSelector` now puts `c2.android.flac.decoder` first.
 - Speaker DSP bypasses USB DAC media routes (`CarDsp.updateRoute`, fed by the route log). Separate [headphone EQ](HEADPHONE_EQ.md) can process USB only after explicit enablement for that output. Speaker DSP handles float and 16-bit input; headphone EQ also handles packed 24/32-bit PCM.
 - DSP state is read once per buffer. Changes are heard after the queued AudioTrack audio drains (about 0.5 to 1 s).
 - Mode or profile changes crossfade the old and new filter chains over about 30 ms to avoid clicks.
-- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a 1/48-octave grid from 1 Hz to Nyquist, plus band centres and DC/Nyquist endpoints), never positive. Including the full PCM bandwidth accounts for shelf boost outside 20 Hz–20 kHz. This is a sampled response estimate, not a guarantee against transient or inter-sample overs. The limiter (linked across channels, instant attack, about 50 ms release, -0.5 dBFS ceiling) is a sample-peak safety net, not a true-peak limiter or loudness tool. Each processed block reports its lowest limiter gain and any full-scale clamp to `OutputGuard`, which drives the Limiting and Clipping light on the tuning chip, throttled to one update per 250 ms. No compression in any mode except Night's light compressor (section 5).
+- Auto preamp = -(maximum of the combined magnitude response of correction + mode + Custom trims, evaluated on a 1/48-octave grid from 1 Hz to Nyquist, plus band centres and DC/Nyquist endpoints), never positive. Including the full PCM bandwidth accounts for shelf boost outside 20 Hz–20 kHz. This is a sampled response estimate, not a guarantee against transient or inter-sample overs. The live limiter links channels, uses about 5 ms of lookahead plus interpolation context and about 50 ms release, and targets -1 dBTP with an additional 1.2 dB detector allowance. Its four-times ITU Annex 2 interpolator is supplemented by a 96-tap sinc detector for high-frequency boundaries. This finite detector is a safety net, not a mathematical bound on ideal reconstruction or a loudness tool. Lookahead drains at end of stream and format changes; seeks discard old state. At 48 kHz the delay is 288 frames (6 ms); at 192 kHz it is 1008 frames (5.25 ms). Unity bypass adds no delay until DSP first engages; subsequent bypass frames retain that stream delay without attenuation. Each processed block reports its lowest limiter gain and any full-scale clamp to `OutputGuard`, which drives the Limiting and Clipping light on the tuning chip, throttled to one update per 250 ms. No compression in any mode except Night's light compressor (section 5).
 
 ### Sound-quality validation (2026-10-29)
 
-Regression signals exposed missing headroom outside the previous 20 Hz–20 kHz response grid: a +6 dB low shelf at 20 Hz reserved only 3 dB, and a +6 dB high shelf at 8 kHz, rendered at 192 kHz, produced a steady 48 kHz sine sample peak of 1.014539 before limiting. The full-band estimate fixes these cases. Tests also cover transient/multitone sample peaks and linked stereo gain at 44.1, 48, 96 and 192 kHz. These are digital checks, not acoustic measurements or evidence of audible superiority.
+Regression signals exposed missing headroom outside the previous 20 Hz–20 kHz response grid: a +6 dB low shelf at 20 Hz reserved only 3 dB, and a +6 dB high shelf at 8 kHz, rendered at 192 kHz, produced a steady 48 kHz sine sample peak of 1.014539 before limiting. The full-band estimate fixes these cases. Tests also cover transient/multitone sample peaks and linked stereo gain at 44.1, 48, 96 and 192 kHz. These are digital checks, not acoustic measurements or evidence of audible superiority. The live limiter additionally passes independent 16-times, 192-tap output reconstruction fixtures at all four rates, including impulses, near-Nyquist boundaries and amplitude bursts (highest fixture peak: -1.144 dBTP). This finite fixture set does not prove a universal ceiling. Media3 still trims encoder delay/padding downstream of the limiter; device resampling and codecs also remain outside this check. Device CPU, listening and DAC loopback validation remain pending.
 
 On the connected phone with HiBy R3 Bluetooth playback, AudioFlinger showed MusicMate's active 44.1 kHz track feeding a 96 kHz, 32-bit PCM A2DP mixer; AudioService reported LDAC. The track had zero recorded underruns in that snapshot and `BitPerfect=false`. This route resamples before Bluetooth transport. The HAL's PCM format does not establish the codec bitrate, receiver DAC format or end-to-end fidelity. No output settings were changed during inspection.
 

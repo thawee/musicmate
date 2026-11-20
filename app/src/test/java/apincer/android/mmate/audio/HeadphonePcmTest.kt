@@ -78,7 +78,7 @@ class HeadphonePcmTest {
         for (encoding in intArrayOf(C.ENCODING_PCM_24BIT, C.ENCODING_PCM_32BIT)) {
             selection = HeadphoneDsp.Selection(true, null)
             val sink = Sink(Int.MAX_VALUE)
-            val output = providerOutput(sink, encoding)
+            val output = wrapped(sink, encoding)
             val first = pcm(encoding, 4_800)
             writeAll(output, first)
             assertArrayEquals(bytes(pcm(encoding, 4_800)), sink.bytes())

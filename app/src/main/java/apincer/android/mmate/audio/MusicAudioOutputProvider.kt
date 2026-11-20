@@ -7,19 +7,16 @@ import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioOutputProvider.InitializationException
 import androidx.media3.exoplayer.audio.AudioOutputProvider.OutputConfig
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
-import apincer.android.mmate.audio.dsp.CarDspProcessor
 
 /**
  * Opens MusicMate's audio outputs: integer PCM only (float and 16-bit become 24-bit), with the USB DAC
  * asked to run at the track's rate. If Android refuses that output, it retries once with the
- * DAC on Android's default format before reporting the failure to the player. Each output gets its
- * own dormant DSP processor at the track's sample rate, so headphone EQ can be enabled live, and
- * applies [levelingGain] to the samples.
+ * DAC on Android's default format before reporting the failure to the player. Sample processing
+ * belongs to [LookaheadAudioSink], which can drain delayed audio at end of stream.
  */
 class MusicAudioOutputProvider(
     base: AudioOutputProvider,
-    private val usbOutputFormat: UsbOutputFormat,
-    private val levelingGain: () -> Double = { 1.0 }
+    private val usbOutputFormat: UsbOutputFormat
 ) : ForwardingAudioOutputProvider(base) {
 
     override fun getAudioOutput(config: OutputConfig): AudioOutput {
@@ -43,8 +40,7 @@ class MusicAudioOutputProvider(
             usbOutputFormat.clear()
             super.getAudioOutput(trackConfig)
         }
-        val carDsp = if (channelCount > 0) CarDspProcessor(config.sampleRate, channelCount) else null
-        return IntegerPcmAudioOutput(output, config.encoding, channelCount, carDsp, levelingGain)
+        return IntegerPcmAudioOutput(output, config.encoding, channelCount)
     }
 
     private companion object {

@@ -68,7 +68,11 @@ object CarDsp {
  * Changes are picked up only at a block boundary, so a block is processed once even when the
  * AudioTrack takes it in several writes. Each block reports limiting and clamped samples to [OutputGuard].
  */
-class CarDspProcessor(private val sampleRate: Int, private val channels: Int) {
+class CarDspProcessor(
+    private val sampleRate: Int,
+    private val channels: Int,
+    private val samplePeakLimiter: Boolean = true
+) {
     private var settings: CarDspSettings? = CarDsp.effectiveTarget()
     private var chain: DspChain? = chainFor(settings)
     private var fadeFrom: DspChain? = null
@@ -90,6 +94,7 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int) {
     // A new output or a seek starts at the stream's gain instead of ramping into it
     private var snapGain = true
     private var dspActive = false
+    val isDspActive: Boolean get() = dspActive
     private var engaged = false
     private var warnedInput = false
     private var warnedOutput = false
@@ -244,6 +249,16 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int) {
         if (frame.any { !it.isFinite() }) recover()
     }
 
+    /**
+     * Full-precision input/output for the streaming sink. Its lookahead limiter runs after this
+     * stage and before PCM quantization, so EQ transients above full scale are not clipped early.
+     */
+    fun processFrame(samples: DoubleArray) {
+        for (c in 0 until channels) frame[c] = finite(samples[c])
+        processFrame()
+        System.arraycopy(frame, 0, samples, 0, channels)
+    }
+
     /** Linear ramp to a new leveling gain that ends exactly on it, so unity returns to passthrough. */
     private fun level() {
         if (gain != gainTarget) {
@@ -268,7 +283,7 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int) {
             chain?.process(frame)
         }
         compress()
-        limit()
+        if (samplePeakLimiter) limit()
     }
 
     /** A decoder's NaN or infinity becomes silence, so one bad sample cannot stop playback. */

@@ -55,6 +55,7 @@ import apincer.android.mmate.audio.StreamGain;
 import apincer.android.mmate.audio.TrackGain;
 import apincer.android.mmate.audio.MediaRouteLog;
 import apincer.android.mmate.audio.MusicAudioOutputProvider;
+import apincer.android.mmate.audio.LookaheadAudioSink;
 import apincer.android.mmate.audio.UsbOutputFormat;
 
 public class AndroidPlayerController {
@@ -211,16 +212,17 @@ public class AndroidPlayerController {
                             .build();
 
                     MusicAudioOutputProvider outputProvider =
-                            new MusicAudioOutputProvider(baseProvider, usbOutputFormat, streamGain::getCurrent);
+                            new MusicAudioOutputProvider(baseProvider, usbOutputFormat);
 
                     // Float keeps high-resolution sources above 16 bits; IntegerPcmAudioOutput
                     // turns it back into integer PCM before Android sees it. Media3 skips its
                     // speed processor in float mode, so speed requests go to the AudioTrack.
-                    return new DefaultAudioSink.Builder(context)
+                    AudioSink sink = new DefaultAudioSink.Builder(context)
                             .setEnableFloatOutput(true)
                             .setEnableAudioTrackPlaybackParams(true)
                             .setAudioOutputProvider(outputProvider)
                             .build();
+                    return new LookaheadAudioSink(sink, streamGain::getCurrent);
                 }
 
                 @Override
