@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.32.0] - 2026-11-20
+
 ### Added
 - **Mood queues:** A Mood chip in the queue picks Drive, Focus, Wind down or Sleep and keeps adding tracks whose mood or style tags match, in random order. Each mood shows how many tracks match. Sleep stops adding after about 45 minutes.
 - **Picking a queue source replaces what's next:** Choosing a source or mood now swaps the upcoming tracks for tracks from that source, keeping the current track and anything you put next. Undo brings the old queue back, even after trying several sources in a row. Before, a long queue never changed when you picked a source.
@@ -24,10 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Quality badges:** The short badge label now follows the same tier as its color, so a 24-bit track at 44.1 or 48 kHz reads 24-BIT.
 - **Volume leveling settings:** Settings no longer claim EBU R128 leveling. The clipping option now says what it does, "Lowers the gain so peaks don't clip", and the labels use sentence case.
 - **Style tags:** Groove and Synth-based are read as Groove-driven and Synth-driven, the names the tag editor offers. Tags are rewritten to the new names when a track is next saved.
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.31.0] - 2026-11-08
 
