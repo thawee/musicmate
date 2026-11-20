@@ -70,6 +70,7 @@ public class MusixMateApp extends Application implements coil3.SingletonImageLoa
 
         // start music scan
         startMusicScan();
+        apincer.android.mmate.worker.LoudnessWorker.schedule(this);
 
         PlaylistRepository.loadPlaylists(this);
 

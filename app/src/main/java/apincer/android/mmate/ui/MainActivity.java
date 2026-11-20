@@ -324,10 +324,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 // Rounded like the library badge, so both read the same DR
                 nps.getSpecsDr().setValue(dr > 0 ? "DR " + Math.round(dr) : "");
 
-                apincer.music.core.playback.ReplayGainManager.ReplayGainInfo rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(song.getPath());
-                String rgMode = apincer.music.core.Settings.getReplayGainMode(this);
-                nps.getSpecsReplayGain().setValue(rg != null ? rg.getDisplayString(rgMode) : "");
-
                 nps.getSpecsFileSize().setValue(song.getFileSize() > 0 ? android.text.format.Formatter.formatFileSize(this, song.getFileSize()) : "");
 
                 if (songChanged && !isDestroyed() && !isFinishing()) {
@@ -2237,6 +2233,61 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         alert.show();
     }
 
+    private void doMeasureLoudness(List<Track> selections) {
+        if (selections.isEmpty()) return;
+        final AlertDialog[] alertHolder = new AlertDialog[1];
+        final List<Track> failed = new ArrayList<>();
+        apincer.android.mmate.ui.compose.ActionFilesState state = new apincer.android.mmate.ui.compose.ActionFilesState(selections);
+
+        View cview = apincer.android.mmate.ui.compose.DialogInterop.createActionFilesDialogView(
+            this,
+            getString(R.string.measure_loudness_title),
+            R.drawable.rounded_equalizer_24,
+            state,
+            getString(R.string.measure_loudness_confirm),
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> { if(alertHolder[0] != null) alertHolder[0].dismiss(); },
+            () -> {
+                state.setBusy(true);
+                state.setProgress(FileOperationTask.getInitialProgress(selections.size()));
+                operationTask.measureLoudness(getApplicationContext(), selections,
+                        new FileOperationTask.ProgressCallback() {
+                            @Override
+                            public void onProgress(Track tag, int progress, String status) {
+                                runOnUiThread(() -> {
+                                    state.updateStatus(tag, status);
+                                    state.setProgress(progress);
+                                    if (FileOperationTask.isFailureStatus(status)) failed.add(tag);
+                                });
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                runOnUiThread(() -> {
+                                    state.setBusy(false);
+                                    if(alertHolder[0] != null) alertHolder[0].dismiss();
+                                    showFileOperationFailures(getString(R.string.measure_loudness_failures), failed, selections.size());
+                                });
+                            }
+                        });
+            }
+        );
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+
+        alertHolder[0] = alert;
+        alert.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        if (alert.getWindow() != null) {
+            alert.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+        alert.show();
+    }
+
     private void doEncodeAudioFiles(List<Track> selections) {
         if (selections.isEmpty()) return;
         final List<Track> failed = new ArrayList<>();
@@ -2396,6 +2447,10 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
                 return true;
             } else if (id == R.id.action_encoding_file) {
                 doEncodeAudioFiles(getSelections());
+                mode.finish();
+                return true;
+            } else if (id == R.id.action_measure_loudness) {
+                doMeasureLoudness(getSelections());
                 mode.finish();
                 return true;
             } else if (id == R.id.action_delete) {

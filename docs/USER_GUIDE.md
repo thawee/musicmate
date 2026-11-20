@@ -150,6 +150,12 @@ Speaker Tuning corrects how your car or a Bluetooth speaker sounds when MusicMat
 - **Several cars and speakers.** Each one you tune is listed in the dialog; tap one to switch. MusicMate follows where the music plays: a Bluetooth speaker's tuning turns on when music plays through that speaker, and a car's tuning turns on when music plays through Android Auto in that car. On the phone speaker, headphones or anything not tuned, **No correction** returns, so an EQ never follows you elsewhere. A speaker you pick by hand stays until the music moves to another output. To be recognised in Android Auto, tune the car while Android Auto is playing. With two tuned cars, MusicMate tells them apart by the Bluetooth link each car makes when the drive starts, so allow MusicMate's Nearby devices permission.
 - **Headphones.** The phone's microphone cannot measure headphones, so don't tune them.
 
+### Crossfeed and the Limiting light
+
+- **Crossfeed.** In headphone tuning, **Crossfeed** blends a little of each side into the other, the way each ear hears both speakers in a room. Hard-panned old stereo recordings sound less tiring. It works on Bluetooth headphones and, once you allow processing, on a USB DAC, while tuning is on for that output. Each output remembers it. The tuning chip shows *Crossfeed* next to the profile while it is on.
+- **Limiting.** While tuning is on, the tuning chip shows **Limiting** for a few seconds when MusicMate turned a peak down by more than 1 dB to keep it from distorting. A moment now and then is harmless. If it keeps lighting up with a bass boost or a high Pre-Amp Gain, lower one of them.
+- **Clipping.** The chip shows **Clipping** in red when a peak went past full scale and had to be cut. Lower the Pre-Amp Gain or turn on Prevent Clipping.
+
 ---
 
 ## 6. Streaming to other devices
@@ -248,8 +254,11 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
   - **Play tracks** (default): tap plays, and press and hold opens the details.
   - **Edit tags**: tap opens the details, and press and hold starts selecting several songs.
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
+  - **Target loudness** sets how loud leveled songs play. **−14 LUFS, streaming** (the default) matches streaming services and turns loud songs down less. **−18 LUFS, ReplayGain** is the ReplayGain standard and leaves more headroom. Songs without ReplayGain tags are turned down to about the target.
   - **Pre-Amp Gain** raises or lowers the result.
-  - **Prevent Clipping** stops loud peaks from distorting.
+  - **Prevent Clipping** stops loud peaks from distorting. With it on, a quiet song can also be raised, until its loudest peak reaches full scale.
+  - MusicMate applies leveling to the audio itself, before any headphone or car tuning, and keeps Android's volume at full. 16-bit songs are sent to Android as 24-bit, so leveling adds no rounding noise.
+  - **Measure loudness while charging** writes ReplayGain tags into songs that have none, in hourly runs while the phone charges. To tag songs now, select them (with **Edit tags** as the tap action) and choose **Measure loudness** from the selection menu. Selecting a whole album also writes album gain.
 - **Speaker Tuning** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, rename one with the pencil button (its Bluetooth name stays visible underneath), delete one, or tune another. See [Speaker Tuning](#speaker-tuning).
 - **Display options.**
   - Show storage use in the menu.

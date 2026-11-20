@@ -44,6 +44,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,7 +87,7 @@ fun PlaylistPickerDialog(
     )
 
     val playlists = remember {
-        PlaylistRepository.getPlaylists() ?: emptyList()
+        PlaylistRepository.getPlaylists()?.filterNot { it.isMood } ?: emptyList()
     }
 
     Dialog(
@@ -95,7 +96,7 @@ fun PlaylistPickerDialog(
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = Color(0xF2161618),
+            color = MusicMateDesignTokens.Surfaces.Dialog,
             border = BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderPrimary),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
@@ -122,20 +123,20 @@ fun PlaylistPickerDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
                             contentDescription = null,
-                            tint = Color(0xFFBA68C8),
+                            tint = MusicMateDesignTokens.SourceAccent.Playlist,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Load from Playlist",
+                                text = stringResource(R.string.queue_picker_title),
                                 color = Color.White,
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = (-0.3).sp
                             )
                             Text(
-                                text = "Play immediately, add to queue, or auto-refill",
+                                text = stringResource(R.string.queue_picker_subtitle),
                                 color = Color(0x99FFFFFF),
                                 fontSize = 11.sp
                             )
@@ -148,7 +149,7 @@ fun PlaylistPickerDialog(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.round_close_24),
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = Color.White.copy(alpha = 0.8f),
                             modifier = Modifier.size(22.dp)
                         )
@@ -169,7 +170,7 @@ fun PlaylistPickerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No playlists found in library.",
+                            text = stringResource(R.string.queue_picker_empty),
                             color = Color(0x88FFFFFF),
                             fontSize = 13.sp
                         )
@@ -188,12 +189,12 @@ fun PlaylistPickerDialog(
                             val isActive = entry.name != null && entry.name.equals(activePlaylistName, ignoreCase = true)
                             val badgeInfo = remember(entry) {
                                 when {
-                                    entry.minDrScore >= 12.0 -> "DR12+" to Color(0xFFFFB300)
-                                    entry.isHiresOnly -> "Hi-Res" to Color(0xFF00E5FF)
-                                    entry.isDsdOnly -> "DSD" to Color(0xFFBA68C8)
-                                    entry.isLosslessOnly -> "Lossless" to Color(0xFF26A69A)
-                                    PlaylistEntry.TYPE_SMART.equals(entry.type, ignoreCase = true) -> "Smart" to Color(0xFF00E676)
-                                    else -> "Playlist" to Color(0xFF90A4AE)
+                                    entry.minDrScore >= 12.0 -> R.string.queue_playlist_badge_dr12 to MusicMateDesignTokens.Brand.GoldAmber
+                                    entry.isHiresOnly -> R.string.queue_playlist_badge_hires to MusicMateDesignTokens.AudioProvenance.HiResGold
+                                    entry.isDsdOnly -> R.string.queue_playlist_badge_dsd to MusicMateDesignTokens.AudioProvenance.DsdCyan
+                                    entry.isLosslessOnly -> R.string.queue_playlist_badge_lossless to MusicMateDesignTokens.AudioProvenance.CdSkyBlue
+                                    PlaylistEntry.TYPE_SMART.equals(entry.type, ignoreCase = true) -> R.string.queue_playlist_badge_smart to MusicMateDesignTokens.SourceAccent.Playlist
+                                    else -> R.string.queue_playlist_badge_playlist to MusicMateDesignTokens.Text.Muted
                                 }
                             }
 
@@ -201,14 +202,14 @@ fun PlaylistPickerDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(if (isActive) Color(0x1FBA68C8) else Color(0x0EFFFFFF))
+                                    .background(if (isActive) MusicMateDesignTokens.SourceAccent.Playlist.copy(alpha = 0.12f) else MusicMateDesignTokens.Surfaces.RowFill)
                                     .border(
                                         0.75.dp,
-                                        if (isActive) Color(0x80BA68C8) else Color(0x1AFFFFFF),
+                                        if (isActive) MusicMateDesignTokens.SourceAccent.Playlist.copy(alpha = 0.5f) else MusicMateDesignTokens.Surfaces.BorderSubtle,
                                         RoundedCornerShape(14.dp)
                                     )
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         onPlayAll(entry)
                                         onDismissRequest()
                                     }
@@ -226,7 +227,7 @@ fun PlaylistPickerDialog(
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = badgeInfo.first,
+                                                text = stringResource(badgeInfo.first),
                                                 color = badgeInfo.second,
                                                 fontSize = 10.sp,
                                                 fontFamily = FontFamily.Monospace,
@@ -239,13 +240,13 @@ fun PlaylistPickerDialog(
                                                 modifier = Modifier
                                                     .size(6.dp)
                                                     .clip(CircleShape)
-                                                    .background(Color(0xFF00E676))
+                                                    .background(MusicMateDesignTokens.Status.Positive)
                                             )
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = entry.name ?: "Unnamed Playlist",
+                                        text = entry.name ?: stringResource(R.string.queue_picker_unnamed),
                                         color = Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -274,7 +275,7 @@ fun PlaylistPickerDialog(
                                     // 1. Play All (Replaces queue)
                                     IconButton(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onPlayAll(entry)
                                             onDismissRequest()
                                         },
@@ -282,7 +283,7 @@ fun PlaylistPickerDialog(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_baseline_playlist_play_24),
-                                            contentDescription = "Play All",
+                                            contentDescription = stringResource(R.string.queue_picker_play_all),
                                             tint = MusicMateDesignTokens.Brand.Gold,
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -291,7 +292,7 @@ fun PlaylistPickerDialog(
                                     // 2. Enqueue (Appends to queue)
                                     IconButton(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onEnqueue(entry)
                                             onDismissRequest()
                                         },
@@ -299,8 +300,8 @@ fun PlaylistPickerDialog(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.rounded_playlist_add_24),
-                                            contentDescription = "Add to Queue",
-                                            tint = Color(0xFF00E5FF),
+                                            contentDescription = stringResource(R.string.queue_picker_add_to_queue),
+                                            tint = MusicMateDesignTokens.SourceAccent.UserAdded,
                                             modifier = Modifier.size(19.dp)
                                         )
                                     }
@@ -308,7 +309,7 @@ fun PlaylistPickerDialog(
                                     // 3. Set as Smart Auto-Refill Source
                                     IconButton(
                                         onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onSetSmartSource(entry)
                                             onDismissRequest()
                                         },
@@ -316,8 +317,8 @@ fun PlaylistPickerDialog(
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.round_auto_awesome_24),
-                                            contentDescription = "Auto-Fill from Playlist",
-                                            tint = Color(0xFF00E676),
+                                            contentDescription = stringResource(R.string.queue_picker_keep_adding),
+                                            tint = MusicMateDesignTokens.SourceAccent.Playlist,
                                             modifier = Modifier.size(17.dp)
                                         )
                                     }

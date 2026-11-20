@@ -271,7 +271,7 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
 
 ## 8. Active ReplayGain 2.0 / EBU R128 Loudness Leveling Architecture
 
-`ReplayGainManager.java` levels loudness by changing software volume.
+`ReplayGainManager.java` computes each track's leveling gain, and the app's PCM output multiplies the samples by it before any DSP. The AudioTrack and ExoPlayer volume stay at 1.0, so Android's mixer never scales the audio.
 
 ```
                   ┌──────────────────────────────────────────────┐
@@ -279,28 +279,41 @@ MusicMate monitors and controls external audiophile players via `AndroidPlayerCo
                   │ Reads: REPLAYGAIN_TRACK_GAIN / TRACK_PEAK    │
                   │ Reads: REPLAYGAIN_ALBUM_GAIN / ALBUM_PEAK    │
                   └──────────────────────┬───────────────────────┘
-                                         │
+                                         │ buildMediaItem (main thread)
                                          ▼
                   ┌──────────────────────────────────────────────┐
-                  │            ReplayGainManager                 │
-                  │  Gain Scalar = 10^((gainDb + preAmpDb) / 20) │
-                  │  Peak Guard: scalar * peak <= 1.0            │
+                  │            ReplayGainManager.level           │
+                  │  dB = gain + (target - (-18)) + preAmp       │
+                  │  Ceiling: min(1/peak, +12 dB) with the guard │
+                  │  Result → TrackGain, the MediaItem's tag     │
                   └──────────────────────┬───────────────────────┘
-                                         │
+                                         │ LevelingAudioRenderer
                                          ▼
                   ┌──────────────────────────────────────────────┐
-                  │          AndroidPlayerController             │
-                  │  ExoPlayer.setVolume(clampedScalar)          │
-                  │  Recalculated on onMediaItemTransition()     │
+                  │  StreamGain: gain of the stream being output │
+                  │  Switches when the renderer outputs the      │
+                  │  first buffer of the next gapless stream     │
+                  └──────────────────────┬───────────────────────┘
+                                         │ IntegerPcmAudioOutput.write
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │  CarDspProcessor: gain (20 ms ramp) → DSP    │
+                  │  Float and 16-bit out as 24-bit integer      │
                   └──────────────────────────────────────────────┘
 ```
 
 - **Loudness Modes:**
-  - `Track Gain`: Normalizes every song to standard $-18\text{ LUFS}$ / $89\text{ dB SPL}$.
+  - `Track Gain`: Normalizes every song to the target loudness.
   - `Album Gain`: Preserves intentional dynamic volume contrasts across multi-track concept albums.
   - `Off`: Passes unmodified linear output (fixed $1.0$).
-- **Anti-Clipping True-Peak Guard:** Prevents digital clipping distortion by evaluating $scalar \times peak \le 1.0$. If the boosted scalar would exceed full scale ($0\text{ dBFS}$), it is automatically clamped down.
+- **Target loudness:** `PREF_REPLAYGAIN_TARGET` is $-14\text{ LUFS}$ (streaming, the default) or $-18\text{ LUFS}$ (the ReplayGain 2 reference). Tags are relative to $-18$, so the target adds $target + 18$ dB. An untagged track is assumed to be a $-9\text{ LUFS}$ master and is lowered to the target, never raised.
+- **Anti-Clipping True-Peak Guard:** With the guard on, the gain may raise a quiet track until its tagged peak reaches full scale, capped at +12 dB so a bad peak tag cannot make a track deafening. With the guard off, the gain is never above 0 dB.
+- **Where the gain is applied:** `IntegerPcmAudioOutput` passes `levelingGain()` to `CarDspProcessor.beginBlock`. A new output or a seek starts at the stream's gain. A change during playback ramps linearly over 20 ms and ends exactly on the new value. Gain alone skips the safety limiter, because the guard already keeps the peak below full scale. At unity gain with DSP bypassed, 24/32-bit PCM is passed through byte for byte and 16-bit is only widened to 24-bit. Any gain other than unity, including on a USB DAC without headphone EQ, is computed in double precision and written as 24-bit, so 16-bit sources gain no 16-bit rounding or dither.
+- **Gapless boundary:** `LevelingAudioRenderer` notes each stream's `TrackGain` in `onStreamChanged`, before the base renderer may report the first stream's offset. `StreamGain.outputStreamChanged` switches the gain when `MediaCodecRenderer` reports the new output stream offset, which happens after the last buffer of the previous stream is processed. `onPositionReset` republishes the gain because a seek takes up a pending stream silently, and `onDisabled` clears it. For MP3 and AAC, the sink's trimming processor can hold back a few frames of the previous track, which then play at the new track's gain; the error is bounded by the encoder padding.
+- **Settings changes:** A change to mode, target, pre-amp, clipping guard, or tags rewrites the gain of every queued `TrackGain` and calls `StreamGain.refresh()`, so the playing track ramps to its new gain.
+- **Not merged with the EQ pre-cut:** The DSP chain keeps its own pre-amp. Folding a per-track leveling gain into it would undo leveling.
 - **Cross-Player Metadata Parity:** Loudness tags analyzed by MusicMate are written back to standardized Vorbis Comments (`REPLAYGAIN_TRACK_GAIN`, `REPLAYGAIN_TRACK_PEAK`), ID3v2 TXXX, and MP4 tags via Jaudiotagger, ensuring full interoperability with Poweramp, UAPP, Foobar2000, and Neutron.
+- **Measuring loudness:** `FFMpegHelper.measureLoudness` runs ffmpeg `ebur128=peak=true` and `Loudness.parseEbur128` reads only the Summary block (integrated LUFS and true peak); track gain is $-18 - I$. `LoudnessTagger` measures one album group at a time and writes album gain only when every library track of that album was measured, using the duration-weighted energy mean and the highest peak (cross-track gating is not modelled). Results always go into the file through `ReplayGainManager.writeReplayGainToFile`, which also updates its cache; the database has no ReplayGain columns. `Settings.markReplayGainTagsChanged` then bumps `PREF_REPLAYGAIN_TAGS_CHANGED` so the player recomputes the queued gains and the UI recomputes its leveling status. Entry points are the library selection action (`FileOperationTask.measureLoudness`) and `LoudnessWorker`, an opt-in hourly job that requires charging and tags albums that contain an untagged track. Every path it has handled, tagged or failed, is appended to `filesDir/loudness_checked.txt` and skipped by later runs, so a run stopped by WorkManager resumes instead of re-reading the whole library. A track added later to an already handled album is measured alone and gets track gain only.
 
 ---
 
@@ -352,7 +365,7 @@ MusicMate embeds one HTTP server, SonicNIO (`NioHttpServer`), optimized for bit-
 | `:core` | [`FFMpegHelper.java`](file:///Users/thawee.p/Workspaces/github/musicmate/core/src/main/java/apincer/music/core/codec/FFMpegHelper.java) | DSD 30kHz LPF filtering and 88.2kHz integer downsampling. |
 | `:core` | [`FfmpegPcm.java`](../../core/src/main/java/apincer/music/core/codec/FfmpegPcm.java) | ffprobe format and length, and FFmpeg PCM from any sample frame through a named pipe, for local ALAC, AIFF and DSD playback. |
 | `:server-jupnp` | [`MediaServerHubImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/server-jupnp/src/main/java/apincer/music/server/jupnp/MediaServerHubImpl.java) | DLNA SSDP discovery, AVTransport SOAP, and `SetNextAVTransportURI` gapless. |
-| `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, ReplayGain volume leveling, and CPU wakelocks. |
+| `:app` | [`AndroidPlayerController.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/AndroidPlayerController.java) | Local ExoPlayer AudioTrack engine, per-track leveling gain on each MediaItem, and CPU wakelocks. |
 | `:app` | [`MusicMateServiceImpl.java`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/service/MusicMateServiceImpl.java) | Central service orchestrator, strategy router, and lifecycle manager. |
 | `:app` | [`AudioHubSheet.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/AudioHubSheet.kt) | 3-tab Music Center container hosting Compose viewports. |
 | `:app` | [`NowPlayingPage.kt`](file:///Users/thawee.p/Workspaces/github/musicmate/app/src/main/java/apincer/android/mmate/ui/compose/NowPlayingPage.kt) | Jetpack Compose Now Playing UI, 3D flip Audio Anatomy card with dual-mode telemetry switcher. |

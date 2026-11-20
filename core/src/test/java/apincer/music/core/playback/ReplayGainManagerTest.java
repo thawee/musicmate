@@ -1,6 +1,7 @@
 package apincer.music.core.playback;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -31,16 +32,93 @@ public class ReplayGainManagerTest {
         assertEquals(1.0, ReplayGainManager.parsePeak(null), EPSILON);
     }
 
-    @Test
-    public void testReplayGainInfoDisplay() {
+    private static ReplayGainManager.ReplayGainInfo tags(double trackDb, double trackPeak) {
         ReplayGainManager.ReplayGainInfo info = new ReplayGainManager.ReplayGainInfo();
-        info.trackGainDb = -4.2;
+        info.trackGainDb = trackDb;
+        info.trackPeak = trackPeak;
         info.hasTrackGain = true;
-        info.albumGainDb = -5.1;
-        info.hasAlbumGain = true;
+        return info;
+    }
 
-        assertEquals("RG -4.2 dB", info.getDisplayString("track"));
-        assertEquals("RG -5.1 dB (Album)", info.getDisplayString("album"));
+    private static final float RG2 = -18f;
+    private static final float STREAMING = -14f;
+
+    @Test
+    public void offLeavesVolumeAloneEvenWithTags() {
+        ReplayGainManager.Leveling l = ReplayGainManager.level("off", STREAMING, 3f, true, tags(-6, 0.5));
+        assertEquals(ReplayGainManager.Leveling.Kind.OFF, l.kind);
+        assertEquals(1.0f, l.volume, 0f);
+    }
+
+    @Test
+    public void appliedGainIsTrackGainPlusPreampAtTheReferenceTarget() {
+        ReplayGainManager.Leveling l = ReplayGainManager.level("track", RG2, -3f, true, tags(-4.2, 0.5));
+        assertEquals(ReplayGainManager.Leveling.Kind.APPLIED, l.kind);
+        assertEquals(-7.2, l.appliedDb(), 0.01);
+        assertFalse(l.album);
+    }
+
+    @Test
+    public void streamingTargetCutsLoudMastersFourDbLess() {
+        ReplayGainManager.Leveling l = ReplayGainManager.level("track", STREAMING, 0f, true, tags(-10.0, 0.9));
+        assertEquals(-6.0, l.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void positiveGainIsNeverBoostedPastZeroDb() {
+        ReplayGainManager.Leveling l = ReplayGainManager.level("track", RG2, 0f, false, tags(5.0, 0.3));
+        assertEquals(1.0f, l.volume, 0f);
+        assertEquals(0.0, l.appliedDb(), 0.001);
+    }
+
+    @Test
+    public void guardedQuietTrackIsRaisedOnlyUntilItsPeakReachesFullScale() {
+        ReplayGainManager.Leveling room = ReplayGainManager.level("track", STREAMING, 0f, true, tags(1.0, 0.5));
+        assertEquals(5.0, room.appliedDb(), 0.01);
+        ReplayGainManager.Leveling capped = ReplayGainManager.level("track", STREAMING, 0f, true, tags(6.0, 0.8));
+        assertEquals(1.0 / 0.8, capped.volume, 0.0001);
+        ReplayGainManager.Leveling badPeak = ReplayGainManager.level("track", STREAMING, 0f, true, tags(30.0, 0.001));
+        assertEquals(12.0, badPeak.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void clippingGuardLowersGainToThePeak() {
+        // -1 dB gain with a 1.2 peak would clip; the guard caps the scale at 1 / 1.2
+        ReplayGainManager.Leveling guarded = ReplayGainManager.level("track", RG2, 0f, true, tags(-1.0, 1.2));
+        assertEquals(1.0 / 1.2, guarded.volume, 0.0001);
+        ReplayGainManager.Leveling unguarded = ReplayGainManager.level("track", RG2, 0f, false, tags(-1.0, 1.2));
+        assertEquals(-1.0, unguarded.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void albumModeUsesAlbumGainAndFallsBackToTrack() {
+        ReplayGainManager.ReplayGainInfo info = tags(-4.0, 0.5);
+        ReplayGainManager.Leveling fallback = ReplayGainManager.level("album", RG2, 0f, true, info);
+        assertFalse(fallback.album);
+        assertEquals(-4.0, fallback.appliedDb(), 0.01);
+
+        info.albumGainDb = -6.0;
+        info.albumPeak = 0.5;
+        info.hasAlbumGain = true;
+        ReplayGainManager.Leveling album = ReplayGainManager.level("album", RG2, 0f, true, info);
+        assertTrue(album.album);
+        assertEquals(-6.0, album.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void untaggedTrackIsTreatedAsALoudMasterAtTheTarget() {
+        ReplayGainManager.Leveling streaming = ReplayGainManager.level("track", STREAMING, 0f, true, null);
+        assertEquals(ReplayGainManager.Leveling.Kind.NO_TAGS, streaming.kind);
+        assertEquals(-5.0, streaming.appliedDb(), 0.01);
+        ReplayGainManager.Leveling reference = ReplayGainManager.level("track", RG2, -3f, true, new ReplayGainManager.ReplayGainInfo());
+        assertEquals(-12.0, reference.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void untaggedTrackIsNeverRaisedByThePreamp() {
+        ReplayGainManager.Leveling raised = ReplayGainManager.level("track", STREAMING, 9f, true, null);
+        assertEquals(ReplayGainManager.Leveling.Kind.NO_TAGS, raised.kind);
+        assertEquals(1.0f, raised.volume, 0f);
     }
 
     @Test

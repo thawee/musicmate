@@ -3139,9 +3139,9 @@
             "Mor Lam"
           ],
           "style": [
-            "Groove",
+            "Groove-driven",
             "Indie",
-            "Synth-based"
+            "Synth-driven"
           ],
           "exclude": {
             "mood": [
@@ -3195,7 +3195,7 @@
           "style": [
             "Ambient",
             "Ballad",
-            "Groove",
+            "Groove-driven",
             "Indie"
           ],
           "exclude": {
@@ -3287,6 +3287,172 @@
           "genre": [
             "Classical"
           ]
+        }
+      ]
+    },
+    {
+      "name": "Drive",
+      "uuid": "mood-drive",
+      "type": "genre",
+      "category": "mood",
+      "sessionMinutes": 0,
+      "description": "Upbeat, energetic tracks for the road.",
+      "rules": [
+        {
+          "mood": [
+            "Energetic",
+            "Workout",
+            "Happy",
+            "Inspiring"
+          ],
+          "exclude": {
+            "mood": [
+              "Sleep",
+              "Calm",
+              "Melancholy"
+            ],
+            "style": [
+              "Ambient",
+              "Ballad",
+              "Lo-Fi"
+            ]
+          }
+        },
+        {
+          "style": [
+            "Groove-driven",
+            "Synth-driven"
+          ],
+          "exclude": {
+            "mood": [
+              "Sleep",
+              "Calm",
+              "Melancholy"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Focus",
+      "uuid": "mood-focus",
+      "type": "genre",
+      "category": "mood",
+      "sessionMinutes": 0,
+      "description": "Steady, low-distraction music for work or study.",
+      "rules": [
+        {
+          "mood": [
+            "Focus"
+          ]
+        },
+        {
+          "style": [
+            "Instrumental",
+            "Lo-Fi"
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout",
+              "Dark"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wind down",
+      "uuid": "mood-wind-down",
+      "type": "genre",
+      "category": "mood",
+      "sessionMinutes": 0,
+      "description": "Calm, gentle tracks for relaxing.",
+      "rules": [
+        {
+          "mood": [
+            "Calm",
+            "Chill",
+            "Romantic"
+          ],
+          "exclude": {
+            "style": [
+              "Live"
+            ]
+          }
+        },
+        {
+          "style": [
+            "Acoustic",
+            "Unplugged",
+            "Ambient",
+            "Lo-Fi"
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout",
+              "Dark"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sleep",
+      "uuid": "mood-sleep",
+      "type": "genre",
+      "category": "mood",
+      "sessionMinutes": 45,
+      "description": "Soft, slow music for falling asleep.",
+      "rules": [
+        {
+          "mood": [
+            "Sleep"
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout",
+              "Dark",
+              "Happy"
+            ],
+            "style": [
+              "Live"
+            ]
+          }
+        },
+        {
+          "mood": [
+            "Calm"
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout",
+              "Dark",
+              "Happy"
+            ],
+            "style": [
+              "Live"
+            ]
+          }
+        },
+        {
+          "style": [
+            "Ambient"
+          ],
+          "exclude": {
+            "mood": [
+              "Energetic",
+              "Workout",
+              "Dark",
+              "Happy"
+            ],
+            "style": [
+              "Live"
+            ]
+          }
         }
       ]
     }

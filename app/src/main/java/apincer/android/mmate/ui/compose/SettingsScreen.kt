@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,10 +38,14 @@ fun SettingsScreen(
     onArtistAwareSimilarSongsChange: (Boolean) -> Unit,
     replayGainMode: String = "track",
     onReplayGainModeChange: (String) -> Unit = {},
+    replayGainTarget: Float = -14.0f,
+    onReplayGainTargetChange: (Float) -> Unit = {},
     replayGainPreamp: Float = 0.0f,
     onReplayGainPreampChange: (Float) -> Unit = {},
     replayGainPreventClipping: Boolean = true,
     onReplayGainPreventClippingChange: (Boolean) -> Unit = {},
+    measureLoudnessWhileCharging: Boolean = false,
+    onMeasureLoudnessWhileChargingChange: (Boolean) -> Unit = {},
     tapActionMode: String = "listen",
     onTapActionModeChange: (String) -> Unit = {},
     studioKeepScreenOn: Boolean = true,
@@ -135,14 +140,14 @@ fun SettingsScreen(
                 modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Loudness Leveling Mode",
+                    text = stringResource(R.string.leveling_title),
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Normalizes playback loudness across tracks using EBU R128 / ReplayGain tags",
+                    text = stringResource(R.string.leveling_settings_summary),
                     color = Color(0xFF9E9E9E),
                     fontSize = 12.sp
                 )
@@ -150,9 +155,9 @@ fun SettingsScreen(
 
                 AdaptiveChoiceGroup(
                     options = listOf(
-                        "off" to "Off",
-                        "track" to "Track",
-                        "album" to "Album"
+                        "off" to stringResource(R.string.leveling_mode_off),
+                        "track" to stringResource(R.string.leveling_mode_track),
+                        "album" to stringResource(R.string.leveling_mode_album)
                     ),
                     selected = { replayGainMode.equals(it, ignoreCase = true) },
                     onSelect = onReplayGainModeChange
@@ -160,32 +165,59 @@ fun SettingsScreen(
 
                 if (!replayGainMode.equals("off", ignoreCase = true)) {
                     Spacer(modifier = Modifier.height(14.dp))
-                    val preampDisplay = if (replayGainPreamp > 0) "+${replayGainPreamp.toInt()}" else "${replayGainPreamp.toInt()}"
                     Text(
-                        text = "Pre-Amp Gain: $preampDisplay dB",
+                        text = stringResource(R.string.leveling_settings_target),
+                        color = Color.White,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.leveling_target_summary),
+                        color = MusicMateDesignTokens.Text.Muted,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    AdaptiveChoiceGroup(
+                        options = LEVELING_TARGETS.map {
+                            it to stringResource(if (it > -16f) R.string.leveling_target_streaming else R.string.leveling_target_reference)
+                        },
+                        selected = { kotlin.math.abs(replayGainTarget - it) < 0.1f },
+                        onSelect = onReplayGainTargetChange
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = stringResource(R.string.leveling_settings_preamp, signedDb(replayGainPreamp.toDouble(), 0)),
                         color = Color.White,
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     AdaptiveChoiceGroup(
-                        options = listOf(
-                            -3.0f to "-3 dB",
-                            0.0f to "0 dB",
-                            3.0f to "+3 dB"
-                        ),
+                        options = LEVELING_PREAMPS.map {
+                            it to stringResource(R.string.leveling_preamp_value, signedDb(it.toDouble(), 0))
+                        },
                         selected = { kotlin.math.abs(replayGainPreamp - it) < 0.1f },
                         onSelect = onReplayGainPreampChange
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
                     SettingsSwitchRow(
-                        title = "Prevent Clipping",
-                        subtitle = "True-peak limiter automatically guards against inter-sample digital clipping",
+                        title = stringResource(R.string.leveling_prevent_clipping),
+                        subtitle = stringResource(R.string.leveling_prevent_clipping_summary),
                         checked = replayGainPreventClipping,
                         onCheckedChange = onReplayGainPreventClippingChange
                     )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingsSwitchRow(
+                    title = stringResource(R.string.measure_loudness_while_charging),
+                    subtitle = stringResource(R.string.measure_loudness_while_charging_summary),
+                    checked = measureLoudnessWhileCharging,
+                    onCheckedChange = onMeasureLoudnessWhileChargingChange
+                )
             }
 
             // ── Network players: a ceiling for the volume MusicMate sets ─────

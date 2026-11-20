@@ -91,6 +91,18 @@ public class Settings {
         prefs.edit().putFloat(Constants.PREF_REPLAYGAIN_PREAMP, preamp).apply();
     }
 
+    public static float getReplayGainTarget(Context context) {
+        if (context == null) return -14.0f;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getFloat(Constants.PREF_REPLAYGAIN_TARGET, -14.0f);
+    }
+
+    public static void setReplayGainTarget(Context context, float lufs) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putFloat(Constants.PREF_REPLAYGAIN_TARGET, lufs).apply();
+    }
+
     public static boolean isReplayGainPreventClipping(Context context) {
         if (context == null) return true;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -101,6 +113,24 @@ public class Settings {
         if (context == null) return;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putBoolean(Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING, prevent).apply();
+    }
+
+    public static void markReplayGainTagsChanged(Context context) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putLong(Constants.PREF_REPLAYGAIN_TAGS_CHANGED, System.currentTimeMillis()).apply();
+    }
+
+    public static boolean isMeasureLoudnessWhileCharging(Context context) {
+        if (context == null) return false;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_MEASURE_LOUDNESS_WHILE_CHARGING, false);
+    }
+
+    public static void setMeasureLoudnessWhileCharging(Context context, boolean enabled) {
+        if (context == null) return;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putBoolean(Constants.PREF_MEASURE_LOUDNESS_WHILE_CHARGING, enabled).apply();
     }
 
     public static String getTapActionMode(Context context) {

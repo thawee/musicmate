@@ -52,6 +52,9 @@ import apincer.android.mmate.audio.headphones.HeadphoneProfileParser
 import apincer.android.mmate.audio.headphones.HeadphoneStatus
 import apincer.android.mmate.audio.headphones.HeadphoneTestPlayer
 import apincer.android.mmate.audio.dsp.SoundMode
+import apincer.android.mmate.audio.OutputGuard
+import apincer.android.mmate.audio.OutputGuardState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,14 +76,17 @@ fun AudioTuningChip(modifier: Modifier = Modifier, remoteTarget: String? = null)
     val unavailable = remoteTarget != null || (if (general) tuningAudibility(status).label == "Unavailable" else status.endpoint == null)
     val detail = if (remoteTarget != null) "Not applied to this player"
         else (if (general) status.profile?.name else legacy.profileName) ?: "No correction"
+    val guard = outputGuardLight(remoteTarget == null)
     AudioTuningBadge(if (general) status.binding.soundMode else legacy.mode, enabled, unavailable,
-        if (general) status.binding.nightListening else legacy.nightListening, detail, modifier) { open = true }
+        if (general) status.binding.nightListening else legacy.nightListening, detail,
+        crossfeed = general && status.binding.crossfeed, guard = guard, modifier = modifier) { open = true }
     if (open) QuickAudioTuningDialog(remoteTarget) { open = false }
 }
 
 @Composable
 internal fun AudioTuningBadge(mode: SoundMode, enabled: Boolean, unavailable: Boolean,
-    nightListening: Boolean, profileName: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    nightListening: Boolean, profileName: String, crossfeed: Boolean = false, guard: GuardLight? = null,
+    modifier: Modifier = Modifier, onClick: () -> Unit) {
     val stateLabel = if (unavailable) "Unavailable" else if (enabled) "On" else "Bypassed"
     val modeLabel = mode.label
     val nightActive = enabled && !unavailable && nightListening
@@ -88,6 +94,10 @@ internal fun AudioTuningBadge(mode: SoundMode, enabled: Boolean, unavailable: Bo
         else "$modeLabel is selected; correction and sound processing are not applied"
     val nightDescription = if (nightActive) "Night listening active"
         else if (nightListening) "Night listening saved, inactive" else "Night listening off"
+    val crossfeedActive = enabled && !unavailable && crossfeed
+    val crossfeedDescription = if (crossfeedActive) "Crossfeed active"
+        else if (crossfeed) "Crossfeed saved, inactive" else "Crossfeed off"
+    val detail = if (crossfeedActive) "$profileName · Crossfeed" else profileName
     val accent = if (enabled) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Secondary
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
@@ -96,7 +106,8 @@ internal fun AudioTuningBadge(mode: SoundMode, enabled: Boolean, unavailable: Bo
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 contentDescription = "Audio tuning"
-                stateDescription = "$stateLabel. $processingDescription. $nightDescription. $profileName"
+                stateDescription = "$stateLabel. $processingDescription. $nightDescription. $crossfeedDescription. $profileName" +
+                    (guard?.let { ". Output ${it.label.lowercase()}" } ?: "")
             }.padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -110,12 +121,47 @@ internal fun AudioTuningBadge(mode: SoundMode, enabled: Boolean, unavailable: Bo
                 pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
                 append(stateLabel)
                 pop()
+                guard?.let {
+                    append(" · ")
+                    pushStyle(androidx.compose.ui.text.SpanStyle(color = it.color))
+                    append(it.label)
+                    pop()
+                }
             }, color = MusicMateDesignTokens.Text.Primary, fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold)
-            Text(profileName, color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp,
+            Text(detail, color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
+}
+
+internal enum class GuardLight(val label: String, val color: Color) {
+    LIMITING("Limiting", MusicMateDesignTokens.Brand.GoldAmber),
+    CLIPPING("Clipping", MusicMateDesignTokens.Status.Destructive)
+}
+
+/** A clip outranks limiting; each stays lit for [GUARD_HOLD_MS] after its latest event. */
+internal fun guardLight(state: OutputGuardState, nowMs: Long): GuardLight? = when {
+    state.clippedAtMs > 0 && nowMs - state.clippedAtMs < GUARD_HOLD_MS -> GuardLight.CLIPPING
+    state.limitedAtMs > 0 && nowMs - state.limitedAtMs < GUARD_HOLD_MS -> GuardLight.LIMITING
+    else -> null
+}
+
+private const val GUARD_HOLD_MS = 3_000L
+
+/** [local] false: the guard reports this phone's output, not a remote player's. */
+@Composable
+private fun outputGuardLight(local: Boolean): GuardLight? {
+    val state by OutputGuard.state.collectAsState()
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(state) {
+        now = System.currentTimeMillis()
+        while (guardLight(state, now) != null) {
+            delay(250)
+            now = System.currentTimeMillis()
+        }
+    }
+    return if (local) guardLight(state, now) else null
 }
 
 @Composable
@@ -308,6 +354,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         onAdjust = { bass, treble -> targetEndpoint?.let { HeadphoneDsp.previewCustomTrims(it.key, bass, treble) } },
         onAdjustFinished = { bass, treble -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.adjust(context, endpoint, bass, treble) }) } },
         onNightListening = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setNightListening(context, endpoint, enabled) }) } },
+        onCrossfeed = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setCrossfeed(context, endpoint, enabled) }) } },
         onCompare = { comparing -> targetEndpoint?.let { HeadphoneDsp.setCustomComparison(it.key, comparing) } },
         onPreviewEnd = { targetEndpoint?.let { HeadphoneDsp.clearCustomPreview(it.key) } },
         onCreateProfile = { creatingProfile = true },
@@ -333,6 +380,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         onAdjust = { bass, treble -> targetEndpoint?.let { HeadphoneDsp.previewCustomTrims(it.key, bass, treble) } },
         onAdjustFinished = { bass, treble -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.adjust(context, endpoint, bass, treble) }) } },
         onNightListening = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setNightListening(context, endpoint, enabled) }) } },
+        onCrossfeed = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setCrossfeed(context, endpoint, enabled) }) } },
         onCompare = { comparing -> targetEndpoint?.let { HeadphoneDsp.setCustomComparison(it.key, comparing) } },
         onPreviewEnd = { targetEndpoint?.let { HeadphoneDsp.clearCustomPreview(it.key) } },
         onSoundMode = { preset -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setSoundMode(context, endpoint, preset) }) } },
@@ -412,6 +460,7 @@ internal fun HeadphoneEqControls(
     onAdjust: (Double, Double) -> Unit = { _, _ -> },
     onAdjustFinished: (Double, Double) -> Unit = { _, _ -> },
     onNightListening: (Boolean) -> Unit = {},
+    onCrossfeed: (Boolean) -> Unit = {},
     onCompare: (Boolean) -> Unit = {},
     onPreviewEnd: () -> Unit = {},
     onDelete: (String) -> Unit = {},
@@ -448,7 +497,8 @@ internal fun HeadphoneEqControls(
                         enabled = canEnable, canCompare = status.active && remoteTarget == null, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onCompare = onCompare, onPreviewEnd = onPreviewEnd)
                 }
             }
-            NightListeningControl(status.binding.nightListening, canEnable, onNightListening)
+            NightListeningControl(status.binding.nightListening, canEnable, status.active, onNightListening)
+            CrossfeedControl(status.binding.crossfeed, canEnable, status.active, onCrossfeed)
             TuningDisclosure("Response curve") {
                 TuningResponseCurve(settings.bands + settings.monoBands, status.binding.soundMode, profile?.manual != null, active = status.active, previewState = tuningAudibility(status).label)
             }

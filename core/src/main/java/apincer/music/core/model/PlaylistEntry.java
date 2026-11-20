@@ -18,12 +18,16 @@ public class PlaylistEntry {
     public static final String TYPE_TITLE = "title";
     public static final String TYPE_GENRE = "genre";
     public static final String TYPE_SMART = "smart";
+    public static final String CATEGORY_MOOD = "mood";
     private String name;
     private String uuid; // Added from your JSON sample
     private String type = TYPE_TITLE; // "song" or "album"
     private String note;
     private String version;
     private String description;
+    private String category;
+    /** Minutes of suggested music a smart queue session stops at; 0 keeps refilling. */
+    private int sessionMinutes = 0;
 
     // Smart Playlist dynamic criteria
     private double minDrScore = 0.0;
@@ -90,6 +94,13 @@ public class PlaylistEntry {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public boolean isMood() { return CATEGORY_MOOD.equals(category); }
+
+    public int getSessionMinutes() { return sessionMinutes; }
+    public void setSessionMinutes(int sessionMinutes) { this.sessionMinutes = sessionMinutes; }
 
     public void compileRules() {
         // Rebuild from scratch: rules can now shrink (Remove from Playlist)

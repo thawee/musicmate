@@ -152,6 +152,7 @@ object HeadphoneDsp {
             ?: CarDspSettings(profile?.bands.orEmpty(), requestedPreampDb = profile?.preampDb ?: 0.0)
         return CarDspSettings(correction.bands + personal, compress = binding.nightListening,
             requestedPreampDb = correction.requestedPreampDb, leftBands = correction.leftBands,
-            rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands)
+            rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands,
+            crossfeed = binding.crossfeed)
     }
 }

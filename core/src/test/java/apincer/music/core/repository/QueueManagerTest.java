@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,6 +20,8 @@ import java.util.List;
 
 import apincer.music.core.model.Track;
 import apincer.music.core.model.AudioTag;
+import apincer.music.core.model.PlaylistEntry;
+import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.repository.spi.DbHelper;
 
 public class QueueManagerTest {
@@ -181,6 +184,62 @@ public class QueueManagerTest {
         smartCandidates.add(playable(31));
         queueManager.refreshSmartQueue();
         assertEquals(31, queueManager.getNextTrack().getId());
+    }
+
+    /** The whole library queued by hand, playing track 1, with track 50 put next. */
+    private List<Track> fullLibraryQueue() throws Exception {
+        List<Track> library = new ArrayList<>();
+        for (int i = 1; i <= 100; i++) library.add(playable(i));
+        queueManager.setPlayingQueue(library);
+        queueManager.setPlaybackTrack(library.get(0));
+        queueManager.addPlayNext(library.get(49));
+        return library;
+    }
+
+    @Test
+    public void replaceUpcoming_swapsAFullQueueForSourceTracks() throws Exception {
+        List<Track> library = fullLibraryQueue();
+        smartCandidates.addAll(library.subList(59, 90));
+        queueManager.setSource(QueueManager.Source.NEW);
+
+        assertTrue(queueManager.replaceUpcomingFromSource());
+
+        List<Long> expected = new ArrayList<>(java.util.Arrays.asList(1L, 50L));
+        for (long id = 60; id < 80; id++) expected.add(id);
+        assertEquals(expected, ids(queueManager.getSongs()));
+        assertEquals(1L, queueManager.getCurrentTrack().getId());
+        assertEquals(50L, queueManager.getNextTrack().getId());
+        assertTrue(queueManager.isPlayNext(50L));
+        assertTrue(queueManager.isSmartSuggested(60L));
+        assertEquals(ids(queueManager.getSongs()), ids(savedQueue));
+    }
+
+    @Test
+    public void replaceUpcoming_undoRestoresTheWholeQueue() throws Exception {
+        fullLibraryQueue();
+        List<Long> before = ids(queueManager.getSongs());
+        for (int i = 101; i <= 130; i++) smartCandidates.add(playable(i));
+        QueueManager.Snapshot snapshot = queueManager.snapshot();
+        queueManager.setSource(QueueManager.Source.NEW);
+        queueManager.replaceUpcomingFromSource();
+
+        queueManager.restore(snapshot);
+
+        assertEquals(before, ids(queueManager.getSongs()));
+        assertEquals(before, ids(savedQueue));
+        assertEquals(QueueManager.Source.MANUAL, queueManager.getSource());
+        assertEquals(1L, queueManager.getCurrentTrack().getId());
+        assertTrue(queueManager.isPlayNext(50L));
+    }
+
+    @Test
+    public void replaceUpcoming_keepsTheQueueWhenTheSourceFindsNothing() throws Exception {
+        fullLibraryQueue();
+        List<Long> before = ids(queueManager.getSongs());
+        queueManager.setSource(QueueManager.Source.NEW);
+
+        assertFalse(queueManager.replaceUpcomingFromSource());
+        assertEquals(before, ids(queueManager.getSongs()));
     }
 
     @Test
@@ -827,5 +886,100 @@ public class QueueManagerTest {
         queueManager.setQueueChangeListener(null);
         queueManager.removeTrack(0);
         assertEquals(6, calls[0]);
+    }
+
+    private PlaylistEntry registeredPlaylist;
+
+    @After
+    public void unregisterPlaylist() {
+        if (registeredPlaylist != null) PlaylistRepository.getPlaylists().remove(registeredPlaylist);
+    }
+
+    /** A queue whose playlist query returns {@code results}, for a playlist registered by name. */
+    private QueueManager playlistQueue(String category, int sessionMinutes, List<Track> results) {
+        registeredPlaylist = new PlaylistEntry();
+        registeredPlaylist.setName("Test Mood");
+        registeredPlaylist.setType(PlaylistEntry.TYPE_GENRE);
+        registeredPlaylist.setCategory(category);
+        registeredPlaylist.setSessionMinutes(sessionMinutes);
+        PlaylistRepository.getPlaylists().add(registeredPlaylist);
+        TagRepository playlistRepos = new TagRepository(null, repository.getDbHelper()) {
+            @Override
+            public List<Track> findPlaylist(SearchCriteria criteria) {
+                return "Test Mood".equals(criteria.getKeyword()) ? new ArrayList<>(results) : new ArrayList<>();
+            }
+        };
+        QueueManager manager = new QueueManager(playlistRepos);
+        manager.setRandom(new java.util.Random(42));
+        manager.setActivePlaylist("Test Mood");
+        return manager;
+    }
+
+    private List<Track> playableRange(int count, double durationSeconds) throws Exception {
+        List<Track> tracks = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            AudioTag track = (AudioTag) playable(i);
+            track.setAudioDuration(durationSeconds);
+            tracks.add(track);
+        }
+        return tracks;
+    }
+
+    private static List<Long> ids(List<Track> tracks) {
+        List<Long> ids = new ArrayList<>();
+        for (Track track : tracks) ids.add(track.getId());
+        return ids;
+    }
+
+    @Test
+    public void playlistSessionLimit_stopsRefillingAndMarksCaughtUp() throws Exception {
+        List<Track> tracks = playableRange(30, 240);
+        QueueManager manager = playlistQueue(null, 10, tracks);
+
+        manager.refreshSmartQueue();
+        // 4 + 4 + 4 minutes: the third suggestion crosses the 10 minute limit
+        assertEquals(3, manager.getQueueSize());
+        manager.setPlaybackTrack(manager.getSongs().get(2));
+        assertTrue(manager.isSmartQueueCaughtUp());
+        assertFalse(manager.refreshSmartQueue());
+        assertEquals(3, manager.getQueueSize());
+    }
+
+    @Test
+    public void playlistSessionLimit_ignoresSuggestionsFromEarlierSource() throws Exception {
+        for (int i = 101; i <= 105; i++) {
+            AudioTag earlier = (AudioTag) playable(i);
+            earlier.setAudioDuration(240);
+            smartCandidates.add(earlier);
+        }
+        QueueManager manager = playlistQueue(null, 10, playableRange(30, 240));
+        manager.setSource(QueueManager.Source.NEW);
+        manager.refreshSmartQueue();
+        assertEquals(5, manager.getQueueSize());
+
+        manager.setActivePlaylist("Test Mood");
+        manager.refreshSmartQueue();
+        assertEquals(8, manager.getQueueSize());
+    }
+
+    @Test
+    public void playlistWithoutMood_keepsQueryOrder() throws Exception {
+        List<Track> tracks = playableRange(10, 0);
+        QueueManager manager = playlistQueue(null, 0, tracks);
+
+        manager.refreshSmartQueue();
+        assertEquals(ids(tracks), ids(manager.getSongs()));
+    }
+
+    @Test
+    public void moodPlaylist_shufflesCandidates() throws Exception {
+        List<Track> tracks = playableRange(10, 0);
+        QueueManager manager = playlistQueue(PlaylistEntry.CATEGORY_MOOD, 0, tracks);
+        List<Long> expected = ids(tracks);
+        Collections.shuffle(expected, new java.util.Random(42));
+
+        manager.refreshSmartQueue();
+        assertEquals(expected, ids(manager.getSongs()));
+        assertFalse(expected.equals(ids(tracks)));
     }
 }

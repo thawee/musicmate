@@ -1,9 +1,12 @@
 package apincer.android.mmate.ui.compose
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import apincer.android.mmate.R
 import apincer.music.core.model.Track
 
 class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
@@ -39,11 +42,13 @@ class QueueState(initialTracks: List<Track>, initialPlayingKey: String?) {
     }
 
     /** Label for [upNext], or null when the queue is empty. */
+    @Composable
     fun upNextLabel(isShuffle: Boolean): String? {
         if (tracks.isEmpty()) return null
-        upNext(isShuffle)?.let { return it.title.orEmpty() }
+        val unknownTitle = stringResource(R.string.queue_unknown_title)
+        upNext(isShuffle)?.let { return it.title?.takeIf { title -> title.isNotBlank() } ?: unknownTitle }
         val isPlaying = tracks.any { it.uniqueKey == currentPlayingKey }
-        return if (!isPlaying && isShuffle) "Random track" else "End of queue"
+        return stringResource(if (!isPlaying && isShuffle) R.string.queue_up_next_random else R.string.queue_up_next_end)
     }
 
     fun updateTracks(newTracks: List<Track>) {

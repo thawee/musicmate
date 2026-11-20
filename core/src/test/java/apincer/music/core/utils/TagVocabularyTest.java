@@ -44,4 +44,25 @@ public class TagVocabularyTest {
         assertTrue(TagVocabulary.matchKeys(TagVocabulary.Field.GENRE, "Alternative, Indie").contains("alternative"));
         assertEquals("focus", TagVocabulary.ruleKey(TagVocabulary.Field.MOOD, "Focus / Study"));
     }
+
+    @Test
+    public void renamedStylePresetsMatchOldTagsBothWays() {
+        String[][] oldAndNew = {
+                {"Groove", "Groove-driven"},
+                {"Synth-based", "Synth-driven"},
+                {"Audiophile Vocal", "Vocal"},
+                {"Vocal / Audiophile", "Vocal"},
+        };
+        for (String[] pair : oldAndNew) {
+            String oldTag = pair[0];
+            String newTag = pair[1];
+            assertTrue(oldTag + " tag matches " + newTag + " rule",
+                    TagVocabulary.matchKeys(TagVocabulary.Field.STYLE, oldTag)
+                            .contains(TagVocabulary.ruleKey(TagVocabulary.Field.STYLE, newTag)));
+            assertTrue(newTag + " tag matches " + oldTag + " rule",
+                    TagVocabulary.matchKeys(TagVocabulary.Field.STYLE, newTag)
+                            .contains(TagVocabulary.ruleKey(TagVocabulary.Field.STYLE, oldTag)));
+            assertEquals(newTag, TagVocabulary.normalize(TagVocabulary.Field.STYLE, oldTag));
+        }
+    }
 }

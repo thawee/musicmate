@@ -2,6 +2,7 @@ package apincer.android.mmate.audio.dsp
 
 import android.media.AudioDeviceInfo
 import android.util.Log
+import apincer.android.mmate.audio.OutputGuard
 import apincer.android.mmate.audio.UsbOutputFormat
 import apincer.android.mmate.audio.headphones.HeadphoneDsp
 import java.nio.ByteBuffer
@@ -14,8 +15,8 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 /**
- * What Car DSP applies: the car correction plus the sound mode, as one fixed band list, and
- * whether the light compressor runs (Night only).
+ * What Car DSP applies: the car correction plus the sound mode, as one fixed band list, whether
+ * the light compressor runs (Night only), and headphone crossfeed.
  */
 class CarDspSettings(
     bands: List<PeqBand>,
@@ -24,7 +25,8 @@ class CarDspSettings(
     leftBands: List<PeqBand> = emptyList(),
     rightBands: List<PeqBand> = emptyList(),
     val balanceDb: Double = 0.0,
-    monoBands: List<PeqBand> = emptyList()
+    monoBands: List<PeqBand> = emptyList(),
+    val crossfeed: Boolean = false
 ) {
     val bands: List<PeqBand> = bands.toList()
     val leftBands: List<PeqBand> = leftBands.toList()
@@ -59,16 +61,16 @@ object CarDsp {
 }
 
 /**
- * Applies [CarDsp]'s target to one output's PCM: chain, 30 ms crossfade on target changes, the light
- * compressor when requested, then a linked safety limiter. Unconsented USB bypass is immediate.
+ * Applies volume leveling and [CarDsp]'s target to one output's PCM: leveling gain, chain, 30 ms
+ * crossfade on target changes, the light compressor when requested, then a linked safety limiter.
+ * Leveling alone skips the limiter, because its gain already keeps the track's peak below full
+ * scale. Unconsented USB bypass of the DSP is immediate; leveling still applies there.
  * Changes are picked up only at a block boundary, so a block is processed once even when the
- * AudioTrack takes it in several writes.
+ * AudioTrack takes it in several writes. Each block reports limiting and clamped samples to [OutputGuard].
  */
-class CarDspProcessor(private val sampleRate: Int, private val channels: Int, seed: Long = System.nanoTime()) {
+class CarDspProcessor(private val sampleRate: Int, private val channels: Int) {
     private var settings: CarDspSettings? = CarDsp.effectiveTarget()
-    private var chain: DspChain? = settings?.let {
-        DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
-    }
+    private var chain: DspChain? = chainFor(settings)
     private var fadeFrom: DspChain? = null
     private var fading = false
     private var fadePosition = 0
@@ -80,13 +82,34 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
     private var compressorGain = 1.0
     private val compressorAttack = 1 - exp(-1 / (sampleRate * COMPRESSOR_ATTACK_SECONDS))
     private val compressorRelease = 1 - exp(-1 / (sampleRate * COMPRESSOR_RELEASE_SECONDS))
-    private var random = seed or 1L
+    private var gain = 1.0
+    private var gainFrom = 1.0
+    private var gainTarget = 1.0
+    private var rampPosition = 0
+    private val rampFrames = max(1, (sampleRate * GAIN_RAMP_SECONDS).roundToInt())
+    // A new output or a seek starts at the stream's gain instead of ramping into it
+    private var snapGain = true
+    private var dspActive = false
     private var engaged = false
     private var warnedInput = false
     private var warnedOutput = false
+    private var lowestLimiterGain = 1.0
+    private var clipped = false
 
-    /** Takes up a changed target; true while this block needs processing. */
-    fun beginBlock(): Boolean {
+    /**
+     * Takes up a changed target and [levelingGain]; true while this block needs processing.
+     * [dspAllowed] false runs leveling alone, for input the DSP leaves untouched on this route.
+     */
+    fun beginBlock(levelingGain: Double = 1.0, dspAllowed: Boolean = true): Boolean {
+        if (snapGain) {
+            snapGain = false
+            gain = levelingGain
+            gainTarget = levelingGain
+        } else if (levelingGain != gainTarget) {
+            gainFrom = gain
+            gainTarget = levelingGain
+            rampPosition = 0
+        }
         val route = HeadphoneDsp.current
         val wanted = CarDsp.effectiveTarget(route)
         if (!route.speakerEligible && wanted == null) {
@@ -102,30 +125,32 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
             // mid-fade jumps from the audible mix to just one of its chains and can click.
             fadeFrom = chain
             settings = wanted
-            chain = wanted?.let {
-                DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
-            }
+            chain = chainFor(wanted)
             fading = true
             fadePosition = 0
         }
-        val now = chain != null || fading || compressorGain < RECOVERED
-        if (now != engaged) {
-            engaged = now
-            Log.i(TAG, if (now) "engaged at $sampleRate Hz, $channels ch" else "bypassed")
+        dspActive = dspAllowed && (chain != null || fading || compressorGain < RECOVERED)
+        if (dspActive != engaged) {
+            engaged = dspActive
+            Log.i(TAG, if (dspActive) "engaged at $sampleRate Hz, $channels ch" else "bypassed")
         }
-        return now
+        return dspActive || gain != 1.0 || gainTarget != 1.0
+    }
+
+    private fun chainFor(settings: CarDspSettings?): DspChain? = settings?.let {
+        DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb,
+            it.monoBands, it.crossfeed)
     }
 
     /** After a seek: clear filter state and land on the current target without a fade. */
     fun reset() {
         settings = CarDsp.effectiveTarget()
-        chain = settings?.let {
-            DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb, it.monoBands)
-        }
+        chain = chainFor(settings)
         fadeFrom = null
         fading = false
         limiterGain = 1.0
         compressorGain = 1.0
+        snapGain = true
     }
 
     /** Processes the remaining float samples of [source] into little-endian 24-bit PCM. */
@@ -145,14 +170,13 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
             putInt24(target, (finite(source.getFloat(position).toDouble()) * INT24_SCALE).roundToInt())
             position += 4
         }
-        target.flip()
-        return target
+        return finish(target)
     }
 
-    /** Processes the remaining 16-bit samples of [source] into TPDF-dithered little-endian 16-bit PCM. */
-    fun processInt16(source: ByteBuffer, reuse: ByteBuffer): ByteBuffer {
+    /** Processes the remaining 16-bit samples of [source] into little-endian 24-bit PCM, so no 16-bit rounding is added. */
+    fun processInt16ToInt24(source: ByteBuffer, reuse: ByteBuffer): ByteBuffer {
         val samples = source.remaining() / 2
-        val target = buffer(reuse, samples * 2)
+        val target = buffer(reuse, samples * 3)
         var position = source.position()
         repeat(samples / channels) {
             for (c in 0 until channels) {
@@ -160,14 +184,13 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
                 position += 2
             }
             processFrame()
-            for (c in 0 until channels) putInt16(target, (frame[c] * INT16_SCALE + dither()).roundToInt())
+            for (c in 0 until channels) putInt24(target, (frame[c] * INT24_SCALE).roundToInt())
         }
         repeat(samples % channels) {
-            putInt16(target, source.getShort(position).toInt())
+            putInt24(target, source.getShort(position).toInt() shl 8)
             position += 2
         }
-        target.flip()
-        return target
+        return finish(target)
     }
 
     /** Processes packed little-endian 24-bit samples without changing [source]'s position. */
@@ -187,19 +210,50 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
             }
             processFrame()
             for (c in 0 until channels) {
-                val value = (frame[c] * scale).roundToLong().coerceIn(-scale.toLong(), scale.toLong() - 1).toInt()
-                putInteger(target, value, width)
+                val raw = (frame[c] * scale).roundToLong()
+                val value = raw.coerceIn(-scale.toLong(), scale.toLong() - 1)
+                if (abs(raw) > scale) clipped = true
+                putInteger(target, value.toInt(), width)
             }
         }
         repeat(samples % channels) {
             putInteger(target, readInteger(source, position, width), width)
             position += width
         }
+        return finish(target)
+    }
+
+    private fun finish(target: ByteBuffer): ByteBuffer {
         target.flip()
+        OutputGuard.report(lowestLimiterGain, clipped)
+        lowestLimiterGain = 1.0
+        clipped = false
         return target
     }
 
+    private fun putInt24(target: ByteBuffer, value: Int) {
+        val v = value.coerceIn(-8_388_608, 8_388_607)
+        // +1.0 lands one step past the top code; only a real overshoot counts as a clip
+        if (abs(value) > 8_388_608) clipped = true
+        target.put(v.toByte()).put((v shr 8).toByte()).put((v shr 16).toByte())
+    }
+
     private fun processFrame() {
+        level()
+        if (dspActive) applyDsp()
+        if (frame.any { !it.isFinite() }) recover()
+    }
+
+    /** Linear ramp to a new leveling gain that ends exactly on it, so unity returns to passthrough. */
+    private fun level() {
+        if (gain != gainTarget) {
+            gain = if (++rampPosition >= rampFrames) gainTarget
+            else gainFrom + (gainTarget - gainFrom) * rampPosition / rampFrames
+        }
+        if (gain != 1.0) for (c in 0 until channels) frame[c] *= gain
+    }
+
+    private fun applyDsp() {
         if (fading) {
             System.arraycopy(frame, 0, previous, 0, channels)
             fadeFrom?.process(previous)
@@ -215,7 +269,6 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         }
         compress()
         limit()
-        if (frame.any { !it.isFinite() }) recover()
     }
 
     /** A decoder's NaN or infinity becomes silence, so one bad sample cannot stop playback. */
@@ -271,22 +324,14 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
         limiterGain += (1 - limiterGain) * release
         if (peak * limiterGain > CEILING) limiterGain = CEILING / peak
         if (limiterGain < 1) for (c in 0 until channels) frame[c] *= limiterGain
-    }
-
-    /** Triangular dither of +/-1 LSB from two uniform values (xorshift64). */
-    private fun dither(): Double = uniform() + uniform() - 1.0
-
-    private fun uniform(): Double {
-        random = random xor (random shl 13)
-        random = random xor (random ushr 7)
-        random = random xor (random shl 17)
-        return (random ushr 11) * (1.0 / (1L shl 53))
+        if (limiterGain < lowestLimiterGain) lowestLimiterGain = limiterGain
     }
 
     private companion object {
         const val TAG = "CarDsp"
         const val FADE_SECONDS = 0.03
         const val RELEASE_SECONDS = 0.05
+        const val GAIN_RAMP_SECONDS = 0.02
         /** -0.5 dBFS. */
         const val CEILING = 0.944
         const val COMPRESSOR_THRESHOLD_DB = -20.0
@@ -314,15 +359,5 @@ class CarDspProcessor(private val sampleRate: Int, private val channels: Int, se
 
         fun buffer(reuse: ByteBuffer, bytes: Int): ByteBuffer =
             if (reuse.capacity() >= bytes) reuse.apply { clear() } else ByteBuffer.allocateDirect(bytes)
-
-        fun putInt24(target: ByteBuffer, value: Int) {
-            val v = value.coerceIn(-8_388_608, 8_388_607)
-            target.put(v.toByte()).put((v shr 8).toByte()).put((v shr 16).toByte())
-        }
-
-        fun putInt16(target: ByteBuffer, value: Int) {
-            val v = value.coerceIn(-32_768, 32_767)
-            target.put(v.toByte()).put((v shr 8).toByte())
-        }
     }
 }

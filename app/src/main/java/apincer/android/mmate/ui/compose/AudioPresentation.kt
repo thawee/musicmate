@@ -43,7 +43,8 @@ object AudioPresentation {
     fun qualityLabel(track: Track?, expanded: Boolean): String {
         if (track == null) return "-"
         val tier = tier(track)
-        if (expanded && tier != Tier.UNKNOWN) return tier.expanded
+        // Same tier as accent(track), so a known tier's label matches the badge color
+        if (tier != Tier.UNKNOWN) return if (expanded) tier.expanded else tier.compact
         val raw = track.qualityInd.orEmpty().takeUnless { it.isEmpty() || it == "-" }
             ?: TagUtils.getQualityIndicator(track)
         return qualityLabel(raw, expanded)

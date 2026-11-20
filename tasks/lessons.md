@@ -1,3 +1,5 @@
+- **Prove a queue feature on the user's real queue:** A source or mood that adds nothing to the phone's full queue reads as broken, even when unit tests pass. Before calling queue work done, check that choosing a source visibly changes the phone's queue list and count, and treat "adds 0 on real data" as a blocker, not a limitation.
+- **Measured ReplayGain goes into the file:** The user wants loudness measurement to always write ReplayGain tags to the music file, not keep results only in the database or behind a separate write step. Plan tag-writing features to update the file by default.
 - **Review the music vocabulary itself:** When asked to review default music styles, assess the existing entries and their musical meaning before proposing picker labels or interaction changes.
 - **Keep searchable matches in Audio Auto settings:** The genre/style dropdown request applies to Audio mode → Auto settings → Add/Edit match, not changes to the tag editor. Reuse MusicMate's existing default lists and filtering control without changing the tag editor.
 - **Keep playback tuning focused:** The Now Playing tuning action should prioritize saved profile and sound-mode selection, with direct access to profile creation and the full editor. Keep calibration forms and response details in the full editor.
@@ -565,3 +567,4 @@
 - Verify UI and processing gates before claiming sound modes work without correction; cover the no-profile path in tests.
 
 - Treat repeated reports of clutter as a hierarchy problem: review the whole rendered tuning flow, reduce competing sections and management actions before adding more copy or controls.
+- **Check history before recommending a feature:** I recommended a USB bit-perfect mode that 3.26.0 had already removed, because the user's Galaxy S25 exposes no Android bit-perfect mixer. Before proposing or starting a feature, grep tasks/done.md, CHANGELOG.md and git log for an earlier attempt and why it ended.

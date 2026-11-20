@@ -9,6 +9,7 @@ import androidx.core.view.WindowCompat
 import androidx.preference.PreferenceManager
 import apincer.android.mmate.ui.compose.MusicMateTheme
 import apincer.android.mmate.ui.compose.SettingsScreen
+import apincer.android.mmate.worker.LoudnessWorker
 import apincer.music.core.Constants
 import apincer.music.core.Settings
 
@@ -34,11 +35,17 @@ class SettingsActivity : ComponentActivity() {
             var replayGainMode by remember {
                 mutableStateOf(Settings.getReplayGainMode(this@SettingsActivity))
             }
+            var replayGainTarget by remember {
+                mutableStateOf(Settings.getReplayGainTarget(this@SettingsActivity))
+            }
             var replayGainPreamp by remember {
                 mutableStateOf(Settings.getReplayGainPreamp(this@SettingsActivity))
             }
             var replayGainPreventClipping by remember {
                 mutableStateOf(Settings.isReplayGainPreventClipping(this@SettingsActivity))
+            }
+            var measureLoudnessWhileCharging by remember {
+                mutableStateOf(Settings.isMeasureLoudnessWhileCharging(this@SettingsActivity))
             }
             var tapActionMode by remember {
                 mutableStateOf(Settings.getTapActionMode(this@SettingsActivity))
@@ -72,6 +79,11 @@ class SettingsActivity : ComponentActivity() {
                         replayGainMode = newMode
                         Settings.setReplayGainMode(this@SettingsActivity, newMode)
                     },
+                    replayGainTarget = replayGainTarget,
+                    onReplayGainTargetChange = { newTarget ->
+                        replayGainTarget = newTarget
+                        Settings.setReplayGainTarget(this@SettingsActivity, newTarget)
+                    },
                     replayGainPreamp = replayGainPreamp,
                     onReplayGainPreampChange = { newPreamp ->
                         replayGainPreamp = newPreamp
@@ -81,6 +93,12 @@ class SettingsActivity : ComponentActivity() {
                     onReplayGainPreventClippingChange = { checked ->
                         replayGainPreventClipping = checked
                         Settings.setReplayGainPreventClipping(this@SettingsActivity, checked)
+                    },
+                    measureLoudnessWhileCharging = measureLoudnessWhileCharging,
+                    onMeasureLoudnessWhileChargingChange = { checked ->
+                        measureLoudnessWhileCharging = checked
+                        Settings.setMeasureLoudnessWhileCharging(this@SettingsActivity, checked)
+                        LoudnessWorker.schedule(this@SettingsActivity)
                     },
                     tapActionMode = tapActionMode,
                     onTapActionModeChange = { newMode ->

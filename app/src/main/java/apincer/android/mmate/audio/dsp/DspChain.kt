@@ -5,10 +5,11 @@ import kotlin.math.min
 import kotlin.math.pow
 
 /**
- * Preamp then the bands in series, for one sample rate and channel layout. The preamp keeps the
- * greater attenuation of the requested gain and either ear's combined response's largest boost.
- * Per-ear bands and attenuation-only balance apply to stereo. Mono has its own optional correction;
- * other layouts use shared bands only.
+ * Crossfeed, then preamp and the bands in series, for one sample rate and channel layout. The preamp
+ * keeps the greater attenuation of the requested gain and either ear's combined response's largest
+ * boost; crossfeed boosts no frequency, so it adds nothing there. Crossfeed, per-ear bands and
+ * attenuation-only balance apply to stereo, so the headphone is corrected after the speakers are
+ * simulated. Mono has its own optional correction; other layouts use shared bands only.
  */
 class DspChain(
     bands: List<PeqBand>,
@@ -18,8 +19,10 @@ class DspChain(
     leftBands: List<PeqBand> = emptyList(),
     rightBands: List<PeqBand> = emptyList(),
     balanceDb: Double = 0.0,
-    monoBands: List<PeqBand> = emptyList()
+    monoBands: List<PeqBand> = emptyList(),
+    crossfeed: Boolean = false
 ) {
+    private val crossfeedFilter = if (crossfeed && channels == 2) Crossfeed(sampleRate) else null
     private val filters = design(bands)
     private val channelFilters = when (channels) {
         1 -> listOf(filters + design(monoBands))
@@ -52,6 +55,7 @@ class DspChain(
 
     /** Filters one interleaved frame in place. */
     fun process(frame: DoubleArray) {
+        crossfeedFilter?.process(frame)
         for (channel in 0 until channels) {
             var x = frame[channel] * preamp * channelGains[channel]
             val delay = state[channel]
@@ -67,7 +71,10 @@ class DspChain(
         }
     }
 
-    fun reset() = state.forEach { it.fill(0.0) }
+    fun reset() {
+        crossfeedFilter?.reset()
+        state.forEach { it.fill(0.0) }
+    }
 
     private fun design(bands: List<PeqBand>): List<Biquad> =
         bands.filter { it.frequencyHz < sampleRate * NYQUIST_LIMIT }.map { Biquad.design(it, sampleRate) }

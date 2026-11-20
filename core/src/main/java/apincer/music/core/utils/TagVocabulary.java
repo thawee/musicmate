@@ -51,7 +51,11 @@ public final class TagVocabulary {
 
         Map<String, String> style = new HashMap<>();
         style.put("live / concert", "Live");
-        style.put("vocal / audiophile", "Audiophile Vocal");
+        style.put("vocal / audiophile", "Vocal");
+        // Presets renamed in 3.31.0; libraries still hold the old names
+        style.put("audiophile vocal", "Vocal");
+        style.put("groove", "Groove-driven");
+        style.put("synth-based", "Synth-driven");
         ALIASES.put(Field.STYLE, style);
 
         Map<String, String> origin = new HashMap<>();

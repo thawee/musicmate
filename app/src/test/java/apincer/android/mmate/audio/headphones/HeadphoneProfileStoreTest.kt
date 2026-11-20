@@ -51,7 +51,7 @@ class HeadphoneProfileStoreTest {
         val file = File(folder.root, "settings/headphones.json")
         val profile = profile()
         val library = HeadphoneLibrary(listOf(profile), mapOf(
-            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true, SoundMode.RELAX, nightListening = true),
+            "usb:dac" to HeadphoneBinding(profile.id, true, 2.0, -1.0, true, SoundMode.RELAX, nightListening = true, crossfeed = true),
             "bt:AA:BB" to HeadphoneBinding(profile.id, false, -3.0, 1.0)
         ))
         HeadphoneProfileStore(file).save(library)

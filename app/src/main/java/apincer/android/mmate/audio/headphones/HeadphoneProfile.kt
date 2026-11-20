@@ -39,7 +39,8 @@ data class HeadphoneBinding(
     val usbEqAllowed: Boolean = false,
     /** Legacy files default to Custom so their saved trims retain their sound. */
     val soundMode: SoundMode = SoundMode.CUSTOM,
-    val nightListening: Boolean = false
+    val nightListening: Boolean = false,
+    val crossfeed: Boolean = false
 ) {
     /** Bass migration keeps its shelf approximately; its old mid cut is intentionally retired. */
     internal fun migrated(): HeadphoneBinding = when (soundMode) {

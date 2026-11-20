@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Mood queues:** A Mood chip in the queue picks Drive, Focus, Wind down or Sleep and keeps adding tracks whose mood or style tags match, in random order. Each mood shows how many tracks match. Sleep stops adding after about 45 minutes.
+- **Picking a queue source replaces what's next:** Choosing a source or mood now swaps the upcoming tracks for tracks from that source, keeping the current track and anything you put next. Undo brings the old queue back, even after trying several sources in a row. Before, a long queue never changed when you picked a source.
+- **Volume leveling on the playback screen:** Quick tuning has a Volume leveling section to pick Off, Track or Album and a pre-amp of −3, 0 or +3 dB. A change applies to the playing track right away. Now Playing and the studio console show what leveling does to the current track, such as "Leveling −4.2 dB", "No ReplayGain tags" or that leveling is not applied on a remote player.
+- **Measure loudness:** Select tracks, then choose Measure loudness from the selection menu to measure them and write ReplayGain tags into the files. Selecting every track of an album also writes album gain; measuring part of an album keeps the album gain the files already had. Leveling picks up the new values right away.
+- **Measure loudness while charging:** An option under Volume leveling in Settings writes ReplayGain tags into tracks that have none, in hourly runs while the phone charges. Off by default. Each run picks up where the last one stopped, and files that can't be measured or tagged are not tried again.
+
+- **Headphone crossfeed:** Headphone tuning has a Crossfeed switch that blends a little of each side into the other, like listening to speakers in a room, so hard-panned recordings are less tiring. Each output remembers it, and the tuning chip shows Crossfeed while it is on.
+- **Limiting and clipping light:** The tuning chip shows Limiting for a few seconds when MusicMate turned the sound down by more than 1 dB to stop a peak from distorting, and Clipping when a peak went past full scale and had to be cut.
+
+### Changed
+- **Higher quality volume leveling:** Leveling now changes the audio inside MusicMate, before headphone or car tuning, instead of turning down Android's volume. The new gain starts exactly where the next song starts in gapless playback. 16-bit songs are sent as 24-bit, so leveling adds no rounding noise. With Prevent clipping on, quiet songs can now be raised until their peak reaches full scale.
+- **Target loudness:** Volume leveling has a Target loudness choice. The default, −14 LUFS, matches streaming services and turns loud songs down about 4 dB less than before. −18 LUFS keeps the ReplayGain standard. Songs without tags are turned down to about the target, about −5 dB at −14 LUFS.
+- **Queue screen:** Source chips are real selectable chips with a refresh button and say "Finding tracks…" while working. Removing a track offers Undo, rows keep their drag while reordering, errors say what to do and retry on tap, and sources use one name and one color everywhere.
+- **Quality badges:** The short badge label now follows the same tier as its color, so a 24-bit track at 44.1 or 48 kHz reads 24-BIT.
+- **Volume leveling settings:** Settings no longer claim EBU R128 leveling. The clipping option now says what it does, "Lowers the gain so peaks don't clip", and the labels use sentence case.
+- **Style tags:** Groove and Synth-based are read as Groove-driven and Synth-driven, the names the tag editor offers. Tags are rewritten to the new names when a track is next saved.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.

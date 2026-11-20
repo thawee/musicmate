@@ -10,24 +10,31 @@ import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
 import apincer.android.mmate.audio.dsp.CarDspProcessor
 
 /**
- * Opens MusicMate's audio outputs: integer PCM only (float becomes 24-bit), with the USB DAC
+ * Opens MusicMate's audio outputs: integer PCM only (float and 16-bit become 24-bit), with the USB DAC
  * asked to run at the track's rate. If Android refuses that output, it retries once with the
  * DAC on Android's default format before reporting the failure to the player. Each output gets its
- * own dormant DSP processor at the track's sample rate, so headphone EQ can be enabled live.
+ * own dormant DSP processor at the track's sample rate, so headphone EQ can be enabled live, and
+ * applies [levelingGain] to the samples.
  */
 class MusicAudioOutputProvider(
     base: AudioOutputProvider,
-    private val usbOutputFormat: UsbOutputFormat
+    private val usbOutputFormat: UsbOutputFormat,
+    private val levelingGain: () -> Double = { 1.0 }
 ) : ForwardingAudioOutputProvider(base) {
 
     override fun getAudioOutput(config: OutputConfig): AudioOutput {
         val channelCount = Integer.bitCount(config.channelMask)
-        val trackConfig = if (config.encoding == C.ENCODING_PCM_FLOAT) {
-            config.buildUpon()
+        val trackConfig = when (config.encoding) {
+            C.ENCODING_PCM_FLOAT -> config.buildUpon()
                 .setEncoding(C.ENCODING_PCM_24BIT)
                 .setBufferSize(config.bufferSize / 4 * 3)
                 .build()
-        } else config
+            C.ENCODING_PCM_16BIT -> config.buildUpon()
+                .setEncoding(C.ENCODING_PCM_24BIT)
+                .setBufferSize(config.bufferSize / 2 * 3)
+                .build()
+            else -> config
+        }
         usbOutputFormat.prepare(config.sampleRate, channelCount)
         val output = try {
             super.getAudioOutput(trackConfig)
@@ -37,7 +44,7 @@ class MusicAudioOutputProvider(
             super.getAudioOutput(trackConfig)
         }
         val carDsp = if (channelCount > 0) CarDspProcessor(config.sampleRate, channelCount) else null
-        return IntegerPcmAudioOutput(output, config.encoding, channelCount, carDsp)
+        return IntegerPcmAudioOutput(output, config.encoding, channelCount, carDsp, levelingGain)
     }
 
     private companion object {

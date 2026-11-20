@@ -72,6 +72,8 @@ public class PlaylistRepository {
                         entry.setType(entryObj.optString("type", PlaylistEntry.TYPE_TITLE));
                         entry.setNote(entryObj.optString("note", null));
                         entry.setDescription(entryObj.optString("description", null));
+                        entry.setCategory(entryObj.optString("category", null));
+                        entry.setSessionMinutes(entryObj.optInt("sessionMinutes", 0));
 
                         // Smart playlist telemetry criteria
                         entry.setMinDrScore(entryObj.optDouble("minDrScore", 0.0));
@@ -297,6 +299,8 @@ public class PlaylistRepository {
                     obj.put("losslessOnly", p.isLosslessOnly());
                     obj.put("minBitDepth", p.getMinBitDepth());
                     obj.put("minSampleRate", p.getMinSampleRate());
+                    obj.put("category", p.getCategory());
+                    obj.put("sessionMinutes", p.getSessionMinutes());
                     arr.put(obj);
                 }
             }
@@ -335,6 +339,8 @@ public class PlaylistRepository {
                 entry.setLosslessOnly(entryObj.optBoolean("losslessOnly", false));
                 entry.setMinBitDepth(entryObj.optInt("minBitDepth", 0));
                 entry.setMinSampleRate(entryObj.optLong("minSampleRate", 0L));
+                entry.setCategory(entryObj.optString("category", null));
+                entry.setSessionMinutes(entryObj.optInt("sessionMinutes", 0));
                 org.json.JSONArray rulesArray = entryObj.optJSONArray("rules");
                 if (PlaylistEntry.TYPE_TITLE.equalsIgnoreCase(entry.getType()) && rulesArray != null) {
                     List<PlaylistRule> rules = new ArrayList<>();

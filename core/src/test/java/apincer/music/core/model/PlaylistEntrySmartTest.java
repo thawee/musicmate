@@ -83,6 +83,27 @@ public class PlaylistEntrySmartTest {
     }
 
     @Test
+    public void moodOnlyRuleMatchesWithoutGenre() {
+        PlaylistRule rule = new PlaylistRule();
+        rule.setMood(new java.util.ArrayList<>(java.util.Arrays.asList("Calm", "Chill")));
+        ExcludeRule exclude = new ExcludeRule();
+        exclude.setStyle(new java.util.ArrayList<>(java.util.Collections.singletonList("Live")));
+        rule.setExclude(exclude);
+        PlaylistEntry windDown = new PlaylistEntry();
+        windDown.setType(PlaylistEntry.TYPE_GENRE);
+        windDown.setCategory(PlaylistEntry.CATEGORY_MOOD);
+        windDown.setRules(new java.util.ArrayList<>(java.util.Collections.singletonList(rule)));
+        windDown.compileRules();
+
+        assertTrue(windDown.isMood());
+        assertTrue(windDown.isInPlaylist(tagged(null, "Calm", null)));
+        assertTrue(windDown.isInPlaylist(tagged("Jazz", "Chill / Relax", null)));
+        assertFalse(windDown.isInPlaylist(tagged(null, "Calm", "Live")));
+        assertFalse(windDown.isInPlaylist(tagged(null, "Happy", null)));
+        assertFalse(windDown.isInPlaylist(tagged(null, null, null)));
+    }
+
+    @Test
     public void testSilentTrackWithBogusDynamicRangeIsNotDr12() {
         PlaylistEntry drEntry = new PlaylistEntry();
         drEntry.setType(PlaylistEntry.TYPE_SMART);

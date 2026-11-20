@@ -89,6 +89,12 @@ object HeadphonePreferences {
     }
 
     @Synchronized
+    fun setCrossfeed(context: Context, endpoint: HeadphoneEndpoint, enabled: Boolean) = update(context) {
+        val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(crossfeed = enabled)))
+    }
+
+    @Synchronized
     fun delete(context: Context, id: String) = update(context) { saved ->
         saved.copy(
             profiles = saved.profiles.filterNot { it.id == id },

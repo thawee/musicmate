@@ -116,7 +116,6 @@ internal object UxPreviewFixtures {
         specsFormat.value = "FLAC • 24-bit / 96 kHz"
         specsBitrate.value = "2,744 kbps"
         specsDr.value = "DR12"
-        specsReplayGain.value = "-4.2 dB"
         specsFileSize.value = "178 MB"
         volume.value = 0.64f
         signalPathSteps.addAll(listOf("FLAC", "PCM 24/96", "USB DAC"))

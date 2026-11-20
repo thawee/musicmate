@@ -127,6 +127,11 @@ public final class Constants {
     public static final String PREF_REPLAYGAIN_MODE = "preference_replaygain_mode";
     public static final String PREF_REPLAYGAIN_PREAMP = "preference_replaygain_preamp";
     public static final String PREF_REPLAYGAIN_PREVENT_CLIPPING = "preference_replaygain_prevent_clipping";
+    /** Loudness, in LUFS, that leveling brings every track to. */
+    public static final String PREF_REPLAYGAIN_TARGET = "preference_replaygain_target";
+    /** Bumped after ReplayGain tags are written, so the player and the leveling status reread them. */
+    public static final String PREF_REPLAYGAIN_TAGS_CHANGED = "preference_replaygain_tags_changed";
+    public static final String PREF_MEASURE_LOUDNESS_WHILE_CHARGING = "preference_measure_loudness_while_charging";
     public static final String PREF_TAP_ACTION_MODE = "preference_tap_action_mode";
     public static final String TAP_MODE_CURATE = "curate";
     public static final String TAP_MODE_LISTEN = "listen";

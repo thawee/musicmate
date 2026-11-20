@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.Locale;
 
 import apincer.music.core.model.Track;
+import apincer.music.core.playback.Loudness;
 import apincer.music.core.provider.FileSystem;
 import apincer.android.utils.FileUtils;
 
@@ -335,92 +336,21 @@ public class FFMpegHelper {
         return false;
     }
 
-    public static ReplayGainResult analyzeReplayGain(String path) {
-        String cmd = " -hide_banner -nostats -i " + input(path) + " -filter:a ebur128 -f null -";
-
-        Log.i(TAG, "Analyzing ReplayGain: " + path);
-
+    /** Measures EBU R128 loudness and true peak; null when ffmpeg fails or the track is silent. */
+    public static Loudness measureLoudness(String path, double seconds) {
+        String cmd = " -hide_banner -nostats -i " + input(path) + " -filter:a ebur128=peak=true -f null -";
         FFmpegSession session = FFmpegKit.execute(cmd);
-
-        if (!ReturnCode.isSuccess(session.getReturnCode())) {
-            Log.e(TAG, "ReplayGain analysis failed: " + session.getAllLogsAsString());
-            return null;
-        }
-
         String logs = session.getAllLogsAsString();
-
-        double integratedLufs = parseIntegratedLufs(logs);
-        double truePeak = parseTruePeak(logs);
-
-        if (Double.isNaN(integratedLufs)) {
+        if (!ReturnCode.isSuccess(session.getReturnCode())) {
+            Log.w(TAG, "Loudness measurement failed for " + path + ": " + session.getReturnCode());
             return null;
         }
-
-        // ReplayGain reference = -18 LUFS
-        double gain = -18.0 - integratedLufs;
-
-        return new ReplayGainResult(gain, truePeak);
-    }
-
-    private static double parseIntegratedLufs(String logs) {
-        try {
-            String[] lines = logs.split("\n");
-            for (String line : lines) {
-                if (line.contains("I:")) {
-                    // Example: I: -14.3 LUFS
-                    int idx = line.indexOf("I:");
-                    String sub = line.substring(idx + 2).trim();
-                    String value = sub.split(" ")[0];
-                    return Double.parseDouble(value);
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "parseIntegratedLufs error", e);
-        }
-        return Double.NaN;
-    }
-
-    private static double parseTruePeak(String logs) {
-        try {
-            String[] lines = logs.split("\n");
-            for (String line : lines) {
-                if (line.contains("Peak:")) {
-                    // Example: Peak: -1.2 dBFS
-                    int idx = line.indexOf("Peak:");
-                    String sub = line.substring(idx + 5).trim();
-                    String value = sub.split(" ")[0];
-                    return Double.parseDouble(value);
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "parseTruePeak error", e);
-        }
-        return Double.NaN;
+        return Loudness.parseEbur128(logs, seconds);
     }
 
     // Update your interface to handle the new data
     public interface GenerateCallback {
         void onGenerated(String path, String qualityStatus, int realBits, double highFreqDb);
         void onError(String error);
-    }
-
-    public static class ReplayGainResult {
-        public final double gainDb;
-        public final double peakDb;
-
-        public ReplayGainResult(double gainDb, double peakDb) {
-            this.gainDb = gainDb;
-            this.peakDb = peakDb;
-        }
-
-        public String getGainString() {
-            return String.format(Locale.US, "%.2f dB", gainDb);
-        }
-
-        public String getPeakString() {
-            // Convert dBFS → linear peak (ReplayGain standard)
-            double linear = Math.pow(10, peakDb / 20.0);
-            return String.format(Locale.US, "%.6f", linear);
-        }
     }
 }

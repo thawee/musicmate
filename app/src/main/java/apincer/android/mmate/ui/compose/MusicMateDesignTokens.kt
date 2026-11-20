@@ -22,6 +22,8 @@ object MusicMateDesignTokens {
         val BorderPrimary = Color(0x33FFFFFF)
         val BorderSubtle = Color(0x1AFFFFFF)
         val BorderElevated = Color(0x4DFFFFFF)
+        val Dialog = Color(0xF2161618)
+        val RowFill = Color(0x0EFFFFFF) // one picker row on Dialog
     }
 
     /**
@@ -60,6 +62,18 @@ object MusicMateDesignTokens {
     object Status {
         val Positive = Color(0xFF00E676)
         val Destructive = Color(0xFFEF5350) // Delete and Remove, the trigger and its confirm; matches the theme's error
+    }
+
+    /** One accent per queue source: its chip, its queue section and the playlist picker */
+    object SourceAccent {
+        val Manual = Color(0xFFB0BEC5)
+        val New = Brand.Gold
+        val Downloads = Color(0xFF00E5FF)
+        val Discover = Color(0xFF00E676)
+        val Rediscover = Color(0xFFFF7043)
+        val Playlist = Color(0xFFBA68C8)
+        val UserAdded = Color(0xFF00E5FF) // tracks you put next, and Add to queue
+        val Mood = Color(0xFFF06292)
     }
 
     /**

@@ -599,6 +599,86 @@
     <string name="action_remove_queue_track">Remove %1$s from queue</string>
     <string name="action_move_queue_track_up">Move %1$s up</string>
     <string name="action_move_queue_track_down">Move %1$s down</string>
+
+    <!-- Queue page and playlist picker -->
+    <string name="queue_title">Upcoming queue</string>
+    <plurals name="queue_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+    <string name="queue_finding_tracks">Finding tracks…</string>
+    <string name="queue_action_load_playlist">Load playlist</string>
+    <string name="queue_action_jump_to_playing">Jump to now playing</string>
+    <string name="queue_action_clear">Clear queue</string>
+    <string name="queue_shuffled_up_next">Shuffled · Up next: %1$s</string>
+    <string name="queue_up_next_random">Random track</string>
+    <string name="queue_up_next_end">End of queue</string>
+    <string name="queue_unknown_title">Unknown title</string>
+    <string name="queue_unknown_artist">Unknown artist</string>
+    <string name="queue_clear_title">Clear queue?</string>
+    <plurals name="queue_clear_message">
+        <item quantity="one">Remove %1$d track from the queue? This cannot be undone.</item>
+        <item quantity="other">Remove all %1$d tracks from the queue? This cannot be undone.</item>
+    </plurals>
+    <string name="queue_source_manual">Manual</string>
+    <string name="queue_source_new">New</string>
+    <string name="queue_source_downloads">Downloads</string>
+    <string name="queue_source_discover">Discover</string>
+    <string name="queue_source_rediscover">Rediscover</string>
+    <string name="queue_source_playlist">Playlist</string>
+    <string name="queue_refresh_suggestions">Refresh suggestions</string>
+    <string name="queue_error_refresh_source">Couldn\'t refresh this source. Tap to retry.</string>
+    <string name="queue_error_find_tracks">Couldn\'t find more tracks. Tap to retry.</string>
+    <string name="queue_error_no_playable">No playable tracks found in \"%1$s\". Check that its files still exist, then tap to retry.</string>
+    <string name="queue_error_load_playlist">Couldn\'t load this playlist. Check that its files still exist, then tap to retry.</string>
+    <string name="queue_error_add_playlist">Couldn\'t add this playlist to the queue. Check that its files still exist, then tap to retry.</string>
+    <string name="queue_error_fill_from_playlist">Couldn\'t add tracks from this playlist. Tap to retry.</string>
+    <string name="queue_section_now_playing">Now playing</string>
+    <string name="queue_section_up_next">Up next</string>
+    <string name="queue_section_up_next_yours">Up next (added by you)</string>
+    <string name="queue_section_added_from">Added from %1$s</string>
+    <string name="queue_section_added_automatically">Added automatically</string>
+    <string name="queue_badge_play_next">Play next</string>
+    <string name="queue_badge_smart">Smart</string>
+    <string name="queue_remove_from_queue">Remove from queue</string>
+    <string name="queue_reorder">Reorder</string>
+    <string name="queue_removed_track">Removed \"%1$s\"</string>
+    <string name="queue_undo">Undo</string>
+    <string name="queue_source_replaced">Queue replaced with %1$s.</string>
+    <string name="queue_source_nothing_found">No tracks found for %1$s. Your queue is unchanged.</string>
+    <string name="queue_empty_title_manual">Your queue is empty</string>
+    <string name="queue_empty_title_finding">Finding tracks</string>
+    <string name="queue_empty_title_nothing">Nothing to add yet</string>
+    <string name="queue_empty_body_manual">Tap any song or album in your library to start playback, choose a source above, or load a playlist.</string>
+    <string name="queue_empty_body_rediscover">Rediscover builds as you listen: complete a track, then leave it unheard for 30 days.</string>
+    <string name="queue_empty_body_smart">Choose a source above to add matching tracks from your library.</string>
+    <string name="queue_browse_library">Browse library</string>
+    <string name="queue_picker_title">Load from playlist</string>
+    <string name="queue_picker_subtitle">Play now, add to the queue, or keep adding from a playlist</string>
+    <string name="queue_picker_empty">No playlists in your library yet.</string>
+    <string name="queue_picker_unnamed">Unnamed playlist</string>
+    <string name="queue_picker_play_all">Play all</string>
+    <string name="queue_picker_add_to_queue">Add to queue</string>
+    <string name="queue_picker_keep_adding">Keep adding from this playlist</string>
+    <string name="queue_playlist_badge_dr12">DR12+</string>
+    <string name="queue_playlist_badge_hires">Hi-Res</string>
+    <string name="queue_playlist_badge_dsd">DSD</string>
+    <string name="queue_playlist_badge_lossless">Lossless</string>
+    <string name="queue_playlist_badge_smart">Smart</string>
+    <string name="queue_playlist_badge_playlist">Playlist</string>
+    <string name="queue_source_mood">Mood</string>
+    <string name="queue_mood_title">Play by mood</string>
+    <string name="queue_mood_subtitle">Keeps adding tracks whose mood or style tags match, in random order.</string>
+    <string name="queue_mood_counting">Counting tracks…</string>
+    <string name="queue_mood_no_tracks">No matching tags yet. Add mood or style tags in the tag editor.</string>
+    <string name="queue_mood_keeps_going">Keeps going until you stop</string>
+    <string name="queue_mood_stops_after">Stops after %1$d min</string>
+    <string name="queue_mood_selected">Selected</string>
+    <string name="queue_mood_footer">Only tracks with mood or style tags are included.</string>
+    <plurals name="queue_mood_track_count">
+        <item quantity="one">%1$d track · %2$s</item>
+        <item quantity="other">%1$d tracks · %2$s</item>
+    </plurals>
     <string name="cd_media_server_running">Media server, running</string>
     <string name="cd_media_server_stopped">Media server, stopped</string>
     <string name="cd_copy_server_url">Copy server URL, %1$s</string>
@@ -635,5 +715,43 @@
     <string name="placeholder_96khz">96 kHz</string>
     <string name="placeholder_new">NEW</string>
     <string name="placeholder_badge">Badge</string>
+
+    <!-- Volume leveling (ReplayGain). %1$s in a dB string is a signed number such as −4.2 -->
+    <string name="leveling_title">Volume leveling</string>
+    <string name="leveling_applied">Leveling %1$s dB</string>
+    <string name="leveling_album_applied">Album leveling %1$s dB</string>
+    <string name="leveling_off">Leveling off</string>
+    <string name="leveling_no_tags">No ReplayGain tags</string>
+    <string name="leveling_no_tags_preamp">No ReplayGain tags, estimated %1$s dB</string>
+    <string name="leveling_remote">Leveling not applied on %1$s</string>
+    <string name="leveling_desc_lowered">Volume leveling lowers this track by %1$s decibels</string>
+    <string name="leveling_desc_raised">Volume leveling raises this track by %1$s decibels</string>
+    <string name="leveling_desc_unchanged">Volume leveling leaves this track unchanged</string>
+    <string name="leveling_mode_off">Off</string>
+    <string name="leveling_mode_track">Track</string>
+    <string name="leveling_mode_album">Album</string>
+    <string name="leveling_mode_off_hint">Plays every track at its recorded loudness</string>
+    <string name="leveling_mode_track_hint">Evens out loudness between tracks using ReplayGain tags</string>
+    <string name="leveling_mode_album_hint">Evens out loudness between albums and keeps each album\'s own quiet and loud songs</string>
+    <string name="leveling_preamp">Pre-amp</string>
+    <string name="leveling_preamp_value">%1$s dB</string>
+    <string name="leveling_now_playing">Now playing: %1$s</string>
+    <string name="leveling_not_applied">Not applied to this player</string>
+    <string name="leveling_settings_summary">Evens out loudness between tracks using ReplayGain tags</string>
+    <string name="leveling_settings_preamp">Pre-amp gain: %1$s dB</string>
+    <string name="leveling_settings_target">Target loudness</string>
+    <string name="leveling_target_streaming">−14 LUFS, streaming</string>
+    <string name="leveling_target_reference">−18 LUFS, ReplayGain</string>
+    <string name="leveling_target_summary">−14 LUFS plays louder with less cut. −18 LUFS leaves more room for dynamic recordings.</string>
+    <string name="leveling_prevent_clipping">Prevent clipping</string>
+    <string name="leveling_prevent_clipping_summary">Lowers the gain so peaks don\'t clip</string>
+
+    <!-- Loudness measurement writes ReplayGain tags into the music files -->
+    <string name="action_measure_loudness">Measure loudness</string>
+    <string name="measure_loudness_title">Measure loudness</string>
+    <string name="measure_loudness_confirm">Write tags</string>
+    <string name="measure_loudness_failures">Some files weren\'t tagged</string>
+    <string name="measure_loudness_while_charging">Measure loudness while charging</string>
+    <string name="measure_loudness_while_charging_summary">Writes ReplayGain tags into tracks that have none, while the phone charges</string>
 
 </resources>

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,7 +15,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.music.core.Settings;
 import apincer.music.core.model.Track;
+import apincer.music.core.playback.LoudnessTagger;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.FFMpegHelper;
@@ -286,6 +289,46 @@ public class FileOperationTask {
                     callback.onProgress(tag, (int) Math.ceil(count.incrementAndGet() * rate), "Error");
                 } finally {
                     finishItem(done, selections.size(), callback);
+                }
+            });
+        }
+    }
+
+    /**
+     * Measures loudness and writes ReplayGain tags into each file, album by album, so a whole
+     * selected album also gets its album gain.
+     */
+    public void measureLoudness(@NonNull Context context,
+                                @NonNull List<Track> selections,
+                                @NonNull ProgressCallback callback) {
+        Collection<List<Track>> albums = LoudnessTagger.byAlbum(selections);
+        LoudnessTagger tagger = LoudnessTagger.create(tagRepos);
+        final AtomicInteger count = new AtomicInteger(0);
+        final AtomicInteger albumsLeft = new AtomicInteger(albums.size());
+        final double rate = MAX_PROGRESS / selections.size();
+
+        for (List<Track> album : albums) {
+            MusicMateExecutors.execute(() -> {
+                try {
+                    tagger.tag(album, new LoudnessTagger.Listener() {
+                        @Override
+                        public void onMeasuring(Track track) {
+                            callback.onProgress(track, (int) (count.get() * rate), "Measuring");
+                        }
+
+                        @Override
+                        public void onTagged(Track track, boolean written) {
+                            callback.onProgress(track, (int) Math.ceil(count.incrementAndGet() * rate),
+                                    written ? "Success" : "Failed");
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "Error measuring loudness", e);
+                } finally {
+                    if (albumsLeft.decrementAndGet() == 0) {
+                        Settings.markReplayGainTagsChanged(context);
+                        callback.onComplete();
+                    }
                 }
             });
         }

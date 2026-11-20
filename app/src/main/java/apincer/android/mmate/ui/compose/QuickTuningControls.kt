@@ -28,6 +28,7 @@ internal fun QuickTuningControls(
     onAdjust: (Double, Double) -> Unit = { _, _ -> },
     onAdjustFinished: (Double, Double) -> Unit = { _, _ -> },
     onNightListening: (Boolean) -> Unit = {},
+    onCrossfeed: (Boolean) -> Unit = {},
     onCompare: (Boolean) -> Unit = {},
     onPreviewEnd: () -> Unit = {},
     remoteTarget: String? = null
@@ -52,8 +53,10 @@ internal fun QuickTuningControls(
                     status.binding.bassDb, status.binding.trebleDb, status.binding.nightListening,
                     enabled = canEnable, canCompare = status.active && remoteTarget == null, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onCompare = onCompare, onPreviewEnd = onPreviewEnd)
             }
-            NightListeningControl(status.binding.nightListening, canEnable, onNightListening)
+            NightListeningControl(status.binding.nightListening, canEnable, status.active, onNightListening)
+            CrossfeedControl(status.binding.crossfeed, canEnable, status.active, onCrossfeed)
         }
+        VolumeLevelingControl(remoteTarget)
         HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
         TuningDisclosure("Correction", selectedName ?: "None · sound mode works independently") {
             CorrectionProfileSelector(choices, status.profile?.id, selectedName, output, canApply, onSelect,

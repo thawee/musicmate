@@ -646,18 +646,11 @@ fun NowPlayingPage(
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        // Row 2: Channels, Dynamic Range & ReplayGain
+                        // Row 2: Channels, Dynamic Range & volume leveling
                         val hasChannels = channelsStr.isNotEmpty()
                         val hasDr = drStr.isNotEmpty() && drStr != "-"
-                        val rgStr = state.specsReplayGain.value.ifEmpty {
-                            track?.path?.let { p ->
-                                val rg = apincer.music.core.playback.ReplayGainManager.getInstance().getReplayGain(p)
-                                val mode = apincer.music.core.Settings.getReplayGainMode(context)
-                                rg?.getDisplayString(mode)
-                            } ?: ""
-                        }
-                        val hasRg = rgStr.isNotEmpty()
-                        if (hasChannels || hasDr || hasRg) {
+                        val leveling = levelingStatus(rememberLeveling(track?.path), state.remoteTarget.value)
+                        if (hasChannels || hasDr || leveling != null) {
                             // FlowRow: at large text sizes a value moves to the next line whole
                             FlowRow(
                                 itemVerticalAlignment = Alignment.CenterVertically,
@@ -685,15 +678,16 @@ fun NowPlayingPage(
                                         softWrap = false
                                     )
                                 }
-                                if (hasRg) {
+                                if (leveling != null) {
                                     Text(
-                                        text = if (hasChannels || hasDr) " • $rgStr" else rgStr,
-                                        color = Color(0xFF64B5F6),
+                                        text = if (hasChannels || hasDr) " • ${leveling.text}" else leveling.text,
+                                        color = leveling.color,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = FontFamily.Monospace,
                                         letterSpacing = 0.5.sp,
-                                        softWrap = false
+                                        softWrap = false,
+                                        modifier = Modifier.semantics { contentDescription = leveling.description }
                                     )
                                 }
                             }

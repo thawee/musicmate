@@ -176,6 +176,17 @@ class VUMeterAndBadgeTest {
     }
 
     @Test
+    fun compactLabelFollowsTheSameTierAsTheAccent() {
+        val stale = createMockTrack(bitDepth = 24, qualityInd = "CD")
+        assertEquals("24-BIT", AudioPresentation.qualityLabel(stale, false))
+        assertEquals("24-BIT LOSSLESS", AudioPresentation.qualityLabel(stale, true))
+        assertEquals(Color(0xFFFFD700), AudioPresentation.accent(stale))
+        val unknown = createMockTrack(encoding = "OPUS", fileType = "OPUS", qualityInd = "Hi-Res")
+        assertEquals("HI-RES", AudioPresentation.qualityLabel(unknown, false))
+        assertEquals(Color(0xFF9E9E9E), AudioPresentation.accent(unknown))
+    }
+
+    @Test
     fun testUnifiedBadgeTextNullTrack() {
         assertEquals("-", getUnifiedBadgeText(null))
     }

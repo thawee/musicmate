@@ -77,22 +77,26 @@ internal fun TuningSoundModes(mode: SoundMode, enabled: Boolean = true, showHead
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SoundMode.selectable.forEach { option ->
-                val selected = mode == option
-                Row(Modifier.clip(RoundedCornerShape(24.dp))
-                    .background(if (selected) MusicMateDesignTokens.Brand.GoldContainer else MusicMateDesignTokens.Surfaces.SurfaceElevated)
-                    .border(1.dp, if (selected) MusicMateDesignTokens.Brand.GoldOutline else MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(24.dp))
-                    .selectable(selected, enabled = enabled, role = Role.RadioButton) { onSelect(option) }
-                    .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (selected) Icon(painterResource(R.drawable.ic_check_24), null,
-                        Modifier.size(16.dp), tint = MusicMateDesignTokens.Brand.Gold)
-                    Text(option.label, fontSize = 14.sp, fontWeight = FontWeight.Medium,
-                        color = if (enabled) MusicMateDesignTokens.Text.Primary else MusicMateDesignTokens.Text.Muted)
-                }
+                TuningChoiceChip(option.label, mode == option, enabled) { onSelect(option) }
             }
         }
         TuningHint(soundModeDescription(mode))
+    }
+}
+
+@Composable
+internal fun TuningChoiceChip(label: String, selected: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    Row(Modifier.clip(RoundedCornerShape(24.dp))
+        .background(if (selected) MusicMateDesignTokens.Brand.GoldContainer else MusicMateDesignTokens.Surfaces.SurfaceElevated)
+        .border(1.dp, if (selected) MusicMateDesignTokens.Brand.GoldOutline else MusicMateDesignTokens.Surfaces.BorderSubtle, RoundedCornerShape(24.dp))
+        .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+        .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (selected) Icon(painterResource(R.drawable.ic_check_24), null,
+            Modifier.size(16.dp), tint = MusicMateDesignTokens.Brand.Gold)
+        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+            color = if (enabled) MusicMateDesignTokens.Text.Primary else MusicMateDesignTokens.Text.Muted)
     }
 }
 
@@ -107,15 +111,25 @@ internal fun soundModeDescription(mode: SoundMode): String = when (mode) {
 }
 
 @Composable
-internal fun NightListeningControl(checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+internal fun NightListeningControl(checked: Boolean, enabled: Boolean = true, active: Boolean = true, onChange: (Boolean) -> Unit) =
+    TuningSwitch("Night listening", "Reduces loud passages for quieter listening", checked, enabled, active, onChange)
+
+@Composable
+internal fun CrossfeedControl(checked: Boolean, enabled: Boolean = true, active: Boolean = true, onChange: (Boolean) -> Unit) =
+    TuningSwitch("Crossfeed", "Blends a little of each side into the other, like listening to speakers", checked, enabled, active, onChange)
+
+/** [active] false: the option saves, but this output plays without tuning. */
+@Composable
+private fun TuningSwitch(title: String, hint: String, checked: Boolean, enabled: Boolean, active: Boolean,
+    onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp)
         .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
-        .semantics { contentDescription = "Night listening" },
+        .semantics { contentDescription = title },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Night listening", color = MusicMateDesignTokens.Text.Primary, fontSize = 14.sp)
-            TuningHint("Reduces loud passages for quieter listening")
+            Text(title, color = MusicMateDesignTokens.Text.Primary, fontSize = 14.sp)
+            TuningHint(if (active) hint else "Applies when tuning is on for this output")
         }
         Switch(checked, onCheckedChange = null, enabled = enabled)
     }

@@ -12,13 +12,16 @@ import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Handler;
+import android.content.SharedPreferences;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.ReplayGainManager;
 import apincer.music.core.model.Track;
@@ -27,6 +30,7 @@ import apincer.music.core.provider.MusicFileProvider;
 import apincer.music.core.utils.TagUtils;
 
 import androidx.annotation.OptIn;
+import androidx.preference.PreferenceManager;
 import androidx.annotation.Nullable;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
@@ -36,6 +40,9 @@ import androidx.media3.common.MimeTypes;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.Renderer;
+import androidx.media3.exoplayer.audio.AudioRendererEventListener;
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector;
 import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.audio.AudioSink;
@@ -43,6 +50,9 @@ import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider;
 import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import apincer.android.mmate.audio.AudioTelemetryManager;
 import apincer.android.mmate.audio.FfmpegPlayback;
+import apincer.android.mmate.audio.LevelingAudioRenderer;
+import apincer.android.mmate.audio.StreamGain;
+import apincer.android.mmate.audio.TrackGain;
 import apincer.android.mmate.audio.MediaRouteLog;
 import apincer.android.mmate.audio.MusicAudioOutputProvider;
 import apincer.android.mmate.audio.UsbOutputFormat;
@@ -58,6 +68,17 @@ public class AndroidPlayerController {
     private PlaybackCallback playbackCallback;
     private ExoPlayer internalExoPlayer;
     private Track nextTrack;
+    /** Leveling gain of the stream being output; the PCM output applies it, so the AudioTrack stays at unity. */
+    private final StreamGain streamGain = new StreamGain();
+    // A field, because SharedPreferences holds its listeners weakly
+    private final SharedPreferences.OnSharedPreferenceChangeListener levelingListener = (prefs, key) -> {
+        if (Constants.PREF_REPLAYGAIN_MODE.equals(key) || Constants.PREF_REPLAYGAIN_PREAMP.equals(key)
+                || Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING.equals(key)
+                || Constants.PREF_REPLAYGAIN_TARGET.equals(key)
+                || Constants.PREF_REPLAYGAIN_TAGS_CHANGED.equals(key)) {
+            runOnMainThread(this::relevel);
+        }
+    };
     private final UsbOutputFormat usbOutputFormat;
     private final MediaRouteLog mediaRouteLog;
     private final apincer.android.mmate.audio.dsp.CarAutoSelect carAutoSelect;
@@ -145,7 +166,8 @@ public class AndroidPlayerController {
         MediaItem.Builder item = new MediaItem.Builder()
                 .setMediaId(String.valueOf(track.getId()))
                 .setUri(Uri.fromFile(file))
-                .setMediaMetadata(metadata);
+                .setMediaMetadata(metadata)
+                .setTag(new TrackGain(track.getPath(), levelingGain(track.getPath())));
         if (FfmpegPlayback.needsFfmpeg(track.getPath(),
                 TagUtils.isALACFile(track) || TagUtils.isAIFFile(track), TagUtils.isDSD(track))) {
             // Served as WAV by FfmpegWavDataSource; the MIME type keeps the extension from steering extractor choice
@@ -170,6 +192,7 @@ public class AndroidPlayerController {
             return kotlin.Unit.INSTANCE;
         });
         this.mediaRouteLog.start();
+        PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(levelingListener);
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -187,7 +210,8 @@ public class AndroidPlayerController {
                     AudioTrackAudioOutputProvider baseProvider = new AudioTrackAudioOutputProvider.Builder(context)
                             .build();
 
-                    MusicAudioOutputProvider outputProvider = new MusicAudioOutputProvider(baseProvider, usbOutputFormat);
+                    MusicAudioOutputProvider outputProvider =
+                            new MusicAudioOutputProvider(baseProvider, usbOutputFormat, streamGain::getCurrent);
 
                     // Float keeps high-resolution sources above 16 bits; IntegerPcmAudioOutput
                     // turns it back into integer PCM before Android sees it. Media3 skips its
@@ -197,6 +221,21 @@ public class AndroidPlayerController {
                             .setEnableAudioTrackPlaybackParams(true)
                             .setAudioOutputProvider(outputProvider)
                             .build();
+                }
+
+                @Override
+                protected void buildAudioRenderers(
+                        Context context,
+                        int extensionRendererMode,
+                        MediaCodecSelector mediaCodecSelector,
+                        boolean enableDecoderFallback,
+                        AudioSink audioSink,
+                        Handler eventHandler,
+                        AudioRendererEventListener eventListener,
+                        ArrayList<Renderer> out) {
+                    // Extension renderers are off, so this replaces the only audio renderer Media3 builds
+                    out.add(new LevelingAudioRenderer(context, getCodecAdapterFactory(), mediaCodecSelector,
+                            enableDecoderFallback, eventHandler, eventListener, audioSink, streamGain));
                 }
             };
 
@@ -275,7 +314,6 @@ public class AndroidPlayerController {
                             if (nextTrack != null) {
                                 Track transitioningTrack = nextTrack;
                                 nextTrack = null;
-                                applyReplayGain(transitioningTrack);
                                 playbackCallback.onMediaTrackChanged(transitioningTrack);
                             } else {
                                 playbackCallback.onPlaybackCompleted();
@@ -559,7 +597,6 @@ public class AndroidPlayerController {
                         // Replace the playlist in one step: clearing it first ends the empty
                         // playlist, and STATE_ENDED would advance the queue a second time.
                         internalExoPlayer.setMediaItem(buildMediaItem(song));
-                        applyReplayGain(song);
                         internalExoPlayer.prepare();
                         internalExoPlayer.play();
                     } catch (Exception e) {
@@ -695,6 +732,7 @@ public class AndroidPlayerController {
 
     public void release() {
         unregisterCallback();
+        PreferenceManager.getDefaultSharedPreferences(context).unregisterOnSharedPreferenceChangeListener(levelingListener);
         runOnMainThread(() -> {
             if (internalExoPlayer != null) {
                 internalExoPlayer.release();
@@ -712,14 +750,17 @@ public class AndroidPlayerController {
         return usbOutputFormat.requestedFormat(deviceId);
     }
 
-    private void applyReplayGain(Track song) {
-        if (internalExoPlayer == null || song == null) return;
-        try {
-            float volume = ReplayGainManager.getInstance().calculateGainVolume(context, song);
-            internalExoPlayer.setVolume(volume);
-            Log.d(TAG, "Applied ReplayGain volume: " + volume + " for track: " + song.getTitle());
-        } catch (Exception e) {
-            Log.w(TAG, "Failed to apply ReplayGain", e);
+    private double levelingGain(String path) {
+        return ReplayGainManager.getInstance().leveling(context, path).volume;
+    }
+
+    /** Recomputes the queued tracks' leveling after a settings or tag change. */
+    private void relevel() {
+        if (internalExoPlayer == null) return;
+        for (int i = 0; i < internalExoPlayer.getMediaItemCount(); i++) {
+            MediaItem.LocalConfiguration local = internalExoPlayer.getMediaItemAt(i).localConfiguration;
+            if (local != null && local.tag instanceof TrackGain gain) gain.setGain(levelingGain(gain.getPath()));
         }
+        streamGain.refresh();
     }
 }

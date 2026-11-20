@@ -141,7 +141,7 @@ class HeadphoneStereoDspTest {
     @Test
     fun processorPassesStereoSettingsOnConstructionChangeAndReset() {
         CarDsp.target = CarDspSettings(emptyList(), balanceDb = 6.0)
-        val processor = CarDspProcessor(rate, 2, seed = 7)
+        val processor = CarDspProcessor(rate, 2)
         assertTrue(processor.beginBlock())
         assertEquals(-6.0, processorBalance(processor), 0.001)
         CarDsp.target = CarDspSettings(emptyList(), balanceDb = -6.0)

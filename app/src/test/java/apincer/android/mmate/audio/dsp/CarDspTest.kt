@@ -99,7 +99,7 @@ class CarDspTest {
     @Test
     fun limiterKeepsFullScaleBelowTheCeiling() {
         CarDsp.target = CarDspSettings(emptyList())
-        val processor = CarDspProcessor(48_000, 2, seed = 7)
+        val processor = CarDspProcessor(48_000, 2)
         assertTrue(processor.beginBlock())
         val source = floats(FloatArray(4_800) { if (it % 4 < 2) 1.0f else -1.0f })
         val peak = int24(processor.processFloatToInt24(source, ByteBuffer.allocate(0))).maxOf { kotlin.math.abs(it) }
@@ -110,7 +110,7 @@ class CarDspTest {
     fun limiterControlsTransientsAndMultitoneWithLinkedStereoAtEveryRate() {
         CarDsp.target = CarDspSettings(emptyList())
         for (rate in rates) {
-            val processor = CarDspProcessor(rate, 2, seed = 7)
+            val processor = CarDspProcessor(rate, 2)
             assertTrue(processor.beginBlock())
             val samples = FloatArray(rate / 5 * 2) { i ->
                 val n = i / 2
@@ -134,7 +134,7 @@ class CarDspTest {
         CarDsp.target = CarDspSettings(emptyList())
         for (rate in rates) {
             for (amplitude in doubleArrayOf(0.5, 1.0)) {
-                val processor = CarDspProcessor(rate, 1, seed = 7)
+                val processor = CarDspProcessor(rate, 1)
                 assertTrue(processor.beginBlock())
                 val samples = FloatArray(rate / 2) { n -> (amplitude * sin(2 * PI * 100 * n / rate)).toFloat() }
                 val output = int24(processor.processFloatToInt24(floats(samples), ByteBuffer.allocate(0)))
@@ -166,12 +166,12 @@ class CarDspTest {
         val pcm16 = shorts(ShortArray(64) { (it * 997 - 30_000).toShort() })
         val passed = mutableListOf<Taken>()
         val delegate = recordingOutput(Int.MAX_VALUE, passed)
-        IntegerPcmAudioOutput(delegate, C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2, seed = 1)).write(pcm16, 1, 0)
-        assertSame(pcm16, passed.single().source)
+        IntegerPcmAudioOutput(delegate, C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2)).write(native(pcm16), 1, 0)
+        assertArrayEquals(bytes(IntegerPcmAudioOutput.int16ToInt24(pcm16, ByteBuffer.allocate(0))), joined(passed))
 
         val floats = floats(FloatArray(64) { (it - 32) / 40f })
         val written = mutableListOf<Taken>()
-        IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, written), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2, seed = 1))
+        IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, written), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2))
             .write(native(floats), 1, 0)
         assertArrayEquals(bytes(IntegerPcmAudioOutput.floatToInt24(floats, ByteBuffer.allocate(0))), joined(written))
     }
@@ -181,7 +181,7 @@ class CarDspTest {
         CarDsp.target = presence
         val pcm24 = ByteBuffer.allocateDirect(60)
         val passed = mutableListOf<Taken>()
-        IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, passed), C.ENCODING_PCM_24BIT, 2, CarDspProcessor(48_000, 2, seed = 1))
+        IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, passed), C.ENCODING_PCM_24BIT, 2, CarDspProcessor(48_000, 2))
             .write(pcm24, 1, 0)
         assertSame(pcm24, passed.single().source)
     }
@@ -195,9 +195,9 @@ class CarDspTest {
             every { productName } returns "USB DAC"
         }
         CarDsp.updateRoute(listOf(dac))
-        assertFalse(CarDspProcessor(48_000, 2, seed = 1).beginBlock())
+        assertFalse(CarDspProcessor(48_000, 2).beginBlock())
         CarDsp.updateRoute(listOf(speaker))
-        assertTrue(CarDspProcessor(48_000, 2, seed = 1).beginBlock())
+        assertTrue(CarDspProcessor(48_000, 2).beginBlock())
     }
 
     @Test
@@ -206,8 +206,8 @@ class CarDspTest {
         for (encoding in intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_FLOAT)) {
             val whole = mutableListOf<Taken>()
             val partial = mutableListOf<Taken>()
-            writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, whole), encoding, 2, CarDspProcessor(48_000, 2, seed = 3)), music(encoding, 480))
-            writeAll(IntegerPcmAudioOutput(recordingOutput(6, partial), encoding, 2, CarDspProcessor(48_000, 2, seed = 3)), music(encoding, 480))
+            writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, whole), encoding, 2, CarDspProcessor(48_000, 2)), music(encoding, 480))
+            writeAll(IntegerPcmAudioOutput(recordingOutput(6, partial), encoding, 2, CarDspProcessor(48_000, 2)), music(encoding, 480))
             assertArrayEquals(joined(whole), joined(partial))
             assertNotEquals(0, joined(whole).size)
         }
@@ -218,8 +218,8 @@ class CarDspTest {
         CarDsp.target = presence
         val one = mutableListOf<Taken>()
         val two = mutableListOf<Taken>()
-        writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, one), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2, seed = 5)), music(C.ENCODING_PCM_16BIT, 960))
-        val split = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, two), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2, seed = 5))
+        writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, one), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2)), music(C.ENCODING_PCM_16BIT, 960))
+        val split = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, two), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2))
         val all = music(C.ENCODING_PCM_16BIT, 960)
         writeAll(split, native(all).apply { limit(all.capacity() / 2) })
         writeAll(split, native(all).apply { position(all.capacity() / 2) })
@@ -230,9 +230,9 @@ class CarDspTest {
     fun switchingOnFadesInToExactlyTheNewChain() {
         val frames = 48_000 / 10
         val fadeFrames = (48_000 * 0.03).toInt()
-        val fading = CarDspProcessor(48_000, 1, seed = 1)
+        val fading = CarDspProcessor(48_000, 1)
         CarDsp.target = presence
-        val direct = CarDspProcessor(48_000, 1, seed = 1)
+        val direct = CarDspProcessor(48_000, 1)
         assertTrue(fading.beginBlock())
         assertTrue(direct.beginBlock())
         val input = FloatArray(frames) { (0.2 * sin(2 * PI * 440 * it / 48_000)).toFloat() }
@@ -246,13 +246,14 @@ class CarDspTest {
     fun switchingOffReturnsToTheUntouchedPathAfterTheFade() {
         CarDsp.target = presence
         val taken = mutableListOf<Taken>()
-        val output = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, taken), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2, seed = 1))
+        val output = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, taken), C.ENCODING_PCM_16BIT, 2, CarDspProcessor(48_000, 2))
         writeAll(output, music(C.ENCODING_PCM_16BIT, 480))
         CarDsp.target = null
         repeat(4) { writeAll(output, music(C.ENCODING_PCM_16BIT, 480)) }
         val after = music(C.ENCODING_PCM_16BIT, 480)
-        writeAll(output, after)
-        assertSame(after, taken.last().source)
+        taken.clear()
+        writeAll(output, native(after))
+        assertArrayEquals(bytes(IntegerPcmAudioOutput.int16ToInt24(after, ByteBuffer.allocate(0))), joined(taken))
     }
 
     @Test
@@ -260,12 +261,12 @@ class CarDspTest {
         CarDsp.target = presence
         val seeked = mutableListOf<Taken>()
         val fresh = mutableListOf<Taken>()
-        val output = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, seeked), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2, seed = 1))
+        val output = IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, seeked), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2))
         writeAll(output, music(C.ENCODING_PCM_FLOAT, 480))
         output.flush()
         seeked.clear()
         writeAll(output, music(C.ENCODING_PCM_FLOAT, 480))
-        writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, fresh), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2, seed = 1)), music(C.ENCODING_PCM_FLOAT, 480))
+        writeAll(IntegerPcmAudioOutput(recordingOutput(Int.MAX_VALUE, fresh), C.ENCODING_PCM_FLOAT, 2, CarDspProcessor(48_000, 2)), music(C.ENCODING_PCM_FLOAT, 480))
         assertArrayEquals(joined(fresh), joined(seeked))
     }
 
@@ -301,23 +302,23 @@ class CarDspTest {
     fun sleepCompressorTamesLoudPassagesAndLeavesQuietOnesAlone() {
         CarDsp.target = CarDspSettings(emptyList(), compress = true)
         // -1 dBFS is 19 dB over the -20 dBFS threshold: 2:1 takes about 9.5 dB off
-        val loud = settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.89)
+        val loud = settledPeak(CarDspProcessor(48_000, 2), amplitude = 0.89)
         assertEquals(-10.5, 20 * log10(loud), 0.5)
         // -30 dBFS sits below the knee and passes untouched
-        val quiet = settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.0316)
+        val quiet = settledPeak(CarDspProcessor(48_000, 2), amplitude = 0.0316)
         assertEquals(0.0316, quiet, 0.0005)
     }
 
     @Test
     fun otherModesAreNotCompressed() {
         CarDsp.target = CarDspSettings(emptyList())
-        assertEquals(0.89, settledPeak(CarDspProcessor(48_000, 2, seed = 3), amplitude = 0.89), 0.005)
+        assertEquals(0.89, settledPeak(CarDspProcessor(48_000, 2), amplitude = 0.89), 0.005)
     }
 
     @Test
     fun leavingSleepReleasesTheCompressorBeforeBypassing() {
         CarDsp.target = CarDspSettings(emptyList(), compress = true)
-        val processor = CarDspProcessor(48_000, 2, seed = 3)
+        val processor = CarDspProcessor(48_000, 2)
         settledPeak(processor, amplitude = 0.89)
         CarDsp.target = null
         assertTrue("still releasing", processor.beginBlock())
@@ -329,7 +330,7 @@ class CarDspTest {
     @Test
     fun aUsbRouteEndsTheSleepReleaseAtOnce() {
         CarDsp.target = CarDspSettings(emptyList(), compress = true)
-        val processor = CarDspProcessor(48_000, 2, seed = 3)
+        val processor = CarDspProcessor(48_000, 2)
         settledPeak(processor, amplitude = 0.89)
         CarDsp.updateRoute(listOf(mockk<AudioDeviceInfo> {
             every { type } returns AudioDeviceInfo.TYPE_USB_DEVICE
@@ -343,7 +344,7 @@ class CarDspTest {
     fun nonFiniteInputBecomesSilenceAndPlaybackGoesOn() {
         every { Log.w(any<String>(), any<String>()) } returns 0
         CarDsp.target = presence
-        val processor = CarDspProcessor(44_100, 2, seed = 3)
+        val processor = CarDspProcessor(44_100, 2)
         assertTrue(processor.beginBlock())
         val bad = floats(floatArrayOf(0.5f, Float.NaN, Float.POSITIVE_INFINITY, -0.5f, Float.NEGATIVE_INFINITY, 0.25f))
         val out = int24(processor.processFloatToInt24(bad, ByteBuffer.allocate(0)))
@@ -358,7 +359,7 @@ class CarDspTest {
     fun rapidGainChangesStayContinuousAndReachTheLatestTarget() {
         for (rate in rates) {
             CarDsp.target = null
-            val processor = CarDspProcessor(rate, 2, seed = 1)
+            val processor = CarDspProcessor(rate, 2)
             fun render(frames: Int): IntArray {
                 assertTrue(processor.beginBlock())
                 return int24(processor.processFloatToInt24(

@@ -23,6 +23,7 @@ class HeadphoneRoutingTest {
         assertEquals(expected.requestedPreampDb, actual.requestedPreampDb, 0.0)
         assertEquals(expected.balanceDb, actual.balanceDb, 0.0)
         assertEquals(expected.compress, actual.compress)
+        assertEquals(expected.crossfeed, actual.crossfeed)
     }
 
 
@@ -30,7 +31,7 @@ class HeadphoneRoutingTest {
     fun customComparisonPreservesCalibrationNightPreampAndUsbConsentWithoutPersistence() {
         val endpoint = HeadphoneEndpoint.of(listOf(usb))!!
         val custom = HeadphoneBinding(profile.id, enabled = true, usbEqAllowed = true,
-            bassDb = 3.0, trebleDb = -2.0, nightListening = true)
+            bassDb = 3.0, trebleDb = -2.0, nightListening = true, crossfeed = true)
         bind(endpoint, custom)
         HeadphoneDsp.updateDevices(listOf(usb))
         val original = HeadphoneDsp.current.settings!!
@@ -40,6 +41,7 @@ class HeadphoneRoutingTest {
         assertEquals(profile.bands, HeadphoneDsp.current.settings!!.bands)
         assertEquals(original.requestedPreampDb, HeadphoneDsp.current.settings!!.requestedPreampDb, 0.0)
         assertTrue(HeadphoneDsp.current.settings!!.compress)
+        assertTrue(HeadphoneDsp.current.settings!!.crossfeed)
         HeadphoneDsp.updateDevices(emptyList())
         HeadphoneDsp.updateDevices(listOf(usb))
         assertFalse(HeadphoneDsp.state.value.comparingCustom)

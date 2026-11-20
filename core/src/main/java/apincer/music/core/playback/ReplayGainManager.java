@@ -13,6 +13,7 @@ import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
 import org.jaudiotagger.tag.mp4.Mp4Tag;
+import org.jaudiotagger.tag.mp4.field.Mp4TagReverseDnsField;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 
 import java.io.File;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 import apincer.music.core.Settings;
-import apincer.music.core.model.Track;
+import apincer.music.core.codec.TagReader;
 import apincer.music.core.provider.FileSystem;
 
 /**
@@ -35,6 +36,15 @@ public class ReplayGainManager {
     private static final String TAG = "ReplayGainManager";
     private static volatile ReplayGainManager INSTANCE;
 
+    private static final String MP4_ITUNES = "----:com.apple.iTunes:";
+
+    /** Loudness that ReplayGain 2 tags are computed against. */
+    static final double REFERENCE_LUFS = -18.0;
+    /** Assumed loudness of a track without tags, near a typical modern master. */
+    static final double UNTAGGED_MASTER_LUFS = -9.0;
+    /** +12 dB, so a bad peak tag cannot make a track deafening. */
+    static final double MAX_BOOST = 3.981;
+
     // Cache parsed ReplayGain info for up to 500 tracks to avoid disk I/O on hot paths
     private final LruCache<String, ReplayGainInfo> cache = new LruCache<>(500);
 
@@ -45,14 +55,29 @@ public class ReplayGainManager {
         public double albumPeak = 1.0;
         public boolean hasTrackGain = false;
         public boolean hasAlbumGain = false;
+    }
 
-        public String getDisplayString(String mode) {
-            if ("album".equalsIgnoreCase(mode) && hasAlbumGain) {
-                return String.format(Locale.US, "RG %+.1f dB (Album)", albumGainDb);
-            } else if (hasTrackGain) {
-                return String.format(Locale.US, "RG %+.1f dB", trackGainDb);
-            }
-            return "";
+    /** What volume leveling does to one track. */
+    public static final class Leveling {
+        public enum Kind { OFF, NO_TAGS, APPLIED }
+
+        public static final Leveling OFF = new Leveling(Kind.OFF, 1.0f, false);
+
+        public final Kind kind;
+        /** Linear scale applied to the samples, in [0.01, 4]; above 1 only when the track's peak leaves room. */
+        public final float volume;
+        /** True when the album gain was used rather than the track gain. */
+        public final boolean album;
+
+        Leveling(Kind kind, float volume, boolean album) {
+            this.kind = kind;
+            this.volume = volume;
+            this.album = album;
+        }
+
+        /** The gain the listener actually hears, in dB. */
+        public double appliedDb() {
+            return 20.0 * Math.log10(volume);
         }
     }
 
@@ -79,11 +104,9 @@ public class ReplayGainManager {
         ReplayGainInfo cached = cache.get(filePath);
         if (cached != null) return cached;
 
-        File file = new File(filePath);
-        if (!file.exists() || !file.canRead() || file.isDirectory()) return null;
-
         try {
-            AudioFile audioFile = AudioFileIO.read(file);
+            // Through the granted folder when scoped storage hides the path
+            AudioFile audioFile = TagReader.readAudioFile(new File(filePath));
             Tag tag = audioFile.getTag();
             if (tag == null) return null;
 
@@ -118,109 +141,109 @@ public class ReplayGainManager {
         }
     }
 
-    /**
-     * Calculates the linear output volume scalar [0.0f, 1.0f] to be applied to ExoPlayer
-     * based on user settings, track gain, pre-amp gain, and peak limiter clipping protection.
-     */
-    public float calculateGainVolume(Context context, Track track) {
-        if (context == null || track == null) return 1.0f;
-
+    /** Reads the leveling settings and this file's tags; does file I/O on a cache miss. */
+    public Leveling leveling(Context context, String path) {
+        if (context == null || path == null) return Leveling.OFF;
         String mode = Settings.getReplayGainMode(context);
-        if ("off".equalsIgnoreCase(mode)) {
-            return 1.0f;
+        if ("off".equalsIgnoreCase(mode)) return Leveling.OFF;
+        return level(mode, Settings.getReplayGainTarget(context), Settings.getReplayGainPreamp(context),
+                Settings.isReplayGainPreventClipping(context), getReplayGain(path));
+    }
+
+    public static Leveling level(String mode, float targetLufs, float preAmpDb, boolean preventClipping, ReplayGainInfo info) {
+        if ("off".equalsIgnoreCase(mode)) return Leveling.OFF;
+        // Tags carry the gain to the ReplayGain 2 reference; a louder target needs less cut
+        double targetOffsetDb = targetLufs - REFERENCE_LUFS;
+
+        double gainDb;
+        double peak;
+        boolean album = false;
+        if (info != null && "album".equalsIgnoreCase(mode) && info.hasAlbumGain) {
+            gainDb = info.albumGainDb;
+            peak = info.albumPeak > 0 ? info.albumPeak : (info.trackPeak > 0 ? info.trackPeak : 1.0);
+            album = true;
+        } else if (info != null && info.hasTrackGain) {
+            gainDb = info.trackGainDb;
+            peak = info.trackPeak > 0 ? info.trackPeak : 1.0;
+        } else {
+            // Untagged tracks are assumed to be typical modern masters; with no peak known they are never raised
+            double untaggedDb = Math.min(0.0, targetLufs - UNTAGGED_MASTER_LUFS + preAmpDb);
+            return new Leveling(Leveling.Kind.NO_TAGS, (float) Math.pow(10.0, untaggedDb / 20.0), false);
         }
 
-        float preAmpDb = Settings.getReplayGainPreamp(context);
-        boolean preventClipping = Settings.isReplayGainPreventClipping(context);
+        double linearScale = Math.pow(10.0, (gainDb + targetOffsetDb + preAmpDb) / 20.0);
 
-        ReplayGainInfo info = getReplayGain(track.getPath());
-        double gainDb = 0.0;
-        double peak = 1.0;
-        boolean hasGain = false;
-
-        if (info != null) {
-            if ("album".equalsIgnoreCase(mode) && info.hasAlbumGain) {
-                gainDb = info.albumGainDb;
-                peak = info.albumPeak > 0 ? info.albumPeak : (info.trackPeak > 0 ? info.trackPeak : 1.0);
-                hasGain = true;
-            } else if (info.hasTrackGain) {
-                gainDb = info.trackGainDb;
-                peak = info.trackPeak > 0 ? info.trackPeak : 1.0;
-                hasGain = true;
-            }
-        }
-
-        if (!hasGain) {
-            // Untagged track: apply pre-amp if negative, otherwise preserve 1.0f neutral volume
-            if (preAmpDb < 0) {
-                return (float) Math.pow(10.0, preAmpDb / 20.0);
-            }
-            return 1.0f;
-        }
-
-        double totalGainDb = gainDb + preAmpDb;
-        double linearScale = Math.pow(10.0, totalGainDb / 20.0);
-
-        // Anti-clipping true-peak limiter safeguard
-        if (preventClipping && peak > 0.0) {
-            if (linearScale * peak > 1.0) {
-                linearScale = 1.0 / peak;
-            }
-        }
-
-        // Clamp volume scalar safely into Android AudioTrack / ExoPlayer acceptable bounds [0.01f, 1.0f]
-        return (float) Math.max(0.01, Math.min(linearScale, 1.0));
+        // With the guard, the loudest sample may reach but not pass full scale; without it, only lower
+        double ceiling = preventClipping ? Math.min(1.0 / peak, MAX_BOOST) : 1.0;
+        return new Leveling(Leveling.Kind.APPLIED, (float) Math.max(0.01, Math.min(linearScale, ceiling)), album);
     }
 
     /**
-     * Writes standard ReplayGain 2.0 / EBU R128 tags into the file metadata so external
-     * audiophile players (Poweramp, Foobar2000, UAPP) recognize the loudness leveling.
+     * Writes ReplayGain 2.0 tags into the file so this app and other players (Poweramp, foobar2000,
+     * UAPP) level it. A null {@code album} leaves any album tags already in the file alone.
+     * @return false when the file could not be written or its tag format has no ReplayGain fields
      */
-    public boolean writeReplayGainToFile(String filePath, double gainDb, double peak) {
-        if (filePath == null || filePath.isEmpty()) return false;
+    public boolean writeReplayGainToFile(String filePath, Loudness track, Loudness album) {
+        if (filePath == null || filePath.isEmpty() || track == null) return false;
         File file = new File(filePath);
-        // No canWrite() check: with a granted folder the path itself is not writable
-        if (!file.exists()) return false;
-
+        ReplayGainInfo before = getReplayGain(filePath);
         try {
+            boolean[] supported = {true};
             FileSystem.access().edit(file, workingFile -> {
                 AudioFile audioFile = AudioFileIO.read(workingFile);
                 Tag tag = audioFile.getTagOrCreateAndSetDefault();
-
-                String gainStr = String.format(Locale.US, "%.2f dB", gainDb);
-                String peakStr = String.format(Locale.US, "%.6f", peak);
-
-                if (tag instanceof FlacTag flacTag) {
-                    VorbisCommentTag vorbis = flacTag.getVorbisCommentTag();
-                    if (vorbis != null) {
-                        vorbis.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
-                        vorbis.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
-                    }
-                } else if (tag instanceof VorbisCommentTag vorbisTag) {
-                    vorbisTag.setField("REPLAYGAIN_TRACK_GAIN", gainStr);
-                    vorbisTag.setField("REPLAYGAIN_TRACK_PEAK", peakStr);
-                } else if (tag instanceof AbstractID3v2Tag id3Tag) {
-                    addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_GAIN", gainStr);
-                    addOrUpdateTxxx(id3Tag, "REPLAYGAIN_TRACK_PEAK", peakStr);
+                if (tag instanceof FlacTag flacTag) tag = flacTag.getVorbisCommentTag();
+                if (tag == null || !writeFields(tag, "TRACK", track) || (album != null && !writeFields(tag, "ALBUM", album))) {
+                    supported[0] = false;
+                    return;
                 }
-
                 audioFile.commit();
             });
+            if (!supported[0]) {
+                Log.w(TAG, "No ReplayGain fields for the tag format of " + filePath);
+                return false;
+            }
 
-            // Update cache
             ReplayGainInfo info = new ReplayGainInfo();
-            info.trackGainDb = gainDb;
-            info.trackPeak = peak;
+            info.trackGainDb = track.gainDb();
+            info.trackPeak = track.peakLinear();
             info.hasTrackGain = true;
+            if (album != null) {
+                info.albumGainDb = album.gainDb();
+                info.albumPeak = album.peakLinear();
+                info.hasAlbumGain = true;
+            } else if (before != null && before.hasAlbumGain) {
+                info.albumGainDb = before.albumGainDb;
+                info.albumPeak = before.albumPeak;
+                info.hasAlbumGain = true;
+            }
             cache.put(filePath, info);
-
-            Log.i(TAG, "Successfully committed ReplayGain tags to " + filePath);
             return true;
-
         } catch (Exception e) {
             Log.e(TAG, "Failed to write ReplayGain to " + filePath, e);
             return false;
         }
+    }
+
+    /** Sets REPLAYGAIN_{scope}_GAIN and _PEAK; false when the tag format has nowhere to put them. */
+    private boolean writeFields(Tag tag, String scope, Loudness loudness) throws Exception {
+        String gainKey = "REPLAYGAIN_" + scope + "_GAIN";
+        String peakKey = "REPLAYGAIN_" + scope + "_PEAK";
+        String gain = String.format(Locale.US, "%.2f dB", loudness.gainDb());
+        String peak = String.format(Locale.US, "%.6f", loudness.peakLinear());
+        if (tag instanceof VorbisCommentTag vorbis) {
+            vorbis.setField(gainKey, gain);
+            vorbis.setField(peakKey, peak);
+        } else if (tag instanceof AbstractID3v2Tag id3) {
+            addOrUpdateTxxx(id3, gainKey, gain);
+            addOrUpdateTxxx(id3, peakKey, peak);
+        } else if (tag instanceof Mp4Tag mp4) {
+            mp4.setField(new Mp4TagReverseDnsField(MP4_ITUNES + gainKey.toLowerCase(Locale.US), "com.apple.iTunes", gainKey.toLowerCase(Locale.US), gain));
+            mp4.setField(new Mp4TagReverseDnsField(MP4_ITUNES + peakKey.toLowerCase(Locale.US), "com.apple.iTunes", peakKey.toLowerCase(Locale.US), peak));
+        } else {
+            return false;
+        }
+        return true;
     }
 
     private void parseVorbisReplayGain(VorbisCommentTag vorbis, ReplayGainInfo info) {

@@ -31,6 +31,13 @@
         android:title="Convert Files"
         app:showAsAction="never" />
 
+    <!-- Writes ReplayGain tags into the files -->
+    <item
+        android:id="@+id/action_measure_loudness"
+        android:icon="@drawable/rounded_equalizer_24"
+        android:title="@string/action_measure_loudness"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_delete"
         android:icon="@drawable/rounded_delete_24"

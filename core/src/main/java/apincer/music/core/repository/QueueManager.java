@@ -101,12 +101,17 @@ public class QueueManager {
     private String activePlaylistName;
     private final java.util.Set<Long> sessionIds = new java.util.HashSet<>();
     private final java.util.Set<Long> smartTrackIds = new java.util.HashSet<>();
+    /** Suggestions from the current source only, so a session limit ignores what an earlier source added. */
+    private final java.util.Set<Long> sourceTrackIds = new java.util.HashSet<>();
     /** Tracks the user put next with Play Next; the queue marks only these, not every upcoming track. */
     private final java.util.Set<Long> playNextIds = new java.util.HashSet<>();
     private long sourceRevision;
     private boolean autoFilling;
     private boolean sourceExhausted;
     private static final int SMART_LOOKAHEAD = 20;
+    private java.util.Random random = new java.util.Random();
+
+    void setRandom(java.util.Random random) { this.random = random; }
 
     public synchronized Source getSource() { return source; }
     public synchronized String getActivePlaylistName() { return activePlaylistName; }
@@ -117,6 +122,7 @@ public class QueueManager {
         this.source = Source.PLAYLIST;
         this.sourceExhausted = false;
         this.sourceRevision++;
+        sourceTrackIds.clear();
         for (Track track : queueList) sessionIds.add(track.getId());
         setShuffle(false);
         setRepeatMode(RepeatMode.OFF);
@@ -141,6 +147,7 @@ public class QueueManager {
         source = selected;
         sourceExhausted = false;
         sourceRevision++;
+        sourceTrackIds.clear();
         for (Track track : queueList) sessionIds.add(track.getId());
         if (source != Source.MANUAL) {
             setShuffle(false);
@@ -153,6 +160,19 @@ public class QueueManager {
 
     /** Called on a worker, never on the audio/UI thread. Queries are outside the lock. */
     public boolean refreshSmartQueue() {
+        return fillFromSource(false);
+    }
+
+    /**
+     * Picking a source: its suggestions replace the upcoming tracks, keeping only the current
+     * track and the tracks the user put next. Returns false and leaves the queue as it was when
+     * the source finds nothing. Called on a worker.
+     */
+    public boolean replaceUpcomingFromSource() {
+        return fillFromSource(true);
+    }
+
+    private boolean fillFromSource(boolean replace) {
         Source requested;
         long revision;
         int requestedSlots;
@@ -162,10 +182,15 @@ public class QueueManager {
             requested = source;
             revision = sourceRevision;
             playlistName = activePlaylistName;
-            if (requested == Source.MANUAL || remainingSmartSlots() == 0) return false;
-            requestedSlots = remainingSmartSlots();
-            excluded = new java.util.HashSet<>(sessionIds);
-            excluded.addAll(indexMap.keySet());
+            if (requested == Source.MANUAL) return false;
+            requestedSlots = replace ? SMART_LOOKAHEAD : remainingSmartSlots();
+            if (requestedSlots == 0) return false;
+            if (replace) {
+                excluded = trackIds(keptOnReplace());
+            } else {
+                excluded = new java.util.HashSet<>(sessionIds);
+                excluded.addAll(indexMap.keySet());
+            }
         }
         List<Track> candidates = switch (requested) {
             case NEW -> dbHelper.findRecentlyAdded(0, 0);
@@ -182,6 +207,14 @@ public class QueueManager {
             default -> dbHelper.findMySongs();
         };
         if (candidates == null) return false;
+        apincer.music.core.model.PlaylistEntry entry = requested == Source.PLAYLIST
+                ? PlaylistRepository.getPlaylistByName(playlistName) : null;
+        if (entry != null && entry.isMood()) {
+            // The library query returns artist/album order; a mood should not play one album through
+            candidates = new ArrayList<>(candidates);
+            Collections.shuffle(candidates, random);
+        }
+        long sessionLimitSeconds = entry == null ? 0 : entry.getSessionMinutes() * 60L;
         List<Track> available = new ArrayList<>();
         for (Track track : candidates) {
             if (track == null || track.isContainer() || track.getPath() == null) continue;
@@ -192,24 +225,146 @@ public class QueueManager {
         }
         synchronized (this) {
             if (source != requested || sourceRevision != revision) return false;
-            sourceExhausted = available.size() < requestedSlots;
-            int slots = remainingSmartSlots();
+            double sessionSeconds = sessionLimitSeconds > 0 ? smartQueueSeconds() : 0;
+            int slots = replace ? SMART_LOOKAHEAD : remainingSmartSlots();
+            List<Track> kept = replace ? keptOnReplace() : null;
+            java.util.Set<Long> taken = replace ? trackIds(kept) : null;
             List<Track> additions = new ArrayList<>();
             for (Track track : available) {
                 if (slots == 0) break;
-                if (sessionIds.add(track.getId()) && !indexMap.containsKey(track.getId())) {
+                if (sessionLimitSeconds > 0 && sessionSeconds >= sessionLimitSeconds) break;
+                boolean fresh = replace
+                        ? taken.add(track.getId())
+                        : sessionIds.add(track.getId()) && !indexMap.containsKey(track.getId());
+                if (fresh) {
                     additions.add(track);
                     slots--;
+                    sessionSeconds += Math.max(0, track.getAudioDuration());
                 }
             }
+            sourceExhausted = available.size() < requestedSlots
+                    || (sessionLimitSeconds > 0 && sessionSeconds >= sessionLimitSeconds);
             if (additions.isEmpty()) return false;
-            for (Track track : additions) smartTrackIds.add(track.getId());
+            if (replace) keepOnly(kept);
+            for (Track track : additions) {
+                smartTrackIds.add(track.getId());
+                sourceTrackIds.add(track.getId());
+            }
             autoFilling = true;
             try { enqueuePlayingQueue(additions); }
             finally { autoFilling = false; }
             persistSmartState();
             return true;
         }
+    }
+
+    /** The track playing (or selected) and the upcoming tracks the user put next. */
+    private List<Track> keptOnReplace() {
+        List<Track> kept = new ArrayList<>();
+        int anchor = (playbackIndex != -1) ? playbackIndex : currentIndex;
+        if (anchor >= 0 && anchor < queueList.size()) kept.add(queueList.get(anchor));
+        for (int i = Math.max(anchor + 1, 0); i < queueList.size(); i++) {
+            Track track = queueList.get(i);
+            if (playNextIds.contains(track.getId())) kept.add(track);
+        }
+        return kept;
+    }
+
+    private static java.util.Set<Long> trackIds(List<Track> tracks) {
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (Track track : tracks) ids.add(track.getId());
+        return ids;
+    }
+
+    /** Drops every other track; earlier sources' suggestions may come back under the new one. */
+    private void keepOnly(List<Track> kept) {
+        boolean playing = playbackIndex != -1;
+        clearRemovedAnchor();
+        queueList.clear();
+        queueList.addAll(kept);
+        rebuildIndexMap();
+        currentIndex = queueList.isEmpty() ? -1 : 0;
+        playbackIndex = playing ? currentIndex : -1;
+        sessionIds.clear();
+        java.util.Set<Long> keptIds = trackIds(kept);
+        sessionIds.addAll(keptIds);
+        smartTrackIds.retainAll(keptIds);
+    }
+
+    /** The whole queue as it was, so Undo can put back what a source switch replaced. */
+    public static final class Snapshot {
+        private final List<Track> tracks;
+        private final int currentIndex;
+        private final int playbackIndex;
+        private final Source source;
+        private final String activePlaylistName;
+        private final java.util.Set<Long> sessionIds;
+        private final java.util.Set<Long> smartTrackIds;
+        private final java.util.Set<Long> sourceTrackIds;
+        private final java.util.Set<Long> playNextIds;
+        private final boolean sourceExhausted;
+        private final boolean shuffle;
+        private final RepeatMode repeatMode;
+
+        private Snapshot(QueueManager q) {
+            tracks = new ArrayList<>(q.queueList);
+            currentIndex = q.currentIndex;
+            playbackIndex = q.playbackIndex;
+            source = q.source;
+            activePlaylistName = q.activePlaylistName;
+            sessionIds = new java.util.HashSet<>(q.sessionIds);
+            smartTrackIds = new java.util.HashSet<>(q.smartTrackIds);
+            sourceTrackIds = new java.util.HashSet<>(q.sourceTrackIds);
+            playNextIds = new java.util.HashSet<>(q.playNextIds);
+            sourceExhausted = q.sourceExhausted;
+            shuffle = q.isShuffle;
+            repeatMode = q.repeatMode;
+        }
+    }
+
+    public synchronized Snapshot snapshot() {
+        return new Snapshot(this);
+    }
+
+    public synchronized void restore(Snapshot snapshot) {
+        if (snapshot == null) return;
+        Track playing = (playbackIndex >= 0 && playbackIndex < queueList.size()) ? queueList.get(playbackIndex) : null;
+        clearRemovedAnchor();
+        queueList.clear();
+        queueList.addAll(snapshot.tracks);
+        rebuildIndexMap();
+        currentIndex = snapshot.currentIndex;
+        playbackIndex = snapshot.playbackIndex;
+        // Playback may have moved on since the switch; stay on the track that is playing now
+        Integer playingIndex = playing == null ? null : indexMap.get(playing.getId());
+        if (playingIndex != null) currentIndex = playbackIndex = playingIndex;
+        source = snapshot.source;
+        activePlaylistName = snapshot.activePlaylistName;
+        sourceRevision++;
+        sessionIds.clear();
+        sessionIds.addAll(snapshot.sessionIds);
+        smartTrackIds.clear();
+        smartTrackIds.addAll(snapshot.smartTrackIds);
+        sourceTrackIds.clear();
+        sourceTrackIds.addAll(snapshot.sourceTrackIds);
+        playNextIds.clear();
+        playNextIds.addAll(snapshot.playNextIds);
+        sourceExhausted = snapshot.sourceExhausted;
+        setShuffle(snapshot.shuffle);
+        setRepeatMode(snapshot.repeatMode);
+        dbHelper.savePlayingQueue(queueList);
+        reshuffle();
+        persistSmartState();
+        notifyQueueChanged();
+    }
+
+    /** Length of this source's suggestions in the queue, played or not; unknown durations count as 0. */
+    private double smartQueueSeconds() {
+        double seconds = 0;
+        for (Track track : queueList) {
+            if (sourceTrackIds.contains(track.getId())) seconds += Math.max(0, track.getAudioDuration());
+        }
+        return seconds;
     }
 
     private int remainingSmartSlots() {
@@ -273,6 +428,7 @@ public class QueueManager {
         sourceRevision++;
         sessionIds.clear();
         smartTrackIds.clear();
+        sourceTrackIds.clear();
         playNextIds.clear();
         queueList.clear();
         
@@ -352,6 +508,7 @@ public class QueueManager {
     public synchronized void addPlayingQueue(Track song) {
         if (song == null) return;
         smartTrackIds.remove(song.getId());
+        sourceTrackIds.remove(song.getId());
         if (source != Source.MANUAL) {
             addPlayNext(song);
             return;

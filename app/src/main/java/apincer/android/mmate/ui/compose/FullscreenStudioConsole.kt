@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.semantics
@@ -690,7 +691,7 @@ fun FullscreenStudioConsole(
                         } else encodedResolution
                         val originalRate = AudioPresentation.originalRate(track)
                         val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
-                        val rgStr = state.specsReplayGain.value
+                        val leveling = levelingStatus(rememberLeveling(track?.path), state.remoteTarget.value)
 
                         // Nothing loaded: an empty verdict would read as "CD QUALITY"
                         if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
@@ -707,7 +708,8 @@ fun FullscreenStudioConsole(
                             if (resStr.isNotEmpty()) StudioSpecChip(resStr)
                             if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
                             if (drStr.isNotEmpty()) StudioSpecChip(drStr)
-                            if (rgStr.isNotEmpty()) StudioSpecChip(rgStr)
+                            if (leveling != null) StudioSpecChip(leveling.text,
+                                modifier = Modifier.semantics { contentDescription = leveling.description })
                         }
                     }
 
@@ -1387,10 +1389,11 @@ private fun StudioLinearVolumeFader(
 private fun StudioSpecChip(
     text: String,
     isHighlighted: Boolean = false,
-    highlightColor: Color = Color(0xFFFFB300)
+    highlightColor: Color = Color(0xFFFFB300),
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(if (isHighlighted) highlightColor.copy(alpha = 0.15f) else Color(0x1CFFFFFF))
             .border(

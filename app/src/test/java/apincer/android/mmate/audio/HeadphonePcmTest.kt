@@ -63,7 +63,10 @@ class HeadphonePcmTest {
         for (encoding in intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_24BIT, C.ENCODING_PCM_32BIT)) {
             val sink = Sink(1)
             val source = pcm(encoding, 32)
-            val expected = bytes(source)
+            // 16-bit is widened to 24-bit, which keeps every sample exactly
+            val expected = if (encoding == C.ENCODING_PCM_16BIT) {
+                bytes(IntegerPcmAudioOutput.int16ToInt24(source, ByteBuffer.allocate(0)))
+            } else bytes(source)
             val output = providerOutput(sink, encoding)
             writeAll(output, source)
             assertArrayEquals(expected, sink.bytes())
@@ -103,7 +106,7 @@ class HeadphonePcmTest {
             val scale = if (encoding == C.ENCODING_PCM_24BIT) 8_388_608L else 2_147_483_648L
             // Deliberately big-endian buffer order: packed PCM remains little-endian.
             val source = packed(longArrayOf(scale / 4, -scale / 4, scale - 1, -scale), width(encoding))
-            val processor = CarDspProcessor(48_000, 1, seed = 7)
+            val processor = CarDspProcessor(48_000, 1)
             assertTrue(processor.beginBlock())
             val result = if (encoding == C.ENCODING_PCM_24BIT) {
                 processor.processInt24(source, ByteBuffer.allocate(0))
@@ -182,11 +185,11 @@ class HeadphonePcmTest {
     }
 
     private fun wrapped(sink: Sink, encoding: Int) =
-        IntegerPcmAudioOutput(sink.output, encoding, 1, CarDspProcessor(48_000, 1, seed = 7))
+        IntegerPcmAudioOutput(sink.output, encoding, 1, CarDspProcessor(48_000, 1))
 
     private fun pcm(encoding: Int, count: Int, prefix: Int = 0): ByteBuffer {
         val sample = if (encoding == C.ENCODING_PCM_32BIT) 536_870_912L else if (encoding == C.ENCODING_PCM_24BIT) 2_097_152L else 8_192L
-        return ByteBuffer.allocate(prefix + count * width(encoding)).apply {
+        return ByteBuffer.allocate(prefix + count * width(encoding)).order(ByteOrder.LITTLE_ENDIAN).apply {
             position(prefix)
             repeat(count) { repeat(width(encoding)) { byte -> put((sample shr (8 * byte)).toByte()) } }
             flip()
@@ -217,7 +220,8 @@ class HeadphonePcmTest {
     private fun bytes(buffer: ByteBuffer) = ByteArray(buffer.remaining()).also { buffer.duplicate().get(it) }
 
     private fun writeAll(output: AudioOutput, source: ByteBuffer) {
-        val maximumWrites = source.remaining() + 1
+        // A widened block can take more one-byte writes than the source has bytes
+        val maximumWrites = source.remaining() * 2 + 1
         repeat(maximumWrites) { if (output.write(source, 1, 0)) return }
         throw AssertionError("Output did not consume the block")
     }
