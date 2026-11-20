@@ -1520,3 +1520,28 @@ B: in-app gain before the DSP
 - [x] Advisor review: clamps, USB route, mixer encoding, item coverage and DSD path checked.
 - [ ] (waiting on user: connect the phone) Gapless boundary check with two 24-bit WAVs at different gains, and a 16-bit FLAC with leveling Off on the USB DAC to confirm the output in dumpsys media.audio_flinger.
 
+
+## DSP and tuning UX quality audit — 2026-11-20
+- [x] Inspect DSP math, playback integration, and numerical/audio safeguards.
+- [x] Inspect tuning UX, accessibility, and state consistency.
+- [x] Run focused verification and compare evidence with top-tier DSP expectations.
+- [x] Report prioritized findings with source references and clear evidence limits.
+
+Evidence: focused :app:testGithubDebugUnitTest run passed 207 tests in 31 audio suites; 0 failures/errors/skips. Log: /tmp/musicmate-dsp-audit-tests.log. Source-only UX audit; no live UI, listening, DAC loopback, or distortion/latency measurements performed. No product code changed. Findings: sound DSP foundations; sample-peak rather than true-peak limiter, assumed car target, calibration selection semantics need polish. Top-tier performance remains unproven.
+
+## True-peak safety limiter — 2026-11-20
+- [x] Design streaming detector/lookahead with explicit handling of bypass, seeks, EOS, and gapless boundaries.
+- [x] Implement allocation-free linked limiting with a conservative true-peak ceiling and preserve unprocessed passthrough.
+- [x] Add independent reconstructed-output peak tests plus transparency, transitions, and streaming coverage.
+- [x] Run focused audio suites and build checks; inspect the diff against master and document measured limits.
+
+True-peak evidence: 268 audio tests in 42 suites passed (0 failures/errors/skips); githubDebug assembled. Independent 16x/192-tap reconstruction worst fixture peak -1.143800 dBTP at 44.1/48/96/192 kHz. Target -1 dBTP with 1.2 dB detector margin; lookahead 288 frames / 6 ms at 48 kHz. Desktop warmed stereo throughput 790 ns/frame at 48 kHz and 690 ns/frame at 192 kHz; not a phone CPU measurement. Logs: /tmp/musicmate-truepeak-validation.log, /tmp/musicmate-truepeak-core-tests.log, /tmp/musicmate-truepeak-benchmark.log. Compared scoped changes against master (existing branch work retained) and checked working diff whitespace.
+
+- [ ] Device follow-up: measure Android playback CPU/underruns, listen for pumping and transition artifacts, and verify DAC loopback after device resampling/codec processing. Finite reconstruction fixtures do not establish a universal peak bound; Media3 encoder trimming remains downstream. No installation or playback started on a device.
+
+## Version 3.33.0 and phone installation — 2026-11-20
+- [x] Bump Android version to 3.33.0 / 161; finalize release notes and listening documentation.
+- [x] Verify audio tests, build the matching debug APK, inspect scoped diff, and commit implementation/docs/version.
+- [x] Install update on connected Galaxy S25 without removing app data and verify installed version and launch.
+
+3.33.0 delivery: implementation/docs/version committed as 6861fb75. Audio verification: 268 tests / 42 suites, no failures/errors/skips; githubDebug assembled (log /tmp/musicmate-3.33.0-validation.log). adb install -r succeeded on Galaxy S25 (RFCY21CLTDY), installed versionName 3.33.0-261120 / versionCode 161. MainActivity launch returned Status: ok. Existing installation updated without uninstall or data clearing. Listening/CPU/DAC validation remains a separate pending follow-up above.
